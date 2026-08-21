@@ -247,6 +247,12 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("report package is not correlated to the selected version");
   }
+  if (
+    data.package.package_state === "available" &&
+    data.package.report_reference_id === null
+  ) {
+    invalid("available report package has no source reference");
+  }
   const consentRecordIsPresent =
     data.consent.consent_state !== "not_recorded" ||
     data.consent.approval_id !== null ||

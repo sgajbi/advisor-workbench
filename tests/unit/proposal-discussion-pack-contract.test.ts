@@ -110,6 +110,25 @@ describe("proposal discussion pack contract", () => {
     ).toThrow("client consent is not correlated to the selected version");
   });
 
+  it("requires an available package to carry its source reference", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.package = {
+      state: "supported",
+      reason_code: "report_package_available",
+      package_state: "available",
+      report_request_id: "report-request-2",
+      report_reference_id: null,
+      generated_at: "2026-08-21T09:30:00Z",
+      related_version_no: 2,
+      includes_reviewed_narrative: true,
+      source_service: "lotus-report",
+    };
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("available report package has no source reference");
+  });
+
   it("rejects unknown closed-enum source states", () => {
     const fixture = proposalDiscussionPackFixture() as unknown as {
       data: { consent: { consent_state: string } };

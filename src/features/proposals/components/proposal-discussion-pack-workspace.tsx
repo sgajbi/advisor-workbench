@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Ref } from "react";
 
 import {
+  AiAssistanceDisclosure,
   ScreenStatePanel,
   SemanticBadge,
   SourceRefreshAction,
@@ -320,6 +321,11 @@ function DiscussionPackDecision({
             {model.narrative.generationLabel}
           </SemanticBadge>
         </div>
+        {model.narrative.isAiAssisted ? (
+          <AiAssistanceDisclosure
+            disclosure={model.narrative.aiDisclosure}
+          />
+        ) : null}
         {model.narrative.isAvailable && model.narrative.sections.length > 0 ? (
           <div className={styles.narrativeFlow}>
             {model.narrative.sections.map((section) => (
@@ -425,7 +431,7 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
             {model.memo.status}
           </SemanticBadge>
         </div>
-        {model.memo.sections.length > 0 ? (
+        {model.memo.isAvailable && model.memo.sections.length > 0 ? (
           <ul className={styles.memoList}>
             {model.memo.sections.map((section) => (
               <li key={section.key}>

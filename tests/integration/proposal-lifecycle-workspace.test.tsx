@@ -3235,16 +3235,25 @@ describe("ProposalLifecycleWorkspace", () => {
           proposalId === "proposal-2"
             ? "Income mandate adjustment"
             : fixture.data.title;
+        fixture.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
         fixture.data.lineage.proposal_version_id = `${proposalId}:${versionNo}`;
         return fixture;
       },
     );
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace
-        portfolioId="PB_SG_GLOBAL_BAL_001"
-        mode="discussion-pack"
-      />,
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="discussion-pack"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
@@ -3258,6 +3267,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Client release and delivery")).toBeInTheDocument();
     expect(screen.getByText("Conversation opening")).toBeInTheDocument();
+    expect(screen.getByText("How this was prepared")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /publish|deliver|contact client/i }),
     ).not.toBeInTheDocument();
@@ -3401,6 +3411,88 @@ describe("ProposalLifecycleWorkspace", () => {
       "AWAITING_CLIENT_CONSENT",
     );
     expect(screen.getAllByText("Version 3").length).toBeGreaterThan(0);
+  });
+
+  it("publishes a complete-refresh failure to the shared workflow context", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "proposal-1",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "AWAITING_CLIENT_CONSENT",
+            current_version_no: 2,
+            created_at: "2026-08-21T08:30:00Z",
+            title: "Rebalance concentrated technology exposure",
+          },
+        ],
+        next_cursor: null,
+      })
+      .mockRejectedValueOnce(new Error("Proposal list unavailable"));
+    getProposalDiscussionPackMock.mockResolvedValueOnce(
+      proposalDiscussionPackFixture(),
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="discussion-pack"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Refresh evidence" }),
+    );
+
+    expect(await screen.findByText("Source refresh failed")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "The latest supporting-evidence refresh did not complete.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("does not expose memo sections when source support is restricted", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        {
+          proposal_id: "proposal-1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "AWAITING_CLIENT_CONSENT",
+          current_version_no: 2,
+          created_at: "2026-08-21T08:30:00Z",
+          title: "Rebalance concentrated technology exposure",
+        },
+      ],
+      next_cursor: null,
+    });
+    const restricted = proposalDiscussionPackFixture();
+    restricted.data.overall_state = "partial";
+    restricted.data.memo.state = "restricted";
+    restricted.data.memo.reason_code = "advisor_memo_restricted";
+    getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="discussion-pack"
+      />,
+    );
+
+    expect(
+      await screen.findByText("No source-backed memo sections are available."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Advisor-use rationale is recorded for the selected version."),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an explicit failure instead of inferring discussion readiness", async () => {
