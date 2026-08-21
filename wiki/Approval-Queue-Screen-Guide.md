@@ -83,12 +83,15 @@ These roles describe business use, not authenticated production entitlement.
   fan detail requests across the visible worklist.
 - Derives maker-checker posture from the complete selected evidence set, not lifecycle stage.
 - Reconciles the selected worklist portfolio, lifecycle state, and version with current proposal
-  detail before publishing maker-checker posture.
+  detail before publishing maker-checker posture; an absent worklist portfolio is not replaced by
+  route context.
 - Hides approval records when the worklist record, proposal identity, workflow state, or
   active-version lineage conflicts.
 - Treats an empty approval register as unconfirmed requirements, never as approval not required.
 - Keeps prior confirmed evidence under its prior context when refresh fails, and announces success
   only after the worklist and every selected evidence source refresh and reconcile successfully.
+  A version advance for the same selected proposal carries confirmation onto the reconciled new
+  version; changing the selected proposal still fences the earlier completion.
 - Keeps the selected decision pane beside the worklist at desktop and after it at compact widths.
 - Preserves portfolio and originating lifecycle mode when entering Proposal Detail.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;

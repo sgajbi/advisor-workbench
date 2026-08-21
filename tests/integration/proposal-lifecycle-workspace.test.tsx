@@ -1252,6 +1252,34 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("fails closed when the selected worklist omits source portfolio identity", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      ...proposalListFixture,
+      items: proposalListFixture.items.map((proposal, index) =>
+        index === 0
+          ? { ...proposal, portfolio_id: undefined }
+          : { ...proposal },
+      ),
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Portfolio identity does not agree",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Recorded approval decisions" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
+  });
+
   it("keeps restricted approval evidence distinct in the selected pane and shared rail", async () => {
     getProposalApprovalsMock.mockRejectedValueOnce(
       new Error("Proposal approvals failed (403): forbidden"),
@@ -1375,6 +1403,50 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       within(refreshStatus).getByText("Selected proposal evidence confirmed"),
     ).toBeInTheDocument();
+  });
+
+  it("confirms refreshed evidence when the same selected proposal advances version", async () => {
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    await screen.findByRole("heading", {
+      name: "1 decision is not approved",
+    });
+
+    const advancedSummary: ProposalSummary = {
+      ...proposalListFixture.items[0],
+      current_state: "COMPLIANCE_REVIEW",
+      current_version_no: 4,
+    };
+    const advancedEvidence = selectedProposalEvidence("PRP-RISK");
+    advancedEvidence.detail.proposal = { ...advancedSummary };
+    advancedEvidence.workflow.current_state = "COMPLIANCE_REVIEW";
+    advancedEvidence.approvals.current_state = "COMPLIANCE_REVIEW";
+    advancedEvidence.lineage.versions = [{ version_no: 4 }];
+    listProposalsMock.mockResolvedValueOnce({
+      ...proposalListFixture,
+      items: [advancedSummary, proposalListFixture.items[1]],
+    });
+    getProposalMock.mockResolvedValue(advancedEvidence.detail);
+    getProposalWorkflowEventsMock.mockResolvedValue(advancedEvidence.workflow);
+    getProposalApprovalsMock.mockResolvedValue(advancedEvidence.approvals);
+    getProposalLineageMock.mockResolvedValue(advancedEvidence.lineage);
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh evidence" }));
+
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "confirmed"),
+    );
+    expect(
+      within(refreshStatus).getByText("Selected proposal evidence confirmed"),
+    ).toBeInTheDocument();
+    expect(within(refreshStatus).getByText(/Version 4/)).toBeInTheDocument();
+    expect(screen.getByText("Active version").nextSibling).toHaveTextContent("4");
   });
 
   it("rejects a transport-success refresh whose compound approval evidence conflicts", async () => {
