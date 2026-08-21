@@ -243,10 +243,44 @@ export function parseProposalDiscussionPackEnvelope(
     invalid("approved narrative has no complete source review record");
   }
   if (
+    data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
+    (!data.narrative.narrative_id ||
+      !data.narrative.source_narrative_hash ||
+      data.narrative.sections.length === 0 ||
+      data.narrative.sections.some(({ source_refs }) => source_refs.length === 0))
+  ) {
+    invalid("approved narrative has no complete source artifact");
+  }
+  if (
     data.memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
     (!data.memo.review_event_id || !data.memo.reviewed_by || !data.memo.reviewed_at)
   ) {
     invalid("approved memo has no complete source review record");
+  }
+  if (
+    data.memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
+    (!data.memo.memo_id ||
+      !data.memo.memo_version ||
+      !data.memo.memo_status ||
+      !data.memo.lifecycle_status ||
+      !data.memo.source_input_hash ||
+      !data.memo.memo_hash ||
+      data.memo.sections.length === 0)
+  ) {
+    invalid("approved memo has no complete source artifact");
+  }
+  if (
+    data.narrative.source_narrative_hash !== data.lineage.narrative_hash &&
+    (data.narrative.source_narrative_hash !== null ||
+      data.lineage.narrative_hash !== null)
+  ) {
+    invalid("narrative artifact hash does not match lineage");
+  }
+  if (
+    data.memo.memo_hash !== data.lineage.memo_hash &&
+    (data.memo.memo_hash !== null || data.lineage.memo_hash !== null)
+  ) {
+    invalid("memo artifact hash does not match lineage");
   }
 
   const packageRecordIsPresent =
@@ -273,6 +307,14 @@ export function parseProposalDiscussionPackEnvelope(
     data.package.state !== "supported"
   ) {
     invalid("available report package is not source-supported");
+  }
+  if (
+    data.package.package_state === "available" &&
+    (!data.package.report_request_id ||
+      !data.package.generated_at ||
+      data.package.source_service !== "lotus-report")
+  ) {
+    invalid("available report package has no complete source record");
   }
   const consentRecordIsPresent =
     data.consent.consent_state !== "not_recorded" ||

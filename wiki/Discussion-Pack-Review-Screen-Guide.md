@@ -72,6 +72,8 @@ These are business audiences, not browser-authored roles or entitlements.
   consent record, and client release/delivery.
 - Labels deterministic and AI-assisted narrative generation explicitly. **AI-assisted draft** is
   provenance, not advice, approval, or client-ready authority.
+- Reports narrative freshness as **Not reported** because the contract publishes proposal-version
+  time, not a narrative freshness fact; Workbench does not upgrade that adjacent timestamp.
 - Shows source-backed narrative sections with reference and limitation counts.
 - Shows memo sections, policy disclosures, client-use blockers, and limitations without inventing
   owners, deadlines, priority, or completion.

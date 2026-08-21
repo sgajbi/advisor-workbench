@@ -177,6 +177,56 @@ describe("proposal discussion pack contract", () => {
     ).toThrow("client consent has no complete source record");
   });
 
+  it.each([
+    ["narrative", "sha256:different-narrative"],
+    ["memo", "sha256:different-memo"],
+  ] as const)("rejects a %s artifact hash that disagrees with lineage", (key, hash) => {
+    const fixture = proposalDiscussionPackFixture();
+    if (key === "narrative") fixture.data.narrative.source_narrative_hash = hash;
+    else fixture.data.memo.memo_hash = hash;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow(`${key} artifact hash does not match lineage`);
+  });
+
+  it("requires usable source content before accepting narrative approval", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.narrative.sections[0]!.source_refs = [];
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("approved narrative has no complete source artifact");
+  });
+
+  it("requires a complete memo artifact before accepting memo approval", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.memo.memo_id = null;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("approved memo has no complete source artifact");
+  });
+
+  it("requires a complete source record for an available report package", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.package = {
+      state: "supported",
+      reason_code: "report_package_available",
+      package_state: "available",
+      report_request_id: "report-request-2",
+      report_reference_id: "report-2",
+      generated_at: null,
+      related_version_no: 2,
+      includes_reviewed_narrative: true,
+      source_service: "lotus-report",
+    };
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("available report package has no complete source record");
+  });
+
   it("rejects unknown closed-enum source states", () => {
     const fixture = proposalDiscussionPackFixture() as unknown as {
       data: { consent: { consent_state: string } };
