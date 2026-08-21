@@ -348,6 +348,29 @@ describe("proposal risk and impact contract", () => {
     ).toThrow(/displayable allocation requires coherent source/);
   });
 
+  it("accepts retained allocation views that an unavailable section withholds", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.overall_state = "partial";
+    payload.data.allocation.state = "unavailable";
+    payload.data.allocation.source_service = null;
+    payload.data.allocation.source_mode = null;
+    payload.data.allocation.contract_version = null;
+    payload.data.allocation.calculator_version = null;
+    payload.data.capabilities.find(
+      ({ key }) => key === "allocation_comparison",
+    )!.state = "unavailable";
+
+    expect(
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ).data.allocation.state,
+    ).toBe("unavailable");
+  });
+
   it("rejects displayed partial risk observations without a named source", () => {
     const payload = proposalRiskImpactFixture();
     payload.data.overall_state = "partial";
