@@ -216,7 +216,7 @@ function packageControl(
   envelope: ProposalDiscussionPackEnvelope,
 ): ControlPresentation {
   const evidence = envelope.data.package;
-  if (!["supported", "partial", "not_available"].includes(evidence.state)) {
+  if (evidence.state !== "supported" && evidence.state !== "not_available") {
     return unsupportedControl(
       "package",
       "Report package",

@@ -82,4 +82,30 @@ describe("proposal discussion pack view model", () => {
     });
     expect(report?.summary).not.toMatch(/released|delivered/i);
   });
+
+  it("keeps a partial available package out of the confirmed control count", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.overall_state = "partial";
+    envelope.data.package = {
+      state: "partial",
+      reason_code: "report_package_for_historical_version",
+      package_state: "available",
+      report_request_id: "report-request-1",
+      report_reference_id: "report-1",
+      generated_at: "2026-08-20T09:30:00Z",
+      related_version_no: 1,
+      includes_reviewed_narrative: true,
+      source_service: "lotus-report",
+    };
+
+    const model = buildProposalDiscussionPackModel(envelope);
+    const report = model.controls.find(({ key }) => key === "package");
+
+    expect(report).toMatchObject({
+      status: "Partial",
+      tone: "warn",
+      source: "Source not confirmed",
+    });
+    expect(model.controls.filter(({ tone }) => tone === "success")).toHaveLength(2);
+  });
 });
