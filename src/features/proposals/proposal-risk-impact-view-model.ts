@@ -29,9 +29,10 @@ export function buildProposalRiskImpactModel(
   envelope: ProposalRiskImpactEnvelope,
 ) {
   const { data } = envelope;
-  const activeRequirements = data.decision.approval_requirements.filter(
-    ({ required }) => required,
-  );
+  const decisionIsAvailable = data.decision.state === "ready";
+  const activeRequirements = decisionIsAvailable
+    ? data.decision.approval_requirements.filter(({ required }) => required)
+    : [];
   const blockingRequirements = activeRequirements.filter(
     ({ blocking_until_approved }) => blocking_until_approved,
   );
@@ -59,20 +60,27 @@ export function buildProposalRiskImpactModel(
             : "The source does not provide enough evidence for a proposal risk decision.",
     },
     decision: {
+      isAvailable: decisionIsAvailable,
       state: supportabilityPresentation(data.decision.state),
-      status: data.decision.decision_status
-        ? businessLabel(data.decision.decision_status)
-        : "Decision not available",
+      status:
+        decisionIsAvailable && data.decision.decision_status
+          ? businessLabel(data.decision.decision_status)
+          : "Decision not confirmed",
       summary:
-        data.decision.primary_summary ??
-        "The advisory source has not provided a decision summary for this proposal version.",
-      nextAction: data.decision.recommended_next_action
-        ? businessLabel(data.decision.recommended_next_action)
-        : "Confirm the source evidence before progressing",
-      confidence: data.decision.confidence
-        ? businessLabel(data.decision.confidence)
-        : "Not reported",
-      policyVersion: data.decision.decision_policy_version ?? "Not reported",
+        decisionIsAvailable && data.decision.primary_summary
+          ? data.decision.primary_summary
+          : "The advisory source has not confirmed a decision record for this proposal version.",
+      nextAction:
+        decisionIsAvailable && data.decision.recommended_next_action
+          ? businessLabel(data.decision.recommended_next_action)
+          : "Confirm the source evidence before progressing",
+      confidence:
+        decisionIsAvailable && data.decision.confidence
+          ? businessLabel(data.decision.confidence)
+          : "Not reported",
+      policyVersion:
+        (decisionIsAvailable && data.decision.decision_policy_version) ||
+        "Not reported",
       activeRequirements: activeRequirements.map((requirement) => ({
         type: businessLabel(requirement.approval_type),
         summary: requirement.summary,
@@ -81,19 +89,27 @@ export function buildProposalRiskImpactModel(
         blocking: requirement.blocking_until_approved,
         policyVersion: requirement.policy_version,
       })),
-      materialChanges: data.decision.material_changes.map((change) => ({
+      materialChanges: (decisionIsAvailable
+        ? data.decision.material_changes
+        : []
+      ).map((change) => ({
         id: change.change_id,
         family: businessLabel(change.family),
         summary: change.summary,
         severity: businessLabel(change.severity),
         tone: severityTone(change.severity),
       })),
-      missingEvidence: data.decision.missing_evidence.map((evidence) => ({
+      missingEvidence: (decisionIsAvailable
+        ? data.decision.missing_evidence
+        : []
+      ).map((evidence) => ({
         type: businessLabel(evidence.evidence_type),
         summary: evidence.summary,
         blocking: evidence.blocking,
       })),
-      blockingCount: blockingRequirements.length + blockingEvidence.length,
+      blockingCount: decisionIsAvailable
+        ? blockingRequirements.length + blockingEvidence.length
+        : null,
     },
     risk: {
       state: supportabilityPresentation(data.risk.state),
@@ -143,6 +159,21 @@ export function buildProposalRiskImpactModel(
     })),
     lineage: {
       correlationId: envelope.correlation_id,
+      decisionSupportReference: data.decision.support_reference,
+      workflowGateSupportReference: data.workflow_gate.support_reference,
+      capabilitySupportReferences: data.capabilities
+        .filter(
+          (capability) =>
+            capability.support_reference &&
+            capability.support_reference !== data.decision.support_reference &&
+            capability.support_reference !==
+              data.workflow_gate.support_reference,
+        )
+        .map((capability) => ({
+          key: capability.key,
+          label: `${capability.label} support reference`,
+          value: capability.support_reference as string,
+        })),
       proposalVersionId: data.lineage.proposal_version_id,
       requestHash: data.lineage.request_hash ?? "Not reported",
       artifactHash: data.lineage.artifact_hash ?? "Not reported",
@@ -233,6 +264,7 @@ function formatDate(value: string | null): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   }).format(date);
 }
 

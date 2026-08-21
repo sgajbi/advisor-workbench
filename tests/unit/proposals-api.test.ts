@@ -260,6 +260,7 @@ describe("proposal api", () => {
     const envelope = await getProposalRiskImpact(
       "PRP-RISK",
       "PB_SG_GLOBAL_BAL_001",
+      3,
     );
 
     expect(global.fetch).toHaveBeenCalledWith(

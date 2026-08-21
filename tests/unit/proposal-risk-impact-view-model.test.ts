@@ -23,6 +23,36 @@ describe("proposal risk and impact view model", () => {
     });
     expect(model.workflowGate.disclaimer).toContain("does not prove");
     expect(model.lineage.correlationId).toBe("corr-proposal-risk-impact-001");
+    expect(model.lineage.decisionSupportReference).toBe(
+      "current_version.proposal_result.proposal_decision_summary",
+    );
+    expect(model.lineage.workflowGateSupportReference).toBe(
+      "current_version.proposal_result.workflow_gate_snapshot",
+    );
+  });
+
+  it("keeps an unavailable decision register unknown instead of inferring zero blockers", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.decision.state = "unavailable";
+    envelope.data.decision.approval_requirements = [];
+    envelope.data.decision.material_changes = [];
+    envelope.data.decision.missing_evidence = [];
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.decision.isAvailable).toBe(false);
+    expect(model.decision.blockingCount).toBeNull();
+    expect(model.decision.status).toBe("Decision not confirmed");
+    expect(model.decision.state.label).toBe("Source evidence unavailable");
+  });
+
+  it("formats proposal dates in UTC for deterministic banking records", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.version_created_at = "2026-08-19T20:30:00Z";
+
+    expect(buildProposalRiskImpactModel(envelope).identity.recorded).toBe(
+      "19 Aug 2026",
+    );
   });
 
   it("keeps current and proposed source values separate without calculating a delta", () => {

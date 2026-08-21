@@ -280,10 +280,10 @@ export function buildProposalQueueWorkflowContext({
         ? ["The latest proposal view could not be confirmed."]
         : []),
       ...(hasUnavailableEvidence
-        ? ["One or more supporting policy-evidence sources are unavailable."]
+        ? ["One or more supporting decision-evidence sources are unavailable."]
         : []),
       ...(hasSupportingEvidenceRefreshFailure
-        ? ["The latest policy-evidence refresh did not complete."]
+        ? ["The latest supporting-evidence refresh did not complete."]
         : []),
       ...(hasMoreResults
         ? ["More proposals are available beyond this view."]
@@ -313,15 +313,15 @@ export function buildProposalQueueWorkflowContext({
           ? "No proposals match the current view; more proposals remain available."
           : hasPreviousResults
             ? "No proposals match the current view; earlier proposals remain available."
-            : "No proposals are visible while supporting policy evidence remains incomplete.";
+            : "No proposals are visible while supporting decision evidence remains incomplete.";
     const nextAction = hasProposalRefreshFailure
       ? hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
         ? "Retry the proposal view and restore supporting policy evidence before relying on the current workflow posture."
         : "Retry the proposal view before relying on the current queue posture."
       : hasUnavailableEvidence
-        ? "Restore the unavailable policy-evidence source before relying on suitability workflow posture."
+        ? "Restore the unavailable decision-evidence source before relying on the current workflow posture."
       : hasSupportingEvidenceRefreshFailure
-        ? "Retry the policy-evidence refresh before relying on the current suitability posture."
+        ? "Retry the supporting-evidence refresh before relying on the current workflow posture."
         : totalCount === 0 && hasMoreResults
           ? "Review the next proposals before concluding this queue is clear."
           : totalCount === 0 && hasPreviousResults

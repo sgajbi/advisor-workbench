@@ -75,8 +75,9 @@ decision, clear a gate, approve suitability, or create an order.
 - Requests only `RISK_REVIEW` proposal rows from the Gateway list contract.
 - Keeps counts and attention posture bounded to the returned source window.
 - Uses one reusable, keyboard-operable lifecycle worklist and one selected evidence record.
-- Validates the full risk-impact contract, proposal identity, portfolio identity, decimal transport,
-  vocabulary, capability registry, and duplicate identifiers before rendering evidence.
+- Validates the full risk-impact contract, proposal identity, portfolio identity, selected proposal
+  version, decimal transport, vocabulary, capability registry, and duplicate identifiers before
+  rendering evidence.
 - Keeps exact current and proposed allocation values separate and aligns only their display rows.
 - Presents risk observations, workflow gates, exceptions, limitations, capability posture, and
   lineage without promoting them into browser-authored conclusions.
@@ -119,6 +120,7 @@ conclusion.
 | Loading | Selected proposal evidence is being retrieved | Wait; no fallback figures or conclusions are shown |
 | Ready | Exact allocation comparison, risk observations, gates, and source posture | Review exceptions and continue to Proposal Detail when appropriate |
 | Partial | Available evidence remains visible beside explicit missing or unsupported capability statements | Resolve the named source limitation before relying on the missing decision dimension |
+| Decision unavailable | Decision status, blocker count, and exception-register completeness remain explicitly unconfirmed | Restore the source decision record; do not interpret an empty array as zero blockers |
 | Empty evidence | Source confirms no usable allocation or risk evidence for the selected record | Open Proposal Detail or engage the named source owner; do not infer no impact |
 | Refreshing | Earlier evidence remains readable and is clearly awaiting source confirmation | Wait; duplicate refresh is fenced |
 | Refresh failed | Earlier evidence remains with an explicit unconfirmed warning | Retry the same selected proposal; focus remains on the refresh control |
@@ -137,8 +139,9 @@ shown as a limitation. It is never silently replaced with a local assumption.
   replacement states.
 - At wide desktop widths the worklist and evidence pane are simultaneous; at tablet, compact, and
   200%-zoom-equivalent widths the evidence follows the worklist in DOM and keyboard order.
-- Container-aware reflow responds to the actual centre workspace beside the portfolio and workflow
-  rails, with no page-level horizontal overflow.
+- Container-aware reflow responds to the actual centre workspace and selected evidence pane beside
+  the portfolio and workflow rails, with no viewport-coupled module breakpoint and no page-level
+  horizontal overflow.
 - Exact values do not depend on colour or bar length, and controls retain a bank-operable target.
 
 ## Workbench Boundaries
@@ -197,9 +200,10 @@ approval or competitor superiority.
 ## First Support Step
 
 Confirm the visible portfolio and proposal identity, then retry the unchanged selected proposal
-once. If the failure persists, record the proposal id, portfolio id, contract version, correlation
-reference, source owner, and displayed support reference. Do not copy client data or full payloads
-into support channels, bypass Gateway, or inject browser identity headers.
+once. If the failure persists, record the proposal id, portfolio id, selected version, contract
+version, correlation ID, source owner, and the separately labelled decision, workflow-gate, or
+capability support reference. Do not copy client data or full payloads into support channels,
+bypass Gateway, or inject browser identity headers.
 
 ## Related Documentation
 

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type Ref } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 import {
   ScreenStatePanel,
@@ -10,12 +9,8 @@ import {
   SourceRefreshAction,
   Text,
 } from "@/design-system";
-import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
-import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
-import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
-
-import { getProposalRiskImpact } from "../api";
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
+import type { ProposalRiskImpactEnvelope } from "../proposal-risk-impact-contract";
 import {
   buildProposalRiskImpactModel,
   type ProposalRiskImpactModel,
@@ -26,46 +21,31 @@ import styles from "./proposal-risk-impact-workspace.module.css";
 export default function ProposalRiskImpactWorkspace({
   portfolioId,
   rows,
+  selectedProposal,
+  onSelectProposal,
+  evidence,
+  isLoading,
+  isRefreshing,
+  isPermissionBlocked,
+  hasError,
+  hasRefreshFailure,
+  onRefresh,
 }: {
   portfolioId: string;
   rows: ProposalLifecycleRow[];
+  selectedProposal: ProposalLifecycleRow | null;
+  onSelectProposal: (proposalId: string) => void;
+  evidence: ProposalRiskImpactEnvelope | null;
+  isLoading: boolean;
+  isRefreshing: boolean;
+  isPermissionBlocked: boolean;
+  hasError: boolean;
+  hasRefreshFailure: boolean;
+  onRefresh: () => Promise<unknown>;
 }) {
-  const [preferredProposalId, setPreferredProposalId] = useState<string | null>(
-    rows[0]?.proposalId ?? null,
-  );
-  const selectedProposal =
-    rows.find(({ proposalId }) => proposalId === preferredProposalId) ??
-    rows[0] ??
-    null;
-  const riskImpactQuery = useQuery({
-    queryKey: [
-      "proposal-risk-impact",
-      portfolioId,
-      selectedProposal?.proposalId,
-    ],
-    queryFn: async () =>
-      await getProposalRiskImpact(
-        selectedProposal?.proposalId ?? "",
-        portfolioId,
-      ),
-    enabled: Boolean(selectedProposal),
-    ...workbenchStrictQueryDefaults,
-  });
-  const sourcePosture = projectQuerySourcePosture({
-    hasData: Boolean(riskImpactQuery.data),
-    isLoading: riskImpactQuery.isLoading,
-    isFetching: riskImpactQuery.isFetching,
-    hasError: Boolean(riskImpactQuery.error),
-    isPermissionBlocked: isWorkbenchPermissionBlockedError(
-      riskImpactQuery.error,
-    ),
-  });
   const model = useMemo(
-    () =>
-      riskImpactQuery.data
-        ? buildProposalRiskImpactModel(riskImpactQuery.data)
-        : null,
-    [riskImpactQuery.data],
+    () => (evidence ? buildProposalRiskImpactModel(evidence) : null),
+    [evidence],
   );
   const refreshActionRef = useRef<HTMLButtonElement>(null);
   const selectedProposalIdRef = useRef(selectedProposal?.proposalId ?? null);
@@ -77,7 +57,7 @@ export default function ProposalRiskImpactWorkspace({
     const initiatingElement = refreshActionRef.current;
     const initiatingProposalId = selectedProposal?.proposalId ?? null;
     const shouldRestoreFocus = document.activeElement === initiatingElement;
-    const result = await riskImpactQuery.refetch();
+    const result = await onRefresh();
     if (shouldRestoreFocus) {
       window.setTimeout(() => {
         const focusDidNotMove =
@@ -106,7 +86,7 @@ export default function ProposalRiskImpactWorkspace({
           ariaLabel="Risk and Impact proposals"
           rows={rows}
           selectedProposalId={selectedProposal.proposalId}
-          onSelectProposal={setPreferredProposalId}
+          onSelectProposal={onSelectProposal}
         />
 
         <section
@@ -122,20 +102,26 @@ export default function ProposalRiskImpactWorkspace({
             Selected proposal: {selectedProposal.title}.
           </p>
 
-          {sourcePosture.isInitialLoading ? (
+          {selectedProposal.versionNo === null ? (
+            <ScreenStatePanel
+              kind="partial"
+              title="Proposal version is not available"
+              body="The proposal list did not identify the selected version. Risk and impact evidence cannot be matched safely, so no decision posture is shown."
+            />
+          ) : isLoading ? (
             <ScreenStatePanel
               kind="loading"
               title="Loading proposal evidence"
               body="Confirming current and proposed allocation, risk, and decision evidence through Gateway."
               rows={5}
             />
-          ) : sourcePosture.isPermissionBlocked ? (
+          ) : isPermissionBlocked ? (
             <ScreenStatePanel
               kind="permission_blocked"
               title="Risk and impact access is not available"
               body="Your current role cannot view the selected proposal's decision evidence. No fallback evidence is shown."
             />
-          ) : sourcePosture.isUnavailable || !model ? (
+          ) : hasError || !model ? (
             <ScreenStatePanel
               kind="error"
               title="Risk and impact evidence is unavailable"
@@ -146,18 +132,18 @@ export default function ProposalRiskImpactWorkspace({
                   refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
                   idleLabel="Retry source evidence"
                   busyLabel="Retrying source evidence"
-                  isRefreshing={riskImpactQuery.isFetching}
+                  isRefreshing={isRefreshing}
                   onRefresh={refreshEvidence}
                 />
               }
             />
           ) : (
             <RiskImpactEvidence
-              key={model.identity.proposalId}
+              key={`${model.identity.proposalId}:${selectedProposal.versionNo}`}
               model={model}
               proposalHref={selectedProposal.href}
-              refreshing={sourcePosture.isRefreshing}
-              refreshFailed={sourcePosture.hasRefreshFailure}
+              refreshing={isRefreshing}
+              refreshFailed={hasRefreshFailure}
               onRefresh={refreshEvidence}
               refreshActionRef={refreshActionRef}
             />
@@ -260,7 +246,11 @@ function RiskImpactEvidence({
           </div>
           <div>
             <dt>Blocking items</dt>
-            <dd>{model.decision.blockingCount}</dd>
+            <dd>
+              {model.decision.isAvailable
+                ? model.decision.blockingCount
+                : "Not confirmed"}
+            </dd>
           </div>
           <div>
             <dt>Evidence confidence</dt>
@@ -458,45 +448,59 @@ function RiskImpactEvidence({
               Requirements, changes, and evidence gaps
             </Text>
           </div>
-          <span className={styles.blockingCount}>
-            {model.decision.blockingCount} blocking
-          </span>
+          {model.decision.isAvailable ? (
+            <span className={styles.blockingCount}>
+              {model.decision.blockingCount} blocking
+            </span>
+          ) : (
+            <SemanticBadge tone={model.decision.state.tone}>
+              {model.decision.state.label}
+            </SemanticBadge>
+          )}
         </div>
-        <div className={styles.registerColumns}>
-          <DecisionRegisterList
-            title="Approval requirements"
-            empty="No active approval requirement is reported."
-            items={model.decision.activeRequirements.map((requirement) => ({
-              key: `${requirement.type}:${requirement.policyVersion}`,
-              label: requirement.type,
-              summary: requirement.summary,
-              badge: requirement.blocking ? "Blocking" : requirement.severity,
-              tone: requirement.tone,
-            }))}
+        {model.decision.isAvailable ? (
+          <div className={styles.registerColumns}>
+            <DecisionRegisterList
+              title="Approval requirements"
+              empty="No active approval requirement is reported."
+              items={model.decision.activeRequirements.map((requirement) => ({
+                key: `${requirement.type}:${requirement.policyVersion}`,
+                label: requirement.type,
+                summary: requirement.summary,
+                badge: requirement.blocking ? "Blocking" : requirement.severity,
+                tone: requirement.tone,
+              }))}
+            />
+            <DecisionRegisterList
+              title="Material changes"
+              empty="No material change is reported."
+              items={model.decision.materialChanges.map((change) => ({
+                key: change.id,
+                label: change.family,
+                summary: change.summary,
+                badge: change.severity,
+                tone: change.tone,
+              }))}
+            />
+            <DecisionRegisterList
+              title="Missing evidence"
+              empty="No missing evidence is reported."
+              items={model.decision.missingEvidence.map((evidence) => ({
+                key: `${evidence.type}:${evidence.summary}`,
+                label: evidence.type,
+                summary: evidence.summary,
+                badge: evidence.blocking ? "Blocking" : "Follow-up",
+                tone: evidence.blocking ? "danger" : "warn",
+              }))}
+            />
+          </div>
+        ) : (
+          <ScreenStatePanel
+            kind="partial"
+            title="Decision register is not confirmed"
+            body="The proposal source did not return a ready decision record. Approval requirements, material changes, and missing evidence remain unknown; no zero-blocker posture is inferred."
           />
-          <DecisionRegisterList
-            title="Material changes"
-            empty="No material change is reported."
-            items={model.decision.materialChanges.map((change) => ({
-              key: change.id,
-              label: change.family,
-              summary: change.summary,
-              badge: change.severity,
-              tone: change.tone,
-            }))}
-          />
-          <DecisionRegisterList
-            title="Missing evidence"
-            empty="No missing evidence is reported."
-            items={model.decision.missingEvidence.map((evidence) => ({
-              key: `${evidence.type}:${evidence.summary}`,
-              label: evidence.type,
-              summary: evidence.summary,
-              badge: evidence.blocking ? "Blocking" : "Follow-up",
-              tone: evidence.blocking ? "danger" : "warn",
-            }))}
-          />
-        </div>
+        )}
       </section>
 
       <details className={styles.provenance}>
@@ -517,9 +521,27 @@ function RiskImpactEvidence({
           </div>
           <dl className={styles.lineageList}>
             <div>
-              <dt>Support reference</dt>
+              <dt>Correlation ID</dt>
               <dd>{model.lineage.correlationId}</dd>
             </div>
+            {model.lineage.decisionSupportReference ? (
+              <div>
+                <dt>Decision support reference</dt>
+                <dd>{model.lineage.decisionSupportReference}</dd>
+              </div>
+            ) : null}
+            {model.lineage.workflowGateSupportReference ? (
+              <div>
+                <dt>Workflow gate support reference</dt>
+                <dd>{model.lineage.workflowGateSupportReference}</dd>
+              </div>
+            ) : null}
+            {model.lineage.capabilitySupportReferences.map((reference) => (
+              <div key={`${reference.key}:${reference.value}`}>
+                <dt>{reference.label}</dt>
+                <dd>{reference.value}</dd>
+              </div>
+            ))}
             <div>
               <dt>Proposal version</dt>
               <dd>{model.lineage.proposalVersionId}</dd>

@@ -531,11 +531,13 @@
   background: var(--brand);
 }
 
-@media (max-width: 1180px) {
+@container risk-workspace (max-width: 64rem) {
   .workspaceGrid {
     grid-template-columns: minmax(13.5rem, 0.54fr) minmax(0, 1.46fr);
   }
+}
 
+@container risk-evidence (max-width: 48rem) {
   .decisionBrief {
     grid-template-columns: 0.3rem minmax(0, 1fr);
   }
@@ -550,11 +552,7 @@
   }
 }
 
-@media (max-width: 960px) {
-  .workspaceGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+@container risk-evidence (max-width: 40rem) {
   .evidenceGrid,
   .provenanceBody {
     grid-template-columns: minmax(0, 1fr);

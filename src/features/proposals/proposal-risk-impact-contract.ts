@@ -259,6 +259,7 @@ export function parseProposalRiskImpactEnvelope(
   value: unknown,
   expectedProposalId: string,
   expectedPortfolioId?: string,
+  expectedVersionNo?: number,
 ): ProposalRiskImpactEnvelope {
   const envelope = record(value, "proposal risk and impact response");
   const correlationId = requiredString(
@@ -276,6 +277,12 @@ export function parseProposalRiskImpactEnvelope(
   }
   if (expectedPortfolioId && data.portfolio_id !== expectedPortfolioId) {
     invalid("portfolio_id does not match the selected portfolio");
+  }
+  if (
+    expectedVersionNo !== undefined &&
+    data.version_no !== expectedVersionNo
+  ) {
+    invalid("version_no does not match the selected proposal version");
   }
   return {
     correlation_id: correlationId,

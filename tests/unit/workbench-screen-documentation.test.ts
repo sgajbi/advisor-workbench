@@ -150,6 +150,9 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("never fans out risk-impact reads across the whole worklist");
+    expect(guide).toContain("selected proposal\n  version");
+    expect(guide).toContain("empty array as zero blockers");
+    expect(guide).toContain("correlation ID");
     expect(guide).toContain("allocation delta, mandate compliance");
     expect(guide).toContain("Container-aware reflow responds to the actual centre workspace");
     expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
