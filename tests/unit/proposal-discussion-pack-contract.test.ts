@@ -129,6 +129,54 @@ describe("proposal discussion pack contract", () => {
     ).toThrow("available report package has no source reference");
   });
 
+  it("rejects an available package that is not source-supported", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.package = {
+      state: "not_available",
+      reason_code: "report_package_not_available",
+      package_state: "available",
+      report_request_id: "report-request-2",
+      report_reference_id: "report-2",
+      generated_at: "2026-08-21T09:30:00Z",
+      related_version_no: 2,
+      includes_reviewed_narrative: true,
+      source_service: "lotus-report",
+    };
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("available report package is not source-supported");
+  });
+
+  it.each([
+    ["narrative"],
+    ["memo"],
+  ] as const)("requires a complete source audit for approved %s evidence", (key) => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data[key].reviewed_at = null;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow(`approved ${key} has no complete source review record`);
+  });
+
+  it("requires a complete source record for confirmed consent", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.consent = {
+      state: "supported",
+      reason_code: "client_consent_approved",
+      consent_state: "approved",
+      approval_id: "approval-2",
+      actor_id: null,
+      occurred_at: "2026-08-21T09:40:00Z",
+      related_version_no: 2,
+    };
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("client consent has no complete source record");
+  });
+
   it("rejects unknown closed-enum source states", () => {
     const fixture = proposalDiscussionPackFixture() as unknown as {
       data: { consent: { consent_state: string } };
