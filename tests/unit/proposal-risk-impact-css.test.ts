@@ -17,4 +17,20 @@ describe("proposal risk and impact responsive composition", () => {
     expect(css).toContain("@container risk-workspace");
     expect(css).toContain("@container risk-evidence");
   });
+
+  it("reflows reusable record facts from each item container", () => {
+    const css = readFileSync(
+      path.join(
+        process.cwd(),
+        "src/design-system/components/workbench-record-selector.module.css",
+      ),
+      "utf8",
+    );
+
+    expect(css).toContain("@container (max-width: 18rem)");
+    expect(css).not.toContain("@media (max-width:");
+    expect(css).toMatch(
+      /@container \(max-width: 18rem\)[\s\S]*?\.facts\s*\{[\s\S]*?grid-template-columns: 1fr;/,
+    );
+  });
 });

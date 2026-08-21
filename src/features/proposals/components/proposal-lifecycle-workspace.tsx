@@ -346,6 +346,10 @@ export default function ProposalLifecycleWorkspace({
       mode === "risk-impact" && Boolean(selectedRiskProposal);
     const riskVersionUnavailable =
       riskSourceActive && selectedRiskProposal?.versionNo === null;
+    const riskEvidenceIncomplete =
+      riskSourceActive &&
+      Boolean(riskImpactQuery.data) &&
+      riskImpactQuery.data?.data.overall_state !== "ready";
 
     return buildProposalQueueWorkflowContext({
       portfolioId,
@@ -368,7 +372,9 @@ export default function ProposalLifecycleWorkspace({
           (policySourcePosture.isUnavailable ||
             policyEvidenceIdentityMismatch)) ||
         (riskSourceActive &&
-          (riskImpactPosture.isUnavailable || riskVersionUnavailable)),
+          (riskImpactPosture.isUnavailable ||
+            riskVersionUnavailable ||
+            riskEvidenceIncomplete)),
       hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,
       hasSupportingEvidenceRefreshFailure:
         (policySourcesActive && policySourcePosture.hasRefreshFailure) ||
@@ -402,6 +408,7 @@ export default function ProposalLifecycleWorkspace({
     riskImpactPosture.isPermissionBlocked,
     riskImpactPosture.isRefreshing,
     riskImpactPosture.isUnavailable,
+    riskImpactQuery.data,
     selectedRiskProposal,
     sourceWindow.hasPrevious,
     sourceWindow.windowNumber,

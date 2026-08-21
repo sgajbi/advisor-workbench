@@ -518,10 +518,18 @@ describe("ProposalLifecycleWorkspace", () => {
     getProposalRiskImpactMock.mockResolvedValueOnce(envelope);
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace
-        portfolioId="PB_SG_GLOBAL_BAL_001"
-        mode="risk-impact"
-      />,
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="risk-impact"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
@@ -537,6 +545,13 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByLabelText("Asset Class allocation comparison"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Supporting evidence is incomplete",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Partial evidence")).toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
   });
 
   it("does not request evidence when the selected proposal version is missing", async () => {
