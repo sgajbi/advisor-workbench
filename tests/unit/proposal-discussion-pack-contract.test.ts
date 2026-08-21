@@ -75,6 +75,41 @@ describe("proposal discussion pack contract", () => {
     ).toThrow("capability keys are duplicated");
   });
 
+  it("rejects an incomplete capability registry", () => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data.capabilities.pop();
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow("capability registry is incomplete");
+  });
+
+  it.each([
+    ["report package", "package"],
+    ["client consent", "consent"],
+  ] as const)("rejects %s evidence for another proposal version", (label, key) => {
+    const fixture = proposalDiscussionPackFixture();
+    fixture.data[key].related_version_no = 1;
+
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+    ).toThrow(`${label} is not correlated to the selected version`);
+  });
+
+  it("requires package and consent records to identify the selected version", () => {
+    const packageFixture = proposalDiscussionPackFixture();
+    packageFixture.data.package.package_state = "available";
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(packageFixture, ...SELECTED),
+    ).toThrow("report package is not correlated to the selected version");
+
+    const consentFixture = proposalDiscussionPackFixture();
+    consentFixture.data.consent.consent_state = "approved";
+    expect(() =>
+      parseProposalDiscussionPackEnvelope(consentFixture, ...SELECTED),
+    ).toThrow("client consent is not correlated to the selected version");
+  });
+
   it("rejects unknown closed-enum source states", () => {
     const fixture = proposalDiscussionPackFixture() as unknown as {
       data: { consent: { consent_state: string } };

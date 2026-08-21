@@ -234,9 +234,44 @@ export function parseProposalDiscussionPackEnvelope(
   if (data.client_release.delivery_supported)
     invalid("client delivery cannot be presented as supported");
 
+  const packageRecordIsPresent =
+    data.package.package_state !== "not_requested" ||
+    data.package.report_request_id !== null ||
+    data.package.report_reference_id !== null ||
+    data.package.generated_at !== null;
+  if (
+    (data.package.related_version_no !== null &&
+      data.package.related_version_no !== expectedVersionNo) ||
+    (packageRecordIsPresent &&
+      data.package.related_version_no !== expectedVersionNo)
+  ) {
+    invalid("report package is not correlated to the selected version");
+  }
+  const consentRecordIsPresent =
+    data.consent.consent_state !== "not_recorded" ||
+    data.consent.approval_id !== null ||
+    data.consent.actor_id !== null ||
+    data.consent.occurred_at !== null;
+  if (
+    (data.consent.related_version_no !== null &&
+      data.consent.related_version_no !== expectedVersionNo) ||
+    (consentRecordIsPresent &&
+      data.consent.related_version_no !== expectedVersionNo)
+  ) {
+    invalid("client consent is not correlated to the selected version");
+  }
+
   const capabilityKeys = data.capabilities.map(({ key }) => key);
   if (new Set(capabilityKeys).size !== capabilityKeys.length)
     invalid("capability keys are duplicated");
+  if (
+    capabilityKeys.length !== PROPOSAL_DISCUSSION_CAPABILITY_KEYS.length ||
+    PROPOSAL_DISCUSSION_CAPABILITY_KEYS.some(
+      (requiredKey) => !capabilityKeys.includes(requiredKey),
+    )
+  ) {
+    invalid("capability registry is incomplete");
+  }
 
   return {
     correlation_id: correlationId,
