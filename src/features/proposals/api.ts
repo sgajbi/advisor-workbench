@@ -72,6 +72,10 @@ import {
   type ProposalRiskImpactEnvelope,
 } from "./proposal-risk-impact-contract";
 import {
+  parseProposalImplementationStatusEnvelope,
+  type ProposalImplementationStatusEnvelope,
+} from "./proposal-implementation-status-contract";
+import {
   fetchWorkbenchJson,
   observeWorkbenchMutation,
 } from "@/features/workbench/api-client";
@@ -827,8 +831,21 @@ export async function getProposalDeliveryEvents(
 
 export async function getProposalExecutionStatus(
   proposalId: string,
-): Promise<ProposalEnvelopeResponse> {
-  return await getProposalEnvelope(`/proposals/${proposalId}/execution-status`);
+  portfolioId: string,
+  versionNo: number,
+  currentState: string,
+): Promise<ProposalImplementationStatusEnvelope> {
+  const envelope = await fetchWorkbenchJson<unknown>(
+    `${BFF_PROXY_BASE}/proposals/${encodeURIComponent(proposalId)}/execution-status`,
+    "proposal implementation status",
+  );
+  return parseProposalImplementationStatusEnvelope(
+    envelope,
+    proposalId,
+    portfolioId,
+    versionNo,
+    currentState,
+  );
 }
 
 export async function recordProposalExecutionUpdate(
