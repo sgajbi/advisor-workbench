@@ -43,7 +43,7 @@ describe("proposal lifecycle workspace view model", () => {
       proposals,
     });
 
-    expect(model.title).toBe("Risk And Impact");
+    expect(model.title).toBe("Risk and Impact");
     expect(model.totalCount).toBe(1);
     expect(model.attentionCount).toBe(1);
     expect(model.rows).toEqual([
@@ -53,8 +53,7 @@ describe("proposal lifecycle workspace view model", () => {
         version: "Version 3",
         createdOn: "19 Aug 2026",
         nextAction: "Risk officer approval needed",
-        href:
-          "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=risk-impact",
+        href: "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=risk-impact",
       }),
     ]);
   });
@@ -73,7 +72,8 @@ describe("proposal lifecycle workspace view model", () => {
       proposalId: "PRP-READY",
       readiness: "Ready",
       nextAction: "Ready for execution handoff",
-      posture: "Source lifecycle marks this proposal ready for execution handoff.",
+      posture:
+        "Source lifecycle marks this proposal ready for execution handoff.",
     });
   });
 
@@ -86,9 +86,9 @@ describe("proposal lifecycle workspace view model", () => {
 
     expect(model.title).toBe("Discussion Pack Review");
     expect(model.totalCount).toBe(1);
-    expect(`${model.subtitle} ${model.primaryDecision} ${model.recommendedAction}`).not.toMatch(
-      /client-ready/i
-    );
+    expect(
+      `${model.subtitle} ${model.primaryDecision} ${model.recommendedAction}`,
+    ).not.toMatch(/client-ready/i);
     expect(model.rows[0]).toMatchObject({
       proposalId: "PRP-CONSENT",
       readiness: "Pending",
@@ -123,7 +123,9 @@ describe("proposal lifecycle workspace view model", () => {
 
   it("normalizes unsupported route modes to approval queue", () => {
     expect(normalizeProposalLifecycleMode("overview")).toBe("approval-queue");
-    expect(normalizeProposalLifecycleMode("proposal-builder")).toBe("approval-queue");
+    expect(normalizeProposalLifecycleMode("proposal-builder")).toBe(
+      "approval-queue",
+    );
     expect(normalizeProposalLifecycleMode("suitability")).toBe("suitability");
   });
 });

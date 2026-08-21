@@ -268,7 +268,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Risk And Impact" }),
+      await screen.findByRole("heading", { level: 2, name: "Risk and Impact" }),
     ).toBeInTheDocument();
     expect(
       await screen.findByRole("heading", {

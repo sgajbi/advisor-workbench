@@ -1,13 +1,20 @@
 .workspace {
+  container: risk-workspace / inline-size;
+  min-width: 0;
+}
+
+.workspaceGrid {
   display: grid;
-  grid-template-columns: minmax(17rem, 0.72fr) minmax(0, 1.58fr);
+  grid-template-columns: minmax(13.5rem, 0.54fr) minmax(0, 1.7fr);
   align-items: start;
   gap: 0.875rem;
   min-width: 0;
 }
 
 .decisionPane {
+  container: risk-evidence / inline-size;
   min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--border-strong);
   border-top: 3px solid var(--brand-highlight);
   border-radius: var(--radius-tile, 8px);
@@ -515,8 +522,8 @@
 }
 
 @media (max-width: 1180px) {
-  .workspace {
-    grid-template-columns: minmax(15rem, 0.62fr) minmax(0, 1.38fr);
+  .workspaceGrid {
+    grid-template-columns: minmax(13.5rem, 0.54fr) minmax(0, 1.46fr);
   }
 
   .decisionBrief {
@@ -534,7 +541,7 @@
 }
 
 @media (max-width: 960px) {
-  .workspace {
+  .workspaceGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -545,6 +552,86 @@
 
   .evidenceGrid > .analysisSection:first-child {
     border-right: 0;
+  }
+}
+
+@container risk-workspace (max-width: 38rem) {
+  .workspaceGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container risk-evidence (max-width: 32rem) {
+  .recordHeader,
+  .sectionHeading,
+  .refreshFailure,
+  .actionBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerStatus {
+    justify-content: flex-start;
+  }
+
+  .decisionBrief {
+    grid-template-columns: 0.25rem minmax(0, 1fr);
+    padding-inline: 0.875rem;
+  }
+
+  .decisionFacts {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dimensionControl,
+  .evidenceGrid,
+  .registerColumns,
+  .provenanceBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dimensionControl > span {
+    text-align: left;
+  }
+
+  .comparisonLegend {
+    display: none;
+  }
+
+  .allocationLedger li {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .allocationLedger > li > strong {
+    grid-column: 1 / -1;
+  }
+
+  .allocationSide::before {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    content: "Current";
+  }
+
+  .allocationSide.proposed::before {
+    content: "Proposed";
+  }
+
+  .evidenceGrid > .analysisSection:first-child {
+    border-right: 0;
+  }
+
+  .gateFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .primaryAction {
+    text-align: center;
   }
 }
 

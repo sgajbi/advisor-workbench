@@ -86,67 +86,69 @@ export default function ProposalRiskImpactWorkspace({
       className={styles.workspace}
       data-testid="proposal-risk-impact-workspace"
     >
-      <ProposalLifecycleWorklist
-        ariaLabel="Risk and Impact proposals"
-        rows={rows}
-        selectedProposalId={selectedProposal.proposalId}
-        onSelectProposal={setPreferredProposalId}
-      />
+      <div className={styles.workspaceGrid}>
+        <ProposalLifecycleWorklist
+          ariaLabel="Risk and Impact proposals"
+          rows={rows}
+          selectedProposalId={selectedProposal.proposalId}
+          onSelectProposal={setPreferredProposalId}
+        />
 
-      <section
-        className={styles.decisionPane}
-        aria-label="Selected proposal risk and impact"
-      >
-        <p
-          className="sr-only"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
+        <section
+          className={styles.decisionPane}
+          aria-label="Selected proposal risk and impact"
         >
-          Selected proposal: {selectedProposal.title}.
-        </p>
+          <p
+            className="sr-only"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            Selected proposal: {selectedProposal.title}.
+          </p>
 
-        {sourcePosture.isInitialLoading ? (
-          <ScreenStatePanel
-            kind="loading"
-            title="Loading proposal evidence"
-            body="Confirming current and proposed allocation, risk, and decision evidence through Gateway."
-            rows={5}
-          />
-        ) : sourcePosture.isPermissionBlocked ? (
-          <ScreenStatePanel
-            kind="permission_blocked"
-            title="Risk and impact access is not available"
-            body="Your current role cannot view the selected proposal's decision evidence. No fallback evidence is shown."
-          />
-        ) : sourcePosture.isUnavailable || !model ? (
-          <ScreenStatePanel
-            kind="error"
-            title="Risk and impact evidence is unavailable"
-            body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
-            action={
-              <SourceRefreshAction
-                ref={refreshActionRef}
-                refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
-                idleLabel="Retry source evidence"
-                busyLabel="Retrying source evidence"
-                isRefreshing={riskImpactQuery.isFetching}
-                onRefresh={refreshEvidence}
-              />
-            }
-          />
-        ) : (
-          <RiskImpactEvidence
-            key={model.identity.proposalId}
-            model={model}
-            proposalHref={selectedProposal.href}
-            refreshing={sourcePosture.isRefreshing}
-            refreshFailed={sourcePosture.hasRefreshFailure}
-            onRefresh={refreshEvidence}
-            refreshActionRef={refreshActionRef}
-          />
-        )}
-      </section>
+          {sourcePosture.isInitialLoading ? (
+            <ScreenStatePanel
+              kind="loading"
+              title="Loading proposal evidence"
+              body="Confirming current and proposed allocation, risk, and decision evidence through Gateway."
+              rows={5}
+            />
+          ) : sourcePosture.isPermissionBlocked ? (
+            <ScreenStatePanel
+              kind="permission_blocked"
+              title="Risk and impact access is not available"
+              body="Your current role cannot view the selected proposal's decision evidence. No fallback evidence is shown."
+            />
+          ) : sourcePosture.isUnavailable || !model ? (
+            <ScreenStatePanel
+              kind="error"
+              title="Risk and impact evidence is unavailable"
+              body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
+              action={
+                <SourceRefreshAction
+                  ref={refreshActionRef}
+                  refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
+                  idleLabel="Retry source evidence"
+                  busyLabel="Retrying source evidence"
+                  isRefreshing={riskImpactQuery.isFetching}
+                  onRefresh={refreshEvidence}
+                />
+              }
+            />
+          ) : (
+            <RiskImpactEvidence
+              key={model.identity.proposalId}
+              model={model}
+              proposalHref={selectedProposal.href}
+              refreshing={sourcePosture.isRefreshing}
+              refreshFailed={sourcePosture.hasRefreshFailure}
+              onRefresh={refreshEvidence}
+              refreshActionRef={refreshActionRef}
+            />
+          )}
+        </section>
+      </div>
     </div>
   );
 }
