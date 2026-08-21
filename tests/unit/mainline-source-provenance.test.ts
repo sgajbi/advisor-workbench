@@ -78,7 +78,19 @@ describe("canonical mainline source provenance", () => {
     })).toBe(true);
     expect(repositoryOriginMatchesName({
       name: "lotus-workbench",
+      originUrl: "ssh://git@github.com/sgajbi/lotus-workbench.git",
+    })).toBe(true);
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
       originUrl: "https://github.com/sgajbi/lotus-idea.git",
+    })).toBe(false);
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
+      originUrl: "https://github.com/attacker/lotus-workbench.git",
+    })).toBe(false);
+    expect(repositoryOriginMatchesName({
+      name: "lotus-workbench",
+      originUrl: "git@evil.example:other/lotus-workbench.git",
     })).toBe(false);
   });
 

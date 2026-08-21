@@ -850,7 +850,7 @@ if (-not $RunValidation) {
 }
 
 if ($RequireMainlineSources) {
-  & node $provenanceScript --projects-root $ProjectsRoot --output $mainlineSourceRuntimePath
+  & node $provenanceScript --projects-root $ProjectsRoot --workbench-repo-path $workbenchRepo --output $mainlineSourceRuntimePath
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical mainline source provenance changed during Docker startup. Validation was not started."
   }
