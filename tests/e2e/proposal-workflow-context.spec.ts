@@ -465,7 +465,11 @@ test("keeps proposal counts scoped to the current source window", async ({ page 
   await expect(page.getByText("No proposals in the approval queue")).toHaveCount(0);
   await page.getByRole("button", { name: "Next proposals" }).click();
 
-  await expect(page.getByText("Cross-asset concentration review")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Selected proposal decision" })
+      .getByRole("heading", { name: "Cross-asset concentration review" })
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "1 proposal needs attention in this view" })
   ).toBeVisible();
