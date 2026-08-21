@@ -662,6 +662,7 @@ test("withholds unlabelled source money until currency identity is refreshed", a
 
 for (const viewport of [
   { name: "desktop", width: 1440, height: 1000 },
+  { name: "compressed-desktop", width: 1280, height: 900 },
   { name: "tablet", width: 1024, height: 900 },
   { name: "zoom-200-equivalent", width: 720, height: 900 },
   { name: "narrow", width: 390, height: 844 },
@@ -690,7 +691,7 @@ for (const viewport of [
     ).toBe(true);
     await draftTitle.scrollIntoViewIfNeeded();
     const railContainer = controlRail.locator("..");
-    if (viewport.name === "desktop") {
+    if (viewport.width > 1200) {
       await expect(railContainer).toHaveCSS("position", "sticky");
       const railBox = await controlRail.boundingBox();
       expect(railBox?.y).toBeGreaterThanOrEqual(80);
@@ -713,6 +714,12 @@ for (const viewport of [
     await expect(
       page.getByRole("status", { name: "Proposal evaluation status" })
     ).toContainText("Source reference aws_browser_001");
+    const orderBlotter = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Draft Order Blotter" }),
+    }).first();
+    expect(
+      await orderBlotter.evaluate((element) => element.scrollWidth <= element.clientWidth)
+    ).toBe(true);
     await expect(page.locator('a[href*="#simulation"]')).toHaveCount(0);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
