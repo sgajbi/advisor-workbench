@@ -133,4 +133,44 @@ describe("proposal risk and impact contract", () => {
       ),
     ).toThrow(/capability registry is incomplete/);
   });
+
+  it.each([
+    [
+      "decision status",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.decision_status = null;
+      },
+    ],
+    [
+      "decision summary",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.primary_summary = null;
+      },
+    ],
+    [
+      "recommended next action",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.recommended_next_action = null;
+      },
+    ],
+    [
+      "decision confidence",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.confidence = null;
+      },
+    ],
+  ])("rejects a ready decision without %s", (_case, mutate) => {
+    const payload = proposalRiskImpactFixture();
+    mutate(payload);
+
+    expect(() =>
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ),
+    ).toThrow(/ready decision requires/);
+  });
 });

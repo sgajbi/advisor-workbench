@@ -435,6 +435,7 @@ function parseRisk(value: unknown): ProposalRiskImpactRiskEvidence {
 
 function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
   const item = record(value, "decision");
+  const state = literal(item.state, SECTION_STATES, "decision.state");
   const materialChanges = array(
     item.material_changes,
     "decision.material_changes",
@@ -443,8 +444,8 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
     materialChanges.map(({ change_id }) => change_id),
     "decision material change identifiers",
   );
-  return {
-    state: literal(item.state, SECTION_STATES, "decision.state"),
+  const decision = {
+    state,
     reason_code: requiredString(item.reason_code, "decision.reason_code"),
     source_service: literal(
       item.source_service,
@@ -511,6 +512,18 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
     ).map(parseMissingEvidence),
     evidence_refs: stringArray(item.evidence_refs, "decision.evidence_refs"),
   };
+  if (
+    state === "ready" &&
+    (!decision.decision_status ||
+      !decision.primary_summary ||
+      !decision.recommended_next_action ||
+      !decision.confidence)
+  ) {
+    invalid(
+      "ready decision requires decision_status, primary_summary, recommended_next_action, and confidence",
+    );
+  }
+  return decision;
 }
 
 function parseRequirement(value: unknown): ProposalRiskImpactRequirement {
