@@ -108,6 +108,22 @@ describe("proposal risk and impact view model", () => {
     );
   });
 
+  it("withholds every core section when aggregate evidence is unavailable", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.overall_state = "unavailable";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.supportability.label).toBe("Source evidence unavailable");
+    expect(model.decision.isAvailable).toBe(false);
+    expect(model.allocation.isAvailable).toBe(false);
+    expect(model.allocation.views).toEqual([]);
+    expect(model.risk.isAvailable).toBe(false);
+    expect(model.risk.highlights).toEqual([]);
+    expect(model.workflowGate.isAvailable).toBe(false);
+    expect(model.workflowGate.reasons).toEqual([]);
+  });
+
   it("names expected allocation dimensions that the source did not return", () => {
     const envelope = proposalRiskImpactFixture();
     envelope.data.allocation.state = "partial";
