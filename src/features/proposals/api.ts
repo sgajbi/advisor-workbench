@@ -67,7 +67,14 @@ import {
   ProposalWorkflowEventsData,
 } from "./types";
 import { parseProposalListEnvelope } from "./proposal-list-contract";
-import { observeWorkbenchMutation } from "@/features/workbench/api-client";
+import {
+  parseProposalRiskImpactEnvelope,
+  type ProposalRiskImpactData,
+} from "./proposal-risk-impact-contract";
+import {
+  fetchWorkbenchJson,
+  observeWorkbenchMutation,
+} from "@/features/workbench/api-client";
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
@@ -616,6 +623,18 @@ export async function getProposal(
   }
   const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDetailData;
+}
+
+export async function getProposalRiskImpact(
+  proposalId: string,
+  portfolioId: string,
+): Promise<ProposalRiskImpactData> {
+  const envelope = await fetchWorkbenchJson<unknown>(
+    `${BFF_PROXY_BASE}/proposals/${encodeURIComponent(proposalId)}/risk-impact`,
+    "proposal risk and impact",
+  );
+  return parseProposalRiskImpactEnvelope(envelope, proposalId, portfolioId)
+    .data;
 }
 
 export async function getProposalVersion(
@@ -1174,7 +1193,9 @@ function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
 
 function requireSelectedIdeaPortfolio(portfolioId: string) {
   if (!portfolioId.trim()) {
-    throw new Error("Select a portfolio before requesting Lotus Idea source data.");
+    throw new Error(
+      "Select a portfolio before requesting Lotus Idea source data.",
+    );
   }
 }
 
