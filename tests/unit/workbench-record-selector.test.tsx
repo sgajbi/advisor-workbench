@@ -36,6 +36,9 @@ describe("WorkbenchRecordSelector", () => {
     expect(screen.getByRole("listbox", { name: "Suitability reviews" })).toBeInTheDocument();
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(options[0]).toHaveTextContent("Selected");
+    expect(
+      options[0].querySelector("[data-workbench-record-facts]"),
+    ).toHaveTextContent("EvidenceComplete");
     expect(options[1]).toHaveAttribute("aria-selected", "false");
     expect(options[1]).toHaveTextContent("Review");
   });

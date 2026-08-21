@@ -835,8 +835,7 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
     "desktop worklist titles should remain scannable within two lines",
   ).toBeLessThanOrEqual(42);
   const desktopFactsColumns = await firstProposal
-    .getByText("Stage", { exact: true })
-    .locator("xpath=../..")
+    .locator("[data-workbench-record-facts]")
     .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
   expect(
     desktopFactsColumns.trim().split(/\s+/),
@@ -925,13 +924,18 @@ test("keeps workflow context readable without horizontal overflow at stacked-she
 }) => {
   await page.setViewportSize({ width: 1024, height: 1100 });
   await mockProposalQueue(page);
+  await mockProposalApprovalEvidence(page);
   await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
     waitUntil: "domcontentloaded",
   });
 
   await expect(
-    page.getByRole("heading", { level: 2, name: "1 need attention" }),
+    page.getByRole("heading", {
+      level: 2,
+      name: "1 decision is not approved",
+    }),
   ).toBeVisible();
+  await expect(page.getByLabel("Status Source current")).toBeVisible();
   const hasHorizontalOverflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth >
@@ -1014,6 +1018,7 @@ test("keeps proposal counts scoped to the current source window", async ({
                     proposal_id: "PRP-RISK-002",
                     portfolio_id: portfolioId,
                     current_state: "RISK_REVIEW",
+                    current_version_no: 3,
                     title: "Cross-asset concentration review",
                   },
                 ],
@@ -1049,11 +1054,9 @@ test("keeps proposal counts scoped to the current source window", async ({
       .getByRole("region", { name: "Selected proposal decision" })
       .getByRole("heading", { name: "Cross-asset concentration review" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("heading", {
-      name: "1 proposal needs attention in this view",
-    }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Proposal lifecycle counts")).toHaveText(
+    /1\s*In view\s*1\s*Not execution-ready/,
+  );
   await expect(page.getByText("Proposal view 2")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Previous proposals" }),
