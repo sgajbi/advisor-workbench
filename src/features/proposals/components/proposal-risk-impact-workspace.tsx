@@ -324,6 +324,7 @@ function RiskImpactEvidence({
                 <li key={row.key}>
                   <strong>{row.label}</strong>
                   <div className={styles.allocationSide}>
+                    <span className={styles.allocationSideLabel}>Current</span>
                     <span className={styles.allocationValue}>
                       {row.currentWeight}
                     </span>
@@ -337,6 +338,7 @@ function RiskImpactEvidence({
                   <div
                     className={`${styles.allocationSide} ${styles.proposed}`}
                   >
+                    <span className={styles.allocationSideLabel}>Proposed</span>
                     <span className={styles.allocationValue}>
                       {row.proposedWeight}
                     </span>

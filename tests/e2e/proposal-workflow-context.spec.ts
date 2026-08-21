@@ -550,6 +550,15 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
   await expect(selectedEvidence.getByText("Scenario analysis")).toBeVisible();
   await expect(selectedEvidence.getByText("Valuation as of")).toBeVisible();
 
+  const desktopTitleBox = await firstProposal
+    .getByText("Concentration risk review", { exact: true })
+    .boundingBox();
+  expect(desktopTitleBox).not.toBeNull();
+  expect(
+    desktopTitleBox?.height ?? Number.POSITIVE_INFINITY,
+    "desktop worklist titles should remain scannable within two lines",
+  ).toBeLessThanOrEqual(42);
+
   await testInfo.attach("risk-impact-decision-workspace-desktop", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
@@ -600,6 +609,24 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
         (element) => element.scrollWidth <= element.clientWidth,
       ),
     ).toBe(true);
+    if (viewport.width === 390) {
+      const [currentAmountBox, proposedAmountBox] = await Promise.all([
+        selectedEvidence
+          .getByText("USD 850,000.00 · 12 positions")
+          .boundingBox(),
+        selectedEvidence
+          .getByText("USD 775,000.00 · 13 positions")
+          .boundingBox(),
+      ]);
+      expect(currentAmountBox).not.toBeNull();
+      expect(proposedAmountBox).not.toBeNull();
+      expect(
+        proposedAmountBox?.y ?? 0,
+        "mobile allocation amounts should stack without colliding",
+      ).toBeGreaterThanOrEqual(
+        (currentAmountBox?.y ?? 0) + (currentAmountBox?.height ?? 0),
+      );
+    }
   }
 
   await testInfo.attach("risk-impact-decision-workspace-mobile", {

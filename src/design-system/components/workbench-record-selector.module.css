@@ -6,6 +6,7 @@
 
 .item {
   appearance: none;
+  container-type: inline-size;
   display: grid;
   gap: 9px;
   width: 100%;
@@ -22,6 +23,18 @@
     background-color 140ms ease,
     border-color 140ms ease,
     box-shadow 140ms ease;
+}
+
+@container (max-width: 18rem) {
+  .heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .posture {
+    justify-content: flex-start;
+  }
 }
 
 .item:hover:not([aria-disabled="true"]) {

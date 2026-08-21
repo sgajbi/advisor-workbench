@@ -262,11 +262,21 @@
 }
 
 .allocationSide {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(3.25rem, auto) minmax(4rem, 1fr);
   align-items: center;
   gap: 0.3rem 0.625rem;
   min-width: 0;
+}
+
+.allocationSideLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .allocationSide small {
@@ -608,18 +618,19 @@
     grid-column: 1 / -1;
   }
 
-  .allocationSide::before {
+  .allocationSideLabel {
+    position: static;
     grid-column: 1 / -1;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
     color: var(--text-muted);
     font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    content: "Current";
-  }
-
-  .allocationSide.proposed::before {
-    content: "Proposed";
   }
 
   .evidenceGrid > .analysisSection:first-child {
@@ -632,5 +643,15 @@
 
   .primaryAction {
     text-align: center;
+  }
+}
+
+@container risk-evidence (max-width: 24rem) {
+  .allocationLedger li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .allocationSide small {
+    overflow-wrap: anywhere;
   }
 }
