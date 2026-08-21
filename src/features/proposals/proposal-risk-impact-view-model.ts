@@ -4,6 +4,7 @@ import type {
   ProposalRiskImpactAllocationSnapshot,
   ProposalRiskImpactData,
   ProposalRiskImpactEnvelope,
+  ProposalRiskImpactOverallState,
   ProposalRiskImpactSectionState,
   ProposalRiskImpactSeverity,
 } from "./proposal-risk-impact-contract";
@@ -35,6 +36,7 @@ export function buildProposalRiskImpactModel(
   const riskIsAvailable =
     data.risk.state === "ready" || data.risk.state === "partial";
   const workflowGateIsAvailable = data.workflow_gate.state === "ready";
+  const effectiveOverallState = reconcileOverallState(data);
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
     : [];
@@ -55,12 +57,12 @@ export function buildProposalRiskImpactModel(
       recorded: formatDate(data.version_created_at),
     },
     supportability: {
-      label: supportabilityLabel(data.overall_state),
-      tone: supportabilityTone(data.overall_state),
+      label: supportabilityLabel(effectiveOverallState),
+      tone: supportabilityTone(effectiveOverallState),
       explanation:
-        data.overall_state === "ready"
+        effectiveOverallState === "ready"
           ? "Source evidence is available for the current proposal version. This is not an approval decision."
-          : data.overall_state === "partial"
+          : effectiveOverallState === "partial"
             ? "Some proposal evidence is available, but the decision record has source gaps or fallback evidence."
             : "The source does not provide enough evidence for a proposal risk decision.",
     },
@@ -205,6 +207,31 @@ export function buildProposalRiskImpactModel(
       simulationHash: data.lineage.simulation_hash ?? "Not reported",
     },
   };
+}
+
+function reconcileOverallState(
+  data: ProposalRiskImpactData,
+): ProposalRiskImpactOverallState {
+  const coreSectionStates = [
+    data.allocation.state,
+    data.risk.state,
+    data.decision.state,
+    data.workflow_gate.state,
+  ];
+  const hasUsableCoreEvidence = coreSectionStates.some(
+    (state) => state === "ready" || state === "partial",
+  );
+
+  if (data.overall_state === "unavailable" || !hasUsableCoreEvidence) {
+    return "unavailable";
+  }
+  if (
+    data.overall_state === "partial" ||
+    coreSectionStates.some((state) => state !== "ready")
+  ) {
+    return "partial";
+  }
+  return "ready";
 }
 
 function allocationRows(
