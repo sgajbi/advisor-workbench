@@ -252,6 +252,22 @@ describe("ProposalSimulateForm", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("withdraws evaluation confirmation before refreshing source portfolio evidence", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001");
+    await waitForPortfolioEvidence();
+
+    fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
+    expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    expect(screen.queryByText("Evaluation confirmed")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Advise Evaluation Summary" })
+    ).not.toBeInTheDocument();
+    await waitForPortfolioEvidence();
+  });
+
   it("applies the admitted cash assumption to proposed impact while preserving current value", async () => {
     renderForm();
     await waitForPortfolioEvidence();
