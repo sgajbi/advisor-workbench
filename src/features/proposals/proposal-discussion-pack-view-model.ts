@@ -38,11 +38,11 @@ export function buildProposalDiscussionPackModel(
           )
         ? "rejected"
         : "review-required";
-  const narrativeReviewIsRecorded = Boolean(
-    data.narrative.review_id &&
-    data.narrative.reviewed_by &&
-    data.narrative.reviewed_at,
-  );
+  const narrativeReviewIsRecorded = hasRecordedAudit({
+    id: data.narrative.review_id,
+    actor: data.narrative.reviewed_by,
+    occurredAt: data.narrative.reviewed_at,
+  });
   return {
     identity: {
       proposalId: data.proposal_id,
@@ -226,20 +226,32 @@ function narrativeControl(
       "Narrative evidence cannot be confirmed for this version.",
     );
   }
-  const approved = narrative.review_state === "APPROVED_FOR_ADVISOR_USE";
+  const reviewIsRecorded = hasRecordedAudit({
+    id: narrative.review_id,
+    actor: narrative.reviewed_by,
+    occurredAt: narrative.reviewed_at,
+  });
+  const approvalIsIncomplete =
+    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" && !reviewIsRecorded;
+  const approved =
+    narrative.review_state === "APPROVED_FOR_ADVISOR_USE" && reviewIsRecorded;
   const rejected = ["REJECTED", "REGENERATION_REQUESTED"].includes(
     narrative.review_state,
   );
   return {
     key: "narrative",
     label: "Advisor narrative",
-    status: approved
+    status: approvalIsIncomplete
+      ? "Review evidence incomplete"
+      : approved
       ? "Approved for advisor use"
       : rejected
         ? "Revision required"
         : "Review required",
     tone: approved ? "success" : rejected ? "danger" : "warn",
-    summary: approved
+    summary: approvalIsIncomplete
+      ? "The approval state has no complete source review record."
+      : approved
       ? `Reviewed ${formatDateValue(narrative.reviewed_at)}.`
       : "An advisor-use review has not been confirmed for the selected version.",
     source: "Lotus Advise",
@@ -258,20 +270,32 @@ function memoControl(
       "Memo evidence cannot be confirmed for this version.",
     );
   }
-  const approved = memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE";
+  const reviewIsRecorded = hasRecordedAudit({
+    id: memo.review_event_id,
+    actor: memo.reviewed_by,
+    occurredAt: memo.reviewed_at,
+  });
+  const approvalIsIncomplete =
+    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" && !reviewIsRecorded;
+  const approved =
+    memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" && reviewIsRecorded;
   const rejected = ["REQUEST_CHANGES", "REJECT"].includes(
     memo.latest_review_action ?? "",
   );
   return {
     key: "memo",
     label: "Advisor decision memo",
-    status: approved
+    status: approvalIsIncomplete
+      ? "Review evidence incomplete"
+      : approved
       ? "Approved for advisor use"
       : rejected
         ? "Revision required"
         : "Review required",
     tone: approved ? "success" : rejected ? "danger" : "warn",
-    summary: approved
+    summary: approvalIsIncomplete
+      ? "The approval state has no complete source review record."
+      : approved
       ? `Reviewed ${formatDateValue(memo.reviewed_at)}.`
       : "A completed advisor-use memo review has not been confirmed.",
     source: "Lotus Advise",
@@ -282,7 +306,7 @@ function packageControl(
   envelope: ProposalDiscussionPackEnvelope,
 ): ControlPresentation {
   const evidence = envelope.data.package;
-  if (evidence.state !== "supported" && evidence.state !== "not_available") {
+  if (evidence.state !== "supported") {
     return unsupportedControl(
       "package",
       "Report package",
@@ -337,6 +361,25 @@ function consentControl(
       "Current-version client consent cannot be confirmed.",
     );
   }
+  const recordIsComplete = hasRecordedAudit({
+    id: consent.approval_id,
+    actor: consent.actor_id,
+    occurredAt: consent.occurred_at,
+  });
+  if (
+    ["approved", "declined"].includes(consent.consent_state) &&
+    !recordIsComplete
+  ) {
+    return {
+      key: "consent",
+      label: "Client consent record",
+      status: "Source record incomplete",
+      tone: "warn",
+      summary:
+        "The consent state has no complete source approval, actor, and occurrence record.",
+      source: "Lotus Advise",
+    };
+  }
   const presentation = {
     approved: [
       "Recorded",
@@ -376,6 +419,18 @@ function releaseControl(
     summary: release.explanation,
     source: "Governed platform boundary",
   };
+}
+
+function hasRecordedAudit({
+  id,
+  actor,
+  occurredAt,
+}: {
+  id: string | null;
+  actor: string | null;
+  occurredAt: string | null;
+}): boolean {
+  return Boolean(id && actor && occurredAt);
 }
 
 function unsupportedControl(

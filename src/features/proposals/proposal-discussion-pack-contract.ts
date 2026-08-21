@@ -234,6 +234,21 @@ export function parseProposalDiscussionPackEnvelope(
   if (data.client_release.delivery_supported)
     invalid("client delivery cannot be presented as supported");
 
+  if (
+    data.narrative.review_state === "APPROVED_FOR_ADVISOR_USE" &&
+    (!data.narrative.review_id ||
+      !data.narrative.reviewed_by ||
+      !data.narrative.reviewed_at)
+  ) {
+    invalid("approved narrative has no complete source review record");
+  }
+  if (
+    data.memo.latest_review_action === "APPROVE_FOR_ADVISOR_USE" &&
+    (!data.memo.review_event_id || !data.memo.reviewed_by || !data.memo.reviewed_at)
+  ) {
+    invalid("approved memo has no complete source review record");
+  }
+
   const packageRecordIsPresent =
     data.package.package_state !== "not_requested" ||
     data.package.report_request_id !== null ||
@@ -253,6 +268,12 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("available report package has no source reference");
   }
+  if (
+    data.package.package_state === "available" &&
+    data.package.state !== "supported"
+  ) {
+    invalid("available report package is not source-supported");
+  }
   const consentRecordIsPresent =
     data.consent.consent_state !== "not_recorded" ||
     data.consent.approval_id !== null ||
@@ -265,6 +286,14 @@ export function parseProposalDiscussionPackEnvelope(
       data.consent.related_version_no !== expectedVersionNo)
   ) {
     invalid("client consent is not correlated to the selected version");
+  }
+  if (
+    ["approved", "declined"].includes(data.consent.consent_state) &&
+    (!data.consent.approval_id ||
+      !data.consent.actor_id ||
+      !data.consent.occurred_at)
+  ) {
+    invalid("client consent has no complete source record");
   }
 
   const capabilityKeys = data.capabilities.map(({ key }) => key);
