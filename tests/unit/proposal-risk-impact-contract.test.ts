@@ -390,6 +390,33 @@ describe("proposal risk and impact contract", () => {
     },
   );
 
+  it.each([
+    ["EXECUTION_READY", "EXECUTE"],
+    ["NONE", "NONE"],
+  ] as const)(
+    "rejects blocking approval evidence beside a ready %s gate",
+    (gate, recommendedNextStep) => {
+      const payload = proposalRiskImpactFixture();
+      payload.data.decision.decision_status = "REVISION_RECOMMENDED";
+      payload.data.decision.recommended_next_action = "REVISE_PROPOSAL";
+      payload.data.workflow_gate.gate = gate;
+      payload.data.workflow_gate.recommended_next_step = recommendedNextStep;
+      payload.data.workflow_gate.reasons = [];
+
+      expect(() =>
+        parseProposalRiskImpactEnvelope(
+          payload,
+          "PRP-RISK",
+          "PB_SG_GLOBAL_BAL_001",
+          3,
+          "RISK_REVIEW",
+        ),
+      ).toThrow(
+        /executable workflow gate cannot retain blocking decision evidence/,
+      );
+    },
+  );
+
   it("rejects an insufficient-evidence decision without a blocking gap", () => {
     const payload = proposalRiskImpactFixture();
     payload.data.decision.decision_status = "INSUFFICIENT_EVIDENCE";
