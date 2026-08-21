@@ -516,6 +516,7 @@ describe("canonical live validation script", () => {
     );
     expect(startScript).toContain("[switch]$RequireMainlineSources");
     expect(startScript).toContain("mainline-source-provenance.mjs");
+    expect(startScript).toContain("--workbench-repo-path $workbenchRepo");
     expect(startScript).toContain("No Docker build, seed, or validation was started");
     expect(startScript).toContain("docker compose up -d --build --force-recreate");
     expect(startScript).toContain("mainline-source-provenance-runtime.json");

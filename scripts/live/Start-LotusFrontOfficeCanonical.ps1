@@ -80,7 +80,7 @@ function Invoke-MainlineSourceProvenancePreflight {
   $scriptPath = Join-Path $workbenchRepo "scripts\\live\\validation\\mainline-source-provenance.mjs"
   $preflightPath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance.json"
   $runtimePath = Join-Path $mainlineProvenanceRoot "mainline-source-provenance-runtime.json"
-  & node $scriptPath --projects-root $ProjectsRoot --output $preflightPath
+  & node $scriptPath --projects-root $ProjectsRoot --workbench-repo-path $workbenchRepo --output $preflightPath
   if ($LASTEXITCODE -ne 0) {
     throw "Canonical mainline source provenance preflight failed. No Docker build, seed, or validation was started."
   }

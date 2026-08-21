@@ -32,9 +32,24 @@ export function evaluateRepository({ name, path, runGit }) {
   }
 }
 
-export function buildMainlineSourceManifest(projectsRoot, runGit) {
+export function canonicalRepositoryPath({ name, projectsRoot, workbenchRepoPath }) {
+  if (name === "lotus-workbench" && workbenchRepoPath) {
+    return workbenchRepoPath;
+  }
+  return join(projectsRoot, name);
+}
+
+export function buildMainlineSourceManifest(projectsRoot, runGit, options = {}) {
   const repositories = CANONICAL_REPOSITORIES.map((name) =>
-    evaluateRepository({ name, path: join(projectsRoot, name), runGit }),
+    evaluateRepository({
+      name,
+      path: canonicalRepositoryPath({
+        name,
+        projectsRoot,
+        workbenchRepoPath: options.workbenchRepoPath,
+      }),
+      runGit,
+    }),
   );
   return {
     schemaVersion: "lotus.canonical-front-office.mainline-source-provenance.v1",
@@ -113,9 +128,10 @@ function readArgument(name) {
 
 if (process.argv[1] && process.argv[1].endsWith("mainline-source-provenance.mjs")) {
   const projectsRoot = readArgument("--projects-root");
+  const workbenchRepoPath = readArgument("--workbench-repo-path");
   const output = readArgument("--output");
-  if (!projectsRoot || !output) throw new Error("Usage: mainline-source-provenance.mjs --projects-root <path> --output <path>");
-  const manifest = buildMainlineSourceManifest(projectsRoot, defaultRunGit);
+  if (!projectsRoot || !output) throw new Error("Usage: mainline-source-provenance.mjs --projects-root <path> [--workbench-repo-path <path>] --output <path>");
+  const manifest = buildMainlineSourceManifest(projectsRoot, defaultRunGit, { workbenchRepoPath });
   mkdirSync(dirname(output), { recursive: true });
   writeFileSync(output, `${JSON.stringify(manifest, null, 2)}\n`);
   if (!manifest.passed) {

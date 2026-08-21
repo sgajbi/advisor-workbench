@@ -15,9 +15,16 @@ export function evaluateRepository(input: {
   runGit: (path: string, args: string[]) => string;
 }): SourceRepositoryProvenance;
 
+export function canonicalRepositoryPath(input: {
+  name: string;
+  projectsRoot: string;
+  workbenchRepoPath?: string | null | undefined;
+}): string;
+
 export function buildMainlineSourceManifest(
   projectsRoot: string,
   runGit: (path: string, args: string[]) => string,
+  options?: { workbenchRepoPath?: string | null | undefined },
 ): {
   schemaVersion: string;
   proofScope: string;

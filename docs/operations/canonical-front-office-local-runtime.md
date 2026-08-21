@@ -116,6 +116,11 @@ provenance and Idea capacity-seed artifacts to a per-run Local AppData directory
 checked source worktree, so the second preflight cannot reject its own generated files. Normal and `-LocalApps` runs remain
 development evidence and must never be presented as mainline certification.
 
+When another agent owns the shared `lotus-workbench` checkout, platform automation may call the
+same preflight with `--workbench-repo-path` pointing at a clean isolated Workbench mainline worktree.
+The preflight must evaluate that supplied Workbench path while continuing to evaluate all other
+canonical repositories from the governed projects root.
+
 That script performs:
 
 1. preflight every host port required by the selected canonical mode
