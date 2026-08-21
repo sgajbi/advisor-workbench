@@ -966,23 +966,27 @@
     },
     {
       "id": "risk-and-impact",
-      "businessName": "Risk And Impact",
+      "businessName": "Risk and Impact",
       "family": "proposal",
       "routePattern": "/proposals",
       "mode": "risk-impact",
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "wikiSlug": "Risk-And-Impact-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-core", "lotus-risk"],
+      "implementationEvidence": [
+        "src/features/proposals/proposal-risk-impact-contract.ts",
+        "src/features/proposals/proposal-risk-impact-view-model.ts",
+        "src/features/proposals/components/proposal-risk-impact-workspace.tsx",
+        "src/features/proposals/components/proposal-lifecycle-worklist.tsx"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/proposal-workflow-context.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "proposal-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "discussion-pack-review",
