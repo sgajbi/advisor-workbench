@@ -1353,6 +1353,51 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() => expect(refresh).toHaveFocus());
   });
 
+  it("hides cached approval evidence when refresh reports that access was revoked", async () => {
+    getProposalApprovalsMock
+      .mockImplementationOnce(
+        async (proposalId: string) =>
+          selectedProposalEvidence(proposalId).approvals,
+      )
+      .mockRejectedValueOnce(
+        new Error("Proposal approvals failed (403): forbidden"),
+      );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    await screen.findByRole("heading", {
+      name: "1 decision is not approved",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh evidence" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Approval evidence is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Recorded approval decisions" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
+    expect(screen.getByTestId("workbench-refresh-status")).toHaveAttribute(
+      "data-state",
+      "failed",
+    );
+  });
+
   it("announces confirmation only after all selected approval sources refresh", async () => {
     let resolveApprovals:
       | ((value: ProposalApprovalsData) => void)
