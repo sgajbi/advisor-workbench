@@ -569,7 +569,9 @@ test("shows source-backed queue posture without invented advisory evidence", asy
       name: "1 decision is not approved",
     }),
   ).toBeVisible();
-  await expect(page.getByText("2 proposals in view")).toBeVisible();
+  const lifecycleCounts = page.getByLabel("Proposal lifecycle counts");
+  await expect(lifecycleCounts.getByText("2", { exact: true })).toBeVisible();
+  await expect(lifecycleCounts.getByText("In view", { exact: true })).toBeVisible();
   await expect(
     page
       .getByRole("region", { name: "Selected proposal decision" })
