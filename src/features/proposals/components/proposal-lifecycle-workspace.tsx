@@ -39,6 +39,7 @@ import {
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
 import { useProposalSourceWindow } from "../use-proposal-source-window";
 import PolicyReviewWorkspace from "./policy-review-workspace";
+import ProposalLifecycleDecisionWorkspace from "./proposal-lifecycle-decision-workspace";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
@@ -83,12 +84,13 @@ export default function ProposalLifecycleWorkspace({
   const model = useMemo(
     () =>
       buildProposalLifecycleWorkspaceModel({
+        portfolioId,
         mode,
         proposals,
         hasMoreResults: Boolean(data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
       }),
-    [data?.next_cursor, mode, proposals, sourceWindow.hasPrevious]
+    [data?.next_cursor, mode, portfolioId, proposals, sourceWindow.hasPrevious]
   );
   const policyReviewModel = useMemo(
     () => buildPolicyReviewQueueModel({ records: policyQueueQuery.data?.items ?? [] }),
@@ -318,8 +320,12 @@ export default function ProposalLifecycleWorkspace({
 
   return (
     <SectionBlock
-      title={model.title}
-      subtitle={model.subtitle}
+      title={mode === "approval-queue" ? "Review desk" : model.title}
+      subtitle={
+        mode === "approval-queue"
+          ? "Select a proposal, confirm its source posture, and continue to the full review record."
+          : model.subtitle
+      }
       actions={
         <Link
           className="nav-link"
@@ -435,6 +441,11 @@ export default function ProposalLifecycleWorkspace({
             </Link>
           }
           surface="default"
+        />
+      ) : mode === "approval-queue" ? (
+        <ProposalLifecycleDecisionWorkspace
+          key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
+          rows={model.rows}
         />
       ) : (
         <div className={styles.tableWrap}>

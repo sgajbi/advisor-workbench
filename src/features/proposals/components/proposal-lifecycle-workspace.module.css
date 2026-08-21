@@ -50,6 +50,160 @@
   text-transform: uppercase;
 }
 
+.decisionWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.worklistPane,
+.selectedProposalPane {
+  min-width: 0;
+}
+
+.worklistPane {
+  display: grid;
+  gap: 8px;
+}
+
+.selectedProposalHeader,
+.selectedProposalActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.paneHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.paneHeader h3,
+.selectedProposalHeader h3 {
+  margin: 3px 0 0;
+}
+
+.paneHeader > p {
+  max-width: none;
+  text-align: left;
+}
+
+.approvalWorklist {
+  gap: 6px;
+}
+
+.selectedProposalPane {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-top: 3px solid var(--brand-highlight);
+  border-radius: var(--radius-tile, 8px);
+  background: var(--panel);
+  box-shadow: var(--elevation-subtle);
+}
+
+.selectedProposalHeader > div {
+  min-width: 0;
+}
+
+.selectedProposalFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 6px);
+  background: var(--border);
+}
+
+.selectedProposalFacts > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px 11px;
+  background: var(--panel-alt);
+}
+
+.selectedProposalFacts dt,
+.selectedProposalDecision span {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
+.selectedProposalFacts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+}
+
+.selectedProposalDecision {
+  display: grid;
+  gap: 12px;
+}
+
+.selectedProposalDecision > div {
+  display: grid;
+  gap: 4px;
+  padding-left: 11px;
+  border-left: 3px solid var(--brand-highlight);
+}
+
+.selectedProposalDecision strong {
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.selectedProposalActions {
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.selectedProposalActions p {
+  max-width: 31rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+}
+
+.reviewProposalLink {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--brand-strong);
+  border-radius: var(--radius-control, 6px);
+  background: var(--brand-strong);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-decoration: none;
+}
+
+.reviewProposalLink:hover {
+  background: var(--brand);
+}
+
+.reviewProposalLink:focus-visible {
+  outline: 2px solid var(--brand-highlight);
+  outline-offset: 3px;
+}
+
 .tableWrap {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -115,6 +269,16 @@
   margin-top: 5px;
 }
 
+@media (max-width: 1100px) {
+  .decisionWorkspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .selectedProposalPane {
+    position: static;
+  }
+}
+
 @media (max-width: 760px) {
   .decisionPanel {
     flex-direction: column;
@@ -130,5 +294,24 @@
 
   .lifecycleTable {
     min-width: 920px;
+  }
+
+  .selectedProposalHeader,
+  .selectedProposalActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .paneHeader > p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .selectedProposalFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .reviewProposalLink {
+    text-align: center;
   }
 }

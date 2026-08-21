@@ -1,4 +1,5 @@
 import type { AdvisoryJourneyMode } from "./advisory-journey-navigation";
+import { formatDateValue } from "@/design-system/utils/financial-formatters";
 import {
   proposalNextAction,
   proposalReadinessLabel,
@@ -26,6 +27,8 @@ export type ProposalLifecycleRow = {
   readinessTone: "default" | "warn" | "success";
   nextAction: string;
   posture: string;
+  version: string;
+  createdOn: string;
   href: string;
 };
 
@@ -55,9 +58,10 @@ type ModeDefinition = {
 const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
   "approval-queue": {
     title: "Approval Queue",
-    subtitle: "Proposal drafts, maker-checker posture, and advisor-ready next actions.",
-    primaryDecision: "Which proposal needs maker-checker action first?",
-    recommendedAction: "Clear risk, compliance, and client-consent blockers before execution handoff.",
+    subtitle: "Proposal drafts, review-stage posture, and source-supported next actions.",
+    primaryDecision: "Which proposal requires review action first?",
+    recommendedAction:
+      "Open the proposal to verify approvals and supporting evidence before advancing it.",
     emptyTitle: "No proposals in the approval queue",
     emptyBody: "Create an advisor-use draft when a client objective is ready for review.",
   },
@@ -128,11 +132,13 @@ function attentionCount(rows: ProposalLifecycleRow[]): number {
 }
 
 export function buildProposalLifecycleWorkspaceModel({
+  portfolioId,
   mode,
   proposals,
   hasMoreResults = false,
   hasPreviousResults = false,
 }: {
+  portfolioId: string;
   mode: ProposalLifecycleMode;
   proposals: ProposalSummary[];
   hasMoreResults?: boolean;
@@ -148,8 +154,22 @@ export function buildProposalLifecycleWorkspaceModel({
     readiness: proposalReadinessLabel(proposal.current_state),
     readinessTone: proposalReadinessTone(proposal.current_state),
     nextAction: proposalNextAction(proposal.current_state),
-    posture: proposalStageDescription(proposal.current_state),
-    href: `/proposals/${proposal.proposal_id}`,
+    posture:
+      proposal.current_state === "EXECUTION_READY"
+        ? "Source lifecycle marks this proposal ready for execution handoff."
+        : proposalStageDescription(proposal.current_state),
+    version:
+      typeof proposal.current_version_no === "number"
+        ? `Version ${proposal.current_version_no}`
+        : "Version not reported",
+    createdOn: formatDateValue(proposal.created_at, {
+      nullDisplay: "Date not reported",
+    }),
+    href: buildProposalDetailHref({
+      proposalId: proposal.proposal_id,
+      portfolioId,
+      fromMode: mode,
+    }),
   }));
 
   const hasAdjacentResults = hasMoreResults || hasPreviousResults;
@@ -174,4 +194,29 @@ export function buildProposalLifecycleWorkspaceModel({
     attentionCount: attentionCount(rows),
     rows,
   };
+}
+
+export function buildProposalDetailHref({
+  proposalId,
+  portfolioId,
+  fromMode,
+}: {
+  proposalId: string;
+  portfolioId: string;
+  fromMode: ProposalLifecycleMode;
+}): string {
+  const query = new URLSearchParams({ portfolioId, fromMode });
+  return `/proposals/${encodeURIComponent(proposalId)}?${query.toString()}`;
+}
+
+export function buildProposalLifecycleHref({
+  portfolioId,
+  mode,
+}: {
+  portfolioId: string;
+  mode: ProposalLifecycleMode;
+}): string {
+  const query = new URLSearchParams({ portfolioId });
+  if (mode !== "approval-queue") query.set("mode", mode);
+  return `/proposals?${query.toString()}`;
 }
