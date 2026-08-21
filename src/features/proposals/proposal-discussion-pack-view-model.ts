@@ -26,6 +26,13 @@ export function buildProposalDiscussionPackModel(
   envelope: ProposalDiscussionPackEnvelope,
 ) {
   const { data } = envelope;
+  const controls = [
+    narrativeControl(envelope),
+    memoControl(envelope),
+    packageControl(envelope),
+    consentControl(envelope),
+    releaseControl(envelope),
+  ] satisfies ControlPresentation[];
   const narrativeSourceCount = data.narrative.sections.reduce(
     (count, section) => count + section.source_refs.length,
     0,
@@ -52,14 +59,8 @@ export function buildProposalDiscussionPackModel(
       versionNo: data.version_no,
       recorded: formatDateValue(data.version_created_at),
     },
-    posture: overallPosture(envelope),
-    controls: [
-      narrativeControl(envelope),
-      memoControl(envelope),
-      packageControl(envelope),
-      consentControl(envelope),
-      releaseControl(envelope),
-    ] satisfies ControlPresentation[],
+    posture: overallPosture(envelope, controls),
+    controls,
     narrative: {
       isAvailable: data.narrative.state === "supported",
       isAiAssisted: data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
@@ -105,10 +106,7 @@ export function buildProposalDiscussionPackModel(
             : {}),
         },
         clientUse: "blocked",
-        freshness: {
-          state: "current",
-          asOf: data.version_created_at,
-        },
+        freshness: { state: "not-reported" },
         limitations: [
           ...data.narrative.client_ready_blockers,
           ...data.narrative.limitations.map(({ message }) => message),
@@ -179,7 +177,10 @@ export function buildProposalDiscussionPackModel(
   };
 }
 
-function overallPosture(envelope: ProposalDiscussionPackEnvelope) {
+function overallPosture(
+  envelope: ProposalDiscussionPackEnvelope,
+  controls: ControlPresentation[],
+) {
   const { data } = envelope;
   if (data.overall_state === "partial") {
     return {
@@ -192,7 +193,10 @@ function overallPosture(envelope: ProposalDiscussionPackEnvelope) {
         "Resolve the unavailable evidence before relying on this pack in a client meeting.",
     };
   }
-  if (data.attention_required) {
+  const internalControlsConfirmed = controls
+    .filter(({ key }) => key !== "release")
+    .every(({ tone }) => tone === "success");
+  if (data.attention_required || !internalControlsConfirmed) {
     return {
       label: "Review required",
       tone: "warn" as const,

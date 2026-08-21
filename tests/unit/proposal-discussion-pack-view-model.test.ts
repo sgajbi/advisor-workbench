@@ -204,10 +204,28 @@ describe("proposal discussion pack view model", () => {
       preparation: "ai-assisted",
       availability: "live",
       clientUse: "blocked",
-      freshness: { state: "current", asOf: "2026-08-21T08:30:00Z" },
+      freshness: { state: "not-reported" },
     });
     expect(model.narrative.aiDisclosure.limitations).toContain(
       "Client-ready publication is not supported.",
     );
+  });
+
+  it("does not infer aggregate success from contradictory source flags", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.overall_state = "supported";
+    envelope.data.attention_required = false;
+    envelope.data.narrative.review_state = "DRAFT";
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.controls.find(({ key }) => key === "narrative")).toMatchObject({
+      status: "Review required",
+      tone: "warn",
+    });
+    expect(model.posture).toMatchObject({
+      label: "Review required",
+      title: "Conversation controls still need advisor attention",
+    });
   });
 });
