@@ -238,6 +238,21 @@ describe("proposal discussion pack contract", () => {
     ).toThrow("capability registry does not match source evidence");
   });
 
+  it.each(["client_release", "client_delivery"] as const)(
+    "rejects a supported %s capability claim",
+    (key) => {
+      const fixture = proposalDiscussionPackFixture();
+      const capability = fixture.data.capabilities.find(
+        (item) => item.key === key,
+      )!;
+      capability.state = "supported";
+
+      expect(() =>
+        parseProposalDiscussionPackEnvelope(fixture, ...SELECTED),
+      ).toThrow("client release and delivery capabilities must remain unsupported");
+    },
+  );
+
   it("requires a complete source record for an available report package", () => {
     const fixture = proposalDiscussionPackFixture();
     fixture.data.package = {
