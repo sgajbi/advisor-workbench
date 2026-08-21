@@ -106,6 +106,12 @@ describe("proposal risk and impact view model", () => {
     expect(model.workflowGate.gate).toBe("Gate not confirmed");
     expect(model.workflowGate.nextStep).toBe("Source next step not confirmed");
     expect(model.workflowGate.reasons).toEqual([]);
+    expect(
+      model.capabilities.find(({ key }) => key === "workflow_gate"),
+    ).toMatchObject({
+      status: "Partial source evidence",
+      tone: "warn",
+    });
   });
 
   it("withholds risk conclusions when risk evidence is unusable", () => {
