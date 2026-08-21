@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -160,7 +160,6 @@ export default function ProposalSimulateForm({
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
   const [evaluatedWorkspaceId, setEvaluatedWorkspaceId] = useState<string | null>(null);
   const [evaluatedDraftFingerprint, setEvaluatedDraftFingerprint] = useState<string | null>(null);
-  const portfolioEvidenceRevision = useRef(0);
   const [savedDraft, setSavedDraft] = useState<{
     proposalId: string;
     portfolioId: string;
@@ -346,7 +345,6 @@ export default function ProposalSimulateForm({
   }
 
   async function refreshPortfolioEvidence() {
-    portfolioEvidenceRevision.current += 1;
     setEvaluatedDraftFingerprint(null);
     await portfolioBookQuery.refetch({ cancelRefetch: true });
   }
@@ -473,14 +471,8 @@ export default function ProposalSimulateForm({
       return;
     }
     setLoading(true);
-    const evidenceRevisionAtEvaluation = portfolioEvidenceRevision.current;
     try {
       await createEvaluatedWorkspace(values);
-      if (evidenceRevisionAtEvaluation !== portfolioEvidenceRevision.current) {
-        throw new Error(
-          "Portfolio evidence changed while evaluation was running. Review the refreshed evidence and evaluate again."
-        );
-      }
       setEvaluatedDraftFingerprint(
         buildProposalDraftFingerprint({ values, cashFlows, trades })
       );
@@ -506,16 +498,10 @@ export default function ProposalSimulateForm({
       return;
     }
     const values = parsedValues.data;
-    const evidenceRevisionAtEvaluation = portfolioEvidenceRevision.current;
     setError(null);
     setSavingDraft(true);
     try {
       const evaluatedWorkspace = await createEvaluatedWorkspace(values);
-      if (evidenceRevisionAtEvaluation !== portfolioEvidenceRevision.current) {
-        throw new Error(
-          "Portfolio evidence changed while the draft was being prepared. Review the refreshed evidence and save again."
-        );
-      }
       setEvaluatedDraftFingerprint(
         buildProposalDraftFingerprint({ values, cashFlows, trades })
       );
@@ -621,6 +607,7 @@ export default function ProposalSimulateForm({
               cashCurrency={cashEvidenceCurrency}
               sourceCurrency={sourceBookCurrency}
               onRefresh={refreshPortfolioEvidence}
+              refreshBlocked={loading || savingDraft}
             />
 
             <section className={styles.panel} aria-labelledby="portfolio-context-heading">
