@@ -564,7 +564,7 @@ function RiskImpactEvidence({
               title="Approval requirements"
               empty="No active approval requirement is reported."
               items={model.decision.activeRequirements.map((requirement) => ({
-                key: `${requirement.type}:${requirement.policyVersion}`,
+                key: requirement.id,
                 label: requirement.type,
                 summary: requirement.summary,
                 badge: requirement.blocking ? "Blocking" : requirement.severity,
