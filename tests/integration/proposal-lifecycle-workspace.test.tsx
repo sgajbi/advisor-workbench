@@ -88,8 +88,7 @@ const getProposalRiskImpactMock = vi.fn(
     _portfolioId: string,
     _versionNo: number,
     _currentState: string,
-  ) =>
-    proposalRiskImpactFixture(),
+  ) => proposalRiskImpactFixture(),
 );
 const getAdvisoryPolicyReviewQueueMock = vi.fn(
   async (_filters?: { evaluationStatus?: string; portfolioId?: string }) =>
@@ -168,12 +167,7 @@ vi.mock("../../src/features/proposals/api", () => ({
     versionNo: number,
     currentState: string,
   ) =>
-    getProposalRiskImpactMock(
-      proposalId,
-      portfolioId,
-      versionNo,
-      currentState,
-    ),
+    getProposalRiskImpactMock(proposalId, portfolioId, versionNo, currentState),
   listProposals: (filters: unknown) => listProposalsMock(filters),
   recordAdvisoryPolicySignOffDecision: (
     evaluationId: string,
@@ -412,14 +406,13 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     fireEvent.click(refresh);
 
-    const refreshStatus = await screen.findByTestId(
-      "workbench-refresh-status",
-    );
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
     await waitFor(() => {
       expect(refreshStatus).toHaveAttribute("data-state", "failed");
     });
-    expect(within(refreshStatus).getByText("Source refresh failed"))
-      .toBeInTheDocument();
+    expect(
+      within(refreshStatus).getByText("Source refresh failed"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 4,
@@ -446,7 +439,9 @@ describe("ProposalLifecycleWorkspace", () => {
   });
 
   it("announces a failed retry when no cached evidence is available", async () => {
-    getProposalRiskImpactMock.mockRejectedValue(new Error("Gateway unavailable"));
+    getProposalRiskImpactMock.mockRejectedValue(
+      new Error("Gateway unavailable"),
+    );
 
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
@@ -460,14 +455,13 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     fireEvent.click(retry);
 
-    const refreshStatus = await screen.findByTestId(
-      "workbench-refresh-status",
-    );
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
     await waitFor(() => {
       expect(refreshStatus).toHaveAttribute("data-state", "failed");
     });
-    expect(within(refreshStatus).getByText("Source refresh failed"))
-      .toBeInTheDocument();
+    expect(
+      within(refreshStatus).getByText("Source refresh failed"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         name: "Risk and impact evidence is unavailable",
@@ -594,8 +588,104 @@ describe("ProposalLifecycleWorkspace", () => {
       settleRefresh?.(proposalRiskImpactFixture());
     });
     await waitFor(() => expect(nextProposal).toHaveFocus());
-    expect(screen.queryByTestId("workbench-refresh-status"))
-      .not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("workbench-refresh-status"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not let a late refresh for a prior proposal clear the current confirmation", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [
+        proposalListFixture.items[0],
+        {
+          ...proposalListFixture.items[0],
+          proposal_id: "PRP-RISK-INCOME",
+          title: "Income allocation review",
+        },
+      ],
+      next_cursor: null,
+    });
+    let settleFirstRefresh:
+      | ((value: ReturnType<typeof proposalRiskImpactFixture>) => void)
+      | undefined;
+    let settleSecondRefresh:
+      | ((value: ReturnType<typeof proposalRiskImpactFixture>) => void)
+      | undefined;
+    getProposalRiskImpactMock
+      .mockResolvedValueOnce(proposalRiskImpactFixture())
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof proposalRiskImpactFixture>>(
+            (resolve) => {
+              settleFirstRefresh = resolve;
+            },
+          ),
+      )
+      .mockImplementationOnce(async (proposalId: string) => {
+        const envelope = proposalRiskImpactFixture();
+        envelope.data.proposal_id = proposalId;
+        envelope.data.title = "Income allocation review";
+        return envelope;
+      })
+      .mockImplementationOnce(
+        async (proposalId: string) =>
+          await new Promise<ReturnType<typeof proposalRiskImpactFixture>>(
+            (resolve) => {
+              settleSecondRefresh = (value) => {
+                value.data.proposal_id = proposalId;
+                value.data.title = "Income allocation review";
+                resolve(value);
+              };
+            },
+          ),
+      );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="risk-impact"
+      />,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Refresh source evidence" }),
+    );
+    fireEvent.click(
+      screen.getByRole("option", { name: /Income allocation review/ }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        level: 3,
+        name: "Income allocation review",
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Refresh source evidence" }),
+    );
+    await act(async () => {
+      settleSecondRefresh?.(proposalRiskImpactFixture());
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("workbench-refresh-status")).toHaveAttribute(
+        "data-state",
+        "confirmed",
+      );
+    });
+    expect(screen.getByTestId("workbench-refresh-status")).toHaveTextContent(
+      "PRP-RISK-INCOME · Version 3",
+    );
+
+    await act(async () => {
+      settleFirstRefresh?.(proposalRiskImpactFixture());
+    });
+    expect(screen.getByTestId("workbench-refresh-status")).toHaveAttribute(
+      "data-state",
+      "confirmed",
+    );
+    expect(screen.getByTestId("workbench-refresh-status")).toHaveTextContent(
+      "PRP-RISK-INCOME · Version 3",
+    );
   });
 
   it("keeps a non-ready decision register explicitly unknown", async () => {
@@ -664,8 +754,9 @@ describe("ProposalLifecycleWorkspace", () => {
       .getByText("Partial source evidence")
       .closest("header");
     expect(recordHeader).not.toBeNull();
-    expect(within(recordHeader!).queryByText("Source evidence ready"))
-      .not.toBeInTheDocument();
+    expect(
+      within(recordHeader!).queryByText("Source evidence ready"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Risk evidence is not confirmed" }),
     ).toBeInTheDocument();
@@ -675,16 +766,14 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText("68%")).not.toBeInTheDocument();
-    expect(screen.queryByText("USD 850,000.00 · 12 positions"))
-      .not.toBeInTheDocument();
-    expect(screen.queryByText("Risk Review Required"))
-      .not.toBeInTheDocument();
+    expect(
+      screen.queryByText("USD 850,000.00 · 12 positions"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Risk Review Required")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Evidence scope and lineage"));
     expect(screen.getByText("Response contract")).toBeInTheDocument();
-    expect(
-      screen.getByText("proposal-risk-impact.v1"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("proposal-risk-impact.v1")).toBeInTheDocument();
     expect(screen.getByText("Allocation contract")).toBeInTheDocument();
     expect(screen.getByText("advisory-simulation.v1")).toBeInTheDocument();
     expect(screen.getByText("Allocation calculator")).toBeInTheDocument();

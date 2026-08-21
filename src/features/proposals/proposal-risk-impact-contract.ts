@@ -195,6 +195,15 @@ export type ProposalRiskImpactMissingEvidence = {
   evidence_refs: string[];
 };
 
+export function proposalRiskImpactMissingEvidenceIdentity(
+  evidence: Pick<
+    ProposalRiskImpactMissingEvidence,
+    "evidence_type" | "reason_code"
+  >,
+): string {
+  return JSON.stringify([evidence.evidence_type, evidence.reason_code]);
+}
+
 export type ProposalRiskImpactDecisionEvidence = {
   state: ProposalRiskImpactSectionState;
   reason_code: string;
@@ -216,17 +225,25 @@ export type ProposalRiskImpactDecisionEvidence = {
   evidence_refs: string[];
 };
 
+export type ProposalRiskImpactWorkflowGateReason = {
+  reason_code: string;
+  severity: ProposalRiskImpactSeverity;
+  source: (typeof GATE_REASON_SOURCES)[number];
+};
+
+export function proposalRiskImpactWorkflowGateReasonIdentity(
+  reason: ProposalRiskImpactWorkflowGateReason,
+): string {
+  return JSON.stringify([reason.source, reason.reason_code]);
+}
+
 export type ProposalRiskImpactWorkflowGate = {
   state: ProposalRiskImpactSectionState;
   reason_code: string;
   support_reference: string | null;
   gate: (typeof GATES)[number] | null;
   recommended_next_step: (typeof GATE_NEXT_STEPS)[number] | null;
-  reasons: Array<{
-    reason_code: string;
-    severity: ProposalRiskImpactSeverity;
-    source: (typeof GATE_REASON_SOURCES)[number];
-  }>;
+  reasons: ProposalRiskImpactWorkflowGateReason[];
 };
 
 export type ProposalRiskImpactCapability = {
@@ -296,7 +313,9 @@ export function parseProposalRiskImpactEnvelope(
     invalid("version_no does not match the selected proposal version");
   }
   if (data.current_state !== expectedCurrentState) {
-    invalid("current_state does not match the selected proposal lifecycle state");
+    invalid(
+      "current_state does not match the selected proposal lifecycle state",
+    );
   }
   return {
     correlation_id: correlationId,
@@ -492,6 +511,7 @@ function parseRisk(value: unknown): ProposalRiskImpactRiskEvidence {
     summary: requiredString(item.summary, "risk.summary", true),
     highlights: stringArray(item.highlights, "risk.highlights"),
   };
+  unique(risk.highlights, "risk highlight values");
   if (
     state === "ready" &&
     (!risk.source_service || risk.summary.trim().length === 0)
@@ -526,6 +546,14 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
   unique(
     materialChanges.map(({ change_id }) => change_id),
     "decision material change identifiers",
+  );
+  const missingEvidence = array(
+    item.missing_evidence,
+    "decision.missing_evidence",
+  ).map(parseMissingEvidence);
+  unique(
+    missingEvidence.map(proposalRiskImpactMissingEvidenceIdentity),
+    "missing evidence identities",
   );
   const decision = {
     state,
@@ -586,10 +614,7 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
     ),
     approval_requirements: approvalRequirements,
     material_changes: materialChanges,
-    missing_evidence: array(
-      item.missing_evidence,
-      "decision.missing_evidence",
-    ).map(parseMissingEvidence),
+    missing_evidence: missingEvidence,
     evidence_refs: stringArray(item.evidence_refs, "decision.evidence_refs"),
   };
   if (
@@ -608,7 +633,7 @@ function parseDecision(value: unknown): ProposalRiskImpactDecisionEvidence {
 
 function parseRequirement(value: unknown): ProposalRiskImpactRequirement {
   const item = record(value, "approval requirement");
-  return {
+  const requirement = {
     approval_type: literal(item.approval_type, APPROVAL_TYPES, "approval_type"),
     required: booleanValue(item.required, "approval requirement required"),
     severity: literal(
@@ -634,6 +659,10 @@ function parseRequirement(value: unknown): ProposalRiskImpactRequirement {
       "approval requirement policy_version",
     ),
   };
+  if (requirement.blocking_until_approved && !requirement.required) {
+    invalid("blocking approval requirement must be required");
+  }
+  return requirement;
 }
 
 function parseMaterialChange(value: unknown): ProposalRiskImpactMaterialChange {
@@ -673,6 +702,25 @@ function parseMissingEvidence(
 function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
   const item = record(value, "workflow gate");
   const state = literal(item.state, SECTION_STATES, "workflow_gate.state");
+  const reasons = array(item.reasons, "workflow_gate.reasons").map((value) => {
+    const reason = record(value, "workflow gate reason");
+    return {
+      reason_code: requiredString(
+        reason.reason_code,
+        "workflow gate reason_code",
+      ),
+      severity: literal(reason.severity, SEVERITIES, "workflow gate severity"),
+      source: literal(
+        reason.source,
+        GATE_REASON_SOURCES,
+        "workflow gate source",
+      ),
+    };
+  });
+  unique(
+    reasons.map(proposalRiskImpactWorkflowGateReasonIdentity),
+    "workflow gate reason identities",
+  );
   const workflowGate = {
     state,
     reason_code: requiredString(item.reason_code, "workflow_gate.reason_code"),
@@ -686,25 +734,7 @@ function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
       GATE_NEXT_STEPS,
       "workflow_gate.recommended_next_step",
     ),
-    reasons: array(item.reasons, "workflow_gate.reasons").map((value) => {
-      const reason = record(value, "workflow gate reason");
-      return {
-        reason_code: requiredString(
-          reason.reason_code,
-          "workflow gate reason_code",
-        ),
-        severity: literal(
-          reason.severity,
-          SEVERITIES,
-          "workflow gate severity",
-        ),
-        source: literal(
-          reason.source,
-          GATE_REASON_SOURCES,
-          "workflow gate source",
-        ),
-      };
-    }),
+    reasons,
   };
   if (
     state === "ready" &&

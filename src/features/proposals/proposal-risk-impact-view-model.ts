@@ -1,7 +1,9 @@
 import type { SemanticBadgeTone } from "@/design-system";
 
 import {
+  proposalRiskImpactMissingEvidenceIdentity,
   proposalRiskImpactRequirementIdentity,
+  proposalRiskImpactWorkflowGateReasonIdentity,
   type ProposalRiskImpactAllocationSnapshot,
   type ProposalRiskImpactData,
   type ProposalRiskImpactEnvelope,
@@ -51,8 +53,7 @@ export function buildProposalRiskImpactModel(
   const decisionIsAvailable = decisionState === "ready";
   const allocationIsAvailable =
     allocationState === "ready" || allocationState === "partial";
-  const riskIsAvailable =
-    riskState === "ready" || riskState === "partial";
+  const riskIsAvailable = riskState === "ready" || riskState === "partial";
   const workflowGateIsAvailable = workflowGateState === "ready";
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
@@ -128,6 +129,7 @@ export function buildProposalRiskImpactModel(
         ? data.decision.missing_evidence
         : []
       ).map((evidence) => ({
+        id: proposalRiskImpactMissingEvidenceIdentity(evidence),
         type: businessLabel(evidence.evidence_type),
         summary: evidence.summary,
         blocking: evidence.blocking,
@@ -176,22 +178,23 @@ export function buildProposalRiskImpactModel(
     workflowGate: {
       isAvailable: workflowGateIsAvailable,
       state: supportabilityPresentation(workflowGateState),
-      gate: workflowGateIsAvailable && data.workflow_gate.gate
-        ? businessLabel(data.workflow_gate.gate)
-        : "Gate not confirmed",
+      gate:
+        workflowGateIsAvailable && data.workflow_gate.gate
+          ? businessLabel(data.workflow_gate.gate)
+          : "Gate not confirmed",
       nextStep:
         workflowGateIsAvailable && data.workflow_gate.recommended_next_step
           ? businessLabel(data.workflow_gate.recommended_next_step)
           : "Source next step not confirmed",
-      reasons: (workflowGateIsAvailable
-        ? data.workflow_gate.reasons
-        : []
-      ).map((reason) => ({
-        reason: businessLabel(reason.reason_code),
-        source: businessLabel(reason.source),
-        severity: businessLabel(reason.severity),
-        tone: severityTone(reason.severity),
-      })),
+      reasons: (workflowGateIsAvailable ? data.workflow_gate.reasons : []).map(
+        (reason) => ({
+          id: proposalRiskImpactWorkflowGateReasonIdentity(reason),
+          reason: businessLabel(reason.reason_code),
+          source: businessLabel(reason.source),
+          severity: businessLabel(reason.severity),
+          tone: severityTone(reason.severity),
+        }),
+      ),
       disclaimer:
         "Workflow gate evidence controls progression. It does not prove that an approval was recorded.",
     },

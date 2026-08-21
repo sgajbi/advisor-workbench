@@ -47,7 +47,9 @@ describe("proposal risk and impact contract", () => {
         3,
         "RISK_REVIEW",
       ),
-    ).toThrow(/current_state does not match the selected proposal lifecycle state/);
+    ).toThrow(
+      /current_state does not match the selected proposal lifecycle state/,
+    );
   });
 
   it.each([
@@ -103,6 +105,44 @@ describe("proposal risk and impact contract", () => {
           ...payload.data.decision.approval_requirements[0]!,
           summary: "A second summary must not share the same source identity.",
         });
+      },
+    ],
+    [
+      "blocking approval requirement that is not required",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.decision.approval_requirements[0]!.required = false;
+      },
+    ],
+    [
+      "duplicate missing-evidence identity",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        const evidence = {
+          evidence_type: "CLIENT_CONTEXT",
+          reason_code: "CLIENT_CONTEXT_MISSING",
+          summary: "Current client context must be confirmed.",
+          blocking: true,
+          evidence_refs: [] as string[],
+        };
+        payload.data.decision.missing_evidence.push(evidence, {
+          ...evidence,
+          blocking: false,
+          summary: "Conflicting copy for the same missing-evidence source.",
+        });
+      },
+    ],
+    [
+      "duplicate workflow-gate reason identity",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.workflow_gate.reasons.push({
+          ...payload.data.workflow_gate.reasons[0]!,
+          severity: "LOW",
+        });
+      },
+    ],
+    [
+      "duplicate risk highlight",
+      (payload: ReturnType<typeof proposalRiskImpactFixture>) => {
+        payload.data.risk.highlights.push(payload.data.risk.highlights[0]!);
       },
     ],
     [
@@ -163,6 +203,36 @@ describe("proposal risk and impact contract", () => {
         3,
         "RISK_REVIEW",
       ).data.decision.approval_requirements,
+    ).toHaveLength(2);
+  });
+
+  it("keeps missing-evidence identities distinct when fields contain delimiters", () => {
+    const payload = proposalRiskImpactFixture();
+    payload.data.decision.missing_evidence = [
+      {
+        evidence_type: "client:context",
+        reason_code: "missing",
+        summary: "Current context must be confirmed.",
+        blocking: true,
+        evidence_refs: [],
+      },
+      {
+        evidence_type: "client",
+        reason_code: "context:missing",
+        summary: "Current context must be confirmed.",
+        blocking: true,
+        evidence_refs: [],
+      },
+    ];
+
+    expect(
+      parseProposalRiskImpactEnvelope(
+        payload,
+        "PRP-RISK",
+        "PB_SG_GLOBAL_BAL_001",
+        3,
+        "RISK_REVIEW",
+      ).data.decision.missing_evidence,
     ).toHaveLength(2);
   });
 
