@@ -869,18 +869,37 @@ describe("ProposalLifecycleWorkspace", () => {
   it("recovers implementation evidence when a missing proposal version becomes available", async () => {
     const { current_version_no: _currentVersionNo, ...unversionedProposal } =
       proposalListFixture.items[1];
+    let resolveRecoveredEvidence:
+      | ((value: ReturnType<typeof implementationStatusFixture>) => void)
+      | undefined;
     listProposalsMock
       .mockResolvedValueOnce({ items: [unversionedProposal], next_cursor: null })
       .mockResolvedValueOnce({
         items: [proposalListFixture.items[1]],
         next_cursor: null,
       });
+    getProposalExecutionStatusMock.mockImplementationOnce(
+      async () =>
+        await new Promise<ReturnType<typeof implementationStatusFixture>>(
+          (resolve) => {
+            resolveRecoveredEvidence = resolve;
+          },
+        ),
+    );
 
     renderWithQueryClient(
-      <ProposalLifecycleWorkspace
-        portfolioId="PB_SG_GLOBAL_BAL_001"
-        mode="implementation"
-      />,
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="implementation"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
     );
 
     expect(
@@ -890,14 +909,32 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(getProposalExecutionStatusMock).not.toHaveBeenCalled();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Recheck proposal version" }),
-    );
+    const recheck = screen.getByRole("button", {
+      name: "Recheck proposal version",
+    });
+    fireEvent.click(recheck);
 
+    const pendingRecheck = await screen.findByRole("button", {
+      name: "Rechecking proposal version…",
+    });
+    expect(pendingRecheck).toHaveAttribute("aria-disabled", "true");
     expect(
       await screen.findByRole("heading", {
-        name: "Accepted for implementation",
+        name: "Refreshing proposal evidence",
       }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Source refresh in progress")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveRecoveredEvidence?.(implementationStatusFixture("PRP-READY", 5));
+    });
+
+    expect(
+      await within(
+        screen.getByRole("region", {
+          name: "Selected proposal implementation status",
+        }),
+      ).findByRole("heading", { name: "Accepted for implementation" }),
     ).toBeInTheDocument();
     expect(getProposalExecutionStatusMock).toHaveBeenCalledWith(
       "PRP-READY",

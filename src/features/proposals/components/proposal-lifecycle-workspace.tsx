@@ -61,6 +61,12 @@ type PolicyEvidenceReviewRequest = {
   sourceEvaluationHash: string;
 };
 
+type ImplementationRefreshTransaction = {
+  generation: number;
+  scope: string;
+  state: "pending" | "failed";
+};
+
 export default function ProposalLifecycleWorkspace({
   portfolioId,
   mode,
@@ -83,6 +89,8 @@ export default function ProposalLifecycleWorkspace({
   } | null>(null);
   const implementationRefreshGenerationRef = useRef(0);
   const implementationRefreshScopeRef = useRef("");
+  const [implementationRefreshTransaction, setImplementationRefreshTransaction] =
+    useState<ImplementationRefreshTransaction | null>(null);
   const sourceWindow = useProposalSourceWindow(portfolioId);
   const proposalQueryKey = [
     "proposal-lifecycle-workspace",
@@ -219,8 +227,13 @@ export default function ProposalLifecycleWorkspace({
   }, [implementationRefreshScope]);
   const selectImplementationProposal = (proposalId: string) => {
     implementationRefreshGenerationRef.current += 1;
+    setImplementationRefreshTransaction(null);
     setSelectedImplementationProposal(proposalId);
   };
+  const implementationCompoundRefreshState =
+    implementationRefreshTransaction?.scope === implementationRefreshScope
+      ? implementationRefreshTransaction.state
+      : null;
   const policyReviewModel = useMemo(
     () =>
       buildPolicyReviewQueueModel({
@@ -569,7 +582,8 @@ export default function ProposalLifecycleWorkspace({
         (policySourcesActive && policySourcePosture.isRefreshing) ||
         (riskSourceActive && riskImpactPosture.isRefreshing) ||
         (implementationSourceActive &&
-          implementationStatusPosture.isRefreshing),
+          (implementationStatusPosture.isRefreshing ||
+            implementationCompoundRefreshState === "pending")),
       permissionBlocked: proposalSourcePosture.isPermissionBlocked,
       hasRestrictedEvidence:
         (approvalSourcesActive &&
@@ -605,7 +619,8 @@ export default function ProposalLifecycleWorkspace({
         (policySourcesActive && policySourcePosture.hasRefreshFailure) ||
         (riskSourceActive && riskImpactPosture.hasRefreshFailure) ||
         (implementationSourceActive &&
-          implementationStatusPosture.hasRefreshFailure),
+          (implementationStatusPosture.hasRefreshFailure ||
+            implementationCompoundRefreshState === "failed")),
       hasMoreResults: Boolean(data?.next_cursor),
       hasPreviousResults: sourceWindow.hasPrevious,
       windowNumber: sourceWindow.windowNumber,
@@ -630,6 +645,7 @@ export default function ProposalLifecycleWorkspace({
     implementationStatusPosture.isPermissionBlocked,
     implementationStatusPosture.isRefreshing,
     implementationStatusPosture.isUnavailable,
+    implementationCompoundRefreshState,
     implementationStatusQuery.data,
     mode,
     model,
@@ -660,6 +676,60 @@ export default function ProposalLifecycleWorkspace({
     sourceWindow.windowNumber,
   ]);
   usePublishProposalWorkflowContext(workflowContextModel);
+
+  async function refreshImplementationStatus() {
+    const refreshGeneration = ++implementationRefreshGenerationRef.current;
+    const refreshScope = implementationRefreshScope;
+    setImplementationRefreshTransaction({
+      generation: refreshGeneration,
+      scope: refreshScope,
+      state: "pending",
+    });
+
+    try {
+      const refreshedWindow = await readProposalWindow();
+      const refreshedModel = buildProposalLifecycleWorkspaceModel({
+        portfolioId,
+        mode,
+        proposals: refreshedWindow.items,
+        hasMoreResults: Boolean(refreshedWindow.next_cursor),
+        hasPreviousResults: sourceWindow.hasPrevious,
+      });
+      const refreshedProposal = refreshedModel.rows.find(
+        (row) =>
+          row.proposalId === selectedImplementationProposal?.proposalId,
+      );
+      if (!refreshedProposal || refreshedProposal.versionNo === null) {
+        throw new Error(
+          "The selected proposal is no longer available for implementation follow-up.",
+        );
+      }
+      const refreshedEvidence = await refreshImplementationStatusForProposal(
+        refreshedProposal,
+      );
+      const transactionIsCurrent =
+        implementationRefreshGenerationRef.current === refreshGeneration &&
+        implementationRefreshScopeRef.current === refreshScope;
+      setImplementationRefreshTransaction((current) =>
+        current?.generation === refreshGeneration ? null : current,
+      );
+      if (!transactionIsCurrent) return refreshedEvidence;
+      queryClient.setQueryData(proposalQueryKey, refreshedWindow);
+      return refreshedEvidence;
+    } catch (error) {
+      const transactionIsCurrent =
+        implementationRefreshGenerationRef.current === refreshGeneration &&
+        implementationRefreshScopeRef.current === refreshScope;
+      setImplementationRefreshTransaction((current) =>
+        current?.generation === refreshGeneration
+          ? transactionIsCurrent
+            ? { ...current, state: "failed" }
+            : null
+          : current,
+      );
+      throw error;
+    }
+  }
 
   if (isLoading) {
     return (
@@ -945,45 +1015,17 @@ export default function ProposalLifecycleWorkspace({
           onSelectProposal={selectImplementationProposal}
           evidence={implementationStatusQuery.data ?? null}
           isLoading={implementationStatusPosture.isInitialLoading}
-          isRefreshing={implementationStatusPosture.isRefreshing}
+          isRefreshing={
+            implementationStatusPosture.isRefreshing ||
+            implementationCompoundRefreshState === "pending"
+          }
           isPermissionBlocked={implementationStatusPosture.isPermissionBlocked}
           hasError={implementationStatusPosture.isUnavailable}
-          hasRefreshFailure={implementationStatusPosture.hasRefreshFailure}
-          onRefresh={async () => {
-            const refreshGeneration =
-              ++implementationRefreshGenerationRef.current;
-            const refreshScope = implementationRefreshScope;
-            const refreshedWindow = await readProposalWindow();
-            const refreshedModel = buildProposalLifecycleWorkspaceModel({
-              portfolioId,
-              mode,
-              proposals: refreshedWindow.items,
-              hasMoreResults: Boolean(refreshedWindow.next_cursor),
-              hasPreviousResults: sourceWindow.hasPrevious,
-            });
-            const refreshedProposal = refreshedModel.rows.find(
-              (row) =>
-                row.proposalId === selectedImplementationProposal?.proposalId,
-            );
-            if (!refreshedProposal || refreshedProposal.versionNo === null) {
-              throw new Error(
-                "The selected proposal is no longer available for implementation follow-up.",
-              );
-            }
-            const refreshedEvidence =
-              await refreshImplementationStatusForProposal(
-                refreshedProposal,
-              );
-            if (
-              implementationRefreshGenerationRef.current !==
-                refreshGeneration ||
-              implementationRefreshScopeRef.current !== refreshScope
-            ) {
-              return refreshedEvidence;
-            }
-            queryClient.setQueryData(proposalQueryKey, refreshedWindow);
-            return refreshedEvidence;
-          }}
+          hasRefreshFailure={
+            implementationStatusPosture.hasRefreshFailure ||
+            implementationCompoundRefreshState === "failed"
+          }
+          onRefresh={refreshImplementationStatus}
         />
       ) : (
         <div className={styles.tableWrap}>
