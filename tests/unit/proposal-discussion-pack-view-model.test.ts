@@ -262,7 +262,7 @@ describe("proposal discussion pack view model", () => {
     expect(model.narrative.isAvailable).toBe(false);
     expect(model.narrative.aiDisclosure).toMatchObject({
       availability: "unavailable",
-      humanReview: { state: "review-required", sourceRecorded: true },
+      humanReview: { state: "unavailable", sourceRecorded: false },
     });
     expect(model.controls.find(({ key }) => key === "narrative")).toMatchObject({
       status: "Review evidence incomplete",
@@ -322,4 +322,47 @@ describe("proposal discussion pack view model", () => {
       ).toBeNull();
     },
   );
+
+  it("redacts retained narrative provenance when source evidence is restricted", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.narrative.state = "restricted";
+    envelope.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.narrative).toMatchObject({
+      isAvailable: false,
+      isAiAssisted: false,
+      generationLabel: "Restricted",
+      sections: [],
+      reviewedBy: "Not available",
+      reviewedAt: "Not available",
+    });
+    expect(model.narrative.aiDisclosure).toMatchObject({
+      preparation: "unavailable",
+      availability: "unavailable",
+      evidence: { state: "missing", sourceCount: 0 },
+      humanReview: { state: "unavailable", sourceRecorded: false },
+    });
+    expect(model.narrative.aiDisclosure.humanReview).not.toHaveProperty("actor");
+    expect(model.narrative.aiDisclosure.humanReview).not.toHaveProperty(
+      "occurredAt",
+    );
+  });
+
+  it("replaces retained memo readiness with its restricted support posture", () => {
+    const envelope = proposalDiscussionPackFixture();
+    envelope.data.memo.state = "restricted";
+    envelope.data.memo.memo_status = "READY";
+
+    const model = buildProposalDiscussionPackModel(envelope);
+
+    expect(model.memo).toMatchObject({
+      isAvailable: false,
+      status: "Restricted",
+      reviewedBy: "Not available",
+      reviewedAt: "Not available",
+      sections: [],
+    });
+  });
 });
