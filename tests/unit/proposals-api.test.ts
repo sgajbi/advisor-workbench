@@ -1200,7 +1200,6 @@ describe("proposal api", () => {
       },
       "idem-execution-handoff-1",
     );
-    await getProposalExecutionStatus("pp_1");
     await recordProposalExecutionUpdate(
       "pp_1",
       { body: { handoff_status: "PARTIALLY_EXECUTED" } },
@@ -1244,9 +1243,6 @@ describe("proposal api", () => {
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      `${expectedBaseUrl}/proposals/pp_1/execution-status`,
-    );
-    expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/execution-updates`,
       expect.objectContaining({
         method: "POST",
@@ -1254,6 +1250,35 @@ describe("proposal api", () => {
           "Idempotency-Key": "idem-execution-update-1",
         }),
       }),
+    );
+  });
+
+  it("parses the Gateway implementation-status contract for the selected proposal", async () => {
+    const { proposalImplementationStatusFixture } =
+      await import("../fixtures/proposal-implementation-status");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(proposalImplementationStatusFixture()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
+    );
+
+    const result = await getProposalExecutionStatus(
+      "PRP-IMPLEMENT",
+      "PB_SG_GLOBAL_BAL_001",
+      3,
+      "EXECUTION_READY",
+    );
+
+    expect(result.contract_version).toBe("proposal-implementation-status.v1");
+    expect(result.data.handoff_status).toBe("ACCEPTED");
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/PRP-IMPLEMENT/execution-status`,
+      expect.objectContaining({ cache: "no-store" }),
     );
   });
 
