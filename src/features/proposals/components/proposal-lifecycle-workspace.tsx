@@ -351,7 +351,13 @@ export default function ProposalLifecycleWorkspace({
     const riskEvidenceIncomplete =
       riskSourceActive &&
       Boolean(riskImpactQuery.data) &&
-      riskImpactQuery.data?.data.overall_state !== "ready";
+      [
+        riskImpactQuery.data?.data.overall_state,
+        riskImpactQuery.data?.data.allocation.state,
+        riskImpactQuery.data?.data.risk.state,
+        riskImpactQuery.data?.data.decision.state,
+        riskImpactQuery.data?.data.workflow_gate.state,
+      ].some((state) => state !== "ready");
 
     return buildProposalQueueWorkflowContext({
       portfolioId,
@@ -365,16 +371,21 @@ export default function ProposalLifecycleWorkspace({
         (policySourcesActive && policySourcePosture.isRefreshing) ||
         (riskSourceActive && riskImpactPosture.isRefreshing),
       permissionBlocked:
-        proposalSourcePosture.isPermissionBlocked ||
+        proposalSourcePosture.isPermissionBlocked,
+      hasRestrictedEvidence:
         (policySourcesActive && policySourcePosture.isPermissionBlocked) ||
         (riskSourceActive && riskImpactPosture.isPermissionBlocked),
-      hasError: proposalSourcePosture.isUnavailable,
+      hasError:
+        proposalSourcePosture.isUnavailable &&
+        !proposalSourcePosture.isPermissionBlocked,
       hasUnavailableEvidence:
         (policySourcesActive &&
-          (policySourcePosture.isUnavailable ||
+          ((policySourcePosture.isUnavailable &&
+            !policySourcePosture.isPermissionBlocked) ||
             policyEvidenceIdentityMismatch)) ||
         (riskSourceActive &&
-          (riskImpactPosture.isUnavailable ||
+          ((riskImpactPosture.isUnavailable &&
+            !riskImpactPosture.isPermissionBlocked) ||
             riskVersionUnavailable ||
             riskEvidenceIncomplete)),
       hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,

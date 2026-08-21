@@ -88,6 +88,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
         isLoading: sourcePosture.isInitialLoading,
         isRefreshing: sourcePosture.isRefreshing,
         permissionBlocked: sourcePosture.isPermissionBlocked,
+        hasRestrictedEvidence: false,
         hasError: sourcePosture.isUnavailable,
         hasUnavailableEvidence: false,
         hasProposalRefreshFailure: sourcePosture.hasRefreshFailure,

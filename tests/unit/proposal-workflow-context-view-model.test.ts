@@ -13,6 +13,7 @@ const baseQueueInput = {
   isLoading: false,
   isRefreshing: false,
   permissionBlocked: false,
+  hasRestrictedEvidence: false,
   hasError: false,
   hasUnavailableEvidence: false,
   hasProposalRefreshFailure: false,
@@ -216,5 +217,20 @@ describe("proposal workflow context view model", () => {
 
     expect(model.nextAction).toContain("supporting decision evidence");
     expect(model.nextAction).not.toMatch(/policy|suitability/i);
+  });
+
+  it("keeps selected evidence restriction distinct from portfolio workflow access", () => {
+    const model = buildProposalQueueWorkflowContext({
+      ...baseQueueInput,
+      hasRestrictedEvidence: true,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Supporting evidence is restricted");
+    expect(model.currentPosture).toBe("2 proposals in current view");
+    expect(model.nextAction).toContain("required supporting decision evidence");
+    expect(`${model.summary} ${model.blockers.join(" ")}`).not.toMatch(
+      /portfolio's entire|workflow details are hidden/i,
+    );
   });
 });
