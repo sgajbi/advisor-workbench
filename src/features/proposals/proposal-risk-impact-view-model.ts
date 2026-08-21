@@ -51,9 +51,10 @@ export function buildProposalRiskImpactModel(
     data.workflow_gate.state,
   );
   const decisionIsAvailable = decisionState === "ready";
-  const effectiveWorkflowGateState = decisionIsAvailable
-    ? workflowGateState
-    : decisionState;
+  const effectiveWorkflowGateState =
+    workflowGateState === "ready" && !decisionIsAvailable
+      ? decisionState
+      : workflowGateState;
   const allocationIsAvailable =
     allocationState === "ready" || allocationState === "partial";
   const riskIsAvailable = riskState === "ready" || riskState === "partial";

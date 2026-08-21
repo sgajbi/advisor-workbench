@@ -114,6 +114,25 @@ describe("proposal risk and impact view model", () => {
     });
   });
 
+  it("preserves the gate's own unavailable state when the decision is partial", () => {
+    const envelope = proposalRiskImpactFixture();
+    envelope.data.overall_state = "partial";
+    envelope.data.decision.state = "partial";
+    envelope.data.workflow_gate.state = "unavailable";
+
+    const model = buildProposalRiskImpactModel(envelope);
+
+    expect(model.workflowGate.isAvailable).toBe(false);
+    expect(model.workflowGate.state.label).toBe("Source evidence unavailable");
+    expect(model.workflowGate.gate).toBe("Gate not confirmed");
+    expect(
+      model.capabilities.find(({ key }) => key === "workflow_gate"),
+    ).toMatchObject({
+      status: "Source evidence unavailable",
+      tone: "danger",
+    });
+  });
+
   it("withholds risk conclusions when risk evidence is unusable", () => {
     const envelope = proposalRiskImpactFixture();
     envelope.data.risk.state = "not_supported";
