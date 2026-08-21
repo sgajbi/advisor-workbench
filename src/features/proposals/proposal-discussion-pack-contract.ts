@@ -381,6 +381,12 @@ export function parseProposalDiscussionPackEnvelope(
   ) {
     invalid("capability registry does not match source evidence");
   }
+  if (
+    capabilityStates.get("client_release") === "supported" ||
+    capabilityStates.get("client_delivery") === "supported"
+  ) {
+    invalid("client release and delivery capabilities must remain unsupported");
+  }
 
   return {
     correlation_id: correlationId,
