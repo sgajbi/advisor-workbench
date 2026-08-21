@@ -564,11 +564,19 @@ test("shows source-backed queue posture without invented advisory evidence", asy
     page.getByRole("heading", { level: 1, name: "Approval Queue" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { level: 2, name: "1 need attention" }),
+    page.getByRole("heading", {
+      level: 2,
+      name: "1 decision is not approved",
+    }),
   ).toBeVisible();
   await expect(page.getByText("2 proposals in view")).toBeVisible();
   await expect(
-    page.getByText("1 proposal needs advisor action."),
+    page
+      .getByRole("region", { name: "Selected proposal decision" })
+      .getByText("Approval exception"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("1 recorded approval decision is not approved."),
   ).toBeVisible();
   await expect(page.getByText("Advisory proposal lifecycle")).toBeVisible();
 
