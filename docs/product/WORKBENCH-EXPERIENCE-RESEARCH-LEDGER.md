@@ -5,6 +5,52 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Discussion Pack Review: source-backed conversation preparation
+
+### Business job
+
+A client advisor must prepare one selected proposal conversation without confusing internal
+advisor-use content, report preparation, client consent, or lifecycle position with authority to
+publish, deliver, or contact the client. The worklist must remain dense and keyboard-operable while
+the selected record gives the controls and evidence needed for the next governed decision.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-21 from official BlackRock Aladdin Wealth proposal-generation,
+Avaloq client-management, Temenos Wealth Management, and WCAG 2.2 sources. The common applicable
+pattern is a connected proposal-to-conversation journey with source-owned suitability, narrative,
+compliance, and document evidence; responsive reflow, visible focus, and programmatic status remain
+baseline requirements. The research informs workflow principles, not competitor imitation or a
+claim of bank approval.
+
+### Adopted
+
+- Keep a bounded worklist before one selected decision desk; request selected evidence only.
+- Separate advisor narrative, advisor memo, report package, client consent, and client
+  release/delivery as five independent source controls.
+- Use a full-width selected desk inside the constrained three-rail Workbench canvas and the shared
+  grid selector for dense identity-first scanning.
+- Put supporting narrative, disclosure, limitation, capability, and lineage detail behind a clear
+  business hierarchy while retaining exact source evidence.
+- Reconcile the refreshed worklist version with the selected source contract before announcing
+  success; preserve explicit failure and focus continuity.
+
+### Rejected
+
+- Decorative card dashboards, inferred conversation readiness, or client-release actions.
+- N+1 evidence reads across the proposal list; invented owner, SLA, priority, client, or whole-book
+  totals; and direct browser calls to Advise or Report.
+- Treating AI-assisted text as advice, approval, suitability, or client-ready content.
+- A new UI framework, page-global CSS, or a one-off selector when a reusable Workbench pattern fits.
+
+### Implementation and validation
+
+Workbench #749 consumes Gateway #559's `proposal-discussion-pack-review.v1` projection, validates
+identity and client-release boundaries, and delivers the selected-record workspace, strict states,
+context-preserving detail handoff, screen guide, focused tests, and optimized production-browser
+proof at 1440/1280/1024/720/390. Canonical populated proof remains separately governed and must not
+be inferred from mocked browser evidence.
+
 ## Approval Queue: exception-led selected-record review
 
 ### Business job

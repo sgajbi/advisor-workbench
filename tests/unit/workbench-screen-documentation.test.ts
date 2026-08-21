@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 22,
-      coverageExceptions: 14,
-      unmappedGuides: 14,
+      mappedGuides: 23,
+      coverageExceptions: 13,
+      unmappedGuides: 13,
     });
   });
 
@@ -235,6 +235,42 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("does not prove fill completeness, settlement");
     expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Discussion Pack Review to independent conversation and release controls", () => {
+    const registry = loadRegistry();
+    const discussionPack = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "discussion-pack-review",
+    );
+
+    expect(discussionPack).toMatchObject({
+      businessName: "Discussion Pack Review",
+      routePattern: "/proposals",
+      mode: "discussion-pack",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Discussion-Pack-Review-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise", "lotus-report"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/proposal-discussion-pack-contract.ts",
+        "src/features/proposals/components/proposal-discussion-pack-workspace.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Discussion-Pack-Review-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("five independent controls");
+    expect(guide).toContain("never fans out discussion-pack reads across the\nworklist");
+    expect(guide).toContain("AI-assisted draft");
+    expect(guide).toContain("There is no publish, release, deliver, contact-client");
+    expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

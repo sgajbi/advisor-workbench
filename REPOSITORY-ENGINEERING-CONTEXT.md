@@ -603,6 +603,18 @@ Current repository posture:
     across an unversioned-to-versioned recovery for the same selected proposal. Do
     not mutate implementation status or invent owner, SLA, priority, order, fill, allocation,
     settlement, custody, or accounting completion.
+    Discussion Pack Review is source-backed conversation preparation, not a lifecycle label. Its
+    worklist requests `AWAITING_CLIENT_CONSENT` through Gateway and reads
+    `proposal-discussion-pack-review.v1` for one selected proposal/version only. Keep advisor
+    narrative, advisor memo, report-package preparation, client consent, and client
+    release/delivery as independent controls; an advisor-use artefact, package reference, consent
+    record, or empty blocker list must never be promoted into client-release authority. Advise owns
+    proposal, narrative, memo, policy, review, and consent evidence; Report owns the named package
+    evidence; Gateway owns the strict experience projection. Label AI-assisted generation as
+    provenance, not advice or approval. Confirm refresh only after the bounded worklist and exact
+    selected evidence reconcile, fence stale selection/scope completions, preserve prior confirmed
+    evidence under explicit refresh failure, and do not add publish, release, deliver,
+    contact-client, consent, report-generation, or approval mutations to the screen.
 21. Portfolio Income & Activity treats Gateway activity summary amounts as positive magnitudes.
     Workbench derives cash direction from the canonical bucket identity: `INFLOWS` increase cash,
     while `OUTFLOWS`, `FEES`, and `TAXES` reduce cash. Unknown buckets remain visible but must be
