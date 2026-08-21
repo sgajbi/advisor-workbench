@@ -14,10 +14,12 @@ function git(repoPath, args, runGit) {
 
 export function repositoryOriginMatchesName({ name, originUrl }) {
   const normalizedOrigin = originUrl.trim().toLowerCase().replace(/\.git$/, "");
-  return (
-    normalizedOrigin.endsWith(`/${name.toLowerCase()}`) ||
-    normalizedOrigin.endsWith(`:${name.toLowerCase()}`)
-  );
+  const normalizedName = name.toLowerCase();
+  return [
+    `https://github.com/sgajbi/${normalizedName}`,
+    `git@github.com:sgajbi/${normalizedName}`,
+    `ssh://git@github.com/sgajbi/${normalizedName}`,
+  ].includes(normalizedOrigin);
 }
 
 export function evaluateRepository({ name, path, runGit }) {
