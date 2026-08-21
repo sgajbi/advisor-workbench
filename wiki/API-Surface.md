@@ -299,6 +299,11 @@ promote dormant labels into product ownership just because historical route file
   Canonical validation creates a Gateway-backed proposal with an advisor-review
   `narrative_request`, records advisor-use review, requests reviewed report packaging, and captures
   `proposal-narrative-posture-live.png` under the governed Workbench proof bundle.
+- Approval Queue reads one cursor-bounded `GET /api/v1/proposals` window through the Workbench BFF.
+  For the selected proposal only, it composes
+  `GET /api/v1/proposals/{proposal_id}?include_evidence=true`,
+  `/workflow-events`, `/approvals`, and `/lineage` as one maker-checker evidence set. The browser
+  does not fan these record reads across the visible worklist or infer approval from list state.
 - Proposal Detail presents one decision-first review workspace over the existing Gateway contracts:
   identity and lifecycle lead to the next action, proposed changes, allocation impact, and review
   gates; Narrative and Memo are peer advisor-review modes; and version, lineage, replay, and review

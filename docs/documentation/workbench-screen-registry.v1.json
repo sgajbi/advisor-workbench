@@ -419,16 +419,22 @@
       "fragment": null,
       "surfaceClassification": "active-screen",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/features/proposals/components/proposal-detail-view.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "wikiSlug": "Proposal-Detail-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-report", "lotus-ai"],
+      "implementationEvidence": [
+        "src/features/proposals/components/proposal-detail-view.tsx",
+        "src/features/proposals/components/proposal-detail-domain-panels.tsx",
+        "src/features/proposals/components/proposal-narrative-posture-panel.tsx",
+        "src/features/proposals/components/proposal-memo-posture-panel.tsx",
+        "src/features/proposals/proposal-action-evidence.ts"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/proposal-workflow-context.spec.ts",
+        "tests/e2e/proposal-memo-posture.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "proposal-guides",
-        "reason": "Dedicated business screen guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "performance-summary",

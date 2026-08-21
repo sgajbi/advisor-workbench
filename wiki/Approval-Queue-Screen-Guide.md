@@ -12,8 +12,8 @@ advisor opens the full evidence and action record.
 | Canonical route | `/proposals?portfolioId={portfolio_id}`; `mode=approval-queue` is equivalent |
 | Navigation | Direct bounded route; the global **Proposal** workspace remains capability-disabled |
 | Supported scope | One selected portfolio and one cursor-bounded Gateway proposal window |
-| Evidence posture | Gateway-backed Advise proposal summaries; detailed approval and evidence posture remains in Proposal Detail |
-| Primary next action | Select a proposal, understand its source stage, then open the full review |
+| Evidence posture | Gateway-backed proposal summaries plus selected-only detail, workflow, approval-register, and active-version lineage evidence |
+| Primary next action | Select a proposal, resolve any source-backed approval exception, then open the governed full review |
 
 The number shown is **in this view**, not a whole book, client, household, or global approval-queue
 total. A visible lifecycle stage does not itself prove suitability, approval, client consent,
@@ -24,9 +24,9 @@ publication, execution, or production entitlement.
 Approval Queue helps an advisor answer four questions without opening every proposal:
 
 1. Which proposals are present in the current source window?
-2. Which visible proposal is not yet ready for downstream handoff?
-3. What source stage, version, recorded date, posture, and next action belong to the selected item?
-4. Which full proposal record must be opened to verify approvals and supporting evidence?
+2. What maker-checker evidence is recorded for the selected proposal?
+3. Do proposal identity, workflow state, approval register, and active-version lineage agree?
+4. Which exception or next business action requires the full proposal record?
 
 At wide desktop widths the worklist and selected proposal remain visible together. The worklist
 stacks before the decision pane on tablet, narrow, and zoomed layouts so selection always precedes
@@ -51,11 +51,12 @@ These roles describe business use, not authenticated production entitlement.
    [Advisory Overview](Advisory-Overview-Screen-Guide), or
    [Proposal Builder](Proposal-Builder-Screen-Guide).
 2. Confirm the portfolio and current source-window posture in the page and workflow context.
-3. Review the visible **In view** and **Need action** measures.
+3. Review the visible **In view** and **Not execution-ready** measures. These are lifecycle-window
+   orientation, not approval counts.
 4. Move through proposals with pointer or Up/Down/Home/End keys.
-5. Read the selected proposal's source stage, readiness, version, recorded date, current posture,
-   and next business action.
-6. Select **Open proposal review** to inspect source-owned changes, impact, review gates,
+5. Read the selected proposal's source stage, version, creator-record posture, recorded date,
+   approval register, workflow evidence, active-version lineage, and next business action.
+6. Select **Open full proposal review** to inspect source-owned changes, impact, review gates,
    approvals, lineage, narrative, memo, and permitted actions.
 7. Use **Return to Approval Queue** to restore the originating portfolio and worklist context.
 8. Continue through later lifecycle modes only when their own source evidence supports that task.
@@ -75,8 +76,15 @@ These roles describe business use, not authenticated production entitlement.
 - Keeps proposal count and attention posture explicitly scoped to the current source window.
 - Provides previous and next source-window navigation without claiming global completeness.
 - Shows a keyboard-operable single-record worklist with visible selected state.
-- Presents source-supported proposal title, identity, lifecycle stage, derived readiness, active
-  version, recorded date, posture, and next action where supplied.
+- Presents source-supported proposal title, identity, lifecycle stage, active version,
+  creator-record posture, recorded date, and bounded next action where supplied.
+- Loads detail, workflow, approval records, and lineage for the selected proposal only; it does not
+  fan detail requests across the visible worklist.
+- Derives maker-checker posture from the complete selected evidence set, not lifecycle stage.
+- Hides approval records when proposal identity, workflow state, or active-version lineage conflicts.
+- Treats an empty approval register as unconfirmed requirements, never as approval not required.
+- Keeps prior confirmed evidence under its prior context when refresh fails, and announces success
+  only after every selected source refresh succeeds.
 - Keeps the selected decision pane beside the worklist at desktop and after it at compact widths.
 - Preserves portfolio and originating lifecycle mode when entering Proposal Detail.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;
@@ -92,19 +100,21 @@ These roles describe business use, not authenticated production entitlement.
 | Select a proposal | Proposal is present in the current source window | None; changes the visible decision context only |
 | Move to next or previous proposal window | Source supplies a cursor or a prior window is retained | None; reads another bounded Gateway window |
 | Build Proposal | Selected portfolio context | Opens Proposal Builder; nothing is approved or executed |
-| Open proposal review | Selected proposal identity and supported detail route | None; opens the full source-backed review record |
+| Refresh evidence | Selected proposal identity and the four Gateway-backed evidence reads | None; replaces posture only after the complete refresh succeeds |
+| Open full proposal review | Selected proposal identity and supported detail route | None; opens the full source-backed review record |
 | Return to Approval Queue | Source proposal portfolio where available, otherwise bounded route context | None; restores the originating queue route |
 
 ## Information And Source Authority
 
 | Business fact | Workbench presentation | Source authority |
 | --- | --- | --- |
-| Proposal, portfolio, lifecycle state, version, creator, and recorded time | Parsed from the proposal-list contract; creator is not exposed as a human identity without directory evidence | Gateway over Advise proposal lifecycle |
-| Stage, readiness, posture, and next action | Bounded business copy derived from the source lifecycle state | Workbench presentation over the source state |
+| Proposal, portfolio, lifecycle state, version, creator-record presence, and recorded time | Parsed from the proposal-list contract; raw creator ids are not presented as verified human identity | Gateway over Advise proposal lifecycle |
+| Stage and bounded next action | Business copy derived from source lifecycle state; not maker-checker proof | Workbench presentation over the source state |
 | In-view and attention counts | Count only rows in the current source window | Workbench view model over Gateway rows |
 | More or earlier proposals | Shown only from source cursor and retained window history | Gateway cursor plus Workbench navigation history |
 | Selected proposal | Advisor's current browser selection within the returned window | Workbench interaction state; not a source mutation |
-| Detailed changes, allocation impact, approvals, workflow, lineage, narrative, memo, and actions | Available only after opening Proposal Detail | Gateway over Advise detail and evidence contracts |
+| Selected detail, workflow, approvals, and active-version lineage | Reconciled as one selected-record maker-checker evidence set | Gateway over Advise detail and evidence contracts |
+| Proposed changes, allocation impact, narrative, memo, and governed actions | Available only after opening Proposal Detail | Gateway over Advise detail, review, and evidence contracts |
 
 The queue does not receive client name, household, assignee, due date, SLA, urgency, materiality,
 whole-book count, or global sort authority. Workbench does not invent them.
@@ -114,13 +124,16 @@ whole-book count, or global sort authority. Workbench does not invent them.
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Loading | Proposal posture is being retrieved | Wait; no fallback proposal claims are shown |
-| Ready | Current-window measures, worklist, selected decision, and source posture | Review and open the relevant proposal |
+| Ready | Current-window worklist plus one source-reconciled selected approval posture | Review the evidence and open the relevant proposal |
 | Empty current window | No matching proposals, with explicit adjacent-window guidance where applicable | Move to the next or previous source window or build a draft |
 | Partial source window | The visible count remains bounded and more/earlier proposals are disclosed | Continue window navigation before concluding the queue is clear |
-| Refreshing | Earlier confirmed rows remain readable but are not labelled current | Wait for source settlement before relying on posture |
-| Refresh failed | Earlier rows remain with an explicit unconfirmed warning | Retry the same source view; do not infer new status |
-| Restricted | Proposal details are hidden by the source access boundary | Use an entitled portfolio or the bank's access process |
-| Unavailable | No fallback queue or readiness values are shown | Retry after the source recovers |
+| Selected evidence checking | Worklist remains visible while detail, workflow, approvals, and lineage settle | Wait; no state-derived maker-checker posture is substituted |
+| Empty approval register | Explicit **No approval records** posture and boundary note | Open the full review to confirm the required maker-checker step |
+| Evidence conflict | Conflicting evidence is named and approval records are hidden | Recheck the same source set before relying on posture |
+| Refreshing | Earlier confirmed evidence remains under its confirmed proposal context | Wait for all four source reads to settle |
+| Refresh failed | Earlier evidence remains visible but is not relabelled as refreshed | Retry the exact selected evidence set |
+| Restricted | Selected approval evidence is hidden and the shared rail remains restricted | Use the bank's access process; no retry bypass is offered |
+| Unavailable | Worklist remains, selected maker-checker posture is withheld, and exact retry is offered | Retry after the source recovers |
 
 ## Responsive And Accessible Use
 
@@ -130,6 +143,8 @@ whole-book count, or global sort authority. Workbench does not invent them.
 - At wide desktop widths, worklist and selected decision are simultaneous.
 - At tablet, narrow, and 200%-zoom-equivalent widths, the decision pane follows the worklist in
   logical DOM order and the page has no two-dimensional workflow scroll.
+- Refresh restores the initiating control only when the advisor has not moved elsewhere; late
+  results from another selection are discarded.
 - The full-review and return links retain visible focus and an operable target.
 - Reduced-motion users receive the same state, order, and source evidence without relying on
   animation.
@@ -169,8 +184,13 @@ private-banking vocabulary, access boundaries, and validation evidence.
 
 - `tests/unit/proposal-lifecycle-workspace-view-model.test.ts` proves source metadata, business
   projection, filtering, bounded-empty wording, and context-preserving proposal links.
-- `tests/integration/proposal-lifecycle-workspace.test.tsx` proves worklist selection, keyboard
-  focus, selected decision evidence, source-window transitions, and fail-closed states.
+- `tests/unit/proposal-approval-evidence-view-model.test.ts` proves empty, approval-exception,
+  ready, proposal-mismatch, workflow-mismatch, active-version-mismatch, and incomplete posture.
+- `tests/unit/use-source-refresh-action.test.tsx` proves source completion, compound-query failure,
+  background refresh posture, and late-result fencing for the shared refresh lifecycle.
+- `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only reads, worklist
+  selection, keyboard focus, approval-register truth, empty/conflict/restricted/failure states,
+  refresh confirmation, source-window transitions, and shared-rail consistency.
 - `tests/integration/proposal-detail-view.test.tsx` proves routine return context uses the
   source-owned proposal portfolio rather than trusting the incoming query.
 - `tests/e2e/proposal-workflow-context.spec.ts` runs against an optimized production Workbench and
