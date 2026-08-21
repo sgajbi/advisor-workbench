@@ -116,11 +116,17 @@ describe("proposal risk and impact view model", () => {
 
     expect(model.supportability.label).toBe("Source evidence unavailable");
     expect(model.decision.isAvailable).toBe(false);
+    expect(model.decision.state.label).toBe("Source evidence unavailable");
     expect(model.allocation.isAvailable).toBe(false);
+    expect(model.allocation.state.label).toBe("Source evidence unavailable");
     expect(model.allocation.views).toEqual([]);
     expect(model.risk.isAvailable).toBe(false);
+    expect(model.risk.state.label).toBe("Source evidence unavailable");
     expect(model.risk.highlights).toEqual([]);
     expect(model.workflowGate.isAvailable).toBe(false);
+    expect(model.workflowGate.state.label).toBe(
+      "Source evidence unavailable",
+    );
     expect(model.workflowGate.reasons).toEqual([]);
   });
 

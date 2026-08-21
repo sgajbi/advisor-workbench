@@ -31,17 +31,28 @@ export function buildProposalRiskImpactModel(
 ) {
   const { data } = envelope;
   const effectiveOverallState = reconcileOverallState(data);
-  const aggregateIsAvailable = effectiveOverallState !== "unavailable";
-  const decisionIsAvailable =
-    aggregateIsAvailable && data.decision.state === "ready";
+  const allocationState = reconcileSectionState(
+    effectiveOverallState,
+    data.allocation.state,
+  );
+  const riskState = reconcileSectionState(
+    effectiveOverallState,
+    data.risk.state,
+  );
+  const decisionState = reconcileSectionState(
+    effectiveOverallState,
+    data.decision.state,
+  );
+  const workflowGateState = reconcileSectionState(
+    effectiveOverallState,
+    data.workflow_gate.state,
+  );
+  const decisionIsAvailable = decisionState === "ready";
   const allocationIsAvailable =
-    aggregateIsAvailable &&
-    (data.allocation.state === "ready" || data.allocation.state === "partial");
+    allocationState === "ready" || allocationState === "partial";
   const riskIsAvailable =
-    aggregateIsAvailable &&
-    (data.risk.state === "ready" || data.risk.state === "partial");
-  const workflowGateIsAvailable =
-    aggregateIsAvailable && data.workflow_gate.state === "ready";
+    riskState === "ready" || riskState === "partial";
+  const workflowGateIsAvailable = workflowGateState === "ready";
   const activeRequirements = decisionIsAvailable
     ? data.decision.approval_requirements.filter(({ required }) => required)
     : [];
@@ -73,7 +84,7 @@ export function buildProposalRiskImpactModel(
     },
     decision: {
       isAvailable: decisionIsAvailable,
-      state: supportabilityPresentation(data.decision.state),
+      state: supportabilityPresentation(decisionState),
       status:
         decisionIsAvailable && data.decision.decision_status
           ? businessLabel(data.decision.decision_status)
@@ -125,7 +136,7 @@ export function buildProposalRiskImpactModel(
     },
     risk: {
       isAvailable: riskIsAvailable,
-      state: supportabilityPresentation(data.risk.state),
+      state: supportabilityPresentation(riskState),
       source: data.risk.source_service ?? "Source not reported",
       summary:
         (riskIsAvailable && data.risk.summary) ||
@@ -134,7 +145,7 @@ export function buildProposalRiskImpactModel(
     },
     allocation: {
       isAvailable: allocationIsAvailable,
-      state: supportabilityPresentation(data.allocation.state),
+      state: supportabilityPresentation(allocationState),
       source: allocationSourceLabel(data),
       contractVersion: data.allocation.contract_version ?? "Not reported",
       calculatorVersion: data.allocation.calculator_version ?? "Not reported",
@@ -162,7 +173,7 @@ export function buildProposalRiskImpactModel(
     },
     workflowGate: {
       isAvailable: workflowGateIsAvailable,
-      state: supportabilityPresentation(data.workflow_gate.state),
+      state: supportabilityPresentation(workflowGateState),
       gate: workflowGateIsAvailable && data.workflow_gate.gate
         ? businessLabel(data.workflow_gate.gate)
         : "Gate not confirmed",
@@ -237,6 +248,13 @@ function reconcileOverallState(
     return "partial";
   }
   return "ready";
+}
+
+function reconcileSectionState(
+  overallState: ProposalRiskImpactOverallState,
+  sectionState: ProposalRiskImpactSectionState,
+): ProposalRiskImpactSectionState {
+  return overallState === "unavailable" ? "unavailable" : sectionState;
 }
 
 function allocationRows(
