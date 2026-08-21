@@ -386,6 +386,22 @@ function parseAllocation(value: unknown): ProposalRiskImpactAllocationEvidence {
     expected_dimensions: expectedDimensions,
     views,
   };
+  const hasCoherentSource =
+    (allocation.source_service === "lotus-core" &&
+      allocation.source_mode === "LOTUS_CORE") ||
+    (allocation.source_service === "lotus-advise" &&
+      allocation.source_mode === "LOTUS_ADVISE_LOCAL_FALLBACK");
+  const hasRenderableComparison = views.length > 0;
+  if (
+    (state === "ready" || hasRenderableComparison) &&
+    (!hasCoherentSource ||
+      !allocation.contract_version ||
+      !allocation.calculator_version)
+  ) {
+    invalid(
+      "displayable allocation requires coherent source, contract, and calculator provenance",
+    );
+  }
   if (
     state === "ready" &&
     (expectedDimensions.length === 0 ||
@@ -467,6 +483,13 @@ function parseRisk(value: unknown): ProposalRiskImpactRiskEvidence {
     (!risk.source_service || risk.summary.trim().length === 0)
   ) {
     invalid("ready risk evidence requires source_service and summary");
+  }
+  if (
+    state === "partial" &&
+    (risk.summary.trim().length > 0 || risk.highlights.length > 0) &&
+    !risk.source_service
+  ) {
+    invalid("displayable partial risk evidence requires source_service");
   }
   return risk;
 }
@@ -669,6 +692,14 @@ function parseWorkflowGate(value: unknown): ProposalRiskImpactWorkflowGate {
     (!workflowGate.gate || !workflowGate.recommended_next_step)
   ) {
     invalid("ready workflow gate requires gate and recommended_next_step");
+  }
+  if (
+    state === "ready" &&
+    workflowGate.gate &&
+    !["EXECUTION_READY", "NONE"].includes(workflowGate.gate) &&
+    workflowGate.reasons.length === 0
+  ) {
+    invalid("ready blocking workflow gate requires at least one reason");
   }
   return workflowGate;
 }

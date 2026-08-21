@@ -128,6 +128,18 @@ describe("proposal risk and impact view model", () => {
       "Source evidence unavailable",
     );
     expect(model.workflowGate.reasons).toEqual([]);
+    expect(
+      model.capabilities
+        .filter(({ key }) =>
+          [
+            "allocation_comparison",
+            "proposal_risk_lens",
+            "decision_posture",
+            "workflow_gate",
+          ].includes(key),
+        )
+        .map(({ status }) => status),
+    ).toEqual(Array(4).fill("Source evidence unavailable"));
   });
 
   it("names expected allocation dimensions that the source did not return", () => {
