@@ -213,10 +213,12 @@ export function buildProposalQueueWorkflowContext({
   selectedEvidence?: ProposalQueueSelectedEvidenceContext;
   responsivePriority?: ProposalWorkflowContextResponsivePriority;
 }): ProposalWorkflowContextModel {
+  const visibleSelectedEvidence =
+    permissionBlocked || hasRestrictedEvidence ? undefined : selectedEvidence;
   const facts = [
     { label: "Portfolio", value: portfolioId },
     { label: "Queue", value: modeLabel },
-    ...(selectedEvidence?.facts ?? []),
+    ...(visibleSelectedEvidence?.facts ?? []),
   ];
 
   if (isLoading) {
@@ -291,7 +293,7 @@ export function buildProposalQueueWorkflowContext({
     hasUnavailableEvidence ||
     hasProposalRefreshFailure ||
     hasSupportingEvidenceRefreshFailure ||
-    Boolean(selectedEvidence?.hasEvidenceGap) ||
+    Boolean(visibleSelectedEvidence?.hasEvidenceGap) ||
     hasPartialQueueWindow;
 
   if (hasPartialEvidence) {
@@ -310,8 +312,8 @@ export function buildProposalQueueWorkflowContext({
       ...(hasSupportingEvidenceRefreshFailure
         ? ["The latest supporting-evidence refresh did not complete."]
         : []),
-      ...(selectedEvidence?.hasEvidenceGap
-        ? selectedEvidence.blockers
+      ...(visibleSelectedEvidence?.hasEvidenceGap
+        ? visibleSelectedEvidence.blockers
         : []),
       ...(hasMoreResults
         ? ["More proposals are available beyond this view."]
@@ -321,14 +323,14 @@ export function buildProposalQueueWorkflowContext({
         : []),
     ];
     const onlySelectedEvidenceGap =
-      Boolean(selectedEvidence?.hasEvidenceGap) &&
+      Boolean(visibleSelectedEvidence?.hasEvidenceGap) &&
       !hasRestrictedEvidence &&
       !hasUnavailableEvidence &&
       !hasProposalRefreshFailure &&
       !hasSupportingEvidenceRefreshFailure &&
       !hasPartialQueueWindow;
     const title = onlySelectedEvidenceGap
-      ? selectedEvidence?.title ?? "Selected proposal evidence is incomplete"
+      ? visibleSelectedEvidence?.title ?? "Selected proposal evidence is incomplete"
       :
       hasRestrictedEvidence ||
       hasUnavailableEvidence ||
@@ -345,7 +347,7 @@ export function buildProposalQueueWorkflowContext({
             ? "More proposals available"
             : "Current proposal view";
     const summary = onlySelectedEvidenceGap
-      ? selectedEvidence?.summary ?? primaryDecision
+      ? visibleSelectedEvidence?.summary ?? primaryDecision
       :
       totalCount > 0
         ? primaryDecision
@@ -357,7 +359,7 @@ export function buildProposalQueueWorkflowContext({
             ? "No proposals match the current view; earlier proposals remain available."
             : "No proposals are visible while supporting decision evidence remains incomplete.";
     const nextAction = onlySelectedEvidenceGap
-      ? selectedEvidence?.nextAction ?? recommendedAction
+      ? visibleSelectedEvidence?.nextAction ?? recommendedAction
       : hasProposalRefreshFailure
       ? hasRestrictedEvidence
         ? "Retry the proposal view, then use an entitled role or request access to the required supporting decision evidence."
@@ -381,7 +383,7 @@ export function buildProposalQueueWorkflowContext({
       title,
       summary,
       currentPosture: onlySelectedEvidenceGap
-        ? selectedEvidence?.currentPosture ?? "Selected evidence incomplete"
+        ? visibleSelectedEvidence?.currentPosture ?? "Selected evidence incomplete"
         : `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in current view`,
       nextAction,
       blockers,
@@ -392,12 +394,12 @@ export function buildProposalQueueWorkflowContext({
         { label: "Need action", value: String(attentionCount) },
       ],
       sourceLabel:
-        onlySelectedEvidenceGap && selectedEvidence
-          ? selectedEvidence.sourceLabel
+        onlySelectedEvidenceGap && visibleSelectedEvidence
+          ? visibleSelectedEvidence.sourceLabel
           : "Advisory proposal lifecycle",
       boundaryNote:
-        onlySelectedEvidenceGap && selectedEvidence
-          ? selectedEvidence.boundaryNote
+        onlySelectedEvidenceGap && visibleSelectedEvidence
+          ? visibleSelectedEvidence.boundaryNote
           : "Counts apply only to proposals shown in this view. They do not establish complete queue posture while proposal or supporting evidence is partial.",
       responsivePriority,
     });
@@ -421,15 +423,15 @@ export function buildProposalQueueWorkflowContext({
   return withStatePresentation({
     state: "ready",
     title:
-      selectedEvidence?.title ??
+      visibleSelectedEvidence?.title ??
       (attentionCount > 0 ? `${attentionCount} need attention` : "Queue ready for review"),
-    summary: selectedEvidence?.summary ?? primaryDecision,
+    summary: visibleSelectedEvidence?.summary ?? primaryDecision,
     currentPosture:
-      selectedEvidence?.currentPosture ??
+      visibleSelectedEvidence?.currentPosture ??
       `${totalCount} ${totalCount === 1 ? "proposal" : "proposals"} in view`,
-    nextAction: selectedEvidence?.nextAction ?? recommendedAction,
+    nextAction: visibleSelectedEvidence?.nextAction ?? recommendedAction,
     blockers:
-      selectedEvidence?.blockers ??
+      visibleSelectedEvidence?.blockers ??
       (attentionCount > 0
         ? [`${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} advisor action.`]
         : []),
@@ -439,9 +441,9 @@ export function buildProposalQueueWorkflowContext({
       { label: "Need action", value: String(attentionCount) },
     ],
     sourceLabel:
-      selectedEvidence?.sourceLabel ?? "Advisory proposal lifecycle",
+      visibleSelectedEvidence?.sourceLabel ?? "Advisory proposal lifecycle",
     boundaryNote:
-      selectedEvidence?.boundaryNote ??
+      visibleSelectedEvidence?.boundaryNote ??
       "This is queue-level posture. Open a proposal to inspect its record-specific workflow, evidence, and approvals.",
     responsivePriority,
   });
