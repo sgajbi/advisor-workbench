@@ -32,6 +32,7 @@ import {
   getProposalIdempotencyRecord,
   getProposalDeliveryEvents,
   getProposalDeliverySummary,
+  getProposalDiscussionPack,
   getProposalApprovals,
   getProposalMemo,
   getProposalMemoLineage,
@@ -67,6 +68,7 @@ import {
   submitProposal,
 } from "../../src/features/proposals/api";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
+import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
@@ -271,6 +273,34 @@ describe("proposal api", () => {
     expect(envelope.correlation_id).toBe("corr-proposal-risk-impact-001");
     expect(envelope.data.proposal_id).toBe("PRP-RISK");
     expect(envelope.data.portfolio_id).toBe("PB_SG_GLOBAL_BAL_001");
+  });
+
+  it("loads a selected discussion pack only through the BFF with bound identity", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(proposalDiscussionPackFixture()), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
+    );
+
+    const envelope = await getProposalDiscussionPack(
+      "proposal-1",
+      "PB_SG_GLOBAL_BAL_001",
+      2,
+      "AWAITING_CLIENT_CONSENT",
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${expectedBaseUrl}/proposals/proposal-1/discussion-pack-review?portfolio_id=PB_SG_GLOBAL_BAL_001&version_no=2`,
+      { cache: "no-store" },
+    );
+    expect(envelope.data.narrative.review_state).toBe(
+      "APPROVED_FOR_ADVISOR_USE",
+    );
   });
 
   it.each([
