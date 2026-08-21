@@ -458,9 +458,12 @@ Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Pro
 Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
 Status. The Proposal Builder check evaluates its draft through Gateway and Advise before capturing
 the same screen; evaluation is a source-backed result state, not a separately addressable screen.
-These journey checks are route-level evidence over existing
-Gateway-backed Workbench screens; they do not promote new backend capability, client-ready release,
-client communication, or execution truth.
+These journey checks are route-level evidence over existing Gateway-backed Workbench screens;
+they do not promote new backend capability, client-ready release, client communication, execution,
+or product support. Implementation Status becomes source proof only when validation also confirms the
+selected proposal and version against `proposal-implementation-status.v1`, its evidence posture,
+lineage, source observation, and explicit unsupported order/fill/settlement capability. A route
+screenshot alone remains navigation evidence.
 For Opportunities and Ideas, the browser proof now goes beyond read-path rendering: it opens
 source-safe Idea candidate detail and records review-action, feedback, and bounded
 conversion-intent controls through the Workbench BFF/Gateway path, verifying source-owned queue and

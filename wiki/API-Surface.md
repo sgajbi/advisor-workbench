@@ -312,6 +312,11 @@ promote dormant labels into product ownership just because historical route file
   explicit partial-state message. A mutation is announced as successful only after Gateway
   persistence succeeds and the owning proposal reads refresh coherently from source truth. This
   presentation does not add client-release, approval, communication, or execution authority.
+- Implementation Status reads one selected record from
+  `GET /api/v1/proposals/{proposal_id}/execution-status` with discriminator
+  `proposal-implementation-status.v1`, always through browser path `/api/bff/api/v1/...`. The
+  response describes advisory handoff and reconciliation only. It is not a mutation contract and
+  provides no order, fill, allocation, settlement, custody-booking, or accounting authority.
 - RFC-0024 advisor memo and evidence-pack posture is implemented on `/proposals/{proposalId}`
   through Gateway proposal memo endpoints. Workbench can create or replay an advisor-use memo with
   `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/memo`, record advisor-use review with

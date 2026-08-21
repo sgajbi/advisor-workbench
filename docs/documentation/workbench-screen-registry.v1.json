@@ -1023,16 +1023,17 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Implementation-Status-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/features/proposals/proposal-lifecycle-workspace-view-model.ts"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/features/proposals/proposal-implementation-status-contract.ts",
+        "src/features/proposals/proposal-implementation-status-view-model.ts",
+        "src/features/proposals/use-proposal-implementation-status.ts",
+        "src/features/proposals/components/proposal-implementation-status-workspace.tsx"
+      ],
+      "runtimeEvidence": ["tests/e2e/proposal-workflow-context.spec.ts"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "proposal-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     }
   ],
   "modeAuthorities": [

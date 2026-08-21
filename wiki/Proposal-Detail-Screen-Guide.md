@@ -47,8 +47,9 @@ These use cases do not substitute for authenticated production-role or portfolio
 ## Workflow Position
 
 1. Enter from [Approval Queue](Approval-Queue-Screen-Guide),
-   [Risk and Impact](Risk-And-Impact-Screen-Guide), Suitability Review, Discussion Pack Review, or
-   another supported proposal handoff.
+   [Risk and Impact](Risk-And-Impact-Screen-Guide),
+   [Implementation Status](Implementation-Status-Screen-Guide), Suitability Review, Discussion Pack
+   Review, or another supported proposal handoff.
 2. Confirm the proposal header and active version before reviewing supporting evidence.
 3. Review the decision-first change, impact, gate, approval, and lineage sections.
 4. Use **Narrative review** or **Memo & evidence pack** as peer advisor-review modes; neither mode
@@ -138,6 +139,7 @@ Proposal Detail deliberately does not:
 | --- | --- | --- |
 | Inbound and return | [Approval Queue](Approval-Queue-Screen-Guide) | Proposal, portfolio, and Approval Queue origin |
 | Inbound and return | [Risk and Impact](Risk-And-Impact-Screen-Guide) | Proposal, portfolio, and Risk and Impact origin |
+| Inbound and return | [Implementation Status](Implementation-Status-Screen-Guide) | Proposal, portfolio, and Implementation origin |
 | Earlier construction | [Proposal Builder](Proposal-Builder-Screen-Guide) | Selected portfolio; retained proposal identity exists only after Gateway draft creation |
 | Downstream packaging | Report-owned materialization after a reviewed package request | Source request identity only; Workbench does not claim document completion |
 
@@ -168,6 +170,7 @@ memo content into support channels.
 
 - [Approval Queue](Approval-Queue-Screen-Guide)
 - [Risk and Impact](Risk-And-Impact-Screen-Guide)
+- [Implementation Status](Implementation-Status-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Screen Guide Catalogue](Screen-Guide-Catalogue)
 - [Supported Features](Supported-Features)

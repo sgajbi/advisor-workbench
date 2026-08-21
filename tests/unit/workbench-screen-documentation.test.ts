@@ -57,9 +57,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 21,
-      coverageExceptions: 15,
-      unmappedGuides: 15,
+      mappedGuides: 22,
+      coverageExceptions: 14,
+      unmappedGuides: 14,
     });
   });
 
@@ -196,6 +196,45 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("allocation delta, mandate compliance");
     expect(guide).toContain("Container-aware reflow responds to the actual centre workspace");
     expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Implementation Status to selected handoff evidence and explicit execution boundaries", () => {
+    const registry = loadRegistry();
+    const implementationStatus = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "implementation-status",
+    );
+
+    expect(implementationStatus).toMatchObject({
+      businessName: "Implementation Status",
+      routePattern: "/proposals",
+      mode: "implementation",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Implementation-Status-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/proposal-implementation-status-contract.ts",
+        "src/features/proposals/proposal-implementation-status-view-model.ts",
+        "src/features/proposals/components/proposal-implementation-status-workspace.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Implementation-Status-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("one selected proposal");
+    expect(guide).toContain("never fans out across the worklist");
+    expect(guide).toContain(
+      "`order_fill_settlement_detail` is explicitly `not_supported`",
+    );
+    expect(guide).toContain("does not prove fill completeness, settlement");
+    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
     expect(validate(registry).errors).toEqual([]);
   });
 
