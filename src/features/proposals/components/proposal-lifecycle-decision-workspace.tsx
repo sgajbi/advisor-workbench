@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import type { Ref } from "react";
 
 import {
   ScreenStatePanel,
@@ -9,18 +9,14 @@ import {
   SourceRefreshAction,
   Text,
   WorkbenchRefreshStatus,
+  useSourceRefreshAction,
+  type SourceRefreshState,
 } from "@/design-system";
 
 import type { ProposalApprovalEvidenceModel } from "../proposal-approval-evidence-view-model";
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
 import ProposalLifecycleWorklist from "./proposal-lifecycle-worklist";
 import styles from "./proposal-lifecycle-workspace.module.css";
-
-type RefreshOutcome = "pending" | "confirmed" | "failed" | null;
-type RefreshState = {
-  proposalId: string;
-  outcome: Exclude<RefreshOutcome, null>;
-} | null;
 
 export default function ProposalLifecycleDecisionWorkspace({
   rows,
@@ -45,50 +41,19 @@ export default function ProposalLifecycleDecisionWorkspace({
   hasRefreshFailure: boolean;
   onRefresh: () => Promise<unknown>;
 }) {
-  const refreshGeneration = useRef({ proposalId: "", generation: 0 });
-  const [refreshState, setRefreshState] = useState<RefreshState>(null);
+  const selectionIdentity = selectedProposal
+    ? `${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
+    : null;
+  const sourceRefresh = useSourceRefreshAction({
+    identity: selectionIdentity,
+    isRefreshing,
+    hasRefreshFailure,
+    onRefresh,
+  });
 
   if (!selectedProposal) return null;
 
-  const selectedProposalId = selectedProposal.proposalId;
   const contextLabel = `${selectedProposal.title} · ${selectedProposal.version}`;
-  const refreshOutcome =
-    refreshState?.proposalId === selectedProposalId
-      ? refreshState.outcome
-      : null;
-  const resolvedRefreshOutcome = isRefreshing
-    ? "pending"
-    : hasRefreshFailure
-      ? "failed"
-      : refreshOutcome;
-
-  async function refreshEvidence() {
-    const proposalId = selectedProposalId;
-    const generation = refreshGeneration.current.generation + 1;
-    refreshGeneration.current = { proposalId, generation };
-    setRefreshState({ proposalId, outcome: "pending" });
-    try {
-      const result = await onRefresh();
-      if (
-        generation !== refreshGeneration.current.generation ||
-        proposalId !== refreshGeneration.current.proposalId
-      ) {
-        return;
-      }
-      setRefreshState({
-        proposalId,
-        outcome: refreshResultHasError(result) ? "failed" : "confirmed",
-      });
-    } catch {
-      if (
-        generation !== refreshGeneration.current.generation ||
-        proposalId !== refreshGeneration.current.proposalId
-      ) {
-        return;
-      }
-      setRefreshState({ proposalId, outcome: "failed" });
-    }
-  }
 
   return (
     <div
@@ -99,7 +64,10 @@ export default function ProposalLifecycleDecisionWorkspace({
         ariaLabel="Approval Queue proposals"
         rows={rows}
         selectedProposalId={selectedProposal.proposalId}
-        onSelectProposal={onSelectProposal}
+        onSelectProposal={(proposalId) => {
+          sourceRefresh.reset();
+          onSelectProposal(proposalId);
+        }}
       />
 
       <section
@@ -128,9 +96,9 @@ export default function ProposalLifecycleDecisionWorkspace({
           </SemanticBadge>
         </div>
 
-        {resolvedRefreshOutcome ? (
+        {sourceRefresh.refreshState ? (
           <ApprovalEvidenceRefreshStatus
-            state={resolvedRefreshOutcome}
+            state={sourceRefresh.refreshState}
             requestedContext={contextLabel}
             confirmedContext={evidence ? contextLabel : "Not confirmed"}
             hasConfirmedEvidence={Boolean(evidence)}
@@ -159,11 +127,12 @@ export default function ProposalLifecycleDecisionWorkspace({
             body="The selected proposal's source evidence could not be confirmed. Lifecycle state alone is not shown as maker-checker readiness."
             action={
               <SourceRefreshAction
+                ref={sourceRefresh.actionRef}
                 refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                 idleLabel="Retry approval evidence"
                 busyLabel="Retrying approval evidence…"
                 isRefreshing={isRefreshing}
-                onRefresh={refreshEvidence}
+                onRefresh={sourceRefresh.refresh}
               />
             }
             surface="default"
@@ -175,11 +144,12 @@ export default function ProposalLifecycleDecisionWorkspace({
             body="Gateway did not return one complete selected-proposal evidence set. Refresh before relying on this review."
             action={
               <SourceRefreshAction
+                ref={sourceRefresh.actionRef}
                 refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                 idleLabel="Refresh approval evidence"
                 busyLabel="Refreshing approval evidence…"
                 isRefreshing={isRefreshing}
-                onRefresh={refreshEvidence}
+                onRefresh={sourceRefresh.refresh}
               />
             }
             surface="default"
@@ -192,11 +162,12 @@ export default function ProposalLifecycleDecisionWorkspace({
               body={evidence.posture.summary}
               action={
                 <SourceRefreshAction
+                  ref={sourceRefresh.actionRef}
                   refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
                   idleLabel="Recheck source evidence"
                   busyLabel="Rechecking source evidence…"
                   isRefreshing={isRefreshing}
-                  onRefresh={refreshEvidence}
+                  onRefresh={sourceRefresh.refresh}
                 />
               }
               surface="default"
@@ -211,7 +182,8 @@ export default function ProposalLifecycleDecisionWorkspace({
             evidence={evidence}
             proposalHref={selectedProposal.href}
             isRefreshing={isRefreshing}
-            onRefresh={refreshEvidence}
+            onRefresh={sourceRefresh.refresh}
+            refreshActionRef={sourceRefresh.actionRef}
           />
         )}
       </section>
@@ -224,11 +196,13 @@ function ApprovalEvidenceDecision({
   proposalHref,
   isRefreshing,
   onRefresh,
+  refreshActionRef,
 }: {
   evidence: ProposalApprovalEvidenceModel;
   proposalHref: string;
   isRefreshing: boolean;
   onRefresh: () => Promise<unknown>;
+  refreshActionRef: Ref<HTMLButtonElement>;
 }) {
   return (
     <>
@@ -292,6 +266,7 @@ function ApprovalEvidenceDecision({
             </Text>
           </div>
           <SourceRefreshAction
+            ref={refreshActionRef}
             refreshScope={`proposal-approval:${evidence.identity.proposalId}`}
             idleLabel="Refresh evidence"
             busyLabel="Refreshing evidence…"
@@ -376,7 +351,7 @@ function ApprovalEvidenceRefreshStatus({
   confirmedContext,
   hasConfirmedEvidence,
 }: {
-  state: Exclude<RefreshOutcome, null>;
+  state: SourceRefreshState;
   requestedContext: string;
   confirmedContext: string;
   hasConfirmedEvidence: boolean;
@@ -416,16 +391,5 @@ function ApprovalEvidenceRefreshStatus({
       title="Selected proposal evidence confirmed"
       confirmedContext={confirmedContext}
     />
-  );
-}
-
-function refreshResultHasError(result: unknown): boolean {
-  if (!Array.isArray(result)) return false;
-  return result.some(
-    (item) =>
-      typeof item === "object" &&
-      item !== null &&
-      (("isError" in item && item.isError === true) ||
-        ("error" in item && item.error !== null && item.error !== undefined)),
   );
 }
