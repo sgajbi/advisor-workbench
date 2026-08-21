@@ -192,7 +192,9 @@ export function buildProposalLifecycleWorkspaceModel({
       typeof proposal.current_version_no === "number"
         ? proposal.current_version_no
         : null,
-    creator: proposal.created_by || "Creator not reported",
+    creator: proposal.created_by?.trim()
+      ? "Recorded by source"
+      : "Not reported",
     createdOn: formatDateValue(proposal.created_at, {
       nullDisplay: "Date not reported",
     }),
