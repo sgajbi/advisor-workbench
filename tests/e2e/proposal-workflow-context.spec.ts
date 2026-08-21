@@ -1055,7 +1055,7 @@ test("keeps proposal counts scoped to the current source window", async ({
       .getByRole("heading", { name: "Cross-asset concentration review" }),
   ).toBeVisible();
   await expect(page.getByLabel("Proposal lifecycle counts")).toHaveText(
-    /1\s*In view\s*1\s*Not execution-ready/,
+    /^\s*1\s*In view\s*1\s*Not execution-ready\s*$/,
   );
   await expect(page.getByText("Proposal view 2")).toBeVisible();
   await expect(

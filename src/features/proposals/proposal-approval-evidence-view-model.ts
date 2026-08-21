@@ -32,7 +32,7 @@ export type ProposalApprovalEvidenceAgreement =
   | { issue: ProposalApprovalEvidenceIssue; currentState?: string };
 
 type ProposalApprovalEvidenceExpectation = {
-  expectedPortfolioId: string;
+  expectedPortfolioId: string | null;
   expectedProposalId: string;
   expectedState: string;
   expectedVersionNo: number | null;

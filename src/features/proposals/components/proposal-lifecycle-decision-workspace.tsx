@@ -42,7 +42,7 @@ export default function ProposalLifecycleDecisionWorkspace({
   onRefresh: () => Promise<unknown>;
 }) {
   const selectionIdentity = selectedProposal
-    ? `${selectedProposal.proposalId}:${selectedProposal.versionNo ?? "unversioned"}`
+    ? selectedProposal.proposalId
     : null;
   const {
     actionRef: refreshActionRef,

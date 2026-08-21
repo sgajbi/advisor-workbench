@@ -51,6 +51,7 @@ describe("proposal lifecycle workspace view model", () => {
       expect.objectContaining({
         proposalId: "PRP-RISK",
         currentState: "RISK_REVIEW",
+        sourcePortfolioId: "PB_SG_GLOBAL_BAL_001",
         readiness: "Blocked",
         version: "Version 3",
         versionNo: 3,
@@ -60,6 +61,25 @@ describe("proposal lifecycle workspace view model", () => {
         href: "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=risk-impact",
       }),
     ]);
+  });
+
+  it("retains an absent source portfolio instead of substituting route context", () => {
+    const model = buildProposalLifecycleWorkspaceModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      mode: "approval-queue",
+      proposals: [
+        {
+          proposal_id: "PRP-UNSCOPED",
+          current_state: "RISK_REVIEW",
+          current_version_no: 1,
+        },
+      ],
+    });
+
+    expect(model.rows[0]).toMatchObject({
+      portfolio: "Not reported",
+      sourcePortfolioId: null,
+    });
   });
 
   it("filters implementation mode to execution-ready proposals", () => {

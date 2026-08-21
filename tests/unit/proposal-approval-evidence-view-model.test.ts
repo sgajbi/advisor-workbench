@@ -124,6 +124,20 @@ describe("proposal approval evidence view model", () => {
     expect(model.approvals.notApprovedCount).toBe(1);
   });
 
+  it("fails closed when the selected worklist does not report portfolio authority", () => {
+    const model = buildProposalApprovalEvidenceModel({
+      ...evidenceFixture(),
+      ...selectedWorklistRecord,
+      expectedPortfolioId: null,
+    });
+
+    expect(model.agreement.issue).toBe("portfolio-mismatch");
+    expect(model.posture).toMatchObject({
+      state: "conflict",
+      title: "Portfolio identity does not agree",
+    });
+  });
+
   it.each([
     ["proposal identity", (fixture: ReturnType<typeof evidenceFixture>) => {
       fixture.approvals.proposal_id = "PRP-OTHER";

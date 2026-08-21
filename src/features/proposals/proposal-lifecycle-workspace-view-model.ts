@@ -22,6 +22,7 @@ export type ProposalLifecycleRow = {
   currentState: string;
   title: string;
   portfolio: string;
+  sourcePortfolioId: string | null;
   stage: string;
   stageTone: "default" | "warn" | "success";
   readiness: string;
@@ -175,6 +176,7 @@ export function buildProposalLifecycleWorkspaceModel({
     currentState: proposal.current_state,
     title: proposal.title || proposal.proposal_id,
     portfolio: proposal.portfolio_id ?? "Not reported",
+    sourcePortfolioId: proposal.portfolio_id ?? null,
     stage: proposalStageLabel(proposal.current_state),
     stageTone: proposalStageTone(proposal.current_state),
     readiness: proposalReadinessLabel(proposal.current_state),

@@ -402,7 +402,7 @@ export default function ProposalLifecycleWorkspace({
     return buildProposalApprovalEvidenceModel({
       approvals: approvalRecordsQuery.data,
       detail: approvalDetailQuery.data,
-      expectedPortfolioId: portfolioId,
+      expectedPortfolioId: selectedApprovalProposal.sourcePortfolioId,
       expectedProposalId: selectedApprovalProposal.proposalId,
       expectedState: selectedApprovalProposal.currentState,
       expectedVersionNo: selectedApprovalProposal.versionNo,
@@ -414,7 +414,6 @@ export default function ProposalLifecycleWorkspace({
     approvalLineageQuery.data,
     approvalRecordsQuery.data,
     approvalWorkflowQuery.data,
-    portfolioId,
     selectedApprovalProposal,
   ]);
   const selectedApprovalWorkflowContext = useMemo(() => {
@@ -809,8 +808,7 @@ export default function ProposalLifecycleWorkspace({
             );
             if (
               !refreshedProposal ||
-              (refreshedProposal.portfolio_id !== undefined &&
-                refreshedProposal.portfolio_id !== portfolioId)
+              refreshedProposal.portfolio_id !== portfolioId
             ) {
               throw new Error(
                 "The selected proposal is no longer present in the current portfolio worklist.",
@@ -819,7 +817,7 @@ export default function ProposalLifecycleWorkspace({
             confirmRefreshedProposalApprovalEvidence({
               approvals: approvalsResult.data,
               detail: detailResult.data,
-              expectedPortfolioId: portfolioId,
+              expectedPortfolioId: refreshedProposal.portfolio_id,
               expectedProposalId: refreshedProposal.proposal_id,
               expectedState: refreshedProposal.current_state,
               expectedVersionNo:
@@ -827,6 +825,28 @@ export default function ProposalLifecycleWorkspace({
               lineage: lineageResult.data,
               workflow: workflowResult.data,
             });
+            const refreshedEvidenceQueryKey = [
+              "proposal-approval-evidence",
+              portfolioId,
+              refreshedProposal.proposal_id,
+              refreshedProposal.current_version_no ?? null,
+            ] as const;
+            queryClient.setQueryData(
+              [...refreshedEvidenceQueryKey, "detail"],
+              detailResult.data,
+            );
+            queryClient.setQueryData(
+              [...refreshedEvidenceQueryKey, "workflow"],
+              workflowResult.data,
+            );
+            queryClient.setQueryData(
+              [...refreshedEvidenceQueryKey, "approvals"],
+              approvalsResult.data,
+            );
+            queryClient.setQueryData(
+              [...refreshedEvidenceQueryKey, "lineage"],
+              lineageResult.data,
+            );
             return results;
           }}
         />
