@@ -1152,6 +1152,185 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(getProposalLineageMock).toHaveBeenCalledTimes(2);
   });
 
+  it("does not interpret an empty approval register as approval not required", async () => {
+    getProposalApprovalsMock.mockImplementationOnce(async (proposalId: string) => ({
+      ...selectedProposalEvidence(proposalId).approvals,
+      approvals: [],
+    }));
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "No approval decision is recorded",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Gateway returned an empty approval register. This does not mean that approval is not required.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No approval records")).toBeInTheDocument();
+  });
+
+  it("hides approval records when selected proposal source identity conflicts", async () => {
+    getProposalWorkflowEventsMock.mockImplementationOnce(
+      async (proposalId: string) => ({
+        ...selectedProposalEvidence(proposalId).workflow,
+        current_state: "DRAFT",
+      }),
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Workflow state does not agree",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/approval records remain hidden/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Recorded approval decisions" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps restricted approval evidence distinct in the selected pane and shared rail", async () => {
+    getProposalApprovalsMock.mockRejectedValueOnce(
+      new Error("Proposal approvals failed (403): forbidden"),
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="approval-queue"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Approval evidence is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Supporting evidence is restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry approval evidence" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
+  });
+
+  it("keeps confirmed evidence visible and restores focus after refresh failure", async () => {
+    getProposalApprovalsMock
+      .mockImplementationOnce(
+        async (proposalId: string) =>
+          selectedProposalEvidence(proposalId).approvals,
+      )
+      .mockRejectedValueOnce(
+        new Error("Proposal approvals failed (503): unavailable"),
+      );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    await screen.findByRole("heading", {
+      name: "1 decision is not approved",
+    });
+    const refresh = screen.getByRole("button", { name: "Refresh evidence" });
+    refresh.focus();
+    fireEvent.click(refresh);
+
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "failed"),
+    );
+    expect(
+      within(refreshStatus).getByText("Source refresh failed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "1 decision is not approved" }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(refresh).toHaveFocus());
+  });
+
+  it("announces confirmation only after all selected approval sources refresh", async () => {
+    let resolveApprovals:
+      | ((value: ProposalApprovalsData) => void)
+      | undefined;
+    getProposalApprovalsMock
+      .mockImplementationOnce(
+        async (proposalId: string) =>
+          selectedProposalEvidence(proposalId).approvals,
+      )
+      .mockImplementationOnce(
+        async (_proposalId: string) =>
+          await new Promise<ProposalApprovalsData>((resolve) => {
+            resolveApprovals = resolve;
+          }),
+      );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    await screen.findByRole("heading", {
+      name: "1 decision is not approved",
+    });
+    const refresh = screen.getByRole("button", { name: "Refresh evidence" });
+    fireEvent.click(refresh);
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "pending"),
+    );
+    expect(
+      within(refreshStatus).getByText("Reconfirming selected proposal"),
+    ).toBeInTheDocument();
+    expect(
+      within(refreshStatus).queryByText(
+        "Selected proposal evidence confirmed",
+      ),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveApprovals?.(selectedProposalEvidence("PRP-RISK").approvals);
+    });
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "confirmed"),
+    );
+    expect(
+      within(refreshStatus).getByText("Selected proposal evidence confirmed"),
+    ).toBeInTheDocument();
+  });
+
   it("resets selected proposal identity when the source window changes", async () => {
     listProposalsMock
       .mockResolvedValueOnce({
