@@ -50,8 +50,8 @@ export function buildProposalApprovalEvidenceModel({
         nullDisplay: "Date not reported",
       }),
       tone: approval.approved
-        ? ("success" satisfies SemanticBadgeTone)
-        : ("danger" satisfies SemanticBadgeTone),
+        ? ("success" as const)
+        : ("danger" as const),
     }));
   const workflowEvents = [...workflow.events]
     .sort((left, right) => right.occurred_at.localeCompare(left.occurred_at))

@@ -42,12 +42,12 @@ export default function ProposalLifecycleWorklist({
           title: row.title,
           subtitle: `${row.proposalId} · ${row.version}`,
           status: (
-            <SemanticBadge tone={row.readinessTone}>
-              {row.readiness}
+            <SemanticBadge tone={row.stageTone}>
+              {row.stage}
             </SemanticBadge>
           ),
           facts: [
-            { label: "Stage", value: row.stage },
+            { label: "Created by", value: row.creator },
             { label: "Recorded", value: row.createdOn },
           ],
           nextAction: row.nextAction,

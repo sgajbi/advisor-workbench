@@ -48,8 +48,9 @@ export function ProposalWorkflowContextPublisher({
 
   useEffect(() => {
     publish(model);
-    return reset;
-  }, [model, publish, reset]);
+  }, [model, publish]);
+
+  useEffect(() => reset, [reset]);
 
   return null;
 }
@@ -60,12 +61,14 @@ export function usePublishProposalWorkflowContext(model: ProposalWorkflowContext
   const reset = context?.reset;
 
   useEffect(() => {
-    if (!publish || !reset) {
-      return;
-    }
+    if (!publish) return;
     publish(model);
+  }, [model, publish]);
+
+  useEffect(() => {
+    if (!reset) return;
     return reset;
-  }, [model, publish, reset]);
+  }, [reset]);
 }
 
 function useProposalWorkflowContext(): ProposalWorkflowContextValue {
