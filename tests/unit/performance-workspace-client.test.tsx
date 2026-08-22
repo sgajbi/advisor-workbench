@@ -16,6 +16,7 @@ import {
 } from "../fixtures/performance-workspace-fixtures";
 
 const replaceMock = vi.fn();
+const pushMock = vi.fn();
 const getSummaryClientMock = vi.fn();
 const getDetailsClientMock = vi.fn();
 const restoreFocusMock = vi.fn();
@@ -25,6 +26,7 @@ const DEFAULT_PORTFOLIO_RETURN = String(
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
+    push: pushMock,
     replace: replaceMock,
   }),
 }));
@@ -178,6 +180,7 @@ describe("PerformanceWorkspaceClient", () => {
   afterEach(() => {
     vi.useRealTimers();
     replaceMock.mockReset();
+    pushMock.mockReset();
     getSummaryClientMock.mockReset();
     getDetailsClientMock.mockReset();
     restoreFocusMock.mockReset();
@@ -791,7 +794,8 @@ describe("PerformanceWorkspaceClient", () => {
 
     expect(getSummaryClientMock).not.toHaveBeenCalled();
     expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
-    expect(replaceMock).toHaveBeenCalledTimes(1);
+    expect(pushMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("preserves the previous analytical canvas while new details are loading", async () => {
@@ -952,6 +956,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
     expect(replaceMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
 
     await act(async () => {
       screen.getByRole("button", { name: "Retry Selection" }).click();
@@ -964,7 +969,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("refresh-confirmed")).toHaveTextContent("3Y");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&period=3Y&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
@@ -1012,6 +1017,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
     expect(getSummaryClientMock).not.toHaveBeenCalled();
     expect(replaceMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
 
     await act(async () => {
       screen.getByRole("button", { name: "Retry Selection" }).click();
@@ -1024,7 +1030,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
     expect(getDetailsClientMock).toHaveBeenCalledTimes(2);
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=sector&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
@@ -1063,7 +1069,7 @@ describe("PerformanceWorkspaceClient", () => {
         "Asset Class contribution"
       );
     });
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
@@ -1124,7 +1130,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
       expect(screen.getByTestId("period")).toHaveTextContent("3Y");
     });
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&mode=analysis&period=3Y&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
@@ -1188,7 +1194,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
     });
 
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
@@ -1203,7 +1209,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("mode")).toHaveTextContent("risk");
     });
 
-    expect(replaceMock).toHaveBeenLastCalledWith(
+    expect(pushMock).toHaveBeenLastCalledWith(
       "/performance?portfolioId=PF_1001&mode=risk&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
