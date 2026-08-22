@@ -11,7 +11,7 @@ import {
   filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessMandateType,
-  isManageExceptionEvidenceComplete,
+  getManageExceptionEvidencePosture,
   readStringFromResponse,
 } from "@/features/workbench/manage-workspace-view-model";
 import {
@@ -42,7 +42,10 @@ export default function ManageContextRail({
     commandModel.mandateId
   );
   const attentionCount = attentionRows.length;
-  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
+  const exceptionEvidencePosture = getManageExceptionEvidencePosture(
+    data.commandCenterExceptions,
+    data.commandCenterExceptionsError
+  );
   const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");
@@ -96,8 +99,10 @@ export default function ManageContextRail({
         <div className="manage-context-rail-header">
           <Text variant="label">Review Posture</Text>
           <strong>
-            {!hasCompleteExceptionEvidence
+            {exceptionEvidencePosture === "unavailable"
               ? "Attention evidence unavailable"
+              : exceptionEvidencePosture === "partial"
+                ? "Attention review continues across source views"
               : attentionCount
               ? "Needs portfolio manager attention"
               : businessStateLabel(commandModel.mandateHealthState)}
@@ -108,7 +113,12 @@ export default function ManageContextRail({
           items={[
             {
               label: "Attention Items",
-              value: hasCompleteExceptionEvidence ? `${attentionCount} open` : "Not available",
+              value:
+                exceptionEvidencePosture === "unavailable"
+                  ? "Not available"
+                  : exceptionEvidencePosture === "partial"
+                    ? `${attentionCount} shown; more available`
+                    : `${attentionCount} open`,
             },
             {
               label: "Data Readiness",
