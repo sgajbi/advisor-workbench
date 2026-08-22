@@ -46,6 +46,21 @@ describe("advisor-book business-date resolution", () => {
     });
   });
 
+  it.each([
+    "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_OTHER_001&asOfDate=2026-04-10",
+    "period=ONE_YEAR&asOfDate=2026-04-10",
+    "reportingCurrency=usd&asOfDate=2026-04-10",
+  ])("does not salvage a date from invalid review context %s", (query) => {
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+
+    expect(
+      resolveAdvisorBookAsOfDateFromSearchParams(new URLSearchParams(query)),
+    ).toEqual({
+      status: "not_confirmed",
+      reason: "invalid_review_context",
+    });
+  });
+
   it("uses only an explicit valid development configuration when no date is requested", () => {
     vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "dev");
     vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");

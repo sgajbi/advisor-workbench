@@ -151,6 +151,25 @@ describe("AdvisorBookWorkspace", () => {
     expect(getAdvisorBookMock).not.toHaveBeenCalled();
   });
 
+  it.each([
+    "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_OTHER_001&asOfDate=2026-04-10",
+    "period=ONE_YEAR&asOfDate=2026-04-10",
+    "reportingCurrency=usd&asOfDate=2026-04-10",
+  ])("does not request source data for invalid review context %s", (query) => {
+    useSearchParamsMock.mockReturnValue(new URLSearchParams(query));
+
+    render(<AdvisorBookWorkspace />);
+
+    expect(screen.getByText("Business date not confirmed")).toBeInTheDocument();
+    expect(screen.getByText(/conflicting or unsupported context/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Reset review context" })).toHaveAttribute(
+      "href",
+      "/book",
+    );
+    expect(screen.queryByLabelText("Business date")).not.toBeInTheDocument();
+    expect(getAdvisorBookMock).not.toHaveBeenCalled();
+  });
+
   it("does not use a configured development date outside a development environment", () => {
     vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "production");
     vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
