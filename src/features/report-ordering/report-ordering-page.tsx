@@ -4,6 +4,7 @@ import { resolveSelectedPortfolioId } from "@/apps/portfolio/portfolio-selection
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
 import {
   AppPageShell,
+  buildWorkbenchUnsupportedReviewContextNotice,
   DegradedStatePanel,
   MainWithSideRailLayout,
   WorkbenchPageContainer,
@@ -66,6 +67,12 @@ export async function ReportOrderingPage({
   return (
     <ReportOrderingWorkspace
       initialBatchId={reviewContextResult.context.batchId}
+      contextNotice={buildWorkbenchUnsupportedReviewContextNotice({
+        title: "Report source context",
+        subject: "Report preparation",
+        destination: "report ordering workflow",
+        requestedPeriod: reviewContextResult.context.period,
+      })}
       portfolio={{
         portfolioId,
         displayName: workspace.portfolio.display_name,

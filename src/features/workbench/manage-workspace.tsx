@@ -6,6 +6,8 @@ import { buildReviewContextHref } from "@/shell/review-context";
 import {
   AppPageShell,
   buildWorkbenchSourceContextNotice,
+  buildWorkbenchUnsupportedReviewContextNotice,
+  combineWorkbenchContextNotices,
   DegradedStatePanel,
   MainWithSideRailLayout,
   SemanticBadge,
@@ -56,13 +58,24 @@ export function ManageWorkspace({
       data.mandateHealthError ||
       !data.mandateHealth
   );
-  const contextNotice = buildWorkbenchSourceContextNotice({
+  const contextNotice = combineWorkbenchContextNotices({
     title: "Mandate source context",
-    subject: "Mandate management",
-    requestedAsOfDate: reviewContext.asOfDate,
-    requestedReportingCurrency: reviewContext.reportingCurrency,
-    sourceAsOfDate: data.portfolio.as_of_date,
-    sourceCurrency: portfolio.base_currency,
+    notices: [
+      buildWorkbenchSourceContextNotice({
+        title: "Mandate source context",
+        subject: "Mandate management",
+        requestedAsOfDate: reviewContext.asOfDate,
+        requestedReportingCurrency: reviewContext.reportingCurrency,
+        sourceAsOfDate: data.portfolio.as_of_date,
+        sourceCurrency: portfolio.base_currency,
+      }),
+      buildWorkbenchUnsupportedReviewContextNotice({
+        title: "Mandate source context",
+        subject: "Mandate evidence",
+        destination: "mandate management workspace",
+        requestedPeriod: reviewContext.period,
+      }),
+    ],
   });
 
   return (

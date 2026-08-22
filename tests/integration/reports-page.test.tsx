@@ -13,6 +13,7 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
   ReportOrderingWorkspace: ({
     portfolio,
     initialBatchId,
+    contextNotice,
   }: {
     portfolio: {
       portfolioId: string;
@@ -22,6 +23,7 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       reportingCurrency: string;
     };
     initialBatchId?: string;
+    contextNotice?: { title: string; body: string } | null;
   }) => (
     <div>
       <h1>Report Centre Workspace</h1>
@@ -31,6 +33,9 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       <span data-testid="source-base-currency">{portfolio.sourceBaseCurrency}</span>
       <span data-testid="reporting-currency">{portfolio.reportingCurrency}</span>
       <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
+      {contextNotice ? (
+        <aside aria-label={contextNotice.title}>{contextNotice.body}</aside>
+      ) : null}
     </div>
   ),
 }));
@@ -116,6 +121,21 @@ describe("reports page", () => {
 
     expect(screen.getByTestId("source-base-currency")).toHaveTextContent("SGD");
     expect(screen.getByTestId("reporting-currency")).toHaveTextContent("USD");
+  });
+
+  it("discloses that a carried review period does not filter report ordering", async () => {
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          period: "YTD",
+        }),
+      }),
+    );
+
+    expect(screen.getByLabelText("Report source context")).toHaveTextContent(
+      /review period YTD.*does not filter this report ordering workflow/i,
+    );
   });
 
   it("fails closed when portfolio workspace context cannot be loaded", async () => {

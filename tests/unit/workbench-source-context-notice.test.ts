@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildWorkbenchSourceContextNotice,
   buildWorkbenchUnsupportedReviewContextNotice,
+  combineWorkbenchContextNotices,
 } from "@/design-system";
 
 describe("Workbench source context notice", () => {
@@ -84,6 +85,30 @@ describe("Workbench unsupported review-context notice", () => {
         title: "Queue scope",
         subject: "Queue evidence",
         destination: "queue",
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("combined Workbench context notice", () => {
+  it("combines distinct source limitations into one non-repeating business notice", () => {
+    expect(
+      combineWorkbenchContextNotices({
+        title: "Mandate source context",
+        notices: [
+          { title: "Date context", body: "Mandate evidence uses the source valuation date." },
+          { title: "Period context", body: "The carried review period does not filter this workspace." },
+          { title: "Duplicate", body: "Mandate evidence uses the source valuation date." },
+        ],
+      }),
+    ).toEqual({
+      title: "Mandate source context",
+      body: "Mandate evidence uses the source valuation date. The carried review period does not filter this workspace.",
+    });
+    expect(
+      combineWorkbenchContextNotices({
+        title: "No limitations",
+        notices: [null, undefined],
       }),
     ).toBeNull();
   });
