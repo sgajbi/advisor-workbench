@@ -5630,7 +5630,9 @@ not source authority for product state.
 4. Claim zero attention items only from a complete, non-degraded, untruncated source window.
 5. Describe Construction Alternatives as **Generated on request** because Overview does not fetch
    or prove an existing alternative set.
-6. Replace the page-local feature-card mosaic and raw attention table with reusable semantic
+6. Require explicit structured portfolio membership before presenting a wave as the selected
+   portfolio's rebalance posture; list order and identifier text are not authority.
+7. Replace the page-local feature-card mosaic and raw attention table with reusable semantic
    Workbench patterns.
 
 ### Rejected decisions
@@ -5646,7 +5648,8 @@ not source authority for product state.
 
 Workbench #763 owns this slice. Focused design-system, view-model, and component tests prove the
 fail-closed risk profile, bounded attention evidence, business task handoffs, semantic table and
-navigation structure, and absence of fabricated alternatives availability. The governed screen
+navigation structure, explicit portfolio-to-wave binding, rejection of unscoped waves, and absence
+of fabricated alternatives availability. The governed screen
 guide and registry document Gateway/Core/Manage authority and remove only the Manage Overview #605
 coverage exception. Production-browser route proof, protected CI, exact-main validation, wiki
 publication, strict parity, issue closure, and branch hygiene remain required.

@@ -150,7 +150,9 @@ Current repository posture:
    or advertise generated construction alternatives that it has not fetched. Lead with named
    evidence gaps and active attention before navigation. Reuse `WorkbenchTaskDirectory` when a
    screen needs a compact set of source-owned business handoffs; keep task title, purpose, source
-   status, and action label together instead of recreating feature-card grids.
+   status, and action label together instead of recreating feature-card grids. Selected-portfolio
+   rebalance posture requires an explicit structured portfolio id or portfolio-id collection on the
+   wave record; never bind the first returned wave or infer membership from a wave or trigger id.
 10. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
     Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
     state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
