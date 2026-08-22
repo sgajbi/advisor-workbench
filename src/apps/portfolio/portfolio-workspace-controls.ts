@@ -1,4 +1,9 @@
-import type { ReviewContext } from "@/shell/review-context";
+import {
+  buildReviewContextHref,
+  parseReviewContext,
+  type ReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 import type { PortfolioWorkspace } from "./types";
 import {
@@ -90,6 +95,33 @@ export function applyPortfolioControlPatch(
   }
 
   return next;
+}
+
+export function buildPortfolioReviewHref({
+  pathname,
+  searchParams,
+  portfolioId,
+  controls,
+}: {
+  pathname: string;
+  searchParams: ReviewContextSearchParams & { toString(): string };
+  portfolioId: string;
+  controls: PortfolioWorkspaceControls;
+}): string {
+  const reviewContextResult = parseReviewContext(searchParams);
+  if (reviewContextResult.status === "invalid") {
+    throw new TypeError("Cannot navigate with invalid review context.");
+  }
+
+  const currentQuery = searchParams.toString();
+  const href = `${pathname}${currentQuery ? `?${currentQuery}` : ""}`;
+  return buildReviewContextHref(href, {
+    ...reviewContextResult.context,
+    portfolioId,
+    asOfDate: controls.asOfDate,
+    period: controls.timeWindow,
+    reportingCurrency: controls.reportingCurrency,
+  });
 }
 
 function canUsePortfolioAsOfDate(

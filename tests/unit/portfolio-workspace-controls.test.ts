@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyPortfolioControlPatch,
+  buildPortfolioReviewHref,
   resolvePortfolioReviewControls,
 } from "@/apps/portfolio/portfolio-workspace-controls";
 import type { PortfolioWorkspace } from "@/apps/portfolio/types";
@@ -138,5 +139,35 @@ describe("portfolio review-context controls", () => {
         "unsupported_reporting_currency",
       ],
     });
+  });
+});
+
+describe("portfolio review navigation", () => {
+  it("commits controls through the governed context while preserving page state", () => {
+    expect(
+      buildPortfolioReviewHref({
+        pathname: "/portfolio",
+        searchParams: new URLSearchParams(
+          "portfolioId=STALE&period=30D&mode=exceptions&selectedRecordId=SG000001",
+        ),
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        controls: CONTROLS,
+      }),
+    ).toBe(
+      "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=SG000001&mode=exceptions",
+    );
+  });
+
+  it("refuses to salvage an ambiguous current address", () => {
+    expect(() =>
+      buildPortfolioReviewHref({
+        pathname: "/portfolio",
+        searchParams: new URLSearchParams(
+          "portfolioId=PB_ONE&portfolioId=PB_TWO",
+        ),
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        controls: CONTROLS,
+      }),
+    ).toThrowError("Cannot navigate with invalid review context.");
   });
 });
