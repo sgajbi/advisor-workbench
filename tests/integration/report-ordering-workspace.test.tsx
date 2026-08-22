@@ -292,7 +292,7 @@ describe("ReportOrderingWorkspace", () => {
     }));
     expect(batchStatusMock).toHaveBeenCalledWith("rbch_1");
     expect(routerPushMock).toHaveBeenCalledWith(
-      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&batchId=rbch_1",
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD&batchId=rbch_1",
       { scroll: false },
     );
     expect(submitMock).not.toHaveBeenCalled();
