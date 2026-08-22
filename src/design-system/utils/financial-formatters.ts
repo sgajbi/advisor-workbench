@@ -30,7 +30,7 @@ export type BusinessDateParts = {
 
 const BUSINESS_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const OFFSET_TIMESTAMP_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/i;
 const SHORT_MONTHS = [
   "Jan",
   "Feb",
@@ -230,7 +230,30 @@ function formatBusinessDateParts(parts: BusinessDateParts): string {
 
 function parseTimestampValue(value: string | null | undefined): Date | null {
   const candidate = value?.trim();
-  if (!candidate || !OFFSET_TIMESTAMP_PATTERN.test(candidate)) {
+  const match = candidate?.match(OFFSET_TIMESTAMP_PATTERN);
+  if (!candidate || !match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const offsetHour = match[7] === undefined ? 0 : Number(match[7]);
+  const offsetMinute = match[8] === undefined ? 0 : Number(match[8]);
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth(year, month) ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    offsetHour > 23 ||
+    offsetMinute > 59
+  ) {
     return null;
   }
 

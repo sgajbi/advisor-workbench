@@ -72,4 +72,12 @@ describe("financial-formatters", () => {
       formatTimestampValue("not-a-timestamp", { nullDisplay: "Not available" }),
     ).toBe("Not available");
   });
+
+  it("rejects impossible timestamp calendar, clock, and offset components", () => {
+    expect(formatTimestampValue("2026-02-30T08:32:00Z")).toBe("N/A");
+    expect(formatTimestampValue("2026-01-01T24:00:00Z")).toBe("N/A");
+    expect(formatTimestampValue("2026-01-01T08:60:00Z")).toBe("N/A");
+    expect(formatTimestampValue("2026-01-01T08:32:60Z")).toBe("N/A");
+    expect(formatTimestampValue("2026-01-01T08:32:00+24:00")).toBe("N/A");
+  });
 });
