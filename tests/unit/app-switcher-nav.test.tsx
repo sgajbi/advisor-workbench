@@ -118,6 +118,59 @@ describe("AppSwitcherNav", () => {
     );
   });
 
+  it("carries the governed review context into every enabled workspace", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
+      ),
+    );
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "fallback",
+      normalized: fallbackNormalizedCapabilities(),
+    });
+
+    render(<AppSwitcherNav />);
+    openWorkspaceMenu();
+
+    expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute(
+      "href",
+      "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
+    expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
+    );
+  });
+
+  it("fails closed when a governed field is ambiguous", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_OTHER_001",
+      ),
+    );
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "fallback",
+      normalized: fallbackNormalizedCapabilities(),
+    });
+
+    render(<AppSwitcherNav />);
+    openWorkspaceMenu();
+
+    const portfolio = screen.getByText("Portfolio");
+    expect(portfolio).toHaveAttribute("aria-disabled", "true");
+    expect(portfolio).toHaveAttribute(
+      "title",
+      "Review context is invalid. Correct the portfolio, date, period, or currency selection before switching workspaces.",
+    );
+    expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
+  });
+
   it("marks Portfolio as the only current workspace on Allocation", () => {
     usePathnameMock.mockReturnValue("/allocation");
     useSearchParamsMock.mockReturnValue(new URLSearchParams());
