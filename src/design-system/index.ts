@@ -48,6 +48,7 @@ export type { WorkbenchChartContextRowItem } from "./components/workbench-chart-
 export { default as WorkbenchChartShell } from "./components/workbench-chart-shell";
 export { default as WorkbenchECharts } from "./components/workbench-echarts";
 export { default as WorkbenchDecisionBrief } from "./components/workbench-decision-brief";
+export { default as WorkbenchDecisionWorkspace } from "./components/workbench-decision-workspace";
 export type {
   WorkbenchDecisionBriefAttention,
   WorkbenchDecisionBriefFact,
