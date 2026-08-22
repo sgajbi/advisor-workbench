@@ -1364,6 +1364,8 @@ export default function ProposalLifecycleWorkspace({
           hasPrevious={sourceWindow.hasPrevious}
           hasNext={Boolean(data?.next_cursor)}
           isLoading={proposalQuery.isFetching}
+          itemLabel="proposals"
+          viewLabel="Proposal view"
           onPrevious={sourceWindow.showPrevious}
           onNext={() => sourceWindow.showNext(data?.next_cursor)}
         />

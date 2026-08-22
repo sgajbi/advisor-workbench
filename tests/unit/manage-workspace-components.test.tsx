@@ -282,7 +282,6 @@ describe("manage workspace split components", () => {
     expect(getDpmCommandCenterExceptions).toHaveBeenCalledWith(
       {
         portfolioId: "PF_1001",
-        mandateId: "mandate_001",
         state: "ACTIVE",
         limit: 25,
         cursor: "attention-window-2",
@@ -320,6 +319,25 @@ describe("manage workspace split components", () => {
       screen.getByRole("button", { name: "Benchmark mapping requires review" })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry source view" })).toBeEnabled();
+    expect(screen.queryByText("More attention items are available")).not.toBeInTheDocument();
+    expect(screen.queryByText("No open items")).not.toBeInTheDocument();
+  });
+
+  it("shows rejected source records explicitly instead of inferring an empty queue", () => {
+    const data = buildManageWorkspaceData();
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions!,
+      data: {
+        items: [{ mandate_id: "mandate_001", title: "Missing source identity" }],
+        next_cursor: null,
+      },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("1 source record could not be identified")).toBeInTheDocument();
+    expect(screen.getByText("0 in this view")).toBeInTheDocument();
+    expect(screen.queryByText("No open attention items")).not.toBeInTheDocument();
     expect(screen.queryByText("No open items")).not.toBeInTheDocument();
   });
 

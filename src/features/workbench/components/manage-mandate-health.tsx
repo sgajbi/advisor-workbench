@@ -23,7 +23,7 @@ import {
 } from "@/features/workbench/manage-mandate-health-helpers";
 import {
   businessStateLabel,
-  buildManageExceptionRows,
+  buildManageExceptionRowsResult,
   buildMandateHealthDimensionRows,
   filterManageExceptionRowsForMandate,
   formatBusinessMandateType,
@@ -58,8 +58,9 @@ export default function ManageMandateHealth({ data }: Props) {
     initialResponse: data.commandCenterExceptions,
     initialError: data.commandCenterExceptionsError,
   });
+  const exceptionRowsResult = buildManageExceptionRowsResult(exceptionSource.response);
   const exceptionRows = filterManageExceptionRowsForMandate(
-    buildManageExceptionRows(exceptionSource.response),
+    exceptionRowsResult.rows,
     commandModel.mandateId,
   );
   const hasAvailableExceptionEvidence = exceptionSource.evidencePosture !== "unavailable";
@@ -112,7 +113,6 @@ export default function ManageMandateHealth({ data }: Props) {
         hasSourceError={Boolean(
             data.commandCenterError ||
             !hasAvailableExceptionEvidence ||
-            exceptionSource.navigationFailure ||
             data.mandateHealthError
         )}
       />
@@ -171,6 +171,7 @@ export default function ManageMandateHealth({ data }: Props) {
           hasNext={Boolean(exceptionSource.nextCursor)}
           isLoading={exceptionSource.isLoading}
           navigationFailure={exceptionSource.navigationFailure}
+          rejectedRowCount={exceptionRowsResult.rejectedRowCount}
           selectedKey={selectedException?.key ?? null}
           onSelect={setSelectedExceptionKey}
           onPrevious={() => void exceptionSource.showPrevious()}
@@ -303,6 +304,7 @@ function AttentionReviewQueue({
   hasNext,
   isLoading,
   navigationFailure,
+  rejectedRowCount,
   selectedKey,
   onSelect,
   onPrevious,
@@ -320,6 +322,7 @@ function AttentionReviewQueue({
     direction: "next" | "previous";
     permissionBlocked: boolean;
   } | null;
+  rejectedRowCount: number;
   selectedKey: string | null;
   onSelect: (key: string) => void;
   onPrevious: () => void;
@@ -367,14 +370,21 @@ function AttentionReviewQueue({
           }
         />
       ) : null}
-      {evidencePosture === "unavailable" ? (
+      {rejectedRowCount > 0 ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title={`${rejectedRowCount} source ${rejectedRowCount === 1 ? "record could" : "records could"} not be identified`}
+          body="Manage returned attention evidence without a source-owned exception identifier. Confirmed records remain reviewable, but no complete or zero-attention conclusion has been inferred."
+        />
+      ) : evidencePosture === "unavailable" ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
           title="Attention items are temporarily unavailable"
           body="The mandate summary remains visible, but the source exception queue could not be confirmed. No zero-attention conclusion has been inferred."
         />
-      ) : evidencePosture === "partial" ? (
+      ) : evidencePosture === "partial" && !navigationFailure ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
@@ -427,7 +437,7 @@ function AttentionReviewQueue({
           title="No open attention items"
           body="Manage returned no open mandate exceptions for this portfolio."
         />
-      ) : evidencePosture === "partial" ? (
+      ) : evidencePosture === "partial" && rejectedRowCount === 0 ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"

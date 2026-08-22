@@ -67,8 +67,9 @@ investment approval, exception-resolution authority, or client-delivery authorit
 - Presents the selected portfolio and Manage mandate context through the Workbench BFF and Gateway.
 - Presents Manage-owned mandate health, data readiness, benchmark alignment, latest monitoring,
   and health-dimension evidence without recalculating them in the browser.
-- Filters source-returned book exceptions to the exact selected mandate and rejects rows without a
-  source-owned exception identity.
+- Filters each portfolio-scoped source window to the exact selected mandate. Rows without a
+  source-owned exception identity are rejected and reported as partial evidence instead of being
+  silently converted into an empty queue.
 - Provides keyboard-operable exception selection and keeps the selected record's business
   observation, severity, owner, age, source, status, and next step together.
 - Keeps monitoring-run, source-run, exception, mandate, correlation, and authority identifiers
@@ -87,7 +88,7 @@ investment approval, exception-resolution authority, or client-delivery authorit
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
 | Decide whether the attention view is reviewable | Supported Gateway response with an item collection and valid `next_cursor` metadata | None |
-| Treat the visible view as exhaustive | `next_cursor` is explicitly `null` | None |
+| Treat the visible view as exhaustive | `next_cursor` is explicitly `null` and every returned row has a source-owned exception identity | None |
 | Select an attention item | Valid source-owned exception identity belonging to the selected mandate | None; local review selection only |
 | Inspect supporting lineage | Selected source exception | None; expands technical evidence |
 | Continue to another source view | Source continuation cursor or previously confirmed cursor history | None; performs a new Gateway read |
@@ -117,6 +118,7 @@ Shared endpoint detail remains in [API Surface](API-Surface), and service owners
 | Partial populated view | Valid rows, **N in this view**, and **More attention items are available** | Continue through source views before drawing a whole-queue conclusion |
 | Complete empty view | **No open attention items** only after the source confirms no continuation | Continue the mandate review; this is not an enterprise all-clear |
 | Partial view with no selected-mandate row | Explicit statement that this source view cannot support a zero-attention conclusion | Continue to the next source view |
+| Row missing source identity | Explicit count of unidentifiable source records; confirmed rows remain reviewable and the view stays partial | Validate the Manage source response; do not infer zero or completeness |
 | Continuation loading | Last confirmed rows remain visible; navigation reports that attention items are loading | Wait; repeated navigation is blocked, then focus returns to the activated control or nearest available source-view action |
 | Continuation failure | Last confirmed rows plus a named next/previous-view failure and **Retry source view** | Retry the same scoped Gateway read |
 | Permission blocked | Last confirmed evidence remains bounded; the requested view is not presented as current | Use an entitled role or approved support path |
@@ -153,12 +155,13 @@ action and destination.
 ## Evidence And Validation
 
 - `tests/unit/manage-workspace-view-model.test.ts` proves source identity, mandate filtering,
-  malformed-row rejection, and complete/partial/unavailable cursor posture.
+  malformed-row accounting, and fail-closed complete/partial/unavailable cursor posture.
 - `tests/unit/workbench-api.test.ts` proves server composition and browser continuation requests use
-  the correct Gateway/BFF targets and exact portfolio, mandate, state, limit, and cursor parameters.
+  the correct Gateway/BFF targets and request parameters.
 - `tests/unit/manage-workspace-components.test.tsx` proves partial rows remain reviewable, source
   navigation, stable focus, exact source-view/correlation evidence, retained evidence on failure,
-  retry, and late-response fencing across portfolio and mandate changes.
+  retry, one consistent portfolio-scoped cursor query, explicit rejected-row posture, and
+  late-response fencing across portfolio and mandate changes.
 - `tests/unit/manage-overview-model.test.ts` proves Overview reports a partial first source view
   without converting it into unavailable evidence or a complete count.
 - `tests/e2e/manage-mandate-health-workspace.spec.ts` proves an optimized-production Workbench uses

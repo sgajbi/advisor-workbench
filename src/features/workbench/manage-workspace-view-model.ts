@@ -37,6 +37,11 @@ export type MandateHealthRow = {
   reasons: string;
 };
 
+export type ManageExceptionRowsResult = {
+  rows: ManageExceptionRow[];
+  rejectedRowCount: number;
+};
+
 export type ManageExceptionEvidencePosture = "complete" | "partial" | "unavailable";
 
 type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
@@ -44,15 +49,25 @@ type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
 export function buildManageExceptionRows(
   exceptions: ManageWorkspaceData["commandCenterExceptions"]
 ): ManageExceptionRow[] {
+  return buildManageExceptionRowsResult(exceptions).rows;
+}
+
+export function buildManageExceptionRowsResult(
+  exceptions: ManageWorkspaceData["commandCenterExceptions"]
+): ManageExceptionRowsResult {
   const records = extractRecords(asRecord(exceptions?.data).items ?? asRecord(exceptions?.data).exceptions);
-  return records.flatMap((record) => {
+  const rows: ManageExceptionRow[] = [];
+  let rejectedRowCount = 0;
+
+  for (const record of records) {
     const exceptionId =
       readString(record, "exception_id") ||
       readString(record, "monitoring_exception_id");
     if (!exceptionId) {
-      return [];
+      rejectedRowCount += 1;
+      continue;
     }
-    return [{
+    rows.push({
       key: exceptionId,
       mandateId: readString(record, "mandate_id"),
       monitoringRunId: readString(record, "monitoring_run_id") || "N/A",
@@ -82,8 +97,10 @@ export function buildManageExceptionRows(
         readString(record, "next_action") ||
         readString(record, "recommended_action") ||
         "N/A",
-    }];
-  });
+    });
+  }
+
+  return { rows, rejectedRowCount };
 }
 
 export function filterManageExceptionRowsForMandate(
@@ -131,7 +148,9 @@ export function getManageExceptionEvidencePosture(
     return "unavailable";
   }
   if (responseData.next_cursor === null) {
-    return "complete";
+    return buildManageExceptionRowsResult(exceptions).rejectedRowCount > 0
+      ? "partial"
+      : "complete";
   }
   return typeof responseData.next_cursor === "string" && responseData.next_cursor.trim()
     ? "partial"

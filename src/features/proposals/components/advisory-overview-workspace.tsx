@@ -389,6 +389,8 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
             hasPrevious={sourceWindow.hasPrevious}
             hasNext={Boolean(proposalQuery.data?.next_cursor)}
             isLoading={proposalQuery.isFetching}
+            itemLabel="proposals"
+            viewLabel="Proposal view"
             onPrevious={sourceWindow.showPrevious}
             onNext={() => sourceWindow.showNext(proposalQuery.data?.next_cursor)}
           />
