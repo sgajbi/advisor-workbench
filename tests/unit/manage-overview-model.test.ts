@@ -46,7 +46,7 @@ describe("manage overview model", () => {
         expect.objectContaining({
           key: "quality",
           title: "PM Operating Quality",
-          metric: "1 evidence rows",
+          metric: "1 evidence record",
           href: "/workbench/PF_1001?mode=quality",
         }),
         expect.objectContaining({
@@ -63,7 +63,17 @@ describe("manage overview model", () => {
       "review",
     ]);
     expect(model.blockedSurfaces).toEqual([]);
-    expect(model.overviewPostureLabel).toBe("Evidence Available");
+    expect(model.overviewPostureLabel).toBe("Action required");
+    expect(model.overviewPostureTone).toBe("warn");
+    expect(model.moduleItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "construction",
+          metric: "Generated on request",
+          actionLabel: "Open construction",
+        }),
+      ])
+    );
   });
 
   it("keeps partial posture source-owned and exposes blocked surfaces without local capability claims", () => {
@@ -82,7 +92,7 @@ describe("manage overview model", () => {
       "PM operating quality",
       "Outcome reviews",
     ]);
-    expect(model.overviewPostureLabel).toBe("Needs attention");
+    expect(model.overviewPostureLabel).toBe("Evidence incomplete");
     expect(model.overviewPostureTone).toBe("warn");
     expect(model.postureCards).toEqual(
       expect.arrayContaining([
@@ -95,6 +105,42 @@ describe("manage overview model", () => {
     );
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Client Communication");
     expect(model.moduleItems.map((item) => item.title)).not.toContain("Trade Approval");
+  });
+
+  it("does not infer a balanced mandate when the source omits risk profile", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        mandate: {
+          ...base.mandate!,
+          data: {
+            ...base.mandate!.data,
+            risk_profile: null,
+          },
+        },
+      })
+    );
+
+    expect(model.portfolioSummary.riskProfile).toBe("Not reported");
+    expect(model.blockedSurfaces).toContain("Mandate risk profile");
+    expect(model.overviewPostureLabel).toBe("Evidence incomplete");
+    expect(model.overviewPostureTone).toBe("warn");
+  });
+
+  it("uses a source-confirmed ready posture only when evidence is complete and no items are open", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        commandCenterExceptions: {
+          ...base.commandCenterExceptions!,
+          data: { items: [], next_cursor: null },
+        },
+      })
+    );
+
+    expect(model.blockedSurfaces).toEqual([]);
+    expect(model.overviewPostureLabel).toBe("Ready for review");
+    expect(model.overviewPostureTone).toBe("success");
   });
 
   it.each([

@@ -1,8 +1,12 @@
+import Link from "next/link";
+
 import {
+  AnalyticsTable,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
   Text,
+  WorkbenchTaskDirectory,
 } from "@/design-system";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import { buildManageOverviewModel } from "@/features/workbench/manage-overview-model";
@@ -21,7 +25,7 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
   return (
     <SectionBlock
       title="Mandate Operating Posture"
-      subtitle="Advisor-facing view of mandate readiness, rebalance status, and items needing attention."
+      subtitle="Portfolio-manager view of mandate readiness, rebalance status, and items needing attention."
       className="manage-overview-panel"
       actions={
         <SemanticBadge tone={model.overviewPostureTone}>
@@ -77,49 +81,55 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
                 : "Evidence unavailable"}
             </span>
           </div>
-          <table className="manage-overview-table">
-            <thead>
-              <tr>
-                <th>Priority</th>
-                <th>Observation</th>
-                <th>Source</th>
-                <th>Age</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!model.hasCompleteExceptionEvidence ? (
-                <tr>
-                  <td colSpan={5}>
-                    Attention-item evidence is temporarily unavailable; no zero-attention
-                    conclusion has been inferred.
-                  </td>
-                </tr>
-              ) : model.exceptionRows.length ? (
-                model.exceptionRows.slice(0, 4).map((row) => (
-                  <tr key={row.key}>
-                    <td>
-                      <SemanticBadge tone={toneForState(row.severity)}>
+          <AnalyticsTable
+            ariaLabel="Mandate attention items"
+            scrollRegionLabel="Mandate attention worklist"
+            density="compact"
+            variant="observation"
+            className="manage-overview-analytics-table"
+            columns={[
+              { key: "priority", label: "Priority" },
+              { key: "observation", label: "Observation" },
+              { key: "owner", label: "Owner" },
+              { key: "age", label: "Age" },
+              { key: "action", label: "Next step" },
+            ]}
+            rows={
+              model.hasCompleteExceptionEvidence
+                ? model.exceptionRows.slice(0, 4).map((row) => ({
+                    key: row.key,
+                    cells: [
+                      <SemanticBadge key="priority" tone={toneForState(row.severity)}>
                         {businessStateLabel(row.severity)}
-                      </SemanticBadge>
-                    </td>
-                    <td>{formatBusinessExceptionTitle(row.title)}</td>
-                    <td>{formatBusinessOwner(row.owner)}</td>
-                    <td>{row.age}</td>
-                    <td>
-                      <a href={buildManageModeHref(model.portfolioSummary.portfolioId, "mandate")}>
+                      </SemanticBadge>,
+                      formatBusinessExceptionTitle(row.title),
+                      formatBusinessOwner(row.owner),
+                      row.age,
+                      <Link
+                        key="action"
+                        href={buildManageModeHref(
+                          model.portfolioSummary.portfolioId,
+                          "mandate"
+                        )}
+                      >
                         {row.nextAction}
-                      </a>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5}>No active attention items.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      </Link>,
+                    ],
+                  }))
+                : []
+            }
+            emptyState={
+              model.hasCompleteExceptionEvidence
+                ? {
+                    title: "No active attention items",
+                    body: "The current source window reports no open mandate attention items.",
+                  }
+                : {
+                    title: "Attention evidence unavailable",
+                    body: "No zero-attention conclusion has been inferred. Open Mandate Health when source evidence is available.",
+                  }
+            }
+          />
         </div>
 
         <div className="manage-overview-card manage-active-rebalance-card">
@@ -149,19 +159,26 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
         </div>
       </div>
 
-      <div className="manage-module-grid" aria-label="Manage work areas">
-        {model.moduleItems.map((item) => (
-          <a className="manage-module-card" href={item.href} key={item.key}>
-            <span className="manage-module-icon" data-icon={item.icon} aria-hidden="true" />
-            <strong>{item.title}</strong>
-            <span className="manage-module-metric">{item.metric}</span>
-          </a>
-        ))}
-      </div>
+      <SectionBlock
+        title="Continue Portfolio Management"
+        subtitle="Open the source-owned work area required for the next decision."
+      >
+        <WorkbenchTaskDirectory
+          ariaLabel="Manage work areas"
+          items={model.moduleItems.map((item) => ({
+            key: item.key,
+            title: item.title,
+            description: item.description,
+            status: item.metric,
+            href: item.href,
+            actionLabel: item.actionLabel,
+          }))}
+        />
+      </SectionBlock>
 
       <div className="manage-overview-activity">
         <div className="manage-overview-card-header">
-          <h3>Audit Log &amp; Timeline</h3>
+          <h3>Recent Operating Activity</h3>
         </div>
         <div className="manage-activity-timeline" role="list">
           {model.latestActivities.map((activity) => (
