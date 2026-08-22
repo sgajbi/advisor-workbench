@@ -330,7 +330,7 @@ describe("ProposalDetailView", () => {
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("returns to the originating lifecycle view using the source-owned portfolio", async () => {
+  it("drops selectors from a different portfolio when returning to the source-owned worklist", async () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
@@ -351,7 +351,33 @@ describe("ProposalDetailView", () => {
     const returnLink = await screen.findByRole("link", { name: "Return to Risk and Impact" });
     expect(returnLink).toHaveAttribute(
       "href",
-      "/proposals?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk-impact"
+      "/proposals?portfolioId=pf_1&mode=risk-impact"
+    );
+  });
+
+  it("preserves selectors that belong to the source-owned proposal portfolio", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-1"
+          returnPortfolioId="pf_1"
+          returnReviewContext={{
+            portfolioId: "pf_1",
+            asOfDate: "2026-08-21",
+            period: "YTD",
+            reportingCurrency: "SGD",
+          }}
+          returnMode="risk-impact"
+        />
+      </QueryClientProvider>
+    );
+
+    expect(
+      await screen.findByRole("link", { name: "Return to Risk and Impact" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk-impact",
     );
   });
 
