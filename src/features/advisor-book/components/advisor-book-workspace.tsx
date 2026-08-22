@@ -108,7 +108,7 @@ function AdvisorBookDateRequired({
     const next = new URLSearchParams(searchParams.toString());
     next.set("asOfDate", resolution.value);
     next.set("offset", "0");
-    router.replace(`${pathname}?${next.toString()}`);
+    router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
   return (
@@ -176,7 +176,7 @@ function AdvisorBookSourceWorkspace({
     setOptionalQuery(next, "sortBy", sortBy === "portfolio_id" ? "" : sortBy);
     setOptionalQuery(next, "sortOrder", sortOrder === "asc" ? "" : sortOrder);
     next.set("offset", "0");
-    router.replace(`${pathname}?${next.toString()}`);
+    router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
   function clearView() {
@@ -184,13 +184,13 @@ function AdvisorBookSourceWorkspace({
     for (const key of ["clientId", "mandateType", "sortBy", "sortOrder", "offset"]) {
       next.delete(key);
     }
-    router.replace(`${pathname}?${next.toString()}`);
+    router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
   function changePage(offset: number) {
     const next = new URLSearchParams(searchParams.toString());
     next.set("offset", String(Math.max(offset, 0)));
-    router.replace(`${pathname}?${next.toString()}`);
+    router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
   if (loading) {

@@ -5,6 +5,7 @@ import AdvisorBookWorkspace from "@/features/advisor-book/components/advisor-boo
 import { WorkbenchApiError } from "@/features/workbench/api-client";
 
 const getAdvisorBookMock = vi.fn();
+const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
 const useSearchParamsMock = vi.fn();
 
@@ -17,7 +18,7 @@ vi.mock("@/features/advisor-book/api", async () => {
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/book",
-  useRouter: () => ({ replace: routerReplaceMock }),
+  useRouter: () => ({ push: routerPushMock, replace: routerReplaceMock }),
   useSearchParams: () => useSearchParamsMock(),
 }));
 
@@ -87,6 +88,7 @@ describe("AdvisorBookWorkspace", () => {
 
   beforeEach(() => {
     routerReplaceMock.mockReset();
+    routerPushMock.mockReset();
     getAdvisorBookMock.mockReset();
     useSearchParamsMock.mockReturnValue(new URLSearchParams("asOfDate=2026-04-10"));
   });
@@ -133,9 +135,11 @@ describe("AdvisorBookWorkspace", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Review book" }));
 
-    expect(routerReplaceMock).toHaveBeenCalledWith(
+    expect(routerPushMock).toHaveBeenCalledWith(
       "/book?asOfDate=2026-04-11&clientId=CIF_SG_002&offset=0",
+      { scroll: false },
     );
+    expect(routerReplaceMock).not.toHaveBeenCalled();
   });
 
   it("does not request source data for an ambiguous repeated business date", () => {
@@ -198,8 +202,9 @@ describe("AdvisorBookWorkspace", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
 
-    expect(routerReplaceMock).toHaveBeenCalledWith(
+    expect(routerPushMock).toHaveBeenCalledWith(
       "/book?asOfDate=2026-04-10&offset=0&clientId=CIF_SG_002",
+      { scroll: false },
     );
   });
 
@@ -231,12 +236,16 @@ describe("AdvisorBookWorkspace", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
-    expect(routerReplaceMock).toHaveBeenLastCalledWith(
+    expect(routerPushMock).toHaveBeenLastCalledWith(
       "/book?asOfDate=2026-04-10&clientId=CIF_SG_002&mandateType=ADVISORY&sortBy=client_id&sortOrder=desc&offset=0",
+      { scroll: false },
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Clear view" }));
-    expect(routerReplaceMock).toHaveBeenLastCalledWith("/book?asOfDate=2026-04-10");
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/book?asOfDate=2026-04-10",
+      { scroll: false },
+    );
   });
 
   it("keeps requested controls explicit when the source returns a different order", async () => {
