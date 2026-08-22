@@ -51,9 +51,9 @@ export default function AppSwitcherNav() {
 
   return (
     <WorkspaceMenuNav
-      key={routeIdentity}
       items={items}
       ariaLabel="Workspace Navigation"
+      navigationIdentity={routeIdentity}
     />
   );
 }
