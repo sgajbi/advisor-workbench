@@ -199,6 +199,8 @@ vi.mock(
       detailDrawer: {
         title: string;
         tabs: Array<{ key: string; label: string; content: ReactNode }>;
+        fullPageHref?: string;
+        fullPageLabel?: string;
       } | null;
       onClose: () => void;
     }) =>
@@ -210,6 +212,9 @@ vi.mock(
               {tab.content}
             </section>
           ))}
+          {detailDrawer.fullPageHref && detailDrawer.fullPageLabel ? (
+            <a href={detailDrawer.fullPageHref}>{detailDrawer.fullPageLabel}</a>
+          ) : null}
           <button type="button" onClick={onClose}>Close holding review</button>
         </aside>
       ) : null,
@@ -381,6 +386,10 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     );
     expect(screen.getByText("US_TECH · 100 USD gross")).toBeInTheDocument();
     expect(screen.queryByText("SG_BOND · 200 SGD")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open transactions" })).toHaveAttribute(
+      "href",
+      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
     expect(routerPushMock).toHaveBeenCalledWith(
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=EQ_US_1",
       { scroll: false },

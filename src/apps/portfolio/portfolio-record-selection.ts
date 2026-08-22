@@ -1,5 +1,7 @@
 import {
+  buildReviewContextHref,
   buildReviewContextNavigationHref,
+  parseReviewContext,
   type ReviewContextSearchParams,
 } from "@/shell/review-context";
 
@@ -21,5 +23,28 @@ export function buildPortfolioRecordSelectionHref({
       portfolioId,
       selectedRecordId,
     },
+  });
+}
+
+export function buildPortfolioRelatedRecordHref({
+  destinationPathname,
+  sourceHref,
+  portfolioId,
+}: {
+  destinationPathname: string;
+  sourceHref: string;
+  portfolioId: string;
+}): string | null {
+  const sourceUrl = new URL(sourceHref, "http://workbench.local");
+  const reviewContextResult = parseReviewContext(sourceUrl.searchParams);
+  if (reviewContextResult.status === "invalid") {
+    return null;
+  }
+
+  return buildReviewContextHref(destinationPathname, {
+    ...reviewContextResult.context,
+    portfolioId,
+    selectedRecordId: undefined,
+    batchId: undefined,
   });
 }
