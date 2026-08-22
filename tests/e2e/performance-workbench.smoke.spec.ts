@@ -17,6 +17,12 @@ import {
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
 import { observeBrowserRuntimeFailures } from './browser-runtime-reliability';
+import {
+  GOVERNED_REVIEW_AS_OF_DATE,
+  GOVERNED_REVIEW_CURRENCY,
+  GOVERNED_REVIEW_PERIOD,
+  GOVERNED_REVIEW_PORTFOLIO_ID,
+} from './governed-review-context-fixture';
 
 test.describe.configure({ mode: 'default' });
 
@@ -128,9 +134,10 @@ function expectGovernedPerformanceContext(
     reportingCurrency: string;
     mode?: string;
   },
+  pathname = '/performance',
 ) {
   const currentUrl = new URL(url);
-  expect(currentUrl.pathname).toBe('/performance');
+  expect(currentUrl.pathname).toBe(pathname);
   expect(currentUrl.searchParams.get('portfolioId')).toBe(expected.portfolioId);
   expect(currentUrl.searchParams.get('asOfDate')).toBe(expected.asOfDate);
   expect(currentUrl.searchParams.get('period')).toBe(expected.period);
@@ -932,6 +939,76 @@ test.describe('Performance workbench smoke', () => {
       reportingCurrency: summary.portfolio.base_currency,
       mode: 'analysis',
     });
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
+  });
+
+  test('governed review context survives Portfolio to Performance and browser Back', async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic cross-workspace proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+    const reviewContext = {
+      portfolioId: GOVERNED_REVIEW_PORTFOLIO_ID,
+      asOfDate: GOVERNED_REVIEW_AS_OF_DATE,
+      period: GOVERNED_REVIEW_PERIOD,
+      reportingCurrency: GOVERNED_REVIEW_CURRENCY,
+    };
+    const portfolioUrl = new URL('/portfolio', 'http://workbench.local');
+    Object.entries(reviewContext).forEach(([key, value]) => {
+      portfolioUrl.searchParams.set(key, value);
+    });
+
+    await page.goto(`${portfolioUrl.pathname}${portfolioUrl.search}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    expectGovernedPerformanceContext(page.url(), reviewContext, '/portfolio');
+
+    const workspaceNavigation = page.getByRole('navigation', {
+      name: 'Workspace Navigation',
+    });
+    const workspaceTrigger = workspaceNavigation.getByRole('button', {
+      name: 'Switch workspace. Current workspace Portfolio',
+    });
+    await workspaceTrigger.click();
+    const performanceLink = workspaceNavigation.getByRole('link', {
+      name: 'Performance',
+    });
+    await performanceLink.focus();
+    await performanceLink.click();
+
+    await expect(page.getByRole('heading', { name: /^Performance$/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    expectGovernedPerformanceContext(page.url(), reviewContext);
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Workspace Navigation' })
+        .getByRole('button', {
+          name: 'Switch workspace. Current workspace Performance',
+        }),
+    ).toBeFocused();
+
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    expectGovernedPerformanceContext(page.url(), reviewContext, '/portfolio');
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Workspace Navigation' })
+        .getByRole('button', {
+          name: 'Switch workspace. Current workspace Portfolio',
+        }),
+    ).toBeFocused();
 
     await runtime.assertStylesAreHeadManaged();
     expect(runtime.snapshot()).toEqual([]);
