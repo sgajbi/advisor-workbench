@@ -422,16 +422,27 @@ export function useReportOrderingWorkflow({
         : null,
     [catalogue, configuration],
   );
+  const activeScopePortfolioIds =
+    initialBatchId && activeBatchIntent
+      ? activeBatchIntent.portfolioIds
+      : selectedPortfolioIds;
+  const activePortfolioSelectionState = initialBatchId
+    ? activeBatchIntent
+      ? "ready"
+      : batchStatusError
+        ? "error"
+        : "loading"
+    : portfolioSelectionState;
   const model = useMemo(
     () => baseModel
       ? applyReportScopeReadiness(
           baseModel,
           scopeMode,
-          selectedPortfolioIds,
-          portfolioSelectionState,
+          activeScopePortfolioIds,
+          activePortfolioSelectionState,
         )
       : null,
-    [baseModel, portfolioSelectionState, scopeMode, selectedPortfolioIds],
+    [activePortfolioSelectionState, activeScopePortfolioIds, baseModel, scopeMode],
   );
   const publishedConfigurationFieldIds = useMemo(
     () =>
@@ -444,7 +455,7 @@ export function useReportOrderingWorkflow({
   const currentSourceFingerprint = catalogue ? JSON.stringify(catalogue) : "";
   const currentScopeFingerprint = JSON.stringify({
     scopeMode,
-    portfolioIds: [...selectedPortfolioIds].sort(),
+    portfolioIds: [...activeScopePortfolioIds].sort(),
   });
   const activeReviewedIntent =
     reviewedIntent?.portfolioId === portfolioId ? reviewedIntent : null;
@@ -586,7 +597,7 @@ export function useReportOrderingWorkflow({
       const handle = scopeMode === "explicit_portfolio_batch"
         ? await submitPortfolioReviewBatch({
             ...sharedOrder,
-            portfolioIds: [...selectedPortfolioIds].sort(),
+            portfolioIds: [...activeScopePortfolioIds].sort(),
           })
         : await submitPortfolioReviewOrder({ ...sharedOrder, portfolioId });
       if (!isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration)) {
@@ -596,12 +607,12 @@ export function useReportOrderingWorkflow({
         const batchHandle = handle as ReportBatchHandle;
         if (
           batchHandle.idempotency_key !== activeReviewedIntent.idempotencyKey ||
-          batchHandle.item_count !== selectedPortfolioIds.length
+          batchHandle.item_count !== activeScopePortfolioIds.length
         ) {
           throw new Error("The accepted bundle did not match the reviewed request intent.");
         }
         const batchIntent: ActiveBatchIntent = {
-          portfolioIds: [...selectedPortfolioIds].sort(),
+          portfolioIds: [...activeScopePortfolioIds].sort(),
           asOfDate: configuration.asOfDate,
           requestedOutputFormats: [configuration.outputFormat],
           reportingCurrency:
@@ -657,7 +668,7 @@ export function useReportOrderingWorkflow({
     activeReviewedIntent,
     currentScopeFingerprint,
     scopeMode,
-    selectedPortfolioIds,
+    activeScopePortfolioIds,
     onBatchAccepted,
   ]);
 
