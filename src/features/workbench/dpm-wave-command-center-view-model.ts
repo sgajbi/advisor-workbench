@@ -181,6 +181,7 @@ export type DpmWaveCommandCenterPanelModel = {
   selectedWaveSupportabilityReason: string;
   reportInputRef: string;
   reportInputStatus: string;
+  proofPackStatus: string;
   aiMemoStatus: string;
   aiMemoRunId: string;
   operationsHandoffSummaryStatus: string;
@@ -330,6 +331,9 @@ export function buildDpmWaveCommandCenterModel(params: {
     reportInputRef: readReportInputRef(params.waveReportInput?.data, waveAiMemo),
     reportInputStatus: params.waveReportInput
       ? normalizeState(params.waveReportInput.supportability.state)
+      : "NOT_REQUESTED",
+    proofPackStatus: waveDetail
+      ? normalizeState(waveDetail.supportability.state)
       : "NOT_REQUESTED",
     aiMemoStatus: readAiMemoStatus(
       waveAiMemo,
