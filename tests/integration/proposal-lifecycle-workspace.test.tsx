@@ -2879,6 +2879,12 @@ describe("ProposalLifecycleWorkspace", () => {
     renderWithQueryClient(
       <ProposalLifecycleWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-10",
+          period: "YTD",
+          reportingCurrency: "SGD",
+        }}
         mode="suitability"
       />,
     );
@@ -2915,7 +2921,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("link", { name: "Open full proposal" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=suitability",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&fromMode=suitability",
     );
     expect(screen.getAllByText("Review required")).toHaveLength(3);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();

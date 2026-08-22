@@ -81,7 +81,10 @@ describe("portfolio data grids", () => {
 
     render(
       <PortfolioHoldingsGrid
-        portfolioId="MANUAL_PB_USD_001"
+        reviewContext={{
+          portfolioId: "MANUAL_PB_USD_001",
+          asOfDate: "2026-03-28",
+        }}
         positions={[
           {
             security_id: "EQ_1",
@@ -99,7 +102,6 @@ describe("portfolio data grids", () => {
           },
         ]}
         baseCurrency="USD"
-        asOfDate="2026-03-28"
         columnMode="expanded"
         filterLabel="Filtered by Asset Class: Equities"
         onClearFilter={onClearFilter}
@@ -138,7 +140,10 @@ describe("portfolio data grids", () => {
   it("omits inactive holdings controls when no filter or bulk workflow exists", () => {
     render(
       <PortfolioHoldingsGrid
-        portfolioId="MANUAL_PB_USD_001"
+        reviewContext={{
+          portfolioId: "MANUAL_PB_USD_001",
+          asOfDate: "2026-03-28",
+        }}
         positions={[
           {
             security_id: "EQ_1",
@@ -151,7 +156,6 @@ describe("portfolio data grids", () => {
           },
         ]}
         baseCurrency="USD"
-        asOfDate="2026-03-28"
         columnMode="expanded"
         onRowSelect={vi.fn()}
       />,
@@ -908,10 +912,14 @@ describe("portfolio data grids", () => {
   it("shows an empty-state CTA for holdings with no rows", () => {
     const { container } = render(
       <PortfolioHoldingsGrid
-        portfolioId="MANUAL_PB_USD_001"
+        reviewContext={{
+          portfolioId: "MANUAL_PB_USD_001",
+          asOfDate: "2026-03-28",
+          period: "YTD",
+          reportingCurrency: "EUR",
+        }}
         positions={[]}
         baseCurrency="USD"
-        asOfDate="2026-03-28"
         columnMode="essential"
       />
     );
@@ -919,11 +927,11 @@ describe("portfolio data grids", () => {
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toHaveAttribute(
       "href",
-      "/workbench/MANUAL_PB_USD_001?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&reportingCurrency=USD",
+      "/workbench/MANUAL_PB_USD_001?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=YTD&reportingCurrency=EUR",
     );
     expect(screen.getByRole("link", { name: /Review readiness/i })).toHaveAttribute(
       "href",
-      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&reportingCurrency=USD#portfolio-attention",
+      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=YTD&reportingCurrency=EUR#portfolio-attention",
     );
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
@@ -933,7 +941,10 @@ describe("portfolio data grids", () => {
   it("shows a partial state when some holdings are unpriced", () => {
     const { container } = render(
       <PortfolioHoldingsGrid
-        portfolioId="MANUAL_PB_USD_001"
+        reviewContext={{
+          portfolioId: "MANUAL_PB_USD_001",
+          asOfDate: "2026-03-28",
+        }}
         positions={[
           {
             security_id: "EQ_1",
@@ -947,7 +958,6 @@ describe("portfolio data grids", () => {
           },
         ]}
         baseCurrency="USD"
-        asOfDate="2026-03-28"
         columnMode="essential"
       />
     );
@@ -1133,7 +1143,10 @@ describe("portfolio data grids", () => {
     const { container } = render(
       <>
         <PortfolioHoldingsGrid
-          portfolioId="MANUAL_PB_USD_001"
+          reviewContext={{
+            portfolioId: "MANUAL_PB_USD_001",
+            asOfDate: "2026-03-28",
+          }}
           positions={[
             {
               security_id: "EQ_1",
@@ -1148,7 +1161,6 @@ describe("portfolio data grids", () => {
             },
           ]}
           baseCurrency="USD"
-          asOfDate="2026-03-28"
           columnMode="expanded"
         />
         <PortfolioTransactionsGrid

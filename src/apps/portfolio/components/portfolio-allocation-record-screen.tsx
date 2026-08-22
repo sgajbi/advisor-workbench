@@ -8,6 +8,7 @@ import {
 } from "../portfolio-allocation-drilldown-view-model";
 import type { PortfolioRecordScreenData } from "../portfolio-record-screen-data";
 import type { PortfolioAllocationSelection, PortfolioWorkspace } from "../types";
+import type { PortfolioTimeWindow } from "../view-model";
 import PortfolioAllocationPanel from "./portfolio-allocation-panel";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
 import PortfolioRecordScreenShell from "./portfolio-record-screen-shell";
@@ -24,6 +25,7 @@ export default function PortfolioAllocationRecordScreen(props: PortfolioRecordSc
           workspace={props.workspace}
           asOfDate={context.selectedAsOfDate}
           reportingCurrency={context.selectedReportingCurrency}
+          timeWindow={props.timeWindow ?? context.timeWindow}
         />
       ) : null}
     </PortfolioRecordScreenShell>
@@ -34,10 +36,12 @@ function PortfolioAllocationRecordWorkspace({
   workspace,
   asOfDate,
   reportingCurrency,
+  timeWindow,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
   reportingCurrency: string;
+  timeWindow: PortfolioTimeWindow;
 }) {
   const [selectedAllocation, setSelectedAllocation] =
     useState<PortfolioAllocationSelection | null>(null);
@@ -67,10 +71,14 @@ function PortfolioAllocationRecordWorkspace({
         onExposureModeChange={setAllocationExposureMode}
       />
       <PortfolioHoldingsGrid
-        portfolioId={workspace.portfolio.portfolio_id}
+        reviewContext={{
+          portfolioId: workspace.portfolio.portfolio_id,
+          asOfDate,
+          period: timeWindow,
+          reportingCurrency,
+        }}
         positions={allocationHoldings.positions}
         baseCurrency={workspace.portfolio.base_currency}
-        asOfDate={asOfDate}
         columnMode="expanded"
         kicker="Exposure contributors"
         title={allocationHoldings.title}
