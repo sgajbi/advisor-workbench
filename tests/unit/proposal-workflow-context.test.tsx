@@ -146,4 +146,20 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.getByText("Workflow context")).toBeInTheDocument();
     expect(screen.getByText("Source and scope")).toBeInTheDocument();
   });
+
+  it("preserves repeated source blockers without duplicate-key warnings", () => {
+    const repeatedBlocker = "Selected evidence remains unavailable.";
+    const model = {
+      ...neutralModel,
+      blockers: [repeatedBlocker, repeatedBlocker],
+    };
+
+    render(
+      <ProposalWorkflowContextProvider initialModel={model}>
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(screen.getAllByText(repeatedBlocker)).toHaveLength(2);
+  });
 });

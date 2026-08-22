@@ -132,8 +132,8 @@ export function ProposalWorkflowContextRail() {
               Attention required
             </Text>
             <ul>
-              {model.blockers.map((blocker) => (
-                <li key={blocker}>{blocker}</li>
+              {model.blockers.map((blocker, index) => (
+                <li key={`${blocker}:${index}`}>{blocker}</li>
               ))}
             </ul>
           </section>
