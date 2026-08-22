@@ -14,8 +14,15 @@ const workbenchPort = Number.parseInt(
   10,
 );
 
-if (scenario !== "rebalance-waves") {
-  throw new Error("Manage smoke scenario must be rebalance-waves.");
+const scenarioSpecs = {
+  "mandate-health": "tests/e2e/manage-mandate-health-workspace.spec.ts",
+  "rebalance-waves": "tests/e2e/manage-rebalance-workspace.spec.ts",
+};
+const spec = scenarioSpecs[scenario];
+if (!spec) {
+  throw new Error(
+    `Manage smoke scenario must be one of: ${Object.keys(scenarioSpecs).join(", ")}.`,
+  );
 }
 for (const [name, port] of [
   ["MANAGE_E2E_FIXTURE_PORT", fixturePort],
@@ -39,7 +46,7 @@ const child = spawn(
   [
     playwrightCli,
     "test",
-    "tests/e2e/manage-rebalance-workspace.spec.ts",
+    spec,
     ...forwardedArguments,
   ],
   {

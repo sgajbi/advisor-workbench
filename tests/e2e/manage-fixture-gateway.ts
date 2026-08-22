@@ -5,10 +5,18 @@ import { fallbackNormalizedCapabilities } from "../../src/features/platform-capa
 export type ManageFixtureGateway = {
   close: () => Promise<void>;
   port: number;
+  setMandateHealthExceptionMode: (
+    mode: "windows" | "empty" | "unavailable" | "delayed-next",
+  ) => void;
+  setMandateHealthPortfolioScope: (
+    portfolioId: "PB_SG_GLOBAL_BAL_001" | "PB_SG_INCOME_001",
+  ) => void;
 };
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const mandateId = "MANDATE_PB_SG_GLOBAL_BAL_001";
+const secondaryPortfolioId = "PB_SG_INCOME_001";
+const secondaryMandateId = "MANDATE_PB_SG_INCOME_001";
 const waveId = "dwv_001";
 const campaignId = "campaign-holdings-202605";
 
@@ -17,6 +25,12 @@ export async function startManageFixtureGateway({
 }: {
   port: number;
 }): Promise<ManageFixtureGateway> {
+  let mandateHealthExceptionMode:
+    | "windows"
+    | "empty"
+    | "unavailable"
+    | "delayed-next" = "windows";
+  let activeMandateHealthPortfolioId = portfolioId;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
     const path = requestUrl.pathname;
@@ -35,17 +49,33 @@ export async function startManageFixtureGateway({
       });
       return;
     }
-    if (path === `/api/v1/workbench/${portfolioId}/portfolio-360`) {
-      sendJson(response, portfolio360());
+    const portfolio360Match = path.match(/^\/api\/v1\/workbench\/([^/]+)\/portfolio-360$/);
+    if (portfolio360Match) {
+      const requestedPortfolioId = portfolio360Match[1];
+      if (![portfolioId, secondaryPortfolioId].includes(requestedPortfolioId)) {
+        sendJson(response, { code: "fixture_portfolio_not_found" }, 404);
+        return;
+      }
+      sendJson(response, portfolio360(requestedPortfolioId));
+      return;
+    }
+    const mandateByPortfolioMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/mandates\/by-portfolio\/([^/]+)$/,
+    );
+    if (mandateByPortfolioMatch) {
+      const requestedPortfolioId = mandateByPortfolioMatch[1];
+      sendJson(
+        response,
+        requestedPortfolioId === secondaryPortfolioId
+          ? mandateEnvelope(secondaryPortfolioId, secondaryMandateId)
+          : mandateEnvelope(),
+      );
       return;
     }
     if (
-      path === `/api/v1/dpm/command-center/mandates/by-portfolio/${portfolioId}`
+      path === `/api/v1/dpm/command-center/mandates/${mandateId}/health` ||
+      path === `/api/v1/dpm/command-center/mandates/${secondaryMandateId}/health`
     ) {
-      sendJson(response, mandateEnvelope());
-      return;
-    }
-    if (path === `/api/v1/dpm/command-center/mandates/${mandateId}/health`) {
       sendJson(
         response,
         commandEnvelope({ dimensions: [] }, "corr-manage-health"),
@@ -78,11 +108,15 @@ export async function startManageFixtureGateway({
       return;
     }
     if (path === "/api/v1/dpm/command-center") {
+      const activeMandateId =
+        activeMandateHealthPortfolioId === secondaryPortfolioId
+          ? secondaryMandateId
+          : mandateId;
       sendJson(
         response,
         commandEnvelope(
           {
-            mandate_id: mandateId,
+            mandate_id: activeMandateId,
             mandate_health_state: "READY",
             data_completeness_state: "READY",
             latest_monitoring_run_status: "COMPLETE",
@@ -93,6 +127,40 @@ export async function startManageFixtureGateway({
       return;
     }
     if (path === "/api/v1/dpm/command-center/exceptions") {
+      if (process.env.MANAGE_E2E_FIXTURE === "mandate-health") {
+        const cursor = requestUrl.searchParams.get("cursor");
+        const requestedPortfolioId = requestUrl.searchParams.get("portfolio_id");
+        if (requestedPortfolioId === secondaryPortfolioId) {
+          sendJson(response, secondaryMandateExceptionWindow());
+          return;
+        }
+        if (mandateHealthExceptionMode === "unavailable") {
+          sendJson(response, { code: "fixture_exception_source_unavailable" }, 503);
+          return;
+        }
+        if (mandateHealthExceptionMode === "empty") {
+          sendJson(response, mandateExceptionEmptyWindow());
+          return;
+        }
+        if (
+          mandateHealthExceptionMode === "delayed-next" &&
+          cursor === "mandate-attention-window-2"
+        ) {
+          setTimeout(() => {
+            if (!response.destroyed) {
+              sendJson(response, mandateExceptionWindowTwo());
+            }
+          }, 750);
+          return;
+        }
+        sendJson(
+          response,
+          cursor === "mandate-attention-window-2"
+            ? mandateExceptionWindowTwo()
+            : mandateExceptionWindowOne(),
+        );
+        return;
+      }
       sendJson(
         response,
         commandEnvelope(
@@ -171,17 +239,126 @@ export async function startManageFixtureGateway({
   return {
     port,
     close: () => closeServer(server),
+    setMandateHealthExceptionMode: (mode) => {
+      mandateHealthExceptionMode = mode;
+    },
+    setMandateHealthPortfolioScope: (requestedPortfolioId) => {
+      activeMandateHealthPortfolioId = requestedPortfolioId;
+    },
   };
 }
 
-function portfolio360() {
+function mandateExceptionWindowOne() {
+  return commandEnvelope(
+    {
+      items: [
+        {
+          exception_id: "mandate-exception-benchmark",
+          mandate_id: mandateId,
+          monitoring_run_id: "manage-monitoring-2026-05-03",
+          source_run_id: "performance-run-2026-05-03",
+          correlation_id: "corr-manage-exceptions-window-1-item",
+          authority: "lotus-manage:monitoring-exception",
+          severity: "HIGH",
+          title: "Benchmark mapping requires review",
+          source_system: "lotus-performance",
+          owner: "Portfolio Management",
+          age_hours: 3,
+          state: "ACTIVE",
+          next_action: "Confirm the benchmark assignment before the next review",
+        },
+        {
+          exception_id: "mandate-exception-price",
+          mandate_id: mandateId,
+          monitoring_run_id: "manage-monitoring-2026-05-03",
+          source_run_id: "valuation-run-2026-05-03",
+          correlation_id: "corr-manage-exceptions-window-1-price",
+          authority: "lotus-manage:monitoring-exception",
+          severity: "MEDIUM",
+          title: "Fixed income price requires confirmation",
+          source_system: "lotus-core",
+          owner: "Investment Operations",
+          age_hours: 6,
+          state: "ACTIVE",
+          next_action: "Confirm the latest validated price",
+        },
+      ],
+      next_cursor: "mandate-attention-window-2",
+    },
+    "corr-manage-exceptions-window-1",
+  );
+}
+
+function mandateExceptionWindowTwo() {
+  return commandEnvelope(
+    {
+      items: [
+        {
+          exception_id: "mandate-exception-concentration",
+          mandate_id: mandateId,
+          monitoring_run_id: "manage-monitoring-2026-05-03",
+          source_run_id: "risk-run-2026-05-03",
+          correlation_id: "corr-manage-exceptions-window-2-item",
+          authority: "lotus-manage:monitoring-exception",
+          severity: "HIGH",
+          title: "Concentration threshold requires review",
+          source_system: "lotus-risk",
+          owner: "Portfolio Management",
+          age_hours: 1,
+          state: "ACTIVE",
+          next_action: "Review concentration exposure and agree the response",
+        },
+      ],
+      next_cursor: null,
+    },
+    "corr-manage-exceptions-window-2",
+  );
+}
+
+function mandateExceptionEmptyWindow() {
+  return commandEnvelope(
+    { items: [], next_cursor: null },
+    "corr-manage-exceptions-empty",
+  );
+}
+
+function secondaryMandateExceptionWindow() {
+  return commandEnvelope(
+    {
+      items: [
+        {
+          exception_id: "secondary-mandate-exception-income",
+          mandate_id: secondaryMandateId,
+          monitoring_run_id: "manage-monitoring-income-2026-05-03",
+          source_run_id: "income-run-2026-05-03",
+          correlation_id: "corr-manage-exceptions-secondary-item",
+          authority: "lotus-manage:monitoring-exception",
+          severity: "MEDIUM",
+          title: "Income distribution threshold requires review",
+          source_system: "lotus-manage",
+          owner: "Portfolio Management",
+          age_hours: 2,
+          state: "ACTIVE",
+          next_action: "Review the distribution threshold",
+        },
+      ],
+      next_cursor: null,
+    },
+    "corr-manage-exceptions-secondary",
+  );
+}
+
+function portfolio360(requestedPortfolioId = portfolioId) {
   return {
     correlation_id: "corr-manage-portfolio",
     contract_version: "v1",
     as_of_date: "2026-05-03",
     portfolio: {
-      portfolio_id: portfolioId,
-      client_id: "CLIENT_SG_001",
+      portfolio_id: requestedPortfolioId,
+      client_id:
+        requestedPortfolioId === secondaryPortfolioId
+          ? "CLIENT_SG_INCOME_001"
+          : "CLIENT_SG_001",
       base_currency: "SGD",
       booking_center_code: "SG",
     },
@@ -201,13 +378,19 @@ function portfolio360() {
   };
 }
 
-function mandateEnvelope() {
+function mandateEnvelope(
+  requestedPortfolioId = portfolioId,
+  requestedMandateId = mandateId,
+) {
   return commandEnvelope(
     {
       mandate: {
-        mandate_id: mandateId,
-        portfolio_id: portfolioId,
-        mandate_type: "DPM_GLOBAL_BALANCED",
+        mandate_id: requestedMandateId,
+        portfolio_id: requestedPortfolioId,
+        mandate_type:
+          requestedPortfolioId === secondaryPortfolioId
+            ? "DPM_INCOME"
+            : "DPM_GLOBAL_BALANCED",
         base_currency: "SGD",
         risk_profile: "BALANCED",
         as_of_date: "2026-05-03",

@@ -46,7 +46,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     mode: "manage",
     portEnvironmentVariable: "MANAGE_E2E_FIXTURE_PORT",
     scenarioEnvironmentVariable: "MANAGE_E2E_FIXTURE",
-    scenarios: new Set(["rebalance-waves"]),
+    scenarios: new Set(["mandate-health", "rebalance-waves"]),
   },
 ] as const;
 
