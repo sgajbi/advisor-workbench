@@ -427,7 +427,7 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
               Advisor memo
             </Text>
           </div>
-          <SemanticBadge tone={model.memo.isAvailable ? "success" : "warn"}>
+          <SemanticBadge tone={model.memo.tone}>
             {model.memo.status}
           </SemanticBadge>
         </div>
