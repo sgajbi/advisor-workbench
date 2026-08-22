@@ -803,7 +803,7 @@ export default function ProposalLifecycleWorkspace({
     });
 
     try {
-      const refreshedWindow = await readProposalWindow();
+      const refreshedWindow = await refetchProposalWindow();
       const refreshedModel = buildProposalLifecycleWorkspaceModel({
         portfolioId,
         mode,
@@ -844,6 +844,17 @@ export default function ProposalLifecycleWorkspace({
       );
       throw error;
     }
+  }
+
+  async function refetchProposalWindow() {
+    const result = await proposalQuery.refetch();
+    if (result.isError || !result.data) {
+      throw (
+        result.error ??
+        new Error("The proposal worklist refresh did not return source data.")
+      );
+    }
+    return result.data;
   }
 
   if (isLoading) {

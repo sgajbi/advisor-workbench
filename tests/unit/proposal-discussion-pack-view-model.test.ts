@@ -327,6 +327,8 @@ describe("proposal discussion pack view model", () => {
     const envelope = proposalDiscussionPackFixture();
     envelope.data.narrative.state = "restricted";
     envelope.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
+    const sourceBlocker = envelope.data.narrative.client_ready_blockers[0]!;
+    const sourceLimitation = envelope.data.narrative.limitations[0]!.message;
 
     const model = buildProposalDiscussionPackModel(envelope);
 
@@ -348,6 +350,14 @@ describe("proposal discussion pack view model", () => {
     expect(model.narrative.aiDisclosure.humanReview).not.toHaveProperty(
       "occurredAt",
     );
+    expect(model.blockers).toEqual([
+      "Narrative evidence and preparation provenance are not available for this proposal version.",
+    ]);
+    expect(model.blockers).not.toContain(sourceBlocker);
+    expect(model.limitations).toEqual([]);
+    expect(model.narrative.aiDisclosure.limitations).not.toContain(
+      sourceLimitation,
+    );
   });
 
   it("replaces retained memo readiness with its restricted support posture", () => {
@@ -360,9 +370,27 @@ describe("proposal discussion pack view model", () => {
     expect(model.memo).toMatchObject({
       isAvailable: false,
       status: "Restricted",
+      tone: "danger",
       reviewedBy: "Not available",
       reviewedAt: "Not available",
       sections: [],
     });
   });
+
+  it.each(["PENDING_REVIEW", "BLOCKED"] as const)(
+    "uses a warning tone for an available memo with %s status",
+    (status) => {
+      const envelope = proposalDiscussionPackFixture();
+      envelope.data.memo.memo_status = status;
+      envelope.data.memo.latest_review_action = null;
+
+      const model = buildProposalDiscussionPackModel(envelope);
+
+      expect(model.memo).toMatchObject({
+        isAvailable: true,
+        status: status === "PENDING_REVIEW" ? "Pending review" : "Blocked",
+        tone: "warn",
+      });
+    },
+  );
 });

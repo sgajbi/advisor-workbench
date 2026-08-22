@@ -3460,6 +3460,56 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("hides cached discussion evidence when worklist access is revoked", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({
+        items: [
+          {
+            proposal_id: "proposal-1",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "AWAITING_CLIENT_CONSENT",
+            current_version_no: 2,
+            created_at: "2026-08-21T08:30:00Z",
+            title: "Rebalance concentrated technology exposure",
+          },
+        ],
+        next_cursor: null,
+      })
+      .mockRejectedValueOnce(
+        new Error(
+          'Proposal list failed (403): {"detail":"portfolio access denied"}',
+        ),
+      );
+    getProposalDiscussionPackMock.mockResolvedValueOnce(
+      proposalDiscussionPackFixture(),
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="discussion-pack"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(await screen.findByText("Conversation opening")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh evidence" }));
+
+    expect(
+      await screen.findByText("Proposal access is not available"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Conversation opening")).not.toBeInTheDocument();
+    expect(screen.queryByText("How this was prepared")).not.toBeInTheDocument();
+    expect(screen.queryByText("Decision summary")).not.toBeInTheDocument();
+  });
+
   it("does not expose memo sections when source support is restricted", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [
@@ -3519,6 +3569,8 @@ describe("ProposalLifecycleWorkspace", () => {
     restricted.data.narrative.generation_mode = "AI_ASSISTED_DRAFT";
     const hiddenNarrative = restricted.data.narrative.sections[0]!.text;
     const hiddenReviewer = restricted.data.narrative.reviewed_by!;
+    const hiddenBlocker = restricted.data.narrative.client_ready_blockers[0]!;
+    const hiddenLimitation = restricted.data.narrative.limitations[0]!.message;
     getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
 
     renderWithQueryClient(
@@ -3535,6 +3587,8 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.queryByText("How this was prepared")).not.toBeInTheDocument();
     expect(screen.queryByText(hiddenNarrative)).not.toBeInTheDocument();
     expect(screen.queryByText(hiddenReviewer)).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenBlocker)).not.toBeInTheDocument();
+    expect(screen.queryByText(hiddenLimitation)).not.toBeInTheDocument();
   });
 
   it("withholds policy text when disclosure support is restricted", async () => {

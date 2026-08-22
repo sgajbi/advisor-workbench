@@ -52,10 +52,10 @@ export function buildProposalDiscussionPackModel(
     data.memo.state === "supported" && memoArtifactIsComplete;
   const narrativeBoundaryMessage =
     "Narrative evidence and preparation provenance are not available for this proposal version.";
-  const narrativeControlStatus = controls.find(
+  const narrativeControlPresentation = controls.find(
     ({ key }) => key === "narrative",
-  )!.status;
-  const memoControlStatus = controls.find(({ key }) => key === "memo")!.status;
+  )!;
+  const memoControlPresentation = controls.find(({ key }) => key === "memo")!;
   const narrativeReviewIsRecorded = hasRecordedAudit({
     id: data.narrative.review_id,
     actor: data.narrative.reviewed_by,
@@ -88,7 +88,7 @@ export function buildProposalDiscussionPackModel(
         narrativeIsAvailable &&
         data.narrative.generation_mode === "AI_ASSISTED_DRAFT",
       generationLabel: !narrativeIsAvailable
-        ? narrativeControlStatus
+        ? narrativeControlPresentation.status
         : data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
           ? "AI-assisted draft"
           : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
@@ -154,7 +154,8 @@ export function buildProposalDiscussionPackModel(
       isAvailable: memoIsAvailable,
       status: memoIsAvailable
         ? businessLabel(data.memo.memo_status ?? data.memo.state)
-        : memoControlStatus,
+        : memoControlPresentation.status,
+      tone: memoControlPresentation.tone,
       reviewedBy: memoIsAvailable
         ? (data.memo.reviewed_by ?? "Not recorded")
         : "Not available",
@@ -196,17 +197,20 @@ export function buildProposalDiscussionPackModel(
             policyVersion: disclosure.policy_version,
           }))
         : [],
-    blockers: disclosurePolicyIsSupported
-      ? data.narrative.client_ready_blockers
-      : [policyBoundaryMessage],
-    limitations: disclosurePolicyIsSupported
-      ? data.narrative.limitations.map((limitation, index) => ({
-          key: `${limitation.evidence_key}:${index}`,
-          area: businessLabel(limitation.evidence_key),
-          purpose: businessLabel(limitation.required_for),
-          message: limitation.message,
-        }))
-      : [],
+    blockers: !narrativeIsAvailable
+      ? [narrativeBoundaryMessage]
+      : disclosurePolicyIsSupported
+        ? data.narrative.client_ready_blockers
+        : [policyBoundaryMessage],
+    limitations:
+      narrativeIsAvailable && disclosurePolicyIsSupported
+        ? data.narrative.limitations.map((limitation, index) => ({
+            key: `${limitation.evidence_key}:${index}`,
+            area: businessLabel(limitation.evidence_key),
+            purpose: businessLabel(limitation.required_for),
+            message: limitation.message,
+          }))
+        : [],
     capabilities: data.capabilities.map((capability) => ({
       key: capability.key,
       name: businessLabel(capability.key),
