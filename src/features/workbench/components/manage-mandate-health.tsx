@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-import { ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
+import {
+  ActionButton,
+  ScreenStatePanel,
+  SectionBlock,
+  SemanticBadge,
+  SourceWindowNavigation,
+} from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
   clampMandateHealthPercent,
@@ -23,10 +29,10 @@ import {
   formatBusinessMandateType,
   formatBusinessOwner,
   formatBusinessSource,
-  isManageExceptionEvidenceComplete,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
+import { useManageExceptionSourceWindow } from "@/features/workbench/use-manage-exception-source-window";
 
 import type {
   MandateHealthRow,
@@ -46,11 +52,17 @@ export default function ManageMandateHealth({ data }: Props) {
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
+  const exceptionSource = useManageExceptionSourceWindow({
+    portfolioId: data.portfolio.portfolio.portfolio_id,
+    mandateId: commandModel.mandateId === "N/A" ? null : commandModel.mandateId,
+    initialResponse: data.commandCenterExceptions,
+    initialError: data.commandCenterExceptionsError,
+  });
   const exceptionRows = filterManageExceptionRowsForMandate(
-    buildManageExceptionRows(data.commandCenterExceptions),
+    buildManageExceptionRows(exceptionSource.response),
     commandModel.mandateId,
   );
-  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
+  const hasAvailableExceptionEvidence = exceptionSource.evidencePosture !== "unavailable";
   const healthRows = buildMandateHealthDimensionRows(commandModel);
   const [selectedExceptionKey, setSelectedExceptionKey] = useState<string | null>(
     exceptionRows[0]?.key ?? null,
@@ -98,9 +110,9 @@ export default function ManageMandateHealth({ data }: Props) {
         dataCompletenessState={commandModel.dataCompletenessState}
         mandateHealthState={commandModel.mandateHealthState}
         hasSourceError={Boolean(
-          data.commandCenterError ||
-            data.commandCenterExceptionsError ||
-            !hasCompleteExceptionEvidence ||
+            data.commandCenterError ||
+            !hasAvailableExceptionEvidence ||
+            exceptionSource.navigationFailure ||
             data.mandateHealthError
         )}
       />
@@ -152,9 +164,18 @@ export default function ManageMandateHealth({ data }: Props) {
       <div className="mandate-health-review-workspace" id="mandate-attention-review">
         <AttentionReviewQueue
           rows={exceptionRows}
-          hasCompleteEvidence={hasCompleteExceptionEvidence}
+          evidencePosture={exceptionSource.evidencePosture}
+          correlationId={exceptionSource.response?.correlation_id ?? null}
+          currentWindow={exceptionSource.currentWindow}
+          hasPrevious={exceptionSource.hasPrevious}
+          hasNext={Boolean(exceptionSource.nextCursor)}
+          isLoading={exceptionSource.isLoading}
+          navigationFailure={exceptionSource.navigationFailure}
           selectedKey={selectedException?.key ?? null}
           onSelect={setSelectedExceptionKey}
+          onPrevious={() => void exceptionSource.showPrevious()}
+          onNext={() => void exceptionSource.showNext()}
+          onRetry={() => void exceptionSource.retry()}
         />
         {selectedException ? (
           <SelectedReviewItem
@@ -275,19 +296,44 @@ function HealthSummaryCard({
 
 function AttentionReviewQueue({
   rows,
-  hasCompleteEvidence,
+  evidencePosture,
+  correlationId,
+  currentWindow,
+  hasPrevious,
+  hasNext,
+  isLoading,
+  navigationFailure,
   selectedKey,
   onSelect,
+  onPrevious,
+  onNext,
+  onRetry,
 }: {
   rows: ManageExceptionRow[];
-  hasCompleteEvidence: boolean;
+  evidencePosture: "complete" | "partial" | "unavailable";
+  correlationId: string | null;
+  currentWindow: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+  isLoading: boolean;
+  navigationFailure: {
+    direction: "next" | "previous";
+    permissionBlocked: boolean;
+  } | null;
   selectedKey: string | null;
   onSelect: (key: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  onRetry: () => void;
 }) {
+  const hasAvailableEvidence = evidencePosture !== "unavailable";
   return (
     <section
       className="manage-overview-table-card mandate-attention-card"
       aria-labelledby="mandate-attention-heading"
+      data-source-window={currentWindow}
+      data-source-posture={evidencePosture}
+      data-source-correlation-id={correlationId ?? undefined}
     >
       <div className="manage-overview-card-header">
         <div>
@@ -295,21 +341,48 @@ function AttentionReviewQueue({
           <h3 id="mandate-attention-heading">Attention Required</h3>
         </div>
         <strong>
-          {hasCompleteEvidence
+          {evidencePosture === "complete"
             ? rows.length
               ? `${rows.length} open`
               : "No open items"
-            : "Evidence unavailable"}
+            : evidencePosture === "partial"
+              ? `${rows.length} in this view`
+              : "Evidence unavailable"}
         </strong>
       </div>
-      {!hasCompleteEvidence ? (
+      {navigationFailure ? (
+        <ScreenStatePanel
+          kind={navigationFailure.permissionBlocked ? "permission_blocked" : "partial"}
+          surface="portfolio"
+          title={
+            navigationFailure.permissionBlocked
+              ? "The requested attention-item view is not available for this access context"
+              : `The ${navigationFailure.direction} attention-item view could not be loaded`
+          }
+          body="The last confirmed source window remains visible. No queue position or completion state has been inferred."
+          action={
+            <ActionButton priority="secondary" aria-disabled={isLoading} onClick={onRetry}>
+              {isLoading ? "Retrying source view" : "Retry source view"}
+            </ActionButton>
+          }
+        />
+      ) : null}
+      {evidencePosture === "unavailable" ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
           title="Attention items are temporarily unavailable"
           body="The mandate summary remains visible, but the source exception queue could not be confirmed. No zero-attention conclusion has been inferred."
         />
-      ) : rows.length ? (
+      ) : evidencePosture === "partial" ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="More attention items are available"
+          body={`Source window ${currentWindow} is reviewable but does not represent the complete attention queue. Continue through the source views before drawing a whole-queue conclusion.`}
+        />
+      ) : null}
+      {hasAvailableEvidence && rows.length ? (
         <div
           className="mandate-attention-table-scroll"
           tabIndex={0}
@@ -347,14 +420,34 @@ function AttentionReviewQueue({
             </tbody>
           </table>
         </div>
-      ) : (
+      ) : evidencePosture === "complete" ? (
         <ScreenStatePanel
           kind="empty"
           surface="portfolio"
           title="No open attention items"
           body="Manage returned no open mandate exceptions for this portfolio."
         />
-      )}
+      ) : evidencePosture === "partial" ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="No selected-mandate items in this source view"
+          body="Continue through the available source views. This partial view does not support a zero-attention conclusion."
+        />
+      ) : null}
+      {hasAvailableEvidence ? (
+        <SourceWindowNavigation
+          ariaLabel="Mandate attention source views"
+          currentWindow={currentWindow}
+          hasPrevious={hasPrevious}
+          hasNext={hasNext}
+          isLoading={isLoading}
+          itemLabel="attention items"
+          viewLabel="Attention-item source view"
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
+      ) : null}
     </section>
   );
 }
