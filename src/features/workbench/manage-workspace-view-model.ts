@@ -219,6 +219,31 @@ export function firstNonEmpty(...values: Array<string | null | undefined>): stri
   return values.find((value) => value && value.trim().length > 0) ?? "N/A";
 }
 
+export function isBusinessValueAvailable(
+  value: string | number | null | undefined,
+): boolean {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase()
+    .replaceAll(/[^A-Z0-9]+/g, "_")
+    .replaceAll(/^_+|_+$/g, "");
+  return ![
+    "",
+    "EMPTY",
+    "MISSING",
+    "N_A",
+    "NA",
+    "NONE",
+    "NOT_AVAILABLE",
+    "NOT_PROVIDED",
+    "NOT_REPORTED",
+    "NOT_SUPPLIED",
+    "NULL",
+    "UNAVAILABLE",
+    "UNKNOWN",
+  ].includes(normalized);
+}
+
 export function businessStateLabel(value: string | number | null | undefined): string {
   const normalized = String(value ?? "").trim();
   if (!normalized || normalized === "N/A") {
