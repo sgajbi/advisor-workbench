@@ -8,6 +8,7 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
+import ReviewContextRecovery from "@/shell/review-context-recovery";
 
 import type { PortfolioRecordScreenData } from "../portfolio-record-screen-data";
 import type { PortfolioRecordCashflowProjection } from "../portfolio-record-evidence-view-model";
@@ -27,6 +28,8 @@ export default function PortfolioRecordScreenShell({
   screen,
   portfolioId,
   workspace,
+  timeWindow,
+  reviewContextError,
   children,
   cashflowProjection,
 }: PortfolioRecordScreenData & {
@@ -40,7 +43,7 @@ export default function PortfolioRecordScreenShell({
     ? buildPortfolioRecordDisplayName(workspace)
     : resolvedPortfolioId;
   const headerKpis = workspace
-    ? buildPortfolioRecordHeaderKpis(workspace, "30D", screen)
+    ? buildPortfolioRecordHeaderKpis(workspace, timeWindow ?? "30D", screen)
     : [];
 
   return (
@@ -48,12 +51,12 @@ export default function PortfolioRecordScreenShell({
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
         mainClassName="portfolio-main portfolio-record-screen-main"
-        rail={
+        rail={reviewContextError ? undefined : (
           <PortfolioScreenRail
             portfolioId={resolvedPortfolioId}
             activeScreen={screen}
           />
-        }
+        )}
         side={
           workspace ? (
             <PortfolioRecordEvidenceRail
@@ -72,7 +75,13 @@ export default function PortfolioRecordScreenShell({
             subtitle={buildPortfolioRecordScreenSubtitle(screen)}
           >
             <WorkbenchSectionStack className="portfolio-page-sections">
-              {!workspace ? (
+              {reviewContextError ? (
+                <ReviewContextRecovery
+                  body={reviewContextError}
+                  href="/book"
+                  actionLabel="Open My book"
+                />
+              ) : !workspace ? (
                 <DegradedStatePanel title="Portfolio records unavailable">
                   The selected portfolio records are not available for this
                   review.
