@@ -151,8 +151,17 @@ describe("portfolio review-context controls", () => {
       {
         as_of_date: "2026-08-21",
         income_summary: { reporting_currency: "SGD" },
+        performance: { period: "YTD" },
       },
       true,
+    ],
+    [
+      {
+        as_of_date: "2026-08-21",
+        income_summary: { reporting_currency: "SGD" },
+        performance: { period: "30D" },
+      },
+      false,
     ],
     [
       {
@@ -170,7 +179,7 @@ describe("portfolio review-context controls", () => {
       false,
     ],
   ] as const)(
-    "admits only source evidence for the requested date and currency: %o",
+    "admits only source evidence for the requested date, period, and currency: %o",
     (response, expected) => {
       expect(isPortfolioReviewResponseCurrent(response, CONTROLS)).toBe(
         expected,

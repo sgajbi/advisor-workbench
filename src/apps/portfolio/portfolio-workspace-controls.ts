@@ -99,22 +99,31 @@ export function applyPortfolioControlPatch(
 
 /**
  * Admits analytical evidence only when dated book evidence and every available
- * reporting-currency source confirm the control transaction. Currency sources
- * may be absent in a partial response; those modules remain visibly unavailable
- * rather than blocking dated holdings. The composite response does not echo the
- * requested period, so period identity remains a Gateway contract follow-up.
+ * reporting-currency and performance sources confirm the control transaction.
+ * A source may be absent in a partial response; that module remains visibly
+ * unavailable rather than blocking dated holdings that did confirm identity.
  */
 export function isPortfolioReviewResponseCurrent<
   Response extends Readonly<{
     as_of_date?: string;
     income_summary?: Readonly<{ reporting_currency: string }> | null;
     activity_summary?: Readonly<{ reporting_currency: string }> | null;
+    performance?: Readonly<{ period: string }> | null;
   }>,
 >(
   response: Response | null,
-  controls: Pick<PortfolioWorkspaceControls, "asOfDate" | "reportingCurrency">,
+  controls: Pick<
+    PortfolioWorkspaceControls,
+    "asOfDate" | "reportingCurrency" | "timeWindow"
+  >,
 ): response is Response & Readonly<{ as_of_date: string }> {
   if (response?.as_of_date !== controls.asOfDate) {
+    return false;
+  }
+  if (
+    response.performance &&
+    response.performance.period !== controls.timeWindow
+  ) {
     return false;
   }
 
