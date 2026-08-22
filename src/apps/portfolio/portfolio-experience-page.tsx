@@ -31,6 +31,18 @@ export default async function PortfolioExperiencePage({
     );
   }
 
+  if (!reviewContextResult.context.portfolioId) {
+    return (
+      <PortfolioPageLayout>
+        <ReviewContextRecovery
+          body="Select a source-confirmed portfolio from My book before opening Portfolio Review. No default portfolio was substituted."
+          href="/book"
+          actionLabel="Open My book"
+        />
+      </PortfolioPageLayout>
+    );
+  }
+
   const portfolios = await getPortfolioCatalog();
   const selectedPortfolioId = resolveSelectedPortfolioId(
     portfolios,
@@ -39,6 +51,17 @@ export default async function PortfolioExperiencePage({
   const workspace = selectedPortfolioId
     ? await getPortfolioWorkspaceShell(selectedPortfolioId)
     : null;
+  if (!selectedPortfolioId) {
+    return (
+      <PortfolioPageLayout>
+        <ReviewContextRecovery
+          body="The selected portfolio is not available in the source-confirmed portfolio catalogue. No alternative portfolio was substituted."
+          href="/book"
+          actionLabel="Choose another portfolio"
+        />
+      </PortfolioPageLayout>
+    );
+  }
   const controlResolution = workspace
     ? resolvePortfolioReviewControls(workspace, reviewContextResult.context)
     : null;

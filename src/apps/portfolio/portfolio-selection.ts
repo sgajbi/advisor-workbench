@@ -1,5 +1,3 @@
-import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
-
 type PortfolioCatalogIdentity = {
   portfolio_id: string;
 };
@@ -9,9 +7,13 @@ export function resolveSelectedPortfolioId(
   requestedPortfolioId: string | null | undefined
 ): string | null {
   const normalizedRequestedPortfolioId = requestedPortfolioId?.trim();
-  if (normalizedRequestedPortfolioId) {
-    return normalizedRequestedPortfolioId;
+  if (!normalizedRequestedPortfolioId) {
+    return null;
   }
 
-  return resolvePreferredPortfolioId(portfolios, (item) => item.portfolio_id);
+  return portfolios.some(
+    (portfolio) => portfolio.portfolio_id === normalizedRequestedPortfolioId,
+  )
+    ? normalizedRequestedPortfolioId
+    : null;
 }

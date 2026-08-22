@@ -167,7 +167,11 @@ describe("PortfolioFoundationPage", () => {
   it("renders the summary workspace for fast portfolio review", async () => {
     const fetchSpy = stubPortfolioApis();
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     expect(
       document.querySelector("main.workstation-page.app-page-shell.app-page-shell-portfolio.portfolio-page")
@@ -369,45 +373,39 @@ describe("PortfolioFoundationPage", () => {
     expect(requestedUrls.some((url) => url.includes("/transactions?limit=200"))).toBe(false);
   }, 30000);
 
-  it("prefers the canonical front-office portfolio when no portfolio is requested", async () => {
+  it("does not substitute a canonical portfolio when none is requested", async () => {
     const fetchSpy = stubPortfolioApis();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL) => {
-        const url = input.toString();
-        if (url.includes("/api/v1/portfolio/portfolios")) {
-          if (url.includes("/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/")) {
-            return fetchSpy(String(input).replace("PB_SG_GLOBAL_BAL_001", "PORT_UI_1001"));
-          }
-          return {
-            ok: true,
-            json: async () => ({
-              items: [
-                {
-                  portfolio_id: "DEMO_ADV_USD_001",
-                  display_name: "Legacy demo portfolio",
-                },
-                {
-                  portfolio_id: "PB_SG_GLOBAL_BAL_001",
-                  display_name: "Private Banking Global Balanced",
-                },
-              ],
-            }),
-          } as Response;
-        }
-        return fetchSpy(input);
-      })
-    );
 
     render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
 
-    const requestedUrls = vi.mocked(fetch).mock.calls.map((call) => String(call[0]));
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/No default portfolio was substituted/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open My book" })).toHaveAttribute(
+      "href",
+      "/book",
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not substitute another portfolio when the requested identity is absent", async () => {
+    const fetchSpy = stubPortfolioApis();
+
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PB_NOT_ASSIGNED_001" }),
+      }),
+    );
+
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/No alternative portfolio was substituted/i)).toBeInTheDocument();
     expect(
-      requestedUrls.some((url) =>
-        url.includes("/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/workspace")
-      )
-    ).toBe(true);
-    expect(requestedUrls.some((url) => url.includes("DEMO_ADV_USD_001"))).toBe(false);
+      screen.getByRole("link", { name: "Choose another portfolio" }),
+    ).toHaveAttribute("href", "/book");
+    expect(
+      fetchSpy.mock.calls.some(([input]) =>
+        String(input).includes("PB_NOT_ASSIGNED_001/workspace"),
+      ),
+    ).toBe(false);
   });
 
   it("ignores legacy detailed mode and keeps one focused portfolio review surface", async () => {
@@ -419,7 +417,11 @@ describe("PortfolioFoundationPage", () => {
     });
     const fetchSpy = stubPortfolioApis();
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
@@ -487,7 +489,11 @@ describe("PortfolioFoundationPage", () => {
     window.localStorage.setItem("lotus:portfolio:section:allocation", "false");
     stubPortfolioApis();
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
@@ -530,7 +536,11 @@ describe("PortfolioFoundationPage", () => {
       },
     });
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
@@ -555,7 +565,11 @@ describe("PortfolioFoundationPage", () => {
       },
     });
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
@@ -578,7 +592,11 @@ describe("PortfolioFoundationPage", () => {
       },
     });
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     expect(screen.getAllByText("Blocking controls active").length).toBeGreaterThanOrEqual(1);
   }, 30000);
@@ -587,7 +605,11 @@ describe("PortfolioFoundationPage", () => {
     window.localStorage.setItem("lotus:portfolio:view-mode", "detailed");
     stubPortfolioApis(buildCombinedPartialPortfolioOverrides());
 
-    render(await PortfolioFoundationPage({ searchParams: Promise.resolve({}) }));
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
