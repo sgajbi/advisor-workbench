@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("Manage Overview responsive composition", () => {
-  it("reduces the posture and portfolio grids before they can widen the page", () => {
+  it("lets posture cards reflow from their available content width", () => {
     const css = readFileSync(
       path.join(
         process.cwd(),
@@ -14,14 +14,14 @@ describe("Manage Overview responsive composition", () => {
     );
 
     expect(css).toMatch(
-      /@media \(max-width: 1200px\)[\s\S]*?\.manageScope :global\(\.manage-decision-readiness-grid\)\s*\{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+      /\.manageScope :global\(\.manage-decision-readiness-grid\)\s*\{[\s\S]*?grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 14rem\), 1fr\)\);/,
     );
     expect(css).toMatch(
       /@media \(max-width: 720px\)[\s\S]*?\.manageScope :global\(\.manage-decision-readiness-grid\),[\s\S]*?\.manageScope :global\(\.manage-portfolio-value-band dl\),[\s\S]*?grid-template-columns: 1fr;/,
     );
   });
 
-  it("stacks task status below its business title on a narrow card", () => {
+  it("keeps task status below its business title at every card width", () => {
     const css = readFileSync(
       path.join(
         process.cwd(),
@@ -31,10 +31,10 @@ describe("Manage Overview responsive composition", () => {
     );
 
     expect(css).toMatch(
-      /@media \(max-width: 480px\)[\s\S]*?\.heading\s*\{[\s\S]*?flex-direction: column;/,
+      /\.heading\s*\{[\s\S]*?display: grid;[\s\S]*?gap: 0\.2rem;/,
     );
     expect(css).toMatch(
-      /@media \(max-width: 480px\)[\s\S]*?\.status\s*\{[\s\S]*?text-align: left;/,
+      /\.status\s*\{[\s\S]*?text-align: left;/,
     );
   });
 });
