@@ -76,6 +76,28 @@ describe("portfolio screen navigation", () => {
     expect(items.map((item) => item.href).join(" ")).not.toContain("batchId");
   });
 
+  it("projects periods through each rail destination's declared policy", () => {
+    const items = buildPortfolioScreenNavigationItems({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      asOfDate: "2026-08-21",
+      period: "5Y",
+      reportingCurrency: "SGD",
+    });
+
+    expect(items.find((item) => item.key === "portfolio")?.href).not.toContain(
+      "period=",
+    );
+    expect(items.find((item) => item.key === "positions")?.href).not.toContain(
+      "period=",
+    );
+    expect(items.find((item) => item.key === "reports")?.href).not.toContain(
+      "period=",
+    );
+    expect(items.find((item) => item.key === "performance")?.href).toContain(
+      "period=5Y",
+    );
+  });
+
   it("keeps five business domains primary and groups the remaining tasks", () => {
     const model = buildPortfolioScreenNavigationModel(
       { portfolioId: "PB_SG_GLOBAL_BAL_001" },
