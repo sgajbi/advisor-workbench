@@ -42,6 +42,12 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     scenarioEnvironmentVariable: "PM_QUALITY_E2E_FIXTURE",
     scenarios: new Set(["record-selection"]),
   },
+  {
+    mode: "manage",
+    portEnvironmentVariable: "MANAGE_E2E_FIXTURE_PORT",
+    scenarioEnvironmentVariable: "MANAGE_E2E_FIXTURE",
+    scenarios: new Set(["rebalance-waves"]),
+  },
 ] as const;
 
 export type ServiceRequestTarget = "server" | "client";

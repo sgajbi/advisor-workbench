@@ -3946,8 +3946,14 @@
   .manageScope :global(.execution-acknowledgement-evidence-grid),
   .manageScope :global(.execution-acknowledgement-lineage dl),
   .manageScope :global(.construction-alternatives-grid),
-  .manageScope :global(.construction-alternatives-detail-grid) {
+  .manageScope :global(.construction-alternatives-detail-grid),
+  .manageScope :global(.rebalance-main-grid) {
     grid-template-columns: 1fr;
+  }
+
+  .manageScope :global(.rebalance-campaign-workflow-command-grid),
+  .manageScope :global(.rebalance-campaign-workflow-command-evidence) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .manageScope :global(.mandate-health-summary-grid) {
@@ -4023,5 +4029,31 @@
   .manageScope :global(.manage-rebalance-evidence > div) {
     gap: 4px;
     padding: 11px 14px;
+  }
+
+  .manageScope :global(.rebalance-summary-strip),
+  .manageScope :global(.rebalance-metric-grid),
+  .manageScope :global(.rebalance-campaign-workflow-command-grid),
+  .manageScope :global(.rebalance-campaign-workflow-command-evidence) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manageScope :global(.rebalance-summary-cell:nth-child(2)) {
+    border-right: 0;
+  }
+
+  .manageScope :global(.rebalance-summary-cell:nth-child(-n + 2)) {
+    border-bottom: 1px solid #c6c6cd;
+  }
+
+  .manageScope :global(.rebalance-section-heading),
+  .manageScope :global(.rebalance-table-heading),
+  .manageScope :global(.rebalance-campaign-workflow-command-header) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .manageScope :global(.rebalance-table-heading div) {
+    flex-wrap: wrap;
   }
 }

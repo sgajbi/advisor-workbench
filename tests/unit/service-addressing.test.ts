@@ -18,6 +18,8 @@ describe("service addressing", () => {
   const originalPortfolioFixturePort = process.env.PORTFOLIO_E2E_FIXTURE_PORT;
   const originalPmQualityFixtureScenario = process.env.PM_QUALITY_E2E_FIXTURE;
   const originalPmQualityFixturePort = process.env.PM_QUALITY_E2E_FIXTURE_PORT;
+  const originalManageFixtureScenario = process.env.MANAGE_E2E_FIXTURE;
+  const originalManageFixturePort = process.env.MANAGE_E2E_FIXTURE_PORT;
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
@@ -31,6 +33,8 @@ describe("service addressing", () => {
     process.env.PORTFOLIO_E2E_FIXTURE_PORT = originalPortfolioFixturePort;
     process.env.PM_QUALITY_E2E_FIXTURE = originalPmQualityFixtureScenario;
     process.env.PM_QUALITY_E2E_FIXTURE_PORT = originalPmQualityFixturePort;
+    process.env.MANAGE_E2E_FIXTURE = originalManageFixtureScenario;
+    process.env.MANAGE_E2E_FIXTURE_PORT = originalManageFixturePort;
   });
 
   it("uses the explicit BFF base URL when configured", () => {
@@ -188,6 +192,26 @@ describe("service addressing", () => {
     process.env.PM_QUALITY_E2E_FIXTURE_PORT = "18140";
 
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18140");
+  });
+
+  it("allows only the exact process-owned Manage rebalance-waves fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
+    process.env.MANAGE_E2E_FIXTURE = "rebalance-waves";
+    process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18150");
+  });
+
+  it("rejects a Manage fixture URL whose scenario is not governed", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
+    process.env.MANAGE_E2E_FIXTURE = "overview";
+    process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+    );
   });
 
   it("rejects a PM quality fixture URL whose scenario is not governed", () => {

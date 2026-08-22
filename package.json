@@ -60,6 +60,7 @@
     "test:e2e:portfolio:positions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs positions-status",
     "test:e2e:portfolio:transactions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs transactions-status",
     "test:e2e:portfolio:unavailable": "node scripts/testing/run-portfolio-smoke-scenario.mjs shell-unavailable",
+    "test:e2e:manage:rebalance-waves": "node scripts/testing/run-manage-smoke-scenario.mjs rebalance-waves",
     "test:e2e:intake:readiness": "playwright test tests/e2e/intake-first-action-readiness.spec.ts",
     "test:e2e:reports:states": "node scripts/testing/run-report-centre-smoke-scenario.mjs",
     "live:stack:down": "powershell -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1",
