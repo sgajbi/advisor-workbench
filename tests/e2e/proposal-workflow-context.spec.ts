@@ -5,6 +5,17 @@ import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
+const advisoryAsOfDate = "2026-04-10";
+
+function buildProposalBuilderUrl({
+  includeAdvisoryDate = true,
+}: { includeAdvisoryDate?: boolean } = {}): string {
+  const params = new URLSearchParams({ portfolioId });
+  if (includeAdvisoryDate) {
+    params.set("asOfDate", advisoryAsOfDate);
+  }
+  return `/proposals/simulate?${params.toString()}`;
+}
 
 async function mockProposalPortfolioEvidence(
   page: Page,
@@ -1480,7 +1491,7 @@ test("keeps proposal evaluation inside construction without persisted workflow a
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl({ includeAdvisoryDate: false }), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1499,6 +1510,10 @@ test("keeps proposal evaluation inside construction without persisted workflow a
   await expect(
     workflowRail.getByRole("button", { name: "Save Advisor Draft" }),
   ).toBeDisabled();
+  await expect(page.getByTestId("proposal-portfolio-evidence")).toHaveAttribute(
+    "data-evidence-status",
+    "not_selected",
+  );
   await expect(
     page.getByText("No persisted advisory workflow record"),
   ).toBeVisible();
@@ -1520,7 +1535,7 @@ test("keeps proposal actions unavailable until failed portfolio evidence is refr
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalPortfolioEvidence(page, { failFirstRead: true });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1575,7 +1590,7 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalBuilderEvaluation(page);
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1715,7 +1730,7 @@ test("refetches and confirms the combined portfolio book for a changed advisory 
   const requestedDates: string[] = [];
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalPortfolioEvidence(page, { requestedDates });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1750,7 +1765,7 @@ test("shows requested and source dates while blocking a mismatched source snapsh
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalPortfolioEvidence(page, { effectiveDate: "2026-04-09" });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1793,7 +1808,7 @@ test("withholds mixed-currency impact until refreshed source evidence matches th
   await mockProposalPortfolioEvidence(page, {
     sourceCurrencies: ["SGD", "USD"],
   });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1860,7 +1875,7 @@ test("withholds unlabelled source money until currency identity is refreshed", a
   await mockProposalPortfolioEvidence(page, {
     sourceCurrencies: [null, "USD"],
   });
-  await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+  await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1904,7 +1919,7 @@ for (const viewport of [
   }, testInfo) => {
     await page.setViewportSize(viewport);
     await mockProposalBuilderEvaluation(page);
-    await page.goto(`/proposals/simulate?portfolioId=${portfolioId}`, {
+    await page.goto(buildProposalBuilderUrl(), {
       waitUntil: "domcontentloaded",
     });
 
