@@ -66,8 +66,9 @@ handing the user to a focused Manage mode.
 
 ## Implemented Capabilities
 
-- Presents Core-owned portfolio value, position count, cash weight, base currency, and identity
-  through the Workbench BFF and Gateway.
+- Presents Core-owned portfolio value, position count, cash weight, base currency, identity, and
+  readable calendar business date through the Workbench BFF and Gateway; raw ISO date text is not
+  used as advisor-facing rail copy.
 - Presents the mandate risk profile only when Manage reports a usable value; absent and governed
   unavailable values such as `UNKNOWN` or `NOT_AVAILABLE` are **Not reported** and make the
   overview incomplete.
@@ -106,7 +107,7 @@ portfolio instruction, order, execution, settlement record, or approval.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio identity, base currency, market value, positions, and cash weight | Formats the selected portfolio context; does not recalculate portfolio accounting | Gateway over Core portfolio contracts |
+| Portfolio identity, base currency, business date, market value, positions, and cash weight | Formats the selected portfolio context through the governed calendar-date authority; does not recalculate portfolio accounting or convert the date into an instant | Gateway over Core portfolio contracts |
 | Mandate risk profile, health, data readiness, and monitoring posture | Maps source values into business labels and fails closed for missing evidence | Gateway over Manage mandate and command-centre contracts |
 | Active attention items, owner, severity, age, and next step | Limits presentation to the current returned window and never infers a whole-book queue | Gateway over Manage exception contracts |
 | Rebalance stage, source readiness, issue count, and support note | Presents source-owned wave posture without execution claims | Gateway over Manage rebalance-wave contracts |
@@ -177,8 +178,8 @@ unsupported capability, and this guide is not a claim of competitor superiority.
   membership, rejection of an unscoped first wave, generated-on-request copy, business record
   grammar, and portfolio-preserving task routes.
 - `tests/unit/manage-workspace-components.test.tsx` proves the attention worklist, named scroll
-  region, business task directory, recent activity, incomplete-evidence state, and absence of a
-  fabricated alternatives-available claim.
+  region, business-formatted date context, business task directory, recent activity,
+  incomplete-evidence state, and absence of a fabricated alternatives-available claim.
 - `tests/unit/design-system-components.test.tsx` proves the reusable task directory's semantic
   navigation, status evidence, full-card links, and action labels.
 - `tests/unit/manage-overview-responsive-css.test.ts` proves that posture, value, evidence, and task

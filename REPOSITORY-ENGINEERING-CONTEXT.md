@@ -1185,6 +1185,15 @@ Important validation expectations:
     degraded economics, snapshots, smoothing status, and methodology reason codes secondary but
     accessible. Do not hide evidence, duplicate the mapping in page components, infer calculation
     completeness, or expose implementation vocabulary as the advisor's first reading path.
+37. Business dates and timestamps use one fail-closed presentation boundary. Validate a
+    `YYYY-MM-DD` business date as calendar components and render those components without creating
+    a midnight instant; missing, malformed, and impossible dates fail to explicit unavailable copy.
+    Advisor Book uses **Not confirmed** and must not contact its source until the request date is
+    explicit or supplied by its bounded local development configuration; the returned scope date
+    must exactly match the request.
+    Exact timestamps require `Z` or a numeric offset, normalize to UTC, and disclose **UTC** in
+    business copy. Do not render raw ISO dates, accept unzoned timestamps, silently substitute a
+    fixed demonstration date, or reintroduce feature-local date parsers.
 
 ### Visual Review Gate
 
