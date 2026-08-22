@@ -5778,3 +5778,64 @@ identity, focus stability after asynchronous refresh, launch consequence gating,
 evidence, repeat prevention, clean runtime, 1440/1024/720/390 reflow, and zero page overflow. Full
 repository gates, protected review/CI, exact-main validation, wiki publication/parity, issue closure,
 and branch hygiene remain required.
+
+## Governed Business-Date And Timestamp Trust
+
+### Business job
+
+An advisor must know which calendar date governs own-book membership and portfolio-management
+evidence without mistaking a fixed demonstration date, malformed URL, raw source value, or hidden
+timezone conversion for confirmed business truth.
+
+### Current-product research
+
+Research was reviewed on 2026-08-22 from primary standards and public-sector design guidance:
+
+1. [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6) defines `full-date`
+   independently from `date-time`; an exact time carries `Z` or a numeric offset.
+2. [ECMA-402](https://tc39.es/ecma402/2025/#sec-intl-datetimeformat-constructor) makes locale,
+   calendar, and timezone explicit `Intl.DateTimeFormat` inputs rather than browser defaults.
+3. [Unicode LDML date guidance](https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Names)
+   states that a clock value without timezone context is incomplete and describes localized zone
+   presentation.
+4. [GOV.UK date guidance](https://design-system.service.gov.uk/patterns/dates/) supports visible,
+   unambiguous calendar-date entry and readable written-date presentation.
+
+These sources define semantics and interaction quality only. They do not replace Gateway/Core
+business-date authority, prescribe Lotus branding, or justify a new date library.
+
+### Adopted decisions
+
+1. Treat `YYYY-MM-DD` business dates as validated calendar components; never append a fabricated
+   midnight or let host timezone conversion change the day.
+2. Require an explicit request date or the bounded local development configuration before loading
+   Advisor Book. Missing, malformed, and impossible dates render **Business date not confirmed**
+   and make no source request.
+3. Give the advisor a labelled native calendar-date recovery control that updates the governed URL
+   scope and resets paging before the source request begins.
+4. Require the returned Advisor Book scope date to match the requested date exactly; mismatch is a
+   source-contract failure, not an alternate successful view.
+5. Require timestamps to carry `Z` or an explicit offset, normalize them to UTC, and include
+   **UTC** in visible output.
+6. Reuse the design-system formatter authority for Advisor Book, Manage context, and Domain Product
+   timestamps; remove page-local date formatting and raw ISO presentation.
+
+### Rejected decisions
+
+1. A hardcoded production fallback or silent substitution after invalid input.
+2. Raw ISO strings as advisor-facing date copy.
+3. Parsing a calendar date as midnight UTC, local time, or another instant.
+4. Accepting an unzoned timestamp or hiding which clock is shown.
+5. Adding Moment, Luxon, date-fns, Temporal polyfills, or another dependency for this bounded rule.
+6. Expanding into user-selectable locale preferences, cross-screen context carriage, freshness
+   indicators, or backend business-calendar calculations owned by #777, #779, #787, or upstream.
+
+### Validation and publication decision
+
+Workbench #786 owns the slice. Formatter, Advisor Book configuration/API/integration, Domain Product,
+and Manage component tests prove valid and impossible dates, no-request fail-closed behavior,
+request/response scope agreement, raw-ISO removal, offset-required timestamps, and UTC disclosure.
+Optimized-production Playwright must prove invalid-date blocking, explicit recovery, the single BFF
+request after recovery, keyboard usability, responsive layout, and zero page overflow. Advisor Book
+and Manage wiki guides plus repository context carry the durable policy; protected CI, exact-main
+validation, wiki publication/parity, issue closure, and branch hygiene remain required.

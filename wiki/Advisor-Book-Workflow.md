@@ -44,11 +44,14 @@ team, delegated, tenant, or booking-centre permissions in the browser.
 ## Workflow Position
 
 1. Open **My book** from the portfolio context switcher or navigate to `/book`.
-2. Confirm own-book scope, business date, booking centre, availability, and operating limitations.
-3. Narrow the register using an exact client reference, supported mandate, and requested sort.
-4. Confirm the returned range and displayed order before moving between source pages.
-5. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Screen-Guide).
-6. Within another supported portfolio screen, use **Portfolio context** to change portfolio while
+2. If the business date is not confirmed, select the calendar date to review. Workbench does not
+   request portfolio assignments until that date is valid.
+3. Confirm own-book scope, source-confirmed business date, booking centre, availability, and
+   operating limitations.
+4. Narrow the register using an exact client reference, supported mandate, and requested sort.
+5. Confirm the returned range and displayed order before moving between source pages.
+6. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Screen-Guide).
+7. Within another supported portfolio screen, use **Portfolio context** to change portfolio while
    preserving the current business task and supported filters. Workbench requests own-book choices
    only when the switcher is opened.
 
@@ -68,6 +71,9 @@ approval, order handling, execution, settlement, reporting, or client communicat
 - Shows both requested and displayed order when the source page does not match the requested sort.
 - Pages through source results using the returned paging metadata and preserves the governed
   business date when the working view is cleared.
+- Blocks a missing, malformed, or impossible requested business date before source loading and
+  offers one explicit calendar-date recovery control. A returned date that does not match the
+  requested source scope is rejected rather than rendered.
 - Opens a source-returned portfolio in Portfolio Review using task-preserving navigation.
 - Keeps legacy assignment, stale evidence, trusted-context-only tenant scope, and other returned
   limitations visible instead of manufacturing confidence in the browser.
@@ -76,6 +82,7 @@ approval, order handling, execution, settlement, reporting, or client communicat
 
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
+| Select the business date | Enter a valid calendar date, then choose **Review book** | None; this establishes the source request scope and resets paging |
 | Apply a book view | Enter supported filters and sorting, then choose **Apply view** | None; this requests a new source-backed view |
 | Clear the working view | Choose **Clear view** | None; filters and sorting reset while the governed date remains |
 | Move between result pages | Use **Previous** or **Next** when source paging permits | None; Workbench requests the selected source page |
@@ -92,7 +99,8 @@ to perform an unrelated regulated action.
 | --- | --- | --- |
 | Own-book membership, filters, sorting, and paging | Requested through the same-origin BFF; Workbench validates the exact `v1` response and does not reconstruct membership | Gateway `GET /api/v1/advisor-book/portfolios` over Core `PortfolioManagerBookMembership:v1` |
 | Portfolio reference, client reference, mandate, currency, lifecycle, and assignment basis | Presented from validated response fields; no household, AUM, or attention score is derived | Core membership contract through Gateway |
-| Business date, booking centre, source service, snapshot, correlation, evidence currency, support state, and reason codes | Shown as operating evidence and limitations; no browser-side readiness calculation | Gateway/Core provenance and supportability fields |
+| Requested and returned business date | Workbench validates a real calendar date before loading and requires exact request/response agreement; it does not create an instant or substitute a constant | Explicit user/development request scope and Gateway/Core returned scope |
+| Booking centre, source service, snapshot, correlation, evidence currency, support state, and reason codes | Shown as operating evidence and limitations; no browser-side readiness calculation | Gateway/Core provenance and supportability fields |
 | Caller and tenant boundary | Browser-supplied identity, tenant, region, booking-centre, role, and capability headers are removed by the BFF | Governed runtime context; production principal remains owned by Workbench #436 |
 
 Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
@@ -102,6 +110,7 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
+| Business date not confirmed | No assignment request, no substituted date, and a labelled calendar-date control | Select a valid business date; paging resets before Workbench contacts the BFF |
 | Loading | A dedicated book-loading state while the source request is outstanding | Wait for the governed response; no global portfolio list is substituted |
 | Ready | Scope, evidence, measures, filters, register, paging, and operating boundaries | Review source scope before opening a portfolio |
 | Empty book | Source-confirmed empty posture for the requested own-book scope | Confirm date and operating scope; Retry only if the source posture suggests recovery |
@@ -140,8 +149,11 @@ guide does not turn a supported screen into a claim of bank approval or producti
 
 ## Evidence And Validation
 
-- Focused unit and integration coverage validates the strict Advisor Book contract, state model,
-  filters, paging, task-preserving navigation, permission handling, and absence of a global fallback.
+- Focused unit and integration coverage validates the strict Advisor Book contract, business-date
+  admission and source-scope agreement, state model, filters, paging, task-preserving navigation,
+  permission handling, and absence of a global fallback.
+- `tests/e2e/advisor-book-workspace.spec.ts` proves an invalid URL date makes no Advisor Book request,
+  then recovers through explicit selection before rendering returned membership.
 - `scripts/live/validation/browser-workflows.mjs` validates the browser workflow through Gateway.
 - Canonical proof uses `PB_SG_GLOBAL_BAL_001` and requires exactly one canonical portfolio,
   `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current accepted snapshot

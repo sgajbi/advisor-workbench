@@ -111,9 +111,12 @@ WORKBENCH_ADVISOR_BOOK_ROLE=ADVISOR
 NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE=2026-04-10
 ```
 
-The BFF discards browser-supplied authority and adds only `advisor.book.read`. This fixture is
-rejected outside `dev`, `development`, `local`, or `test`; UAT and production require the future
-authenticated principal resolver tracked by Workbench #436.
+The BFF discards browser-supplied authority and adds only `advisor.book.read`. Development caller
+authority is rejected outside `dev`, `development`, `local`, or `test`; UAT and production require
+the future authenticated principal resolver tracked by Workbench #436. The public as-of value is an
+explicitly configured local request-date fixture: an explicit URL date takes precedence, invalid
+input does not fall back to it, and a missing valid date blocks the own-book request until the user
+selects one.
 
 ### Advisor Cockpit local authority fixture
 

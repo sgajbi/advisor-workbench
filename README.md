@@ -254,6 +254,13 @@ WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
 WORKBENCH_DPM_SOURCE_AS_OF_DATE=2026-04-10
 ```
 
+`NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE` is an explicitly configured request fixture for the
+governed local-development runtime, not an in-code or production fallback. An explicit URL date
+takes precedence; an invalid URL date never falls back to this value. Without either a valid request
+date or this configured fixture, **My book** fails closed and asks the user to select the business
+date before contacting Gateway. The BFF independently rejects development caller authority outside
+the permitted local environments.
+
 `WORKBENCH_IDEA_AUTH_MODE=development_configured` is rejected outside those development
 environments. An unset environment, `uat`, production, or any other environment requires the future
 `authenticated_session` resolver and returns a no-store `401` before contacting Gateway until it is
