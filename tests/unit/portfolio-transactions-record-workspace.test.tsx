@@ -1,12 +1,19 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type MockTransactionRow = { transactionId: string };
 type MockDetailDrawer = {
   title: string;
   tabs: Array<{ key: string; content: React.ReactNode }>;
 };
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 
 vi.mock("ag-grid-react", () => ({
   AgGridReact: ({
@@ -48,8 +55,17 @@ import PortfolioTransactionsRecordWorkspace from "../../src/apps/portfolio/compo
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 
 describe("portfolio transactions record workspace", () => {
+  beforeEach(() => {
+    window.history.replaceState(
+      {},
+      "",
+      "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D",
+    );
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    routerPushMock.mockClear();
   });
 
   it("opens booked-event detail and applies a supported FX contract drill-down", async () => {
@@ -73,6 +89,10 @@ describe("portfolio transactions record workspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Review TX_1" }));
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
     expect(screen.getAllByText("FXC-2026-0001").length).toBeGreaterThan(0);
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_1",
+      { scroll: false },
+    );
 
     fireEvent.click(
       screen.getByRole("button", { name: "Open FX Contract Transactions" }),
