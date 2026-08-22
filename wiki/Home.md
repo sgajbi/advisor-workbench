@@ -60,6 +60,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - Exception-led mandate posture, active attention, and portfolio-management handoffs:
   [Manage Overview](Manage-Overview-Screen-Guide)
+- Source-backed mandate health, cursor-bounded attention review, and exception lineage:
+  [Mandate Health](Mandate-Health-Screen-Guide)
 - Source-backed rebalance readiness, proposed changes, controlled actions, and evidence posture:
   [Rebalance Waves](Rebalance-Waves-Screen-Guide)
 - Source-backed relationship-manager book flow:
