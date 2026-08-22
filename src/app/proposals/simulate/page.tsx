@@ -36,6 +36,8 @@ export default async function ProposalSimulatePage({
   }
 
   const initialAsOfDate = reviewContextResult.context.asOfDate ?? "";
+  const initialReportingCurrency =
+    reviewContextResult.context.reportingCurrency ?? "";
   return (
     <ProposalWorkspaceShell
       reviewContext={{ ...reviewContextResult.context, portfolioId }}
@@ -49,6 +51,7 @@ export default async function ProposalSimulatePage({
       <ProposalSimulateForm
         initialPortfolioId={portfolioId}
         initialAsOfDate={initialAsOfDate}
+        initialReportingCurrency={initialReportingCurrency}
       />
     </ProposalWorkspaceShell>
   );
