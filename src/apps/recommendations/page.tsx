@@ -7,21 +7,52 @@ import {
   getAdvisoryJourneyDefinition,
   normalizeAdvisoryJourneyMode,
 } from "@/features/proposals/advisory-journey-navigation";
-import ProposalWorkspaceShell, {
-  resolveProposalPortfolioId,
-} from "@/features/proposals/components/proposal-workspace-shell";
+import ProposalWorkspaceShell from "@/features/proposals/components/proposal-workspace-shell";
 import {
   buildAdvisorCockpitWorkflowContext,
 } from "@/features/proposals/proposal-workflow-context-view-model";
+import ReviewContextRecovery from "@/shell/review-context-recovery";
+import {
+  parseReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 export default async function RecommendationsAppPage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string; mode?: string; candidateId?: string }>;
+  searchParams: Promise<
+    ReviewContextSearchParams & {
+      mode?: string | readonly string[];
+      candidateId?: string | readonly string[];
+    }
+  >;
 }) {
   const resolvedSearch = await searchParams;
-  const portfolioId = resolveProposalPortfolioId(resolvedSearch.portfolioId);
-  const requestedMode = normalizeAdvisoryJourneyMode(resolvedSearch.mode);
+  const reviewContextResult = parseReviewContext(resolvedSearch);
+  if (reviewContextResult.status === "invalid") {
+    return (
+      <ReviewContextRecovery
+        body="The advisory-workspace address contains repeated or unsupported review context. No advisory evidence was requested."
+        href="/book"
+        actionLabel="Select a portfolio from My book"
+      />
+    );
+  }
+
+  const portfolioId = reviewContextResult.context.portfolioId;
+  if (!portfolioId) {
+    return (
+      <ReviewContextRecovery
+        body="Select a source-confirmed portfolio from My book before opening advisory priorities. No demo portfolio was substituted."
+        href="/book"
+        actionLabel="Select a portfolio from My book"
+      />
+    );
+  }
+
+  const requestedMode = normalizeAdvisoryJourneyMode(
+    typeof resolvedSearch.mode === "string" ? resolvedSearch.mode : undefined,
+  );
   const activeMode =
     requestedMode === "opportunities" ||
     requestedMode === "cockpit" ||
@@ -32,7 +63,7 @@ export default async function RecommendationsAppPage({
   const definition = getAdvisoryJourneyDefinition(activeMode);
   return (
     <ProposalWorkspaceShell
-      reviewContext={{ portfolioId }}
+      reviewContext={{ ...reviewContextResult.context, portfolioId }}
       activeScreen="advisory"
       activeMode={activeMode}
       title={definition.title}
@@ -55,10 +86,16 @@ export default async function RecommendationsAppPage({
       ) : activeMode === "opportunities" ? (
         <AdvisoryOpportunitiesWorkspace
           portfolioId={portfolioId}
-          selectedCandidateId={resolvedSearch.candidateId}
+          selectedCandidateId={
+            typeof resolvedSearch.candidateId === "string"
+              ? resolvedSearch.candidateId
+              : undefined
+          }
         />
       ) : (
-        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId }} />
+        <AdvisoryOverviewWorkspace
+          reviewContext={{ ...reviewContextResult.context, portfolioId }}
+        />
       )}
     </ProposalWorkspaceShell>
   );
