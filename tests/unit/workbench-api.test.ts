@@ -2894,7 +2894,9 @@ describe("workbench api", () => {
     expect(body.body.stateful_input.portfolio_id).toBe(
       "PB_SG_GLOBAL_BAL_001"
     );
-    expect(body.body.stateful_input.as_of).toBe("2026-04-10");
+    expect(body.body.stateful_input.as_of).toBe(
+      constructionPortfolio().as_of_date
+    );
     expect(body.body.stateful_input.mandate_id).toBe(
       "MANDATE_PB_SG_GLOBAL_BAL_001"
     );
@@ -2946,18 +2948,21 @@ describe("workbench api", () => {
     const secondBody = JSON.parse(fetchMock.mock.calls[1][1].body);
     const firstHeaders = fetchMock.mock.calls[0][1].headers;
     const secondHeaders = fetchMock.mock.calls[1][1].headers;
+    const constructionContext = constructionPortfolio();
+    const operationPrefix = `workbench-construction-${constructionContext.portfolio.portfolio_id}-${constructionContext.as_of_date}-`;
+    const correlationPrefix = `corr-${operationPrefix}`;
     expect(firstBody.idempotency_key).toMatch(
-      /^workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+      new RegExp(`^${operationPrefix}[0-9a-f-]+$`)
     );
     expect(secondBody.idempotency_key).toMatch(
-      /^workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+      new RegExp(`^${operationPrefix}[0-9a-f-]+$`)
     );
     expect(firstBody.idempotency_key).not.toBe(secondBody.idempotency_key);
     expect(firstHeaders["X-Correlation-Id"]).toMatch(
-      /^corr-workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+      new RegExp(`^${correlationPrefix}[0-9a-f-]+$`)
     );
     expect(secondHeaders["X-Correlation-Id"]).toMatch(
-      /^corr-workbench-construction-PB_SG_GLOBAL_BAL_001-2026-04-10-/
+      new RegExp(`^${correlationPrefix}[0-9a-f-]+$`)
     );
     expect(firstHeaders["X-Correlation-Id"]).not.toBe(
       secondHeaders["X-Correlation-Id"]
