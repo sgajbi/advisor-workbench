@@ -210,7 +210,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
-  it("withholds fetched detail that does not confirm the summary valuation identity", async () => {
+  it("accepts returned valuation metadata that is not part of Performance request identity", async () => {
     getDetailsClientMock.mockResolvedValueOnce(
       buildDetails({ as_of_date: "2026-02-23" }),
     );
@@ -229,10 +229,11 @@ describe("PerformanceWorkspaceClient", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("chart-points")).toHaveTextContent("0");
-      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
     expect(pushMock).not.toHaveBeenCalled();
     expect(replaceMock).not.toHaveBeenCalled();
   });

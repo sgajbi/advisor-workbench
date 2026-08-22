@@ -209,6 +209,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText(/source valuation date 2026-02-24/i)).toBeInTheDocument();
     expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
     expect(await findWorkflowControl(/^Performance Overview/i)).toBeInTheDocument();
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(await screen.findByText("Performance Drivers")).toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(
