@@ -26,12 +26,6 @@ import {
 } from "./proposal-workflow-context";
 import styles from "./proposal-workspace-shell.module.css";
 
-export const CANONICAL_ADVISORY_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
-
-export function resolveProposalPortfolioId(portfolioId?: string | null): string {
-  return portfolioId?.trim() || CANONICAL_ADVISORY_PORTFOLIO_ID;
-}
-
 export default function ProposalWorkspaceShell({
   reviewContext,
   activeScreen,

@@ -31,9 +31,19 @@ vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
   default: ({
     reviewContext,
   }: {
-    reviewContext: { portfolioId: string };
+    reviewContext: {
+      portfolioId: string;
+      asOfDate?: string;
+      period?: string;
+      reportingCurrency?: string;
+    };
   }) => (
-    <section>
+    <section
+      data-testid="advisory-overview-workspace"
+      data-as-of={reviewContext.asOfDate}
+      data-period={reviewContext.period}
+      data-currency={reviewContext.reportingCurrency}
+    >
       <h2>Advisory Overview</h2>
       <p>{reviewContext.portfolioId}</p>
     </section>
@@ -89,7 +99,12 @@ vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
     children,
   }: {
     title: string;
-    reviewContext: { portfolioId: string };
+    reviewContext: {
+      portfolioId: string;
+      asOfDate?: string;
+      period?: string;
+      reportingCurrency?: string;
+    };
     workflowContext?: { sourceLabel: string };
     workflowContextPresentation?: string;
     children: React.ReactNode;
@@ -98,14 +113,15 @@ vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
       data-testid="proposal-workspace-shell"
       data-context-presentation={workflowContextPresentation}
       data-source-label={workflowContext?.sourceLabel}
+      data-as-of={reviewContext.asOfDate}
+      data-period={reviewContext.period}
+      data-currency={reviewContext.reportingCurrency}
     >
       <h1>{title}</h1>
       <p>{reviewContext.portfolioId}</p>
       {children}
     </section>
   ),
-  resolveProposalPortfolioId: (portfolioId?: string | null) =>
-    portfolioId?.trim() || "PB_SG_GLOBAL_BAL_001",
 }));
 
 vi.mock("next/dynamic", () => ({
@@ -239,7 +255,12 @@ describe("app route entrypoints", () => {
   it("mounts recommendations as the advisory workspace when portfolio context exists", async () => {
     render(
       await RecommendationsAppPage({
-        searchParams: Promise.resolve({ portfolioId: "PORT_1001" }),
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          asOfDate: "2026-06-30",
+          period: "3Y",
+          reportingCurrency: "SGD",
+        }),
       }),
     );
 
@@ -247,17 +268,49 @@ describe("app route entrypoints", () => {
       screen.getAllByRole("heading", { name: "Advisory Overview" }).length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("proposal-workspace-shell")).toHaveAttribute(
+      "data-as-of",
+      "2026-06-30",
+    );
+    expect(screen.getByTestId("advisory-overview-workspace")).toHaveAttribute(
+      "data-period",
+      "3Y",
+    );
+    expect(screen.getByTestId("advisory-overview-workspace")).toHaveAttribute(
+      "data-currency",
+      "SGD",
+    );
   });
 
-  it("mounts recommendations without leaving the advisory route when no portfolio is selected", async () => {
+  it("requires a source-confirmed portfolio before mounting advisory evidence", async () => {
     render(await RecommendationsAppPage({ searchParams: Promise.resolve({}) }));
 
     expect(
-      screen.getAllByRole("heading", { name: "Advisory Overview" }).length,
-    ).toBeGreaterThan(0);
-    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(
-      0,
+      screen.getByText("Review context needs attention"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/No demo portfolio was substituted/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Select a portfolio from My book" }),
+    ).toHaveAttribute("href", "/book");
+    expect(
+      screen.queryByRole("heading", { name: "Advisory Overview" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("rejects ambiguous advisory review context before mounting a workspace", async () => {
+    render(
+      await RecommendationsAppPage({
+        searchParams: Promise.resolve({
+          portfolioId: ["PORT_1001", "PORT_2002"],
+          asOfDate: "2026-06-30",
+        }),
+      }),
     );
+
+    expect(screen.getByText(/repeated or unsupported review context/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Advisory Overview" }),
+    ).not.toBeInTheDocument();
   });
 
   it("mounts recommendations ideas mode as a focused advisory screen", async () => {
