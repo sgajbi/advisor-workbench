@@ -6,12 +6,12 @@ This page inventories Workbench-owned browser routes and local server routes. Ro
 not sufficient evidence of supported product capability; shell posture, Gateway backing, tests,
 and canonical validation remain authoritative.
 
-| Surface Class | Authority | Evidence Decision |
-| --- | --- | --- |
+| Surface Class             | Authority                                       | Evidence Decision                                                               |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
 | Active product navigation | Workbench shell plus Gateway capability posture | May be described as active only when capability and canonical route proof agree |
-| Direct workflow route | Workbench presentation over Gateway contracts | Must not imply Workbench owns upstream domain decisions |
-| Compatibility route | Redirect or bounded legacy entry | Must remain visibly separate from the primary topology |
-| `/api/bff/*` | Internal Workbench bridge | Is not a second public or domain-authoritative API |
+| Direct workflow route     | Workbench presentation over Gateway contracts   | Must not imply Workbench owns upstream domain decisions                         |
+| Compatibility route       | Redirect or bounded legacy entry                | Must remain visibly separate from the primary topology                          |
+| `/api/bff/*`              | Internal Workbench bridge                       | Is not a second public or domain-authoritative API                              |
 
 ## Product routes
 
@@ -304,6 +304,13 @@ promote dormant labels into product ownership just because historical route file
   `GET /api/v1/proposals/{proposal_id}?include_evidence=true`,
   `/workflow-events`, `/approvals`, and `/lineage` as one maker-checker evidence set. The browser
   does not fan these record reads across the visible worklist or infer approval from list state.
+- Suitability Review does not read the generic proposal list. It reads the portfolio-scoped
+  advisory-policy review queue through `/api/bff/api/v1/advisory-policy-evaluations/review-queue`,
+  then reads evaluation, sign-off-package, and workflow evidence for the selected evaluation only.
+  Manual refresh repeats that exact four-read set and confirms success only after the selected
+  portfolio, evaluation, proposal, version, package, and workflow identities agree. A bounded
+  evidence request posts through the same Gateway family with the source evaluation hash and an
+  idempotency key; it is not policy approval or client-publication authority.
 - Proposal Detail presents one decision-first review workspace over the existing Gateway contracts:
   identity and lifecycle lead to the next action, proposed changes, allocation impact, and review
   gates; Narrative and Memo are peer advisor-review modes; and version, lineage, replay, and review

@@ -147,14 +147,14 @@ Current repository posture:
    attach book-level actions to an exception, generate remediation narrative locally, or call
    `lotus-manage`/`lotus-ai` directly.
 10. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
-   Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
-   state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
-   blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
-   list, bounded campaign-discovery posture, lifecycle-event evidence posture, preview-readiness
-   posture, launch-history audit posture, read-only campaign workflow audit posture, and
-   `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
-   calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
-   maker-checker state, or operate campaign-definition upsert locally.
+    Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
+    state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
+    blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
+    list, bounded campaign-discovery posture, lifecycle-event evidence posture, preview-readiness
+    posture, launch-history audit posture, read-only campaign workflow audit posture, and
+    `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
+    calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
+    maker-checker state, or operate campaign-definition upsert locally.
 11. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,
@@ -709,19 +709,19 @@ Primary areas:
    capability projection, and selected-portfolio entitlement enforcement for Advisor Cockpit BFF
    traffic. Browser proposal components do not own advisor identity or role.
 10. `tests/`
-   Unit, integration, and Playwright smoke coverage.
+    Unit, integration, and Playwright smoke coverage.
 11. `wiki/`
-   canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
+    canonical authored source for GitHub wiki publication and operator-facing Workbench summaries.
 12. `docs/documentation/workbench-screen-registry.v1.json`
-   canonical route, business-screen, mode, navigation-posture, source-owner, evidence, and wiki-guide
-   mapping. `npm run quality:screen-docs` compares it with every Next.js route entrypoint and the
-   source-owned Performance, Manage, Advisory Journey, and Proposal Lifecycle mode definitions.
-   The gate owns the required authority-family set independently from the registry, rejects missing,
-   duplicate, and unexpected families, and compares literal source alias targets with their resolved
-   canonical surface modes. Required guide headings must be complete Markdown headings outside
-   properly closed fenced blocks; an opening-style delimiter with an info suffix is not a close.
-   Every active surface needs one canonical guide or an explicit issue-backed coverage exception;
-   aliases reuse the canonical guide instead of creating duplicate prose.
+    canonical route, business-screen, mode, navigation-posture, source-owner, evidence, and wiki-guide
+    mapping. `npm run quality:screen-docs` compares it with every Next.js route entrypoint and the
+    source-owned Performance, Manage, Advisory Journey, and Proposal Lifecycle mode definitions.
+    The gate owns the required authority-family set independently from the registry, rejects missing,
+    duplicate, and unexpected families, and compares literal source alias targets with their resolved
+    canonical surface modes. Required guide headings must be complete Markdown headings outside
+    properly closed fenced blocks; an opening-style delimiter with an info suffix is not a close.
+    Every active surface needs one canonical guide or an explicit issue-backed coverage exception;
+    aliases reuse the canonical guide instead of creating duplicate prose.
 
 ## Runtime And Integration Boundaries
 
@@ -821,8 +821,7 @@ Container runtime rules:
 5. PR and exact-main Docker lanes reject fixable high/critical image findings and publish CycloneDX
    SBOM evidence, and
 6. Trivy execution remains pinned to the vendor-declared safe 0.69.3 binary and the full immutable
-   trivy-action 0.35.0 commit because mutable Trivy ecosystem references were compromised in March
-   2026. Any scanner refresh requires explicit supply-chain review and issue traceability, and
+   trivy-action 0.35.0 commit because mutable Trivy ecosystem references were compromised in March 2026. Any scanner refresh requires explicit supply-chain review and issue traceability, and
 7. Dockerized local Vitest parity uses an explicit two-worker ceiling so it remains deterministic
    while the canonical Lotus stack is running, and masks workstation `.env.local` with the tracked
    empty CI fixture. Do not replace these controls with per-test timeout inflation, disabled
@@ -932,84 +931,84 @@ Important validation expectations:
    reuse so current-worktree proof cannot silently exercise stale code,
    and run the generated `.next/standalone/server.js` directly after staging `.next/static` beside
    it. Do not substitute `next start` for a repository configured with `output: standalone`,
-4. Docker and build validation remain part of the merge gate,
-4. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
+5. Docker and build validation remain part of the merge gate,
+6. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
    validation-only NGINX image, run the two-replica scale proof against that same Workbench image,
    and upload the machine-readable evidence,
-4. canonical live validation matters when a change affects integrated product flows,
-5. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
+7. canonical live validation matters when a change affects integrated product flows,
+8. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
    `-LocalApps` runs are useful branch-local development evidence, not certification evidence.
    When another agent owns the shared Workbench checkout, platform automation may supply an
    isolated Workbench mainline checkout to the source-provenance preflight. That override is valid
    only when the path is a clean `lotus-workbench` Git origin at exact `origin/main`; a clean path
    to another Lotus repository must fail closed as a repository-identity mismatch.
-6. canonical startup must use the reusable, fail-closed Compose project/path ownership predicate
+9. canonical startup must use the reusable, fail-closed Compose project/path ownership predicate
    for Docker port owners. `npm run live:stack:preflight` audits an existing stack without mutation,
    and `npm run test:runtime-ownership` executes the equivalent/foreign path matrix in feature, PR,
    and main lanes. Core portfolio seeding must use the repo-local `portfolio_common` library on
    `PYTHONPATH`; do not bypass source-readiness blockers with Workbench-local state,
-6. README and wiki updates should keep active product-surface truth explicit, especially when
-   legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
-6. product docs should distinguish active shell navigation from disabled or compatibility-only
-   routes when the shell bootstrap contract does not treat every historical route as supported,
-7. route-file existence alone is not enough for documentation truth; use shell registry,
-   capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
-   as supported. Keep the Workbench screen registry aligned with source route and mode definitions,
-   use separate implementation and navigation-posture fields, and remove a `coverageException` only
-   after the mapped business guide satisfies the complete heading and evidence standard.
-8. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
-   Reporting operator reads is centralized in
-   `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
-   in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and
-   never emit portfolio, client, document, session, report batch, trace, request body, response
-   body, or screen-content identifiers as metric labels. The metrics helper consumes Gateway
-   `source_supportability` arrays for performance/risk freshness and supportability posture, with
-   stale source freshness taking precedence over ready source items. State-changing Workbench
-   actions should use the mutation observation helper so they emit bounded request, state, and
-   applicable attention metrics without incrementing panel hydration counters.
-9. DPM outcome-review Workbench reads use the same bounded observability registry. Metric labels
-   must identify only governed route, panel, operation, freshness, supportability, and status
-   classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
-   response payloads, hashes, and lineage references must stay out of metric labels.
-10. Repository-source governance assertions must be platform-newline portable. Assert semantic
+10. README and wiki updates should keep active product-surface truth explicit, especially when
+    legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
+11. product docs should distinguish active shell navigation from disabled or compatibility-only
+    routes when the shell bootstrap contract does not treat every historical route as supported,
+12. route-file existence alone is not enough for documentation truth; use shell registry,
+    capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
+    as supported. Keep the Workbench screen registry aligned with source route and mode definitions,
+    use separate implementation and navigation-posture fields, and remove a `coverageException` only
+    after the mapped business guide satisfies the complete heading and evidence standard.
+13. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
+    Reporting operator reads is centralized in
+    `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
+    in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and
+    never emit portfolio, client, document, session, report batch, trace, request body, response
+    body, or screen-content identifiers as metric labels. The metrics helper consumes Gateway
+    `source_supportability` arrays for performance/risk freshness and supportability posture, with
+    stale source freshness taking precedence over ready source items. State-changing Workbench
+    actions should use the mutation observation helper so they emit bounded request, state, and
+    applicable attention metrics without incrementing panel hydration counters.
+14. DPM outcome-review Workbench reads use the same bounded observability registry. Metric labels
+    must identify only governed route, panel, operation, freshness, supportability, and status
+    classes; outcome review ids, portfolio ids, proof-pack ids, rebalance run ids, request payloads,
+    response payloads, hashes, and lineage references must stay out of metric labels.
+15. Repository-source governance assertions must be platform-newline portable. Assert semantic
     lines, fields, and ordered contracts with `\r?\n` handling or explicit LF/CRLF cases; do not
     make a green Windows gate depend on LF-only byte substrings.
-11. Async UI tests must synchronize on the advisor-visible settled outcome as well as asserting the
+16. Async UI tests must synchronize on the advisor-visible settled outcome as well as asserting the
     Gateway request. A mock being called proves request start, not that React has committed success,
     failure, or refreshed evidence. Do not replace a missing outcome boundary with sleeps, timeout
     inflation, retries, or suite serialization.
-12. Route tests must not repeatedly reset and reload the full Next module graph merely to vary
+17. Route tests must not repeatedly reset and reload the full Next module graph merely to vary
     runtime configuration. Extract a small deterministic input parser or selection seam, read
     runtime configuration at invocation time, and retain one bounded route-composition proof.
-10. DPM mandate command-center reads and monitoring actions use bounded observability labels for
+18. DPM mandate command-center reads and monitoring actions use bounded observability labels for
     command-center summary, exceptions, mandate lookup, mandate health, and monitoring run-once
     operations. Metric labels must not include portfolio ids, mandate ids, PM ids, book ids,
     monitoring run ids, exception ids, source-run ids, request bodies, response bodies, or screen
     content.
-11. DPM outcome-review AI narrative requests are Workbench state-changing mutations through
+19. DPM outcome-review AI narrative requests are Workbench state-changing mutations through
     Gateway only. Workbench may display bounded workflow-pack run status returned by Gateway/AI,
     but it must not construct AI prompts, generate recommendations, score PMs, or treat a narrative
     run as autonomous approval.
-12. DPM construction alternative generation and selection are Workbench state-changing mutations
+20. DPM construction alternative generation and selection are Workbench state-changing mutations
     through Gateway only. Workbench may construct the stateful source selector needed to invoke the
     Gateway/manage contract, but it must not synthesize stateless portfolio snapshots, price
     payloads, target weights, optimization outcomes, supportability states, or selection decisions.
-13. DPM proof-pack generation, retrieval, Markdown, report-input, AI-evidence reads/actions, and
+21. DPM proof-pack generation, retrieval, Markdown, report-input, AI-evidence reads/actions, and
     governed AI PM memo requests are Workbench gateway-only operations. Observability labels must
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; proof-pack ids, rebalance run ids, mandate ids, portfolio ids, content hashes, source
     hashes, workflow-pack run ids, request bodies, response bodies, and screen content must never
     be emitted as metric labels.
-14. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
+22. DPM rebalance-wave reads and mutations are Workbench gateway-only operations. Observability
     labels must remain bounded to route, panel, operation, freshness, supportability, status class,
     and error category; wave ids, wave item ids, portfolio ids, proof-pack ids, handoff refs,
     campaign ids, report-input refs, workflow-pack run ids, request bodies, response bodies, and
     screen content must never be emitted as metric labels.
-15. DPM portfolio-memory reads are Workbench gateway-only operations. Observability labels must
+23. DPM portfolio-memory reads are Workbench gateway-only operations. Observability labels must
     remain bounded to route, panel, operation, freshness, supportability, status class, and error
     category; portfolio ids, event ids, source refs, artifact refs, content hashes, request bodies,
     response bodies, and screen content must never be emitted as metric labels.
-16. DPM PM operating quality policy, score-run, score-run summary, score-run preview, create,
+24. DPM PM operating quality policy, score-run, score-run summary, score-run preview, create,
     fairness-analysis preview/create/list/detail, review-action preview/create/list/detail, and
     summary-invocation preview/create/list/detail operations are Workbench gateway-only operations.
     Observability labels must remain bounded to route, panel, operation, freshness,
@@ -1018,11 +1017,11 @@ Important validation expectations:
     source refs, content hashes, artifact refs, workflow run ids, request bodies, response bodies,
     generated summary text, prompts, model responses, score values, and screen content must never
     be emitted as metric labels.
-17. Proposal advisor narrative actions are Workbench gateway-only operations. UI state must stay
+25. Proposal advisor narrative actions are Workbench gateway-only operations. UI state must stay
     explicit about advisor-use review, reviewed narrative package inclusion, report delivery
     posture, and latest delivery event, without presenting report rendering, archive publication,
     client messaging, or client-ready release as Workbench-owned capabilities.
-18. Advisor suitability policy review queue reads and bounded evidence-review requests are
+26. Advisor suitability policy review queue reads and bounded evidence-review requests are
     Workbench gateway-only operations backed by Gateway advisory-policy evaluation contracts.
     Workbench must bind record-specific evidence and actions to an explicitly selected queue
     evaluation. The selected proposal, version, and evaluation remain visible; pointer and keyboard
@@ -1041,12 +1040,18 @@ Important validation expectations:
     but it must not calculate suitability locally, approve or waive policy findings, record
     policy sign-off approval, infer client-ready release, or expose raw policy payload field names
     on advisor-facing screens.
-19. Portfolio transaction monetary fields must retain their source currency semantics through view
+    The policy-review queue is the Suitability screen's only worklist and count authority; do not
+    request or render the generic proposal list as a competing queue. Use the shared adaptive
+    decision-workspace pattern so desktop and advisor-tablet widths keep worklist and selected
+    evidence together, while compact layouts preserve worklist-before-decision order. A manual
+    refresh must repeat the queue, selected evaluation, sign-off package, and workflow reads as one
+    source transaction and announce success only after all four settle and identity still agrees.
+27. Portfolio transaction monetary fields must retain their source currency semantics through view
     models, grids, drawers, totals, and exports. Pair `gross_amount` and `price` with transaction
     `currency`; pair `net_cost_base` and `realized_gain_loss_base` with portfolio base currency.
     Do not use a gross/base fallback as one labeled amount or aggregate mixed currencies. Preserve
     Gateway `total`, `skip`, and `limit` when a transaction screen claims ledger coverage.
-20. Advisor-book UI must consume only Gateway `/api/v1/advisor-book/portfolios`, validate exact
+28. Advisor-book UI must consume only Gateway `/api/v1/advisor-book/portfolios`, validate exact
     `v1` own-book and `PortfolioManagerBookMembership:v1` semantics, and preserve Gateway
     supportability, tenant-scope, assignment-basis, paging, and provenance evidence. The browser
     must not infer household, team, delegated, supervisor, AUM, attention, or ownership scope; it
@@ -1061,20 +1066,20 @@ Important validation expectations:
     capability does not supersede their governed partial posture. Any canonical proof asserting
     exact membership uniqueness must cover the complete own-book result set: validate paging
     metadata against returned items and fail closed on a non-zero offset or incomplete page.
-21. Performance browser proof must read source module capabilities and source economics before
+29. Performance browser proof must read source module capabilities and source economics before
     asserting optional metrics or analytical rows. Use `npm run test:e2e:performance:populated`
     for the complete metric/layout precondition and
     `npm run test:e2e:performance:unavailable` for truthful degraded behavior. Keep live-only
     timing checks separate, use default independent Playwright execution rather than serial mode,
     and do not let one summary failure skip Analysis, Contribution, or Evidence journeys.
-22. Performance attribution level totals are source-owned analytics. Workbench may aggregate
+30. Performance attribution level totals are source-owned analytics. Workbench may aggregate
     portfolio and benchmark exposure weights for presentation, but it must bind allocation,
     selection, interaction, and total attribution effect directly to the Gateway contract rather
     than reconstructing them from detail rows. Render missing optional component totals as
     `Unavailable`; reserve `—` for intentionally non-additive return columns. A missing required
     total effect is malformed upstream evidence owned by Gateway issue #506, not a reason to make
     the Workbench contract nullable or substitute zero.
-23. Canonical live validation must prove the source authority required by the acceptance claim,
+31. Canonical live validation must prove the source authority required by the acceptance claim,
     not only endpoint availability, row presence, or a rendered panel. Select the governed entity
     explicitly; require its exact versioned source, assignment or calculation basis, current
     accepted provenance, snapshot/content identity, authoritative lineage, and exact requested
@@ -1085,7 +1090,7 @@ Important validation expectations:
     provenance fails closed. When Idea candidate detail does not expose a source hash, Workbench
     proof must verify the available candidate id, policy, queue evaluation timestamp, source
     signal, and detail source-ref evidence and record the hash as an explicit non-claim.
-24. Performance analytical selections are source-confirmed transactions. Keep requested controls
+32. Performance analytical selections are source-confirmed transactions. Keep requested controls
     separate from the rendered summary/details and URL until every contract required by the selected
     view succeeds. If a refresh fails, retain usable prior evidence only under its prior labels,
     expose the requested and confirmed contexts plus an exact source retry, and announce pending,
@@ -1097,7 +1102,7 @@ Important validation expectations:
     publish summary, detail, normalized controls, or query state; do not invent fallback analytics.
     Use `npm run test:e2e:performance:refresh-integrity` for the owned optimized-production failure
     and recovery journey.
-25. Independently fetched analytical panels own independent source state. Never convert a rejected
+33. Independently fetched analytical panels own independent source state. Never convert a rejected
     request into a supported empty response, blank correlation id, or generic unavailable posture.
     Cache only source-confirmed success, evict matching cached evidence after a permission denial,
     fence obsolete completions, distinguish recoverable error from permission block and valid
@@ -1116,7 +1121,7 @@ Important validation expectations:
     chart. Its nested layout must reflow from the module's inline-size capacity rather than the
     outer viewport. Use `npm run test:e2e:performance:return-path-density` for the owned
     optimized-production semantic, focus, height, responsive, and overflow proof.
-26. Source-selection controls belong beside every Performance decision view that they govern.
+34. Source-selection controls belong beside every Performance decision view that they govern.
     Summary and Analysis must reuse one component and one complete request-shaping path for horizon,
     basis, explicit review window, frequency, and benchmark. Keep return-view presentation local to
     the Summary return-path module and analytical segment selection local to Analysis. Preserve the
@@ -1125,7 +1130,7 @@ Important validation expectations:
     widths, source-changing controls must retain a measured 44px touch target without reducing
     desktop workstation density. Use `npm run test:e2e:performance:analysis-controls` for the owned
     direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
-27. Persisted Advisor Brief review is a source-confirmed internal decision transaction. Offer only
+35. Persisted Advisor Brief review is a source-confirmed internal decision transaction. Offer only
     known actions admitted by the returned workflow, state each business consequence, require the
     staff reference, rationale, and replacement lineage that the action needs, and provide a
     distinct review-before-confirm step. Show pending, source-confirmed success, and explicit
@@ -1141,7 +1146,7 @@ Important validation expectations:
     listener. Use
     `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
     confirmation, source-persistence, responsive, focus, and browser-runtime proof.
-28. Performance supportability uses one business-and-evidence presentation boundary. Derive the
+36. Performance supportability uses one business-and-evidence presentation boundary. Derive the
     advisor conclusion, client-use implication, named limitations, and technical disclosure from
     the same Gateway-owned contribution object. Translate only explicitly governed source and
     smoothing values; absent, inconsistent, or unknown statuses and reason codes fail closed to a
