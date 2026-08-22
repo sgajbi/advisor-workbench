@@ -489,8 +489,11 @@ function buildCampaignWorkflowEvidenceRow(
         "RECORDED"
     ),
     actor:
-      readString(record, "actor_id") ||
+      readString(record, "decided_by") ||
       readString(record, "recorded_by") ||
+      readString(record, "opened_by") ||
+      readString(record, "transitioned_by") ||
+      readString(record, "actor_id") ||
       readString(record, "created_by") ||
       "N/A",
     recordedAt:
@@ -918,7 +921,7 @@ function resolveCampaignCandidateNextAction(
     return "Resolve source readiness before checking campaign launch posture.";
   }
   if (candidateSourceReadiness === "READY") {
-    return "Check launch readiness through Gateway.";
+    return "Review launch readiness and any source-owned blockers.";
   }
   return "Review source refs before campaign action.";
 }

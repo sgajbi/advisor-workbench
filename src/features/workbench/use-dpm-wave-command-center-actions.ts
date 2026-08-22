@@ -109,6 +109,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignPreviewReadinessKey: string | null;
   pendingCampaignLaunchPackageKey: string | null;
   pendingCampaignLaunchKey: string | null;
+  pendingCampaignWorkflowEvidenceKey: string | null;
   pendingCampaignLifecycleCommand: boolean;
   pendingCampaignWorkflowCommand: boolean;
   actionError: string | null;
@@ -118,6 +119,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   campaignLaunchError: string | null;
   campaignLifecycleCommandError: string | null;
   campaignWorkflowCommandError: string | null;
+  campaignWorkflowEvidenceError: string | null;
   campaignLifecycleCommandEvidence: DpmCampaignLifecycleCommandEvidence | null;
   campaignWorkflowCommandEvidence: DpmCampaignWorkflowCommandEvidence | null;
   actionMessage: string | null;
@@ -134,6 +136,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   requestWaveMemo: () => void;
   requestOperationsBrief: () => void;
   selectCampaign: (row: DpmCampaignDefinitionRow) => void;
+  loadCampaignWorkflowEvidence: (row: DpmCampaignDefinitionRow) => Promise<void>;
   loadCampaignLifecycle: (row: DpmCampaignDefinitionRow) => Promise<void>;
   loadCampaignLaunchHistory: (
     row: DpmCampaignDefinitionRow,
@@ -221,6 +224,8 @@ export function useDpmWaveCommandCenterActions({
     useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] =
     useState<string | null>(null);
+  const [pendingCampaignWorkflowEvidenceKey, setPendingCampaignWorkflowEvidenceKey] =
+    useState<string | null>(null);
   const [pendingCampaignLifecycleCommand, setPendingCampaignLifecycleCommand] =
     useState<string | null>(null);
   const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
@@ -239,6 +244,8 @@ export function useDpmWaveCommandCenterActions({
   const [campaignLifecycleCommandError, setCampaignLifecycleCommandError] =
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignWorkflowCommandError, setCampaignWorkflowCommandError] =
+    useState<CampaignBoundValue<string> | null>(null);
+  const [campaignWorkflowEvidenceError, setCampaignWorkflowEvidenceError] =
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignLifecycleCommandEvidence, setCampaignLifecycleCommandEvidence] =
     useState<CampaignBoundValue<DpmCampaignLifecycleCommandEvidence> | null>(null);
@@ -290,7 +297,9 @@ export function useDpmWaveCommandCenterActions({
     )
       ? selectedCampaignState.selectedCampaignKey
       : campaignListModel.campaignRows[0]?.key ?? null;
-  selectedCampaignKeyRef.current = selectedCampaignKey;
+  useEffect(() => {
+    selectedCampaignKeyRef.current = selectedCampaignKey;
+  }, [selectedCampaignKey]);
   const initialCampaignKey = campaignListModel.campaignRows[0]?.key ?? null;
   const useInitialCampaignEvidence = selectedCampaignKey === initialCampaignKey;
   const model = buildDpmWaveCommandCenterModel({
@@ -741,6 +750,32 @@ export function useDpmWaveCommandCenterActions({
     setCampaignMakerCheckerControlsResponse({ campaignKey: row.key, value: makerCheckerControls });
   }
 
+  async function loadCampaignWorkflowEvidence(row: DpmCampaignDefinitionRow) {
+    if (pendingCampaignWorkflowEvidenceKey) {
+      return;
+    }
+    const request = beginCampaignRequest("workflow-evidence", row);
+    setPendingCampaignWorkflowEvidenceKey(row.key);
+    setCampaignWorkflowEvidenceError(null);
+    try {
+      await refreshCampaignWorkflowEvidence(row, request);
+    } catch (error) {
+      if (isCurrentCampaignRequest(request)) {
+        setCampaignWorkflowEvidenceError({
+          campaignKey: row.key,
+          value:
+            error instanceof Error
+              ? error.message
+              : "Campaign governance evidence could not be loaded.",
+        });
+      }
+    } finally {
+      setPendingCampaignWorkflowEvidenceKey((current) =>
+        current === row.key ? null : current,
+      );
+    }
+  }
+
   async function recordCampaignLifecycleCommand(command: DpmCampaignLifecycleCommandInput) {
     if (pendingCampaignLifecycleCommand) {
       return;
@@ -903,6 +938,7 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignWorkflowEvidenceKey,
     pendingCampaignLifecycleCommand: pendingCampaignLifecycleCommand === selectedCampaignKey,
     pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
     actionError: actionError ?? selectedAiActionError,
@@ -922,6 +958,10 @@ export function useDpmWaveCommandCenterActions({
     ),
     campaignWorkflowCommandError: valueForSelectedCampaign(
       campaignWorkflowCommandError,
+      selectedCampaignKey,
+    ),
+    campaignWorkflowEvidenceError: valueForSelectedCampaign(
+      campaignWorkflowEvidenceError,
       selectedCampaignKey,
     ),
     campaignLifecycleCommandEvidence: valueForSelectedCampaign(
@@ -949,6 +989,7 @@ export function useDpmWaveCommandCenterActions({
     requestWaveMemo,
     requestOperationsBrief,
     selectCampaign,
+    loadCampaignWorkflowEvidence,
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,

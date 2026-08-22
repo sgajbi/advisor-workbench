@@ -80,6 +80,7 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignPreviewReadinessKey,
     pendingCampaignLaunchPackageKey,
     pendingCampaignLaunchKey,
+    pendingCampaignWorkflowEvidenceKey,
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError,
@@ -89,6 +90,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignLaunchError,
     campaignLifecycleCommandError,
     campaignWorkflowCommandError,
+    campaignWorkflowEvidenceError,
     campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
@@ -104,10 +106,12 @@ export default function DpmWaveCommandCenterPanel({
     openEvidencePack,
     requestWaveMemo,
     requestOperationsBrief,
+    selectCampaign,
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
     launchCampaign,
+    loadCampaignWorkflowEvidence,
     recordCampaignLifecycleCommand,
     recordCampaignWorkflowCommand,
   } = useDpmWaveCommandCenterActions({
@@ -240,12 +244,13 @@ export default function DpmWaveCommandCenterPanel({
         launchHistoryError={campaignLaunchHistoryError}
         previewReadinessError={campaignPreviewReadinessError}
         launchError={campaignLaunchError}
-        workflowError={campaignWorkflowError}
+        workflowError={campaignWorkflowEvidenceError ?? campaignWorkflowError}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
         pendingLaunchHistoryKey={pendingCampaignLaunchHistoryKey}
         pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}
         pendingLaunchPackageKey={pendingCampaignLaunchPackageKey}
         pendingLaunchKey={pendingCampaignLaunchKey}
+        pendingWorkflowEvidenceKey={pendingCampaignWorkflowEvidenceKey}
         pendingLifecycleCommand={pendingCampaignLifecycleCommand}
         pendingWorkflowCommand={pendingCampaignWorkflowCommand}
         lifecycleCommandError={campaignLifecycleCommandError}
@@ -255,9 +260,11 @@ export default function DpmWaveCommandCenterPanel({
         selectedCampaign={selectedCampaign}
         selectedCampaignKey={selectedCampaignKey}
         errorMessage={campaignDefinitionsError ?? campaignDiscoveryError}
+        onSelectCampaign={selectCampaign}
         onLoadLifecycle={loadCampaignLifecycle}
         onLoadLaunchHistory={loadCampaignLaunchHistory}
         onCheckLaunchReadiness={checkCampaignLaunchReadiness}
+        onLoadWorkflowEvidence={loadCampaignWorkflowEvidence}
         onLaunchCampaign={launchCampaign}
         onRecordLifecycleCommand={recordCampaignLifecycleCommand}
         onRecordWorkflowCommand={recordCampaignWorkflowCommand}

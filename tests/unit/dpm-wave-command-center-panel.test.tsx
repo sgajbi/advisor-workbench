@@ -330,21 +330,20 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getAllByText("Simulation ready").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
-    expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign administration" })).toBeInTheDocument();
+    expect(screen.getAllByText("Apple and Tesla holdings review").length).toBeGreaterThan(0);
     expect(screen.getAllByText("10").length).toBeGreaterThan(0);
-    expect(screen.getByText("rebalance_review")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
+    expect(screen.getByRole("toolbar", { name: "Campaign administration modes" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review posture" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("heading", { name: "Campaign Launch Posture" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
 
     const activeRebalance = screen.getByRole("heading", { name: "Active Rebalance" });
     const proposedChanges = screen.getByRole("heading", { name: "Proposed Changes" });
     const decisionSupport = screen.getByRole("heading", { name: "Decision support" });
-    const campaignDefinitions = screen.getByRole("heading", { name: "Campaign Definitions" });
+    const campaignDefinitions = screen.getByRole("heading", { name: "Campaign administration" });
     expect(activeRebalance.compareDocumentPosition(proposedChanges)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
@@ -375,14 +374,14 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open Evidence" }));
-
     await waitFor(() =>
       expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
         campaignId: "campaign-holdings-202605",
         campaignVersion: "2026.05",
       }),
     );
+
+    fireEvent.click(screen.getByText("Lifecycle history and technical trace"));
 
     const table = await screen.findByRole("table", {
       name: "DPM campaign lifecycle evidence",
@@ -409,8 +408,6 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open History" }));
-
     await waitFor(() =>
       expect(getDpmCampaignDefinitionLaunchHistory).toHaveBeenCalledWith({
         campaignId: "campaign-holdings-202605",
@@ -419,6 +416,9 @@ describe("DpmWaveCommandCenterPanel", () => {
         offset: 0,
       }),
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
+    fireEvent.click(screen.getByText("Launch history and replay evidence"));
 
     const table = await screen.findByRole("table", { name: "DPM campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
@@ -465,12 +465,14 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open History" }));
+    await waitFor(() => expect(getDpmCampaignDefinitionLaunchHistory).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
+    fireEvent.click(screen.getByText("Launch history and replay evidence"));
 
-    expect(await screen.findByText("No launch records")).toBeInTheDocument();
+    expect(screen.getByText("No launch records")).toBeInTheDocument();
     expect(screen.getByText("0 of 0")).toBeInTheDocument();
     expect(screen.queryByText("1-0 of 0")).not.toBeInTheDocument();
-    expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
+    expect(screen.getAllByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
@@ -482,11 +484,6 @@ describe("DpmWaveCommandCenterPanel", () => {
         campaignDefinitions={campaignDefinitionsResponse}
       />,
     );
-
-    const launchButton = screen.getByRole("button", { name: "Launch Campaign" });
-    expect(launchButton).toBeDisabled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
 
     await waitFor(() =>
       expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalledWith({
@@ -503,9 +500,17 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
+    fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
     expect((await screen.findAllByText("Ready")).length).toBeGreaterThan(0);
-    expect(screen.getByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
+    expect(screen.getAllByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM").length).toBeGreaterThan(0);
+    const launchButton = screen.getByRole("button", { name: "Launch governed wave" });
+    expect(launchButton).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+      }),
+    );
+    fireEvent.click(launchButton);
 
     await waitFor(() =>
       expect(launchDpmCampaignDefinition).toHaveBeenCalledWith({
@@ -515,9 +520,13 @@ describe("DpmWaveCommandCenterPanel", () => {
       }),
     );
 
-    expect(await screen.findByText("dwv_campaign_launch_001")).toBeInTheDocument();
-    expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
-    expect(screen.queryByText("corr-campaign-launch")).not.toBeInTheDocument();
+    expect((await screen.findAllByText("dwv_campaign_launch_001")).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("campaign-launch:campaign-holdings-202605:2026.05:abc").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("corr-campaign-launch").every((element) => element.closest("details") !== null),
+    ).toBe(true);
   });
 
   it("renders blocked campaign preview readiness and keeps launch unavailable", async () => {
@@ -539,13 +548,12 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Check Readiness" }));
-
     await waitFor(() => expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
     expect((await screen.findAllByText("Campaign Definition Actor Not Entitled")).length).toBeGreaterThan(0);
     expect(screen.getByText("Blocked")).toBeInTheDocument();
     expect(await screen.findByText("preview_wave, create_wave")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
     expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
