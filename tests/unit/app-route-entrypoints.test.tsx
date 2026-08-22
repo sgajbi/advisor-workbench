@@ -333,6 +333,29 @@ describe("app route entrypoints", () => {
     expect(screen.getByText("risk-impact")).toBeInTheDocument();
   });
 
+  it.each([
+    {},
+    { portfolioId: ["PORT_1001", "PORT_2002"], mode: "risk-impact" },
+  ])(
+    "does not mount a proposal queue without one governed portfolio: %o",
+    async (searchParams) => {
+      render(
+        await ProposalsPage({
+          searchParams: Promise.resolve(searchParams),
+        }),
+      );
+
+      expect(
+        screen.getByText("Review context needs attention"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", {
+          name: "Proposal Lifecycle Workspace",
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
   it("gives Suitability Review the full-width decision desk presentation", async () => {
     render(
       await ProposalsPage({
