@@ -393,7 +393,7 @@ export default function PerformanceWorkspaceClient({
         confirmedControls: resolvedDetails.controls,
       });
       startTransition(() => {
-        router.replace(buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }), {
+        router.push(buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }), {
           scroll: false,
         });
       });
@@ -503,7 +503,7 @@ export default function PerformanceWorkspaceClient({
           return;
         }
         startTransition(() => {
-          router.replace(buildPerformanceHref({ ...controls, mode: nextMode }), {
+          router.push(buildPerformanceHref({ ...controls, mode: nextMode }), {
             scroll: false,
           });
         });
