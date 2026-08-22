@@ -118,9 +118,11 @@ function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
 export default function ProposalSimulateForm({
   initialPortfolioId,
   initialAsOfDate = "",
+  initialReportingCurrency = "",
 }: {
   initialPortfolioId: string;
   initialAsOfDate?: string;
+  initialReportingCurrency?: string;
 }) {
   const isHydrated = useClientMounted();
   const [defaultIdempotencyKey] = useState(createUiIdempotencyKey);
@@ -140,16 +142,16 @@ export default function ProposalSimulateForm({
         initialPortfolioId === "PB_SG_GLOBAL_BAL_001"
           ? "MANDATE_PB_SG_GLOBAL_BAL_001"
           : "",
-      baseCurrency: "USD",
+      baseCurrency: initialReportingCurrency,
       cashAmount: "10000",
     },
   });
 
   const [cashFlows, setCashFlows] = useState<ProposalDraftCashFlowIntent[]>([
-    createCashFlowIntent(1, "USD"),
+    createCashFlowIntent(1, initialReportingCurrency),
   ]);
   const [trades, setTrades] = useState<ProposalDraftTradeIntent[]>([
-    createTradeIntent(1, "USD"),
+    createTradeIntent(1, initialReportingCurrency),
   ]);
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
@@ -742,7 +744,7 @@ export default function ProposalSimulateForm({
               onRemoveCashFlow={(id) =>
                 setCashFlows((current) => current.filter((row) => row.id !== id))
               }
-              onAddCashFlow={() => addCashFlow(form.getValues().baseCurrency || "USD")}
+              onAddCashFlow={() => addCashFlow(form.getValues().baseCurrency)}
             />
 
             <DraftOrderBlotterPanel

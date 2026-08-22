@@ -136,7 +136,10 @@ function deferred<T>() {
   return { promise, reject, resolve };
 }
 
-function renderForm(initialPortfolioId = "PB_SG_GLOBAL_BAL_001") {
+function renderForm(
+  initialPortfolioId = "PB_SG_GLOBAL_BAL_001",
+  initialReportingCurrency = "USD",
+) {
   const queryClient = new QueryClient();
   const view = render(
     <QueryClientProvider client={queryClient}>
@@ -148,6 +151,7 @@ function renderForm(initialPortfolioId = "PB_SG_GLOBAL_BAL_001") {
         <ProposalSimulateForm
           initialPortfolioId={initialPortfolioId}
           initialAsOfDate="2026-04-10"
+          initialReportingCurrency={initialReportingCurrency}
         />
         <ProposalWorkflowContextBoundary presentation="inline" />
         <ProposalWorkflowContextRail />
@@ -197,6 +201,24 @@ describe("ProposalSimulateForm", () => {
     );
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
     expect(screen.getByLabelText("Additional Cash Assumption")).toHaveValue("10000");
+  });
+
+  it("initializes portfolio evidence and draft rows from governed currency", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValueOnce(
+      portfolioBook(undefined, { currency: "SGD" }),
+    );
+    renderForm("PB_SG_GLOBAL_BAL_001", "SGD");
+
+    await waitForPortfolioEvidence();
+    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("SGD");
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2026-04-10", reportingCurrency: "SGD" },
+    );
+    expect(screen.getByTestId("proposal-draft-impact")).toHaveAttribute(
+      "data-preview-currency",
+      "SGD",
+    );
   });
 
   it("keeps construction before the final control rail in DOM order and preserves portfolio scope", async () => {

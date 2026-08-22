@@ -9,16 +9,25 @@ vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => 
   default: ({
     initialPortfolioId,
     initialAsOfDate,
+    initialReportingCurrency,
   }: {
     initialPortfolioId: string;
     initialAsOfDate?: string;
+    initialReportingCurrency?: string;
   }) => {
-    proposalFormRenderMock({ initialPortfolioId, initialAsOfDate });
+    proposalFormRenderMock({
+      initialPortfolioId,
+      initialAsOfDate,
+      initialReportingCurrency,
+    });
     return (
       <section>
         <h1>Create Advisory Proposal</h1>
         <p>{initialPortfolioId}</p>
         <p data-testid="initial-advisory-date">{initialAsOfDate || "Not confirmed"}</p>
+        <p data-testid="initial-reporting-currency">
+          {initialReportingCurrency || "Not confirmed"}
+        </p>
       </section>
     );
   },
@@ -62,6 +71,7 @@ describe("ProposalSimulatePage", () => {
         searchParams: Promise.resolve({
           portfolioId: "PORT_UI_1001",
           asOfDate: "2026-04-10",
+          reportingCurrency: "SGD",
         }),
       })
     );
@@ -69,6 +79,12 @@ describe("ProposalSimulatePage", () => {
     expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
     expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
     expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("2026-04-10");
+    expect(screen.getByTestId("initial-reporting-currency")).toHaveTextContent("SGD");
+    expect(proposalFormRenderMock).toHaveBeenCalledWith({
+      initialPortfolioId: "PORT_UI_1001",
+      initialAsOfDate: "2026-04-10",
+      initialReportingCurrency: "SGD",
+    });
     expect(screen.getByRole("heading", { name: "Draft not yet persisted" })).toBeInTheDocument();
     expect(screen.getByText("No persisted advisory workflow record")).toBeInTheDocument();
   });
