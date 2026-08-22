@@ -297,6 +297,77 @@ describe("ReportOrderingWorkspace", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
+  it("rehydrates an addressed bundle from source-owned status without resubmitting", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&batchId=rbch_1",
+    );
+
+    render(
+      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_1" />,
+    );
+
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(batchStatusMock).toHaveBeenCalledWith("rbch_1");
+    expect(await screen.findByText("Report data complete")).toBeInTheDocument();
+    expect(screen.getByText("Needs retry")).toBeInTheDocument();
+    expect(submitBatchMock).not.toHaveBeenCalled();
+    expect(submitMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when an addressed bundle does not confirm the selected portfolio", async () => {
+    const mismatch = buildReportBatchStatus();
+    mismatch.batch_id = "rbch_other";
+    batchStatusMock.mockResolvedValueOnce(parseReportBatchStatus(mismatch));
+
+    render(
+      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_requested" />,
+    );
+
+    expect(
+      await screen.findByText(/does not confirm the selected portfolio/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).not.toBeInTheDocument();
+    expect(submitBatchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a late Back-navigation batch response out of the current address", async () => {
+    const currentStatus = buildReportBatchStatus();
+    currentStatus.batch_id = "rbch_current";
+    currentStatus.items[1].last_error_summary = "Current addressed outcome";
+    const staleStatus = buildReportBatchStatus();
+    staleStatus.batch_id = "rbch_stale";
+    staleStatus.items[1].last_error_summary = "Stale addressed outcome";
+    let resolveStale:
+      | ((value: ReturnType<typeof parseReportBatchStatus>) => void)
+      | null = null;
+    batchStatusMock
+      .mockReturnValueOnce(new Promise((resolve) => {
+        resolveStale = resolve;
+      }))
+      .mockResolvedValueOnce(parseReportBatchStatus(currentStatus));
+
+    const view = render(
+      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_stale" />,
+    );
+    await waitFor(() => expect(batchStatusMock).toHaveBeenCalledWith("rbch_stale"));
+    view.rerender(
+      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_current" />,
+    );
+
+    expect(await screen.findByText("Current addressed outcome")).toBeInTheDocument();
+    await act(async () => {
+      resolveStale?.(parseReportBatchStatus(staleStatus));
+    });
+    expect(screen.getByText("Current addressed outcome")).toBeInTheDocument();
+    expect(screen.queryByText("Stale addressed outcome")).not.toBeInTheDocument();
+  });
+
   it("pages through the source-owned advisor book instead of truncating bundle selection", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });

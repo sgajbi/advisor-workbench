@@ -12,8 +12,10 @@ vi.mock("@/apps/portfolio/api", () => ({
 vi.mock("@/features/report-ordering/components/report-ordering-workspace", () => ({
   ReportOrderingWorkspace: ({
     portfolio,
+    initialBatchId,
   }: {
     portfolio: { portfolioId: string; displayName: string; asOfDate: string; baseCurrency: string };
+    initialBatchId?: string;
   }) => (
     <div>
       <h1>Report Centre Workspace</h1>
@@ -21,6 +23,7 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       <span>{portfolio.displayName}</span>
       <span>{portfolio.asOfDate}</span>
       <span>{portfolio.baseCurrency}</span>
+      <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
     </div>
   ),
 }));
@@ -80,6 +83,19 @@ describe("reports page", () => {
     expect(screen.getByText(/confirmed portfolio context/)).toBeInTheDocument();
     expect(screen.queryByText(/source-backed portfolio context/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
+  });
+
+  it("passes the governed batch identity into source rehydration", async () => {
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          batchId: "rbch_1",
+        }),
+      }),
+    );
+
+    expect(screen.getByTestId("initial-batch-id")).toHaveTextContent("rbch_1");
   });
 
   it.each([

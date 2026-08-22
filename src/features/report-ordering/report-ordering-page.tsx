@@ -65,6 +65,7 @@ export async function ReportOrderingPage({
 
   return (
     <ReportOrderingWorkspace
+      initialBatchId={reviewContextResult.context.batchId}
       portfolio={{
         portfolioId,
         displayName: workspace.portfolio.display_name,

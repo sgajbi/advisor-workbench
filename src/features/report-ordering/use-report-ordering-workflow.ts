@@ -13,6 +13,7 @@ import {
 } from "./api";
 import type {
   ReportBatchHandle,
+  ReportBatchReference,
   ReportBatchStatus,
   ReportJobHandle,
   ReportJobListResponse,
@@ -57,7 +58,7 @@ type ActiveBatchIntent = {
 
 type BatchWorkspaceState = {
   portfolioId: string;
-  handle: ReportBatchHandle | null;
+  handle: ReportBatchReference | null;
   intent: ActiveBatchIntent | null;
   status: ReportBatchStatus | null;
   error: string | null;
@@ -72,6 +73,7 @@ export function useReportOrderingWorkflow({
   scopeMode = "single_portfolio",
   selectedPortfolioIds = [portfolioId],
   portfolioSelectionState = "ready",
+  initialBatchId,
   onBatchAccepted,
 }: {
   portfolioId: string;
@@ -80,6 +82,7 @@ export function useReportOrderingWorkflow({
   scopeMode?: ReportOrderingScopeMode;
   selectedPortfolioIds?: string[];
   portfolioSelectionState?: "loading" | "ready" | "error";
+  initialBatchId?: string;
   onBatchAccepted?: (batchId: string) => void;
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
@@ -223,6 +226,93 @@ export function useReportOrderingWorkflow({
     }
   }, [updateBatchWorkspace]);
 
+  const rehydrateBatchStatus = useCallback(async (batchId: string) => {
+    const workspaceGeneration = workspaceGenerationRef.current;
+    const requestSequence = ++batchStatusRequestSequenceRef.current;
+    activeBatchIdRef.current = batchId;
+    setBatchWorkspaceState({
+      portfolioId,
+      handle: null,
+      intent: null,
+      status: null,
+      error: null,
+    });
+    try {
+      const response = await getPortfolioReviewBatchStatus(batchId);
+      if (
+        !isActiveWorkspaceGeneration(portfolioId, workspaceGeneration) ||
+        activeBatchIdRef.current !== batchId ||
+        batchStatusRequestSequenceRef.current !== requestSequence
+      ) {
+        return false;
+      }
+      if (
+        response.batch_id !== batchId ||
+        !response.materialized_portfolio_ids.includes(portfolioId)
+      ) {
+        setBatchWorkspaceState({
+          portfolioId,
+          handle: null,
+          intent: null,
+          status: null,
+          error:
+            "This report bundle does not confirm the selected portfolio. No portfolio outcomes are shown.",
+        });
+        return false;
+      }
+      if (
+        response.as_of_date !== asOfDate ||
+        (response.reporting_currency !== null &&
+          response.reporting_currency !== reportingCurrency)
+      ) {
+        setBatchWorkspaceState({
+          portfolioId,
+          handle: null,
+          intent: null,
+          status: null,
+          error:
+            "This report bundle does not match the selected review date or reporting currency. No portfolio outcomes are shown.",
+        });
+        return false;
+      }
+      const intent: ActiveBatchIntent = {
+        portfolioIds: [...response.materialized_portfolio_ids].sort(),
+        asOfDate: response.as_of_date,
+        requestedOutputFormats: [...response.requested_output_formats].sort(),
+        reportingCurrency: response.reporting_currency,
+      };
+      setBatchWorkspaceState({
+        portfolioId,
+        handle: {
+          batch_id: response.batch_id,
+          supportability: response.supportability,
+          render_supportability: response.render_supportability,
+        },
+        intent,
+        status: response,
+        error: null,
+      });
+      return true;
+    } catch {
+      if (
+        !isActiveWorkspaceGeneration(portfolioId, workspaceGeneration) ||
+        activeBatchIdRef.current !== batchId ||
+        batchStatusRequestSequenceRef.current !== requestSequence
+      ) {
+        return false;
+      }
+      setBatchWorkspaceState({
+        portfolioId,
+        handle: null,
+        intent: null,
+        status: null,
+        error:
+          "The addressed report bundle could not be confirmed by Reporting. No portfolio outcomes are shown.",
+      });
+      return false;
+    }
+  }, [asOfDate, isActiveWorkspaceGeneration, portfolioId, reportingCurrency]);
+
   useEffect(() => {
     if (
       !submittedBatchHandle ||
@@ -309,18 +399,21 @@ export function useReportOrderingWorkflow({
 
   useEffect(() => {
     activePortfolioIdRef.current = portfolioId;
-    activeBatchIdRef.current = null;
+    activeBatchIdRef.current = initialBatchId ?? null;
     batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
     const timer = window.setTimeout(() => {
       void loadCatalogue(true);
       void loadHistory();
+      if (initialBatchId) {
+        void rehydrateBatchStatus(initialBatchId);
+      }
     }, 0);
     return () => {
       workspaceGenerationRef.current += 1;
       window.clearTimeout(timer);
     };
-  }, [loadCatalogue, loadHistory, portfolioId]);
+  }, [initialBatchId, loadCatalogue, loadHistory, portfolioId, rehydrateBatchStatus]);
 
   const baseModel = useMemo(
     () =>
@@ -612,6 +705,7 @@ export function useReportOrderingWorkflow({
       submittedBatchHandle && activeBatchIntent
         ? activeBatchIntent.requestedOutputFormats
         : [],
+    batchPortfolioIds: activeBatchIntent?.portfolioIds ?? [],
     supportReference: submittedBatchHandle?.batch_id ?? submittedHandle?.report_job_id ?? null,
     screenState,
     preflightReviewed,
@@ -628,7 +722,9 @@ export function useReportOrderingWorkflow({
     refreshHistory: loadHistory,
     refreshBatchStatus: () => submittedBatchHandle && activeBatchIntent
       ? loadBatchStatus(submittedBatchHandle.batch_id, activeBatchIntent)
-      : Promise.resolve(false),
+      : initialBatchId
+        ? rehydrateBatchStatus(initialBatchId)
+        : Promise.resolve(false),
   };
 }
 
