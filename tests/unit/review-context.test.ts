@@ -26,6 +26,16 @@ describe("governed review context", () => {
     });
   });
 
+  it.each([null, undefined])(
+    "treats unavailable framework search params %s as unconfirmed",
+    (searchParams) => {
+      expect(parseReviewContext(searchParams)).toEqual({
+        status: "valid",
+        context: {},
+      });
+    },
+  );
+
   it("parses every governed field without altering source identity", () => {
     const result = parseReviewContext(
       new URLSearchParams(serializeReviewContext(COMPLETE_CONTEXT)),
