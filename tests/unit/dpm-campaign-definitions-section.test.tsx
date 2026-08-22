@@ -110,8 +110,9 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(callbacks.onCheckLaunchReadiness).toHaveBeenCalledWith(campaign);
   });
 
-  it("shows one action mode at a time and requires consequence review", () => {
+  it("shows one action mode at a time and requires consequence review", async () => {
     const callbacks = renderWorkspace();
+    await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign));
 
     fireEvent.click(screen.getByRole("button", { name: "Lifecycle control" }));
     expect(screen.getByRole("heading", { name: "Lifecycle control" })).toBeInTheDocument();
@@ -138,15 +139,56 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(callbacks.onLaunchCampaign).toHaveBeenCalledWith(campaign);
   });
 
-  it("preserves keyboard selection and switches the source identity", () => {
+  it("preserves keyboard selection and requests the source identity change", async () => {
     const callbacks = renderWorkspace();
+    await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign));
     const first = screen.getByRole("option", { name: /Apple and Tesla holdings review/ });
 
     fireEvent.keyDown(first, { key: "ArrowDown" });
 
     expect(callbacks.onSelectCampaign).toHaveBeenCalledWith(replacementCampaign);
-    expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(replacementCampaign);
+  });
+
+  it("defers a new selection until the prior evidence request settles, then retries it", async () => {
+    const callbacks = {
+      onSelectCampaign: vi.fn(),
+      onLoadLifecycle: vi.fn(),
+      onLoadLaunchHistory: vi.fn(),
+      onLoadWorkflowEvidence: vi.fn(),
+      onCheckLaunchReadiness: vi.fn(),
+      onLaunchCampaign: vi.fn(),
+      onRecordLifecycleCommand: vi.fn().mockResolvedValue(undefined),
+      onRecordWorkflowCommand: vi.fn().mockResolvedValue(undefined),
+    };
+    const section = (
+      selectedCampaign: DpmCampaignDefinitionRow,
+      pendingLifecycleKey: string | null,
+    ) => (
+      <DpmCampaignDefinitionsSection
+        rows={[campaign, replacementCampaign]}
+        lifecycleRows={[]}
+        launchHistoryRows={[]}
+        launchHistoryPage={launchHistoryPage}
+        launchPosture={launchPosture}
+        selectedCampaign={selectedCampaign}
+        selectedCampaignKey={selectedCampaign.key}
+        pendingLifecycleKey={pendingLifecycleKey}
+        {...callbacks}
+      />
+    );
+    const view = render(section(campaign, campaign.key));
+
+    view.rerender(section(replacementCampaign, campaign.key));
+    expect(screen.getByRole("status")).toHaveTextContent("Refreshing source evidence");
+    expect(callbacks.onLoadLifecycle).not.toHaveBeenCalledWith(replacementCampaign);
+
+    view.rerender(section(replacementCampaign, null));
+    await waitFor(() =>
+      expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(replacementCampaign),
+    );
+    expect(callbacks.onLoadLaunchHistory).toHaveBeenCalledWith(replacementCampaign, 0);
     expect(callbacks.onLoadWorkflowEvidence).toHaveBeenCalledWith(replacementCampaign);
+    expect(callbacks.onCheckLaunchReadiness).toHaveBeenCalledWith(replacementCampaign);
   });
 
   it("renders one useful empty state without action controls", () => {
@@ -156,5 +198,15 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(screen.queryByTestId("workbench-decision-workspace")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /launch/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /retire/i })).not.toBeInTheDocument();
+  });
+
+  it("never describes failed selected-campaign evidence as current", async () => {
+    const callbacks = renderWorkspace({
+      lifecycleError: "Manage lifecycle evidence is unavailable.",
+    });
+
+    await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign));
+    expect(screen.getByText("Source evidence needs attention")).toHaveAttribute("role", "alert");
+    expect(screen.queryByText("Source evidence current")).not.toBeInTheDocument();
   });
 });

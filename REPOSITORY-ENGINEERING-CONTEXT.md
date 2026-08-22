@@ -162,10 +162,14 @@ Current repository posture:
     state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,
     blocked actions, lotus-ai workflow-pack run posture, active Manage-owned campaign-definition
     list, bounded campaign-discovery posture, lifecycle-event evidence posture, preview-readiness
-    posture, launch-history audit posture, read-only campaign workflow audit posture, and
+    posture, launch-history audit posture, selected-campaign workflow evidence and governed
+    action posture, and
     `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
-    calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
-    maker-checker state, or operate campaign-definition upsert locally.
+    calculate campaign membership or readiness, infer campaign lifecycle state, or operate
+    campaign-definition upsert locally. Campaign retirement, supersession, approval, assignment,
+    task, maker-checker, and launch actions must use the current typed Gateway contracts, remain
+    bound to the exact selected campaign id and version, confirm only after Manage persistence and
+    source refresh, and never imply trade, order, OMS, client-contact, or external-workflow authority.
     Rebalance context must use the loaded mandate type, portfolio currency, and wave as-of date or
     show an explicit not-reported value; never insert a default mandate or currency. Evidence copy
     must distinguish ready, not opened, not requested, pending, partial, blocked, unavailable, and

@@ -22,6 +22,7 @@ export type DpmCampaignWorkflowCommandForm = {
   assignmentAction: DpmCampaignAssignmentActionType;
   assignmentTaskType: DpmCampaignAssignmentTaskType;
   taskTransition: DpmCampaignTaskTransitionType;
+  dueAt: string;
   escalationTier: DpmCampaignEscalationTier;
   slaPosture: DpmCampaignSlaPosture;
   controlAction: DpmCampaignMakerCheckerAction;
@@ -91,7 +92,9 @@ export function buildDpmCampaignWorkflowCommand(params: {
           correlation_id: correlationId,
         },
       };
-    case "task_transition":
+    case "task_transition": {
+      const updatesTaskOwnership =
+        form.taskTransition === "REASSIGNED" || form.taskTransition === "ESCALATED";
       return {
         commandType: form.commandType,
         taskRef: reference,
@@ -100,9 +103,17 @@ export function buildDpmCampaignWorkflowCommand(params: {
           transition_ref: `${reference}:${form.taskTransition.toLowerCase()}`,
           transitioned_by: actorId,
           transition_reason: rationale,
+          assigned_actor_ids: updatesTaskOwnership ? assignedActorIds : undefined,
+          escalation_tier: updatesTaskOwnership ? form.escalationTier : undefined,
+          sla_posture: updatesTaskOwnership ? form.slaPosture : undefined,
+          due_at:
+            form.taskTransition === "DUE_DATE_CHANGED"
+              ? normalizeUtcDateTime(form.dueAt)
+              : undefined,
           correlation_id: correlationId,
         },
       };
+    }
     case "maker_checker_control":
       return {
         commandType: form.commandType,
@@ -118,6 +129,14 @@ export function buildDpmCampaignWorkflowCommand(params: {
         },
       };
   }
+}
+
+function normalizeUtcDateTime(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return /(?:Z|[+-]\d{2}:\d{2})$/u.test(trimmed)
+    ? trimmed
+    : `${trimmed}${trimmed.length === 16 ? ":00" : ""}Z`;
 }
 
 function optionalString(value: string): string | undefined {
