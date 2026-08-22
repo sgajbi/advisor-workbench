@@ -65,6 +65,8 @@ before handoff; a prior visual result never substitutes for current source confi
 
 - Reads required portfolio-book evidence for the selected portfolio, advisory date, and reporting
   currency through the Workbench BFF and Gateway.
+- Starts the advisory date unconfirmed unless the route supplies a valid calendar date; it never
+  inserts a fixed demonstration date into the advisor's draft.
 - Distinguishes loading, confirmed, confirmed-empty, stale-refresh, mismatched, incomplete,
   restricted, and unavailable evidence instead of creating fallback holdings or cash.
 - Supports held-position buy and sell changes, cash movements, and off-book draft orders.
@@ -113,6 +115,7 @@ Shared endpoint families and runtime ownership remain in [API Surface](API-Surfa
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Preparing | Hydration-safe disabled actions and source-evidence loading | Wait; no first action can be lost before handlers are ready |
+| Advisory date not confirmed | Empty required date field and unavailable source-backed proposal actions | Select the intended advisory date; Workbench does not substitute a demonstration date |
 | Evidence confirmed | Holdings, cash, date, currency, and readiness are visible | Continue construction or deliberately refresh the source |
 | Evidence unavailable or mismatched | Exact requested/source context and an explicit block | Refresh the portfolio evidence or correct the context |
 | Draft input needs correction | Field-level guidance, blocked impact where necessary, and **Action required** | Correct the visible value; Workbench does not coerce it to zero |

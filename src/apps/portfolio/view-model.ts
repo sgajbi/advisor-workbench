@@ -1,3 +1,5 @@
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
+
 import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
 import { formatDate, formatTimestamp } from "./formatters";
 import type {
@@ -55,13 +57,11 @@ export type PortfolioWorkspaceContext = {
 
 export type PortfolioUiTone = "neutral" | "success" | "warn" | "danger";
 
-const DEFAULT_PORTFOLIO_AS_OF_DATE = "2000-01-01";
-
 export function buildInitialPortfolioControls(
   workspace: PortfolioWorkspace | null
 ): PortfolioWorkspaceControls {
   return {
-    asOfDate: workspace?.as_of_date ?? DEFAULT_PORTFOLIO_AS_OF_DATE,
+    asOfDate: workspace?.as_of_date ?? "",
     reportingCurrency: getPortfolioCurrencyOptions(workspace)[0] ?? "USD",
     viewMode: "summary",
     timeWindow: "30D",
@@ -126,13 +126,20 @@ export function buildPortfolioWorkspaceContext(
     workspace?.control_capabilities?.reporting_currency_restatement.reason ??
     "Reporting currency restatement is not available for this portfolio yet.";
 
-  const effectivePeriod = resolveEffectivePeriod(
-    selectedAsOfDate,
-    controls.timeWindow,
-    workspace?.profile.open_date,
-    controls.viewMode === "detailed" ? controls.customStartDate : "",
-    controls.viewMode === "detailed" ? controls.customEndDate : ""
-  );
+  const effectivePeriod = isBusinessDateValue(selectedAsOfDate)
+    ? resolveEffectivePeriod(
+        selectedAsOfDate,
+        controls.timeWindow,
+        workspace?.profile.open_date,
+        controls.viewMode === "detailed" ? controls.customStartDate : "",
+        controls.viewMode === "detailed" ? controls.customEndDate : "",
+      )
+    : {
+        startDate: "",
+        endDate: "",
+        label: "Business date not confirmed",
+        isCustomRange: false,
+      };
 
   return {
     selectedAsOfDate,

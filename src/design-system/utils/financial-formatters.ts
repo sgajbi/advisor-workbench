@@ -146,13 +146,8 @@ export function formatTimestampValue(
   value: string | null | undefined,
   { nullDisplay = "N/A" }: DateOptions = {},
 ): string {
-  const candidate = value?.trim();
-  if (!candidate || !OFFSET_TIMESTAMP_PATTERN.test(candidate)) {
-    return nullDisplay;
-  }
-
-  const parsed = new Date(candidate);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseTimestampValue(value);
+  if (!parsed) {
     return nullDisplay;
   }
 
@@ -168,7 +163,11 @@ export function formatTimestampValue(
   }).format(parsed);
 }
 
-export function isBusinessDateValue(value: string | null | undefined): value is string {
+export function isTimestampValue(value: string | null | undefined): boolean {
+  return parseTimestampValue(value) !== null;
+}
+
+export function isBusinessDateValue(value: string | null | undefined): boolean {
   return parseBusinessDateValue(value) !== null;
 }
 
@@ -196,4 +195,14 @@ function daysInMonth(year: number, month: number): number {
     return leapYear ? 29 : 28;
   }
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
+}
+
+function parseTimestampValue(value: string | null | undefined): Date | null {
+  const candidate = value?.trim();
+  if (!candidate || !OFFSET_TIMESTAMP_PATTERN.test(candidate)) {
+    return null;
+  }
+
+  const parsed = new Date(candidate);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

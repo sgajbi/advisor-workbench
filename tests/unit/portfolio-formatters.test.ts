@@ -24,6 +24,8 @@ describe("portfolio formatters", () => {
   it("formats dates consistently across the page", () => {
     expect(formatDate("2026-03-28")).toBe("28 Mar 2026");
     expect(formatDate("2026-03-28T08:00:00Z")).toBe("28 Mar 2026");
+    expect(formatDate("2026-03-28T08:00:00")).toBe("N/A");
+    expect(formatDate("2026-03-28untrusted")).toBe("N/A");
   });
 
   it("formats counts and statuses consistently", () => {

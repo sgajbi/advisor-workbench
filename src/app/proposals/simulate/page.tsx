@@ -1,4 +1,5 @@
 import ProposalSimulateForm from "@/features/proposals/components/proposal-simulate-form";
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
@@ -7,12 +8,16 @@ import { buildSimulationProposalWorkflowContext } from "@/features/proposals/pro
 export default async function ProposalSimulatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string }>;
+  searchParams: Promise<{ portfolioId?: string; asOfDate?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const portfolioId = resolveProposalPortfolioId(
     resolvedSearchParams.portfolioId,
   );
+  const requestedAsOfDate = resolvedSearchParams.asOfDate?.trim();
+  const initialAsOfDate = isBusinessDateValue(requestedAsOfDate)
+    ? requestedAsOfDate ?? ""
+    : "";
   return (
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
@@ -23,7 +28,10 @@ export default async function ProposalSimulatePage({
       workflowContext={buildSimulationProposalWorkflowContext({ portfolioId })}
       workflowContextPresentation="inline-boundary"
     >
-      <ProposalSimulateForm initialPortfolioId={portfolioId} />
+      <ProposalSimulateForm
+        initialPortfolioId={portfolioId}
+        initialAsOfDate={initialAsOfDate}
+      />
     </ProposalWorkspaceShell>
   );
 }

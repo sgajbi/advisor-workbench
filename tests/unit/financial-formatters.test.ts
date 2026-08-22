@@ -8,6 +8,7 @@ import {
   formatPercent,
   formatTimestampValue,
   isBusinessDateValue,
+  isTimestampValue,
   parseBusinessDateValue,
 } from "@/design-system/utils/financial-formatters";
 
@@ -58,6 +59,8 @@ describe("financial-formatters", () => {
       "28 Mar 2026, 08:00 UTC",
     );
     expect(formatTimestampValue("2026-03-28T08:00:00")).toBe("N/A");
+    expect(isTimestampValue("2026-03-28T08:00:00Z")).toBe(true);
+    expect(isTimestampValue("2026-03-28T08:00:00")).toBe(false);
     expect(
       formatTimestampValue("not-a-timestamp", { nullDisplay: "Not available" }),
     ).toBe("Not available");

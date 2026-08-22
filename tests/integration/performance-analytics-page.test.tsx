@@ -287,9 +287,9 @@ describe("PerformanceAnalyticsPage", () => {
     const summaryCall = fetchMock.mock.calls.find(([input]) =>
       input.toString().includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
     );
-    expect(summaryCall?.[0].toString()).toContain("period=EXPLICIT");
-    expect(summaryCall?.[0].toString()).toContain("report_start_date=2026-01-01");
-    expect(summaryCall?.[0].toString()).toContain("report_end_date=2026-04-10");
+    expect(summaryCall?.[0].toString()).toContain("period=YTD");
+    expect(summaryCall?.[0].toString()).not.toContain("report_start_date=");
+    expect(summaryCall?.[0].toString()).not.toContain("report_end_date=");
     expect(summaryCall?.[0].toString()).toContain(
       "benchmark_code=BMK_PB_GLOBAL_BALANCED_60_40"
     );

@@ -144,7 +144,10 @@ function renderForm(initialPortfolioId?: string) {
       <ProposalWorkflowContextProvider
         initialModel={buildSimulationProposalWorkflowContext({ portfolioId })}
       >
-        <ProposalSimulateForm initialPortfolioId={initialPortfolioId} />
+        <ProposalSimulateForm
+          initialPortfolioId={initialPortfolioId}
+          initialAsOfDate="2026-04-10"
+        />
         <ProposalWorkflowContextBoundary presentation="inline" />
         <ProposalWorkflowContextRail />
       </ProposalWorkflowContextProvider>

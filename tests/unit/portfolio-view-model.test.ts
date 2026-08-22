@@ -221,6 +221,20 @@ function buildOperationalWorkspace(): PortfolioWorkspace {
 }
 
 describe("portfolio view model", () => {
+  it("keeps absent source context free of a fabricated business date", () => {
+    const controls = buildInitialPortfolioControls(null);
+
+    expect(controls.asOfDate).toBe("");
+    expect(buildPortfolioWorkspaceContext(null, controls)).toEqual(
+      expect.objectContaining({
+        selectedAsOfDate: "",
+        periodLabel: "Business date not confirmed",
+        effectivePeriodStartDate: "",
+        effectivePeriodEndDate: "",
+      }),
+    );
+  });
+
   it("resolves time windows against the selected as-of date", () => {
     expect(resolveTimeWindowStartDate("2026-02-24", "7D", "2024-01-01")).toBe("2026-02-17");
     expect(resolveTimeWindowStartDate("2026-02-24", "30D", "2024-01-01")).toBe("2026-01-25");
