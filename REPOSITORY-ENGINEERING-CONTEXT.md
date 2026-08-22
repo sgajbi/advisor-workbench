@@ -1194,6 +1194,24 @@ Important validation expectations:
     Exact timestamps require `Z` or a numeric offset, normalize to UTC, and disclose **UTC** in
     business copy. Do not render raw ISO dates, accept unzoned timestamps, silently substitute a
     fixed demonstration date, or reintroduce feature-local date parsers.
+38. Governed cross-workspace review context consists only of portfolio, valuation date, review
+    period, and reporting currency. `selectedRecordId` and `batchId` are screen-local identities:
+    strip them when switching workspaces and retain them only within their owning record or batch
+    flow. Missing, repeated, or malformed required identity fails closed to the shared recovery
+    surface; **My book** must remain a context-free recovery entry.
+39. A context-dependent full-page action is available only when its exact governed destination can
+    be built through the shared review-context authority. Do not invent default portfolio, date,
+    period, currency, record, or batch values to keep a link visible. If the caller lacks the
+    address, omit the action and retain the source-backed drawer or summary evidence.
+40. Writing a record or batch identity into the URL is not addressability proof. An addressed
+    screen must rehydrate the exact Gateway resource, validate source identity against the active
+    review context, fence late responses during Back/Forward or workspace changes, and fail closed
+    without reconstructing success or resubmitting a mutation.
+41. Source-identity reconciliation may compare only request fields the owning Gateway/backend
+    contract actually accepts. Preserve useful cross-workspace URL context when appropriate, but do
+    not send unsupported selectors or reject valid source evidence for failing to echo them. Show a
+    concise capability notice when source valuation date, base currency, or another returned fact
+    cannot be controlled by the current screen.
 
 ### Visual Review Gate
 
