@@ -231,7 +231,7 @@
       "navigationPosture": "active",
       "canonicalSurfaceIds": ["manage-overview"],
       "implementationEvidence": ["src/app/workbench/page.tsx"],
-      "note": "Resolves a source-backed portfolio before redirecting and otherwise renders an explicit unavailable state."
+      "note": "Routes unscoped entry to the Gateway-backed My Book selection workspace; no portfolio is selected or substituted by the alias."
     }
   ],
   "surfaces": [
