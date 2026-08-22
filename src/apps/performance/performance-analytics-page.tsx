@@ -182,13 +182,8 @@ export default async function PerformanceAnalyticsPage({
         initialChartFrequency={chartFrequency}
         initialMode={initialMode}
         initialBenchmark={benchmark}
-        initialAsOfDate={
-          workspaceSummary?.as_of_date ?? reviewContextResult.context.asOfDate
-        }
-        initialReportingCurrency={
-          workspaceSummary?.portfolio.base_currency ??
-          reviewContextResult.context.reportingCurrency
-        }
+        initialAsOfDate={reviewContextResult.context.asOfDate}
+        initialReportingCurrency={reviewContextResult.context.reportingCurrency}
       />
     </AppPageShell>
   );

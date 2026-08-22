@@ -1,5 +1,9 @@
 import { CANONICAL_PERFORMANCE_PERIOD_OPTIONS } from "./periods";
 import type { PerformanceWorkspaceMode } from "./performance-workspace-modes";
+import {
+  isReviewPeriod,
+  serializeReviewContext,
+} from "@/shell/review-context";
 
 export const PERIOD_OPTIONS = CANONICAL_PERFORMANCE_PERIOD_OPTIONS;
 export const BASIS_OPTIONS = ["NET", "GROSS"] as const;
@@ -26,6 +30,8 @@ export function buildPerformanceHref({
   reportStartDate,
   reportEndDate,
   mode,
+  asOfDate,
+  reportingCurrency,
 }: {
   portfolioId: string;
   period: string;
@@ -37,14 +43,23 @@ export function buildPerformanceHref({
   reportStartDate?: string;
   reportEndDate?: string;
   mode?: PerformanceWorkspaceMode;
+  asOfDate?: string;
+  reportingCurrency?: string;
 }) {
-  const query = new URLSearchParams();
+  if (!isReviewPeriod(period)) {
+    throw new TypeError("Performance period must be a governed review period.");
+  }
+
+  const query = serializeReviewContext({
+    portfolioId,
+    asOfDate,
+    period,
+    reportingCurrency,
+  });
   const isExplicitWindow = period === "EXPLICIT";
-  query.set("portfolioId", portfolioId);
   if (mode && mode !== "summary") {
     query.set("mode", mode);
   }
-  query.set("period", period);
   query.set("detailBasis", detailBasis);
   query.set("contributionDimension", contributionDimension);
   query.set("attributionDimension", attributionDimension);

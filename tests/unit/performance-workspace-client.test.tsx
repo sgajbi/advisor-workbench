@@ -1182,7 +1182,7 @@ describe("PerformanceWorkspaceClient", () => {
       expect(screen.getByTestId("period")).toHaveTextContent("3Y");
     });
     expect(pushMock).toHaveBeenLastCalledWith(
-      "/performance?portfolioId=PF_1001&mode=analysis&period=3Y&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      "/performance?portfolioId=PF_1001&period=3Y&mode=analysis&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
   });
@@ -1246,7 +1246,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
 
     expect(pushMock).toHaveBeenLastCalledWith(
-      "/performance?portfolioId=PF_1001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      "/performance?portfolioId=PF_1001&period=YTD&mode=analysis&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
     expect(getSummaryClientMock).not.toHaveBeenCalled();
@@ -1261,7 +1261,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
 
     expect(pushMock).toHaveBeenLastCalledWith(
-      "/performance?portfolioId=PF_1001&mode=risk&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      "/performance?portfolioId=PF_1001&period=YTD&mode=risk&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
       { scroll: false }
     );
     expect(getSummaryClientMock).not.toHaveBeenCalled();
