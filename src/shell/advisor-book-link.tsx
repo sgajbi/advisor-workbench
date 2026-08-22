@@ -5,10 +5,11 @@ import { useSearchParams } from "next/navigation";
 
 import styles from "./app-shell.module.css";
 
-type SearchParamsReader = Pick<URLSearchParams, "get">;
+type SearchParamsReader = Pick<URLSearchParams, "getAll">;
 
 export function buildAdvisorBookHref(searchParams: SearchParamsReader): string {
-  const asOfDate = searchParams.get("asOfDate")?.trim();
+  const requestedDates = searchParams.getAll("asOfDate");
+  const asOfDate = requestedDates.length === 1 ? requestedDates[0]?.trim() : undefined;
 
   if (!asOfDate) {
     return "/book";

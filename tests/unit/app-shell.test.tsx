@@ -85,6 +85,13 @@ describe("buildAdvisorBookHref", () => {
     expect(buildAdvisorBookHref(new URLSearchParams("mode=summary"))).toBe("/book");
   });
 
+  it("omits an ambiguous repeated business date", () => {
+    expect(
+      buildAdvisorBookHref(
+        new URLSearchParams("asOfDate=2026-04-10&asOfDate=2026-04-11"),
+      ),
+    ).toBe("/book");
+  });
 });
 
 describe("LotusMark", () => {

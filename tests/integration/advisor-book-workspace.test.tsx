@@ -134,6 +134,19 @@ describe("AdvisorBookWorkspace", () => {
     );
   });
 
+  it("does not request source data for an ambiguous repeated business date", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("asOfDate=2026-04-10&asOfDate=2026-04-11"),
+    );
+
+    render(<AdvisorBookWorkspace />);
+
+    expect(screen.getByText("Business date not confirmed")).toBeInTheDocument();
+    expect(screen.getByText(/supplied more than once/i)).toBeInTheDocument();
+    expect(screen.getByText(/Portfolio assignments have not been requested/i)).toBeInTheDocument();
+    expect(getAdvisorBookMock).not.toHaveBeenCalled();
+  });
+
   it("updates supported source filters in the URL and resets paging", async () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams("asOfDate=2026-04-10&offset=25&sortBy=portfolio_id"),

@@ -10,9 +10,23 @@ export type AdvisorBookAsOfDateResolution =
       status: "not_confirmed";
       reason:
         | "invalid_requested_date"
+        | "ambiguous_requested_date"
         | "date_not_configured"
         | "invalid_development_configuration";
     };
+
+type SearchParamsReader = Pick<URLSearchParams, "getAll">;
+
+export function resolveAdvisorBookAsOfDateFromSearchParams(
+  searchParams: SearchParamsReader,
+): AdvisorBookAsOfDateResolution {
+  const requestedDates = searchParams.getAll("asOfDate");
+  if (requestedDates.length > 1) {
+    return { status: "not_confirmed", reason: "ambiguous_requested_date" };
+  }
+
+  return resolveAdvisorBookAsOfDate(requestedDates[0] ?? null);
+}
 
 export function resolveAdvisorBookAsOfDate(
   requested?: string | null,

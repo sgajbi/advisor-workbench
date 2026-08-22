@@ -26,6 +26,7 @@ import type {
 } from "../contracts";
 import {
   resolveAdvisorBookAsOfDate,
+  resolveAdvisorBookAsOfDateFromSearchParams,
   type AdvisorBookAsOfDateResolution,
 } from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
@@ -54,7 +55,7 @@ function AdvisorBookWorkspaceContent({
 }: {
   searchParams: ReturnType<typeof useSearchParams>;
 }) {
-  const dateResolution = resolveAdvisorBookAsOfDate(searchParams.get("asOfDate"));
+  const dateResolution = resolveAdvisorBookAsOfDateFromSearchParams(searchParams);
 
   if (dateResolution.status === "not_confirmed") {
     return (
@@ -86,6 +87,8 @@ function AdvisorBookDateRequired({
   const reason =
     dateResolution.reason === "invalid_requested_date"
       ? "The requested business date is not a valid calendar date."
+      : dateResolution.reason === "ambiguous_requested_date"
+        ? "The requested business date was supplied more than once and cannot be confirmed."
       : dateResolution.reason === "invalid_development_configuration"
         ? "The configured local business date is not valid."
         : "No business date has been confirmed for this book view.";

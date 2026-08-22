@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { resolveAdvisorBookAsOfDate } from "@/features/advisor-book/configuration";
+import {
+  resolveAdvisorBookAsOfDate,
+  resolveAdvisorBookAsOfDateFromSearchParams,
+} from "@/features/advisor-book/configuration";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -27,6 +30,19 @@ describe("advisor-book business-date resolution", () => {
     expect(resolveAdvisorBookAsOfDate("2026-02-30")).toEqual({
       status: "not_confirmed",
       reason: "invalid_requested_date",
+    });
+  });
+
+  it("fails closed when the requested business date is repeated", () => {
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+
+    expect(
+      resolveAdvisorBookAsOfDateFromSearchParams(
+        new URLSearchParams("asOfDate=2026-04-10&asOfDate=2026-04-11"),
+      ),
+    ).toEqual({
+      status: "not_confirmed",
+      reason: "ambiguous_requested_date",
     });
   });
 

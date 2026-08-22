@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  resolveAdvisorBookAsOfDate,
+  resolveAdvisorBookAsOfDateFromSearchParams,
   type AdvisorBookAsOfDateResolution,
 } from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
@@ -33,8 +33,8 @@ export default function AdvisorBookContextSwitcher({
     }
   }, [portfolioId]);
 
-  const dateResolution = resolveAdvisorBookAsOfDate(
-    new URLSearchParams(locationSearch).get("asOfDate"),
+  const dateResolution = resolveAdvisorBookAsOfDateFromSearchParams(
+    new URLSearchParams(locationSearch),
   );
 
   return (
