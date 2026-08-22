@@ -313,12 +313,14 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
   },
 };
 
-function renderActions() {
+function renderActions(
+  definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
+) {
   return renderHook(() =>
     useDpmWaveCommandCenterActions({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       waveList: waveResponse,
-      campaignDefinitions,
+      campaignDefinitions: definitions,
     })
   );
 }
@@ -550,6 +552,56 @@ describe("useDpmWaveCommandCenterActions", () => {
       replacementCampaignVersion: "2026.06",
       contentHash: "sha256:campaign-superseded",
     });
+  });
+
+  it("never renders a late campaign A response under campaign B", async () => {
+    const twoCampaigns: DpmCampaignDefinitionGatewayResponse = {
+      ...campaignDefinitions,
+      data: {
+        ...campaignDefinitions.data,
+        items: [
+          ...(campaignDefinitions.data.items as Array<Record<string, unknown>>),
+          {
+            campaign_id: "campaign-income-202606",
+            campaign_version: "2026.06",
+            display_name: "Income mandate review",
+            status: "ACTIVE",
+            as_of_date: "2026-06-10",
+            eligible_portfolio_types: ["DISCRETIONARY"],
+            candidates: [],
+            source_refs: [],
+          },
+        ],
+        count: 2,
+      },
+    };
+    let resolveCampaignA!: (value: DpmCampaignDefinitionGatewayResponse) => void;
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveCampaignA = resolve;
+      }),
+    );
+    const { result } = renderActions(twoCampaigns);
+
+    await waitFor(() => expect(result.current.model.campaignRows).toHaveLength(2));
+    const campaignA = result.current.model.campaignRows[0]!;
+    const campaignB = result.current.model.campaignRows[1]!;
+    let campaignALoad!: Promise<void>;
+    act(() => {
+      campaignALoad = result.current.loadCampaignLifecycle(campaignA);
+    });
+    await waitFor(() => expect(result.current.pendingCampaignLifecycleKey).toBe(campaignA.key));
+    act(() => result.current.selectCampaign(campaignB));
+    expect(result.current.selectedCampaignKey).toBe(campaignB.key);
+
+    await act(async () => {
+      resolveCampaignA(lifecycleResponse);
+      await campaignALoad;
+    });
+
+    expect(result.current.selectedCampaignKey).toBe(campaignB.key);
+    expect(result.current.model.campaignLifecycleRows).toEqual([]);
+    expect(result.current.campaignLifecycleError).toBeNull();
   });
 
   it("keeps campaign lifecycle commands fail-closed for missing replacement evidence", async () => {
