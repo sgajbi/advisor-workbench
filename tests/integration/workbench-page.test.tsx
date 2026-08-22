@@ -24,7 +24,11 @@ describe("WorkbenchPage", () => {
     render(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_1001" }),
-        searchParams: Promise.resolve({}),
+        searchParams: Promise.resolve({
+          asOfDate: "2026-06-30",
+          period: "3Y",
+          reportingCurrency: "SGD",
+        }),
       })
     );
 
@@ -46,12 +50,18 @@ describe("WorkbenchPage", () => {
       within(manageWorkAreas).getByRole("link", {
         name: /Rebalance Waves Ready.*Open rebalance waves/i,
       })
-    ).toHaveAttribute("href", "/workbench/PF_1001?mode=waves");
+    ).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=waves",
+    );
     expect(
       within(manageWorkAreas).getByRole("link", {
         name: /Construction Alternatives Generated on request/i,
       })
-    ).toHaveAttribute("href", "/workbench/PF_1001?mode=construction");
+    ).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=construction",
+    );
 
     const screenNav = screen.getByRole("navigation", { name: "Workbench screen navigation" });
     expect(within(screenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(
@@ -66,18 +76,18 @@ describe("WorkbenchPage", () => {
     const manageNav = screen.getByLabelText("Manage workspace navigation");
     expect(within(manageNav).getByRole("link", { name: "Overview" })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001"
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD"
     );
     fireEvent.click(
       within(manageNav).getByRole("button", { name: /Change workflow step/i }),
     );
     expect(within(manageNav).getByRole("link", { name: "Mandate" })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001?mode=mandate"
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=mandate"
     );
     expect(within(manageNav).getByRole("link", { name: "Rebalance" })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001?mode=waves"
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=waves"
     );
     expect(screen.queryByRole("heading", { name: "Construction Alternatives" })).not.toBeInTheDocument();
   });
@@ -105,8 +115,63 @@ describe("WorkbenchPage", () => {
     );
     expect(screen.getByRole("link", { name: "Return To Portfolio" })).toHaveAttribute(
       "href",
-      "/portfolio"
+      "/portfolio?portfolioId=PF_404"
     );
+  });
+
+  it("rejects conflicting governed context before any Manage source call", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_1001" }),
+        searchParams: Promise.resolve({
+          portfolioId: ["PF_1001", "PF_OTHER"],
+          asOfDate: "2026-06-30",
+        }),
+      }),
+    );
+
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/No mandate evidence was requested/i)).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("withholds a source response that does not confirm the route portfolio", async () => {
+    const sourceFetch = createManageFetch({ portfolioId: "PF_1001" });
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const response = await sourceFetch(input);
+      if (!input.toString().includes("/api/v1/workbench/PF_1001/portfolio-360")) {
+        return response;
+      }
+      const payload = (await response.json()) as Record<string, unknown> & {
+        portfolio: Record<string, unknown>;
+      };
+      return jsonResponse({
+        ...payload,
+        portfolio: {
+          ...payload.portfolio,
+          portfolio_id: "PF_OTHER",
+        },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      await WorkbenchPage({
+        params: Promise.resolve({ portfolioId: "PF_1001" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(screen.getByRole("heading", { name: "Manage Workspace" })).toBeInTheDocument();
+    expect(screen.getByText(/did not confirm the selected portfolio/i)).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/dpm/command-center"),
+      ),
+    ).toBe(false);
   });
 
   it("renders mandate health as a focused manage surface", async () => {

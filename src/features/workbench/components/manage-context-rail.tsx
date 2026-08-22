@@ -4,6 +4,7 @@ import {
   WorkbenchRailCard,
 } from "@/design-system";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
+import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
@@ -26,9 +27,11 @@ import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-revie
 export default function ManageContextRail({
   data,
   activeMode,
+  reviewContext,
 }: {
   data: ManageWorkspaceData;
   activeMode: ManageMode;
+  reviewContext: PortfolioReviewContext;
 }) {
   const portfolio = data.portfolio.portfolio;
   const modeDefinition = getManageModeDefinition(activeMode);
@@ -56,17 +59,17 @@ export default function ManageContextRail({
     activeMode === "mandate"
       ? [
           ["Review Attention Items", "#mandate-attention-review"],
-          ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
-          ["Return to Manage Overview", buildManageModeHref(portfolio.portfolio_id, "overview")],
+          ["Open Rebalance", buildManageModeHref(reviewContext, "waves")],
+          ["Return to Manage Overview", buildManageModeHref(reviewContext, "overview")],
         ]
       : [
-          ["Open Mandate Health", buildManageModeHref(portfolio.portfolio_id, "mandate")],
-          ["Open Rebalance", buildManageModeHref(portfolio.portfolio_id, "waves")],
-          ["Open Construction", buildManageModeHref(portfolio.portfolio_id, "construction")],
-          ["Open Portfolio Memory", buildManageModeHref(portfolio.portfolio_id, "memory")],
-          ["Open PM Quality", buildManageModeHref(portfolio.portfolio_id, "quality")],
-          ["Open Outcome Reviews", buildManageModeHref(portfolio.portfolio_id, "reviews")],
-          ["Open Evidence Pack", buildManageModeHref(portfolio.portfolio_id, "proof")],
+          ["Open Mandate Health", buildManageModeHref(reviewContext, "mandate")],
+          ["Open Rebalance", buildManageModeHref(reviewContext, "waves")],
+          ["Open Construction", buildManageModeHref(reviewContext, "construction")],
+          ["Open Portfolio Memory", buildManageModeHref(reviewContext, "memory")],
+          ["Open PM Quality", buildManageModeHref(reviewContext, "quality")],
+          ["Open Outcome Reviews", buildManageModeHref(reviewContext, "reviews")],
+          ["Open Evidence Pack", buildManageModeHref(reviewContext, "proof")],
         ];
 
   return (

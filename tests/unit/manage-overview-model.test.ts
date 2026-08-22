@@ -47,13 +47,13 @@ describe("manage overview model", () => {
           key: "quality",
           title: "PM Operating Quality",
           metric: "1 evidence record",
-          href: "/workbench/PF_1001?mode=quality",
+          href: "/workbench/PF_1001?portfolioId=PF_1001&mode=quality",
         }),
         expect.objectContaining({
           key: "proof",
           title: "Evidence Pack",
           metric: "Evidence available",
-          href: "/workbench/PF_1001?mode=proof",
+          href: "/workbench/PF_1001?portfolioId=PF_1001&mode=proof",
         }),
       ])
     );

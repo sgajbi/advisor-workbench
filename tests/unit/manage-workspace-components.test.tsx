@@ -193,12 +193,20 @@ describe("manage workspace split components", () => {
     expect(screen.getByText("Evidence unavailable")).toBeInTheDocument();
     expect(screen.queryByText("No open items")).not.toBeInTheDocument();
 
-    rerender(<ManageOverview data={data} />);
+    rerender(
+      <ManageOverview data={data} reviewContext={{ portfolioId: "PF_1001" }} />,
+    );
     expect(screen.getAllByText("Evidence unavailable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
     expect(screen.queryByText("No active attention items.")).not.toBeInTheDocument();
 
-    rerender(<ManageContextRail data={data} activeMode="reviews" />);
+    rerender(
+      <ManageContextRail
+        data={data}
+        activeMode="reviews"
+        reviewContext={{ portfolioId: "PF_1001" }}
+      />,
+    );
     const posture = screen.getByLabelText("Manage review posture");
     expect(within(posture).getByText("Not available")).toBeInTheDocument();
     expect(within(posture).queryByText("0 open")).not.toBeInTheDocument();
@@ -226,11 +234,19 @@ describe("manage workspace split components", () => {
     expect(screen.getByRole("button", { name: "Next attention items" })).toBeEnabled();
     expect(screen.getByText("Attention-item source view 1")).toBeInTheDocument();
 
-    rerender(<ManageOverview data={data} />);
+    rerender(
+      <ManageOverview data={data} reviewContext={{ portfolioId: "PF_1001" }} />,
+    );
     expect(screen.getByText("2 shown; more available")).toBeInTheDocument();
     expect(screen.getByText("2 shown")).toBeInTheDocument();
 
-    rerender(<ManageContextRail data={data} activeMode="mandate" />);
+    rerender(
+      <ManageContextRail
+        data={data}
+        activeMode="mandate"
+        reviewContext={{ portfolioId: "PF_1001" }}
+      />,
+    );
     const posture = screen.getByLabelText("Manage review posture");
     expect(within(posture).getByText("2 shown; more available")).toBeInTheDocument();
   });
@@ -432,7 +448,12 @@ describe("manage workspace split components", () => {
   });
 
   it("renders overview operating posture from Gateway-backed manage data", () => {
-    render(<ManageOverview data={buildManageWorkspaceData()} />);
+    render(
+      <ManageOverview
+        data={buildManageWorkspaceData()}
+        reviewContext={{ portfolioId: "PF_1001" }}
+      />,
+    );
 
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     const posture = screen.getByLabelText("Operating posture");
@@ -445,7 +466,7 @@ describe("manage workspace split components", () => {
     const taskDirectory = screen.getByRole("navigation", { name: "Manage work areas" });
     expect(within(taskDirectory).getByRole("link", { name: /Mandate Health/i })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001?mode=mandate"
+      "/workbench/PF_1001?portfolioId=PF_1001&mode=mandate"
     );
     expect(within(taskDirectory).getByText("Generated on request")).toBeInTheDocument();
     expect(screen.queryByText("Alternatives available")).not.toBeInTheDocument();
@@ -464,7 +485,12 @@ describe("manage workspace split components", () => {
       },
     };
 
-    render(<ManageOverview data={data} />);
+    render(
+      <ManageOverview
+        data={data}
+        reviewContext={{ portfolioId: "PF_1001" }}
+      />,
+    );
 
     expect(screen.getByText("Not reported")).toBeInTheDocument();
     expect(screen.getByText("Evidence incomplete")).toBeInTheDocument();
@@ -473,7 +499,13 @@ describe("manage workspace split components", () => {
   });
 
   it("renders the context rail without exposing client communication actions", () => {
-    render(<ManageContextRail data={buildManageWorkspaceData()} activeMode="reviews" />);
+    render(
+      <ManageContextRail
+        data={buildManageWorkspaceData()}
+        activeMode="reviews"
+        reviewContext={{ portfolioId: "PF_1001" }}
+      />,
+    );
 
     expect(screen.getByText("Decision Support")).toBeInTheDocument();
     expect(screen.getByText("Outcome Reviews")).toBeInTheDocument();
@@ -491,7 +523,7 @@ describe("manage workspace split components", () => {
 
     expect(screen.getByRole("link", { name: "Open PM Quality" })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001?mode=quality"
+      "/workbench/PF_1001?portfolioId=PF_1001&mode=quality"
     );
     expect(screen.getByRole("link", { name: "Return to Portfolio" })).toHaveAttribute(
       "href",

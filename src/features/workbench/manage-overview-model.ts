@@ -1,4 +1,5 @@
 import type { SemanticBadgeTone } from "@/design-system";
+import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import {
@@ -25,9 +26,13 @@ type ReviewModel = ReturnType<typeof buildOutcomeReviewPanelModel>;
 type PortfolioWaveOverview = ReturnType<typeof buildPortfolioWaveOverview>;
 export type ManageOverviewModel = ReturnType<typeof buildManageOverviewModel>;
 
-export function buildManageOverviewModel(data: ManageWorkspaceData) {
+export function buildManageOverviewModel(
+  data: ManageWorkspaceData,
+  reviewContext?: PortfolioReviewContext,
+) {
   const portfolio = data.portfolio;
   const portfolioId = portfolio.portfolio.portfolio_id;
+  const navigationContext = reviewContext ?? { portfolioId };
   const commandModel = buildDpmCommandCenterPanelModel({
     commandCenter: data.commandCenter,
     exceptions: data.commandCenterExceptions,
@@ -166,7 +171,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
             : exceptionEvidencePosture === "partial"
               ? `${exceptionRows.length} in the first source view; more available`
               : `${exceptionRows.length} attention items`,
-        href: buildManageModeHref(portfolioId, "mandate"),
+        href: buildManageModeHref(navigationContext, "mandate"),
         actionLabel: "Open mandate health",
       },
       {
@@ -174,7 +179,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Rebalance Waves",
         description: "Review proposed changes, readiness, and source-reported issues.",
         metric: businessStateLabel(portfolioWave.state),
-        href: buildManageModeHref(portfolioId, "waves"),
+        href: buildManageModeHref(navigationContext, "waves"),
         actionLabel: "Open rebalance waves",
       },
       {
@@ -182,7 +187,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Construction Alternatives",
         description: "Generate and compare supported portfolio alternatives on demand.",
         metric: "Generated on request",
-        href: buildManageModeHref(portfolioId, "construction"),
+        href: buildManageModeHref(navigationContext, "construction"),
         actionLabel: "Open construction",
       },
       {
@@ -190,7 +195,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Portfolio Memory",
         description: "Review source-owned decisions and portfolio operating events.",
         metric: `${memoryModel.eventCount} events`,
-        href: buildManageModeHref(portfolioId, "memory"),
+        href: buildManageModeHref(navigationContext, "memory"),
         actionLabel: "Open portfolio memory",
       },
       {
@@ -200,7 +205,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         metric: formatEvidenceRecordCount(
           pmQualityFairnessAnalysisCount || pmQualityScoreRunCount || pmQualityPolicyCount
         ),
-        href: buildManageModeHref(portfolioId, "quality"),
+        href: buildManageModeHref(navigationContext, "quality"),
         actionLabel: "Open operating quality",
       },
       {
@@ -208,7 +213,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Outcome Reviews",
         description: "Assess post-decision outcomes and required follow-up.",
         metric: formatRecordCount(reviewModel.items.length, "review", "reviews"),
-        href: buildManageModeHref(portfolioId, "reviews"),
+        href: buildManageModeHref(navigationContext, "reviews"),
         actionLabel: "Open outcome reviews",
       },
       {
@@ -216,7 +221,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Evidence Pack",
         description: "Inspect governed evidence and downstream handoff posture.",
         metric: latestProofPackId !== "N/A" ? "Evidence available" : "Not requested",
-        href: buildManageModeHref(portfolioId, "proof"),
+        href: buildManageModeHref(navigationContext, "proof"),
         actionLabel: "Open evidence pack",
       },
     ],
