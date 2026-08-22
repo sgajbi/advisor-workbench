@@ -149,6 +149,52 @@ describe("AppSwitcherNav", () => {
     );
   });
 
+  it("projects review periods according to each destination contract", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=5Y&reportingCurrency=SGD",
+      ),
+    );
+    const fallback = fallbackNormalizedCapabilities();
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "contract",
+      normalized: {
+        ...fallback,
+        shellBootstrap: {
+          workspaces: [
+            ...fallback.shellBootstrap.workspaces,
+            {
+              id: "reporting",
+              label: "Reporting",
+              href: "/reports",
+              enabled: true,
+              supportability: { state: "ready", reasons: [] },
+            },
+          ],
+        },
+      },
+    });
+
+    render(<AppSwitcherNav />);
+    openWorkspaceMenu();
+
+    expect(screen.getByRole("link", { name: "Portfolio" })).toHaveAttribute(
+      "href",
+      "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&reportingCurrency=SGD",
+    );
+    expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=5Y&reportingCurrency=SGD",
+    );
+    expect(screen.getByRole("link", { name: "Reporting" })).toHaveAttribute(
+      "href",
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&reportingCurrency=SGD",
+    );
+  });
+
   it("fails closed when a governed field is ambiguous", () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams(

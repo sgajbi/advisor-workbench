@@ -65,6 +65,24 @@ const REVIEW_CONTEXT_QUERY_KEYS = {
 const REVIEW_CONTEXT_FIELDS = Object.keys(
   REVIEW_CONTEXT_QUERY_KEYS,
 ) as ReviewContextField[];
+const PORTFOLIO_REVIEW_PERIODS = new Set<ReviewPeriod>([
+  "7D",
+  "30D",
+  "MTD",
+  "QTD",
+  "YTD",
+  "1Y",
+  "SI",
+]);
+const PORTFOLIO_REVIEW_DESTINATIONS = new Set([
+  "/portfolio",
+  "/allocation",
+  "/positions",
+  "/transactions",
+  "/income",
+  "/cashflow",
+  "/reports",
+]);
 
 const REPORTING_CURRENCY_PATTERN = /^[A-Z]{3}$/;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
@@ -142,6 +160,7 @@ export function serializeReviewContext(context: ReviewContext): URLSearchParams 
  */
 export function scopeReviewContextForWorkspace(
   context: ReviewContext,
+  destinationHref?: string,
 ): WorkspaceReviewContext {
   const {
     portfolioId,
@@ -149,10 +168,18 @@ export function scopeReviewContextForWorkspace(
     period,
     reportingCurrency,
   } = context;
+  const destinationPathname = destinationHref
+    ? splitLocalHref(destinationHref).pathname
+    : null;
+  const destinationAcceptsPeriod =
+    !period ||
+    !destinationPathname ||
+    !PORTFOLIO_REVIEW_DESTINATIONS.has(destinationPathname) ||
+    PORTFOLIO_REVIEW_PERIODS.has(period);
   return {
     ...(portfolioId ? { portfolioId } : {}),
     ...(asOfDate ? { asOfDate } : {}),
-    ...(period ? { period } : {}),
+    ...(period && destinationAcceptsPeriod ? { period } : {}),
     ...(reportingCurrency ? { reportingCurrency } : {}),
   };
 }

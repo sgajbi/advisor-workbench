@@ -45,7 +45,10 @@ export default function AppSwitcherNav() {
         !disabled && reviewContextResult.status === "valid"
           ? buildReviewContextHref(
               workspace.href,
-              scopeReviewContextForWorkspace(reviewContextResult.context),
+              scopeReviewContextForWorkspace(
+                reviewContextResult.context,
+                workspace.href,
+              ),
             )
           : undefined,
       disabled,
