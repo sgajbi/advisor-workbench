@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildManageExceptionRows,
+  buildManageExceptionRowsResult,
   filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessExceptionTitle,
@@ -99,7 +100,7 @@ describe("manage workspace business presentation", () => {
   });
 
   it("rejects exception rows without a source-owned identity", () => {
-    const rows = buildManageExceptionRows({
+    const result = buildManageExceptionRowsResult({
       correlation_id: "corr-exceptions",
       contract_version: "v1",
       source_service: "lotus-manage",
@@ -118,9 +119,37 @@ describe("manage workspace business presentation", () => {
       },
     });
 
-    expect(rows).toEqual([
+    expect(result).toEqual({
+      rejectedRowCount: 1,
+      rows: [
       expect.objectContaining({ key: "monitoring-exception-1" }),
-    ]);
+      ],
+    });
+  });
+
+  it("does not report complete evidence when every source row lacks identity", () => {
+    const response = {
+      correlation_id: "corr-exceptions",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:exceptions",
+        state: "SUPPORTED",
+        partial_readiness_reasons: [],
+      },
+      data: {
+        items: [{ mandate_id: "mandate-current", title: "Missing identity" }],
+        next_cursor: null,
+      },
+    };
+
+    expect(buildManageExceptionRowsResult(response)).toEqual({
+      rows: [],
+      rejectedRowCount: 1,
+    });
+    expect(getManageExceptionEvidencePosture(response, null)).toBe("partial");
   });
 
   it("separates an available partial source window from complete and unavailable evidence", () => {

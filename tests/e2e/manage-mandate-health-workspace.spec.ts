@@ -125,7 +125,13 @@ test("Mandate Health preserves source truth across partial and complete attentio
     const next = page.getByRole("button", { name: "Next attention items" });
     await next.focus();
     await expect(next).toBeFocused();
+    const continuationRequest = page.waitForRequest((request) =>
+      request.url().includes("cursor=mandate-attention-window-2"),
+    );
     await next.click();
+    const continuationUrl = new URL((await continuationRequest).url());
+    expect(continuationUrl.searchParams.get("portfolio_id")).toBe(portfolioId);
+    expect(continuationUrl.searchParams.get("mandate_id")).toBeNull();
 
     await expect(
       page.getByRole("button", {

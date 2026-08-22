@@ -11,8 +11,8 @@ export default function SourceWindowNavigation({
   hasPrevious,
   hasNext,
   isLoading = false,
-  itemLabel = "proposals",
-  viewLabel = "Proposal view",
+  itemLabel,
+  viewLabel,
   onPrevious,
   onNext,
 }: {
@@ -21,8 +21,8 @@ export default function SourceWindowNavigation({
   hasPrevious: boolean;
   hasNext: boolean;
   isLoading?: boolean;
-  itemLabel?: string;
-  viewLabel?: string;
+  itemLabel: string;
+  viewLabel: string;
   onPrevious: () => void;
   onNext: () => void;
 }) {

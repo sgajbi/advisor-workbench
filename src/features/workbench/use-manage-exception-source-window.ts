@@ -50,45 +50,48 @@ export function useManageExceptionSourceWindow({
   initialResponse: ExceptionResponse;
   initialError: string | null;
 }) {
-  const scopeKey = `${portfolioId}::${mandateId ?? "mandate-unavailable"}::ACTIVE`;
-  const sourceWindow = useSourceWindow(scopeKey);
+  // Manage issues portfolio-scoped cursors. Keep that request scope stable across
+  // every source window, while the view scope also fences the selected mandate.
+  const requestScopeKey = `${portfolioId}::ACTIVE`;
+  const viewScopeKey = `${requestScopeKey}::${mandateId ?? "mandate-unavailable"}`;
+  const sourceWindow = useSourceWindow(viewScopeKey);
   const [visibleWindow, setVisibleWindow] = useState<VisibleWindow>(() =>
     initialVisibleWindow({
-      scopeKey,
+      scopeKey: viewScopeKey,
       response: initialResponse,
       sourceError: initialError,
     })
   );
   const [isLoading, setIsLoading] = useState(false);
   const [failedNavigation, setFailedNavigation] = useState<FailedNavigation | null>(null);
-  const activeScopeRef = useRef(scopeKey);
+  const activeScopeRef = useRef(viewScopeKey);
   const requestGenerationRef = useRef(0);
   const activeWindow =
-    visibleWindow.scopeKey === scopeKey
+    visibleWindow.scopeKey === viewScopeKey
       ? visibleWindow
       : initialVisibleWindow({
-          scopeKey,
+          scopeKey: viewScopeKey,
           response: initialResponse,
           sourceError: initialError,
         });
 
-  if (visibleWindow.scopeKey !== scopeKey) {
+  if (visibleWindow.scopeKey !== viewScopeKey) {
     setVisibleWindow(activeWindow);
     setIsLoading(false);
     setFailedNavigation(null);
   }
 
   useEffect(() => {
-    activeScopeRef.current = scopeKey;
+    activeScopeRef.current = viewScopeKey;
     requestGenerationRef.current += 1;
-  }, [scopeKey]);
+  }, [viewScopeKey]);
 
   const loadWindow = useCallback(
     async (cursor: string | undefined, direction: NavigationDirection) => {
       if (isLoading) {
         return;
       }
-      const initiatingScope = scopeKey;
+      const initiatingScope = viewScopeKey;
       const requestGeneration = ++requestGenerationRef.current;
       setIsLoading(true);
       setFailedNavigation(null);
@@ -97,7 +100,6 @@ export function useManageExceptionSourceWindow({
         const response = await getDpmCommandCenterExceptions(
           {
             portfolioId,
-            mandateId: mandateId ?? undefined,
             state: "ACTIVE",
             limit: 25,
             cursor,
@@ -140,7 +142,7 @@ export function useManageExceptionSourceWindow({
         }
       }
     },
-    [isLoading, mandateId, portfolioId, scopeKey, sourceWindow]
+    [isLoading, portfolioId, sourceWindow, viewScopeKey]
   );
 
   const nextCursor = getManageExceptionNextCursor(activeWindow.response);
