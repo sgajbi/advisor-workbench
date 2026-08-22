@@ -5,6 +5,7 @@ import {
   formatCount,
   formatDate,
   formatStatus,
+  formatTimestamp,
 } from "../formatters";
 import type { PortfolioPositionView, PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
@@ -119,7 +120,7 @@ function resolveExceptionEvidence(
       return [
         ["Reporting Status", formatStatus(workspace.readiness.reporting.status)],
         ["Report Rows", String(workspace.readiness.reporting.row_count)],
-        ["Generated At", formatDate(workspace.readiness.reporting.generated_at_utc)],
+        ["Generated At", formatTimestamp(workspace.readiness.reporting.generated_at_utc)],
       ];
     case "controls_blocking":
       return [

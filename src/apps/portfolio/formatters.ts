@@ -1,11 +1,9 @@
 import {
-  formatBusinessDateValue,
   formatCurrencyValue,
+  formatDateValue,
   formatNumber,
   formatPercent,
   formatTimestampValue,
-  isBusinessDateValue,
-  isTimestampValue,
 } from "@/design-system/utils/financial-formatters";
 
 export function formatPct(value: number | null | undefined): string {
@@ -31,17 +29,7 @@ export function formatQuantity(value: number | null | undefined): string {
 }
 
 export function formatDate(value: string | null | undefined): string {
-  const candidate = value?.trim();
-  if (!candidate) {
-    return formatBusinessDateValue(null);
-  }
-  if (isBusinessDateValue(candidate)) {
-    return formatBusinessDateValue(candidate);
-  }
-
-  return isTimestampValue(candidate)
-    ? formatBusinessDateValue(candidate.slice(0, 10))
-    : formatBusinessDateValue(null);
+  return formatDateValue(value);
 }
 
 export function formatTimestamp(value: string | null | undefined): string {
