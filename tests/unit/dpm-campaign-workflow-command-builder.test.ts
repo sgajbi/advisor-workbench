@@ -15,6 +15,7 @@ const baseForm: DpmCampaignWorkflowCommandForm = {
   assignmentAction: "ASSIGNED",
   assignmentTaskType: "ASSIGNMENT",
   taskTransition: "ACKNOWLEDGED",
+  dueAt: "",
   escalationTier: "PM",
   slaPosture: "ON_TRACK",
   controlAction: "REVIEW_COMPLETED",
@@ -85,6 +86,38 @@ describe("buildDpmCampaignWorkflowCommand", () => {
         reviewer_actor_id: "governance_sg_1",
         control_outcome: "PASSED",
         control_reason: "Portfolio manager acknowledgement is required.",
+      },
+    });
+  });
+
+  it("includes the source fields required by responsibility and due-date transitions", () => {
+    expect(
+      build({
+        ...baseForm,
+        commandType: "task_transition",
+        taskTransition: "ESCALATED",
+        escalationTier: "GOVERNANCE",
+        slaPosture: "ATTENTION",
+      }),
+    ).toMatchObject({
+      body: {
+        transition_type: "ESCALATED",
+        assigned_actor_ids: ["pm_sg_2", "ops_sg_1"],
+        escalation_tier: "GOVERNANCE",
+        sla_posture: "ATTENTION",
+      },
+    });
+    expect(
+      build({
+        ...baseForm,
+        commandType: "task_transition",
+        taskTransition: "DUE_DATE_CHANGED",
+        dueAt: "2026-05-12T08:00",
+      }),
+    ).toMatchObject({
+      body: {
+        transition_type: "DUE_DATE_CHANGED",
+        due_at: "2026-05-12T08:00:00Z",
       },
     });
   });

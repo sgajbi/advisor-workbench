@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ScreenStatePanel,
   SemanticBadge,
@@ -109,38 +109,60 @@ export default function DpmCampaignDefinitionsSection(props: Props) {
     onCheckLaunchReadiness,
   } = props;
   const [mode, setMode] = useState<CampaignWorkspaceMode>("review");
-  const loadedCampaignKeyRef = useRef<string | null>(null);
-
-  const loadSelectedEvidence = useCallback((row: DpmCampaignDefinitionRow) => {
-    loadedCampaignKeyRef.current = row.key;
-    onLoadLifecycle(row);
-    onLoadLaunchHistory(row, 0);
-    onLoadWorkflowEvidence(row);
-    onCheckLaunchReadiness(row);
-  }, [onCheckLaunchReadiness, onLoadLaunchHistory, onLoadLifecycle, onLoadWorkflowEvidence]);
+  const [requestedCampaignKey, setRequestedCampaignKey] = useState<string | null>(null);
+  const evidenceRequestPending = Boolean(
+    pendingLifecycleKey ||
+      pendingLaunchHistoryKey ||
+      pendingPreviewReadinessKey ||
+      pendingLaunchPackageKey ||
+      pendingWorkflowEvidenceKey,
+  );
 
   function selectCampaign(key: string) {
     const row = rows.find((candidate) => candidate.key === key);
     if (!row) return;
     onSelectCampaign(row);
     setMode("review");
-    loadSelectedEvidence(row);
   }
 
   useEffect(() => {
-    if (!selectedCampaign || loadedCampaignKeyRef.current === selectedCampaign.key) return;
-    loadSelectedEvidence(selectedCampaign);
-  }, [loadSelectedEvidence, selectedCampaign]);
+    if (
+      !selectedCampaign ||
+      evidenceRequestPending ||
+      requestedCampaignKey === selectedCampaign.key
+    ) return;
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setRequestedCampaignKey(selectedCampaign.key);
+      onLoadLifecycle(selectedCampaign);
+      onLoadLaunchHistory(selectedCampaign, 0);
+      onLoadWorkflowEvidence(selectedCampaign);
+      onCheckLaunchReadiness(selectedCampaign);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    evidenceRequestPending,
+    requestedCampaignKey,
+    onCheckLaunchReadiness,
+    onLoadLaunchHistory,
+    onLoadLifecycle,
+    onLoadWorkflowEvidence,
+    selectedCampaign,
+  ]);
 
   const selectedEvidencePending = Boolean(
     selectedCampaign &&
-      [
-        pendingLifecycleKey,
-        pendingLaunchHistoryKey,
-        pendingPreviewReadinessKey,
-        pendingLaunchPackageKey,
-        pendingWorkflowEvidenceKey,
-      ].includes(selectedCampaign.key),
+      (requestedCampaignKey !== selectedCampaign.key ||
+        [
+          pendingLifecycleKey,
+          pendingLaunchHistoryKey,
+          pendingPreviewReadinessKey,
+          pendingLaunchPackageKey,
+          pendingWorkflowEvidenceKey,
+        ].includes(selectedCampaign.key)),
   );
 
   return (
@@ -206,6 +228,12 @@ export default function DpmCampaignDefinitionsSection(props: Props) {
                 mode={mode}
                 onModeChange={setMode}
                 selectedEvidencePending={selectedEvidencePending}
+                selectedEvidenceError={Boolean(
+                  props.lifecycleError ||
+                    props.launchHistoryError ||
+                    props.previewReadinessError ||
+                    props.workflowError,
+                )}
               />
             ) : (
               <ScreenStatePanel kind="empty" surface="portfolio" title="Select a campaign" body="Choose a campaign from the worklist to inspect its decision posture." />
@@ -223,6 +251,7 @@ function CampaignDecisionPane({
   mode,
   onModeChange,
   selectedEvidencePending,
+  selectedEvidenceError,
   lifecycleRows,
   launchHistoryRows,
   launchHistoryPage,
@@ -251,6 +280,7 @@ function CampaignDecisionPane({
   mode: CampaignWorkspaceMode;
   onModeChange: (mode: CampaignWorkspaceMode) => void;
   selectedEvidencePending: boolean;
+  selectedEvidenceError: boolean;
 }) {
   if (!selectedCampaign) return null;
   return (
@@ -277,7 +307,13 @@ function CampaignDecisionPane({
           <Text variant="microLabel">Recommended next action</Text>
           <strong>{selectedCampaign.nextAction}</strong>
         </div>
-        {selectedEvidencePending ? <span role="status">Refreshing source evidence…</span> : <span>Source evidence current</span>}
+        {selectedEvidencePending ? (
+          <span role="status">Refreshing source evidence…</span>
+        ) : selectedEvidenceError ? (
+          <span role="alert">Source evidence needs attention</span>
+        ) : (
+          <span>Source evidence current</span>
+        )}
       </div>
       <div className={styles.modeSelector} role="toolbar" aria-label="Campaign administration modes">
         {([

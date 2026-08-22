@@ -129,6 +129,47 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     });
   });
 
+  it("requires and submits transition-specific accountability evidence", async () => {
+    const onRecordWorkflowCommand = vi.fn().mockResolvedValue(undefined);
+    render(
+      <DpmCampaignWorkflowAuditCard
+        summaryRows={[]}
+        evidenceRows={[]}
+        selectedCampaign={selectedCampaign}
+        onRecordWorkflowCommand={onRecordWorkflowCommand}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Business action"), {
+      target: { value: "task_transition" },
+    });
+    fireEvent.change(screen.getByLabelText("Task progress"), {
+      target: { value: "DUE_DATE_CHANGED" },
+    });
+    fireEvent.change(screen.getByLabelText("Existing task reference"), {
+      target: { value: "task-review-001" },
+    });
+    fireEvent.change(screen.getByLabelText("Business rationale"), {
+      target: { value: "The review deadline changed after governance escalation." },
+    });
+    expect(screen.getByRole("button", { name: "Record governance action" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("New due date and time (UTC)"), {
+      target: { value: "2026-05-12T08:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record governance action" }));
+
+    await waitFor(() => expect(onRecordWorkflowCommand).toHaveBeenCalledTimes(1));
+    expect(onRecordWorkflowCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        commandType: "task_transition",
+        body: expect.objectContaining({
+          transition_type: "DUE_DATE_CHANGED",
+          due_at: "2026-05-12T08:00:00Z",
+        }),
+      }),
+    );
+  });
+
   it("renders submitting, failure, and Gateway-returned command evidence states", () => {
     render(
       <DpmCampaignWorkflowAuditCard

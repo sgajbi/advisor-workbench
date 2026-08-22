@@ -65,6 +65,7 @@ export default function DpmCampaignWorkflowAuditCard({
     assignmentAction: "ASSIGNED",
     assignmentTaskType: "ASSIGNMENT",
     taskTransition: "ACKNOWLEDGED",
+    dueAt: "",
     escalationTier: "NONE",
     slaPosture: "ON_TRACK",
     controlAction: "SUBMITTED_FOR_REVIEW",
@@ -73,15 +74,20 @@ export default function DpmCampaignWorkflowAuditCard({
     reviewerActorId: "",
   });
   const commandUnavailable = !selectedCampaign;
-  const needsAssignee =
-    form.commandType === "assignment_task" || form.commandType === "assignment_action";
+  const needsAssignee = campaignWorkflowNeedsAssignee(form);
+  const needsEscalationTier =
+    form.commandType === "task_transition" && form.taskTransition === "ESCALATED";
+  const needsDueAt =
+    form.commandType === "task_transition" && form.taskTransition === "DUE_DATE_CHANGED";
   const submitDisabled =
     commandUnavailable ||
     pendingCommand ||
     !form.actorId.trim() ||
     !form.reference.trim() ||
     !form.rationale.trim() ||
-    (needsAssignee && !form.assignedActorIds.trim());
+    (needsAssignee && !form.assignedActorIds.trim()) ||
+    (needsEscalationTier && form.escalationTier === "NONE") ||
+    (needsDueAt && !form.dueAt.trim());
 
   function updateForm<Key extends keyof DpmCampaignWorkflowCommandForm>(
     key: Key,
@@ -214,8 +220,9 @@ function CommandSpecificFields({
   ) => void;
   disabled: boolean;
 }) {
-  const needsAssignee =
-    form.commandType === "assignment_task" || form.commandType === "assignment_action";
+  const needsAssignee = campaignWorkflowNeedsAssignee(form);
+  const needsDueAt =
+    form.commandType === "task_transition" && form.taskTransition === "DUE_DATE_CHANGED";
   return (
     <>
       {form.commandType === "approval_decision" ? (
@@ -336,10 +343,32 @@ function CommandSpecificFields({
           </label>
         </>
       ) : null}
+      {needsDueAt ? (
+        <label className="workbench-field-label" htmlFor="dpm-campaign-task-due-at">
+          New due date and time (UTC)
+          <input
+            id="dpm-campaign-task-due-at"
+            className="workbench-input"
+            type="datetime-local"
+            value={form.dueAt}
+            onChange={(event) => updateForm("dueAt", event.target.value)}
+            disabled={disabled}
+          />
+        </label>
+      ) : null}
       {form.commandType === "maker_checker_control" ? (
         <MakerCheckerFields form={form} updateForm={updateForm} disabled={disabled} />
       ) : null}
     </>
+  );
+}
+
+function campaignWorkflowNeedsAssignee(form: DpmCampaignWorkflowCommandForm): boolean {
+  return (
+    form.commandType === "assignment_task" ||
+    form.commandType === "assignment_action" ||
+    (form.commandType === "task_transition" &&
+      (form.taskTransition === "REASSIGNED" || form.taskTransition === "ESCALATED"))
   );
 }
 
