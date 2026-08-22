@@ -1,6 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import {
@@ -13,6 +15,7 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
+import { buildReviewContextNavigationHref } from "@/shell/review-context";
 
 import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
 import {
@@ -44,10 +47,29 @@ export function ReportOrderingWorkspace({ portfolio }: { portfolio: ReportOrderi
 }
 
 function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
   const [portfolioSelectionState, setPortfolioSelectionState] =
     useState<"loading" | "ready" | "error">("loading");
+  const commitBatchAddress = useCallback(
+    (batchId: string) => {
+      const href = buildReviewContextNavigationHref({
+        pathname,
+        searchParams,
+        patch: {
+          portfolioId: portfolio.portfolioId,
+          batchId,
+        },
+      });
+      if (href) {
+        router.push(href, { scroll: false });
+      }
+    },
+    [pathname, portfolio.portfolioId, router, searchParams],
+  );
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
@@ -55,6 +77,7 @@ function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderi
     scopeMode,
     selectedPortfolioIds,
     portfolioSelectionState,
+    onBatchAccepted: commitBatchAddress,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
