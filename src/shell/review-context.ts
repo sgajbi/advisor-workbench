@@ -44,7 +44,9 @@ export type ReviewContextParseResult =
 
 export type ReviewContextSearchParams =
   | Pick<URLSearchParams, "getAll">
-  | Readonly<Record<string, string | readonly string[] | undefined>>;
+  | Readonly<Record<string, string | readonly string[] | undefined>>
+  | null
+  | undefined;
 
 const REVIEW_CONTEXT_QUERY_KEYS = {
   portfolioId: "portfolioId",
@@ -155,6 +157,10 @@ function getSearchParamValues(
   searchParams: ReviewContextSearchParams,
   key: string,
 ): readonly string[] {
+  if (!searchParams) {
+    return [];
+  }
+
   const getAll = (searchParams as { getAll?: unknown }).getAll;
   if (typeof getAll === "function") {
     return (getAll as (name: string) => string[]).call(searchParams, key);
