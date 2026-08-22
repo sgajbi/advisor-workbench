@@ -789,7 +789,12 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("**shown in this view**, not as a total");
-    expect(guide).toContain("rejects rows without a\n  source-owned exception identity");
+    expect(guide).toContain(
+      "Rows without a\n  source-owned exception identity are rejected and reported as partial evidence",
+    );
+    expect(guide).toContain(
+      "every returned row has a source-owned exception identity",
+    );
     expect(guide).toContain("last confirmed source view during continuation loading or failure");
     expect(guide).toContain("does not:\n\n- calculate mandate health");
     expect(validate(registry).errors).toEqual([]);
