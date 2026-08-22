@@ -106,6 +106,10 @@ export function parseReviewContext(
     : { status: "valid", context: context as ReviewContext };
 }
 
+export function isReviewPeriod(value: string): value is ReviewPeriod {
+  return REVIEW_PERIOD_SET.has(value);
+}
+
 /**
  * Emits governed fields once and in a stable order. Invalid programmatic
  * context is rejected instead of being converted into a misleading URL.
@@ -214,7 +218,7 @@ function isValidReviewContextValue(
     case "asOfDate":
       return isBusinessDateValue(value);
     case "period":
-      return REVIEW_PERIOD_SET.has(value);
+      return isReviewPeriod(value);
     case "reportingCurrency":
       return REPORTING_CURRENCY_PATTERN.test(value);
     case "selectedRecordId":

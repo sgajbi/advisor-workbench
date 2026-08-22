@@ -54,8 +54,9 @@ type PerformanceControlState = {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
-  asOfDate?: string;
-  reportingCurrency?: string;
+  sourceAsOfDate?: string;
+  reviewAsOfDate?: string;
+  reviewReportingCurrency?: string;
 };
 
 type PerformanceDetailsStatus = "idle" | "loading" | "ready" | "failed";
@@ -246,18 +247,20 @@ export default function PerformanceWorkspaceClient({
       attributionDimension: initialAttributionDimension,
       chartFrequency: initialChartFrequency,
       benchmark: initialBenchmark,
-      asOfDate: initialAsOfDate,
-      reportingCurrency: initialReportingCurrency,
+      sourceAsOfDate: initialSummary?.as_of_date,
+      reviewAsOfDate: initialAsOfDate,
+      reviewReportingCurrency: initialReportingCurrency,
       reportStartDate: initialSummary?.report_start_date,
       reportEndDate: initialSummary?.report_end_date,
     };
     if (
-      buildPerformanceHref(requestedControls) === buildPerformanceHref(initialControls)
+      buildPerformanceControlsHref(requestedControls) ===
+      buildPerformanceControlsHref(initialControls)
     ) {
       return;
     }
     startTransition(() => {
-      router.replace(buildPerformanceHref({ ...initialControls, mode }), { scroll: false });
+      router.replace(buildPerformanceControlsHref(initialControls, mode), { scroll: false });
     });
   }, [
     initialAttributionDimension,
@@ -270,6 +273,7 @@ export default function PerformanceWorkspaceClient({
     initialPeriod,
     initialPortfolioId,
     initialReportingCurrency,
+    initialSummary?.as_of_date,
     initialSummary?.report_end_date,
     initialSummary?.report_start_date,
     mode,
@@ -432,7 +436,7 @@ export default function PerformanceWorkspaceClient({
         confirmedControls: resolvedDetails.controls,
       });
       startTransition(() => {
-        router.push(buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }), {
+        router.push(buildPerformanceControlsHref(resolvedDetails.controls, modeRef.current), {
           scroll: false,
         });
       });
@@ -487,10 +491,13 @@ export default function PerformanceWorkspaceClient({
         setDetails(resolvedDetails.details);
         setDetailsStatus("ready");
         setControls(resolvedDetails.controls);
-        if (buildPerformanceHref(resolvedDetails.controls) !== buildPerformanceHref(controls)) {
+        if (
+          buildPerformanceControlsHref(resolvedDetails.controls) !==
+          buildPerformanceControlsHref(controls)
+        ) {
           startTransition(() => {
             router.replace(
-              buildPerformanceHref({ ...resolvedDetails.controls, mode: modeRef.current }),
+              buildPerformanceControlsHref(resolvedDetails.controls, modeRef.current),
               {
                 scroll: false,
               }
@@ -542,7 +549,7 @@ export default function PerformanceWorkspaceClient({
           return;
         }
         startTransition(() => {
-          router.push(buildPerformanceHref({ ...controls, mode: nextMode }), {
+          router.push(buildPerformanceControlsHref(controls, nextMode), {
             scroll: false,
           });
         });
@@ -606,8 +613,7 @@ function buildResolvedSummaryControls(
     benchmark: resolvedSummary.benchmark_code ?? undefined,
     reportStartDate: resolvedSummary.report_start_date,
     reportEndDate: resolvedSummary.report_end_date,
-    asOfDate: resolvedSummary.as_of_date,
-    reportingCurrency: resolvedSummary.portfolio.base_currency,
+    sourceAsOfDate: resolvedSummary.as_of_date,
   };
 }
 
@@ -624,8 +630,28 @@ function buildResolvedDetailControls(
     benchmark: resolvedDetails.benchmark_code ?? requestedControls.benchmark,
     reportStartDate: resolvedDetails.report_start_date,
     reportEndDate: resolvedDetails.report_end_date,
-    asOfDate: resolvedDetails.as_of_date,
+    sourceAsOfDate: resolvedDetails.as_of_date,
   };
+}
+
+function buildPerformanceControlsHref(
+  controls: PerformanceControlState,
+  mode?: PerformanceWorkspaceMode,
+): string {
+  return buildPerformanceHref({
+    portfolioId: controls.portfolioId,
+    asOfDate: controls.reviewAsOfDate,
+    period: controls.period,
+    reportingCurrency: controls.reviewReportingCurrency,
+    mode,
+    detailBasis: controls.detailBasis,
+    contributionDimension: controls.contributionDimension,
+    attributionDimension: controls.attributionDimension,
+    chartFrequency: controls.chartFrequency,
+    benchmark: controls.benchmark,
+    reportStartDate: controls.reportStartDate,
+    reportEndDate: controls.reportEndDate,
+  });
 }
 
 function requireCurrentPerformanceDetails(
@@ -635,7 +661,7 @@ function requireCurrentPerformanceDetails(
   if (
     !isPerformanceDetailsSourceCurrent(details, {
       portfolioId: controls.portfolioId,
-      asOfDate: controls.asOfDate,
+      asOfDate: controls.sourceAsOfDate,
       period: controls.period,
     })
   ) {
@@ -840,8 +866,8 @@ function resolveInitialControls({
       initialBenchmark,
     reportStartDate: initialDetails?.report_start_date ?? initialSummary?.report_start_date,
     reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
-    asOfDate: initialDetails?.as_of_date ?? initialSummary?.as_of_date ?? initialAsOfDate,
-    reportingCurrency:
-      initialSummary?.portfolio.base_currency ?? initialReportingCurrency,
+    sourceAsOfDate: initialDetails?.as_of_date ?? initialSummary?.as_of_date,
+    reviewAsOfDate: initialAsOfDate,
+    reviewReportingCurrency: initialReportingCurrency,
   };
 }

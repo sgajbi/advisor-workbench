@@ -236,6 +236,27 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBe(false);
   });
 
+  it("preserves source-confirmed valuation context through a user-selected workspace mode", async () => {
+    installPerformancePageFetchMock();
+
+    await renderPerformancePage({
+      portfolioId: "DEMO_ADV_USD_001",
+      asOfDate: "2026-02-24",
+      period: "YTD",
+      reportingCurrency: "USD",
+    });
+
+    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith(
+        "/performance?portfolioId=DEMO_ADV_USD_001&asOfDate=2026-02-24&period=YTD&reportingCurrency=USD&mode=analysis&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+        { scroll: false },
+      );
+    });
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("uses the shared full-width workstation shell instead of a centered page container", async () => {
     installPerformancePageFetchMock();
 
@@ -895,7 +916,9 @@ describe("PerformanceAnalyticsPage", () => {
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith(
-        expect.stringContaining("/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis"),
+        expect.stringContaining(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&mode=analysis",
+        ),
         { scroll: false }
       );
     });
@@ -1129,7 +1152,7 @@ describe("PerformanceAnalyticsPage", () => {
         );
         expect(pushMock).toHaveBeenCalledWith(
           expect.stringContaining(
-            "/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis",
+            "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&mode=analysis",
           ),
           { scroll: false },
         );
