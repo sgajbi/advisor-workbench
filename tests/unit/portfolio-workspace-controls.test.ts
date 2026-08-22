@@ -147,8 +147,30 @@ describe("portfolio review-context controls", () => {
     [{}, false],
     [{ as_of_date: "2026-08-20" }, false],
     [{ as_of_date: "2026-08-21" }, true],
+    [
+      {
+        as_of_date: "2026-08-21",
+        income_summary: { reporting_currency: "SGD" },
+      },
+      true,
+    ],
+    [
+      {
+        as_of_date: "2026-08-21",
+        activity_summary: { reporting_currency: "USD" },
+      },
+      false,
+    ],
+    [
+      {
+        as_of_date: "2026-08-21",
+        income_summary: { reporting_currency: "SGD" },
+        activity_summary: { reporting_currency: "EUR" },
+      },
+      false,
+    ],
   ] as const)(
-    "admits only source evidence for the requested valuation date: %o",
+    "admits only source evidence for the requested date and currency: %o",
     (response, expected) => {
       expect(isPortfolioReviewResponseCurrent(response, CONTROLS)).toBe(
         expected,
