@@ -4,17 +4,26 @@ import ProposalWorkspaceShell, {
   resolveProposalPortfolioId,
 } from "@/features/proposals/components/proposal-workspace-shell";
 import { buildSimulationProposalWorkflowContext } from "@/features/proposals/proposal-workflow-context-view-model";
+import {
+  type ProposalRouteSearchParam,
+  resolveSingleProposalSearchParam,
+} from "@/features/proposals/proposal-route-search-params";
 
 export default async function ProposalSimulatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string; asOfDate?: string }>;
+  searchParams: Promise<{
+    portfolioId?: ProposalRouteSearchParam;
+    asOfDate?: ProposalRouteSearchParam;
+  }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const portfolioId = resolveProposalPortfolioId(
-    resolvedSearchParams.portfolioId,
+    resolveSingleProposalSearchParam(resolvedSearchParams.portfolioId),
   );
-  const requestedAsOfDate = resolvedSearchParams.asOfDate?.trim();
+  const requestedAsOfDate = resolveSingleProposalSearchParam(
+    resolvedSearchParams.asOfDate,
+  )?.trim();
   const initialAsOfDate = isBusinessDateValue(requestedAsOfDate)
     ? requestedAsOfDate ?? ""
     : "";

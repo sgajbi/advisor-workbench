@@ -88,5 +88,19 @@ describe("ProposalSimulatePage", () => {
     expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
     expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("Not confirmed");
   });
+
+  it("fails closed when proposal context query parameters are repeated", async () => {
+    render(
+      await ProposalSimulatePage({
+        searchParams: Promise.resolve({
+          portfolioId: ["PORT_DUPLICATE", "PORT_OTHER"],
+          asOfDate: ["2026-04-10", "2026-04-11"],
+        }),
+      })
+    );
+
+    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("Not confirmed");
+  });
 });
 

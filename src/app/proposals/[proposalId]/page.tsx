@@ -2,31 +2,31 @@ import ProposalDetailView from "@/features/proposals/components/proposal-detail-
 import { normalizeAdvisoryJourneyMode } from "@/features/proposals/advisory-journey-navigation";
 import { resolveProposalPortfolioId } from "@/features/proposals/components/proposal-workspace-shell";
 import { normalizeProposalLifecycleMode } from "@/features/proposals/proposal-lifecycle-workspace-view-model";
-
-type SearchParamValue = string | string[] | undefined;
+import {
+  type ProposalRouteSearchParam,
+  resolveSingleProposalSearchParam,
+} from "@/features/proposals/proposal-route-search-params";
 
 type Props = {
   params: Promise<{
     proposalId: string;
   }>;
   searchParams?: Promise<{
-    portfolioId?: SearchParamValue;
-    fromMode?: SearchParamValue;
+    portfolioId?: ProposalRouteSearchParam;
+    fromMode?: ProposalRouteSearchParam;
   }>;
 };
-
-function singleSearchParam(value: SearchParamValue): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
 
 export default async function ProposalDetailPage({ params, searchParams }: Props) {
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const returnPortfolioId = resolveProposalPortfolioId(
-    singleSearchParam(resolvedSearchParams.portfolioId),
+    resolveSingleProposalSearchParam(resolvedSearchParams.portfolioId),
   );
   const returnMode = normalizeProposalLifecycleMode(
-    normalizeAdvisoryJourneyMode(singleSearchParam(resolvedSearchParams.fromMode)),
+    normalizeAdvisoryJourneyMode(
+      resolveSingleProposalSearchParam(resolvedSearchParams.fromMode),
+    ),
   );
 
   return (
