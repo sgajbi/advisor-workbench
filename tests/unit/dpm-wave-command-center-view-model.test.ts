@@ -484,7 +484,7 @@ describe("DPM wave command-center view model", () => {
       candidateFilters: "As Of Date: 2026-05-10; Eligible Portfolio Types: DISCRETIONARY",
       candidateWarnings: "N/A",
       lineageRefCount: "4",
-      nextAction: "Check launch readiness through Gateway.",
+      nextAction: "Review launch readiness and any source-owned blockers.",
       operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM, NO_CLIENT_CONTACT_WORKFLOW",
     });
   });
