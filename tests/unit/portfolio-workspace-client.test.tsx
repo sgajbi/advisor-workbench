@@ -11,6 +11,14 @@ import {
 
 const getSummaryDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/portfolio",
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () =>
+    new URLSearchParams("portfolioId=MANUAL_PB_USD_001&period=30D"),
+}));
 
 vi.mock("../../src/apps/portfolio/api", () => ({
   getPortfolioWorkspaceShell: (...args: unknown[]) => getShellWorkspaceMock(...args),
@@ -26,13 +34,26 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace-toolbar", () =>
     controls,
     onControlsChange,
   }: {
-    controls: { viewMode: "summary" | "detailed" };
-    onControlsChange: (patch: { viewMode?: "summary" | "detailed" }) => void;
+    controls: {
+      viewMode: "summary" | "detailed";
+      timeWindow: "30D" | "YTD" | "1Y";
+    };
+    onControlsChange: (patch: {
+      viewMode?: "summary" | "detailed";
+      timeWindow?: "30D" | "YTD" | "1Y";
+    }) => void;
   }) => (
     <div>
       <div data-testid="view-mode">{controls.viewMode}</div>
+      <div data-testid="time-window">{controls.timeWindow}</div>
       <button type="button" onClick={() => onControlsChange({ viewMode: "detailed" })}>
         Switch Detailed
+      </button>
+      <button type="button" onClick={() => onControlsChange({ timeWindow: "YTD" })}>
+        Select YTD
+      </button>
+      <button type="button" onClick={() => onControlsChange({ timeWindow: "1Y" })}>
+        Select 1Y
       </button>
     </div>
   ),
@@ -116,8 +137,227 @@ describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
     getShellWorkspaceMock.mockReset();
     getSummaryDetailsMock.mockReset();
+    routerPushMock.mockReset();
     resetAnalyticsUiMetricEvents();
     window.localStorage.clear();
+  });
+
+  it("commits a review period and URL only after source detail is confirmed", async () => {
+    getSummaryDetailsMock.mockResolvedValue({ positions: [] });
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "Manual portfolio",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    routerPushMock.mockReset();
+
+    let confirmDetails: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        confirmDetails = resolve;
+      }),
+    );
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
+    expect(screen.getByRole("status")).toHaveTextContent("Confirming review context");
+    expect(routerPushMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      confirmDetails?.({ as_of_date: "2026-03-28", positions: [] });
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("time-window")).toHaveTextContent("YTD");
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Review context confirmed");
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=YTD&reportingCurrency=USD",
+      { scroll: false },
+    );
+  });
+
+  it("keeps the confirmed context and commits only after a successful retry", async () => {
+    getSummaryDetailsMock
+      .mockResolvedValueOnce({ positions: [] })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        as_of_date: "2026-03-28",
+        positions: [],
+      });
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "Manual portfolio",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Review context was not changed",
+    );
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
+    const retry = screen.getByRole("button", {
+      name: "Retry portfolio review context",
+    });
+    expect(retry).toBeEnabled();
+    expect(routerPushMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      retry.click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("time-window")).toHaveTextContent("YTD");
+    });
+    expect(routerPushMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("commits only the latest review-context request", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "Manual portfolio",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    let confirmYtd: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    let confirmOneYear: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    getSummaryDetailsMock
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          confirmYtd = resolve;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          confirmOneYear = resolve;
+        }),
+      );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+      screen.getByRole("button", { name: "Select 1Y" }).click();
+    });
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(3));
+    await act(async () => {
+      confirmOneYear?.({ as_of_date: "2026-03-28", positions: [] });
+    });
+    await waitFor(() => expect(screen.getByTestId("time-window")).toHaveTextContent("1Y"));
+
+    await act(async () => {
+      confirmYtd?.({ as_of_date: "2026-03-28", positions: [] });
+    });
+    expect(screen.getByTestId("time-window")).toHaveTextContent("1Y");
+    expect(routerPushMock).toHaveBeenCalledTimes(1);
+    expect(routerPushMock).toHaveBeenCalledWith(
+      expect.stringContaining("period=1Y"),
+      { scroll: false },
+    );
+  });
+
+  it("does not commit an in-flight control request after portfolio identity changes", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
+    const firstWorkspace = buildWorkspace("MANUAL_PB_USD_001");
+    const { rerender } = render(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_001",
+            display_name: "First portfolio",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_001",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={firstWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    let confirmFirstPortfolio:
+      | ((value: Partial<PortfolioWorkspace>) => void)
+      | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        confirmFirstPortfolio = resolve;
+      }),
+    );
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+
+    const secondWorkspace = buildWorkspace("MANUAL_PB_USD_002");
+    getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
+    rerender(
+      <PortfolioWorkspaceClient
+        portfolios={[
+          {
+            portfolio_id: "MANUAL_PB_USD_002",
+            display_name: "Second portfolio",
+            base_currency: "USD",
+            client_id: "MANUAL_CIF_002",
+            booking_center_code: "Singapore",
+          },
+        ]}
+        selectedPortfolioId="MANUAL_PB_USD_002"
+        initialWorkspace={secondWorkspace}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+        "MANUAL_PB_USD_002",
+      );
+    });
+
+    await act(async () => {
+      confirmFirstPortfolio?.({
+        as_of_date: "2026-03-28",
+        positions: [],
+      });
+    });
+
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+      "MANUAL_PB_USD_002",
+    );
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
+    expect(routerPushMock).not.toHaveBeenCalled();
   });
 
   it("does not duplicate summary fetches in strict mode and preserves explicit detail changes", async () => {

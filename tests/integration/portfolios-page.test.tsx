@@ -2,6 +2,14 @@ import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/portfolio",
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
     const componentPromise = loader().then((mod: unknown) =>
@@ -93,6 +101,7 @@ describe("PortfolioFoundationPage", () => {
     resetPortfolioApiRequestCache();
     window.localStorage.clear();
     vi.unstubAllGlobals();
+    routerPushMock.mockReset();
   });
 
   it("does not call a source when governed review context is ambiguous", async () => {

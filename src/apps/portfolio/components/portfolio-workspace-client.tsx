@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
+  WorkbenchRefreshStatus,
   WorkbenchToolbarPlaceholder,
 } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 
 import {
   getPortfolioWorkspaceShell,
@@ -13,7 +16,10 @@ import {
   mergePortfolioWorkspace,
 } from "../api";
 import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recovery-observability";
-import { applyPortfolioControlPatch } from "../portfolio-workspace-controls";
+import {
+  applyPortfolioControlPatch,
+  buildPortfolioReviewHref,
+} from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
@@ -49,6 +55,17 @@ type ShellRequestState = {
   status: "idle" | "loading" | "loaded" | "unavailable";
 };
 
+type PortfolioControlStateDraft = {
+  sourceKey: string;
+  controls: PortfolioWorkspaceControls;
+};
+
+type PortfolioControlTransition = {
+  sourceKey: string;
+  status: "pending" | "confirmed" | "failed";
+  requestedControls: PortfolioWorkspaceControls;
+};
+
 export default function PortfolioWorkspaceClient({
   portfolios,
   selectedPortfolioId,
@@ -60,12 +77,44 @@ export default function PortfolioWorkspaceClient({
   initialWorkspace: PortfolioWorkspace | null;
   initialControls?: PortfolioWorkspaceControls;
 }) {
-  const [controls, setControls] = useState<PortfolioWorkspaceControls>(
-    initialControls ?? buildInitialPortfolioControls(initialWorkspace)
-  );
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const initialWorkspaceSourceKey = useMemo(
     () => buildPortfolioWorkspaceSourceKey(selectedPortfolioId, initialWorkspace),
     [initialWorkspace, selectedPortfolioId]
+  );
+  const initialControlValues = useMemo(
+    () => initialControls ?? buildInitialPortfolioControls(initialWorkspace),
+    [initialControls, initialWorkspace],
+  );
+  const [controlDraft, setControlDraft] = useState<PortfolioControlStateDraft>({
+    sourceKey: initialWorkspaceSourceKey,
+    controls: initialControlValues,
+  });
+  const controls =
+    controlDraft.sourceKey === initialWorkspaceSourceKey
+      ? controlDraft.controls
+      : initialControlValues;
+  const setControls = useCallback(
+    (
+      next:
+        | PortfolioWorkspaceControls
+        | ((current: PortfolioWorkspaceControls) => PortfolioWorkspaceControls),
+    ) => {
+      setControlDraft((current) => {
+        const currentControls =
+          current.sourceKey === initialWorkspaceSourceKey
+            ? current.controls
+            : initialControlValues;
+        return {
+          sourceKey: initialWorkspaceSourceKey,
+          controls:
+            typeof next === "function" ? next(currentControls) : next,
+        };
+      });
+    },
+    [initialControlValues, initialWorkspaceSourceKey],
   );
   const [workspaceDraft, setWorkspaceDraft] = useState<WorkspaceStateDraft>({
     sourceKey: initialWorkspaceSourceKey,
@@ -111,10 +160,21 @@ export default function PortfolioWorkspaceClient({
   );
   const interactiveReady = useClientMounted();
   const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
+  const controlRequestSequence = useRef(0);
+  const controlRequestSourceKey = useRef(initialWorkspaceSourceKey);
+  const [controlTransition, setControlTransition] =
+    useState<PortfolioControlTransition | null>(null);
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState]
   );
+
+  useEffect(() => {
+    if (controlRequestSourceKey.current !== initialWorkspaceSourceKey) {
+      controlRequestSourceKey.current = initialWorkspaceSourceKey;
+      controlRequestSequence.current += 1;
+    }
+  }, [initialWorkspaceSourceKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -193,6 +253,7 @@ export default function PortfolioWorkspaceClient({
     initialWorkspace,
     initialWorkspaceSourceKey,
     selectedPortfolioId,
+    setControls,
     setWorkspaceState,
     workspaceState,
   ]);
@@ -247,7 +308,78 @@ export default function PortfolioWorkspaceClient({
     [controls, workspaceState]
   );
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
-    setControls((current) => applyPortfolioControlPatch(current, patch));
+    const nextControls = applyPortfolioControlPatch(controls, patch);
+    if (!requiresSourceConfirmation(patch)) {
+      setControls(nextControls);
+      return;
+    }
+
+    void confirmPortfolioControls(nextControls);
+  }
+
+  async function confirmPortfolioControls(
+    requestedControls: PortfolioWorkspaceControls,
+  ) {
+    if (!selectedPortfolioId || !workspaceState) {
+      return;
+    }
+
+    const requestId = ++controlRequestSequence.current;
+    const requestedContext = buildPortfolioWorkspaceContext(
+      workspaceState,
+      requestedControls,
+    );
+    const request = buildPortfolioSummaryDetailsRequest(
+      selectedPortfolioId,
+      requestedContext,
+    );
+    const scopedRequestKey = `${initialWorkspaceSourceKey}|${request.key}`;
+    setControlTransition({
+      sourceKey: initialWorkspaceSourceKey,
+      status: "pending",
+      requestedControls,
+    });
+
+    const details = await getPortfolioWorkspaceSummaryDetailsOnce(
+      scopedRequestKey,
+      selectedPortfolioId,
+      request.params,
+    );
+    if (requestId !== controlRequestSequence.current) {
+      return;
+    }
+
+    if (
+      !details ||
+      details.as_of_date !== requestedContext.selectedAsOfDate
+    ) {
+      setControlTransition({
+        sourceKey: initialWorkspaceSourceKey,
+        status: "failed",
+        requestedControls,
+      });
+      return;
+    }
+
+    summaryRequestRef.current = { key: scopedRequestKey, status: "loaded" };
+    setWorkspaceState((current) =>
+      current ? mergePortfolioWorkspace(current, details) : current,
+    );
+    setControls(requestedControls);
+    router.push(
+      buildPortfolioReviewHref({
+        pathname,
+        searchParams: searchParams ?? new URLSearchParams(),
+        portfolioId: selectedPortfolioId,
+        controls: requestedControls,
+      }),
+      { scroll: false },
+    );
+    setControlTransition({
+      sourceKey: initialWorkspaceSourceKey,
+      status: "confirmed",
+      requestedControls,
+    });
   }
 
   function handleExport() {
@@ -266,6 +398,11 @@ export default function PortfolioWorkspaceClient({
     anchor.click();
     URL.revokeObjectURL(downloadUrl);
   }
+
+  const activeControlTransition =
+    controlTransition?.sourceKey === initialWorkspaceSourceKey
+      ? controlTransition
+      : null;
 
   return (
     <PortfolioPageLayout>
@@ -297,19 +434,104 @@ export default function PortfolioWorkspaceClient({
                 />
               </div>
             ) : (
-              <PortfolioWorkspaceToolbar
-                controls={controls}
-                context={context}
-                onControlsChange={handleControlsChange}
-                onExport={handleExport}
-                quickActions={workspaceState ? getOrderedWorkflowCues(workspaceState) : []}
-              />
+              <>
+                <PortfolioWorkspaceToolbar
+                  controls={controls}
+                  context={context}
+                  onControlsChange={handleControlsChange}
+                  onExport={handleExport}
+                  quickActions={workspaceState ? getOrderedWorkflowCues(workspaceState) : []}
+                  contextChangePending={activeControlTransition?.status === "pending"}
+                />
+                {activeControlTransition ? (
+                  <PortfolioControlTransitionStatus
+                    transition={activeControlTransition}
+                    confirmedControls={controls}
+                    onRetry={() =>
+                      void confirmPortfolioControls(
+                        activeControlTransition.requestedControls,
+                      )
+                    }
+                  />
+                ) : null}
+              </>
             )
           }
         />
       )}
     </PortfolioPageLayout>
   );
+}
+
+function PortfolioControlTransitionStatus({
+  transition,
+  confirmedControls,
+  onRetry,
+}: {
+  transition: PortfolioControlTransition;
+  confirmedControls: PortfolioWorkspaceControls;
+  onRetry: () => void;
+}) {
+  const requestedContext = formatPortfolioControlContext(
+    transition.requestedControls,
+  );
+
+  const confirmedContext = formatPortfolioControlContext(confirmedControls);
+
+  if (transition.status === "pending") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="pending"
+        eyebrow="Portfolio review context"
+        title="Confirming review context"
+        message="Source-backed portfolio detail is being refreshed before the view changes."
+        requestedContext={requestedContext}
+        confirmedContext={confirmedContext}
+      />
+    );
+  }
+
+  if (transition.status === "failed") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="failed"
+        eyebrow="Portfolio review context"
+        title="Review context was not changed"
+        message="Portfolio detail could not be confirmed. The previous review context remains active."
+        requestedContext={requestedContext}
+        confirmedContext={confirmedContext}
+        onRetry={onRetry}
+        retryLabel="Retry portfolio review context"
+      />
+    );
+  }
+
+  return (
+    <WorkbenchRefreshStatus
+      kind="confirmed"
+      eyebrow="Portfolio review context"
+      title="Review context confirmed"
+      confirmedContext={confirmedContext}
+    />
+  );
+}
+
+function requiresSourceConfirmation(
+  patch: Partial<PortfolioWorkspaceControls>,
+): boolean {
+  return [
+    patch.asOfDate,
+    patch.reportingCurrency,
+    patch.timeWindow,
+    patch.customStartDate,
+    patch.customEndDate,
+  ].some((value) => value !== undefined);
+}
+
+function formatPortfolioControlContext(
+  controls: PortfolioWorkspaceControls,
+): string {
+  return `${formatBusinessDateValue(controls.asOfDate)} · ${controls.timeWindow} · ${controls.reportingCurrency}`;
 }
 
 function getPortfolioWorkspaceSummaryDetailsOnce(
