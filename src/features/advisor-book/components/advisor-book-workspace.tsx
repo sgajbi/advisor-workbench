@@ -40,15 +40,28 @@ import styles from "../advisor-book-workspace.module.css";
 
 const PAGE_SIZE = 25;
 
+type AdvisorBookFilterDraft = {
+  clientId: string;
+  mandateType: string;
+  sortBy: AdvisorBookSortBy;
+  sortOrder: AdvisorBookSortOrder;
+};
+
+function buildAdvisorBookFilterDraft(
+  query: AdvisorBookQuery,
+): AdvisorBookFilterDraft {
+  return {
+    clientId: query.clientId ?? "",
+    mandateType: query.mandateType ?? "",
+    sortBy: query.sortBy ?? "portfolio_id",
+    sortOrder: query.sortOrder ?? "asc",
+  };
+}
+
 export default function AdvisorBookWorkspace() {
   const searchParams = useSearchParams();
 
-  return (
-    <AdvisorBookWorkspaceContent
-      key={searchParams.toString()}
-      searchParams={searchParams}
-    />
-  );
+  return <AdvisorBookWorkspaceContent searchParams={searchParams} />;
 }
 
 function AdvisorBookWorkspaceContent({
@@ -157,24 +170,43 @@ function AdvisorBookSourceWorkspace({
     () => queryFromSearchParams(searchParams, asOfDate),
     [asOfDate, searchParams],
   );
-  const queryClientId = query.clientId ?? "";
-  const [clientId, setClientId] = useState(queryClientId);
-  const [mandateType, setMandateType] = useState(query.mandateType ?? "");
-  const [sortBy, setSortBy] = useState<AdvisorBookSortBy>(
-    query.sortBy ?? "portfolio_id",
-  );
-  const [sortOrder, setSortOrder] = useState<AdvisorBookSortOrder>(
-    query.sortOrder ?? "asc",
-  );
+  const filterIdentity = searchParams.toString();
+  const queryFilterDraft = buildAdvisorBookFilterDraft(query);
+  const [filterState, setFilterState] = useState({
+    observedIdentity: filterIdentity,
+    draft: queryFilterDraft,
+  });
+  let filterDraft = filterState.draft;
+  if (filterState.observedIdentity !== filterIdentity) {
+    filterDraft = queryFilterDraft;
+    setFilterState({ observedIdentity: filterIdentity, draft: queryFilterDraft });
+  }
   const { response, loading, error, reload } = useAdvisorBook(query);
+
+  function updateFilterDraft(
+    patch: Partial<AdvisorBookFilterDraft>,
+  ) {
+    setFilterState({
+      observedIdentity: filterIdentity,
+      draft: { ...filterDraft, ...patch },
+    });
+  }
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = new URLSearchParams(searchParams.toString());
-    setOptionalQuery(next, "clientId", clientId.trim());
-    setOptionalQuery(next, "mandateType", mandateType);
-    setOptionalQuery(next, "sortBy", sortBy === "portfolio_id" ? "" : sortBy);
-    setOptionalQuery(next, "sortOrder", sortOrder === "asc" ? "" : sortOrder);
+    setOptionalQuery(next, "clientId", filterDraft.clientId.trim());
+    setOptionalQuery(next, "mandateType", filterDraft.mandateType);
+    setOptionalQuery(
+      next,
+      "sortBy",
+      filterDraft.sortBy === "portfolio_id" ? "" : filterDraft.sortBy,
+    );
+    setOptionalQuery(
+      next,
+      "sortOrder",
+      filterDraft.sortOrder === "asc" ? "" : filterDraft.sortOrder,
+    );
     next.set("offset", "0");
     router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
@@ -193,49 +225,14 @@ function AdvisorBookSourceWorkspace({
     router.push(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
-  if (loading) {
-    return (
-      <ScreenStatePanel
-        kind="loading"
-        title="Loading your book"
-        body="Confirming portfolio assignments for the selected business date."
-        rows={6}
-      />
-    );
-  }
-
-  if (error) {
-    const errorEvidence = getWorkbenchApiErrorEvidence(error);
-    return (
-      <ScreenStatePanel
-        kind={isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error"}
-        title={
-          isWorkbenchPermissionBlockedError(error)
-            ? "Book access is not available"
-            : "Your book could not be loaded"
-        }
-        body={
-          isWorkbenchPermissionBlockedError(error)
-            ? "Your authenticated role does not currently provide access to this own-book view."
-            : "Portfolio assignments are temporarily unavailable. No broader portfolio list has been substituted."
-        }
-        hint={
-          errorEvidence
-            ? `${errorEvidence.label} ${errorEvidence.value}. Retry, or contact support if access should be available.`
-            : "Retry when portfolio assignments are available."
-        }
-        action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
-      />
-    );
-  }
-
-  if (!response) {
-    return null;
-  }
-
-  const model = buildAdvisorBookWorkspaceModel(response);
-  const resultScope = buildAdvisorBookResultScopeModel(query, response.page);
-  const lastReturned = response.page.offset + response.page.returned_count;
+  const model = response ? buildAdvisorBookWorkspaceModel(response) : null;
+  const resultScope = response
+    ? buildAdvisorBookResultScopeModel(query, response.page)
+    : null;
+  const lastReturned = response
+    ? response.page.offset + response.page.returned_count
+    : 0;
+  const errorEvidence = error ? getWorkbenchApiErrorEvidence(error) : null;
   const hasCustomView = Boolean(
     query.clientId ||
       query.mandateType ||
@@ -245,34 +242,46 @@ function AdvisorBookSourceWorkspace({
 
   return (
     <div className={styles.workspace}>
-      <div className={styles.contextStrip} aria-label="Book scope">
-        <SemanticBadge tone={model.state === "ready" ? "success" : model.state === "degraded" ? "warn" : "default"}>
-          {model.stateLabel}
-        </SemanticBadge>
-        <div className={styles.contextItem}>
-          <span>Scope</span>
-          <strong>{model.scopeLabel}</strong>
+      {model ? (
+        <div className={styles.contextStrip} aria-label="Book scope">
+          <SemanticBadge
+            tone={
+              model.state === "ready"
+                ? "success"
+                : model.state === "degraded"
+                  ? "warn"
+                  : "default"
+            }
+          >
+            {model.stateLabel}
+          </SemanticBadge>
+          <div className={styles.contextItem}>
+            <span>Scope</span>
+            <strong>{model.scopeLabel}</strong>
+          </div>
+          <div className={styles.contextItem}>
+            <span>Business date</span>
+            <strong>{model.asOfLabel}</strong>
+          </div>
+          <div className={styles.contextItem}>
+            <span>Booking centre</span>
+            <strong>{model.bookingCentreLabel}</strong>
+          </div>
+          <span className={styles.supportReference}>{model.stateDetail}</span>
         </div>
-        <div className={styles.contextItem}>
-          <span>Business date</span>
-          <strong>{model.asOfLabel}</strong>
-        </div>
-        <div className={styles.contextItem}>
-          <span>Booking centre</span>
-          <strong>{model.bookingCentreLabel}</strong>
-        </div>
-        <span className={styles.supportReference}>{model.stateDetail}</span>
-      </div>
+      ) : null}
 
-      <WorkbenchSummaryMetricStrip
-        ariaLabel="Current book view"
-        items={model.metrics.map((metric) => ({
-          key: metric.label,
-          label: metric.label,
-          value: metric.value,
-          support: metric.detail,
-        }))}
-      />
+      {model ? (
+        <WorkbenchSummaryMetricStrip
+          ariaLabel="Current book view"
+          items={model.metrics.map((metric) => ({
+            key: metric.label,
+            label: metric.label,
+            value: metric.value,
+            support: metric.detail,
+          }))}
+        />
+      ) : null}
 
       <SectionBlock
         title="Assigned portfolios"
@@ -287,8 +296,10 @@ function AdvisorBookSourceWorkspace({
             <FieldLabel htmlFor="advisor-book-client-reference">Client reference</FieldLabel>
             <input
               id="advisor-book-client-reference"
-              value={clientId}
-              onChange={(event) => setClientId(event.target.value)}
+              value={filterDraft.clientId}
+              onChange={(event) =>
+                updateFilterDraft({ clientId: event.target.value })
+              }
               placeholder="Exact client reference"
               aria-label="Client reference"
               spellCheck={false}
@@ -299,8 +310,10 @@ function AdvisorBookSourceWorkspace({
             <select
               id="advisor-book-mandate"
               aria-label="Mandate"
-              value={mandateType}
-              onChange={(event) => setMandateType(event.target.value)}
+              value={filterDraft.mandateType}
+              onChange={(event) =>
+                updateFilterDraft({ mandateType: event.target.value })
+              }
             >
               <option value="">All supported mandates</option>
               <option value="ADVISORY">Advisory</option>
@@ -312,8 +325,12 @@ function AdvisorBookSourceWorkspace({
             <select
               id="advisor-book-sort"
               aria-label="Sort by"
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as AdvisorBookSortBy)}
+              value={filterDraft.sortBy}
+              onChange={(event) =>
+                updateFilterDraft({
+                  sortBy: event.target.value as AdvisorBookSortBy,
+                })
+              }
             >
               <option value="portfolio_id">Portfolio</option>
               <option value="client_id">Client</option>
@@ -325,8 +342,12 @@ function AdvisorBookSourceWorkspace({
             <select
               id="advisor-book-sort-order"
               aria-label="Sort direction"
-              value={sortOrder}
-              onChange={(event) => setSortOrder(event.target.value as AdvisorBookSortOrder)}
+              value={filterDraft.sortOrder}
+              onChange={(event) =>
+                updateFilterDraft({
+                  sortOrder: event.target.value as AdvisorBookSortOrder,
+                })
+              }
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
@@ -342,95 +363,145 @@ function AdvisorBookSourceWorkspace({
           </div>
         </form>
 
-        <div className={styles.resultScope} aria-live="polite">
-          <strong>{resultScope.rangeLabel}</strong>
-          <span>{resultScope.viewLabel}</span>
-        </div>
+        {loading ? (
+          <ScreenStatePanel
+            kind="loading"
+            title="Loading your book"
+            body="Confirming portfolio assignments for the selected business date."
+            rows={6}
+          />
+        ) : error ? (
+          <ScreenStatePanel
+            kind={isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error"}
+            title={
+              isWorkbenchPermissionBlockedError(error)
+                ? "Book access is not available"
+                : "Your book could not be loaded"
+            }
+            body={
+              isWorkbenchPermissionBlockedError(error)
+                ? "Your authenticated role does not currently provide access to this own-book view."
+                : "Portfolio assignments are temporarily unavailable. No broader portfolio list has been substituted."
+            }
+            hint={
+              errorEvidence
+                ? `${errorEvidence.label} ${errorEvidence.value}. Retry, or contact support if access should be available.`
+                : "Retry when portfolio assignments are available."
+            }
+            action={<ActionButton onClick={() => void reload()}>Retry</ActionButton>}
+          />
+        ) : response && model && resultScope ? (
+          <>
+            <div className={styles.resultScope} aria-live="polite">
+              <strong>{resultScope.rangeLabel}</strong>
+              <span>{resultScope.viewLabel}</span>
+            </div>
 
-        <AnalyticsTable
-          ariaLabel="Portfolios in my book"
-          density="compact"
-          variant="portfolio"
-          columns={[
-            { key: "portfolio", label: "Portfolio" },
-            { key: "client", label: "Client reference" },
-            { key: "mandate", label: "Mandate" },
-            { key: "currency", label: "Currency" },
-            { key: "status", label: "Lifecycle" },
-            { key: "membership", label: "Assignment basis" },
-          ]}
-          rows={model.rows.map((row) => ({
-            key: row.portfolioId,
-            cells: [
-              <div key="portfolio" className={styles.portfolioCell}>
-                <Link
-                  href={buildPortfolioContextHref({
-                    pathname: "/book",
-                    searchParams,
-                    portfolioId: row.portfolioId,
-                  })}
-                >
-                  {row.portfolioLabel}
-                </Link>
-                <small>{row.portfolioReferenceLabel} · Open Portfolio Review</small>
-              </div>,
-              <span key="client" className={styles.referenceValue}>
-                {row.clientReference}
-              </span>,
-              row.mandateLabel,
-              row.currencyLabel,
-              row.statusLabel,
-              <span key="membership" className={styles.cellDetail}>{row.membershipLabel}</span>,
-            ],
-          }))}
-          emptyState={{
-            title: model.stateLabel,
-            body: model.stateDetail,
-          }}
-        />
+            <AnalyticsTable
+              ariaLabel="Portfolios in my book"
+              density="compact"
+              variant="portfolio"
+              columns={[
+                { key: "portfolio", label: "Portfolio" },
+                { key: "client", label: "Client reference" },
+                { key: "mandate", label: "Mandate" },
+                { key: "currency", label: "Currency" },
+                { key: "status", label: "Lifecycle" },
+                { key: "membership", label: "Assignment basis" },
+              ]}
+              rows={model.rows.map((row) => ({
+                key: row.portfolioId,
+                cells: [
+                  <div key="portfolio" className={styles.portfolioCell}>
+                    <Link
+                      href={buildPortfolioContextHref({
+                        pathname: "/book",
+                        searchParams,
+                        portfolioId: row.portfolioId,
+                      })}
+                    >
+                      {row.portfolioLabel}
+                    </Link>
+                    <small>
+                      {row.portfolioReferenceLabel} · Open Portfolio Review
+                    </small>
+                  </div>,
+                  <span key="client" className={styles.referenceValue}>
+                    {row.clientReference}
+                  </span>,
+                  row.mandateLabel,
+                  row.currencyLabel,
+                  row.statusLabel,
+                  <span key="membership" className={styles.cellDetail}>
+                    {row.membershipLabel}
+                  </span>,
+                ],
+              }))}
+              emptyState={{
+                title: model.stateLabel,
+                body: model.stateDetail,
+              }}
+            />
 
-        <div className={styles.pagination} aria-label="Book pagination">
-          <ActionButton
-            priority="quiet"
-            disabled={response.page.offset === 0}
-            onClick={() => changePage(response.page.offset - response.page.limit)}
-          >
-            Previous
-          </ActionButton>
-          <span>
-            {response.page.returned_count
-              ? `${response.page.offset + 1}–${lastReturned} of ${response.page.total_count}`
-              : `0 of ${response.page.total_count}`}
-          </span>
-          <ActionButton
-            priority="quiet"
-            disabled={lastReturned >= response.page.total_count}
-            onClick={() => changePage(response.page.offset + response.page.limit)}
-          >
-            Next
-          </ActionButton>
-        </div>
+            <div className={styles.pagination} aria-label="Book pagination">
+              <ActionButton
+                priority="quiet"
+                disabled={response.page.offset === 0}
+                onClick={() =>
+                  changePage(response.page.offset - response.page.limit)
+                }
+              >
+                Previous
+              </ActionButton>
+              <span>
+                {response.page.returned_count
+                  ? `${response.page.offset + 1}–${lastReturned} of ${response.page.total_count}`
+                  : `0 of ${response.page.total_count}`}
+              </span>
+              <ActionButton
+                priority="quiet"
+                disabled={lastReturned >= response.page.total_count}
+                onClick={() =>
+                  changePage(response.page.offset + response.page.limit)
+                }
+              >
+                Next
+              </ActionButton>
+            </div>
+          </>
+        ) : null}
       </SectionBlock>
 
-      <div className={styles.supportGrid}>
-        <SectionBlock title="Operating boundaries" subtitle="What this book view does and does not confirm.">
-          {model.limitations.length ? (
-            <ul className={styles.limitations}>
-              {model.limitations.map((limitation) => (
-                <li key={limitation.rawValue}>
-                  <strong>{limitation.label}</strong>
-                  <p>{limitation.detail}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No operating limitations were reported for this own-book view.</p>
-          )}
-        </SectionBlock>
-        <SectionBlock title="Operational details" subtitle="Evidence for operational follow-up.">
-          <DefinitionList ariaLabel="Advisor book operational details" items={model.supportDetails} />
-        </SectionBlock>
-      </div>
+      {model ? (
+        <div className={styles.supportGrid}>
+          <SectionBlock
+            title="Operating boundaries"
+            subtitle="What this book view does and does not confirm."
+          >
+            {model.limitations.length ? (
+              <ul className={styles.limitations}>
+                {model.limitations.map((limitation) => (
+                  <li key={limitation.rawValue}>
+                    <strong>{limitation.label}</strong>
+                    <p>{limitation.detail}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No operating limitations were reported for this own-book view.</p>
+            )}
+          </SectionBlock>
+          <SectionBlock
+            title="Operational details"
+            subtitle="Evidence for operational follow-up."
+          >
+            <DefinitionList
+              ariaLabel="Advisor book operational details"
+              items={model.supportDetails}
+            />
+          </SectionBlock>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -197,7 +197,8 @@ describe("AdvisorBookWorkspace", () => {
     render(<AdvisorBookWorkspace />);
     await screen.findByText("Book available");
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Client reference" }), {
+    const clientReference = screen.getByRole("textbox", { name: "Client reference" });
+    fireEvent.change(clientReference, {
       target: { value: "CIF_SG_002" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
@@ -274,7 +275,10 @@ describe("AdvisorBookWorkspace", () => {
     const { rerender } = render(<AdvisorBookWorkspace />);
     await screen.findByText("Book available");
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Client reference" }), {
+    const clientReference = screen.getByRole("textbox", {
+      name: "Client reference",
+    });
+    fireEvent.change(clientReference, {
       target: { value: "CIF_SG_002" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Apply view" }));
@@ -282,15 +286,24 @@ describe("AdvisorBookWorkspace", () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams("asOfDate=2026-04-10&clientId=CIF_SG_002&offset=0"),
     );
+    clientReference.focus();
     rerender(<AdvisorBookWorkspace />);
-    expect(await screen.findByRole("textbox", { name: "Client reference" })).toHaveValue(
-      "CIF_SG_002",
-    );
+    const filteredClientReference = await screen.findByRole("textbox", {
+      name: "Client reference",
+    });
+    expect(filteredClientReference).toBe(clientReference);
+    expect(filteredClientReference).toHaveValue("CIF_SG_002");
+    expect(filteredClientReference).toHaveFocus();
 
     useSearchParamsMock.mockReturnValue(new URLSearchParams("asOfDate=2026-04-10"));
     rerender(<AdvisorBookWorkspace />);
 
-    expect(await screen.findByRole("textbox", { name: "Client reference" })).toHaveValue("");
+    const restoredClientReference = await screen.findByRole("textbox", {
+      name: "Client reference",
+    });
+    expect(restoredClientReference).toBe(clientReference);
+    expect(restoredClientReference).toHaveValue("");
+    expect(restoredClientReference).toHaveFocus();
     await waitFor(() => {
       const lastQuery = getAdvisorBookMock.mock.calls.at(-1)?.[0];
       expect(lastQuery).toMatchObject({
