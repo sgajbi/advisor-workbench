@@ -6,7 +6,6 @@ import {
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
 import {
-  buildReviewContextHref,
   parseReviewContext,
 } from "@/shell/review-context";
 import ReviewContextRecovery from "@/shell/review-context-recovery";
@@ -149,20 +148,15 @@ export default async function PerformanceAnalyticsPage({
     workspaceSummary &&
     !isPerformanceSummarySourceCurrent(workspaceSummary, {
       portfolioId: selectedPortfolioId,
-      asOfDate: reviewContextResult.context.asOfDate,
-      reportingCurrency: reviewContextResult.context.reportingCurrency,
+      period,
     })
   ) {
     return (
       <AppPageShell pageKey="performance" className="performance-page portfolio-page">
         <ReviewContextRecovery
-          body="The selected portfolio, valuation date, or reporting currency is not confirmed by the performance source. No analytical detail was requested."
-          href={buildReviewContextHref("/performance", {
-            portfolioId: selectedPortfolioId,
-            asOfDate: workspaceSummary.as_of_date,
-            reportingCurrency: workspaceSummary.portfolio.base_currency,
-          })}
-          actionLabel="Use available performance context"
+          body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."
+          href="/book"
+          actionLabel="Choose a portfolio from My book"
         />
       </AppPageShell>
     );
@@ -184,9 +178,45 @@ export default async function PerformanceAnalyticsPage({
         initialBenchmark={benchmark}
         initialAsOfDate={reviewContextResult.context.asOfDate}
         initialReportingCurrency={reviewContextResult.context.reportingCurrency}
+        initialContextNotice={buildPerformanceContextNotice({
+          requestedAsOfDate: reviewContextResult.context.asOfDate,
+          requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
+          sourceAsOfDate: workspaceSummary?.as_of_date,
+          sourceCurrency: workspaceSummary?.portfolio.base_currency,
+        })}
       />
     </AppPageShell>
   );
+}
+
+export function buildPerformanceContextNotice({
+  requestedAsOfDate,
+  requestedReportingCurrency,
+  sourceAsOfDate,
+  sourceCurrency,
+}: {
+  requestedAsOfDate?: string;
+  requestedReportingCurrency?: string;
+  sourceAsOfDate?: string;
+  sourceCurrency?: string;
+}): { title: string; body: string } | null {
+  const limitations: string[] = [];
+  if (requestedAsOfDate && sourceAsOfDate) {
+    limitations.push(
+      `Performance uses the source valuation date ${sourceAsOfDate}; the advisor review date ${requestedAsOfDate} remains available when you return to other workspaces.`,
+    );
+  }
+  if (requestedReportingCurrency && sourceCurrency) {
+    limitations.push(
+      `Performance is presented in source base currency ${sourceCurrency}; reporting-currency restatement to ${requestedReportingCurrency} is not supported by this contract.`,
+    );
+  }
+  return limitations.length > 0
+    ? {
+        title: "Performance source context",
+        body: limitations.join(" "),
+      }
+    : null;
 }
 
 function getSearchParamValue(

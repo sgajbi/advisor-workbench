@@ -137,6 +137,7 @@ export type PerformanceWorkspaceViewProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   loadIssue?: PerformanceWorkspaceLoadIssue | null;
   refreshStatus?: PerformanceWorkspaceRefreshStatus | null;
+  contextNotice?: { title: string; body: string } | null;
   mode: PerformanceWorkspaceMode;
   period: string;
   detailBasis: string;

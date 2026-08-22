@@ -2,6 +2,7 @@ import {
   MainWithSideRailLayout,
   Panel,
   WorkbenchRefreshStatus,
+  WorkbenchContextNotice,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
@@ -45,6 +46,7 @@ export default function PerformanceWorkspaceView({
   workspace,
   loadIssue,
   refreshStatus,
+  contextNotice,
   mode,
   period,
   detailBasis,
@@ -215,6 +217,12 @@ export default function PerformanceWorkspaceView({
                     className="performance-refresh-status"
                   />
                 )
+              ) : null}
+              {contextNotice ? (
+                <WorkbenchContextNotice
+                  title={contextNotice.title}
+                  body={contextNotice.body}
+                />
               ) : null}
               {controlNormalizationNotice ? (
                 <div

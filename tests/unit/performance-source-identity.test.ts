@@ -17,12 +17,10 @@ import {
 describe("performance source identity", () => {
   const identity = {
     portfolioId: "PF_1001",
-    asOfDate: "2026-02-24",
     period: "YTD",
-    reportingCurrency: "USD",
   };
 
-  it("accepts summary and detail payloads that confirm the complete requested identity", () => {
+  it("accepts summary and detail payloads that confirm supported request identity", () => {
     expect(
       isPerformanceSummarySourceCurrent(buildPerformanceWorkspaceSummary(), identity),
     ).toBe(true);
@@ -43,14 +41,7 @@ describe("performance source identity", () => {
         portfolio: { ...summary.portfolio, portfolio_id: "PF_OTHER" },
       }),
     ],
-    ["valuation date", (summary) => ({ ...summary, as_of_date: "2026-02-23" })],
-    [
-      "reporting currency",
-      (summary) => ({
-        ...summary,
-        portfolio: { ...summary.portfolio, base_currency: "EUR" },
-      }),
-    ],
+    ["period", (summary) => ({ ...summary, period: "3Y" })],
   ])("rejects a summary with stale %s identity", (_name, buildStaleSummary) => {
     expect(
       isPerformanceSummarySourceCurrent(
@@ -65,7 +56,6 @@ describe("performance source identity", () => {
     Partial<WorkbenchPerformanceWorkspaceDetails>,
   ]>([
     ["portfolio", { portfolio_id: "PF_OTHER" }],
-    ["valuation date", { as_of_date: "2026-02-23" }],
     ["period", { period: "3Y" }],
   ])("rejects analytical detail with stale %s identity", (_name, overrides) => {
     expect(
@@ -74,5 +64,27 @@ describe("performance source identity", () => {
         identity,
       ),
     ).toBe(false);
+  });
+
+  it("does not claim unsupported valuation-date or currency request identity", () => {
+    const summary = buildPerformanceWorkspaceSummary();
+    const details = buildPerformanceWorkspaceDetails();
+
+    expect(
+      isPerformanceSummarySourceCurrent(
+        {
+          ...summary,
+          as_of_date: "2026-02-23",
+          portfolio: { ...summary.portfolio, base_currency: "EUR" },
+        },
+        identity,
+      ),
+    ).toBe(true);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        { ...details, as_of_date: "2026-02-23" },
+        identity,
+      ),
+    ).toBe(true);
   });
 });

@@ -45,6 +45,7 @@ import {
   WorkspaceMenuNav,
   WorkbenchDeferredSection,
   WorkbenchChoiceGroup,
+  WorkbenchContextNotice,
   WorkbenchInlineRefreshNote,
   WorkbenchRefreshStatus,
   WorkbenchPageContainer,
@@ -69,6 +70,20 @@ import {
 } from "@/design-system";
 
 describe("design-system components", () => {
+  it("renders source-scope guidance as a compact labelled note", () => {
+    render(
+      <WorkbenchContextNotice
+        title="Performance source context"
+        body="Analytics use the source valuation date."
+      />,
+    );
+
+    expect(
+      screen.getByTestId("workbench-context-notice"),
+    ).toHaveAccessibleName("Performance source context");
+    expect(screen.getByText("Analytics use the source valuation date.")).toBeVisible();
+  });
+
   it("renders a keyboard-reachable business task directory with source posture", () => {
     render(
       <WorkbenchTaskDirectory
