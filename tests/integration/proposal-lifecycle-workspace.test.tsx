@@ -2250,7 +2250,9 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Loading proposal posture" }),
+      await screen.findByRole("heading", {
+        name: "Loading suitability reviews",
+      }),
     ).toBeInTheDocument();
 
     await act(async () => {
@@ -2260,7 +2262,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledWith("pev_001");
     });
     expect(
-      screen.getByRole("heading", { name: "Loading proposal posture" }),
+      screen.getByRole("heading", { name: "Loading suitability reviews" }),
     ).toBeInTheDocument();
 
     await act(async () => {
@@ -2275,11 +2277,13 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", {
-        name: /need attention|queue ready for review/i,
+      await screen.findAllByRole("heading", {
+        name: "Complete required approval review.",
       }),
+    ).not.toHaveLength(0);
+    expect(
+      screen.getByText("Gateway-backed suitability policy review"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Source current")).toBeInTheDocument();
   });
 
   it("keeps cached policy evidence visible while its source refreshes", async () => {
@@ -2322,14 +2326,14 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Refreshing proposal evidence",
+        name: "Refreshing suitability evidence",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Refreshing")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 4,
-        name: "PRP-RISK · ppv_001",
+        name: "PRP-RISK",
       }),
     ).toBeInTheDocument();
 
@@ -2344,11 +2348,13 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", {
-        name: /need attention|queue ready for review/i,
+      await screen.findAllByRole("heading", {
+        name: "Complete required approval review.",
       }),
+    ).not.toHaveLength(0);
+    expect(
+      screen.getByText("Gateway-backed suitability policy review"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Source current")).toBeInTheDocument();
   });
 
   it("keeps cached policy evidence visible but marks a failed refresh partial", async () => {
@@ -2379,23 +2385,23 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Supporting evidence is incomplete",
+        name: "Suitability evidence refresh failed",
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The latest supporting-evidence refresh did not complete.",
+        "The latest suitability evidence refresh did not complete.",
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The selected policy evidence could not be refreshed. The prior source package remains visible but is not confirmed current.",
+        "The prior evidence remains visible but is not confirmed current.",
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         level: 4,
-        name: "PRP-RISK · ppv_001",
+        name: "PRP-RISK",
       }),
     ).toBeInTheDocument();
   });
@@ -2516,11 +2522,13 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Supporting evidence is restricted",
+        name: "Suitability reviews are restricted",
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Policy review access is not available"),
+      screen.getByText(
+        "Your current role does not permit this portfolio's policy-review worklist to be viewed.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
@@ -2562,10 +2570,10 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.queryByRole("button", { name: "Request more evidence" }),
     ).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", {
-        name: "Supporting evidence is incomplete",
+      await screen.findAllByRole("heading", {
+        name: "Selected policy evidence is unconfirmed",
       }),
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
   });
 
   it("keeps a mismatched evaluation detail explicit and fail closed", async () => {
@@ -2597,10 +2605,10 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.queryByRole("button", { name: "Request more evidence" }),
     ).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", {
-        name: "Supporting evidence is incomplete",
+      await screen.findAllByRole("heading", {
+        name: "Selected policy evidence is unconfirmed",
       }),
-    ).toBeInTheDocument();
+    ).not.toHaveLength(0);
   });
 
   it("withholds review actions when required queue and detail identity is missing", async () => {
@@ -2848,15 +2856,28 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledWith("pev_001");
     });
 
+    expect(listProposalsMock).not.toHaveBeenCalled();
+
     expect(
       await screen.findByRole("heading", {
         level: 3,
-        name: "Policy evaluations needing review",
+        name: "Advisor decision worklist",
       }),
     ).toBeInTheDocument();
+    const policyCounts = screen.getByLabelText("Policy review counts");
+    expect(within(policyCounts).getByText("In review")).toBeInTheDocument();
+    expect(within(policyCounts).getByText("Need action")).toBeInTheDocument();
+    expect(within(policyCounts).getAllByText("1")).toHaveLength(2);
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 4, name: "PRP-RISK · ppv_001" }),
+      screen.getByRole("heading", { level: 4, name: "PRP-RISK" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open full proposal" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=suitability",
+    );
     expect(screen.getAllByText("Review required")).toHaveLength(3);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();
     expect(
@@ -2885,6 +2906,53 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.queryByText("DISCLOSURE_REQUIREMENT_OPEN"),
     ).not.toBeInTheDocument();
+  });
+
+  it("confirms a manual suitability refresh only after every selected source succeeds", async () => {
+    let resolveWorkflowRefresh:
+      ((value: AdvisoryPolicyWorkflowData) => void) | undefined;
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="suitability"
+      />,
+    );
+
+    const refreshButton = await screen.findByRole("button", {
+      name: "Refresh source evidence",
+    });
+    getAdvisoryPolicyWorkflowMock.mockImplementationOnce(
+      async () =>
+        await new Promise<AdvisoryPolicyWorkflowData>((resolve) => {
+          resolveWorkflowRefresh = resolve;
+        }),
+    );
+
+    refreshButton.focus();
+    fireEvent.click(refreshButton);
+
+    const refreshStatus = await screen.findByTestId("workbench-refresh-status");
+    expect(refreshStatus).toHaveAttribute("data-state", "pending");
+    expect(
+      within(refreshStatus).queryByText("Suitability evidence refreshed"),
+    ).not.toBeInTheDocument();
+    expect(getAdvisoryPolicyReviewQueueMock).toHaveBeenCalledTimes(2);
+    expect(getAdvisoryPolicyEvaluationMock).toHaveBeenCalledTimes(2);
+    expect(getAdvisoryPolicySignOffPackageMock).toHaveBeenCalledTimes(2);
+    expect(getAdvisoryPolicyWorkflowMock).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolveWorkflowRefresh?.(policyWorkflowFixture);
+    });
+
+    await waitFor(() =>
+      expect(refreshStatus).toHaveAttribute("data-state", "confirmed"),
+    );
+    expect(
+      within(refreshStatus).getByText("Suitability evidence refreshed"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(refreshButton).toHaveFocus());
   });
 
   it("keeps evidence and actions bound to the explicitly selected review", async () => {
@@ -2968,7 +3036,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     expect(
       await within(selectedReview).findByRole("heading", {
-        name: "PRP-INCOME · ppv_002",
+        name: "PRP-INCOME",
       }),
     ).toBeInTheDocument();
     expect(
@@ -2986,7 +3054,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     expect(
       within(selectedReview).getByRole("heading", {
-        name: "PRP-INCOME · ppv_002",
+        name: "PRP-INCOME",
       }),
     ).toBeInTheDocument();
     expect(
@@ -3118,7 +3186,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     expect(
       await within(selectedReview).findByRole("heading", {
-        name: "PRP-INCOME · ppv_002",
+        name: "PRP-INCOME",
       }),
     ).toBeInTheDocument();
 
@@ -3197,7 +3265,7 @@ describe("ProposalLifecycleWorkspace", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Policy review queue unavailable"),
+      screen.getByText("Suitability worklist unavailable"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
@@ -3452,7 +3520,9 @@ describe("ProposalLifecycleWorkspace", () => {
       await screen.findByRole("button", { name: "Refresh evidence" }),
     );
 
-    expect(await screen.findByText("Source refresh failed")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Source refresh failed"),
+    ).toBeInTheDocument();
     expect(
       await screen.findByText(
         "The latest supporting-evidence refresh did not complete.",
@@ -3542,7 +3612,9 @@ describe("ProposalLifecycleWorkspace", () => {
       await screen.findByText("No source-backed memo sections are available."),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("Advisor-use rationale is recorded for the selected version."),
+      screen.queryByText(
+        "Advisor-use rationale is recorded for the selected version.",
+      ),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Ready")).not.toBeInTheDocument();
     expect(screen.getAllByText("Restricted").length).toBeGreaterThan(0);
@@ -3613,7 +3685,8 @@ describe("ProposalLifecycleWorkspace", () => {
     policyCapability.state = "restricted";
     policyCapability.reason_code = "disclosure_policy_restricted";
     const hiddenPolicyText = restricted.data.narrative.disclosures[0]!.text;
-    const hiddenPolicyBlocker = restricted.data.narrative.client_ready_blockers[0]!;
+    const hiddenPolicyBlocker =
+      restricted.data.narrative.client_ready_blockers[0]!;
     const hiddenPolicyLimitation =
       restricted.data.narrative.limitations[0]!.message;
     getProposalDiscussionPackMock.mockResolvedValueOnce(restricted);
@@ -3628,9 +3701,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       await screen.findByText("Policy disclosure evidence unavailable"),
     ).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByText("Policy disclosure evidence unavailable"),
-    );
+    fireEvent.click(screen.getByText("Policy disclosure evidence unavailable"));
     expect(
       screen.getByText(
         "Policy text is withheld because source disclosure support is not available for this proposal version.",

@@ -5,6 +5,7 @@ import {
   buildPersistedProposalDraftWorkflowContext,
   buildProposalQueueWorkflowContext,
   buildSimulationProposalWorkflowContext,
+  buildSuitabilityReviewWorkflowContext,
 } from "@/features/proposals/proposal-workflow-context-view-model";
 
 const baseQueueInput = {
@@ -28,6 +29,66 @@ const baseQueueInput = {
 };
 
 describe("proposal workflow context view model", () => {
+  it("uses policy-review authority for suitability counts and recovery", () => {
+    const model = buildSuitabilityReviewWorkflowContext({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      isLoading: false,
+      isRefreshing: false,
+      permissionBlocked: false,
+      hasError: false,
+      hasRefreshFailure: true,
+      hasUnavailableEvidence: false,
+      totalCount: 3,
+      actionCount: 2,
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Suitability evidence refresh failed");
+    expect(model.facts).toEqual(
+      expect.arrayContaining([
+        { label: "In review", value: "3" },
+        { label: "Need action", value: "2" },
+      ]),
+    );
+    expect(model.blockers).toContain(
+      "The latest suitability evidence refresh did not complete.",
+    );
+    expect(model.sourceLabel).toBe("Gateway-backed suitability policy review");
+  });
+
+  it("fails closed when selected suitability evidence has an identity conflict", () => {
+    const model = buildSuitabilityReviewWorkflowContext({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      isLoading: false,
+      isRefreshing: false,
+      permissionBlocked: false,
+      hasError: false,
+      hasRefreshFailure: false,
+      hasUnavailableEvidence: true,
+      totalCount: 1,
+      actionCount: 1,
+      selectedEvidence: {
+        proposalId: "PRP-RISK",
+        title: "Selected policy evidence is unconfirmed",
+        summary: "The selected source identities do not agree.",
+        currentPosture: "Source identity conflict",
+        nextAction: "Recheck the selected policy identity.",
+        blockers: [
+          "Selected policy identity does not agree across source evidence.",
+        ],
+        facts: [{ label: "Proposal", value: "PRP-RISK" }],
+        sourceLabel: "Gateway-backed selected suitability evidence",
+        boundaryNote: "Source identities must agree.",
+        hasEvidenceGap: true,
+      },
+    });
+
+    expect(model.state).toBe("partial");
+    expect(model.title).toBe("Selected policy evidence is unconfirmed");
+    expect(model.currentPosture).toBe("Source identity conflict");
+    expect(model.nextAction).toContain("Recheck");
+  });
+
   it("keeps the shared shell neutral when no source record is supplied", () => {
     const model = buildNeutralProposalWorkflowContext({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -36,8 +97,12 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe("empty");
     expect(model.currentPosture).toBe("No proposal workflow is selected");
-    expect([model.title, model.summary, model.currentPosture, model.nextAction].join(" ")).not.toMatch(
-      /kyc (is )?(current|verified)|suitability (is )?complete|approved|client ready/i
+    expect(
+      [model.title, model.summary, model.currentPosture, model.nextAction].join(
+        " ",
+      ),
+    ).not.toMatch(
+      /kyc (is )?(current|verified)|suitability (is )?complete|approved|client ready/i,
     );
     expect(model.boundaryNote).toContain("No approval");
   });
@@ -50,7 +115,9 @@ describe("proposal workflow context view model", () => {
     expect(model.state).toBe("empty");
     expect(model.title).toBe("Draft not yet persisted");
     expect(model.sourceLabel).toBe("No persisted advisory workflow record");
-    expect(model.boundaryNote).toContain("Simulation does not imply suitability review");
+    expect(model.boundaryNote).toContain(
+      "Simulation does not imply suitability review",
+    );
   });
 
   it("publishes source-retained workflow identity only after draft persistence", () => {
@@ -61,9 +128,14 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe("ready");
     expect(model.title).toBe("Advisor draft saved");
-    expect(model.facts).toContainEqual({ label: "Proposal", value: "pp_test_001" });
+    expect(model.facts).toContainEqual({
+      label: "Proposal",
+      value: "pp_test_001",
+    });
     expect(model.currentPosture).toBe("Draft retained for review");
-    expect(model.boundaryNote).toContain("does not imply suitability completion");
+    expect(model.boundaryNote).toContain(
+      "does not imply suitability completion",
+    );
   });
 
   it.each([
@@ -102,13 +174,19 @@ describe("proposal workflow context view model", () => {
       input: {},
       expectedTitle: "1 need attention",
     },
-  ])("models $expectedState without fallback authority", ({ input, expectedState, expectedTitle }) => {
-    const model = buildProposalQueueWorkflowContext({ ...baseQueueInput, ...input });
+  ])(
+    "models $expectedState without fallback authority",
+    ({ input, expectedState, expectedTitle }) => {
+      const model = buildProposalQueueWorkflowContext({
+        ...baseQueueInput,
+        ...input,
+      });
 
-    expect(model.state).toBe(expectedState);
-    expect(model.title).toBe(expectedTitle);
-    expect(model.sourceLabel).toBe("Advisory proposal lifecycle");
-  });
+      expect(model.state).toBe(expectedState);
+      expect(model.title).toBe(expectedTitle);
+      expect(model.sourceLabel).toBe("Advisory proposal lifecycle");
+    },
+  );
 
   it("shows source counts and an explicit queue-level boundary", () => {
     const model = buildProposalQueueWorkflowContext(baseQueueInput);
@@ -117,7 +195,7 @@ describe("proposal workflow context view model", () => {
       expect.arrayContaining([
         { label: "In view", value: "2" },
         { label: "Need action", value: "1" },
-      ])
+      ]),
     );
     expect(model.blockers).toEqual(["1 proposal needs advisor action."]);
     expect(model.boundaryNote).toContain("queue-level posture");
@@ -147,7 +225,9 @@ describe("proposal workflow context view model", () => {
     expect(model.blockers).toEqual([
       "One or more supporting decision-evidence sources are unavailable.",
     ]);
-    expect(model.boundaryNote).toContain("do not establish complete queue posture");
+    expect(model.boundaryNote).toContain(
+      "do not establish complete queue posture",
+    );
   });
 
   it("keeps an empty first window partial while more proposals remain", () => {
@@ -162,7 +242,7 @@ describe("proposal workflow context view model", () => {
     expect(model.title).toBe("More proposals available");
     expect(model.nextAction).toContain("next proposals");
     expect(model.blockers).toContain(
-      "More proposals are available beyond this view."
+      "More proposals are available beyond this view.",
     );
   });
 
@@ -189,11 +269,13 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe("partial");
     expect(model.title).toBe("Proposal view is incomplete");
-    expect(model.blockers).toContain("The latest proposal view could not be confirmed.");
-    expect(model.nextAction).toContain("Retry the proposal view");
-    expect(`${model.title} ${model.nextAction} ${model.blockers.join(" ")}`).not.toMatch(
-      /suitability|policy-evidence/
+    expect(model.blockers).toContain(
+      "The latest proposal view could not be confirmed.",
     );
+    expect(model.nextAction).toContain("Retry the proposal view");
+    expect(
+      `${model.title} ${model.nextAction} ${model.blockers.join(" ")}`,
+    ).not.toMatch(/suitability|policy-evidence/);
   });
 
   it("keeps failed supporting-evidence refresh guidance specific to suitability", () => {
@@ -204,7 +286,9 @@ describe("proposal workflow context view model", () => {
 
     expect(model.state).toBe("partial");
     expect(model.title).toBe("Supporting evidence is incomplete");
-    expect(model.blockers).toContain("The latest supporting-evidence refresh did not complete.");
+    expect(model.blockers).toContain(
+      "The latest supporting-evidence refresh did not complete.",
+    );
     expect(model.nextAction).toContain("supporting-evidence refresh");
   });
 
@@ -273,9 +357,9 @@ describe("proposal workflow context view model", () => {
         "Active version",
       );
       expect(model.sourceLabel).toBe("Advisory proposal lifecycle");
-      expect(`${model.title} ${model.summary} ${model.currentPosture}`).not.toMatch(
-        /cached/i,
-      );
+      expect(
+        `${model.title} ${model.summary} ${model.currentPosture}`,
+      ).not.toMatch(/cached/i);
     },
   );
 });

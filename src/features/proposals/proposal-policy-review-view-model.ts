@@ -5,6 +5,7 @@ import type {
   AdvisoryPolicySignOffPackageData,
   AdvisoryPolicyWorkflowData,
 } from "./types";
+import { buildProposalDetailHref } from "./proposal-lifecycle-workspace-view-model";
 
 export type PolicyReviewQueueRow = {
   evaluationId: string;
@@ -77,7 +78,11 @@ export function resolvePolicyReviewSelection({
     return preferredEvaluationId;
   }
 
-  return rows[0]?.evaluationId ?? null;
+  return (
+    rows
+      .map((row) => row.evaluationId)
+      .sort((left, right) => left.localeCompare(right))[0] ?? null
+  );
 }
 
 export function buildPolicyReviewQueueModel({
@@ -94,10 +99,16 @@ export function buildPolicyReviewQueueModel({
     const sourceGaps = stringArray(record.source_gaps);
 
     return {
-      evaluationId: stringValue(record.evaluation_id, "Evaluation not reported"),
+      evaluationId: stringValue(
+        record.evaluation_id,
+        "Evaluation not reported",
+      ),
       portfolioId: stringValue(record.portfolio_id, "Portfolio not reported"),
       proposalId,
-      proposalVersion: stringValue(record.proposal_version_id, "Version not reported"),
+      proposalVersion: stringValue(
+        record.proposal_version_id,
+        "Version not reported",
+      ),
       sourceIdentityComplete: requiredIdentityPresent([
         record.evaluation_id,
         record.portfolio_id,
@@ -121,10 +132,13 @@ export function buildPolicyReviewQueueModel({
         consentRequirements,
       }),
       evidencePosture: evidencePosture(sourceGaps),
-      href: `/proposals/${encodeURIComponent(proposalId)}`,
+      href: buildProposalDetailHref({
+        proposalId,
+        portfolioId: stringValue(record.portfolio_id, ""),
+        fromMode: "suitability",
+      }),
     };
   });
-
   return {
     totalCount: rows.length,
     actionCount: rows.filter((row) => row.policyStatus !== "Ready").length,
@@ -189,26 +203,45 @@ export function buildPolicyEvaluationEvidenceModel({
 
   const sourceRefs = stringArray(evaluation.source_refs);
   const sourceGaps = stringArray(evaluation.source_gaps);
-  const ruleResults = recordArray(recordValue(evaluation.evaluation_json)?.rule_results);
+  const ruleResults = recordArray(
+    recordValue(evaluation.evaluation_json)?.rule_results,
+  );
   const packagePosture = recordValue(signOffPackage?.package_posture);
   const lineage = recordValue(signOffPackage?.lineage);
   const lineagePosture = recordValue(lineage?.lineage_posture);
   const auditEvents = recordArray(lineage?.audit_events);
   const approvalDependencies = stringArray(evaluation.approval_dependencies);
-  const disclosureRequirements = stringArray(evaluation.disclosure_requirements);
+  const disclosureRequirements = stringArray(
+    evaluation.disclosure_requirements,
+  );
   const consentRequirements = stringArray(evaluation.consent_requirements);
   const workflowBlockers = stringArray(workflow?.sign_off_blockers);
   const sourceEvaluationHash = stringValue(evaluation.evaluation_hash, "");
-  const evaluationId = stringValue(evaluation.evaluation_id, "Evaluation not reported");
-  const evaluationPortfolioId = stringValue(evaluation.portfolio_id, "Portfolio not reported");
-  const proposalId = stringValue(evaluation.proposal_id, "Proposal not reported");
-  const proposalVersion = stringValue(evaluation.proposal_version_id, "Version not reported");
+  const evaluationId = stringValue(
+    evaluation.evaluation_id,
+    "Evaluation not reported",
+  );
+  const evaluationPortfolioId = stringValue(
+    evaluation.portfolio_id,
+    "Portfolio not reported",
+  );
+  const proposalId = stringValue(
+    evaluation.proposal_id,
+    "Proposal not reported",
+  );
+  const proposalVersion = stringValue(
+    evaluation.proposal_version_id,
+    "Version not reported",
+  );
 
   return {
     evaluationId,
     proposalId,
     proposalVersion,
-    policyPack: policyLabel(evaluation.policy_pack_id, evaluation.policy_version),
+    policyPack: policyLabel(
+      evaluation.policy_pack_id,
+      evaluation.policy_version,
+    ),
     sourceIdentityAligned: sourceIdentityAligned({
       evaluationId,
       proposalId,
@@ -232,13 +265,24 @@ export function buildPolicyEvaluationEvidenceModel({
     sourceRefs: sourceRefs.map(friendlySourceRef).slice(0, 4),
     sourceGaps: sourceGaps.map(friendlyRequirement).slice(0, 4),
     ruleCount: ruleResults.length,
-    blockingRuleCount: ruleResults.filter((rule) => policyStatusTone(rule.status) === "danger").length,
-    approvalDependencies: approvalDependencies.map(friendlyRequirement).slice(0, 4),
-    disclosureRequirements: disclosureRequirements.map(friendlyRequirement).slice(0, 4),
-    consentRequirements: consentRequirements.map(friendlyRequirement).slice(0, 4),
+    blockingRuleCount: ruleResults.filter(
+      (rule) => policyStatusTone(rule.status) === "danger",
+    ).length,
+    approvalDependencies: approvalDependencies
+      .map(friendlyRequirement)
+      .slice(0, 4),
+    disclosureRequirements: disclosureRequirements
+      .map(friendlyRequirement)
+      .slice(0, 4),
+    consentRequirements: consentRequirements
+      .map(friendlyRequirement)
+      .slice(0, 4),
     auditEventCount: auditEvents.length,
     signOffPackagePosture: signOffPackagePosture(packagePosture),
-    clientPublicationPosture: clientPublicationPosture(packagePosture, lineagePosture),
+    clientPublicationPosture: clientPublicationPosture(
+      packagePosture,
+      lineagePosture,
+    ),
     workflowStatus: workflowStatusLabel(workflow?.sign_off_status),
     workflowTone: workflowStatusTone(workflow?.sign_off_status),
     makerCheckerPosture:
@@ -314,7 +358,7 @@ function sourceIdentityAligned({
 
 function requiredIdentityPresent(candidates: unknown[]): boolean {
   return candidates.every(
-    (candidate) => typeof candidate === "string" && candidate.trim().length > 0
+    (candidate) => typeof candidate === "string" && candidate.trim().length > 0,
   );
 }
 
@@ -323,7 +367,7 @@ function valuesAgree(expected: string, candidates: unknown[]): boolean {
     (candidate) =>
       candidate == null ||
       (typeof candidate === "string" &&
-        (!candidate.trim() || candidate.trim() === expected))
+        (!candidate.trim() || candidate.trim() === expected)),
   );
 }
 
@@ -343,7 +387,7 @@ function recordArray(value: unknown): Array<Record<string, unknown>> {
   }
   return value.filter(
     (item): item is Record<string, unknown> =>
-      Boolean(item) && typeof item === "object" && !Array.isArray(item)
+      Boolean(item) && typeof item === "object" && !Array.isArray(item),
   );
 }
 
@@ -351,11 +395,16 @@ function stringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
 }
 
 function policyLabel(policyPackId: unknown, policyVersion: unknown): string {
-  const pack = friendlyPhrase(stringValue(policyPackId, "Policy pack not reported"));
+  const pack = friendlyPhrase(
+    stringValue(policyPackId, "Policy pack not reported"),
+  );
   const version = stringValue(policyVersion, "");
   return version ? `${pack} / ${version}` : pack;
 }
@@ -390,7 +439,10 @@ function policyStatusTone(status: unknown): SemanticBadgeTone {
 }
 
 function signOffStatus(record: AdvisoryPolicyEvaluationRecord): string {
-  if (Array.isArray(record.sign_off_events_json) && record.sign_off_events_json.length > 0) {
+  if (
+    Array.isArray(record.sign_off_events_json) &&
+    record.sign_off_events_json.length > 0
+  ) {
     return "Sign-off recorded";
   }
   if (record.evaluation_status === "READY") {
@@ -399,8 +451,13 @@ function signOffStatus(record: AdvisoryPolicyEvaluationRecord): string {
   return "Sign-off pending";
 }
 
-function signOffTone(record: AdvisoryPolicyEvaluationRecord): SemanticBadgeTone {
-  if (Array.isArray(record.sign_off_events_json) && record.sign_off_events_json.length > 0) {
+function signOffTone(
+  record: AdvisoryPolicyEvaluationRecord,
+): SemanticBadgeTone {
+  if (
+    Array.isArray(record.sign_off_events_json) &&
+    record.sign_off_events_json.length > 0
+  ) {
     return "success";
   }
   return record.evaluation_status === "READY" ? "success" : "warn";
@@ -445,15 +502,31 @@ function requirementSummary({
   consentRequirements: string[];
 }): string {
   const parts = [
-    countPhrase(approvalDependencies.length, "approval dependency", "approval dependencies"),
-    countPhrase(disclosureRequirements.length, "disclosure review", "disclosure reviews"),
-    countPhrase(consentRequirements.length, "client consent", "client consents"),
+    countPhrase(
+      approvalDependencies.length,
+      "approval dependency",
+      "approval dependencies",
+    ),
+    countPhrase(
+      disclosureRequirements.length,
+      "disclosure review",
+      "disclosure reviews",
+    ),
+    countPhrase(
+      consentRequirements.length,
+      "client consent",
+      "client consents",
+    ),
   ].filter(Boolean);
 
   return parts.length > 0 ? parts.join(", ") : "No open requirements reported";
 }
 
-function countPhrase(count: number, singular: string, plural: string): string | null {
+function countPhrase(
+  count: number,
+  singular: string,
+  plural: string,
+): string | null {
   if (count === 0) {
     return null;
   }
@@ -496,7 +569,9 @@ function evidencePosture(sourceGaps: string[]): string {
   return `${sourceGaps.length} evidence ${sourceGaps.length === 1 ? "gap" : "gaps"}`;
 }
 
-function signOffPackagePosture(posture: Record<string, unknown> | null): string {
+function signOffPackagePosture(
+  posture: Record<string, unknown> | null,
+): string {
   const sourcePackage = stringValue(posture?.sign_off_source_package, "");
   if (sourcePackage.includes("SUPPORTED")) {
     return "Source package available";
@@ -506,25 +581,30 @@ function signOffPackagePosture(posture: Record<string, unknown> | null): string 
 
 function clientPublicationPosture(
   packagePosture: Record<string, unknown> | null,
-  lineagePosture: Record<string, unknown> | null
+  lineagePosture: Record<string, unknown> | null,
 ): string {
   const value =
     stringValue(packagePosture?.client_ready_publication, "") ||
     stringValue(lineagePosture?.client_ready_publication, "");
-  return value === "BLOCKED" ? "Client publication blocked" : "Client publication not supported";
+  return value === "BLOCKED"
+    ? "Client publication blocked"
+    : "Client publication not supported";
 }
 
 function slaPosture(posture: Record<string, unknown> | null): string {
   const status = stringValue(posture?.status, "");
-  const openCount = typeof posture?.open_requirement_count === "number"
-    ? posture.open_requirement_count
-    : null;
+  const openCount =
+    typeof posture?.open_requirement_count === "number"
+      ? posture.open_requirement_count
+      : null;
   const label = status === "OVERDUE" ? "SLA overdue" : "Within review SLA";
   return openCount === null ? label : `${label}, ${openCount} open`;
 }
 
 function friendlySourceRef(value: string): string {
-  return friendlyPhrase(value.replace(/^lotus-[^:]+:/, "").replace(/^lotus-/, ""));
+  return friendlyPhrase(
+    value.replace(/^lotus-[^:]+:/, "").replace(/^lotus-/, ""),
+  );
 }
 
 function friendlyRequirement(value: string): string {
@@ -542,7 +622,7 @@ function friendlyPhrase(value: string): string {
     .map((part) =>
       part.length <= 3
         ? part.toUpperCase()
-        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
     )
     .join(" ");
 }

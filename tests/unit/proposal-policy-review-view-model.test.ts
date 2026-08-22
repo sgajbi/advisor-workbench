@@ -20,7 +20,9 @@ describe("proposal policy review view model", () => {
           policy_version: "2026.05",
           evaluation_status: "PENDING_REVIEW",
           approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
-          disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+          disclosure_requirements: [
+            "advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+          ],
           consent_requirements: [],
           source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
         },
@@ -40,7 +42,7 @@ describe("proposal policy review view model", () => {
       openRequirements: "1 approval dependency, 1 disclosure review",
       evidencePosture: "1 evidence gap",
       nextAction: "Complete required approval review.",
-      href: "/proposals/PRP-SUITABILITY",
+      href: "/proposals/PRP-SUITABILITY?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=suitability",
     });
     expect(JSON.stringify(model)).not.toContain("PENDING_REVIEW");
     expect(JSON.stringify(model)).not.toContain("advisor_reviewed_disclosure");
@@ -56,7 +58,9 @@ describe("proposal policy review view model", () => {
           policy_pack_id: "GLOBAL_PRIVATE_BANKING_BASELINE",
           policy_version: "2026.05",
           evaluation_status: "READY",
-          sign_off_events_json: [{ event_type: "POLICY_EVALUATION_SIGN_OFF_RECORDED" }],
+          sign_off_events_json: [
+            { event_type: "POLICY_EVALUATION_SIGN_OFF_RECORDED" },
+          ],
         },
         {
           evaluation_id: "pev_blocked",
@@ -74,7 +78,9 @@ describe("proposal policy review view model", () => {
     expect(model.rows[0].policyStatus).toBe("Ready");
     expect(model.rows[0].signOffStatus).toBe("Sign-off recorded");
     expect(model.rows[1].policyStatus).toBe("Blocked");
-    expect(model.rows[1].nextAction).toBe("Resolve blocking policy evidence before advisor sign-off.");
+    expect(model.rows[1].nextAction).toBe(
+      "Resolve blocking policy evidence before advisor sign-off.",
+    );
   });
 
   it("preserves an explicit review selection across source reordering", () => {
@@ -86,8 +92,9 @@ describe("proposal policy review view model", () => {
     }).rows;
 
     expect(
-      resolvePolicyReviewSelection({ rows, preferredEvaluationId: "pev_001" })
+      resolvePolicyReviewSelection({ rows, preferredEvaluationId: "pev_001" }),
     ).toBe("pev_001");
+    expect(resolvePolicyReviewSelection({ rows })).toBe("pev_001");
   });
 
   it("falls back visibly to the first available review when a selected record leaves the queue", () => {
@@ -96,9 +103,17 @@ describe("proposal policy review view model", () => {
     }).rows;
 
     expect(
-      resolvePolicyReviewSelection({ rows, preferredEvaluationId: "pev_removed" })
+      resolvePolicyReviewSelection({
+        rows,
+        preferredEvaluationId: "pev_removed",
+      }),
     ).toBe("pev_002");
-    expect(resolvePolicyReviewSelection({ rows: [], preferredEvaluationId: "pev_002" })).toBeNull();
+    expect(
+      resolvePolicyReviewSelection({
+        rows: [],
+        preferredEvaluationId: "pev_002",
+      }),
+    ).toBeNull();
   });
 
   it("does not confirm an empty policy queue while its source is refreshing", () => {
@@ -108,7 +123,7 @@ describe("proposal policy review view model", () => {
         rowCount: 0,
         isRefreshing: true,
         hasRefreshFailure: false,
-      })
+      }),
     ).toMatchObject({
       kind: "loading",
       title: "Refreshing policy review queue",
@@ -127,7 +142,9 @@ describe("proposal policy review view model", () => {
       kind: "partial",
       title: "Policy review queue is unconfirmed",
     });
-    expect(presentation?.body).toContain("before concluding that no evaluations need review");
+    expect(presentation?.body).toContain(
+      "before concluding that no evaluations need review",
+    );
   });
 
   it("keeps a settled empty policy queue definitive", () => {
@@ -137,7 +154,7 @@ describe("proposal policy review view model", () => {
         rowCount: 0,
         isRefreshing: false,
         hasRefreshFailure: false,
-      })
+      }),
     ).toEqual({
       kind: "empty",
       title: "No policy evaluations need review",
@@ -151,14 +168,21 @@ describe("proposal policy review view model", () => {
         evaluation_id: "pev_001",
         evaluation_status: "PENDING_REVIEW",
         evaluation_hash: "sha256:policy-evaluation-1",
-        source_refs: ["lotus-core:core_product_eligibility_target_market_complexity"],
+        source_refs: [
+          "lotus-core:core_product_eligibility_target_market_complexity",
+        ],
         source_gaps: ["client_consent:SG_STRUCTURED_NOTE"],
         approval_dependencies: ["COMPLIANCE_REVIEW:SG_STRUCTURED_NOTE"],
-        disclosure_requirements: ["advisor_reviewed_disclosure:SG_STRUCTURED_NOTE"],
+        disclosure_requirements: [
+          "advisor_reviewed_disclosure:SG_STRUCTURED_NOTE",
+        ],
         consent_requirements: ["client_consent:SG_STRUCTURED_NOTE"],
         evaluation_json: {
           rule_results: [
-            { rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW", status: "PENDING_REVIEW" },
+            {
+              rule_id: "SG_COMPLEX_PRODUCT_DISCLOSURE_REVIEW",
+              status: "PENDING_REVIEW",
+            },
             { rule_id: "MANDATE_ALIGNMENT", status: "READY" },
           ],
         },

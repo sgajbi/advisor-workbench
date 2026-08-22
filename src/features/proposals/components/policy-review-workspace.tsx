@@ -1,13 +1,19 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { Alert, CircularProgress, Stack } from "@mui/material";
+import type { ReactNode, Ref } from "react";
 
 import {
   ActionButton,
   ScreenStatePanel,
   SemanticBadge,
+  SourceRefreshAction,
   Text,
+  WorkbenchDecisionWorkspace,
   WorkbenchRecordSelector,
+  WorkbenchRefreshStatus,
+  useSourceRefreshAction,
+  type SourceRefreshState,
 } from "@/design-system";
 
 import {
@@ -36,6 +42,7 @@ export default function PolicyReviewWorkspace({
   reviewRequestPending,
   reviewRequestSucceeded,
   reviewRequestFailed,
+  onRefresh,
   onRequestMoreEvidence,
 }: {
   portfolioId: string;
@@ -56,8 +63,25 @@ export default function PolicyReviewWorkspace({
   reviewRequestPending: boolean;
   reviewRequestSucceeded: boolean;
   reviewRequestFailed: boolean;
+  onRefresh: () => Promise<unknown>;
   onRequestMoreEvidence: () => void;
 }) {
+  const selectedReview =
+    model.rows.find((row) => row.evaluationId === selectedEvaluationId) ?? null;
+  const refreshIdentity = selectedReview
+    ? `${portfolioId}:${selectedReview.evaluationId}`
+    : `${portfolioId}:worklist`;
+  const {
+    actionRef: refreshActionRef,
+    refresh,
+    refreshState,
+    reset: resetRefresh,
+  } = useSourceRefreshAction({
+    identity: refreshIdentity,
+    isRefreshing: isRefreshing || evidenceRefreshing,
+    hasRefreshFailure: hasRefreshFailure || evidenceRefreshFailure,
+    onRefresh,
+  });
   const emptyPresentation = buildPolicyReviewQueueEmptyPresentation({
     portfolioId,
     rowCount: model.rows.length,
@@ -67,12 +91,13 @@ export default function PolicyReviewWorkspace({
 
   if (isLoading) {
     return (
-      <div className={styles.policyReviewPanel}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <CircularProgress size={16} />
-          <Text variant="body">Loading policy review queue...</Text>
-        </Stack>
-      </div>
+      <ScreenStatePanel
+        kind="loading"
+        title="Loading suitability reviews"
+        body="Retrieving the policy evaluations that require advisor review for this portfolio."
+        rows={5}
+        surface="default"
+      />
     );
   }
 
@@ -91,8 +116,18 @@ export default function PolicyReviewWorkspace({
     return (
       <ScreenStatePanel
         kind="error"
-        title="Policy review queue unavailable"
-        body="Suitability policy evaluations could not be loaded from the approved advisory workflow."
+        title="Suitability worklist unavailable"
+        body="Policy evaluations could not be confirmed through the approved advisory workflow. No fallback reviews are shown."
+        action={
+          <SourceRefreshAction
+            ref={refreshActionRef}
+            refreshScope={`suitability:${portfolioId}:worklist`}
+            idleLabel="Retry suitability worklist"
+            busyLabel="Retrying suitability worklist…"
+            isRefreshing={isRefreshing}
+            onRefresh={refresh}
+          />
+        }
         surface="default"
       />
     );
@@ -104,6 +139,18 @@ export default function PolicyReviewWorkspace({
         kind={emptyPresentation.kind}
         title={emptyPresentation.title}
         body={emptyPresentation.body}
+        action={
+          emptyPresentation.kind === "partial" ? (
+            <SourceRefreshAction
+              ref={refreshActionRef}
+              refreshScope={`suitability:${portfolioId}:empty-worklist`}
+              idleLabel="Retry suitability worklist"
+              busyLabel="Retrying suitability worklist…"
+              isRefreshing={isRefreshing}
+              onRefresh={refresh}
+            />
+          ) : undefined
+        }
         surface="default"
       />
     );
@@ -111,62 +158,102 @@ export default function PolicyReviewWorkspace({
 
   return (
     <div className={styles.policyReviewPanel}>
-      {isRefreshing ? (
-        <Alert severity="info" sx={{ mb: 1 }}>
-          Refreshing the policy review queue. Previously retrieved evaluations remain visible.
-        </Alert>
-      ) : null}
-      {hasRefreshFailure ? (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          The policy review queue could not be refreshed. Previously retrieved evaluations remain
-          visible while the source is rechecked.
-        </Alert>
-      ) : null}
       <div className={styles.policyReviewHeader}>
         <div>
           <Text variant="microLabel">Suitability Policy Queue</Text>
           <Text variant="subsectionTitle" as="h3">
-            Policy evaluations needing review
+            Advisor decision worklist
+          </Text>
+          <Text variant="secondary">
+            One source-backed queue for suitability evidence, control gaps and
+            the next review step.
           </Text>
         </div>
-        <div className={styles.policyReviewCounts} aria-label="Policy review counts">
-          <span>{model.totalCount}</span>
-          <strong>{model.actionCount} need action</strong>
+        <div
+          className={styles.policyReviewCounts}
+          aria-label="Policy review counts"
+        >
+          <div>
+            <span>{model.totalCount}</span>
+            <strong>In review</strong>
+          </div>
+          <div>
+            <span>{model.actionCount}</span>
+            <strong>Need action</strong>
+          </div>
         </div>
       </div>
-      <div className={styles.policyReviewWorkspace}>
-        <section className={styles.policyWorklist} aria-labelledby="policy-review-worklist-title">
-          <div className={styles.policyPaneHeader}>
-            <div>
-              <Text variant="microLabel">Review worklist</Text>
-              <Text variant="body" as="h4" id="policy-review-worklist-title">
-                Choose a proposal to review
-              </Text>
+
+      {refreshState ? (
+        <SuitabilityRefreshStatus
+          state={refreshState}
+          requestedContext={
+            selectedReview
+              ? `${selectedReview.proposalId} · ${selectedReview.proposalVersion}`
+              : portfolioId
+          }
+          confirmedContext={
+            evidenceModel?.sourceIdentityAligned && selectedReview
+              ? `${selectedReview.proposalId} · ${selectedReview.proposalVersion}`
+              : "Not confirmed"
+          }
+          onRetry={() => void refresh()}
+          retrying={isRefreshing || evidenceRefreshing}
+        />
+      ) : null}
+
+      <WorkbenchDecisionWorkspace
+        ariaLabel="Selected suitability review"
+        className={styles.policyReviewWorkspace}
+        worklistClassName={styles.policyWorklist}
+        decisionClassName={styles.policyDetail}
+        worklist={
+          <section aria-labelledby="policy-review-worklist-title">
+            <div className={styles.policyPaneHeader}>
+              <div>
+                <Text variant="microLabel">Priority worklist</Text>
+                <Text variant="body" as="h4" id="policy-review-worklist-title">
+                  Choose a policy evaluation
+                </Text>
+              </div>
+              <SourceRefreshAction
+                ref={refreshActionRef}
+                refreshScope={`suitability:${refreshIdentity}`}
+                idleLabel="Refresh source evidence"
+                busyLabel="Refreshing source evidence…"
+                isRefreshing={isRefreshing || evidenceRefreshing}
+                onRefresh={refresh}
+                priority="quiet"
+              />
             </div>
-            <Text variant="secondary">Arrow keys move between reviews.</Text>
-          </div>
-          <WorkbenchRecordSelector
-            ariaLabel="Suitability policy reviews"
-            className={styles.policyWorklistSelector}
-            selectedKey={selectedEvaluationId}
-            onSelectionChange={onSelectEvaluation}
-            items={model.rows.map((row) => ({
-              key: row.evaluationId,
-              title: row.proposalId,
-              subtitle: `${row.proposalVersion} · ${row.policyPack}`,
-              status: (
-                <SemanticBadge tone={row.policyStatusTone}>{row.policyStatus}</SemanticBadge>
-              ),
-              facts: [
-                { label: "Sign-off", value: row.signOffStatus },
-                { label: "Requirements", value: row.openRequirements },
-                { label: "Evidence", value: row.evidencePosture },
-              ],
-              nextAction: row.nextAction,
-            }))}
-          />
-        </section>
-        <section className={styles.policyDetail} aria-label="Selected suitability review">
+            <WorkbenchRecordSelector
+              ariaLabel="Suitability policy reviews"
+              className={styles.policyWorklistSelector}
+              selectedKey={selectedEvaluationId}
+              onSelectionChange={(evaluationId) => {
+                resetRefresh();
+                onSelectEvaluation(evaluationId);
+              }}
+              items={model.rows.map((row) => ({
+                key: row.evaluationId,
+                title: row.proposalId,
+                subtitle: `${row.proposalVersion} · ${row.policyPack}`,
+                status: (
+                  <SemanticBadge tone={row.policyStatusTone}>
+                    {row.policyStatus}
+                  </SemanticBadge>
+                ),
+                facts: [
+                  { label: "Sign-off", value: row.signOffStatus },
+                  { label: "Requirements", value: row.openRequirements },
+                  { label: "Evidence", value: row.evidencePosture },
+                ],
+                nextAction: row.nextAction,
+              }))}
+            />
+          </section>
+        }
+        decision={
           <PolicyEvaluationEvidenceSection
             isLoading={evidenceLoading}
             isRefreshing={evidenceRefreshing}
@@ -177,10 +264,13 @@ export default function PolicyReviewWorkspace({
             reviewRequestPending={reviewRequestPending}
             reviewRequestSucceeded={reviewRequestSucceeded}
             reviewRequestFailed={reviewRequestFailed}
+            proposalHref={selectedReview?.href ?? null}
+            onRefresh={refresh}
+            refreshActionRef={refreshActionRef}
             onRequestMoreEvidence={onRequestMoreEvidence}
           />
-        </section>
-      </div>
+        }
+      />
     </div>
   );
 }
@@ -195,6 +285,9 @@ function PolicyEvaluationEvidenceSection({
   reviewRequestPending,
   reviewRequestSucceeded,
   reviewRequestFailed,
+  proposalHref,
+  onRefresh,
+  refreshActionRef,
   onRequestMoreEvidence,
 }: {
   isLoading: boolean;
@@ -206,16 +299,20 @@ function PolicyEvaluationEvidenceSection({
   reviewRequestPending: boolean;
   reviewRequestSucceeded: boolean;
   reviewRequestFailed: boolean;
+  proposalHref: string | null;
+  onRefresh: () => Promise<unknown>;
+  refreshActionRef: Ref<HTMLButtonElement>;
   onRequestMoreEvidence: () => void;
 }) {
   if (isLoading) {
     return (
-      <div className={styles.policyEvidencePanel}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <CircularProgress size={16} />
-          <Text variant="body">Loading policy evidence...</Text>
-        </Stack>
-      </div>
+      <ScreenStatePanel
+        kind="loading"
+        title="Checking selected policy evidence"
+        body="Confirming the evaluation, sign-off package and workflow identity through Gateway."
+        rows={5}
+        surface="default"
+      />
     );
   }
 
@@ -236,6 +333,16 @@ function PolicyEvaluationEvidenceSection({
         kind="error"
         title="Policy evidence unavailable"
         body="Policy detail and sign-off package posture could not be loaded from the approved advisory workflow."
+        action={
+          <SourceRefreshAction
+            ref={refreshActionRef}
+            refreshScope="suitability:selected-evidence"
+            idleLabel="Retry selected evidence"
+            busyLabel="Retrying selected evidence…"
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh}
+          />
+        }
         surface="default"
       />
     );
@@ -249,6 +356,16 @@ function PolicyEvaluationEvidenceSection({
         kind="partial"
         title="Selected policy evidence is unconfirmed"
         body="The selected proposal and its supporting policy evidence do not agree. No review request is available until the source package is refreshed."
+        action={
+          <SourceRefreshAction
+            ref={refreshActionRef}
+            refreshScope="suitability:identity-check"
+            idleLabel="Recheck policy identity"
+            busyLabel="Rechecking policy identity…"
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh}
+          />
+        }
         surface="default"
       />
     );
@@ -256,28 +373,38 @@ function PolicyEvaluationEvidenceSection({
 
   return (
     <div className={styles.policyEvidencePanel}>
-      {isRefreshing ? (
-        <Alert severity="info" sx={{ mb: 1 }}>
-          Refreshing the selected policy evidence. The prior source package remains visible during
-          this check.
-        </Alert>
-      ) : null}
-      {hasRefreshFailure ? (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          The selected policy evidence could not be refreshed. The prior source package remains
-          visible but is not confirmed current.
-        </Alert>
-      ) : null}
       <div className={styles.policyEvidenceHeader}>
         <div>
           <Text variant="microLabel">Selected suitability review</Text>
           <Text variant="subsectionTitle" as="h4">
-            {model.proposalId} · {model.proposalVersion}
+            {model.proposalId}
           </Text>
-          <Text variant="secondary">{model.policyPack}</Text>
+          <Text variant="secondary">
+            {model.proposalVersion} · {model.policyPack}
+          </Text>
         </div>
-        <Link href={`/proposals/${encodeURIComponent(model.proposalId)}`}>Open proposal</Link>
+        {proposalHref ? (
+          <Link href={proposalHref}>Open full proposal</Link>
+        ) : null}
       </div>
+      {hasRefreshFailure ? (
+        <div className={styles.refreshException} role="alert">
+          <div>
+            <Text variant="microLabel">Source exception</Text>
+            <Text variant="body">
+              The prior evidence remains visible but is not confirmed current.
+            </Text>
+          </div>
+          <SourceRefreshAction
+            ref={refreshActionRef}
+            refreshScope={`suitability:${model.evaluationId}:retry`}
+            idleLabel="Retry evidence refresh"
+            busyLabel="Retrying evidence refresh…"
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh}
+          />
+        </div>
+      ) : null}
       <div className={styles.policyDecisionBrief}>
         <div>
           <Text variant="microLabel">Required next step</Text>
@@ -285,62 +412,158 @@ function PolicyEvaluationEvidenceSection({
             {model.nextAction}
           </Text>
         </div>
-        <SemanticBadge tone={model.policyStatusTone}>{model.policyStatus}</SemanticBadge>
+        <SemanticBadge tone={model.policyStatusTone}>
+          {model.policyStatus}
+        </SemanticBadge>
       </div>
       <div className={styles.policyEvidenceGrid}>
-        <EvidenceMetric label="Source evidence">{model.sourcePosture}</EvidenceMetric>
-        <EvidenceMetric label="Blocking rules">{model.blockingRuleCount} blocking</EvidenceMetric>
-        <EvidenceMetric label="Sign-off package">{model.signOffPackagePosture}</EvidenceMetric>
+        <EvidenceMetric label="Source evidence">
+          {model.sourcePosture}
+        </EvidenceMetric>
+        <EvidenceMetric label="Blocking rules">
+          {model.blockingRuleCount} blocking
+        </EvidenceMetric>
+        <EvidenceMetric label="Sign-off package">
+          {model.signOffPackagePosture}
+        </EvidenceMetric>
         <EvidenceMetric label="Review SLA">{model.slaPosture}</EvidenceMetric>
       </div>
       <div className={styles.policyControlGrid}>
         <EvidenceMetric label="Workflow status">
-          <SemanticBadge tone={model.workflowTone}>{model.workflowStatus}</SemanticBadge>
+          <SemanticBadge tone={model.workflowTone}>
+            {model.workflowStatus}
+          </SemanticBadge>
         </EvidenceMetric>
-        <EvidenceMetric label="Maker-checker">{model.makerCheckerPosture}</EvidenceMetric>
-        <EvidenceMetric label="Client publication">{model.clientPublicationPosture}</EvidenceMetric>
-        <EvidenceMetric label="Rule results">{model.ruleCount} reviewed</EvidenceMetric>
+        <EvidenceMetric label="Maker-checker">
+          {model.makerCheckerPosture}
+        </EvidenceMetric>
+        <EvidenceMetric label="Client publication">
+          {model.clientPublicationPosture}
+        </EvidenceMetric>
+        <EvidenceMetric label="Rule results">
+          {model.ruleCount} reviewed
+        </EvidenceMetric>
       </div>
       <details className={styles.policyEvidenceDisclosure}>
         <summary>
           <span>
             <Text variant="microLabel">Supporting evidence</Text>
-            <Text variant="body">Dependencies, source references and outstanding gaps</Text>
+            <Text variant="body">
+              Dependencies, source references and outstanding gaps
+            </Text>
           </span>
           <span>Show detail</span>
         </summary>
         <div className={styles.policyEvidenceColumns}>
-          <EvidenceList title="Approval dependencies" values={model.approvalDependencies} />
-          <EvidenceList title="Disclosure reviews" values={model.disclosureRequirements} />
-          <EvidenceList title="Client consent evidence" values={model.consentRequirements} />
-          <EvidenceList title="Sign-off blockers" values={model.workflowBlockers} />
+          <EvidenceList
+            title="Approval dependencies"
+            values={model.approvalDependencies}
+          />
+          <EvidenceList
+            title="Disclosure reviews"
+            values={model.disclosureRequirements}
+          />
+          <EvidenceList
+            title="Client consent evidence"
+            values={model.consentRequirements}
+          />
+          <EvidenceList
+            title="Sign-off blockers"
+            values={model.workflowBlockers}
+          />
           <EvidenceList title="Source references" values={model.sourceRefs} />
           <EvidenceList title="Source gaps" values={model.sourceGaps} />
         </div>
       </details>
       <div className={styles.policyEvidenceActions}>
         <ActionButton
-          priority="secondary"
+          priority="primary"
           onClick={onRequestMoreEvidence}
           disabled={
-            reviewRequestPending || !model.sourceIdentityAligned || !model.sourceEvaluationHash
+            reviewRequestPending ||
+            !model.sourceIdentityAligned ||
+            !model.sourceEvaluationHash
           }
         >
-          {reviewRequestPending ? "Recording request..." : "Request more evidence"}
+          {reviewRequestPending
+            ? "Recording request..."
+            : "Request more evidence"}
         </ActionButton>
-        <Text variant="secondary">
+        <p
+          className={styles.actionStatus}
+          role={reviewRequestFailed ? "alert" : "status"}
+          aria-live={reviewRequestFailed ? "assertive" : "polite"}
+        >
           {reviewRequestSucceeded
             ? "Evidence review request recorded through the advisory policy workflow."
             : reviewRequestFailed
               ? "Evidence review request could not be recorded from the advisory policy workflow."
               : "Records a review request only; it does not approve sign-off or client publication."}
-        </Text>
+        </p>
       </div>
     </div>
   );
 }
 
-function EvidenceMetric({ label, children }: { label: string; children: ReactNode }) {
+function SuitabilityRefreshStatus({
+  state,
+  requestedContext,
+  confirmedContext,
+  onRetry,
+  retrying,
+}: {
+  state: SourceRefreshState;
+  requestedContext: string;
+  confirmedContext: string;
+  onRetry: () => void;
+  retrying: boolean;
+}) {
+  if (state === "confirmed") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="confirmed"
+        eyebrow="Source confirmed"
+        title="Suitability evidence refreshed"
+        confirmedContext={confirmedContext}
+      />
+    );
+  }
+
+  if (state === "pending") {
+    return (
+      <WorkbenchRefreshStatus
+        kind="pending"
+        eyebrow="Source refresh"
+        title="Refreshing suitability evidence"
+        message="The existing worklist remains visible while Gateway confirms the selected policy package."
+        requestedContext={requestedContext}
+        confirmedContext={confirmedContext}
+      />
+    );
+  }
+
+  return (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Source exception"
+      title="Suitability evidence refresh failed"
+      message="The latest policy package could not be confirmed. Earlier evidence remains visible and is marked unconfirmed."
+      requestedContext={requestedContext}
+      confirmedContext={confirmedContext}
+      onRetry={onRetry}
+      retrying={retrying}
+      retryLabel="Retry suitability evidence"
+    />
+  );
+}
+
+function EvidenceMetric({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <div className={styles.policyEvidenceMetric}>
       <Text variant="microLabel">{label}</Text>
@@ -357,8 +580,8 @@ function EvidenceList({ title, values }: { title: string; values: string[] }) {
         <Text variant="secondary">None reported</Text>
       ) : (
         <ul>
-          {values.map((value) => (
-            <li key={value}>{value}</li>
+          {values.map((value, index) => (
+            <li key={`${value}:${index}`}>{value}</li>
           ))}
         </ul>
       )}

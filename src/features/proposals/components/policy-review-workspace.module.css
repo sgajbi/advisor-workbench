@@ -1,17 +1,15 @@
 .policyReviewPanel {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
   margin-bottom: 12px;
-  padding: 14px 16px;
+  min-width: 0;
 }
 
 .policyReviewHeader {
-  align-items: flex-start;
+  align-items: flex-end;
   display: flex;
   gap: 16px;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding: 0 2px;
 }
 
 .policyReviewHeader h3 {
@@ -19,13 +17,16 @@
 }
 
 .policyReviewCounts {
-  border: 1px solid var(--border);
-  border-left: 4px solid #765a17;
-  border-radius: 8px;
-  background: #fffdf7;
-  min-width: 132px;
-  padding: 10px 12px;
-  text-align: right;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(88px, 1fr));
+  min-width: 210px;
+}
+
+.policyReviewCounts > div {
+  border-left: 1px solid var(--border);
+  display: grid;
+  gap: 4px;
+  padding: 2px 14px;
 }
 
 .policyReviewCounts span,
@@ -35,24 +36,21 @@
 
 .policyReviewCounts span {
   color: var(--text);
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
   line-height: 1;
 }
 
 .policyReviewCounts strong {
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   letter-spacing: 0.04em;
-  margin-top: 6px;
   text-transform: uppercase;
 }
 
 .policyReviewWorkspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
+  margin-top: 12px;
 }
 
 .policyWorklist,
@@ -61,19 +59,23 @@
 }
 
 .policyWorklist {
-  display: grid;
-  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden;
 }
 
 .policyWorklistSelector {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  border-top: 1px solid var(--border);
 }
 
 .policyPaneHeader {
+  align-items: center;
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
   gap: 10px;
+  min-height: 64px;
+  padding: 10px 12px;
 }
 
 .policyPaneHeader h4 {
@@ -81,10 +83,11 @@
 }
 
 .policyDetail {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel-alt);
-  padding: 14px;
+  border-color: color-mix(in srgb, var(--border) 82%, var(--text));
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgb(15 23 42 / 8%);
+  padding: 18px;
 }
 
 .policyEvidencePanel {
@@ -110,14 +113,26 @@
   text-underline-offset: 3px;
 }
 
+.refreshException {
+  align-items: center;
+  background: color-mix(in srgb, #b45309 7%, var(--panel));
+  border-block: 1px solid color-mix(in srgb, #b45309 30%, var(--border));
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin: 14px -18px 0;
+  padding: 10px 18px;
+}
+
 .policyDecisionBrief {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--brand-highlight) 42%, var(--border));
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid
+    color-mix(in srgb, var(--brand-highlight) 42%, var(--border));
   border-left: 4px solid var(--brand-highlight);
   border-radius: 8px;
   background: var(--panel);
@@ -132,15 +147,14 @@
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .policyEvidenceMetric,
 .policyEvidenceList {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel-alt);
-  padding: 10px 12px;
+  border-left: 2px solid var(--border);
+  min-width: 0;
+  padding: 6px 10px;
 }
 
 .policyEvidenceColumns {
@@ -214,12 +228,20 @@
   align-items: center;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fbfcfd;
+  background: var(--panel-alt);
   display: flex;
   gap: 12px;
   justify-content: space-between;
   margin-top: 8px;
   padding: 10px 12px;
+}
+
+.actionStatus {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 54ch;
 }
 
 @media (max-width: 1100px) {
@@ -234,13 +256,13 @@
   .policyPaneHeader,
   .policyEvidenceHeader,
   .policyDecisionBrief,
-  .policyEvidenceActions {
+  .policyEvidenceActions,
+  .refreshException {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .policyReviewCounts {
-    text-align: left;
     width: 100%;
   }
 
