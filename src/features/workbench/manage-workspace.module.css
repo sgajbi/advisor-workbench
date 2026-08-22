@@ -3953,6 +3953,21 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .manageScope :global(.manage-decision-readiness-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manageScope :global(.manage-portfolio-value-band) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .manageScope :global(.manage-portfolio-value-band dl) {
+    width: 100%;
+    gap: 24px;
+  }
+
   .manageScope :global(.portfolio-memory-detail-snapshot) {
     padding-left: 0;
     border-left: 0;
@@ -3968,14 +3983,45 @@
 }
 
 @media (max-width: 720px) {
+  .manageScope :global(.workbench-page-container) {
+    padding: 12px;
+  }
+
   .manageScope :global(.mandate-health-summary-grid),
   .manageScope :global(.mandate-review-facts),
-  .manageScope :global(.mandate-technical-evidence dl > div) {
+  .manageScope :global(.mandate-technical-evidence dl > div),
+  .manageScope :global(.manage-decision-readiness-grid),
+  .manageScope :global(.manage-portfolio-value-band dl),
+  .manageScope :global(.manage-rebalance-evidence > div) {
     grid-template-columns: 1fr;
   }
 
   .manageScope :global(.mandate-health-card),
   .manageScope :global(.mandate-review-detail-body) {
     padding: 14px;
+  }
+
+  .manageScope :global(.manage-portfolio-value-band) {
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .manageScope :global(.manage-portfolio-value-band dl) {
+    gap: 14px;
+  }
+
+  .manageScope :global(.manage-portfolio-value-band strong) {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .manageScope :global(.manage-overview-card-header) {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+
+  .manageScope :global(.manage-rebalance-evidence > div) {
+    gap: 4px;
+    padding: 11px 14px;
   }
 }
