@@ -4,6 +4,7 @@ import {
   fetchWorkbenchResource,
   observeWorkbenchMutation,
   observeWorkbenchResource,
+  type WorkbenchRequestTarget,
 } from "@/features/workbench/api-client";
 import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
 import {
@@ -122,7 +123,7 @@ export async function getDpmCommandCenterExceptions(params?: {
   severity?: string;
   limit?: number;
   cursor?: string;
-}): Promise<DpmCommandCenterGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCommandCenterGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const query = new URLSearchParams();
   query.set("tenant_id", params?.tenantId ?? dpmContext.commandCenterTenantId);
@@ -153,7 +154,7 @@ export async function getDpmCommandCenterExceptions(params?: {
     "dpm.command-center.exceptions.list",
     async () =>
       await fetchWorkbenchResource<DpmCommandCenterGatewayResponse>(
-        "server",
+        target,
         "/dpm/command-center/exceptions",
         "DPM command-center exceptions",
         query

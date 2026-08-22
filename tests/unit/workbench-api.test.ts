@@ -1839,6 +1839,17 @@ describe("workbench api", () => {
       state: "ACTIVE",
       limit: 25,
     });
+    await getDpmCommandCenterExceptions(
+      {
+        tenantId: "default",
+        portfolioManagerId: "PM_SG_DPM_001",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        state: "ACTIVE",
+        limit: 25,
+        cursor: "exception-window-2",
+      },
+      "client"
+    );
     await getDpmMandateByPortfolio("PB_SG_GLOBAL_BAL_001");
     await getDpmMandateHealth("MANDATE_PB_SG_GLOBAL_BAL_001");
 
@@ -1847,9 +1858,12 @@ describe("workbench api", () => {
       "/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PB_SG_GLOBAL_BAL_001&state=ACTIVE"
     );
     expect(fetchMock.mock.calls[1][0]).toBe(
-      `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001`
+      "/api/bff/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PB_SG_GLOBAL_BAL_001&state=ACTIVE&cursor=exception-window-2"
     );
     expect(fetchMock.mock.calls[2][0]).toBe(
+      `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/by-portfolio/PB_SG_GLOBAL_BAL_001`
+    );
+    expect(fetchMock.mock.calls[3][0]).toBe(
       `${resolveGatewayBaseUrl()}/api/v1/dpm/command-center/mandates/MANDATE_PB_SG_GLOBAL_BAL_001/health`
     );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
