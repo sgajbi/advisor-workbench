@@ -1,6 +1,5 @@
 import type { SemanticBadgeTone } from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
-import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import {
   clampMandateHealthPercent,
@@ -21,8 +20,8 @@ import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-revie
 import { buildPortfolioMemoryPanelModel } from "@/features/workbench/portfolio-memory-view-model";
 
 type CommandModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
-type WaveModel = ReturnType<typeof buildDpmWaveCommandCenterModel>;
 type ReviewModel = ReturnType<typeof buildOutcomeReviewPanelModel>;
+type PortfolioWaveOverview = ReturnType<typeof buildPortfolioWaveOverview>;
 export type ManageOverviewModel = ReturnType<typeof buildManageOverviewModel>;
 
 export function buildManageOverviewModel(data: ManageWorkspaceData) {
@@ -34,7 +33,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
-  const waveModel = buildDpmWaveCommandCenterModel({ waveList: data.waves });
+  const portfolioWave = buildPortfolioWaveOverview(data.waves?.data, portfolioId);
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = filterManageExceptionRowsForMandate(
@@ -45,7 +44,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const activeExceptionCount = hasCompleteExceptionEvidence ? exceptionRows.length : null;
   const latestActivities = buildManageActivityRows(
     commandModel,
-    waveModel,
+    portfolioWave,
     reviewModel,
     activeExceptionCount
   );
@@ -76,7 +75,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const mandateHealthState = commandModel.mandateHealthState;
   const mandateTone = toneForState(mandateHealthState);
   const dataTone = toneForState(commandModel.dataCompletenessState);
-  const rebalanceTone = toneForState(waveModel.selectedWaveState);
+  const rebalanceTone = toneForState(portfolioWave.state);
   const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
   const hasActiveAttention = activeExceptionCount !== null && activeExceptionCount > 0;
 
@@ -87,7 +86,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       marketValue: formatAmount(portfolio.overview.market_value_base),
       cashWeight: formatPct(portfolio.overview.cash_weight_pct),
       positionCount: portfolio.overview.position_count,
-      riskProfile: riskProfile ?? "Not reported",
+      riskProfile: riskProfile ? businessStateLabel(riskProfile) : "Not reported",
     },
     postureCards: [
       {
@@ -110,7 +109,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       {
         key: "rebalance",
         label: "Rebalance Status",
-        value: businessStateLabel(waveModel.selectedWaveState),
+        value: businessStateLabel(portfolioWave.state),
         icon: rebalanceTone === "success" ? "check_circle" : "pending",
         tone:
           rebalanceTone === "danger" ? "danger" : rebalanceTone === "success" ? "success" : "warn",
@@ -135,11 +134,11 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
     exceptionRows,
     hasCompleteExceptionEvidence,
     activeRebalance: {
-      triggerType: waveModel.summaryRows[0]?.triggerType,
-      state: waveModel.selectedWaveState,
-      supportabilityState: waveModel.supportabilityState,
-      issueCount: waveModel.selectedWaveIssueCount,
-      supportabilityReason: waveModel.selectedWaveSupportabilityReason,
+      triggerType: portfolioWave.triggerType,
+      state: portfolioWave.state,
+      supportabilityState: portfolioWave.supportabilityState,
+      issueCount: portfolioWave.issueCount,
+      supportabilityReason: portfolioWave.supportabilityReason,
     },
     moduleItems: [
       {
@@ -157,7 +156,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         key: "waves",
         title: "Rebalance Waves",
         description: "Review proposed changes, readiness, and source-reported issues.",
-        metric: businessStateLabel(waveModel.selectedWaveState),
+        metric: businessStateLabel(portfolioWave.state),
         href: buildManageModeHref(portfolioId, "waves"),
         actionLabel: "Open rebalance waves",
       },
@@ -191,7 +190,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         key: "reviews",
         title: "Outcome Reviews",
         description: "Assess post-decision outcomes and required follow-up.",
-        metric: `${reviewModel.items.length} reviews`,
+        metric: formatRecordCount(reviewModel.items.length, "review", "reviews"),
         href: buildManageModeHref(portfolioId, "reviews"),
         actionLabel: "Open outcome reviews",
       },
@@ -219,7 +218,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
 
 function buildManageActivityRows(
   commandModel: CommandModel,
-  waveModel: WaveModel,
+  portfolioWave: PortfolioWaveOverview,
   reviewModel: ReviewModel,
   activeExceptionCount: number | null
 ) {
@@ -234,11 +233,11 @@ function buildManageActivityRows(
               : `Daily mandate review completed with ${activeExceptionCount} attention items.`,
         }
       : null,
-    waveModel.selectedWaveId
+    portfolioWave.waveId
       ? {
           key: "wave",
-          time: businessStateLabel(waveModel.selectedWaveState),
-          event: `${waveModel.selectedWaveItemCount} proposed rebalance changes prepared for review.`,
+          time: businessStateLabel(portfolioWave.state),
+          event: `${portfolioWave.itemCount} proposed rebalance changes prepared for review.`,
         }
       : null,
     reviewModel.items[0]
@@ -280,4 +279,100 @@ function formatPct(value: number | null | undefined): string {
 
 function formatEvidenceRecordCount(count: number): string {
   return `${count} evidence ${count === 1 ? "record" : "records"}`;
+}
+
+function buildPortfolioWaveOverview(data: unknown, portfolioId: string) {
+  const items = readRecordArray(asRecord(data)?.items);
+  const wave = items.find((item) => waveIncludesPortfolio(item, portfolioId));
+
+  if (!wave) {
+    return {
+      waveId: null,
+      state: "N/A",
+      triggerType: null,
+      itemCount: "N/A",
+      issueCount: "N/A",
+      supportabilityState: "N/A",
+      supportabilityReason: "SELECTED_PORTFOLIO_WAVE_NOT_CONFIRMED",
+    };
+  }
+
+  const aggregateMetrics = asRecord(wave.aggregate_metrics);
+  return {
+    waveId: readRecordString(wave, "wave_id"),
+    state:
+      readRecordString(wave, "wave_state") ??
+      readRecordString(wave, "state") ??
+      "N/A",
+    triggerType: readRecordString(wave, "trigger_type"),
+    itemCount: formatRecordValue(
+      wave.item_count ?? aggregateMetrics?.item_count,
+    ),
+    issueCount: formatRecordValue(
+      wave.issue_count ?? aggregateMetrics?.issue_count,
+    ),
+    supportabilityState:
+      readRecordString(wave, "supportability_state") ?? "N/A",
+    supportabilityReason:
+      readRecordString(wave, "supportability_reason") ?? "N/A",
+  };
+}
+
+function waveIncludesPortfolio(
+  wave: Record<string, unknown>,
+  portfolioId: string,
+): boolean {
+  if (readRecordString(wave, "portfolio_id") === portfolioId) {
+    return true;
+  }
+
+  const portfolioIds = [
+    ...readStringArray(wave.portfolio_ids),
+    ...readStringArray(asRecord(wave.portfolio_scope)?.portfolio_ids),
+  ];
+  return portfolioIds.includes(portfolioId);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readRecordArray(value: unknown): Record<string, unknown>[] {
+  return Array.isArray(value)
+    ? value
+        .map(asRecord)
+        .filter((item): item is Record<string, unknown> => item !== null)
+    : [];
+}
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter(
+        (item): item is string => typeof item === "string" && item.trim() !== "",
+      )
+    : [];
+}
+
+function readRecordString(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
+  const value = record[key];
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+}
+
+function formatRecordValue(value: unknown): string {
+  return typeof value === "number" || typeof value === "string"
+    ? String(value)
+    : "N/A";
+}
+
+function formatRecordCount(
+  count: number,
+  singular: string,
+  plural: string,
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
 }

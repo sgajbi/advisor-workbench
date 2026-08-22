@@ -238,10 +238,13 @@ export function buildManageWorkspaceData(
         items: [
           {
             wave_id: "wave_001",
+            portfolio_ids: ["PF_1001"],
             state: "READY",
             trigger_type: "EXPLICIT_PORTFOLIO_LIST",
             item_count: 4,
             issue_count: 0,
+            supportability_state: "SUPPORTED",
+            supportability_reason: "WAVE_READY",
           },
         ],
       },

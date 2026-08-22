@@ -76,7 +76,8 @@ handing the user to a focused Manage mode.
 - Provides a compact attention worklist with business severity, observation, owner, age, and the
   source-supported next step.
 - Keeps active rebalance stage, source readiness, issue count, and support note distinct from order,
-  execution, and settlement posture.
+  execution, and settlement posture, and presents them only when the wave contract explicitly
+  includes the selected portfolio.
 - Provides one reusable, keyboard-accessible business-task directory for Mandate Health, Rebalance
   Waves, Construction Alternatives, Portfolio Memory, PM Operating Quality, Outcome Reviews, and
   Evidence Pack.
@@ -123,6 +124,7 @@ remains in [API Surface](API-Surface), and ownership flow remains in
 | Attention evidence unavailable | No zero-attention conclusion; the worklist explains the missing evidence | Re-establish the source response or follow the support path |
 | Empty attention worklist | Source-confirmed statement that the current window has no active items | Continue the review without inferring enterprise-wide absence |
 | Missing risk profile | **Not reported** plus a named incomplete surface | Review the Manage mandate source; do not assume a balanced profile |
+| No portfolio-scoped wave | **Not available**, **Wave: Not reported**, and no borrowed item or issue count | Open Rebalance Waves for the broader source worklist; do not infer membership from an identifier |
 | Portfolio unavailable | Manage workspace unavailable state with supported Portfolio or Performance handoff | Confirm the portfolio context, then follow the approved support process |
 | Permission blocked | The owning source request fails closed; restricted evidence is not rendered as current | Use an entitled role or approved support path |
 
@@ -138,6 +140,8 @@ Manage Overview deliberately does not:
 - default a missing mandate risk profile to **Balanced** or convert absent evidence into a positive
   state,
 - claim construction alternatives are available before the governed generation action succeeds,
+- infer selected-portfolio wave membership from a wave id, trigger id, list position, or another
+  unstructured identifier,
 - turn a low exception count or positive badge into mandate compliance, suitability, approval,
   supervisory sign-off, investment recommendation, or client-readiness authority,
 - claim book, team, household, or enterprise-wide totals from a selected-portfolio source window,
@@ -162,8 +166,9 @@ unsupported capability, and this guide is not a claim of competitor superiority.
 ## Evidence And Validation
 
 - `tests/unit/manage-overview-model.test.ts` proves missing risk profile, complete zero-attention
-  posture, active-attention hierarchy, source-unavailable posture, generated-on-request copy,
-  business record grammar, and portfolio-preserving task routes.
+  posture, active-attention hierarchy, source-unavailable posture, explicit portfolio-to-wave
+  membership, rejection of an unscoped first wave, generated-on-request copy, business record
+  grammar, and portfolio-preserving task routes.
 - `tests/unit/manage-workspace-components.test.tsx` proves the attention worklist, named scroll
   region, business task directory, recent activity, incomplete-evidence state, and absence of a
   fabricated alternatives-available claim.

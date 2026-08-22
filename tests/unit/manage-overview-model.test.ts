@@ -72,6 +72,10 @@ describe("manage overview model", () => {
           metric: "Generated on request",
           actionLabel: "Open construction",
         }),
+        expect.objectContaining({
+          key: "reviews",
+          metric: "1 review",
+        }),
       ])
     );
   });
@@ -265,6 +269,53 @@ describe("manage overview model", () => {
 
     expect(model.activeRebalance.issueCount).toBe("N/A");
     expect(model.blockedSurfaces).toContain("Rebalance waves");
+  });
+
+  it("does not present an unscoped wave as selected-portfolio rebalance evidence", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        waves: {
+          ...base.waves!,
+          data: {
+            items: [
+              {
+                wave_id: "wave_other",
+                wave_state: "CREATED",
+                trigger_id: "contains-PF_1001-but-is-not-a-contract-field",
+                trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+                item_count: 8,
+                issue_count: 0,
+                supportability_state: "READY",
+                supportability_reason: "WAVE_SUPPORTABILITY_READY",
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    expect(model.activeRebalance).toMatchObject({
+      triggerType: null,
+      state: "N/A",
+      issueCount: "N/A",
+      supportabilityState: "N/A",
+      supportabilityReason: "SELECTED_PORTFOLIO_WAVE_NOT_CONFIRMED",
+    });
+    expect(model.postureCards).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "rebalance",
+          value: "Not available",
+        }),
+      ]),
+    );
+    expect(model.moduleItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "waves", metric: "Not available" }),
+      ]),
+    );
+    expect(model.latestActivities.map((activity) => activity.key)).not.toContain("wave");
   });
 
   it("keeps book-level exceptions outside the selected mandate posture", () => {

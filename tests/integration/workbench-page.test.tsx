@@ -948,11 +948,14 @@ function createManageFetch({ portfolioId }: { portfolioId: string }) {
           items: [
             {
               wave_id: "wave_001",
+              portfolio_ids: [portfolioId],
               state: "READY",
               trigger_type: "EXPLICIT_PORTFOLIO_LIST",
               as_of_date: "2026-05-13",
               item_count: 1,
               issue_count: 0,
+              supportability_state: "SUPPORTED",
+              supportability_reason: "WAVE_READY",
             },
           ],
         },

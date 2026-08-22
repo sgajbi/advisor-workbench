@@ -136,7 +136,11 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
           <div className="manage-overview-card-header">
             <div>
               <h3>Active Rebalance</h3>
-              <span>Wave: {formatBusinessTrigger(model.activeRebalance.triggerType)}</span>
+              <span>
+                Wave: {model.activeRebalance.triggerType
+                  ? formatBusinessTrigger(model.activeRebalance.triggerType)
+                  : "Not reported"}
+              </span>
             </div>
             <SemanticBadge tone={toneForState(model.activeRebalance.state)}>
               Stage: {businessStateLabel(model.activeRebalance.state)}
