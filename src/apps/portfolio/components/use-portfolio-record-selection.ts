@@ -4,7 +4,10 @@ import { useCallback, useMemo, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { buildPortfolioRecordSelectionHref } from "../portfolio-record-selection";
+import {
+  buildPortfolioRecordSelectionHref,
+  buildPortfolioRelatedRecordHref,
+} from "../portfolio-record-selection";
 
 type PortfolioRecordSelectionState = Readonly<{
   sourceKey: string;
@@ -62,6 +65,17 @@ export function usePortfolioRecordSelection({
   return {
     selectedRecordId,
     listHref,
+    buildRelatedHref: useCallback(
+      (destinationPathname: string) =>
+        listHref
+          ? buildPortfolioRelatedRecordHref({
+              destinationPathname,
+              sourceHref: listHref,
+              portfolioId,
+            })
+          : null,
+      [listHref, portfolioId],
+    ),
     openRecord: useCallback(
       (recordId: string) => navigateToRecord(recordId),
       [navigateToRecord],

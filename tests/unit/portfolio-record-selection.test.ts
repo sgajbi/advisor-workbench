@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPortfolioRecordSelectionHref } from "@/apps/portfolio/portfolio-record-selection";
+import {
+  buildPortfolioRecordSelectionHref,
+  buildPortfolioRelatedRecordHref,
+} from "@/apps/portfolio/portfolio-record-selection";
 
 describe("portfolio record selection address", () => {
   it("preserves the confirmed review and page context when selecting a record", () => {
@@ -43,5 +46,18 @@ describe("portfolio record selection address", () => {
         selectedRecordId: "EQ_001",
       }),
     ).toBeNull();
+  });
+
+  it("builds a related record workspace address without leaking page-local state", () => {
+    expect(
+      buildPortfolioRelatedRecordHref({
+        destinationPathname: "/transactions",
+        sourceHref:
+          "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=EQ_001&columns=expanded",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      }),
+    ).toBe(
+      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
   });
 });
