@@ -248,9 +248,11 @@ describe("WorkbenchPage", () => {
 
     expect(screen.getAllByRole("heading", { name: "Rebalance" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Definitions" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Campaign Workflow Audit" })).toBeInTheDocument();
-    expect(screen.getByText("Apple and Tesla holdings review")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign administration" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
+    expect(screen.getAllByText("Apple and Tesla holdings review").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Governance action" }));
+    expect(screen.getByRole("heading", { name: "Governance action" })).toBeInTheDocument();
     expect(screen.getByText("Operating Queue")).toBeInTheDocument();
     expect(screen.getAllByText("Assignment Task").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "Proposed Changes" })).toBeInTheDocument();
