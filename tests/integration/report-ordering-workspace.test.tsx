@@ -149,7 +149,8 @@ const portfolio = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
   displayName: "Global Balanced Mandate",
   asOfDate: "2026-04-22",
-  baseCurrency: "SGD",
+  sourceBaseCurrency: "SGD",
+  reportingCurrency: "SGD",
 };
 
 describe("ReportOrderingWorkspace", () => {
@@ -317,6 +318,45 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByText("2 selected portfolios")).toBeInTheDocument();
     expect(submitBatchMock).not.toHaveBeenCalled();
     expect(submitMock).not.toHaveBeenCalled();
+  });
+
+  it("treats an omitted batch currency as the source base currency", async () => {
+    const sourceBaseBatch = {
+      ...buildReportBatchStatus(),
+      reporting_currency: null,
+    };
+    batchStatusMock.mockResolvedValueOnce(parseReportBatchStatus(sourceBaseBatch));
+
+    render(
+      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_1" />,
+    );
+
+    expect(
+      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/does not match the selected review date/i)).not.toBeInTheDocument();
+  });
+
+  it("rejects an omitted batch currency for a restated reporting context", async () => {
+    const unconfirmedRestatement = {
+      ...buildReportBatchStatus(),
+      reporting_currency: null,
+    };
+    batchStatusMock.mockResolvedValueOnce(parseReportBatchStatus(unconfirmedRestatement));
+
+    render(
+      <ReportOrderingWorkspace
+        portfolio={{ ...portfolio, reportingCurrency: "USD" }}
+        initialBatchId="rbch_1"
+      />,
+    );
+
+    expect(
+      await screen.findByText(/does not match the selected review date or reporting currency/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("table", { name: "Portfolio report bundle outcomes" }),
+    ).not.toBeInTheDocument();
   });
 
   it("fails closed when an addressed bundle does not confirm the selected portfolio", async () => {
@@ -913,7 +953,7 @@ describe("ReportOrderingWorkspace", () => {
     ).toBeInTheDocument();
 
     view.rerender(
-      <ReportOrderingWorkspace portfolio={{ ...portfolio, baseCurrency: "USD" }} />,
+      <ReportOrderingWorkspace portfolio={{ ...portfolio, reportingCurrency: "USD" }} />,
     );
     await waitFor(() => expect(optionsMock).toHaveBeenLastCalledWith("PB_SG_GLOBAL_BAL_001"));
 

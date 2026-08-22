@@ -7,7 +7,9 @@ import {
   submitPortfolioReviewOrder,
 } from "@/features/report-ordering/api";
 import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
-import { useReportOrderingWorkflow } from "@/features/report-ordering/use-report-ordering-workflow";
+import {
+  useReportOrderingWorkflow as useReportOrderingWorkflowSource,
+} from "@/features/report-ordering/use-report-ordering-workflow";
 import {
   buildReportJobListResponse,
   buildReportOrderingResponse,
@@ -22,6 +24,18 @@ vi.mock("@/features/report-ordering/api", () => ({
 const optionsMock = vi.mocked(getReportOrderingOptions);
 const historyMock = vi.mocked(listPortfolioReviewOrders);
 const submitMock = vi.mocked(submitPortfolioReviewOrder);
+
+function useReportOrderingWorkflow(
+  options: Omit<
+    Parameters<typeof useReportOrderingWorkflowSource>[0],
+    "sourceBaseCurrency"
+  >,
+) {
+  return useReportOrderingWorkflowSource({
+    ...options,
+    sourceBaseCurrency: "SGD",
+  });
+}
 
 describe("useReportOrderingWorkflow", () => {
   beforeEach(() => {

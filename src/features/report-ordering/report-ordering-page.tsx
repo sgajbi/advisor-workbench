@@ -70,7 +70,8 @@ export async function ReportOrderingPage({
         portfolioId,
         displayName: workspace.portfolio.display_name,
         asOfDate: controlResolution.controls.asOfDate,
-        baseCurrency: controlResolution.controls.reportingCurrency,
+        sourceBaseCurrency: workspace.portfolio.base_currency,
+        reportingCurrency: controlResolution.controls.reportingCurrency,
       }}
     />
   );
