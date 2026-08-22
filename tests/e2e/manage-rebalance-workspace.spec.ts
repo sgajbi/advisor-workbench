@@ -61,7 +61,7 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
     await expect(context).toContainText("Discretionary Global Balanced");
     await expect(context).toContainText("SGD");
     await expect(context).toContainText("As of 03 May 2026");
-    await expect(context).toContainText("Evidence not opened");
+    await expect(context).toContainText("Evidence not requested");
     await expect(
       page.getByText("Discretionary Balanced", { exact: true }),
     ).toHaveCount(0);
