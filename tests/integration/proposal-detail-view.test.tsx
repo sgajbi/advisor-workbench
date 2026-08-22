@@ -377,6 +377,23 @@ describe("ProposalDetailView", () => {
     );
   });
 
+  it("does not invent a return portfolio when detail and address context are unavailable", async () => {
+    getProposalMock.mockRejectedValueOnce(
+      new Error("Proposal detail failed (503): gateway unavailable"),
+    );
+    renderWithQueryClient();
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Proposal review could not be loaded",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open My book" })).toHaveAttribute(
+      "href",
+      "/book",
+    );
+  });
+
   it("keeps restricted proposal detail distinct and preserves return context", async () => {
     getProposalMock.mockRejectedValueOnce(
       new Error("Proposal detail failed (403): forbidden"),

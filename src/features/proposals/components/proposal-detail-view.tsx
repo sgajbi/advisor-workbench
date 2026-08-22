@@ -137,10 +137,10 @@ function ProposalDetailWorkspace({
   const fallbackReturnHref =
     returnPortfolioId && returnMode
       ? buildProposalLifecycleHref({ portfolioId: returnPortfolioId, mode: returnMode })
-      : "/proposals";
-  const returnLabel = returnMode
+      : "/book";
+  const returnLabel = returnPortfolioId && returnMode
     ? `Return to ${getProposalLifecycleModeDefinition(returnMode).title}`
-    : "Return to Proposal Queue";
+    : "Open My book";
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -572,6 +572,9 @@ function ProposalDetailWorkspace({
         mode: returnMode ?? "approval-queue",
       })
     : fallbackReturnHref;
+  const sourceReturnLabel = sourcePortfolioId
+    ? `Return to ${getProposalLifecycleModeDefinition(returnMode ?? "approval-queue").title}`
+    : returnLabel;
 
   return (
     <main className={detailStyles.page} aria-label="Proposal advisory workspace">
@@ -588,7 +591,7 @@ function ProposalDetailWorkspace({
         </div>
         <div className={detailStyles.headerStatus}>
           <Link className={detailStyles.returnLink} href={sourceReturnHref}>
-            {returnLabel}
+            {sourceReturnLabel}
           </Link>
           <SemanticBadge tone={data.proposal.current_state === "EXECUTION_READY" ? "success" : "warn"}>
             {proposalStageLabel(data.proposal.current_state)}

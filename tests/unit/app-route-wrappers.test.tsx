@@ -63,8 +63,8 @@ describe("app route wrappers", () => {
 
     expect(route.props).toMatchObject({
       proposalId: "PR_1001",
-      returnPortfolioId: "PB_SG_GLOBAL_BAL_001",
-      returnMode: "approval-queue",
+      returnPortfolioId: undefined,
+      returnMode: undefined,
     });
   });
 });

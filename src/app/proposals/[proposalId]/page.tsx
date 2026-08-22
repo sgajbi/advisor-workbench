@@ -1,33 +1,40 @@
 import ProposalDetailView from "@/features/proposals/components/proposal-detail-view";
 import { normalizeAdvisoryJourneyMode } from "@/features/proposals/advisory-journey-navigation";
-import { resolveProposalPortfolioId } from "@/features/proposals/components/proposal-workspace-shell";
 import { normalizeProposalLifecycleMode } from "@/features/proposals/proposal-lifecycle-workspace-view-model";
 import {
-  type ProposalRouteSearchParam,
-  resolveSingleProposalSearchParam,
-} from "@/features/proposals/proposal-route-search-params";
+  parseReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 type Props = {
   params: Promise<{
     proposalId: string;
   }>;
-  searchParams?: Promise<{
-    portfolioId?: ProposalRouteSearchParam;
-    fromMode?: ProposalRouteSearchParam;
-  }>;
+  searchParams?: Promise<
+    ReviewContextSearchParams & {
+      fromMode?: string | readonly string[];
+    }
+  >;
 };
 
 export default async function ProposalDetailPage({ params, searchParams }: Props) {
   const resolvedParams = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const returnPortfolioId = resolveProposalPortfolioId(
-    resolveSingleProposalSearchParam(resolvedSearchParams.portfolioId),
-  );
-  const returnMode = normalizeProposalLifecycleMode(
-    normalizeAdvisoryJourneyMode(
-      resolveSingleProposalSearchParam(resolvedSearchParams.fromMode),
-    ),
-  );
+  const reviewContextResult = parseReviewContext(resolvedSearchParams);
+  const returnPortfolioId =
+    reviewContextResult.status === "valid"
+      ? reviewContextResult.context.portfolioId
+      : undefined;
+  const requestedReturnMode =
+    reviewContextResult.status === "valid" &&
+    typeof resolvedSearchParams.fromMode === "string"
+      ? resolvedSearchParams.fromMode
+      : undefined;
+  const returnMode = requestedReturnMode
+    ? normalizeProposalLifecycleMode(
+        normalizeAdvisoryJourneyMode(requestedReturnMode),
+      )
+    : undefined;
 
   return (
     <ProposalDetailView
