@@ -57,6 +57,17 @@ describe("advisor-book business-date resolution", () => {
     });
   });
 
+  it("uses the explicit fixture in the governed test environment outside Next build", () => {
+    vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "");
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+
+    expect(resolveAdvisorBookAsOfDate(null)).toEqual({
+      status: "confirmed",
+      value: "2026-04-10",
+      source: "development_configured",
+    });
+  });
+
   it.each(["uat", "production"])(
     "rejects a configured development date in the %s environment",
     (environment) => {

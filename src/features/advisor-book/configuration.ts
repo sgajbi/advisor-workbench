@@ -19,6 +19,13 @@ export type AdvisorBookAsOfDateResolution =
 
 type SearchParamsReader = Pick<URLSearchParams, "getAll">;
 
+function resolveWorkbenchBuildEnvironment(): string | undefined {
+  return (
+    process.env.WORKBENCH_BUILD_ENVIRONMENT ||
+    (process.env.NODE_ENV === "test" ? "test" : undefined)
+  );
+}
+
 export function resolveAdvisorBookAsOfDateFromSearchParams(
   searchParams: SearchParamsReader,
 ): AdvisorBookAsOfDateResolution {
@@ -55,7 +62,7 @@ export function resolveAdvisorBookAsOfDate(
 
   if (
     !isDevelopmentAuthorityEnvironment(
-      process.env.WORKBENCH_BUILD_ENVIRONMENT,
+      resolveWorkbenchBuildEnvironment(),
     )
   ) {
     return {
