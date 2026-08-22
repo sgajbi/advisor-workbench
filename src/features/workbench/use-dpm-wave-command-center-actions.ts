@@ -736,10 +736,10 @@ export function useDpmWaveCommandCenterActions({
       assignmentTasks,
       makerCheckerControls,
     ] = await Promise.all([
-      getDpmCampaignApprovalDecisions(params),
-      getDpmCampaignAssignmentActions(params),
-      getDpmCampaignAssignmentTasks(params),
-      getDpmCampaignMakerCheckerControls(params),
+      getDpmCampaignApprovalDecisions(params, "client"),
+      getDpmCampaignAssignmentActions(params, "client"),
+      getDpmCampaignAssignmentTasks(params, "client"),
+      getDpmCampaignMakerCheckerControls(params, "client"),
     ]);
     if (!isCurrentCampaignRequest(request)) {
       return;
@@ -840,7 +840,7 @@ export function useDpmWaveCommandCenterActions({
         return;
       }
       const [definitions, lifecycle] = await Promise.all([
-        listDpmCampaignDefinitions({ limit: 10, offset: 0 }),
+        listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
         getDpmCampaignDefinitionLifecycleEvents({
           campaignId: campaign.campaignId,
           campaignVersion: campaign.campaignVersion,

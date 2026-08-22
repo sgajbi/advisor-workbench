@@ -10,6 +10,7 @@ export type ManageFixtureGateway = {
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const mandateId = "MANDATE_PB_SG_GLOBAL_BAL_001";
 const waveId = "dwv_001";
+const campaignId = "campaign-holdings-202605";
 
 export async function startManageFixtureGateway({
   port,
@@ -59,6 +60,23 @@ export async function startManageFixtureGateway({
       sendJson(response, waveItemsEnvelope());
       return;
     }
+    const launchedWaveItemsMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/waves\/(dwv_campaign_[^/]+)\/items$/,
+    );
+    if (launchedWaveItemsMatch) {
+      const launchedWaveId = launchedWaveItemsMatch[1];
+      sendJson(response, {
+        ...waveEnvelope(),
+        supportability: {
+          ...waveEnvelope().supportability,
+          wave_id: launchedWaveId,
+          wave_state: "CREATED",
+          item_count: 0,
+        },
+        data: { items: [] },
+      });
+      return;
+    }
     if (path === "/api/v1/dpm/command-center") {
       sendJson(
         response,
@@ -91,6 +109,47 @@ export async function startManageFixtureGateway({
     if (path === "/api/v1/dpm/command-center/waves/campaign-discovery") {
       sendJson(response, campaignEnvelope("corr-manage-campaign-discovery"));
       return;
+    }
+    const campaignMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/waves\/campaign-definitions\/([^/]+)\/versions\/([^/]+)\/(.+)$/,
+    );
+    if (campaignMatch) {
+      const [, requestedCampaignId, campaignVersion, surface] = campaignMatch;
+      if (requestedCampaignId !== campaignId) {
+        sendJson(response, { code: "fixture_campaign_not_found" }, 404);
+        return;
+      }
+      if (surface === "lifecycle-events") {
+        sendJson(response, campaignLifecycleEnvelope(campaignVersion));
+        return;
+      }
+      if (surface === "launch-history") {
+        sendJson(response, campaignLaunchHistoryEnvelope(campaignVersion));
+        return;
+      }
+      if (surface === "preview-readiness") {
+        sendJson(response, campaignPreviewReadinessEnvelope(campaignVersion));
+        return;
+      }
+      if (surface === "launch-package") {
+        sendJson(response, campaignLaunchPackageEnvelope(campaignVersion));
+        return;
+      }
+      if (
+        [
+          "approval-decisions",
+          "assignment-actions",
+          "assignment-tasks",
+          "maker-checker-controls",
+        ].includes(surface)
+      ) {
+        sendJson(response, campaignWorkflowEvidenceEnvelope(campaignVersion, surface));
+        return;
+      }
+      if (surface === "launch" && request.method === "POST") {
+        sendJson(response, campaignLaunchEnvelope(campaignVersion), 201);
+        return;
+      }
     }
     if (path.startsWith("/api/v1/dpm/command-center")) {
       sendJson(
@@ -261,7 +320,170 @@ function campaignEnvelope(correlationId: string) {
     contract_version: "v1",
     source_service: "lotus-manage",
     upstream_status: 200,
-    data: { items: [] },
+    data: {
+      items: [
+        campaignDefinition("2026.05", "Asia growth holdings review", "2026-05-10", 12),
+        campaignDefinition("2026.06", "Singapore balanced mandate refresh", "2026-06-10", 7),
+      ],
+      limit: 10,
+      offset: 0,
+      count: 2,
+    },
+  };
+}
+
+function campaignDefinition(
+  campaignVersion: string,
+  displayName: string,
+  asOfDate: string,
+  candidateCount: number,
+) {
+  return {
+    product_name: "BulkReviewCampaignDiscovery",
+    campaign_id: campaignId,
+    campaign_version: campaignVersion,
+    display_name: displayName,
+    status: "ACTIVE",
+    campaign_status: "ACTIVE",
+    as_of_date: asOfDate,
+    eligible_portfolio_types: ["DISCRETIONARY"],
+    candidate_count: candidateCount,
+    eligible_candidate_count: candidateCount - 1,
+    governance_status: "APPROVED",
+    expiry_state: "ACTIVE",
+    access_purpose: "rebalance_review",
+    source_ref_count: 2,
+    candidates: [
+      {
+        portfolio_id: portfolioId,
+        portfolio_type: "DISCRETIONARY",
+        source_refs: [
+          { source_type: "PortfolioManagerBookMembership", source_id: "book-sg-1" },
+        ],
+      },
+    ],
+    governance: {
+      approval_ref: `BRC-APPROVAL-${campaignVersion}`,
+      approved_by: "investment_control_sg",
+    },
+    source_refs: [
+      { source_type: "BulkReviewCampaignDefinition", source_id: `${campaignId}:${campaignVersion}` },
+    ],
+  };
+}
+
+function campaignLifecycleEnvelope(campaignVersion: string) {
+  return commandEnvelope(
+    {
+      campaign_id: campaignId,
+      campaign_version: campaignVersion,
+      events: [
+        {
+          event_type: "ACTIVATED",
+          occurred_at: "2026-05-14T09:30:00Z",
+          actor_id: "portfolio_manager_sg",
+          status: "RECORDED",
+          reason_code: "campaign_definition_activated",
+          correlation_id: `corr-campaign-${campaignVersion}`,
+        },
+      ],
+    },
+    `corr-campaign-lifecycle-${campaignVersion}`,
+  );
+}
+
+function campaignLaunchHistoryEnvelope(campaignVersion: string) {
+  return commandEnvelope(
+    {
+      product_name: "BulkReviewCampaignDefinitionLaunchHistory",
+      campaign_id: campaignId,
+      campaign_version: campaignVersion,
+      items: [],
+      limit: 10,
+      offset: 0,
+      count: 0,
+      total_count: 0,
+      operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+    },
+    `corr-campaign-launch-history-${campaignVersion}`,
+  );
+}
+
+function campaignPreviewReadinessEnvelope(campaignVersion: string) {
+  return commandEnvelope(
+    {
+      product_name: "BulkReviewCampaignDefinitionPreviewReadiness",
+      campaign_id: campaignId,
+      campaign_version: campaignVersion,
+      requested_as_of_date: campaignVersion === "2026.06" ? "2026-06-10" : "2026-05-10",
+      actor_id: "portfolio_manager_sg",
+      supportability_state: "READY",
+      reason_codes: [],
+      blocked_actions: [],
+      operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
+    },
+    `corr-campaign-preview-${campaignVersion}`,
+  );
+}
+
+function campaignLaunchPackageEnvelope(campaignVersion: string) {
+  return commandEnvelope(
+    {
+      product_name: "BulkReviewCampaignDefinitionLaunchPackage",
+      campaign_id: campaignId,
+      campaign_version: campaignVersion,
+      requested_as_of_date: campaignVersion === "2026.06" ? "2026-06-10" : "2026-05-10",
+      actor_id: "portfolio_manager_sg",
+      launch_state: "READY",
+      reason_codes: [],
+      create_headers: {
+        "Idempotency-Key": `campaign-launch:${campaignId}:${campaignVersion}:fixture`,
+      },
+    },
+    `corr-campaign-launch-package-${campaignVersion}`,
+  );
+}
+
+function campaignWorkflowEvidenceEnvelope(campaignVersion: string, surface: string) {
+  return commandEnvelope(
+    {
+      items: [
+        {
+          campaign_id: campaignId,
+          campaign_version: campaignVersion,
+          evidence_ref: `${surface}:${campaignVersion}`,
+          status: "SUPPORTABLE",
+          content_hash: `sha256:${surface}:${campaignVersion}`,
+          reason_codes: [],
+        },
+      ],
+      count: 1,
+      total_count: 1,
+      limit: 10,
+      offset: 0,
+    },
+    `corr-campaign-${surface}-${campaignVersion}`,
+  );
+}
+
+function campaignLaunchEnvelope(campaignVersion: string) {
+  return {
+    ...waveEnvelope(),
+    correlation_id: `corr-campaign-launch-${campaignVersion}`,
+    upstream_status: 201,
+    supportability: {
+      ...waveEnvelope().supportability,
+      wave_id: `dwv_campaign_${campaignVersion.replace(".", "_")}`,
+      wave_state: "CREATED",
+    },
+    data: {
+      wave: {
+        wave_id: `dwv_campaign_${campaignVersion.replace(".", "_")}`,
+        state: "CREATED",
+        trigger_type: "BULK_REVIEW_CAMPAIGN",
+      },
+      durable: true,
+    },
   };
 }
 

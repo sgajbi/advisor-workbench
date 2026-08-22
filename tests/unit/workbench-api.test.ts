@@ -1979,16 +1979,20 @@ describe("workbench api", () => {
       )
     );
 
-    await listDpmCampaignDefinitions({
-      campaignStatus: "ACTIVE",
-      limit: 10,
-      offset: 0,
-    });
+    await listDpmCampaignDefinitions(
+      {
+        campaignStatus: "ACTIVE",
+        limit: 10,
+        offset: 0,
+      },
+      "client",
+    );
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
       "/api/v1/dpm/command-center/waves/campaign-definitions?limit=10&offset=0&campaign_status=ACTIVE"
     );
+    expect(requestedUrl).toContain("/api/bff/api/v1/");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-campaign-definitions");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
@@ -2093,19 +2097,19 @@ describe("workbench api", () => {
     await getDpmCampaignApprovalDecisions({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-    });
+    }, "client");
     await getDpmCampaignAssignmentActions({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-    });
+    }, "client");
     await getDpmCampaignAssignmentTasks({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-    });
+    }, "client");
     await getDpmCampaignMakerCheckerControls({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-    });
+    }, "client");
 
     const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map((call) =>
       call[0].toString()
@@ -2123,6 +2127,7 @@ describe("workbench api", () => {
         expect.stringContaining("/maker-checker-controls?limit=10&offset=0"),
       ])
     );
+    expect(calls.slice(5).every((url) => url.includes("/api/bff/api/v1/"))).toBe(true);
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-campaign-operating-queue");
     expect(metricEventsJson).toContain("wave-campaign-maker-checker-controls");
@@ -2343,10 +2348,12 @@ describe("workbench api", () => {
     expect(requestedUrl).toContain(
       "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/lifecycle-events"
     );
+    expect(requestedUrl).toContain("/api/bff/api/v1/");
     const launchHistoryUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][0].toString();
     expect(launchHistoryUrl).toContain(
       "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/launch-history"
     );
+    expect(launchHistoryUrl).toContain("/api/bff/api/v1/");
     expect(launchHistoryUrl).toContain("limit=10");
     expect(launchHistoryUrl).toContain("offset=0");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());

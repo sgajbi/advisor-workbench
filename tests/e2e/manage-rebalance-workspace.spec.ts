@@ -99,6 +99,42 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
     await expect(changes.getByText("AAPL US")).toBeVisible();
     await expect(changes.getByText("Equity overweight")).toBeVisible();
 
+    const campaignWorkspace = page.getByLabel("Selected campaign decision workspace");
+    await expect(campaignWorkspace).toBeVisible();
+    const campaignOptions = page.getByRole("option");
+    await expect(campaignOptions).toHaveCount(2);
+    const firstCampaign = campaignOptions.nth(0);
+    const secondCampaign = campaignOptions.nth(1);
+    await expect(firstCampaign).toHaveAttribute("aria-selected", "true");
+    await firstCampaign.focus();
+    await firstCampaign.press("ArrowDown");
+    await expect(secondCampaign).toBeFocused();
+    await expect(secondCampaign).toHaveAttribute("aria-selected", "true");
+    await expect(
+      page.locator('[data-selected-campaign="campaign-holdings-202605:2026.06"]'),
+    ).toContainText("Singapore balanced mandate refresh");
+    await expect(page.getByText("Source evidence current")).toBeVisible();
+    await expect(secondCampaign).toBeFocused();
+    await secondCampaign.press("ArrowUp");
+    await expect(firstCampaign).toBeFocused();
+    await expect(firstCampaign).toHaveAttribute("aria-selected", "true");
+
+    await page.getByRole("button", { name: "Launch decision" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Campaign Launch Posture" }),
+    ).toBeVisible();
+    const launchButton = page.getByRole("button", { name: "Launch governed wave" });
+    await expect(launchButton).toBeDisabled();
+    await page
+      .getByRole("checkbox", {
+        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+      })
+      .check();
+    await expect(launchButton).toBeEnabled();
+    await launchButton.click();
+    await expect(page.getByText("dwv_campaign_2026_05")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+
     const overflowEvidence = await page.evaluate(() => {
       const clientWidth = document.documentElement.clientWidth;
       const offenders = [...document.querySelectorAll<HTMLElement>("body *")]

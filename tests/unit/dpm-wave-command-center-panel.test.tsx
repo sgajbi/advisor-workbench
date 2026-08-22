@@ -524,6 +524,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(
       screen.getAllByText("campaign-launch:campaign-holdings-202605:2026.05:abc").length,
     ).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
     expect(
       screen.getAllByText("corr-campaign-launch").every((element) => element.closest("details") !== null),
     ).toBe(true);
