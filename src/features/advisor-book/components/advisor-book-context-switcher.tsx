@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { resolveAdvisorBookAsOfDate } from "../configuration";
+import {
+  resolveAdvisorBookAsOfDate,
+  type AdvisorBookAsOfDateResolution,
+} from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
 import { useAdvisorBook } from "../use-advisor-book";
 import styles from "../advisor-book-context-switcher.module.css";
@@ -30,7 +33,7 @@ export default function AdvisorBookContextSwitcher({
     }
   }, [portfolioId]);
 
-  const asOfDate = resolveAdvisorBookAsOfDate(
+  const dateResolution = resolveAdvisorBookAsOfDate(
     new URLSearchParams(locationSearch).get("asOfDate"),
   );
 
@@ -58,7 +61,7 @@ export default function AdvisorBookContextSwitcher({
           <AdvisorBookContextOptions
             pathname={pathname}
             locationSearch={locationSearch}
-            asOfDate={asOfDate}
+            dateResolution={dateResolution}
             portfolioId={portfolioId}
           />
         ) : null}
@@ -71,6 +74,35 @@ export default function AdvisorBookContextSwitcher({
 }
 
 function AdvisorBookContextOptions({
+  pathname,
+  locationSearch,
+  dateResolution,
+  portfolioId,
+}: {
+  pathname: string;
+  locationSearch: string;
+  dateResolution: AdvisorBookAsOfDateResolution;
+  portfolioId: string;
+}) {
+  if (dateResolution.status === "not_confirmed") {
+    return (
+      <p className={`${styles.optionState} ${styles.warning}`}>
+        Portfolio switching is unavailable until a business date is confirmed in My book.
+      </p>
+    );
+  }
+
+  return (
+    <AdvisorBookContextOptionsWithDate
+      pathname={pathname}
+      locationSearch={locationSearch}
+      asOfDate={dateResolution.value}
+      portfolioId={portfolioId}
+    />
+  );
+}
+
+function AdvisorBookContextOptionsWithDate({
   pathname,
   locationSearch,
   asOfDate,

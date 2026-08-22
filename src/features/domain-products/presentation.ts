@@ -2,6 +2,7 @@ import type {
   DomainProductTrustCertification,
   DomainProductTrustCertificationData,
 } from "./api";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 
 export type TrustTone = "success" | "warn" | "danger" | "default";
 export type SourceAvailability = "checking" | "ready" | "retained" | "unavailable";
@@ -86,16 +87,5 @@ export function formatStateLabel(state: string): string {
 }
 
 export function formatDateTime(value: string | null | undefined): string {
-  if (!value) return "Not available";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "Not available";
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-    timeZoneName: "short",
-  }).format(parsed);
+  return formatTimestampValue(value, { nullDisplay: "Not available" });
 }

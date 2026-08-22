@@ -1,4 +1,10 @@
-import { formatCount, formatCurrency, formatDate, formatStatus } from "./formatters";
+import {
+  formatCount,
+  formatCurrency,
+  formatDate,
+  formatStatus,
+  formatTimestamp,
+} from "./formatters";
 import type { CashflowProjectionSnapshot } from "./portfolio-projected-cashflow-view-model";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
 import { buildPortfolioPositionStateSummary } from "./portfolio-position-state-view-model";
@@ -448,7 +454,7 @@ export function buildReportingSourcePosture(
   const status = reporting.status.trim().toUpperCase();
   const rowCoverage = formatCount(reporting.row_count, "reportable row");
   const generatedAt = reporting.generated_at_utc
-    ? formatDate(reporting.generated_at_utc)
+    ? formatTimestamp(reporting.generated_at_utc)
     : null;
   const label = "Reporting Snapshot";
 

@@ -67,4 +67,43 @@ describe("advisor-book API", () => {
       "/api/bff/api/v1/advisor-book/portfolios?asOfDate=2026-04-10",
     );
   });
+
+  it("rejects source evidence returned for a different business date", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          correlation_id: "corr-date-mismatch",
+          contract_version: "v1",
+          scope: {
+            kind: "own_book",
+            label: "My book",
+            as_of_date: "2026-04-09",
+            booking_center_code: "Singapore",
+          },
+          page: {
+            total_count: 0,
+            offset: 0,
+            limit: 25,
+            returned_count: 0,
+            sort_by: "portfolio_id",
+            sort_order: "asc",
+          },
+          items: [],
+          supportability: {
+            state: "empty",
+            reason_code: "advisor_book_empty",
+            tenant_scope: "source_confirmed",
+            limitations: ["delegated_scope_not_supported"],
+          },
+          provenance: null,
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getAdvisorBook({ asOfDate: "2026-04-10" })).rejects.toThrow(
+      /business date did not match the requested source scope/i,
+    );
+  });
 });

@@ -132,7 +132,7 @@ describe("portfolio summary view model", () => {
 
     expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
       statusLabel: "Partial",
-      support: "Generated 12 May 2026 • 11 report rows",
+      support: "Generated 12 May 2026, 00:00 UTC • 11 report rows",
       tone: "warn",
     });
   });

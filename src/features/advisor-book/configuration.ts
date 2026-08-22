@@ -1,13 +1,43 @@
-const CANONICAL_ADVISOR_BOOK_AS_OF_DATE = "2026-04-10";
-const BUSINESS_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
 
-export function resolveAdvisorBookAsOfDate(requested?: string | null): string {
-  const candidate =
-    requested?.trim() ||
-    process.env.NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE?.trim() ||
-    CANONICAL_ADVISOR_BOOK_AS_OF_DATE;
+export type AdvisorBookAsOfDateResolution =
+  | {
+      status: "confirmed";
+      value: string;
+      source: "requested" | "development_configured";
+    }
+  | {
+      status: "not_confirmed";
+      reason:
+        | "invalid_requested_date"
+        | "date_not_configured"
+        | "invalid_development_configuration";
+    };
 
-  return BUSINESS_DATE_PATTERN.test(candidate)
-    ? candidate
-    : CANONICAL_ADVISOR_BOOK_AS_OF_DATE;
+export function resolveAdvisorBookAsOfDate(
+  requested?: string | null,
+): AdvisorBookAsOfDateResolution {
+  if (requested !== null && requested !== undefined) {
+    const candidate = requested.trim();
+    return isBusinessDateValue(candidate)
+      ? { status: "confirmed", value: candidate, source: "requested" }
+      : { status: "not_confirmed", reason: "invalid_requested_date" };
+  }
+
+  const configured =
+    process.env.NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE?.trim();
+  if (!configured) {
+    return { status: "not_confirmed", reason: "date_not_configured" };
+  }
+
+  return isBusinessDateValue(configured)
+    ? {
+        status: "confirmed",
+        value: configured,
+        source: "development_configured",
+      }
+    : {
+        status: "not_confirmed",
+        reason: "invalid_development_configuration",
+      };
 }

@@ -1,5 +1,5 @@
 import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
-import { formatDate } from "./formatters";
+import { formatDate, formatTimestamp } from "./formatters";
 import type {
   PortfolioActivitySummaryView,
   PortfolioIncomeSummaryView,
@@ -404,7 +404,7 @@ export function getReportingFreshnessSupport(workspace: PortfolioWorkspace): str
 
   if (reportingStatus === "Ready") {
     if (generatedAt && rowCount > 0) {
-      return `Generated ${formatDate(generatedAt)} • ${rowLabel}`;
+      return `Generated ${formatTimestamp(generatedAt)} • ${rowLabel}`;
     }
     if (rowCount > 0) {
       return `${rowLabel} published`;

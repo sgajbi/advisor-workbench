@@ -113,6 +113,27 @@ describe("AdvisorBookWorkspace", () => {
     expect(screen.queryByText(/team book|household|AUM|attention rank/i)).not.toBeInTheDocument();
   });
 
+  it("does not request source data until an invalid business date is corrected", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("asOfDate=not-a-date&clientId=CIF_SG_002&offset=25"),
+    );
+
+    render(<AdvisorBookWorkspace />);
+
+    expect(screen.getByText("Business date not confirmed")).toBeInTheDocument();
+    expect(screen.getByText(/Portfolio assignments have not been requested/i)).toBeInTheDocument();
+    expect(getAdvisorBookMock).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Business date"), {
+      target: { value: "2026-04-11" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review book" }));
+
+    expect(routerReplaceMock).toHaveBeenCalledWith(
+      "/book?asOfDate=2026-04-11&clientId=CIF_SG_002&offset=0",
+    );
+  });
+
   it("updates supported source filters in the URL and resets paging", async () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams("asOfDate=2026-04-10&offset=25&sortBy=portfolio_id"),

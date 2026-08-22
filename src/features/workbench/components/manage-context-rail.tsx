@@ -3,6 +3,7 @@ import {
   Text,
   WorkbenchRailCard,
 } from "@/design-system";
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
@@ -90,7 +91,12 @@ export default function ManageContextRail({
               label: "Portfolio Manager Book",
               value: formatBusinessBook(readStringFromResponse(data.mandate, "pm_book_id")),
             },
-            { label: "As Of", value: data.portfolio.as_of_date },
+            {
+              label: "Business Date",
+              value: formatBusinessDateValue(data.portfolio.as_of_date, {
+                nullDisplay: "Not confirmed",
+              }),
+            },
           ]}
         />
       </WorkbenchRailCard>

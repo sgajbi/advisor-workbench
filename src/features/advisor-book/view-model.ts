@@ -1,4 +1,5 @@
 import type { AdvisorBookPortfolio, AdvisorBookResponse } from "./contracts";
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 
 export type AdvisorBookWorkspaceModel = {
   title: string;
@@ -52,7 +53,9 @@ export function buildAdvisorBookWorkspaceModel(
     subtitle:
       "Review confirmed portfolio coverage, then continue into the selected client workflow.",
     scopeLabel: "Own book",
-    asOfLabel: formatBusinessDate(response.scope.as_of_date),
+    asOfLabel: formatBusinessDateValue(response.scope.as_of_date, {
+      nullDisplay: "Not confirmed",
+    }),
     bookingCentreLabel: response.scope.booking_center_code,
     state,
     stateLabel: advisorBookStateLabel(state),
@@ -229,14 +232,4 @@ function tenantScopeLabel(value: AdvisorBookResponse["supportability"]["tenant_s
   return value === "source_confirmed"
     ? "Confirmed by source"
     : "Workbench access context only";
-}
-
-function formatBusinessDate(value: string): string {
-  const date = new Date(`${value}T00:00:00Z`);
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
 }

@@ -31,7 +31,13 @@ export async function getAdvisorBook(query: AdvisorBookQuery): Promise<AdvisorBo
       "advisor book",
       { headers: buildAnalyticsUiCorrelationHeaders() },
     );
-    return parseAdvisorBookResponse(payload);
+    const response = parseAdvisorBookResponse(payload);
+    if (response.scope.as_of_date !== query.asOfDate) {
+      throw new Error(
+        "Advisor book response business date did not match the requested source scope",
+      );
+    }
+    return response;
   });
 }
 
