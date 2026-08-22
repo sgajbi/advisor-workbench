@@ -13,6 +13,7 @@ import {
   mergePortfolioWorkspace,
 } from "../api";
 import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recovery-observability";
+import { applyPortfolioControlPatch } from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
@@ -307,23 +308,6 @@ export default function PortfolioWorkspaceClient({
       )}
     </PortfolioPageLayout>
   );
-}
-
-function applyPortfolioControlPatch(
-  current: PortfolioWorkspaceControls,
-  patch: Partial<PortfolioWorkspaceControls>
-): PortfolioWorkspaceControls {
-  const next = { ...current, ...patch };
-
-  next.viewMode = "summary";
-  next.columnMode = "essential";
-
-  if (patch.timeWindow !== undefined && patch.customStartDate === undefined && patch.customEndDate === undefined) {
-    next.customStartDate = "";
-    next.customEndDate = "";
-  }
-
-  return next;
 }
 
 function getPortfolioWorkspaceSummaryDetailsOnce(
