@@ -29,6 +29,61 @@ describe("performance source identity", () => {
     ).toBe(true);
   });
 
+  it("requires exact source bounds for an explicit request window", () => {
+    const explicitIdentity = {
+      portfolioId: "PF_1001",
+      period: "EXPLICIT",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-02-24",
+    };
+    const summary = {
+      ...buildPerformanceWorkspaceSummary(),
+      period: "EXPLICIT",
+      report_start_date: explicitIdentity.reportStartDate,
+      report_end_date: explicitIdentity.reportEndDate,
+    };
+    const details = {
+      ...buildPerformanceWorkspaceDetails(),
+      period: "EXPLICIT",
+      report_start_date: explicitIdentity.reportStartDate,
+      report_end_date: explicitIdentity.reportEndDate,
+    };
+
+    expect(isPerformanceSummarySourceCurrent(summary, explicitIdentity)).toBe(true);
+    expect(isPerformanceDetailsSourceCurrent(details, explicitIdentity)).toBe(true);
+    expect(
+      isPerformanceSummarySourceCurrent(
+        { ...summary, report_start_date: "2025-12-01" },
+        explicitIdentity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        { ...details, report_end_date: "2026-02-23" },
+        explicitIdentity,
+      ),
+    ).toBe(false);
+  });
+
+  it("fails closed when an explicit identity omits either requested bound", () => {
+    const summary = { ...buildPerformanceWorkspaceSummary(), period: "EXPLICIT" };
+    const details = { ...buildPerformanceWorkspaceDetails(), period: "EXPLICIT" };
+
+    expect(
+      isPerformanceSummarySourceCurrent(summary, {
+        portfolioId: "PF_1001",
+        period: "EXPLICIT",
+      }),
+    ).toBe(false);
+    expect(
+      isPerformanceDetailsSourceCurrent(details, {
+        portfolioId: "PF_1001",
+        period: "EXPLICIT",
+        reportStartDate: "2026-01-01",
+      }),
+    ).toBe(false);
+  });
+
   it.each<[
     string,
     (summary: WorkbenchPerformanceWorkspaceSummary) => WorkbenchPerformanceWorkspaceSummary,

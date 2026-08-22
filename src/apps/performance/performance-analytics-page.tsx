@@ -118,6 +118,8 @@ export default async function PerformanceAnalyticsPage({
     !isPerformanceSummarySourceCurrent(workspaceSummary, {
       portfolioId: selectedPortfolioId,
       period,
+      reportStartDate,
+      reportEndDate,
     })
   ) {
     return (

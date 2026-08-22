@@ -108,6 +108,8 @@ export default function PerformanceWorkspaceClient({
       isPerformanceDetailsSourceCurrent(initialDetails, {
         portfolioId: initialSummary.portfolio_id,
         period: initialSummary.period,
+        reportStartDate: initialSummary.report_start_date ?? undefined,
+        reportEndDate: initialSummary.report_end_date ?? undefined,
       })
         ? initialDetails
         : null,
@@ -729,6 +731,8 @@ function requireCurrentPerformanceDetails(
     !isPerformanceDetailsSourceCurrent(details, {
       portfolioId: controls.portfolioId,
       period: controls.period,
+      reportStartDate: controls.reportStartDate,
+      reportEndDate: controls.reportEndDate,
     })
   ) {
     throw new Error("Performance analytical detail did not confirm the requested source identity.");
@@ -744,6 +748,8 @@ function requireCurrentPerformanceSummary(
     !isPerformanceSummarySourceCurrent(summary, {
       portfolioId: controls.portfolioId,
       period: controls.period,
+      reportStartDate: controls.reportStartDate,
+      reportEndDate: controls.reportEndDate,
     })
   ) {
     throw new Error("Performance summary did not confirm the requested source identity.");
