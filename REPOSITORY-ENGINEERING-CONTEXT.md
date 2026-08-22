@@ -1242,6 +1242,17 @@ Most relevant current governance:
    specialist task appears once, **All workspaces** owns grouped secondary destinations, and only
    the current workflow step precedes its on-demand alternatives. Escape closes either nested
    disclosure and restores focus to its trigger.
+
+   Governed selected-review identity is owned by `src/shell/review-context.ts`, not by page-local
+   parsers or defaults. Portfolio, valuation date, period, reporting currency, selected record, and
+   report-batch identity parse atomically; any repeated, malformed, or unsupported governed field
+   invalidates the complete context before source reads. Do not salvage a partial context,
+   substitute the canonical demo or first catalogue portfolio, or let screen-local record/batch
+   identity leak into a destination that cannot interpret it. URL context is not source evidence:
+   summary/detail responses must independently confirm the relevant portfolio and valuation/window
+   identity before composition. Use browser-history `push` for confirmed user decisions and
+   `replace` only for source normalization. Back and Forward must synchronize source-backed props,
+   caches, and request fencing without query-key remounts or focus loss.
 8. Advisor-facing readiness and shell-workspace availability must use typed, category-specific
    exact mappings from supported source values to business posture. Open strings, nulls, unknown
    values, and values supplied under the wrong category fail closed as neutral `Not reported` or
