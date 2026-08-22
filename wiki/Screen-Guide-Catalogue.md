@@ -8,8 +8,8 @@ to find its operating guide.
 ## Current Scope
 
 The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Twenty-four active surfaces now have one
-implementation-backed guide that passes the complete guide standard. The remaining 12 dedicated
+screens or modes, and two compatibility aliases**. Twenty-six active surfaces now have one
+implementation-backed guide that passes the complete guide standard. The remaining 10 dedicated
 guides are explicit work under
 [lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
 The catalogue is therefore an inventory and delivery control as well as a navigation page. A
@@ -96,7 +96,7 @@ while the user moves from attention posture into construction, review, and evide
 | ------------------------- | -------------------------------------------- | ------- | -------------------- | ----------------------------- |
 | [Manage Overview](Manage-Overview-Screen-Guide) | `/workbench/{portfolioId}?mode=overview` | Active | Guide available | Gateway, Core, and Manage |
 | Mandate Health            | `/workbench/{portfolioId}?mode=mandate`      | Active  | Guide planned — #605 | Gateway and Manage            |
-| Rebalance Waves           | `/workbench/{portfolioId}?mode=waves`        | Active  | Guide planned — #605 | Gateway and Manage            |
+| [Rebalance Waves](Rebalance-Waves-Screen-Guide) | `/workbench/{portfolioId}?mode=waves` | Active | Guide available | Gateway, Core, Manage, Report, and Lotus AI |
 | Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active  | Guide planned — #605 | Gateway and Manage            |
 | Portfolio Memory          | `/workbench/{portfolioId}?mode=memory`       | Active  | Guide planned — #605 | Gateway and Manage            |
 | PM Copilot                | `/workbench/{portfolioId}?mode=copilot`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
