@@ -805,10 +805,10 @@
 }
 
 .manageScope :global(.manage-portfolio-value-band) {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   align-items: center;
-  justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
   padding: 28px 30px;
   border: 1px solid #131b2e;
   border-radius: 2px;
@@ -840,8 +840,8 @@
 
 .manageScope :global(.manage-portfolio-value-band dl) {
   display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
   margin: 0;
 }
 
@@ -855,7 +855,7 @@
 
 .manageScope :global(.manage-overview-focus-grid) {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(360px, 5fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: 16px;
 }
 
@@ -863,6 +863,7 @@
 .manageScope :global(.manage-overview-table-card),
 .manageScope :global(.manage-overview-activity) {
   display: grid;
+  min-width: 0;
   gap: 0;
   padding: 0;
   border: 1px solid #c6c6cd;
@@ -3959,7 +3960,6 @@
 
   .manageScope :global(.manage-portfolio-value-band) {
     align-items: flex-start;
-    flex-direction: column;
     gap: 20px;
   }
 
