@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+
+import Button from "@mui/material/Button";
 
 import type {
   PortfolioTransactionDrilldownFilter,
@@ -11,22 +13,59 @@ import PortfolioDetailDrawerController from "./portfolio-detail-drawer-controlle
 import PortfolioTransactionsGrid, {
   type TransactionRow,
 } from "./portfolio-transactions-grid";
+import { buildTransactionRows } from "./portfolio-transactions-grid-helpers";
+import PortfolioModuleState from "./portfolio-module-state";
+import { usePortfolioRecordSelection } from "./use-portfolio-record-selection";
 
 export default function PortfolioTransactionsRecordWorkspace({
   workspace,
   asOfDate,
   defaultStartDate,
   defaultEndDate,
+  initialSelectedRecordId,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
   defaultStartDate: string;
   defaultEndDate: string;
+  initialSelectedRecordId?: string;
 }) {
-  const [selectedTransaction, setSelectedTransaction] =
+  const [selectedTransactionRecord, setSelectedTransactionRecord] =
     useState<TransactionRow | null>(null);
   const [externalFilter, setExternalFilter] =
     useState<PortfolioTransactionDrilldownFilter | null>(null);
+  const { selectedRecordId, openRecord, closeRecord } =
+    usePortfolioRecordSelection({
+      portfolioId: workspace.portfolio.portfolio_id,
+      initialSelectedRecordId,
+    });
+  const initialTransactionRows = useMemo(
+    () =>
+      buildTransactionRows(
+        workspace.recent_transactions,
+        workspace.portfolio.base_currency,
+      ),
+    [workspace.portfolio.base_currency, workspace.recent_transactions],
+  );
+  const selectedTransaction =
+    selectedTransactionRecord?.transactionId === selectedRecordId
+      ? selectedTransactionRecord
+      : (initialTransactionRows.find(
+          (transaction) => transaction.transactionId === selectedRecordId,
+        ) ?? null);
+
+  const handleTransactionSelect = useCallback(
+    (transaction: TransactionRow) => {
+      setSelectedTransactionRecord(transaction);
+      openRecord(transaction.transactionId);
+    },
+    [openRecord],
+  );
+
+  const handleCloseRecord = useCallback(() => {
+    setSelectedTransactionRecord(null);
+    closeRecord();
+  }, [closeRecord]);
 
   const detailDrawer = useMemo(() => {
     if (!selectedTransaction) {
@@ -35,7 +74,7 @@ export default function PortfolioTransactionsRecordWorkspace({
 
     const openDrilldown = (filter: PortfolioTransactionDrilldownFilter) => () => {
       setExternalFilter(filter);
-      setSelectedTransaction(null);
+      handleCloseRecord();
     };
     const raw = selectedTransaction.raw;
 
@@ -81,10 +120,23 @@ export default function PortfolioTransactionsRecordWorkspace({
           : null,
       },
     );
-  }, [selectedTransaction, workspace]);
+  }, [handleCloseRecord, selectedTransaction, workspace]);
 
   return (
     <>
+      {selectedRecordId && !selectedTransaction ? (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          title="Transaction is not in the loaded activity page"
+          body="The requested transaction identity was not returned in the current source page for this portfolio and review period. No alternative booking was opened."
+          action={
+            <Button size="small" variant="outlined" onClick={handleCloseRecord}>
+              Clear transaction review
+            </Button>
+          }
+        />
+      ) : null}
       <PortfolioTransactionsGrid
         portfolioId={workspace.portfolio.portfolio_id}
         baseCurrency={workspace.portfolio.base_currency}
@@ -95,11 +147,11 @@ export default function PortfolioTransactionsRecordWorkspace({
         initialLedgerPage={workspace.transaction_ledger_page}
         externalFilter={externalFilter}
         onClearExternalFilter={() => setExternalFilter(null)}
-        onRowSelect={setSelectedTransaction}
+        onRowSelect={handleTransactionSelect}
       />
       <PortfolioDetailDrawerController
         detailDrawer={detailDrawer}
-        onClose={() => setSelectedTransaction(null)}
+        onClose={handleCloseRecord}
       />
     </>
   );

@@ -501,6 +501,14 @@ describe("PortfolioRecordScreenClient positions flow", () => {
 });
 
 describe("PortfolioRecordScreenClient transactions flow", () => {
+  beforeEach(() => {
+    window.history.replaceState(
+      {},
+      "",
+      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
+  });
+
   it("resets record and related-event review when the portfolio identity changes", async () => {
     vi.stubGlobal(
       "fetch",
@@ -525,6 +533,10 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Review TX_FIRST" }));
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=TX_FIRST",
+      { scroll: false },
+    );
 
     const secondWorkspace = buildWorkspaceWithTransaction(
       "PB_SG_INCOME_002",
@@ -544,6 +556,10 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       screen.getByRole("button", { name: "Open FX Contract Transactions" }),
     );
     expect(screen.getByText("FX contract FXC-SECOND")).toBeInTheDocument();
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/transactions?portfolioId=PB_SG_INCOME_002",
+      { scroll: false },
+    );
 
     const thirdWorkspace = buildWorkspaceWithTransaction(
       "PB_SG_PRESERVATION_003",
@@ -561,6 +577,35 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       expect(screen.queryByText("FX contract FXC-SECOND")).not.toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: "Review TX_THIRD" })).toBeInTheDocument();
+  });
+
+  it("rehydrates only an addressed transaction in the loaded source page", () => {
+    const workspace = buildWorkspaceWithTransaction(
+      "PB_SG_GLOBAL_BAL_001",
+      "TX_DIRECT",
+      "FXC-DIRECT",
+    );
+    const { rerender } = render(
+      <PortfolioTransactionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+        selectedRecordId="TX_DIRECT"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
+
+    rerender(
+      <PortfolioTransactionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+        selectedRecordId="TX_NOT_IN_WINDOW"
+      />,
+    );
+    expect(
+      screen.getByText("Transaction is not in the loaded activity page"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Buy" })).not.toBeInTheDocument();
   });
 });
 
