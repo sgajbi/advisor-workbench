@@ -7,6 +7,7 @@ import {
   MetricRow,
   ScreenStatePanel,
   SemanticBadge,
+  SourceRefreshAction,
 } from "@/design-system";
 import { resolveDefaultCallerContext } from "@/features/workbench/caller-context";
 import type {
@@ -26,13 +27,15 @@ import type {
 import type { DpmCampaignWorkflowCommandEvidence } from "@/features/workbench/use-dpm-wave-command-center-actions";
 
 type Props = {
-  summaryRows: DpmCampaignWorkflowSummaryRow[];
   evidenceRows: DpmCampaignWorkflowEvidenceRow[];
   error?: string | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
   pendingCommand?: boolean;
   commandError?: string | null;
   commandEvidence?: DpmCampaignWorkflowCommandEvidence | null;
+  commandRequiresReload?: boolean;
+  evidenceRefreshing?: boolean;
+  onReloadEvidence?: () => Promise<unknown> | unknown;
   onRecordWorkflowCommand: (command: DpmCampaignWorkflowCommandInput) => Promise<void>;
 };
 
@@ -45,13 +48,15 @@ const COMMAND_OPTIONS: Array<{ value: DpmCampaignWorkflowCommandType; label: str
 ];
 
 export default function DpmCampaignWorkflowAuditCard({
-  summaryRows,
   evidenceRows,
   error,
   selectedCampaign,
   pendingCommand = false,
   commandError = null,
   commandEvidence = null,
+  commandRequiresReload = false,
+  evidenceRefreshing = false,
+  onReloadEvidence = async () => {},
   onRecordWorkflowCommand,
 }: Props) {
   const callerContext = resolveDefaultCallerContext();
@@ -82,6 +87,7 @@ export default function DpmCampaignWorkflowAuditCard({
   const submitDisabled =
     commandUnavailable ||
     pendingCommand ||
+    commandRequiresReload ||
     !form.actorId.trim() ||
     !form.reference.trim() ||
     !form.rationale.trim() ||
@@ -141,7 +147,7 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.commandType}
                 onChange={(event) => updateForm("commandType", event.target.value as DpmCampaignWorkflowCommandType)}
-                disabled={pendingCommand}
+                disabled={pendingCommand || commandRequiresReload}
               >
                 {COMMAND_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -159,7 +165,7 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.reference}
                 onChange={(event) => updateForm("reference", event.target.value)}
-                disabled={pendingCommand}
+                disabled={pendingCommand || commandRequiresReload}
               />
             </label>
             <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-rationale">
@@ -169,15 +175,23 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.rationale}
                 onChange={(event) => updateForm("rationale", event.target.value)}
-                disabled={pendingCommand}
+                disabled={pendingCommand || commandRequiresReload}
               />
             </label>
-            <CommandSpecificFields form={form} updateForm={updateForm} disabled={pendingCommand} />
+            <CommandSpecificFields
+              form={form}
+              updateForm={updateForm}
+              disabled={pendingCommand || commandRequiresReload}
+            />
           </div>
 
           <div className="rebalance-campaign-workflow-command-row">
             <ActionButton priority="primary" onClick={submitCommand} disabled={submitDisabled}>
-              {pendingCommand ? "Recording source evidence" : "Record governance action"}
+              {pendingCommand
+                ? "Recording source evidence"
+                : commandRequiresReload
+                  ? "Reload evidence before another action"
+                  : "Record governance action"}
             </ActionButton>
             <span>No trade, order, client-contact, or external workflow action is performed.</span>
           </div>
@@ -196,13 +210,29 @@ export default function DpmCampaignWorkflowAuditCard({
       ) : null}
       {commandEvidence ? <CommandEvidence evidence={commandEvidence} /> : null}
       {error ? (
-        <ScreenStatePanel kind="partial" surface="portfolio" title="Campaign governance evidence needs attention" body={error} />
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Campaign governance evidence needs attention"
+          body={error}
+          action={
+            selectedCampaign ? (
+              <SourceRefreshAction
+                refreshScope={`campaign-governance:${selectedCampaign.key}`}
+                idleLabel="Reload governance evidence"
+                busyLabel="Reloading governance evidence"
+                isRefreshing={evidenceRefreshing}
+                onRefresh={async () => onReloadEvidence()}
+              />
+            ) : null
+          }
+        />
       ) : null}
 
       <details className="rebalance-campaign-disclosure">
         <summary>Source evidence and operating audit</summary>
         <p>Inspect source references, append-only workflow evidence, hashes, and boundaries.</p>
-        <CampaignWorkflowTables summaryRows={summaryRows} evidenceRows={evidenceRows} />
+        <DpmCampaignWorkflowEvidenceTable rows={evidenceRows} />
       </details>
     </div>
   );
@@ -439,45 +469,88 @@ function CommandEvidence({ evidence }: { evidence: DpmCampaignWorkflowCommandEvi
   );
 }
 
-function CampaignWorkflowTables({ summaryRows, evidenceRows }: { summaryRows: DpmCampaignWorkflowSummaryRow[]; evidenceRows: DpmCampaignWorkflowEvidenceRow[] }) {
+export function DpmCampaignWorkflowSummaryTable({
+  rows,
+}: {
+  rows: DpmCampaignWorkflowSummaryRow[];
+}) {
   return (
-    <>
-      <AnalyticsTable
-        ariaLabel="Campaign workflow source summary"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "surface", label: "Business queue" },
-          { key: "state", label: "State" },
-          { key: "items", label: "Items", align: "right" },
-          { key: "page", label: "Window" },
-          { key: "sources", label: "Sources", align: "right" },
-          { key: "reasons", label: "Reason codes" },
-          { key: "hash", label: "Content hash" },
-          { key: "boundaries", label: "Operating boundaries" },
-        ]}
-        rows={summaryRows.map((row) => ({ key: row.key, cells: [row.surface, <DpmWaveStateBadge key={`${row.key}-state`} state={row.state} />, row.itemCount, row.page, row.sourceRefs, row.reasonCodes, row.contentHash, row.operatingBoundaries] }))}
-        emptyState={{ title: "No workflow summary loaded", body: "Manage has not returned campaign workflow summary evidence for this selection." }}
-      />
-      <AnalyticsTable
-        ariaLabel="Campaign governance evidence history"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "type", label: "Evidence" },
-          { key: "ref", label: "Reference" },
-          { key: "status", label: "Status" },
-          { key: "actor", label: "Operator" },
-          { key: "recorded", label: "Recorded" },
-          { key: "reasons", label: "Reason codes" },
-          { key: "sources", label: "Sources", align: "right" },
-          { key: "hash", label: "Content hash" },
-          { key: "transition", label: "Task progress" },
-          { key: "boundaries", label: "Boundaries" },
-        ]}
-        rows={evidenceRows.map((row) => ({ key: row.key, cells: [row.evidenceType, row.evidenceRef, <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />, row.actor, row.recordedAt, row.reasonCodes, row.sourceRefs, row.contentHash, row.transitionPosture, row.operatingBoundaries] }))}
-        emptyState={{ title: "No governance history loaded", body: "Approvals, responsibilities, tasks, and independent reviews remain source-owned in Manage." }}
-      />
-    </>
+    <AnalyticsTable
+      ariaLabel="Book-wide campaign workflow summary"
+      variant="portfolio"
+      density="compact"
+      columns={[
+        { key: "surface", label: "Business queue" },
+        { key: "state", label: "State" },
+        { key: "items", label: "Items", align: "right" },
+        { key: "page", label: "Source window" },
+        { key: "sources", label: "Sources", align: "right" },
+        { key: "reasons", label: "Reason codes" },
+        { key: "hash", label: "Content hash" },
+        { key: "boundaries", label: "Operating boundaries" },
+      ]}
+      rows={rows.map((row) => ({
+        key: row.key,
+        cells: [
+          row.surface,
+          <DpmWaveStateBadge key={`${row.key}-state`} state={row.state} />,
+          row.itemCount,
+          row.page,
+          row.sourceRefs,
+          row.reasonCodes,
+          row.contentHash,
+          row.operatingBoundaries,
+        ],
+      }))}
+      emptyState={{
+        title: "No book-wide workflow summary loaded",
+        body: "Manage has not returned campaign workflow summary evidence for this source window.",
+      }}
+    />
+  );
+}
+
+function DpmCampaignWorkflowEvidenceTable({
+  rows,
+}: {
+  rows: DpmCampaignWorkflowEvidenceRow[];
+}) {
+  return (
+    <AnalyticsTable
+      ariaLabel="Selected campaign governance evidence history"
+      variant="portfolio"
+      density="compact"
+      columns={[
+        { key: "type", label: "Evidence" },
+        { key: "ref", label: "Reference" },
+        { key: "status", label: "Status" },
+        { key: "actor", label: "Operator" },
+        { key: "recorded", label: "Recorded" },
+        { key: "reasons", label: "Reason codes" },
+        { key: "sources", label: "Sources", align: "right" },
+        { key: "hash", label: "Content hash" },
+        { key: "transition", label: "Task progress" },
+        { key: "boundaries", label: "Boundaries" },
+      ]}
+      rows={rows.map((row) => ({
+        key: row.key,
+        cells: [
+          row.evidenceType,
+          row.evidenceRef,
+          <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,
+          row.actor,
+          row.recordedAt,
+          row.reasonCodes,
+          row.sourceRefs,
+          row.contentHash,
+          row.transitionPosture,
+          row.operatingBoundaries,
+        ],
+      }))}
+      emptyState={{
+        title: "No governance history loaded",
+        body: "Approvals, responsibilities, tasks, and independent reviews remain source-owned in Manage.",
+      }}
+    />
   );
 }

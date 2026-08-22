@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ActionButton, MetricRow, ScreenStatePanel, SemanticBadge } from "@/design-system";
+import {
+  ActionButton,
+  MetricRow,
+  ScreenStatePanel,
+  SemanticBadge,
+  SourceRefreshAction,
+} from "@/design-system";
 import { resolveDefaultCallerContext } from "@/features/workbench/caller-context";
 import {
   buildCampaignCommandCorrelationId,
@@ -17,6 +23,9 @@ type Props = {
   pendingCommand?: boolean;
   commandError?: string | null;
   commandEvidence?: DpmCampaignLifecycleCommandEvidence | null;
+  evidenceError?: string | null;
+  evidenceRefreshing?: boolean;
+  onReloadEvidence?: () => Promise<unknown> | unknown;
   onRecordLifecycleCommand: (command: DpmCampaignLifecycleCommandInput) => Promise<void>;
 };
 
@@ -26,6 +35,9 @@ export default function DpmCampaignLifecycleCommandCard({
   pendingCommand = false,
   commandError = null,
   commandEvidence = null,
+  evidenceError = null,
+  evidenceRefreshing = false,
+  onReloadEvidence = async () => {},
   onRecordLifecycleCommand,
 }: Props) {
   const callerContext = resolveDefaultCallerContext();
@@ -44,6 +56,7 @@ export default function DpmCampaignLifecycleCommandCard({
   const submitDisabled =
     !selectedCampaign ||
     pendingCommand ||
+    Boolean(commandEvidence) ||
     !actorId.trim() ||
     !reason.trim() ||
     !confirmed ||
@@ -101,7 +114,7 @@ export default function DpmCampaignLifecycleCommandCard({
                 setCommandType(event.target.value as DpmCampaignLifecycleCommandType);
                 setConfirmed(false);
               }}
-              disabled={pendingCommand}
+              disabled={pendingCommand || Boolean(commandEvidence)}
             >
               <option value="retire">Retire future use</option>
               <option value="supersede">Replace with active version</option>
@@ -119,7 +132,9 @@ export default function DpmCampaignLifecycleCommandCard({
                 className="workbench-input"
                 value={replacementCampaignVersion}
                 onChange={(event) => setReplacementCampaignVersion(event.target.value)}
-                disabled={pendingCommand || replacementVersions.length === 0}
+                disabled={
+                  pendingCommand || Boolean(commandEvidence) || replacementVersions.length === 0
+                }
               >
                 <option value="">Select an active version</option>
                 {replacementVersions.map((row) => (
@@ -136,7 +151,7 @@ export default function DpmCampaignLifecycleCommandCard({
               className="workbench-input"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              disabled={pendingCommand}
+              disabled={pendingCommand || Boolean(commandEvidence)}
             />
           </label>
           <label className="workbench-confirmation" htmlFor="dpm-campaign-lifecycle-confirmation">
@@ -145,7 +160,7 @@ export default function DpmCampaignLifecycleCommandCard({
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
-              disabled={pendingCommand}
+              disabled={pendingCommand || Boolean(commandEvidence)}
             />
             <span>
               I understand this prevents future launches from the selected version and records an append-only source event.
@@ -155,7 +170,13 @@ export default function DpmCampaignLifecycleCommandCard({
       ) : null}
       <div className="rebalance-campaign-workflow-command-row">
         <ActionButton priority="secondary" onClick={submitCommand} disabled={submitDisabled}>
-          {pendingCommand ? "Recording lifecycle event" : commandType === "retire" ? "Retire campaign" : "Replace campaign version"}
+          {pendingCommand
+            ? "Recording lifecycle event"
+            : commandEvidence
+              ? "Lifecycle action recorded"
+              : commandType === "retire"
+                ? "Retire campaign"
+                : "Replace campaign version"}
         </ActionButton>
         <span>No trade, order, OMS, or client-contact action is performed.</span>
       </div>
@@ -170,6 +191,27 @@ export default function DpmCampaignLifecycleCommandCard({
           <MetricRow label="Source" value={commandEvidence.sourceService} />
           <MetricRow label="Correlation" value={commandEvidence.correlationId} />
         </div>
+      ) : null}
+      {evidenceError && selectedCampaign ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title={
+            commandEvidence
+              ? "Recorded lifecycle posture needs refresh"
+              : "Campaign lifecycle evidence needs attention"
+          }
+          body={evidenceError}
+          action={
+            <SourceRefreshAction
+              refreshScope={`campaign-lifecycle:${selectedCampaign.key}`}
+              idleLabel="Reload lifecycle evidence"
+              busyLabel="Reloading lifecycle evidence"
+              isRefreshing={evidenceRefreshing}
+              onRefresh={async () => onReloadEvidence()}
+            />
+          }
+        />
       ) : null}
     </div>
   );

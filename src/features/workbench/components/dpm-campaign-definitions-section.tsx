@@ -16,7 +16,9 @@ import DpmCampaignLaunchHistoryCard, {
   CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
 } from "@/features/workbench/components/dpm-campaign-launch-history-card";
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
-import DpmCampaignWorkflowAuditCard from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
+import DpmCampaignWorkflowAuditCard, {
+  DpmCampaignWorkflowSummaryTable,
+} from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
 import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type {
   DpmCampaignLifecycleCommandInput,
@@ -60,6 +62,7 @@ type Props = {
   previewReadinessPosture?: DpmCampaignPreviewReadinessPosture;
   launchPosture: DpmCampaignLaunchPosture;
   workflowSummaryRows?: DpmCampaignWorkflowSummaryRow[];
+  workflowSummaryError?: string | null;
   workflowEvidenceRows?: DpmCampaignWorkflowEvidenceRow[];
   lifecycleError?: string | null;
   launchHistoryError?: string | null;
@@ -97,6 +100,8 @@ export default function DpmCampaignDefinitionsSection(props: Props) {
     selectedCampaign,
     selectedCampaignKey,
     errorMessage,
+    workflowSummaryRows,
+    workflowSummaryError,
     pendingLifecycleKey,
     pendingLaunchHistoryKey,
     pendingPreviewReadinessKey,
@@ -180,6 +185,24 @@ export default function DpmCampaignDefinitionsSection(props: Props) {
       {errorMessage ? (
         <ScreenStatePanel kind="partial" surface="portfolio" title="Campaign scope needs attention" body={errorMessage} />
       ) : null}
+      {workflowSummaryRows?.length || workflowSummaryError ? (
+        <details className={styles.disclosure}>
+          <summary>Book-wide campaign workflow</summary>
+          <p>
+            Current source windows across campaign operating, approval, assignment, and review
+            queues. These totals describe the book-wide workflow, not the selected campaign.
+          </p>
+          {workflowSummaryError ? (
+            <ScreenStatePanel
+              kind="partial"
+              surface="portfolio"
+              title="Book-wide campaign workflow needs attention"
+              body={workflowSummaryError}
+            />
+          ) : null}
+          <DpmCampaignWorkflowSummaryTable rows={workflowSummaryRows ?? []} />
+        </details>
+      ) : null}
       {rows.length === 0 ? (
         <ScreenStatePanel
           kind="empty"
@@ -257,7 +280,6 @@ function CampaignDecisionPane({
   launchHistoryPage,
   previewReadinessPosture = DEFAULT_PREVIEW_READINESS_POSTURE,
   launchPosture,
-  workflowSummaryRows = [],
   workflowEvidenceRows = [],
   lifecycleError,
   launchHistoryError,
@@ -265,14 +287,18 @@ function CampaignDecisionPane({
   launchError,
   workflowError,
   lifecycleCommandError,
+  pendingLifecycleKey,
   pendingLaunchHistoryKey,
   pendingLaunchKey,
+  pendingWorkflowEvidenceKey,
   pendingLifecycleCommand,
   pendingWorkflowCommand,
   lifecycleCommandEvidence,
   workflowCommandError,
   workflowCommandEvidence,
+  onLoadLifecycle,
   onLoadLaunchHistory,
+  onLoadWorkflowEvidence,
   onLaunchCampaign,
   onRecordLifecycleCommand = async () => {},
   onRecordWorkflowCommand = async () => {},
@@ -336,13 +362,19 @@ function CampaignDecisionPane({
       ) : null}
       {mode === "governance" ? (
         <DpmCampaignWorkflowAuditCard
-          summaryRows={workflowSummaryRows}
+          key={selectedCampaign.key}
           evidenceRows={workflowEvidenceRows}
           error={workflowError}
           selectedCampaign={selectedCampaign}
           pendingCommand={pendingWorkflowCommand}
           commandError={workflowCommandError}
           commandEvidence={workflowCommandEvidence}
+          commandRequiresReload={Boolean(
+            workflowCommandEvidence &&
+              (workflowError || pendingWorkflowEvidenceKey === selectedCampaign.key),
+          )}
+          evidenceRefreshing={pendingWorkflowEvidenceKey === selectedCampaign.key}
+          onReloadEvidence={() => onLoadWorkflowEvidence(selectedCampaign)}
           onRecordWorkflowCommand={onRecordWorkflowCommand}
         />
       ) : null}
@@ -354,6 +386,9 @@ function CampaignDecisionPane({
           pendingCommand={pendingLifecycleCommand}
           commandError={lifecycleCommandError}
           commandEvidence={lifecycleCommandEvidence}
+          evidenceError={lifecycleError}
+          evidenceRefreshing={pendingLifecycleKey === selectedCampaign.key}
+          onReloadEvidence={() => onLoadLifecycle(selectedCampaign)}
           onRecordLifecycleCommand={onRecordLifecycleCommand}
         />
       ) : null}

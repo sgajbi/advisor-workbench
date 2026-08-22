@@ -120,6 +120,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   campaignLifecycleCommandError: string | null;
   campaignWorkflowCommandError: string | null;
   campaignWorkflowEvidenceError: string | null;
+  campaignWorkflowEvidenceResolved: boolean;
   campaignLifecycleCommandEvidence: DpmCampaignLifecycleCommandEvidence | null;
   campaignWorkflowCommandEvidence: DpmCampaignWorkflowCommandEvidence | null;
   actionMessage: string | null;
@@ -247,6 +248,8 @@ export function useDpmWaveCommandCenterActions({
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignWorkflowEvidenceError, setCampaignWorkflowEvidenceError] =
     useState<CampaignBoundValue<string> | null>(null);
+  const [campaignWorkflowEvidenceResolvedKey, setCampaignWorkflowEvidenceResolvedKey] =
+    useState<string | null>(null);
   const [campaignLifecycleCommandEvidence, setCampaignLifecycleCommandEvidence] =
     useState<CampaignBoundValue<DpmCampaignLifecycleCommandEvidence> | null>(null);
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
@@ -748,6 +751,7 @@ export function useDpmWaveCommandCenterActions({
     setCampaignAssignmentActionsResponse({ campaignKey: row.key, value: assignmentActions });
     setCampaignAssignmentTasksResponse({ campaignKey: row.key, value: assignmentTasks });
     setCampaignMakerCheckerControlsResponse({ campaignKey: row.key, value: makerCheckerControls });
+    setCampaignWorkflowEvidenceResolvedKey(row.key);
   }
 
   async function loadCampaignWorkflowEvidence(row: DpmCampaignDefinitionRow) {
@@ -761,6 +765,7 @@ export function useDpmWaveCommandCenterActions({
       await refreshCampaignWorkflowEvidence(row, request);
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
+        setCampaignWorkflowEvidenceResolvedKey(row.key);
         setCampaignWorkflowEvidenceError({
           campaignKey: row.key,
           value:
@@ -828,10 +833,6 @@ export function useDpmWaveCommandCenterActions({
       if (!isCurrentCampaignRequest(request)) {
         return;
       }
-      setCampaignLifecycleCommandEvidence({
-        campaignKey: campaign.key,
-        value: buildCampaignLifecycleCommandEvidence(command.commandType, response),
-      });
       if (isLifecycleCommandBlocked(response)) {
         setCampaignLifecycleCommandError({
           campaignKey: campaign.key,
@@ -839,16 +840,31 @@ export function useDpmWaveCommandCenterActions({
         });
         return;
       }
-      const [definitions, lifecycle] = await Promise.all([
-        listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
-        getDpmCampaignDefinitionLifecycleEvents({
-          campaignId: campaign.campaignId,
-          campaignVersion: campaign.campaignVersion,
-        }),
-      ]);
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignDefinitionsResponse(definitions);
-        setCampaignLifecycleResponse({ campaignKey: campaign.key, value: lifecycle });
+      setCampaignLifecycleCommandEvidence({
+        campaignKey: campaign.key,
+        value: buildCampaignLifecycleCommandEvidence(command.commandType, response),
+      });
+      try {
+        const [definitions, lifecycle] = await Promise.all([
+          listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
+          getDpmCampaignDefinitionLifecycleEvents({
+            campaignId: campaign.campaignId,
+            campaignVersion: campaign.campaignVersion,
+          }),
+        ]);
+        if (isCurrentCampaignRequest(request)) {
+          setCampaignDefinitionsResponse(definitions);
+          setCampaignLifecycleResponse({ campaignKey: campaign.key, value: lifecycle });
+          setCampaignLifecycleError(null);
+        }
+      } catch {
+        if (isCurrentCampaignRequest(request)) {
+          setCampaignLifecycleError({
+            campaignKey: campaign.key,
+            value:
+              "Lifecycle action was recorded, but refreshed campaign evidence could not be loaded. Reload source evidence to confirm the campaign's new lifecycle posture.",
+          });
+        }
       }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
@@ -913,7 +929,21 @@ export function useDpmWaveCommandCenterActions({
         campaignKey: campaign.key,
         value: buildCampaignWorkflowCommandEvidence(command.commandType, response),
       });
-      await refreshCampaignWorkflowEvidence(campaign, request);
+      try {
+        await refreshCampaignWorkflowEvidence(campaign, request);
+        if (isCurrentCampaignRequest(request)) {
+          setCampaignWorkflowEvidenceError(null);
+        }
+      } catch {
+        if (isCurrentCampaignRequest(request)) {
+          setCampaignWorkflowEvidenceResolvedKey(campaign.key);
+          setCampaignWorkflowEvidenceError({
+            campaignKey: campaign.key,
+            value:
+              "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
+          });
+        }
+      }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
         setCampaignWorkflowCommandError({
@@ -964,6 +994,8 @@ export function useDpmWaveCommandCenterActions({
       campaignWorkflowEvidenceError,
       selectedCampaignKey,
     ),
+    campaignWorkflowEvidenceResolved:
+      Boolean(selectedCampaignKey) && campaignWorkflowEvidenceResolvedKey === selectedCampaignKey,
     campaignLifecycleCommandEvidence: valueForSelectedCampaign(
       campaignLifecycleCommandEvidence,
       selectedCampaignKey,

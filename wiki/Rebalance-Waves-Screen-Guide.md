@@ -93,6 +93,8 @@ client-delivery authority, or execution authority.
   pane refreshes only the selected campaign's lifecycle, launch, workflow, and readiness evidence.
 - Keeps every selected-campaign response, pending state, and error fenced to campaign id and version,
   so a late response for Campaign A cannot appear under Campaign B.
+- Labels the operating, approval, assignment, and review queue summary as book-wide and keeps it
+  outside the selected-campaign pane; only id/version-filtered evidence appears under that identity.
 - Separates review, governance, lifecycle, and launch tasks; uses progressive disclosure for technical
   trace; requires a human business rationale and explicit consequence acknowledgement for supported
   lifecycle and launch mutations.
@@ -119,7 +121,9 @@ client-delivery authority, or execution authority.
 | Launch a campaign | Selected campaign, Manage-returned `READY` launch package, and explicit consequence confirmation | Manage owns the durable campaign event and returned wave identity; the confirmation resets after success |
 
 Pending actions disable conflicting controls. Success is shown only from the returned source
-response; failure remains visible and does not fabricate lifecycle progress.
+response. If persistence succeeds but the evidence refresh fails, Workbench preserves the recorded
+action evidence, reports the read failure separately, blocks a duplicate lifecycle action, and offers
+a read-only source-evidence reload instead of claiming that the mutation failed.
 
 ## Information And Source Authority
 
@@ -153,6 +157,7 @@ The browser calls only `/api/bff/api/v1/...`. Shared endpoint detail is document
 | Evidence being prepared | An exact source request is pending | Wait; conflicting actions remain disabled |
 | Evidence needs review, blocked, or unavailable | The badge names the non-ready state | Review the returned reason and owning source before proceeding |
 | Action failure | Business-safe error remains near the decision flow | Retry the same source action only after checking the context |
+| Campaign action recorded, evidence refresh failed | Recorded source evidence remains visible and the refresh failure is separate | Use **Reload lifecycle evidence** or **Reload governance evidence**; do not repeat the mutation |
 | Campaign selection changes during refresh | New selection remains authoritative; late prior-record evidence is discarded | Continue with the selected campaign; repeat the source read only if its own state needs attention |
 | Successful campaign launch | Durable wave identity is shown and launch acknowledgement resets | Review the returned wave; do not repeat the command unless a new governed launch is intended |
 
@@ -198,7 +203,9 @@ this guide is not a claim of competitor superiority.
 - `tests/unit/dpm-campaign-definitions-section.test.tsx`,
   `tests/unit/use-dpm-wave-command-center-actions.test.ts`, and `tests/unit/workbench-api.test.ts`
   prove the shared selected-record workspace, one-task-at-a-time controls, typed command bodies,
-  campaign-identity fencing, same-origin BFF routing, confirmation reset, and explicit failure.
+  campaign-identity fencing, book-wide versus selected-record scope, same-origin BFF routing,
+  persistence-versus-refresh truth, read-only recovery, repeat prevention, confirmation reset, and
+  explicit failure.
 - `tests/integration/workbench-page.test.tsx` and
   `tests/unit/manage-workspace-components.test.tsx` prove selected-portfolio Manage composition.
 - `scripts/live/validation/browser-workflows.mjs` owns canonical populated Manage browser proof for

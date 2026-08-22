@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import DpmCampaignWorkflowAuditCard from "../../src/features/workbench/components/dpm-campaign-workflow-audit-card";
+import DpmCampaignWorkflowAuditCard, {
+  DpmCampaignWorkflowSummaryTable,
+} from "../../src/features/workbench/components/dpm-campaign-workflow-audit-card";
 import type { DpmCampaignDefinitionRow } from "../../src/features/workbench/dpm-wave-command-center-view-model";
 
 const selectedCampaign: DpmCampaignDefinitionRow = {
@@ -32,19 +34,6 @@ describe("DpmCampaignWorkflowAuditCard", () => {
   it("renders bounded Manage workflow evidence and omits raw operational claims", () => {
     render(
       <DpmCampaignWorkflowAuditCard
-        summaryRows={[
-          {
-            key: "operating-queue",
-            surface: "Operating Queue",
-            state: "READY",
-            itemCount: "1",
-            page: "1-1 of 1",
-            sourceRefs: "2",
-            reasonCodes: "MANAGE_SOURCE_BACKED",
-            contentHash: "sha256:queue",
-            operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
-          },
-        ]}
         evidenceRows={[
           {
             key: "task_001",
@@ -67,7 +56,6 @@ describe("DpmCampaignWorkflowAuditCard", () => {
 
     expect(screen.getByText("Governance action")).toBeInTheDocument();
     expect(screen.getByText("Source evidence and operating audit")).toBeInTheDocument();
-    expect(screen.getByText("Operating Queue")).toBeInTheDocument();
     expect(screen.getAllByText("Assignment Task").length).toBeGreaterThan(0);
     expect(screen.getByText("sha256:task")).toBeInTheDocument();
     expect(screen.getByText("ASSIGNED_FOR_REVIEW: OPEN to WAITING_FOR_REVIEW")).toBeInTheDocument();
@@ -77,10 +65,34 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     expect(rendered).not.toContain("client contacted");
   });
 
+  it("labels aggregate source windows as book-wide rather than selected-campaign evidence", () => {
+    render(
+      <DpmCampaignWorkflowSummaryTable
+        rows={[
+          {
+            key: "operating-queue",
+            surface: "Operating Queue",
+            state: "READY",
+            itemCount: "1",
+            page: "1-1 of 1",
+            sourceRefs: "2",
+            reasonCodes: "MANAGE_SOURCE_BACKED",
+            contentHash: "sha256:queue",
+            operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("table", { name: "Book-wide campaign workflow summary" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Operating Queue")).toBeInTheDocument();
+  });
+
   it("keeps command control unavailable until a campaign definition is selected", () => {
     render(
       <DpmCampaignWorkflowAuditCard
-        summaryRows={[]}
         evidenceRows={[]}
         selectedCampaign={null}
         onRecordWorkflowCommand={vi.fn()}
@@ -95,7 +107,6 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     const onRecordWorkflowCommand = vi.fn().mockResolvedValue(undefined);
     render(
       <DpmCampaignWorkflowAuditCard
-        summaryRows={[]}
         evidenceRows={[]}
         selectedCampaign={selectedCampaign}
         onRecordWorkflowCommand={onRecordWorkflowCommand}
@@ -133,7 +144,6 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     const onRecordWorkflowCommand = vi.fn().mockResolvedValue(undefined);
     render(
       <DpmCampaignWorkflowAuditCard
-        summaryRows={[]}
         evidenceRows={[]}
         selectedCampaign={selectedCampaign}
         onRecordWorkflowCommand={onRecordWorkflowCommand}
@@ -170,10 +180,52 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     );
   });
 
+  it("prevents a repeated governance action until failed refresh evidence is reloaded", () => {
+    render(
+      <DpmCampaignWorkflowAuditCard
+        evidenceRows={[]}
+        selectedCampaign={selectedCampaign}
+        commandEvidence={{
+          commandLabel: "Assignment task",
+          evidenceRef: "task-review-001",
+          correlationId: "corr-campaign-command",
+          sourceService: "lotus-manage",
+          upstreamStatus: "201",
+          contentHash: "sha256:task",
+          reasonCodes: "campaign_assignment_task_recorded",
+          operatingBoundaries: "NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
+        }}
+        commandRequiresReload
+        onRecordWorkflowCommand={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Reload evidence before another action" }),
+    ).toBeDisabled();
+    expect(screen.getByLabelText("Business action")).toBeDisabled();
+  });
+
+  it("offers a read-only governance evidence reload after refresh failure", async () => {
+    const onReloadEvidence = vi.fn().mockResolvedValue(undefined);
+    render(
+      <DpmCampaignWorkflowAuditCard
+        evidenceRows={[]}
+        error="The governance action was recorded, but source evidence needs refresh."
+        selectedCampaign={selectedCampaign}
+        evidenceRefreshing={false}
+        onReloadEvidence={onReloadEvidence}
+        onRecordWorkflowCommand={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Reload governance evidence" }));
+    await waitFor(() => expect(onReloadEvidence).toHaveBeenCalledTimes(1));
+  });
+
   it("renders submitting, failure, and Gateway-returned command evidence states", () => {
     render(
       <DpmCampaignWorkflowAuditCard
-        summaryRows={[]}
         evidenceRows={[]}
         selectedCampaign={selectedCampaign}
         pendingCommand
