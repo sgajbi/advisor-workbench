@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
+  buildDpmWaveHeaderModel,
+  buildDpmWaveProofPosture,
   DPM_WAVE_LIFECYCLE_STEPS,
   dpmWaveActionTone,
   dpmWaveBadgeTone,
@@ -95,6 +97,49 @@ describe("DPM wave command-center panel helpers", () => {
       title: "Rebalance data is temporarily unavailable",
       body: "Rebalance details could not be loaded.",
     });
+  });
+
+  it("builds source-backed rebalance context without optimistic fallbacks", () => {
+    expect(
+      buildDpmWaveHeaderModel({
+        mandateType: "DPM_GLOBAL_BALANCED",
+        portfolioCurrency: "sgd",
+        asOfDate: "2026-05-03",
+        proofState: "READY",
+      }),
+    ).toEqual({
+      mandateLabel: "Discretionary Global Balanced",
+      currencyLabel: "SGD",
+      asOfLabel: "As of 03 May 2026",
+      proof: { label: "Evidence ready", tone: "success" },
+    });
+
+    expect(
+      buildDpmWaveHeaderModel({
+        mandateType: "NOT_AVAILABLE",
+        portfolioCurrency: "UNKNOWN",
+        asOfDate: "N/A",
+        proofState: "NOT_REQUESTED",
+      }),
+    ).toEqual({
+      mandateLabel: "Mandate not reported",
+      currencyLabel: "Currency not reported",
+      asOfLabel: "As of not reported",
+      proof: { label: "Evidence not requested", tone: "default" },
+    });
+  });
+
+  it.each([
+    ["READY", "Evidence ready", "success"],
+    ["AVAILABLE", "Evidence not opened", "default"],
+    ["NOT_REQUESTED", "Evidence not requested", "default"],
+    ["PENDING", "Evidence being prepared", "warn"],
+    ["PARTIAL", "Evidence needs review", "warn"],
+    ["BLOCKED", "Evidence blocked", "danger"],
+    ["FAILED", "Evidence unavailable", "danger"],
+    ["UNKNOWN", "Evidence not reported", "default"],
+  ])("maps %s to truthful proof posture", (state, label, tone) => {
+    expect(buildDpmWaveProofPosture(state)).toEqual({ label, tone });
   });
 
   it("builds metric tiles from Manage-owned metric rows without calculating analytics", () => {
