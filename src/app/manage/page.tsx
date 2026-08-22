@@ -1,18 +1,31 @@
 import { redirect } from "next/navigation";
 
-import { resolvePreferredPortfolioId } from "@/features/canonical-portfolio-selection";
-import { getPortfolioCatalog } from "@/apps/portfolio/api";
+import {
+  buildReviewContextHref,
+  parseReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 export default async function ManagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string }>;
+  searchParams: Promise<ReviewContextSearchParams>;
 }) {
-  const portfolios = await getPortfolioCatalog();
   const resolvedSearch = await searchParams;
-  const selectedPortfolioId =
-    portfolios.find((item) => item.portfolio_id === resolvedSearch.portfolioId)?.portfolio_id ??
-    resolvePreferredPortfolioId(portfolios, (item) => item.portfolio_id);
+  const reviewContextResult = parseReviewContext(resolvedSearch);
+  if (reviewContextResult.status === "invalid") {
+    redirect("/book");
+  }
 
-  redirect(selectedPortfolioId ? `/workbench/${encodeURIComponent(selectedPortfolioId)}` : "/workbench");
+  const portfolioId = reviewContextResult.context.portfolioId;
+  if (!portfolioId) {
+    redirect("/book");
+  }
+
+  redirect(
+    buildReviewContextHref(
+      `/workbench/${encodeURIComponent(portfolioId)}`,
+      reviewContextResult.context,
+    ),
+  );
 }
