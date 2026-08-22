@@ -3,6 +3,7 @@
 import Button from "@mui/material/Button";
 
 import {
+  formatBusinessDate,
   formatCurrency,
   formatDate,
   formatPct,
@@ -111,7 +112,7 @@ export function buildTransactionDrilldownDrawer(
         content: transactions.length
           ? renderDrawerDefinitionList(
               transactions.slice(0, 8).map((transaction) => [
-                `${formatDate(transaction.transaction_date)} ${formatStatus(
+                `${formatBusinessDate(transaction.transaction_date)} ${formatStatus(
                   transaction.transaction_type
                 )}`,
                 `${transaction.instrument_id} · ${formatBookedTransactionAmount(
@@ -189,8 +190,8 @@ export function buildTransactionDrawer(
         key: "lifecycle",
         label: "Lifecycle",
         content: renderDrawerDefinitionList([
-          ["Trade Date", formatDate(row.tradeDate)],
-          ["Settlement Date", formatDate(row.settleDate)],
+          ["Trade Date", formatBusinessDate(row.tradeDate)],
+          ["Settlement Date", formatBusinessDate(row.settleDate)],
           ["Settlement status", row.settlementState.label],
           [
             "Component Type",
@@ -332,7 +333,7 @@ function buildHoldingRelatedTransactionsTab(
       {relatedTransactionsState.transactions.length
         ? renderDrawerDefinitionList(
             relatedTransactionsState.transactions.slice(0, 6).map((transaction) => [
-              `${formatDate(transaction.transaction_date)} ${formatStatus(
+              `${formatBusinessDate(transaction.transaction_date)} ${formatStatus(
                 transaction.transaction_type
               )}`,
               `${transaction.instrument_id} · ${formatBookedTransactionAmount(

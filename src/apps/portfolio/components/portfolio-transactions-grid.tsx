@@ -13,7 +13,13 @@ import TextField from "@mui/material/TextField";
 import { WorkbenchInlineRefreshNote } from "@/design-system";
 
 import { getPortfolioTransactionLedger } from "../api";
-import { formatCurrency, formatDate, formatQuantity, formatStatus } from "../formatters";
+import {
+  formatBusinessDate,
+  formatCurrency,
+  formatDate,
+  formatQuantity,
+  formatStatus,
+} from "../formatters";
 import type {
   PortfolioTransactionDrilldownFilter,
   PortfolioTransactionLedgerPage,
@@ -237,7 +243,7 @@ function PortfolioTransactionsGridBody({
         field: "tradeDate",
         headerName: "Trade Date",
         minWidth: 118,
-        valueFormatter: ({ value }) => formatDate(value),
+        valueFormatter: ({ value }) => formatBusinessDate(value),
       }),
       buildTransactionColumn({
         field: "type",
@@ -248,7 +254,7 @@ function PortfolioTransactionsGridBody({
         field: "settleDate",
         headerName: "Settle Date",
         minWidth: 118,
-        valueFormatter: ({ value }) => formatDate(value),
+        valueFormatter: ({ value }) => formatBusinessDate(value),
       }),
       buildTransactionColumn({
         field: "instrument",
