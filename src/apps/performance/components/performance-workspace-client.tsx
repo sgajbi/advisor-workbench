@@ -42,6 +42,7 @@ type PerformanceWorkspaceClientProps = {
   initialBenchmark?: string;
   initialAsOfDate?: string;
   initialReportingCurrency?: string;
+  initialContextNotice?: { title: string; body: string } | null;
 };
 
 type PerformanceControlState = {
@@ -94,6 +95,7 @@ export default function PerformanceWorkspaceClient({
   initialBenchmark,
   initialAsOfDate,
   initialReportingCurrency,
+  initialContextNotice,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
   const sourceConfirmedInitialDetails = useMemo(
@@ -102,7 +104,6 @@ export default function PerformanceWorkspaceClient({
       initialSummary &&
       isPerformanceDetailsSourceCurrent(initialDetails, {
         portfolioId: initialSummary.portfolio_id,
-        asOfDate: initialSummary.as_of_date,
         period: initialSummary.period,
       })
         ? initialDetails
@@ -594,6 +595,7 @@ export default function PerformanceWorkspaceClient({
       workspace={workspace}
       loadIssue={loadIssue}
       refreshStatus={refreshStatus}
+      contextNotice={initialContextNotice}
       mode={mode}
       period={controls?.period ?? initialPeriod}
       detailBasis={controls?.detailBasis ?? initialDetailBasis}
@@ -721,7 +723,6 @@ function requireCurrentPerformanceDetails(
   if (
     !isPerformanceDetailsSourceCurrent(details, {
       portfolioId: controls.portfolioId,
-      asOfDate: controls.sourceAsOfDate,
       period: controls.period,
     })
   ) {

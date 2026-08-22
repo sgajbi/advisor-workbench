@@ -196,43 +196,27 @@ describe("PerformanceAnalyticsPage", () => {
     expect(fetchMock.mock.calls[0]?.[0].toString()).toContain("/api/v1/lookups/portfolios");
   });
 
-  it.each([
-    {
-      name: "valuation date",
-      searchParams: {
-        portfolioId: "DEMO_ADV_USD_001",
-        asOfDate: "2026-02-23",
-      },
-    },
-    {
-      name: "reporting currency",
-      searchParams: {
-        portfolioId: "DEMO_ADV_USD_001",
-        reportingCurrency: "EUR",
-      },
-    },
-  ])("withholds analytical detail when the requested $name is not source-confirmed", async ({
-    searchParams,
-  }) => {
+  it("keeps analytics usable while explaining unsupported review date and currency controls", async () => {
     installPerformancePageFetchMock();
 
-    await renderPerformancePage(searchParams);
+    await renderPerformancePage({
+      portfolioId: "DEMO_ADV_USD_001",
+      asOfDate: "2026-02-23",
+      reportingCurrency: "EUR",
+    });
 
-    expect(
-      screen.getByText(/not confirmed by the performance source/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Use available performance context" }),
-    ).toHaveAttribute(
-      "href",
-      "/performance?portfolioId=DEMO_ADV_USD_001&asOfDate=2026-02-24&reportingCurrency=USD",
-    );
+    expect(screen.getByTestId("workbench-context-notice")).toBeInTheDocument();
+    expect(screen.getByText(/source valuation date 2026-02-24/i)).toBeInTheDocument();
+    expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
+    expect(await findWorkflowControl(/^Performance Overview/i)).toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(
-      fetchMock.mock.calls.some(([input]) =>
-        isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001"),
-      ),
+      fetchMock.mock.calls.some(([input]) => {
+        const url = input.toString();
+        return url.includes("/performance/summary") &&
+          (url.includes("as_of_date") || url.includes("reporting_currency"));
+      }),
     ).toBe(false);
   });
 
