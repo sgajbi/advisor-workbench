@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity, formatStatus } from "@/apps/portfolio/formatters";
+import {
+  formatBusinessDate,
+  formatCount,
+  formatCurrency,
+  formatDate,
+  formatPct,
+  formatQuantity,
+  formatStatus,
+} from "@/apps/portfolio/formatters";
 
 describe("portfolio formatters", () => {
   it("renders percentages with two decimal places", () => {
@@ -27,6 +35,11 @@ describe("portfolio formatters", () => {
     expect(formatDate("2026-03-28T23:30:00-05:00")).toBe("29 Mar 2026, 04:30 UTC");
     expect(formatDate("2026-03-28T08:00:00")).toBe("N/A");
     expect(formatDate("2026-03-28untrusted")).toBe("N/A");
+  });
+
+  it("keeps timestamp-encoded domain dates distinct from exact instants", () => {
+    expect(formatBusinessDate("2026-03-28T08:00:00Z")).toBe("28 Mar 2026");
+    expect(formatBusinessDate("2026-03-28T23:30:00-05:00")).toBe("29 Mar 2026");
   });
 
   it("formats counts and statuses consistently", () => {

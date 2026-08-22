@@ -1,5 +1,5 @@
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
-import { formatDate, formatStatus } from "../formatters";
+import { formatBusinessDate, formatStatus } from "../formatters";
 import {
   buildPortfolioTransactionSettlementState,
   type PortfolioTransactionSettlementState,
@@ -160,8 +160,8 @@ export function formatTransactionLedgerCoverage(params: {
 
 export function buildTransactionExportRows(rows: TransactionRow[], baseCurrency: string) {
   return rows.map((row) => ({
-    "Trade Date": formatDate(row.tradeDate),
-    "Settle Date": formatDate(row.settleDate),
+    "Trade Date": formatBusinessDate(row.tradeDate),
+    "Settle Date": formatBusinessDate(row.settleDate),
     Type: row.type,
     Instrument: row.instrument,
     Quantity: row.quantity,

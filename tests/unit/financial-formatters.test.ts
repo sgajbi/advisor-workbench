@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatBusinessDateValue,
+  formatCalendarDateValue,
   formatCurrencyValue,
   formatDateValue,
   formatNumber,
@@ -52,6 +53,12 @@ describe("financial-formatters", () => {
     expect(
       formatBusinessDateValue("2026-02-29", { nullDisplay: "Not confirmed" }),
     ).toBe("Not confirmed");
+  });
+
+  it("normalizes legacy timestamp-encoded business dates to the UTC calendar", () => {
+    expect(formatCalendarDateValue("2026-03-28")).toBe("28 Mar 2026");
+    expect(formatCalendarDateValue("2026-03-28T23:30:00-05:00")).toBe("29 Mar 2026");
+    expect(formatCalendarDateValue("2026-03-28T08:00:00")).toBe("N/A");
   });
 
   it("requires timestamp zone evidence and always discloses normalized UTC", () => {

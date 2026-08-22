@@ -135,7 +135,34 @@ export function formatBusinessDateValue(
     return nullDisplay;
   }
 
-  return `${String(parts.day).padStart(2, "0")} ${SHORT_MONTHS[parts.month - 1]} ${parts.year}`;
+  return formatBusinessDateParts(parts);
+}
+
+/**
+ * Formats a field whose domain meaning is a calendar date even when a legacy
+ * contract encodes that date as an offset-bearing timestamp. Timestamp inputs
+ * are normalized to the product's disclosed UTC convention before selecting
+ * their calendar components. Do not use this for audit or generated-at instants.
+ */
+export function formatCalendarDateValue(
+  value: string | null | undefined,
+  { nullDisplay = "N/A" }: DateOptions = {},
+): string {
+  const businessDate = parseBusinessDateValue(value);
+  if (businessDate) {
+    return formatBusinessDateParts(businessDate);
+  }
+
+  const timestamp = parseTimestampValue(value);
+  if (!timestamp) {
+    return nullDisplay;
+  }
+
+  return formatBusinessDateParts({
+    year: timestamp.getUTCFullYear(),
+    month: timestamp.getUTCMonth() + 1,
+    day: timestamp.getUTCDate(),
+  });
 }
 
 /**
@@ -195,6 +222,10 @@ function daysInMonth(year: number, month: number): number {
     return leapYear ? 29 : 28;
   }
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
+}
+
+function formatBusinessDateParts(parts: BusinessDateParts): string {
+  return `${String(parts.day).padStart(2, "0")} ${SHORT_MONTHS[parts.month - 1]} ${parts.year}`;
 }
 
 function parseTimestampValue(value: string | null | undefined): Date | null {

@@ -1,4 +1,5 @@
 import {
+  formatCalendarDateValue,
   formatCurrencyValue,
   formatDateValue,
   formatNumber,
@@ -30,6 +31,10 @@ export function formatQuantity(value: number | null | undefined): string {
 
 export function formatDate(value: string | null | undefined): string {
   return formatDateValue(value);
+}
+
+export function formatBusinessDate(value: string | null | undefined): string {
+  return formatCalendarDateValue(value);
 }
 
 export function formatTimestamp(value: string | null | undefined): string {
