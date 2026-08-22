@@ -588,10 +588,18 @@ function ProposalDetailWorkspace({
     lineageSourcePosture,
   ].some((posture) => querySourceAvailability(posture) === "checking");
   const sourcePortfolioId = data.proposal.portfolio_id?.trim() || returnPortfolioId;
+  const addressedPortfolioId =
+    returnReviewContext?.portfolioId ?? returnPortfolioId;
+  const sourceReturnReviewContext =
+    sourcePortfolioId && addressedPortfolioId === sourcePortfolioId
+      ? returnReviewContext
+      : sourcePortfolioId
+        ? { portfolioId: sourcePortfolioId }
+        : undefined;
   const sourceReturnHref = sourcePortfolioId
     ? buildProposalLifecycleHref({
         portfolioId: sourcePortfolioId,
-        reviewContext: returnReviewContext,
+        reviewContext: sourceReturnReviewContext,
         mode: returnMode ?? "approval-queue",
       })
     : fallbackReturnHref;
