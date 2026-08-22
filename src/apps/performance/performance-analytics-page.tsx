@@ -3,8 +3,8 @@ import {
   getWorkbenchApiErrorStatus,
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
-import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import {
   parseReviewContext,
 } from "@/shell/review-context";
@@ -16,29 +16,10 @@ import PerformanceWorkspaceEntry from "./components/performance-workspace-entry"
 import type { PerformanceWorkspaceLoadIssue } from "./components/performance-workspace-types";
 import { isPerformanceSummarySourceCurrent } from "./performance-source-identity";
 
-type LookupEnvelope = {
-  items?: Array<{ id: string; label: string }>;
-};
-
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
   DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
 };
-async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
-  try {
-    const response = await fetch(`${resolveGatewayBaseUrl()}/api/v1/lookups/portfolios?limit=${limit}`, {
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      return [];
-    }
-    const payload = (await response.json()) as LookupEnvelope;
-    return payload.items ?? [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function PerformanceAnalyticsPage({
   searchParams,
 }: {
@@ -71,23 +52,9 @@ export default async function PerformanceAnalyticsPage({
     );
   }
 
-  const portfolios = await getPortfolioOptions();
-  const selectedPortfolioId = portfolios.some(
-    (portfolio) => portfolio.id === requestedPortfolioId,
-  )
-    ? requestedPortfolioId
-    : null;
-  if (!selectedPortfolioId) {
-    return (
-      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
-        <ReviewContextRecovery
-          body="The selected portfolio is not available in the source-confirmed portfolio catalogue. No alternative portfolio was substituted."
-          href="/book"
-          actionLabel="Choose another portfolio"
-        />
-      </AppPageShell>
-    );
-  }
+  // The Performance summary is the authoritative portfolio read. A bounded
+  // lookup page must not reject a valid portfolio from a later Advisor Book page.
+  const selectedPortfolioId = requestedPortfolioId;
 
   const requestedReportStartDate = getSearchParamValue(resolvedSearch, "reportStartDate");
   const requestedReportEndDate = getSearchParamValue(resolvedSearch, "reportEndDate");
@@ -201,12 +168,20 @@ export function buildPerformanceContextNotice({
   sourceCurrency?: string;
 }): { title: string; body: string } | null {
   const limitations: string[] = [];
-  if (requestedAsOfDate && sourceAsOfDate) {
+  if (
+    requestedAsOfDate &&
+    sourceAsOfDate &&
+    requestedAsOfDate !== sourceAsOfDate
+  ) {
     limitations.push(
-      `Performance uses the source valuation date ${sourceAsOfDate}; the advisor review date ${requestedAsOfDate} remains available when you return to other workspaces.`,
+      `Performance uses the source valuation date ${formatBusinessDateValue(sourceAsOfDate)}; the advisor review date ${formatBusinessDateValue(requestedAsOfDate)} remains available when you return to other workspaces.`,
     );
   }
-  if (requestedReportingCurrency && sourceCurrency) {
+  if (
+    requestedReportingCurrency &&
+    sourceCurrency &&
+    requestedReportingCurrency !== sourceCurrency
+  ) {
     limitations.push(
       `Performance is presented in source base currency ${sourceCurrency}; reporting-currency restatement to ${requestedReportingCurrency} is not supported by this contract.`,
     );
