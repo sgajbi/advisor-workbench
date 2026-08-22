@@ -8,6 +8,7 @@ import {
   DegradedStatePanel,
   MainWithSideRailLayout,
   SemanticBadge,
+  WorkbenchContextNotice,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
@@ -33,6 +34,7 @@ import {
   type ManageWorkspaceData,
 } from "@/features/workbench/manage-workspace-data";
 import { isManageExceptionEvidenceAvailable } from "@/features/workbench/manage-workspace-view-model";
+import { buildManageSourceContextNotice } from "@/features/workbench/manage-source-context";
 import styles from "./manage-workspace.module.css";
 
 export function ManageWorkspace({
@@ -54,6 +56,11 @@ export function ManageWorkspace({
       data.mandateHealthError ||
       !data.mandateHealth
   );
+  const contextNotice = buildManageSourceContextNotice({
+    reviewContext,
+    sourceAsOfDate: data.portfolio.as_of_date,
+    sourceCurrency: portfolio.base_currency,
+  });
 
   return (
     <AppPageShell pageKey="manage" className={`portfolio-page manage-page ${styles.manageScope}`}>
@@ -90,6 +97,12 @@ export function ManageWorkspace({
               }
             >
               <WorkbenchSectionStack className="manage-page-sections">
+                {contextNotice ? (
+                  <WorkbenchContextNotice
+                    title={contextNotice.title}
+                    body={contextNotice.body}
+                  />
+                ) : null}
                 {renderManageMode(mode, data, dpmMandateId, reviewContext)}
               </WorkbenchSectionStack>
             </WorkbenchPageFrame>

@@ -195,6 +195,41 @@ describe("AppSwitcherNav", () => {
     );
   });
 
+  it("does not project an incomplete explicit range into another workspace", () => {
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=EXPLICIT&reportingCurrency=SGD&reportStartDate=2026-01-01&reportEndDate=2026-08-21",
+      ),
+    );
+    const fallback = fallbackNormalizedCapabilities();
+    usePlatformCapabilitiesMock.mockReturnValue({
+      loading: false,
+      partialFailure: false,
+      errors: [],
+      shellBootstrapSource: "contract",
+      normalized: {
+        ...fallback,
+        shellBootstrap: {
+          ...fallback.shellBootstrap,
+          workspaces: fallback.shellBootstrap.workspaces.map((workspace) => ({
+            ...workspace,
+            enabled: true,
+            supportability: { state: "ready", reasons: [] },
+          })),
+        },
+      },
+    });
+
+    render(<AppSwitcherNav />);
+    openWorkspaceMenu();
+
+    for (const workspace of ["Portfolio", "Performance", "Risk", "Proposal", "Advisory"]) {
+      const href = screen.getByRole("link", { name: workspace }).getAttribute("href");
+      expect(href).not.toMatch(/period=EXPLICIT|reportStartDate|reportEndDate/);
+      expect(href).toContain("portfolioId=PB_SG_GLOBAL_BAL_001");
+    }
+  });
+
   it("fails closed when a governed field is ambiguous", () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams(

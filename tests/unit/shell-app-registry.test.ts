@@ -114,9 +114,19 @@ describe("resolveShellRouteContext", () => {
     });
     expect(
       resolveShellDestinationReviewContextPolicy("/performance?mode=risk"),
-    ).toBeUndefined();
+    ).toEqual({
+      acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "3Y", "5Y", "SI"],
+    });
     expect(
       resolveShellDestinationReviewContextPolicy("/book"),
-    ).toBeUndefined();
+    ).toEqual({
+      acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"],
+    });
+    expect(resolveShellDestinationReviewContextPolicy("/proposals")).toEqual({
+      acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "3Y", "5Y", "SI"],
+    });
+    expect(resolveShellDestinationReviewContextPolicy("/recommendations")).toEqual({
+      acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "3Y", "5Y", "SI"],
+    });
   });
 });
