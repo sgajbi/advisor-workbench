@@ -7,6 +7,10 @@ import {
 
 import type { PortfolioWorkspace } from "./types";
 import {
+  isPortfolioPerformanceWindowCurrent,
+  type PortfolioPerformanceWindowRequest,
+} from "./portfolio-performance-window";
+import {
   buildInitialPortfolioControls,
   getPortfolioCurrencyOptions,
   PORTFOLIO_TIME_WINDOW_OPTIONS,
@@ -108,7 +112,11 @@ export function isPortfolioReviewResponseCurrent<
     as_of_date?: string;
     income_summary?: Readonly<{ reporting_currency: string }> | null;
     activity_summary?: Readonly<{ reporting_currency: string }> | null;
-    performance?: Readonly<{ period: string }> | null;
+    performance?: Readonly<{
+      period: string;
+      report_start_date?: string | null;
+      report_end_date?: string | null;
+    }> | null;
   }>,
 >(
   response: Response | null,
@@ -116,13 +124,17 @@ export function isPortfolioReviewResponseCurrent<
     PortfolioWorkspaceControls,
     "asOfDate" | "reportingCurrency" | "timeWindow"
   >,
+  performanceWindow: PortfolioPerformanceWindowRequest,
 ): response is Response & Readonly<{ as_of_date: string }> {
   if (response?.as_of_date !== controls.asOfDate) {
     return false;
   }
   if (
     response.performance &&
-    response.performance.period !== controls.timeWindow
+    !isPortfolioPerformanceWindowCurrent(
+      response.performance,
+      performanceWindow,
+    )
   ) {
     return false;
   }

@@ -283,7 +283,10 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      if (details && isPortfolioReviewResponseCurrent(details, controls)) {
+      if (
+        details &&
+        isPortfolioReviewResponseCurrent(details, controls, request.params)
+      ) {
         setWorkspaceState((current) =>
           current ? mergePortfolioWorkspace(current, details) : current
         );
@@ -357,7 +360,13 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    if (!isPortfolioReviewResponseCurrent(details, requestedControls)) {
+    if (
+      !isPortfolioReviewResponseCurrent(
+        details,
+        requestedControls,
+        request.params,
+      )
+    ) {
       setControlTransition({
         sourceKey: initialWorkspaceSourceKey,
         status: "failed",

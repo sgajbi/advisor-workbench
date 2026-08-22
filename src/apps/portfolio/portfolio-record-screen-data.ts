@@ -90,14 +90,17 @@ export async function loadPortfolioRecordScreenData({
     controls.timeWindow,
     shell.profile.open_date,
   );
+  const performanceWindow = {
+    timeWindow: controls.timeWindow,
+    reportStartDate: window.startDate,
+    reportEndDate: window.endDate,
+  } as const;
   const [summaryDetails, detailedDetails] = await Promise.all([
     getPortfolioWorkspaceSummaryDetails(selectedPortfolioId, {
       asOfDate: controls.asOfDate,
       reportingCurrency: controls.reportingCurrency,
       includeProjected: true,
-      timeWindow: controls.timeWindow,
-      reportStartDate: window.startDate,
-      reportEndDate: window.endDate,
+      ...performanceWindow,
       includeWorkflowActions: false,
     }),
     getPortfolioWorkspaceDetailedDetails(selectedPortfolioId, {
@@ -108,7 +111,13 @@ export async function loadPortfolioRecordScreenData({
     }),
   ]);
 
-  if (!isPortfolioReviewResponseCurrent(summaryDetails, controls)) {
+  if (
+    !isPortfolioReviewResponseCurrent(
+      summaryDetails,
+      controls,
+      performanceWindow,
+    )
+  ) {
     return {
       portfolioId: selectedPortfolioId,
       workspace: null,
