@@ -15,6 +15,7 @@ export default function PortfolioPositionsRecordScreen(props: PortfolioRecordScr
           key={props.workspace.portfolio.portfolio_id}
           workspace={props.workspace}
           asOfDate={context.selectedAsOfDate}
+          initialSelectedRecordId={props.selectedRecordId}
         />
       ) : null}
     </PortfolioRecordScreenShell>

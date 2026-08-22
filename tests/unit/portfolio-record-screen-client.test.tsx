@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   PortfolioAllocationSelection,
@@ -13,6 +13,13 @@ import PortfolioPositionsRecordScreen from "../../src/apps/portfolio/components/
 import PortfolioTransactionsRecordScreen from "../../src/apps/portfolio/components/portfolio-transactions-record-screen";
 
 type MockGridRow = { transactionId: string };
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname || "/positions",
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 
 vi.mock("ag-grid-react", () => ({
   AgGridReact: ({
@@ -41,8 +48,18 @@ vi.mock(
   () => ({ default: ({ children }: { children: ReactNode }) => <>{children}</> }),
 );
 
+beforeEach(() => {
+  window.history.replaceState(
+    {},
+    "",
+    "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
+  );
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  routerPushMock.mockClear();
+  window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001");
 });
 vi.mock(
   "../../src/apps/portfolio/components/portfolio-screen-rail",
@@ -364,6 +381,88 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     );
     expect(screen.getByText("US_TECH · 100 USD gross")).toBeInTheDocument();
     expect(screen.queryByText("SG_BOND · 200 SGD")).not.toBeInTheDocument();
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=EQ_US_1",
+      { scroll: false },
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Close holding review" }),
+    );
+    expect(
+      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+    ).not.toBeInTheDocument();
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
+      { scroll: false },
+    );
+  });
+
+  it("rehydrates a source-confirmed holding from the address", () => {
+    render(
+      <PortfolioPositionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={buildWorkspace()}
+        selectedRecordId="FI_SG_1"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Singapore Government Bond" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not substitute another holding when addressed identity is absent", () => {
+    render(
+      <PortfolioPositionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={buildWorkspace()}
+        selectedRecordId="NOT_IN_BOOK"
+      />,
+    );
+
+    expect(
+      screen.getByText("Holding is not in this confirmed portfolio view"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("follows Back and Forward style address changes without retaining stale detail", () => {
+    const workspace = buildWorkspace();
+    const { rerender } = render(
+      <PortfolioPositionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+        selectedRecordId="EQ_US_1"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "US Technology Equity" }),
+    ).toBeInTheDocument();
+
+    rerender(
+      <PortfolioPositionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+      />,
+    );
+    expect(
+      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <PortfolioPositionsRecordScreen
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        workspace={workspace}
+        selectedRecordId="FI_SG_1"
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Singapore Government Bond" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps unavailable cash and activity detail visibly partial", () => {
