@@ -1,10 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
-import { Panel, Text } from "@/design-system";
+import { Panel, ScreenStatePanel, Text } from "@/design-system";
 import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
+import { parseReviewContext } from "@/shell/review-context";
 import {
   buildPortfolioScreenNavigationModel,
   type PortfolioScreenNavigationKey,
@@ -27,8 +28,18 @@ export default function PortfolioScreenRail({
   modeNavigationLabel?: string;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const reviewContextResult = parseReviewContext(searchParams);
+  const portfolioContextMismatch =
+    reviewContextResult.status === "valid" &&
+    reviewContextResult.context.portfolioId !== undefined &&
+    reviewContextResult.context.portfolioId !== portfolioId;
+  const reviewContextInvalid =
+    reviewContextResult.status === "invalid" || portfolioContextMismatch;
   const navigationModel = buildPortfolioScreenNavigationModel(
-    { portfolioId },
+    reviewContextResult.status === "valid" && !portfolioContextMismatch
+      ? { ...reviewContextResult.context, portfolioId }
+      : { portfolioId },
     activeScreen,
   );
   const [navigationExpanded, setNavigationExpanded] = useState(false);
@@ -92,16 +103,27 @@ export default function PortfolioScreenRail({
           </span>
         </button>
       </div>
-      <PortfolioScreenRailNavigation
-        key={navigationExpanded ? "expanded" : "collapsed"}
-        id={navigationId}
-        expanded={navigationExpanded}
-        model={navigationModel}
-        activeScreen={activeScreen}
-        modeItems={modeItems}
-        modeNavigationLabel={modeNavigationLabel}
-        onDestinationSelected={() => closeCompactNavigation()}
-      />
+      {reviewContextInvalid ? (
+        <div role="alert">
+          <ScreenStatePanel
+            kind="error"
+            surface="portfolio"
+            title="Review context needs attention"
+            body="The portfolio review address contains conflicting or unsupported context. Correct the portfolio, date, period, or currency before opening another workspace."
+          />
+        </div>
+      ) : (
+        <PortfolioScreenRailNavigation
+          key={navigationExpanded ? "expanded" : "collapsed"}
+          id={navigationId}
+          expanded={navigationExpanded}
+          model={navigationModel}
+          activeScreen={activeScreen}
+          modeItems={modeItems}
+          modeNavigationLabel={modeNavigationLabel}
+          onDestinationSelected={() => closeCompactNavigation()}
+        />
+      )}
     </Panel>
   );
 }
