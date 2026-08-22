@@ -2,7 +2,7 @@
 
 import { ActionButton, AnalyticsTable, ScreenStatePanel, SectionBlock, SemanticBadge } from "@/design-system";
 
-import type { ReportBatchHandle, ReportBatchStatus } from "../contracts";
+import type { ReportBatchReference, ReportBatchStatus } from "../contracts";
 import styles from "../report-ordering-workspace.module.css";
 
 export function ReportBatchStatusPanel({
@@ -13,7 +13,7 @@ export function ReportBatchStatusPanel({
   onRefresh,
 }: {
   status: ReportBatchStatus | null;
-  acceptedHandle: ReportBatchHandle | null;
+  acceptedHandle: ReportBatchReference | null;
   requestedOutputFormats: string[];
   error: string | null;
   onRefresh: () => void;

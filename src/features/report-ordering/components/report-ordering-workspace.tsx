@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -37,20 +37,35 @@ type ReportOrderingPortfolio = {
   baseCurrency: string;
 };
 
-export function ReportOrderingWorkspace({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
+export function ReportOrderingWorkspace({
+  portfolio,
+  initialBatchId,
+}: {
+  portfolio: ReportOrderingPortfolio;
+  initialBatchId?: string;
+}) {
   return (
     <ReportOrderingWorkspaceSession
-      key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.baseCurrency}`}
+      key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.baseCurrency}:${initialBatchId ?? "new"}`}
       portfolio={portfolio}
+      initialBatchId={initialBatchId}
     />
   );
 }
 
-function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderingPortfolio }) {
+function ReportOrderingWorkspaceSession({
+  portfolio,
+  initialBatchId,
+}: {
+  portfolio: ReportOrderingPortfolio;
+  initialBatchId?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>("single_portfolio");
+  const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>(
+    initialBatchId ? "explicit_portfolio_batch" : "single_portfolio",
+  );
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
   const [portfolioSelectionState, setPortfolioSelectionState] =
     useState<"loading" | "ready" | "error">("loading");
@@ -70,6 +85,19 @@ function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderi
     },
     [pathname, portfolio.portfolioId, router, searchParams],
   );
+  const clearBatchAddress = useCallback(() => {
+    const href = buildReviewContextNavigationHref({
+      pathname,
+      searchParams,
+      patch: {
+        portfolioId: portfolio.portfolioId,
+        batchId: undefined,
+      },
+    });
+    if (href) {
+      router.push(href, { scroll: false });
+    }
+  }, [pathname, portfolio.portfolioId, router, searchParams]);
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
@@ -77,8 +105,15 @@ function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderi
     scopeMode,
     selectedPortfolioIds,
     portfolioSelectionState,
+    initialBatchId,
     onBatchAccepted: commitBatchAddress,
   });
+  useEffect(() => {
+    if (workflow.batchPortfolioIds.length > 0) {
+      setSelectedPortfolioIds(workflow.batchPortfolioIds);
+      setPortfolioSelectionState("ready");
+    }
+  }, [workflow.batchPortfolioIds]);
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
   const focusIntentRef = useRef(0);
@@ -114,6 +149,7 @@ function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderi
       return;
     }
     focusIntentRef.current += 1;
+    clearBatchAddress();
     requestAnimationFrame(() => configurationRef.current?.focus());
   }
 
@@ -153,7 +189,15 @@ function ReportOrderingWorkspaceSession({ portfolio }: { portfolio: ReportOrderi
               }
             >
               <WorkbenchSectionStack className={styles.contentStack}>
-                {workspaceState.kind !== "configuration" &&
+                {initialBatchId ? (
+                  <ReportBatchStatusPanel
+                    status={workflow.batchStatus}
+                    acceptedHandle={workflow.submittedBatchHandle}
+                    requestedOutputFormats={workflow.batchRequestedOutputFormats}
+                    error={workflow.batchStatusError}
+                    onRefresh={() => void workflow.refreshBatchStatus()}
+                  />
+                ) : workspaceState.kind !== "configuration" &&
                 workspaceState.kind !== "accepted" ? (
                   <ScreenStatePanel
                     className={styles.terminalState}

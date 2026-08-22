@@ -330,6 +330,10 @@ export type ReportJobListResponse = z.infer<typeof reportJobListResponseSchema>;
 export type ReportJobListItem = ReportJobListResponse["items"][number];
 export type ReportBatchHandle = z.infer<typeof reportBatchHandleSchema>;
 export type ReportBatchStatus = z.infer<typeof reportBatchStatusSchema>;
+export type ReportBatchReference = Pick<
+  ReportBatchStatus,
+  "batch_id" | "supportability" | "render_supportability"
+>;
 export type ReportBatchItem = ReportBatchStatus["items"][number];
 
 export function parseReportOrderingResponse(value: unknown): ReportOrderingResponse {

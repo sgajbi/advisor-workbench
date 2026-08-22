@@ -64,6 +64,7 @@ describe("portfolio screen navigation", () => {
       period: "YTD",
       reportingCurrency: "SGD",
       selectedRecordId: "SG000001",
+      batchId: "rbch_1",
     });
 
     expect(items.find((item) => item.key === "positions")?.href).toBe(
@@ -72,6 +73,7 @@ describe("portfolio screen navigation", () => {
     expect(items.find((item) => item.key === "risk")?.href).toBe(
       "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
     );
+    expect(items.map((item) => item.href).join(" ")).not.toContain("batchId");
   });
 
   it("keeps five business domains primary and groups the remaining tasks", () => {

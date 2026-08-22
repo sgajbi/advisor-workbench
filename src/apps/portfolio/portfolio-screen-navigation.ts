@@ -1,5 +1,6 @@
 import {
   buildReviewContextHref,
+  scopeReviewContextForWorkspace,
   type ReviewContext,
 } from "@/shell/review-context";
 
@@ -208,7 +209,8 @@ export function buildPortfolioScreenHref(
   href: string,
   reviewContext: PortfolioReviewContext,
 ) {
-  const { selectedRecordId: _selectedRecordId, ...workspaceContext } =
-    reviewContext;
-  return buildReviewContextHref(href, workspaceContext);
+  return buildReviewContextHref(
+    href,
+    scopeReviewContextForWorkspace(reviewContext),
+  );
 }

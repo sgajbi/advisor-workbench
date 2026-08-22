@@ -1,3 +1,9 @@
+import {
+  buildReviewContextHref,
+  parseReviewContext,
+  scopeReviewContextForWorkspace,
+} from "@/shell/review-context";
+
 export function buildPortfolioContextHref({
   pathname,
   searchParams,
@@ -7,26 +13,35 @@ export function buildPortfolioContextHref({
   searchParams: URLSearchParams | Readonly<URLSearchParams>;
   portfolioId: string;
 }): string {
+  const reviewContextResult = parseReviewContext(searchParams);
+  if (reviewContextResult.status === "invalid") {
+    return "/book";
+  }
+  const workspaceContext = {
+    ...scopeReviewContextForWorkspace(reviewContextResult.context),
+    portfolioId,
+  };
   const query = new URLSearchParams(searchParams.toString());
-  query.delete("portfolioId");
 
   if (pathname === "/book") {
-    const portfolioQuery = new URLSearchParams();
-    const asOfDate = query.get("asOfDate");
-    if (asOfDate) {
-      portfolioQuery.set("asOfDate", asOfDate);
-    }
-    portfolioQuery.set("portfolioId", portfolioId);
-    return withQuery("/portfolio", portfolioQuery);
+    return buildReviewContextHref("/portfolio", {
+      portfolioId,
+      asOfDate: workspaceContext.asOfDate,
+    });
   }
 
   const workbenchMatch = pathname.match(/^\/workbench\/[^/]+$/);
   if (workbenchMatch) {
-    return withQuery(`/workbench/${encodeURIComponent(portfolioId)}`, query);
+    return buildReviewContextHref(
+      withQuery(`/workbench/${encodeURIComponent(portfolioId)}`, query),
+      workspaceContext,
+    );
   }
 
-  query.set("portfolioId", portfolioId);
-  return withQuery(pathname || "/portfolio", query);
+  return buildReviewContextHref(
+    withQuery(pathname || "/portfolio", query),
+    workspaceContext,
+  );
 }
 
 function withQuery(pathname: string, query: URLSearchParams): string {
