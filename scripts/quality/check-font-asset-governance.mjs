@@ -29,6 +29,8 @@ const REMOTE_FONT_DELIVERY_PATTERNS = [
   ["remote font asset", /(?:https?:)?\/\/[^\s"'`)<]+\.(?:woff2?|ttf|otf|eot)(?:[?#][^\s"'`)<]*)?/i],
   ["remote stylesheet link", /<link\b(?=[^>]*\brel\s*=\s*["']stylesheet["'])(?=[^>]*\bhref\s*=\s*["'](?:https?:)?\/\/)[^>]*>/i],
 ];
+const TYPESCRIPT_FONT_GOVERNANCE_CANDIDATE =
+  /next\/font\/|@fontsource\/|typeface-|<\s*link\b|createElement|FontFace|\bfont(?:Family)?\b|setProperty/;
 
 function resolveDefaultRepoRoot() {
   return resolve(fileURLToPath(new URL("../..", import.meta.url)));
@@ -458,7 +460,10 @@ function nonCanonicalFontDelivery(relativePath, text) {
     violations.push("font shorthand outside shared semantic tokens");
   }
 
-  if (extname(relativePath) !== ".css") {
+  if (
+    extname(relativePath) !== ".css" &&
+    TYPESCRIPT_FONT_GOVERNANCE_CANDIDATE.test(text)
+  ) {
     const sourceFile = ts.createSourceFile(relativePath, text, ts.ScriptTarget.Latest, true, relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     if (hasRuntimeJsxStylesheetLink(sourceFile)) {
       violations.push("runtime stylesheet link outside governed loader");
@@ -650,19 +655,29 @@ export function validateFontAssetGovernance({ repoRoot, manifest } = {}) {
     throw new Error(`Font asset governance is missing required forbidden runtime hosts: ${missingForbiddenHosts.join(", ")}.`);
   }
 
-  const publicFontReferences = sourceFiles(resolve(effectiveRepoRoot, "src")).flatMap((filePath) => {
-    const text = readFileSync(filePath, "utf8");
+  // Build one immutable source snapshot. The governance rules below inspect the
+  // same bytes, while AST parsing is reserved for files that contain a relevant
+  // font-delivery token. This keeps the blocking gate deterministic under the
+  // full unit suite without weakening same-origin or semantic-token checks.
+  const sourceSnapshot = sourceFiles(resolve(effectiveRepoRoot, "src")).map((filePath) => ({
+    filePath,
+    relativePath: relative(effectiveRepoRoot, filePath).replaceAll("\\", "/"),
+    text: readFileSync(filePath, "utf8"),
+  }));
+
+  const publicFontReferences = sourceSnapshot.flatMap(({ relativePath, text }) => {
     const normalizedText = text.toLowerCase();
-    return forbiddenHosts.filter((host) => normalizedText.includes(host.toLowerCase())).map((host) => `${relative(effectiveRepoRoot, filePath).replaceAll("\\", "/")}: ${host}`);
+    return forbiddenHosts
+      .filter((host) => normalizedText.includes(host.toLowerCase()))
+      .map((host) => `${relativePath}: ${host}`);
   });
   if (publicFontReferences.length > 0) {
     throw new Error(`Public font runtime references are forbidden: ${publicFontReferences.join(", ")}.`);
   }
 
-  const fontDeliveryViolations = sourceFiles(resolve(effectiveRepoRoot, "src")).flatMap((filePath) => {
-    const relativePath = relative(effectiveRepoRoot, filePath).replaceAll("\\", "/");
-    return nonCanonicalFontDelivery(relativePath, readFileSync(filePath, "utf8"));
-  });
+  const fontDeliveryViolations = sourceSnapshot.flatMap(({ relativePath, text }) =>
+    nonCanonicalFontDelivery(relativePath, text),
+  );
   if (fontDeliveryViolations.length > 0) {
     throw new Error(`Font delivery must remain same-origin through src/app/fonts.ts: ${fontDeliveryViolations.join(", ")}.`);
   }
