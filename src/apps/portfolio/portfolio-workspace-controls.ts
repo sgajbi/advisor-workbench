@@ -98,17 +98,36 @@ export function applyPortfolioControlPatch(
 }
 
 /**
- * Admits analytical evidence only when the source confirms the same valuation
- * date as the control transaction. This keeps delayed or tolerant responses
- * from being merged under a newer review context.
+ * Admits analytical evidence only when dated book evidence and every available
+ * reporting-currency source confirm the control transaction. Currency sources
+ * may be absent in a partial response; those modules remain visibly unavailable
+ * rather than blocking dated holdings. The composite response does not echo the
+ * requested period, so period identity remains a Gateway contract follow-up.
  */
 export function isPortfolioReviewResponseCurrent<
-  Response extends Readonly<{ as_of_date?: string }>,
+  Response extends Readonly<{
+    as_of_date?: string;
+    income_summary?: Readonly<{ reporting_currency: string }> | null;
+    activity_summary?: Readonly<{ reporting_currency: string }> | null;
+  }>,
 >(
   response: Response | null,
-  controls: Pick<PortfolioWorkspaceControls, "asOfDate">,
+  controls: Pick<PortfolioWorkspaceControls, "asOfDate" | "reportingCurrency">,
 ): response is Response & Readonly<{ as_of_date: string }> {
-  return response?.as_of_date === controls.asOfDate;
+  if (response?.as_of_date !== controls.asOfDate) {
+    return false;
+  }
+
+  const confirmedCurrencies = [
+    response.income_summary?.reporting_currency,
+    response.activity_summary?.reporting_currency,
+  ].filter((currency): currency is string => Boolean(currency));
+  return (
+    confirmedCurrencies.length === 0 ||
+    confirmedCurrencies.every(
+      (currency) => currency === controls.reportingCurrency,
+    )
+  );
 }
 
 export function buildPortfolioReviewHref({
