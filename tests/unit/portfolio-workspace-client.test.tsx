@@ -120,7 +120,7 @@ describe("PortfolioWorkspaceClient", () => {
     window.localStorage.clear();
   });
 
-  it("does not duplicate summary fetches in strict mode and ignores legacy detailed mode changes", async () => {
+  it("does not duplicate summary fetches in strict mode and preserves explicit detail changes", async () => {
     getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
     getSummaryDetailsMock.mockResolvedValue({
       positions: [{ security_id: "EQ_1" }],
@@ -168,7 +168,7 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("view-mode")).toHaveTextContent("summary");
+      expect(screen.getByTestId("view-mode")).toHaveTextContent("detailed");
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
