@@ -153,6 +153,34 @@ export function buildReviewContextHref(
   return `${pathname}${query ? `?${query}` : ""}${hash}`;
 }
 
+/**
+ * Applies a bounded review-context change to the current local address. The
+ * complete current context must be valid before any field is changed; an
+ * explicit `undefined` removes a governed field while page-local state stays
+ * intact.
+ */
+export function buildReviewContextNavigationHref({
+  pathname,
+  searchParams,
+  patch,
+}: {
+  pathname: string;
+  searchParams: ReviewContextSearchParams & { toString(): string };
+  patch: Partial<ReviewContext>;
+}): string | null {
+  const reviewContextResult = parseReviewContext(searchParams);
+  if (reviewContextResult.status === "invalid") {
+    return null;
+  }
+
+  const currentQuery = searchParams.toString();
+  const currentHref = `${pathname}${currentQuery ? `?${currentQuery}` : ""}`;
+  return buildReviewContextHref(currentHref, {
+    ...reviewContextResult.context,
+    ...patch,
+  });
+}
+
 function getSearchParamValues(
   searchParams: ReviewContextSearchParams,
   key: string,

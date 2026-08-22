@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildReviewContextHref,
+  buildReviewContextNavigationHref,
   parseReviewContext,
   REVIEW_PERIODS,
   serializeReviewContext,
@@ -209,6 +210,35 @@ describe("governed review context", () => {
 
   it("does not add an empty query marker when context is unconfirmed", () => {
     expect(buildReviewContextHref("/portfolio", {})).toBe("/portfolio");
+  });
+
+  it("patches current context while preserving page-local state", () => {
+    expect(
+      buildReviewContextNavigationHref({
+        pathname: "/reports",
+        searchParams: new URLSearchParams(
+          "portfolioId=PB_001&selectedRecordId=ROW_001&view=progress",
+        ),
+        patch: {
+          selectedRecordId: undefined,
+          batchId: "BATCH_001",
+        },
+      }),
+    ).toBe(
+      "/reports?portfolioId=PB_001&batchId=BATCH_001&view=progress",
+    );
+  });
+
+  it("does not patch an ambiguous current address", () => {
+    expect(
+      buildReviewContextNavigationHref({
+        pathname: "/reports",
+        searchParams: new URLSearchParams(
+          "portfolioId=PB_001&portfolioId=PB_002",
+        ),
+        patch: { batchId: "BATCH_001" },
+      }),
+    ).toBeNull();
   });
 
   it.each([
