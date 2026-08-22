@@ -75,7 +75,7 @@ export default function WorkbenchRefreshStatus(props: WorkbenchRefreshStatusProp
           className={styles.action}
           onClick={props.onRetry}
           disabled={props.retrying ?? false}
-          aria-label={props.retryLabel ?? "Retry source refresh"}
+          aria-label={props.retryLabel ?? "Retry performance selection"}
         >
           {props.retrying ? "Retrying…" : "Retry selection"}
         </ActionButton>
