@@ -87,9 +87,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 26,
-      coverageExceptions: 10,
-      unmappedGuides: 10,
+      mappedGuides: 27,
+      coverageExceptions: 9,
+      unmappedGuides: 9,
     });
   });
 
@@ -756,6 +756,41 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
     expect(guide).toContain("does not:\n\n- calculate portfolio value");
     expect(guide).toContain("not a claim of competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Mandate Health to one source-window-truthful exception guide", () => {
+    const registry = loadRegistry();
+    const mandateHealth = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "mandate-health",
+    );
+
+    expect(mandateHealth).toMatchObject({
+      routePattern: "/workbench/{portfolioId}",
+      mode: "mandate",
+      wikiSlug: "Mandate-Health-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-core", "lotus-manage"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/workbench/use-manage-exception-source-window.ts",
+        "src/features/workbench/components/manage-mandate-health.tsx",
+        "src/design-system/hooks/use-source-window.ts",
+        "tests/unit/manage-workspace-components.test.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "scripts/live/validation/browser-workflows.mjs",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Mandate-Health-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("**shown in this view**, not as a total");
+    expect(guide).toContain("rejects rows without a\n  source-owned exception identity");
+    expect(guide).toContain("last confirmed source view during continuation loading or failure");
+    expect(guide).toContain("does not:\n\n- calculate mandate health");
     expect(validate(registry).errors).toEqual([]);
   });
 

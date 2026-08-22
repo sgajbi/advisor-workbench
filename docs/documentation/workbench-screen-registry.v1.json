@@ -637,19 +637,24 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "wikiSlug": "Mandate-Health-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-manage"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/manage-workspace-view-model.ts",
+        "src/features/workbench/dpm-command-center-api.ts",
+        "src/features/workbench/use-manage-exception-source-window.ts",
+        "src/features/workbench/components/manage-mandate-health.tsx",
+        "src/design-system/hooks/use-source-window.ts",
+        "src/design-system/components/source-window-navigation.tsx",
+        "tests/unit/manage-workspace-view-model.test.ts",
+        "tests/unit/manage-workspace-components.test.tsx",
+        "tests/unit/workbench-api.test.ts"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-core-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "rebalance-waves",

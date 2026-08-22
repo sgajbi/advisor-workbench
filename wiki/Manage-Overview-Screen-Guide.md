@@ -55,8 +55,9 @@ investment approval, client-delivery authority, or execution authority.
    mandate risk profile.
 3. Read **Evidence incomplete**, **Action required**, or **Ready for review** before using the
    remaining posture.
-4. Review up to four current-window mandate attention items and open Mandate Health for the full
-   source-backed investigation.
+4. Review up to four first-source-view mandate attention items. When more source views exist, the
+   visible count is labelled as shown rather than complete; open
+   [Mandate Health](Mandate-Health-Screen-Guide) to continue the source-backed investigation.
 5. Review the active rebalance stage and its source readiness without inferring execution.
 6. Open the task directory entry that matches the next portfolio-management decision.
 
@@ -72,8 +73,9 @@ handing the user to a focused Manage mode.
   overview incomplete.
 - Summarises Manage-owned mandate health, data readiness, rebalance stage, and active attention
   count without replacing missing values with favourable defaults.
-- Claims zero attention items only when the source evidence is complete, non-degraded, and not
-  truncated.
+- Keeps valid first-source-view attention items visible when more source views exist, labels that
+  posture explicitly, and claims zero only when the source evidence is complete, non-degraded, and
+  exhaustive.
 - Provides a compact attention worklist with business severity, observation, owner, age, and the
   source-supported next step.
 - Keeps active rebalance stage, source readiness, issue count, and support note distinct from order,
@@ -124,6 +126,7 @@ remains in [API Surface](API-Surface), and ownership flow remains in
 | Action required | Source evidence is usable and one or more active attention items are reported | Review the worklist and open Mandate Health |
 | Evidence incomplete | One or more named overview facts or source surfaces are missing or failed | Use the named partial-state list and open the relevant focused mode when available |
 | Attention evidence unavailable | No zero-attention conclusion; the worklist explains the missing evidence | Re-establish the source response or follow the support path |
+| Partial first source view | Returned items remain visible with **N shown; more available** rather than a total | Open Mandate Health and continue through the source views |
 | Empty attention worklist | Source-confirmed statement that the current window has no active items | Continue the review without inferring enterprise-wide absence |
 | Missing or unavailable risk profile | **Not reported** plus a named incomplete surface | Review the Manage mandate source; do not assume a balanced profile or treat an unavailable sentinel as evidence |
 | Wave supportability identity mismatch | Row-confirmed evidence only; unmatched response-level state, counts, readiness, and reason are not borrowed | Open Rebalance Waves and reconcile the source wave identity |
@@ -159,7 +162,8 @@ unsupported capability, and this guide is not a claim of competitor superiority.
 
 - [Advisor Book](Advisor-Book-Workflow) owns supported own-book portfolio selection.
 - [Portfolio Review](Portfolio-Review-Screen-Guide) owns the daily selected-portfolio checkpoint.
-- Mandate Health owns detailed mandate evidence and attention-item investigation.
+- [Mandate Health](Mandate-Health-Screen-Guide) owns detailed mandate evidence, cursor-bounded
+  attention review, and selected-item investigation.
 - Rebalance Waves owns source-backed wave, campaign, readiness, and evidence workflow.
 - Construction Alternatives owns governed generation and comparison of supported alternatives.
 - Portfolio Memory owns source-recorded decisions and operating events.

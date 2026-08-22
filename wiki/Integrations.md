@@ -205,7 +205,9 @@ must travel through Gateway-shaped contracts.
     dimensions as a selected-item review flow. Missing scores, owners, actions, and evidence remain
     unavailable. Workbench does not reconstruct mandate-health scores, source readiness, PM-book
     membership, exception queues, priority, aggregate-to-item action relationships, or resolution
-    state.
+    state. Manage owns exception ordering and continuation cursors; Workbench keeps each valid
+    returned view reviewable, labels partial scope explicitly, and uses the BFF for continuation
+    without merging views or inventing a complete count.
 18. `lotus-advise` owns advisor-led proposal workflow truth. Workbench proposal queue/detail
     routes consume that truth through Gateway proposal endpoints only. The RFC-0023 proposal detail
     panel can record advisor-use narrative review and request reviewed narrative report packaging

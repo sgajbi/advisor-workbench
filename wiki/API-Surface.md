@@ -223,6 +223,10 @@ promote dormant labels into product ownership just because historical route file
   readiness, monitoring posture, active exceptions, exception-specific owners and next steps,
   health dimensions, and progressively disclosed lineage in a selected-item workflow. It renders
   scores only when the source publishes usable values and leaves missing attributes unavailable.
+  Exception reads remain cursor-bounded. A non-null `next_cursor` means the returned rows are a
+  reviewable source view, not a complete queue; browser continuation requests use
+  `/api/bff/api/v1/dpm/command-center/exceptions` with the exact portfolio, mandate, active state,
+  limit, and source cursor. A zero-attention statement requires an exhaustive response.
   It does not calculate mandate health, infer PM-book membership or exception priority, reconstruct
   source readiness, merge exceptions, bind aggregate actions to an individual exception, resolve
   exceptions locally, or call `lotus-manage` or `lotus-ai` directly. Demo promotion still requires

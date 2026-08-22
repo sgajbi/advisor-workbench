@@ -27,6 +27,7 @@
 - [Performance Evidence](Performance-Evidence-Screen-Guide)
 - [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - [Manage Overview](Manage-Overview-Screen-Guide)
+- [Mandate Health](Mandate-Health-Screen-Guide)
 - [Rebalance Waves](Rebalance-Waves-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)

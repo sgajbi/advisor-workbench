@@ -146,7 +146,12 @@ Current repository posture:
    not calculate mandate health, infer readiness or priority from exception count, merge exceptions,
    attach book-level actions to an exception, generate remediation narrative locally, or call
    `lotus-manage`/`lotus-ai` directly. Overview must fail closed when the mandate risk profile or
-   attention-window evidence is missing. Governed unavailable risk-profile sentinels are missing
+   attention-window evidence is missing. A valid cursor-bounded exception view remains reviewable
+   when more source rows exist: show returned source-owned rows, label the visible count as a view
+   rather than a total, and require an explicit null continuation cursor before claiming exhaustive
+   or zero-attention posture. Browser continuation reads use the BFF, retain the last confirmed view
+   during failure, and fence response identity by portfolio, mandate, state, and requested cursor.
+   Never fabricate an exception identity for selection. Governed unavailable risk-profile sentinels are missing
    evidence, not usable profiles: the business label and completeness decision must share one
    normalized availability rule. Overview must not default risk posture, claim zero exceptions,
    or advertise generated construction alternatives that it has not fetched. Lead with named
