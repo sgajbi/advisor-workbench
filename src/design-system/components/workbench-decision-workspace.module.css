@@ -16,7 +16,7 @@
   top: var(--space-4);
 }
 
-@media (max-width: 1160px) {
+@media (max-width: 900px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }

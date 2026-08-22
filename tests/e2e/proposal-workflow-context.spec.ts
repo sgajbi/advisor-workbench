@@ -1309,6 +1309,12 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
   page,
 }, testInfo) => {
   const recordedEvaluationIds: string[] = [];
+  const proposalQueueRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/api\/bff\/api\/v1\/proposals\?/.test(request.url())) {
+      proposalQueueRequests.push(request.url());
+    }
+  });
   await page.setViewportSize({ width: 1440, height: 1100 });
   await mockProposalQueue(page);
   await mockSuitabilityReviews(page, recordedEvaluationIds);
@@ -1318,6 +1324,23 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
 
   const firstReview = page.getByRole("option", { name: /PRP-RISK-001/i });
   const secondReview = page.getByRole("option", { name: /PRP-INCOME-002/i });
+  await expect(page.getByLabel("Policy review counts")).toContainText(
+    /2\s*In review\s*2\s*Need action/,
+  );
+  await expect(page.getByRole("table")).toHaveCount(0);
+  expect(proposalQueueRequests).toEqual([]);
+
+  const decisionWorkspace = page.getByTestId("workbench-decision-workspace");
+  const desktopWorklistBox = await decisionWorkspace
+    .locator(":scope > div")
+    .boundingBox();
+  const desktopDecisionBox = await decisionWorkspace
+    .locator(":scope > section")
+    .boundingBox();
+  expect(desktopWorklistBox).not.toBeNull();
+  expect(desktopDecisionBox).not.toBeNull();
+  expect(desktopDecisionBox!.x).toBeGreaterThan(desktopWorklistBox!.x);
+
   await expect(firstReview).toHaveAttribute("aria-selected", "true");
   await firstReview.press("ArrowDown");
   await expect(secondReview).toHaveAttribute("aria-selected", "true");
@@ -1326,8 +1349,14 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
     name: "Selected suitability review",
   });
   await expect(
-    selectedReview.getByRole("heading", { name: "PRP-INCOME-002 · ppv_002" }),
+    selectedReview.getByRole("heading", { name: "PRP-INCOME-002" }),
   ).toBeVisible();
+  await expect(
+    selectedReview.getByRole("link", { name: "Open full proposal" }),
+  ).toHaveAttribute(
+    "href",
+    `/proposals/PRP-INCOME-002?portfolioId=${portfolioId}&fromMode=suitability`,
+  );
   await expect(
     selectedReview.getByText("Source evidence complete"),
   ).toBeVisible();
@@ -1346,8 +1375,28 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
     contentType: "image/png",
   });
 
+  await page.setViewportSize({ width: 1024, height: 900 });
+  const tabletWorklistBox = await decisionWorkspace
+    .locator(":scope > div")
+    .boundingBox();
+  const tabletDecisionBox = await decisionWorkspace
+    .locator(":scope > section")
+    .boundingBox();
+  expect(tabletWorklistBox).not.toBeNull();
+  expect(tabletDecisionBox).not.toBeNull();
+  expect(tabletDecisionBox!.x).toBeGreaterThan(tabletWorklistBox!.x);
+
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(secondReview).toHaveAttribute("aria-selected", "true");
+  const mobileWorklistBox = await decisionWorkspace
+    .locator(":scope > div")
+    .boundingBox();
+  const mobileDecisionBox = await decisionWorkspace
+    .locator(":scope > section")
+    .boundingBox();
+  expect(mobileWorklistBox).not.toBeNull();
+  expect(mobileDecisionBox).not.toBeNull();
+  expect(mobileDecisionBox!.y).toBeGreaterThan(mobileWorklistBox!.y);
   const hasHorizontalOverflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth >

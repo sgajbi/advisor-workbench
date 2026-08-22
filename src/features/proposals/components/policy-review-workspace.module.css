@@ -266,9 +266,27 @@
     width: 100%;
   }
 
+  .policyWorklistSelector :global([data-workbench-record-facts]) {
+    display: none;
+  }
+
   .policyEvidenceGrid,
-  .policyControlGrid,
+  .policyControlGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .policyEvidenceColumns {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .policyEvidenceGrid,
+  .policyControlGrid {
+    column-gap: 4px;
+  }
+
+  .policyEvidenceMetric {
+    padding-inline: 8px;
   }
 }
