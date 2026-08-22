@@ -19,7 +19,9 @@ import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recove
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
+  hasPortfolioSourceControlOverride,
   isPortfolioReviewResponseCurrent,
+  restorePortfolioSourceControls,
 } from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
@@ -283,21 +285,56 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      if (
-        details &&
-        isPortfolioReviewResponseCurrent(details, controls, request.params)
-      ) {
+      const responseIsCurrent = isPortfolioReviewResponseCurrent(
+        details,
+        controls,
+        request.params,
+      );
+      let completedRequestKey = scopedRequestKey;
+      if (responseIsCurrent) {
         setWorkspaceState((current) =>
           current ? mergePortfolioWorkspace(current, details) : current
         );
-      } else if (details) {
-        setControlTransition({
-          sourceKey: initialWorkspaceSourceKey,
-          status: "failed",
-          requestedControls: controls,
-        });
+      } else {
+        const requestedControls = controls;
+        const sourceOverrideRequested = hasPortfolioSourceControlOverride(
+          controls,
+          workspaceState,
+        );
+        if (sourceOverrideRequested) {
+          const confirmedControls = restorePortfolioSourceControls(
+            controls,
+            workspaceState,
+          );
+          const confirmedContext = buildPortfolioWorkspaceContext(
+            workspaceState,
+            confirmedControls,
+          );
+          const confirmedRequest = buildPortfolioSummaryDetailsRequest(
+            selectedPortfolioId,
+            confirmedContext,
+          );
+          completedRequestKey = `${initialWorkspaceSourceKey}|${confirmedRequest.key}`;
+          setControls(confirmedControls);
+          router.replace(
+            buildPortfolioReviewHref({
+              pathname,
+              searchParams: searchParams ?? new URLSearchParams(),
+              portfolioId: selectedPortfolioId,
+              controls: confirmedControls,
+            }),
+            { scroll: false },
+          );
+        }
+        if (details || sourceOverrideRequested) {
+          setControlTransition({
+            sourceKey: initialWorkspaceSourceKey,
+            status: "failed",
+            requestedControls,
+          });
+        }
       }
-      summaryRequestRef.current = { key: scopedRequestKey, status: "loaded" };
+      summaryRequestRef.current = { key: completedRequestKey, status: "loaded" };
     }
 
     void loadSummaryDetails();
@@ -309,7 +346,11 @@ export default function PortfolioWorkspaceClient({
     context,
     controls,
     initialWorkspaceSourceKey,
+    pathname,
+    router,
+    searchParams,
     selectedPortfolioId,
+    setControls,
     setWorkspaceState,
     workspaceState,
   ]);
