@@ -29,12 +29,14 @@ export default function PortfolioWorkspaceToolbar({
   onControlsChange,
   onExport,
   quickActions,
+  contextChangePending = false,
 }: {
   controls: PortfolioWorkspaceControls;
   context: PortfolioWorkspaceContext;
   onControlsChange: (patch: Partial<PortfolioWorkspaceControls>) => void;
   onExport: () => void;
   quickActions: Array<{ key: string; label: string; href: string }>;
+  contextChangePending?: boolean;
 }) {
   const [actionsAnchor, setActionsAnchor] = useState<HTMLElement | null>(null);
 
@@ -90,7 +92,7 @@ export default function PortfolioWorkspaceToolbar({
                   onChange={(event) => onControlsChange({ asOfDate: event.target.value })}
                   inputProps={{ max: context.selectedAsOfDate }}
                   title={historicalControlTitle}
-                  disabled={!context.supportsHistoricalSnapshots}
+                  disabled={!context.supportsHistoricalSnapshots || contextChangePending}
                 />
               </div>
 
@@ -106,7 +108,7 @@ export default function PortfolioWorkspaceToolbar({
                   }
                   SelectProps={{ native: true }}
                   title={reportingCurrencyControlTitle}
-                  disabled={!context.supportsReportingCurrencyRestatement}
+                  disabled={!context.supportsReportingCurrencyRestatement || contextChangePending}
                 >
                   {context.currencyOptions.map((option) => (
                     <option key={option} value={option}>
@@ -155,6 +157,7 @@ export default function PortfolioWorkspaceToolbar({
                   options={PORTFOLIO_TIME_WINDOW_OPTIONS.map((option) => ({
                     key: option,
                     label: option,
+                    disabled: contextChangePending,
                   }))}
                   ariaLabel="Portfolio period presets"
                   className={choiceStyles.period}
