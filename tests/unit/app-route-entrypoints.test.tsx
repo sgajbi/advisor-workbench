@@ -28,10 +28,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/features/proposals/components/advisory-overview-workspace", () => ({
-  default: ({ portfolioId }: { portfolioId: string }) => (
+  default: ({
+    reviewContext,
+  }: {
+    reviewContext: { portfolioId: string };
+  }) => (
     <section>
       <h2>Advisory Overview</h2>
-      <p>{portfolioId}</p>
+      <p>{reviewContext.portfolioId}</p>
     </section>
   ),
 }));
@@ -79,13 +83,13 @@ vi.mock("@/features/proposals/components/proposal-lifecycle-workspace", () => ({
 vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
   default: ({
     title,
-    portfolioId,
+    reviewContext,
     workflowContext,
     workflowContextPresentation,
     children,
   }: {
     title: string;
-    portfolioId: string;
+    reviewContext: { portfolioId: string };
     workflowContext?: { sourceLabel: string };
     workflowContextPresentation?: string;
     children: React.ReactNode;
@@ -96,7 +100,7 @@ vi.mock("@/features/proposals/components/proposal-workspace-shell", () => ({
       data-source-label={workflowContext?.sourceLabel}
     >
       <h1>{title}</h1>
-      <p>{portfolioId}</p>
+      <p>{reviewContext.portfolioId}</p>
       {children}
     </section>
   ),

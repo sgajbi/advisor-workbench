@@ -20,28 +20,54 @@ describe("advisory journey navigation", () => {
   });
 
   it("builds portfolio-scoped routes without leaking service terminology into navigation", () => {
-    expect(buildAdvisoryJourneyHref("PB SG/001", "overview")).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001",
+    const reviewContext = {
+      portfolioId: "PB SG/001",
+      asOfDate: "2026-06-30",
+      period: "YTD" as const,
+      reportingCurrency: "SGD",
+      selectedRecordId: "proposal-123",
+      batchId: "batch-456",
+    };
+    const governedQuery =
+      "portfolioId=PB+SG%2F001&asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD";
+
+    expect(buildAdvisoryJourneyHref(reviewContext, "overview")).toBe(
+      `/recommendations?${governedQuery}`,
     );
-    expect(buildAdvisoryJourneyHref("PB SG/001", "cockpit")).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001&mode=cockpit",
+    expect(buildAdvisoryJourneyHref(reviewContext, "cockpit")).toBe(
+      `/recommendations?${governedQuery}&mode=cockpit`,
     );
-    expect(buildAdvisoryJourneyHref("PB SG/001", "copilot")).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001&mode=copilot",
+    expect(buildAdvisoryJourneyHref(reviewContext, "copilot")).toBe(
+      `/recommendations?${governedQuery}&mode=copilot`,
     );
-    expect(buildAdvisoryJourneyHref("PB SG/001", "proposal-builder")).toBe(
-      "/proposals/simulate?portfolioId=PB%20SG%2F001",
+    expect(buildAdvisoryJourneyHref(reviewContext, "proposal-builder")).toBe(
+      `/proposals/simulate?${governedQuery}`,
     );
-    expect(buildAdvisoryJourneyHref("PB SG/001", "risk-impact")).toBe(
-      "/proposals?portfolioId=PB%20SG%2F001&mode=risk-impact",
+    expect(buildAdvisoryJourneyHref(reviewContext, "risk-impact")).toBe(
+      `/proposals?${governedQuery}&mode=risk-impact`,
     );
-    expect(buildAdvisoryJourneyHref("PB SG/001", "proof")).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001&mode=proof",
+    expect(buildAdvisoryJourneyHref(reviewContext, "proof")).toBe(
+      `/recommendations?${governedQuery}&mode=proof`,
+    );
+
+    expect(buildAdvisoryJourneyHref(reviewContext, "proof")).not.toContain(
+      "selectedRecordId",
+    );
+    expect(buildAdvisoryJourneyHref(reviewContext, "proof")).not.toContain(
+      "batchId",
     );
   });
 
   it("builds dense shell-visible journey items with one active mode", () => {
-    const items = buildAdvisoryJourneyModeItems("PB_1", "approval-queue");
+    const items = buildAdvisoryJourneyModeItems(
+      {
+        portfolioId: "PB_1",
+        asOfDate: "2026-06-30",
+        period: "3Y",
+        reportingCurrency: "USD",
+      },
+      "approval-queue",
+    );
 
     expect(items.map((item) => item.key)).toEqual([
       "overview",
@@ -63,7 +89,8 @@ describe("advisory journey navigation", () => {
       {
         label: "Builder",
         detail: "Draft trades",
-        href: "/proposals/simulate?portfolioId=PB_1",
+        href:
+          "/proposals/simulate?portfolioId=PB_1&asOfDate=2026-06-30&period=3Y&reportingCurrency=USD",
       },
     );
     expect(items.some((item) => item.key === "simulation")).toBe(false);

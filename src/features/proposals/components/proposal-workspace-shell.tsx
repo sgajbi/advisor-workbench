@@ -4,6 +4,7 @@ import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-ra
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import {
   buildAdvisoryJourneyModeItems,
+  type AdvisoryJourneyReviewContext,
   type AdvisoryJourneyMode,
 } from "../advisory-journey-navigation";
 import {
@@ -32,7 +33,7 @@ export function resolveProposalPortfolioId(portfolioId?: string | null): string 
 }
 
 export default function ProposalWorkspaceShell({
-  portfolioId,
+  reviewContext,
   activeScreen,
   activeMode = activeScreen === "advisory" ? "overview" : "approval-queue",
   title,
@@ -41,7 +42,7 @@ export default function ProposalWorkspaceShell({
   workflowContextPresentation = "rail",
   children,
 }: {
-  portfolioId: string;
+  reviewContext: AdvisoryJourneyReviewContext;
   activeScreen: Extract<PortfolioScreenNavigationKey, "proposal" | "advisory">;
   activeMode?: AdvisoryJourneyMode;
   title: string;
@@ -50,6 +51,7 @@ export default function ProposalWorkspaceShell({
   workflowContextPresentation?: "rail" | "inline-boundary";
   children: ReactNode;
 }) {
+  const { portfolioId } = reviewContext;
   const initialWorkflowContext =
     workflowContext ??
     buildNeutralProposalWorkflowContext({
@@ -71,7 +73,7 @@ export default function ProposalWorkspaceShell({
               <PortfolioScreenRail
                 portfolioId={portfolioId}
                 activeScreen={activeScreen}
-                modeItems={buildAdvisoryJourneyModeItems(portfolioId, activeMode)}
+                modeItems={buildAdvisoryJourneyModeItems(reviewContext, activeMode)}
                 modeNavigationLabel="Advisory lifecycle navigation"
               />
             }

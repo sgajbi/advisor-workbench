@@ -38,7 +38,7 @@ export default async function ProposalSimulatePage({
   const initialAsOfDate = reviewContextResult.context.asOfDate ?? "";
   return (
     <ProposalWorkspaceShell
-      portfolioId={portfolioId}
+      reviewContext={{ ...reviewContextResult.context, portfolioId }}
       activeScreen="proposal"
       activeMode="proposal-builder"
       title="Proposal Workspace"
