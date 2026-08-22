@@ -503,7 +503,12 @@ describe("manage workspace split components", () => {
       <ManageContextRail
         data={buildManageWorkspaceData()}
         activeMode="reviews"
-        reviewContext={{ portfolioId: "PF_1001" }}
+        reviewContext={{
+          portfolioId: "PF_1001",
+          asOfDate: "2026-04-10",
+          period: "YTD",
+          reportingCurrency: "SGD",
+        }}
       />,
     );
 
@@ -523,11 +528,11 @@ describe("manage workspace split components", () => {
 
     expect(screen.getByRole("link", { name: "Open PM Quality" })).toHaveAttribute(
       "href",
-      "/workbench/PF_1001?portfolioId=PF_1001&mode=quality"
+      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&mode=quality"
     );
     expect(screen.getByRole("link", { name: "Return to Portfolio" })).toHaveAttribute(
       "href",
-      "/portfolio?portfolioId=PF_1001"
+      "/portfolio?portfolioId=PF_1001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD"
     );
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
   });
