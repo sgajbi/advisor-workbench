@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfolio-workspace-client";
+import { buildInitialPortfolioControls } from "../../src/apps/portfolio/view-model";
 import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
@@ -412,6 +413,38 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("withholds automatic detail that does not confirm URL-derived controls", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue({
+      as_of_date: initialWorkspace.as_of_date,
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+    });
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+        initialControls={{
+          ...buildInitialPortfolioControls(initialWorkspace),
+          asOfDate: "2026-03-20",
+        }}
+      />,
+    );
+
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({ asOfDate: "2026-03-20" }),
+    );
+    expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
+    expect(screen.getByRole("alert")).toHaveTextContent("Review context was not changed");
+    expect(routerPushMock).not.toHaveBeenCalled();
   });
 
   it("adopts a changed server-rendered workspace snapshot even when summary request parameters are unchanged", async () => {
