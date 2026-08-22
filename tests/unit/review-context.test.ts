@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildReviewContextHref,
   parseReviewContext,
   REVIEW_PERIODS,
   serializeReviewContext,
@@ -156,5 +157,57 @@ describe("governed review context", () => {
     expect(() =>
       serializeReviewContext({ reportingCurrency: "US Dollar" }),
     ).toThrowError("Invalid review-context value for reportingCurrency.");
+  });
+
+  it("composes governed context before page-local destination state", () => {
+    expect(
+      buildReviewContextHref("/performance?mode=risk", {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-08-21",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      }),
+    ).toBe(
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
+    );
+  });
+
+  it("replaces stale or repeated governed destination values exactly once", () => {
+    const href =
+      "/positions?portfolioId=STALE&portfolioId=STALE_AGAIN&period=30D&instrumentType=BOND";
+
+    expect(
+      buildReviewContextHref(href, {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        period: "1Y",
+      }),
+    ).toBe(
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&period=1Y&instrumentType=BOND",
+    );
+  });
+
+  it("preserves page-local multiplicity and fragments", () => {
+    expect(
+      buildReviewContextHref(
+        "/transactions?status=BOOKED&status=PENDING#activity",
+        { portfolioId: "PB_SG_GLOBAL_BAL_001" },
+      ),
+    ).toBe(
+      "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&status=BOOKED&status=PENDING#activity",
+    );
+  });
+
+  it("does not add an empty query marker when context is unconfirmed", () => {
+    expect(buildReviewContextHref("/portfolio", {})).toBe("/portfolio");
+  });
+
+  it.each([
+    "performance",
+    "https://bank.example/performance",
+    "//bank.example/performance",
+  ])("rejects non-local destination %s", (href) => {
+    expect(() => buildReviewContextHref(href, COMPLETE_CONTEXT)).toThrowError(
+      "Review-context destinations must be local absolute paths.",
+    );
   });
 });
