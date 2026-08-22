@@ -67,8 +67,9 @@ handing the user to a focused Manage mode.
 
 - Presents Core-owned portfolio value, position count, cash weight, base currency, and identity
   through the Workbench BFF and Gateway.
-- Presents the mandate risk profile only when Manage reports it; an absent value is **Not
-  reported** and makes the overview incomplete.
+- Presents the mandate risk profile only when Manage reports a usable value; absent and governed
+  unavailable values such as `UNKNOWN` or `NOT_AVAILABLE` are **Not reported** and make the
+  overview incomplete.
 - Summarises Manage-owned mandate health, data readiness, rebalance stage, and active attention
   count without replacing missing values with favourable defaults.
 - Claims zero attention items only when the source evidence is complete, non-degraded, and not
@@ -77,7 +78,8 @@ handing the user to a focused Manage mode.
   source-supported next step.
 - Keeps active rebalance stage, source readiness, issue count, and support note distinct from order,
   execution, and settlement posture, and presents them only when the wave contract explicitly
-  includes the selected portfolio.
+  includes the selected portfolio. Response-level wave supportability supplements a selected row
+  only when both carry the same source wave identity; row evidence remains authoritative.
 - Provides one reusable, keyboard-accessible business-task directory for Mandate Health, Rebalance
   Waves, Construction Alternatives, Portfolio Memory, PM Operating Quality, Outcome Reviews, and
   Evidence Pack.
@@ -123,7 +125,8 @@ remains in [API Surface](API-Surface), and ownership flow remains in
 | Evidence incomplete | One or more named overview facts or source surfaces are missing or failed | Use the named partial-state list and open the relevant focused mode when available |
 | Attention evidence unavailable | No zero-attention conclusion; the worklist explains the missing evidence | Re-establish the source response or follow the support path |
 | Empty attention worklist | Source-confirmed statement that the current window has no active items | Continue the review without inferring enterprise-wide absence |
-| Missing risk profile | **Not reported** plus a named incomplete surface | Review the Manage mandate source; do not assume a balanced profile |
+| Missing or unavailable risk profile | **Not reported** plus a named incomplete surface | Review the Manage mandate source; do not assume a balanced profile or treat an unavailable sentinel as evidence |
+| Wave supportability identity mismatch | Row-confirmed evidence only; unmatched response-level state, counts, readiness, and reason are not borrowed | Open Rebalance Waves and reconcile the source wave identity |
 | No portfolio-scoped wave | **Not available**, **Wave: Not reported**, and no borrowed item or issue count | Open Rebalance Waves for the broader source worklist; do not infer membership from an identifier |
 | Portfolio unavailable | Manage workspace unavailable state with supported Portfolio or Performance handoff | Confirm the portfolio context, then follow the approved support process |
 | Permission blocked | The owning source request fails closed; restricted evidence is not rendered as current | Use an entitled role or approved support path |

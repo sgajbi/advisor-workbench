@@ -12,6 +12,7 @@ import {
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,
+  isBusinessValueAvailable,
   isManageExceptionEvidenceComplete,
   readStringFromResponse,
   toneForState,
@@ -33,7 +34,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
-  const portfolioWave = buildPortfolioWaveOverview(data.waves?.data, portfolioId);
+  const portfolioWave = buildPortfolioWaveOverview(data.waves, portfolioId);
   const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = filterManageExceptionRowsForMandate(
@@ -57,13 +58,14 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const pmQualityFairnessAnalysisCount =
     data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
   const riskProfile = readStringFromResponse(data.mandate, "risk_profile");
+  const hasRiskProfile = isBusinessValueAvailable(riskProfile);
   const blockedSurfaces = [
     data.commandCenterError ||
     data.mandateHealthError ||
     !data.mandateHealth
       ? "Mandate health"
       : null,
-    riskProfile ? null : "Mandate risk profile",
+    hasRiskProfile ? null : "Mandate risk profile",
     !hasCompleteExceptionEvidence ? "Mandate attention items" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
@@ -86,7 +88,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       marketValue: formatAmount(portfolio.overview.market_value_base),
       cashWeight: formatPct(portfolio.overview.cash_weight_pct),
       positionCount: portfolio.overview.position_count,
-      riskProfile: riskProfile ? businessStateLabel(riskProfile) : "Not reported",
+      riskProfile: hasRiskProfile ? businessStateLabel(riskProfile) : "Not reported",
     },
     postureCards: [
       {
@@ -281,8 +283,11 @@ function formatEvidenceRecordCount(count: number): string {
   return `${count} evidence ${count === 1 ? "record" : "records"}`;
 }
 
-function buildPortfolioWaveOverview(data: unknown, portfolioId: string) {
-  const items = readRecordArray(asRecord(data)?.items);
+function buildPortfolioWaveOverview(response: unknown, portfolioId: string) {
+  const responseRecord = asRecord(response);
+  const data = asRecord(responseRecord?.data);
+  const responseSupportability = asRecord(responseRecord?.supportability);
+  const items = readRecordArray(data?.items);
   const wave = items.find((item) => waveIncludesPortfolio(item, portfolioId));
 
   if (!wave) {
@@ -298,23 +303,37 @@ function buildPortfolioWaveOverview(data: unknown, portfolioId: string) {
   }
 
   const aggregateMetrics = asRecord(wave.aggregate_metrics);
+  const waveId = readRecordString(wave, "wave_id");
+  const matchedResponseSupportability =
+    waveId !== null &&
+    readRecordString(responseSupportability ?? {}, "wave_id") === waveId
+      ? responseSupportability
+      : null;
   return {
-    waveId: readRecordString(wave, "wave_id"),
+    waveId,
     state:
       readRecordString(wave, "wave_state") ??
       readRecordString(wave, "state") ??
+      readRecordString(matchedResponseSupportability ?? {}, "wave_state") ??
       "N/A",
     triggerType: readRecordString(wave, "trigger_type"),
     itemCount: formatRecordValue(
-      wave.item_count ?? aggregateMetrics?.item_count,
+      wave.item_count ??
+        aggregateMetrics?.item_count ??
+        matchedResponseSupportability?.item_count,
     ),
     issueCount: formatRecordValue(
-      wave.issue_count ?? aggregateMetrics?.issue_count,
+      wave.issue_count ??
+        aggregateMetrics?.issue_count ??
+        matchedResponseSupportability?.issue_count,
     ),
     supportabilityState:
-      readRecordString(wave, "supportability_state") ?? "N/A",
+      readRecordString(wave, "supportability_state") ??
+      readRecordString(matchedResponseSupportability ?? {}, "state") ??
+      "N/A",
     supportabilityReason:
-      readRecordString(wave, "supportability_reason") ?? "N/A",
+      readRecordString(wave, "supportability_reason") ??
+      firstNonEmpty(...readStringArray(matchedResponseSupportability?.reason_codes)),
   };
 }
 

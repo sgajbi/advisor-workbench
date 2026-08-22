@@ -747,7 +747,12 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("operates as a work checkpoint rather than a feature catalogue");
-    expect(guide).toContain("absent value is **Not\n  reported**");
+    expect(guide).toContain(
+      "governed\n  unavailable values such as `UNKNOWN` or `NOT_AVAILABLE` are **Not reported**",
+    );
+    expect(guide).toContain(
+      "only when both carry the same source wave identity; row evidence remains authoritative",
+    );
     expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
     expect(guide).toContain("does not:\n\n- calculate portfolio value");
     expect(guide).toContain("not a claim of competitor superiority");

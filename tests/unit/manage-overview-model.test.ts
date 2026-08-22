@@ -131,6 +131,32 @@ describe("manage overview model", () => {
     expect(model.overviewPostureTone).toBe("warn");
   });
 
+  it.each(["N/A", "UNKNOWN", "NOT_AVAILABLE", "not reported", "Unavailable"])(
+    "treats the unavailable risk-profile sentinel %s as incomplete",
+    (riskProfile) => {
+      const base = buildManageWorkspaceData();
+      const model = buildManageOverviewModel(
+        buildManageWorkspaceData({
+          mandate: {
+            ...base.mandate!,
+            data: {
+              ...base.mandate!.data,
+              risk_profile: riskProfile,
+            },
+          },
+          commandCenterExceptions: {
+            ...base.commandCenterExceptions!,
+            data: { items: [], next_cursor: null },
+          },
+        }),
+      );
+
+      expect(model.portfolioSummary.riskProfile).toBe("Not reported");
+      expect(model.blockedSurfaces).toContain("Mandate risk profile");
+      expect(model.overviewPostureLabel).toBe("Evidence incomplete");
+    },
+  );
+
   it("uses a source-confirmed ready posture only when evidence is complete and no items are open", () => {
     const base = buildManageWorkspaceData();
     const model = buildManageOverviewModel(
@@ -317,6 +343,117 @@ describe("manage overview model", () => {
     );
     expect(model.latestActivities.map((activity) => activity.key)).not.toContain("wave");
   });
+
+  it("uses response supportability only when its wave identity matches the selected row", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        waves: {
+          ...base.waves!,
+          supportability: {
+            ...base.waves!.supportability,
+            wave_id: "wave_001",
+            wave_state: "READY",
+            item_count: 6,
+            issue_count: 2,
+            state: "PARTIAL",
+            reason_codes: ["SOURCE_REVIEW_REQUIRED"],
+          },
+          data: {
+            items: [
+              {
+                wave_id: "wave_001",
+                portfolio_ids: ["PF_1001"],
+                trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    expect(model.activeRebalance).toEqual({
+      triggerType: "EXPLICIT_PORTFOLIO_LIST",
+      state: "READY",
+      supportabilityState: "PARTIAL",
+      issueCount: "2",
+      supportabilityReason: "SOURCE_REVIEW_REQUIRED",
+    });
+    expect(model.latestActivities.find((activity) => activity.key === "wave")?.event).toBe(
+      "6 proposed rebalance changes prepared for review.",
+    );
+  });
+
+  it("keeps row evidence authoritative over matched response supportability", () => {
+    const base = buildManageWorkspaceData();
+    const model = buildManageOverviewModel(
+      buildManageWorkspaceData({
+        waves: {
+          ...base.waves!,
+          supportability: {
+            ...base.waves!.supportability,
+            wave_id: "wave_001",
+            wave_state: "CREATED",
+            item_count: 9,
+            issue_count: 7,
+            state: "DEGRADED",
+            reason_codes: ["RESPONSE_REASON"],
+          },
+        },
+      }),
+    );
+
+    expect(model.activeRebalance).toMatchObject({
+      state: "READY",
+      supportabilityState: "SUPPORTED",
+      issueCount: "0",
+      supportabilityReason: "WAVE_READY",
+    });
+    expect(model.latestActivities.find((activity) => activity.key === "wave")?.event).toBe(
+      "4 proposed rebalance changes prepared for review.",
+    );
+  });
+
+  it.each([null, "wave_other"])(
+    "does not borrow response supportability when the response wave identity is %s",
+    (responseWaveId) => {
+      const base = buildManageWorkspaceData();
+      const supportability = {
+        ...base.waves!.supportability,
+        wave_id: responseWaveId,
+        wave_state: "READY",
+        item_count: 4,
+        issue_count: 2,
+        state: "PARTIAL",
+        reason_codes: ["WRONG_WAVE_REASON"],
+      };
+      const model = buildManageOverviewModel(
+        buildManageWorkspaceData({
+          waves: {
+            ...base.waves!,
+            supportability,
+            data: {
+              items: [
+                {
+                  wave_id: "wave_001",
+                  portfolio_ids: ["PF_1001"],
+                  trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+                },
+              ],
+            },
+          },
+        }),
+      );
+
+      expect(model.activeRebalance).toEqual({
+        triggerType: "EXPLICIT_PORTFOLIO_LIST",
+        state: "N/A",
+        supportabilityState: "N/A",
+        issueCount: "N/A",
+        supportabilityReason: "N/A",
+      });
+    },
+  );
 
   it("keeps book-level exceptions outside the selected mandate posture", () => {
     const data = buildManageWorkspaceData();
