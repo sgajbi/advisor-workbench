@@ -75,14 +75,14 @@ describe("AppShell", () => {
 });
 
 describe("buildAdvisorBookHref", () => {
-  it("returns to the context-free advisor book from an active review", () => {
+  it("keeps only the source-required business date when returning to My book", () => {
     expect(
       buildAdvisorBookHref(
         new URLSearchParams(
           "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD&selectedRecordId=ROW_001&batchId=BATCH_001&mode=summary",
         ),
       ),
-    ).toBe("/book");
+    ).toBe("/book?asOfDate=2026-04-22");
   });
 
   it("uses the advisor book default date when no review date is active", () => {
