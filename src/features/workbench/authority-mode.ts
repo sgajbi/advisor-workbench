@@ -5,6 +5,14 @@ const DEVELOPMENT_AUTHORITY_ENVIRONMENTS = new Set([
   "test",
 ]);
 
+export function isDevelopmentAuthorityEnvironment(
+  environment = process.env.LOTUS_ENVIRONMENT,
+): boolean {
+  return DEVELOPMENT_AUTHORITY_ENVIRONMENTS.has(
+    environment?.trim().toLowerCase() || "unconfigured",
+  );
+}
+
 export type ConfiguredAuthorityMode =
   | "development_configured"
   | "authenticated_session";
@@ -19,7 +27,7 @@ export function resolveConfiguredAuthorityMode(
 ): AuthorityModeResolution {
   const environment =
     process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase() || "unconfigured";
-  const isDevelopmentEnvironment = DEVELOPMENT_AUTHORITY_ENVIRONMENTS.has(environment);
+  const isDevelopmentEnvironment = isDevelopmentAuthorityEnvironment(environment);
   const configuredMode = process.env[environmentVariable]?.trim().toLowerCase();
 
   if (

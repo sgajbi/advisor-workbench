@@ -1,4 +1,5 @@
 import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
+import { isDevelopmentAuthorityEnvironment } from "@/features/workbench/authority-mode";
 
 export type AdvisorBookAsOfDateResolution =
   | {
@@ -12,7 +13,8 @@ export type AdvisorBookAsOfDateResolution =
         | "invalid_requested_date"
         | "ambiguous_requested_date"
         | "date_not_configured"
-        | "invalid_development_configuration";
+        | "invalid_development_configuration"
+        | "development_date_not_allowed";
     };
 
 type SearchParamsReader = Pick<URLSearchParams, "getAll">;
@@ -44,14 +46,27 @@ export function resolveAdvisorBookAsOfDate(
     return { status: "not_confirmed", reason: "date_not_configured" };
   }
 
-  return isBusinessDateValue(configured)
-    ? {
-        status: "confirmed",
-        value: configured,
-        source: "development_configured",
-      }
-    : {
-        status: "not_confirmed",
-        reason: "invalid_development_configuration",
-      };
+  if (!isBusinessDateValue(configured)) {
+    return {
+      status: "not_confirmed",
+      reason: "invalid_development_configuration",
+    };
+  }
+
+  if (
+    !isDevelopmentAuthorityEnvironment(
+      process.env.WORKBENCH_BUILD_ENVIRONMENT,
+    )
+  ) {
+    return {
+      status: "not_confirmed",
+      reason: "development_date_not_allowed",
+    };
+  }
+
+  return {
+    status: "confirmed",
+    value: configured,
+    source: "development_configured",
+  };
 }

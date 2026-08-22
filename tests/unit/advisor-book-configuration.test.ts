@@ -47,6 +47,7 @@ describe("advisor-book business-date resolution", () => {
   });
 
   it("uses only an explicit valid development configuration when no date is requested", () => {
+    vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "dev");
     vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
 
     expect(resolveAdvisorBookAsOfDate(null)).toEqual({
@@ -55,6 +56,19 @@ describe("advisor-book business-date resolution", () => {
       source: "development_configured",
     });
   });
+
+  it.each(["uat", "production"])(
+    "rejects a configured development date in the %s environment",
+    (environment) => {
+      vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", environment);
+      vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+
+      expect(resolveAdvisorBookAsOfDate(null)).toEqual({
+        status: "not_confirmed",
+        reason: "development_date_not_allowed",
+      });
+    },
+  );
 
   it("does not invent a date when development configuration is absent or invalid", () => {
     vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "");

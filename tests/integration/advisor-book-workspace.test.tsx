@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisorBookWorkspace from "@/features/advisor-book/components/advisor-book-workspace";
 import { WorkbenchApiError } from "@/features/workbench/api-client";
@@ -81,6 +81,10 @@ const readyResponse = {
 } as const;
 
 describe("AdvisorBookWorkspace", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     routerReplaceMock.mockReset();
     getAdvisorBookMock.mockReset();
@@ -144,6 +148,18 @@ describe("AdvisorBookWorkspace", () => {
     expect(screen.getByText("Business date not confirmed")).toBeInTheDocument();
     expect(screen.getByText(/supplied more than once/i)).toBeInTheDocument();
     expect(screen.getByText(/Portfolio assignments have not been requested/i)).toBeInTheDocument();
+    expect(getAdvisorBookMock).not.toHaveBeenCalled();
+  });
+
+  it("does not use a configured development date outside a development environment", () => {
+    vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "production");
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+    useSearchParamsMock.mockReturnValue(new URLSearchParams());
+
+    render(<AdvisorBookWorkspace />);
+
+    expect(screen.getByText("Business date not confirmed")).toBeInTheDocument();
+    expect(screen.getByText(/local business date cannot be used/i)).toBeInTheDocument();
     expect(getAdvisorBookMock).not.toHaveBeenCalled();
   });
 
