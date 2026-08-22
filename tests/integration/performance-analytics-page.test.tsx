@@ -28,6 +28,7 @@ import {
 } from "../fixtures/performance-workspace-server-fixtures";
 
 const replaceMock = vi.fn();
+const pushMock = vi.fn();
 const RETURN_PATH_EVIDENCE_NAME =
   /^Net Return Path (?:chart|single observation comparison)$/;
 
@@ -35,6 +36,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/performance",
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
+    push: pushMock,
     replace: replaceMock,
   }),
 }));
@@ -122,17 +124,82 @@ async function findWorkflowControl(name: string | RegExp) {
   return screen.findByRole("button", { name });
 }
 
+async function renderPerformancePage(
+  searchParams: Record<string, string | readonly string[] | undefined> = {
+    portfolioId: "DEMO_ADV_USD_001",
+  },
+) {
+  render(
+    await PerformanceAnalyticsPage({
+      searchParams: Promise.resolve(searchParams),
+    }),
+  );
+}
+
 describe("PerformanceAnalyticsPage", () => {
   afterEach(() => {
     replaceMock.mockReset();
+    pushMock.mockReset();
     resetAnalyticsUiMetricEvents();
     vi.unstubAllGlobals();
+  });
+
+  it("does not request portfolio sources when review context is missing", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderPerformancePage({});
+
+    expect(screen.getByRole("heading", { name: "Review context needs attention" }))
+      .toBeInTheDocument();
+    expect(screen.getByText(/No default portfolio was substituted/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open My book" })).toHaveAttribute("href", "/book");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed before source reads when portfolio identity is ambiguous", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderPerformancePage({
+      portfolioId: ["DEMO_ADV_USD_001", "PB_SG_GLOBAL_BAL_001"],
+    });
+
+    expect(screen.getByRole("heading", { name: "Review context needs attention" }))
+      .toBeInTheDocument();
+    expect(screen.getByText(/repeated or unsupported context/i)).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not substitute another portfolio when the requested identity is unavailable", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      if (input.toString().includes("/api/v1/lookups/portfolios")) {
+        return {
+          ok: true,
+          json: async () => ({
+            items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
+          }),
+        } as Response;
+      }
+      return { ok: false, status: 404, json: async () => ({}) } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderPerformancePage({ portfolioId: "PF_NOT_IN_CATALOGUE" });
+
+    expect(screen.getByText(/No alternative portfolio was substituted/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Choose another portfolio" })).toHaveAttribute(
+      "href",
+      "/book",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0].toString()).toContain("/api/v1/lookups/portfolios");
   });
 
   it("uses the shared full-width workstation shell instead of a centered page container", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(
@@ -195,7 +262,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("records bounded route-load observability for the initial performance summary", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
 
@@ -227,9 +294,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(renderedMetrics).not.toContain("CIF_");
   });
 
-  it("prefers the front-office seeded performance portfolio when it is available", async () => {
+  it("uses the explicitly selected portfolio when another seeded portfolio is available", async () => {
     const summary = buildSupportedPerformanceScenario().workspace;
-    const details = buildSupportedPerformanceScenario().workspace;
 
     vi.stubGlobal(
       "fetch",
@@ -246,25 +312,14 @@ describe("PerformanceAnalyticsPage", () => {
             }),
           } as Response;
         }
-        if (url.includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")) {
+        if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
           return {
             ok: true,
             json: async () => ({
               ...summary,
-              portfolio_id: "PB_SG_GLOBAL_BAL_001",
-              portfolio: { ...summary.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
-              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
-            }),
-          } as Response;
-        }
-        if (url.includes("/api/bff/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/details")) {
-          return {
-            ok: true,
-            json: async () => ({
-              ...details,
-              portfolio_id: "PB_SG_GLOBAL_BAL_001",
-              portfolio: { ...details.portfolio, portfolio_id: "PB_SG_GLOBAL_BAL_001" },
-              benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+              portfolio_id: "DEMO_ADV_USD_001",
+              portfolio: { ...summary.portfolio, portfolio_id: "DEMO_ADV_USD_001" },
+              benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
             }),
           } as Response;
         }
@@ -272,7 +327,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     await waitFor(() => {
@@ -280,22 +335,27 @@ describe("PerformanceAnalyticsPage", () => {
         fetchMock.mock.calls.some(([input]) =>
           input
             .toString()
-            .includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
+            .includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")
         )
       ).toBe(true);
     });
     const summaryCall = fetchMock.mock.calls.find(([input]) =>
-      input.toString().includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
+      input.toString().includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")
     );
     expect(summaryCall?.[0].toString()).toContain("period=YTD");
     expect(summaryCall?.[0].toString()).not.toContain("report_start_date=");
     expect(summaryCall?.[0].toString()).not.toContain("report_end_date=");
     expect(summaryCall?.[0].toString()).toContain(
-      "benchmark_code=BMK_PB_GLOBAL_BALANCED_60_40"
+      "benchmark_code=BMK_GLOBAL_BALANCED_60_40"
     );
     expect(
       fetchMock.mock.calls.some(([input]) =>
-        isServerDetailsCall(input.toString(), "PB_SG_GLOBAL_BAL_001")
+        isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001")
+      )
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/api/v1/workbench/PB_SG_GLOBAL_BAL_001/performance/summary")
       )
     ).toBe(false);
   });
@@ -320,7 +380,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
 
     const blockedState = await screen.findByLabelText("Performance workspace access restricted");
     expect(blockedState).toHaveTextContent("Access restricted");
@@ -374,7 +434,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
     fireEvent.click(await findWorkflowControl(/^Risk Review/i));
 
     const riskRegion = await screen.findByRole("region", { name: "Risk" });
@@ -388,10 +448,10 @@ describe("PerformanceAnalyticsPage", () => {
     expect(riskRegion).not.toHaveTextContent("raw_entitlement_denied");
   });
 
-  it("falls back to the demo performance portfolio when the front-office seed is unavailable", async () => {
+  it("loads an explicitly selected demo portfolio when it is source-confirmed", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     await waitFor(() => {
@@ -414,7 +474,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders performance content inside the workstation shell main region", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     const mainShell = document.querySelector(".workstation-shell-main");
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -485,7 +545,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("shows summary modules by default and hides analysis modules", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(document.querySelector(".workstation-shell-main")).toBeTruthy();
     await waitFor(() => {
@@ -590,7 +650,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders a compact benchmark-unassigned state intentionally in summary mode", async () => {
     installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByLabelText("Net Return Path unavailable")).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
@@ -600,7 +660,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders the compact top analysis zone with chart-first hierarchy on first paint", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
@@ -627,7 +687,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("shows analysis modules and hides summary-only modules when analysis mode is selected", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
@@ -695,29 +755,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(
       await PerformanceAnalyticsPage({
         searchParams: Promise.resolve({
-          mode: "advisor-brief",
-        }),
-      })
-    );
-
-    expect(
-      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
-      "Source-grounded brief, drilldowns, and supportability"
-    );
-    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
-      "Internal working narrative"
-    );
-    expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
-  });
-
-  it("accepts the advisor-brief route alias and opens the advisor brief surface on first paint", async () => {
-    installPerformancePageFetchMock();
-
-    render(
-      await PerformanceAnalyticsPage({
-        searchParams: Promise.resolve({
+          portfolioId: "DEMO_ADV_USD_001",
           mode: "advisor-brief",
         }),
       })
@@ -738,7 +776,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("shows Advisor Brief as a first-class mode and allows source drilldown back to Summary and Analysis", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl("Advisor Brief"));
 
@@ -816,7 +854,7 @@ describe("PerformanceAnalyticsPage", () => {
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith(
+      expect(pushMock).toHaveBeenCalledWith(
         expect.stringContaining("/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis"),
         { scroll: false }
       );
@@ -828,7 +866,7 @@ describe("PerformanceAnalyticsPage", () => {
     async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Risk Review/i));
 
@@ -940,6 +978,7 @@ describe("PerformanceAnalyticsPage", () => {
     render(
       await PerformanceAnalyticsPage({
         searchParams: Promise.resolve({
+          portfolioId: "DEMO_ADV_USD_001",
           chartFrequency: "weekly",
           contributionDimension: "currency",
           attributionDimension: "issuer",
@@ -1034,6 +1073,7 @@ describe("PerformanceAnalyticsPage", () => {
       render(
         await PerformanceAnalyticsPage({
           searchParams: Promise.resolve({
+            portfolioId: "DEMO_ADV_USD_001",
             attributionDimension: "issuer",
             chartFrequency: "monthly",
           }),
@@ -1044,8 +1084,14 @@ describe("PerformanceAnalyticsPage", () => {
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
-          "/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
           { scroll: false }
+        );
+        expect(pushMock).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "/performance?portfolioId=DEMO_ADV_USD_001&mode=analysis",
+          ),
+          { scroll: false },
         );
       });
 
@@ -1124,6 +1170,7 @@ describe("PerformanceAnalyticsPage", () => {
       render(
         await PerformanceAnalyticsPage({
           searchParams: Promise.resolve({
+            portfolioId: "DEMO_ADV_USD_001",
             chartFrequency: "weekly",
           }),
         })
@@ -1149,7 +1196,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("keeps attribution detail out of the analysis stage when attribution data is unavailable", async () => {
     installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
@@ -1161,7 +1208,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders summary-only attribution totals when detailed rows are unavailable", async () => {
     installPerformancePageFetchScenario(buildPartialAttributionPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
@@ -1193,7 +1240,7 @@ describe("PerformanceAnalyticsPage", () => {
     };
     installPerformancePageFetchScenario(scenario);
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
@@ -1221,7 +1268,7 @@ describe("PerformanceAnalyticsPage", () => {
     };
     installPerformancePageFetchScenario(scenario);
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
@@ -1268,7 +1315,7 @@ describe("PerformanceAnalyticsPage", () => {
     async ({ scenario, expectations, absent }) => {
       installPerformancePageFetchScenario(scenario);
 
-      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
       fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
       for (const text of expectations) {
@@ -1284,7 +1331,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("disables evidence mode and keeps the page on the current supported surface", async () => {
     installPerformancePageFetchMock();
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     const evidenceTab = await findWorkflowControl(/^Evidence/i);
     expect(evidenceTab).toBeDisabled();
@@ -1345,7 +1392,7 @@ describe("PerformanceAnalyticsPage", () => {
     }) => {
       installPerformancePageFetchScenario(scenario);
 
-      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
       expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
       for (const text of summaryExpectations) {
@@ -1382,7 +1429,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders compact unavailable summary states when benchmark and return series are missing", async () => {
     installPerformancePageFetchScenario(buildBenchmarkUnassignedPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
@@ -1403,7 +1450,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("keeps summary mode free of the duplicate top trust strip when attribution detail is missing", async () => {
     installPerformancePageFetchScenario(buildUnavailableAttributionPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
@@ -1412,7 +1459,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders partial benchmark trust and chart context when a benchmark is assigned but relative returns are incomplete", async () => {
     installPerformancePageFetchScenario(buildPartialBenchmarkPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
@@ -1426,7 +1473,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("renders top contributor and detractor cards when only aggregate contribution rows are available", async () => {
     installPerformancePageFetchScenario(buildAggregateContributionPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+    await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
@@ -1439,7 +1486,7 @@ describe("PerformanceAnalyticsPage", () => {
   it("keeps deferred horizon and contributor modules coherent when multiple support gaps exist", async () => {
     installPerformancePageFetchScenario(buildCombinedPartialPerformanceScenario());
 
-    render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+      await renderPerformancePage();
 
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
@@ -1511,7 +1558,7 @@ describe("PerformanceAnalyticsPage", () => {
     }) => {
       installPerformancePageFetchScenario(scenario);
 
-      render(await PerformanceAnalyticsPage({ searchParams: Promise.resolve({}) }));
+      await renderPerformancePage();
 
       expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
 

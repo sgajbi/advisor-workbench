@@ -5,6 +5,8 @@ import {
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
+import { parseReviewContext } from "@/shell/review-context";
+import ReviewContextRecovery from "@/shell/review-context-recovery";
 import {
   normalizePerformanceWorkspaceMode,
 } from "./performance-workspace-modes";
@@ -15,7 +17,6 @@ type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
 };
 
-const PREFERRED_DEFAULT_PORTFOLIO_IDS = ["PB_SG_GLOBAL_BAL_001", "DEMO_ADV_USD_001"] as const;
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
   DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
@@ -38,48 +39,75 @@ async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label
 export default async function PerformanceAnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    portfolioId?: string;
-    period?: string;
-    detailBasis?: string;
-    detailDimension?: string;
-    contributionDimension?: string;
-    attributionDimension?: string;
-    chartFrequency?: string;
-    mode?: string;
-    benchmark?: string;
-    reportStartDate?: string;
-    reportEndDate?: string;
-  }>;
+  searchParams: Promise<Record<string, string | readonly string[] | undefined>>;
 }) {
   const resolvedSearch = await searchParams;
+  const reviewContextResult = parseReviewContext(resolvedSearch);
+  if (reviewContextResult.status === "invalid") {
+    return (
+      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
+        <ReviewContextRecovery
+          body="The performance review address contains repeated or unsupported context. No portfolio analytics were requested."
+          href="/performance"
+          actionLabel="Reset review context"
+        />
+      </AppPageShell>
+    );
+  }
+
+  const requestedPortfolioId = reviewContextResult.context.portfolioId;
+  if (!requestedPortfolioId) {
+    return (
+      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
+        <ReviewContextRecovery
+          body="Select a source-confirmed portfolio from My book before opening Performance. No default portfolio was substituted."
+          href="/book"
+          actionLabel="Open My book"
+        />
+      </AppPageShell>
+    );
+  }
+
   const portfolios = await getPortfolioOptions();
-  const defaultPortfolioId = PREFERRED_DEFAULT_PORTFOLIO_IDS.find((candidate) =>
-    portfolios.some((portfolio) => portfolio.id === candidate)
-  );
-  const selectedPortfolioId =
-    resolvedSearch.portfolioId?.trim() ||
-    defaultPortfolioId ||
-    portfolios[0]?.id ||
-    null;
-  const requestedReportStartDate = resolvedSearch.reportStartDate?.trim();
-  const requestedReportEndDate = resolvedSearch.reportEndDate?.trim();
+  const selectedPortfolioId = portfolios.some(
+    (portfolio) => portfolio.id === requestedPortfolioId,
+  )
+    ? requestedPortfolioId
+    : null;
+  if (!selectedPortfolioId) {
+    return (
+      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
+        <ReviewContextRecovery
+          body="The selected portfolio is not available in the source-confirmed portfolio catalogue. No alternative portfolio was substituted."
+          href="/book"
+          actionLabel="Choose another portfolio"
+        />
+      </AppPageShell>
+    );
+  }
+
+  const requestedReportStartDate = getSearchParamValue(resolvedSearch, "reportStartDate");
+  const requestedReportEndDate = getSearchParamValue(resolvedSearch, "reportEndDate");
   const hasRequestedDateWindow = Boolean(requestedReportStartDate || requestedReportEndDate);
   const period =
-    resolvedSearch.period?.trim() ||
+    reviewContextResult.context.period ||
     (hasRequestedDateWindow ? "EXPLICIT" : "YTD");
-  const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
-  const legacyDetailDimension = resolvedSearch.detailDimension?.trim();
+  const detailBasis = getSearchParamValue(resolvedSearch, "detailBasis") || "NET";
+  const legacyDetailDimension = getSearchParamValue(resolvedSearch, "detailDimension");
   const contributionDimension =
-    resolvedSearch.contributionDimension?.trim() || legacyDetailDimension || "asset_class";
+    getSearchParamValue(resolvedSearch, "contributionDimension") ||
+    legacyDetailDimension ||
+    "asset_class";
   const attributionDimension =
-    resolvedSearch.attributionDimension?.trim() || legacyDetailDimension || "asset_class";
-  const chartFrequency = resolvedSearch.chartFrequency?.trim() || "monthly";
-  const requestedMode = resolvedSearch.mode?.trim();
+    getSearchParamValue(resolvedSearch, "attributionDimension") ||
+    legacyDetailDimension ||
+    "asset_class";
+  const chartFrequency = getSearchParamValue(resolvedSearch, "chartFrequency") || "monthly";
+  const requestedMode = getSearchParamValue(resolvedSearch, "mode");
   const initialMode = normalizePerformanceWorkspaceMode(requestedMode) ?? "summary";
   const benchmark =
-    resolvedSearch.benchmark?.trim() ||
-    (selectedPortfolioId ? DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId] : undefined);
+    getSearchParamValue(resolvedSearch, "benchmark") ||
+    DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId];
   const reportStartDate = requestedReportStartDate;
   const reportEndDate = requestedReportEndDate;
   const workspaceRequest = {
@@ -96,23 +124,21 @@ export default async function PerformanceAnalyticsPage({
   let workspaceSummary = null;
   let workspaceDetails = null;
   let workspaceLoadIssue: PerformanceWorkspaceLoadIssue | null = null;
-  if (selectedPortfolioId) {
-    try {
-      workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
-        selectedPortfolioId,
-        workspaceRequest
-      );
-      workspaceDetails = null;
-    } catch (error) {
-      workspaceSummary = null;
-      workspaceDetails = null;
-      workspaceLoadIssue = {
-        state: isWorkbenchPermissionBlockedError(error)
-          ? "permission_blocked"
-          : "unavailable",
-        status: getWorkbenchApiErrorStatus(error) ?? undefined,
-      };
-    }
+  try {
+    workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
+      selectedPortfolioId,
+      workspaceRequest
+    );
+    workspaceDetails = null;
+  } catch (error) {
+    workspaceSummary = null;
+    workspaceDetails = null;
+    workspaceLoadIssue = {
+      state: isWorkbenchPermissionBlockedError(error)
+        ? "permission_blocked"
+        : "unavailable",
+      status: getWorkbenchApiErrorStatus(error) ?? undefined,
+    };
   }
 
   return (
@@ -132,4 +158,12 @@ export default async function PerformanceAnalyticsPage({
       />
     </AppPageShell>
   );
+}
+
+function getSearchParamValue(
+  searchParams: Readonly<Record<string, string | readonly string[] | undefined>>,
+  key: string,
+): string | undefined {
+  const value = searchParams[key];
+  return typeof value === "string" ? value.trim() || undefined : undefined;
 }
