@@ -102,6 +102,40 @@ export function applyPortfolioControlPatch(
 }
 
 /**
+ * Restores only source-owned review selectors to the portfolio shell identity.
+ * Presentation preferences stay intact because they do not change analytical
+ * evidence and should not be lost when a source context cannot be confirmed.
+ */
+export function restorePortfolioSourceControls(
+  current: PortfolioWorkspaceControls,
+  workspace: PortfolioWorkspace,
+): PortfolioWorkspaceControls {
+  const confirmed = buildInitialPortfolioControls(workspace);
+  return {
+    ...current,
+    asOfDate: confirmed.asOfDate,
+    reportingCurrency: confirmed.reportingCurrency,
+    timeWindow: confirmed.timeWindow,
+    customStartDate: confirmed.customStartDate,
+    customEndDate: confirmed.customEndDate,
+  };
+}
+
+export function hasPortfolioSourceControlOverride(
+  current: PortfolioWorkspaceControls,
+  workspace: PortfolioWorkspace,
+): boolean {
+  const confirmed = restorePortfolioSourceControls(current, workspace);
+  return (
+    current.asOfDate !== confirmed.asOfDate ||
+    current.reportingCurrency !== confirmed.reportingCurrency ||
+    current.timeWindow !== confirmed.timeWindow ||
+    current.customStartDate !== confirmed.customStartDate ||
+    current.customEndDate !== confirmed.customEndDate
+  );
+}
+
+/**
  * Admits analytical evidence only when dated book evidence and every available
  * reporting-currency and performance sources confirm the control transaction.
  * A source may be absent in a partial response; that module remains visibly

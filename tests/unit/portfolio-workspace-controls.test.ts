@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
+  hasPortfolioSourceControlOverride,
   isPortfolioReviewResponseCurrent,
   resolvePortfolioReviewControls,
+  restorePortfolioSourceControls,
 } from "@/apps/portfolio/portfolio-workspace-controls";
 import type { PortfolioWorkspace } from "@/apps/portfolio/types";
 import type { PortfolioWorkspaceControls } from "@/apps/portfolio/view-model";
@@ -108,6 +110,24 @@ describe("portfolio review-context controls", () => {
         reportingCurrency: "SGD",
       },
     });
+  });
+
+  it("restores source selectors without discarding presentation preferences", () => {
+    expect(hasPortfolioSourceControlOverride(CONTROLS, workspace)).toBe(true);
+    expect(restorePortfolioSourceControls(CONTROLS, workspace)).toEqual({
+      ...CONTROLS,
+      asOfDate: "2026-08-21",
+      reportingCurrency: "USD",
+      timeWindow: "30D",
+      customStartDate: "",
+      customEndDate: "",
+    });
+    expect(
+      hasPortfolioSourceControlOverride(
+        restorePortfolioSourceControls(CONTROLS, workspace),
+        workspace,
+      ),
+    ).toBe(false);
   });
 
   it("accepts source defaults even when optional controls are not supported", () => {

@@ -13,10 +13,11 @@ import {
 const getSummaryDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
 const routerPushMock = vi.fn();
+const routerReplaceMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
-  useRouter: () => ({ push: routerPushMock }),
+  useRouter: () => ({ push: routerPushMock, replace: routerReplaceMock }),
   useSearchParams: () =>
     new URLSearchParams("portfolioId=MANUAL_PB_USD_001&period=30D"),
 }));
@@ -416,7 +417,7 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
-  it("withholds automatic detail that does not confirm URL-derived controls", async () => {
+  it("restores source-confirmed controls when automatic detail rejects URL-derived context", async () => {
     const initialWorkspace = buildWorkspace();
     getSummaryDetailsMock.mockResolvedValue({
       as_of_date: initialWorkspace.as_of_date,
@@ -434,6 +435,7 @@ describe("PortfolioWorkspaceClient", () => {
         initialControls={{
           ...buildInitialPortfolioControls(initialWorkspace),
           asOfDate: "2026-03-20",
+          timeWindow: "YTD",
         }}
       />,
     );
@@ -444,8 +446,45 @@ describe("PortfolioWorkspaceClient", () => {
       expect.objectContaining({ asOfDate: "2026-03-20" }),
     );
     expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
     expect(screen.getByRole("alert")).toHaveTextContent("Review context was not changed");
+    expect(routerReplaceMock).toHaveBeenCalledWith(
+      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
+      { scroll: false },
+    );
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
     expect(routerPushMock).not.toHaveBeenCalled();
+  });
+
+  it("restores source-confirmed controls when automatic detail is unavailable", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue(null);
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+        initialControls={{
+          ...buildInitialPortfolioControls(initialWorkspace),
+          asOfDate: "2026-03-20",
+          timeWindow: "YTD",
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Review context was not changed",
+      );
+    });
+    expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
+    expect(routerReplaceMock).toHaveBeenCalledWith(
+      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
+      { scroll: false },
+    );
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
   it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {
