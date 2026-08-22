@@ -337,6 +337,12 @@ describe("ProposalDetailView", () => {
         <ProposalDetailView
           proposalId="pp-1"
           returnPortfolioId="PB_QUERY_CONTEXT"
+          returnReviewContext={{
+            portfolioId: "PB_QUERY_CONTEXT",
+            asOfDate: "2026-08-21",
+            period: "YTD",
+            reportingCurrency: "SGD",
+          }}
           returnMode="risk-impact"
         />
       </QueryClientProvider>
@@ -345,7 +351,7 @@ describe("ProposalDetailView", () => {
     const returnLink = await screen.findByRole("link", { name: "Return to Risk and Impact" });
     expect(returnLink).toHaveAttribute(
       "href",
-      "/proposals?portfolioId=pf_1&mode=risk-impact"
+      "/proposals?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk-impact"
     );
   });
 

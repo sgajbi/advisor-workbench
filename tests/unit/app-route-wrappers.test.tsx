@@ -41,6 +41,9 @@ describe("app route wrappers", () => {
       params: Promise.resolve({ proposalId: "PR_1001" }),
       searchParams: Promise.resolve({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-08-21",
+        period: "YTD",
+        reportingCurrency: "SGD",
         fromMode: "risk-impact",
       }),
     });
@@ -48,11 +51,17 @@ describe("app route wrappers", () => {
     expect(route.props).toMatchObject({
       proposalId: "PR_1001",
       returnPortfolioId: "PB_SG_GLOBAL_BAL_001",
+      returnReviewContext: {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-08-21",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      },
       returnMode: "risk-impact",
     });
   });
 
-  it("falls back safely when proposal return context is repeated", async () => {
+  it("does not mount proposal detail when governed context is repeated", async () => {
     const route = await ProposalDetailPage({
       params: Promise.resolve({ proposalId: "PR_1001" }),
       searchParams: Promise.resolve({
@@ -62,9 +71,9 @@ describe("app route wrappers", () => {
     });
 
     expect(route.props).toMatchObject({
-      proposalId: "PR_1001",
-      returnPortfolioId: undefined,
-      returnMode: undefined,
+      body: expect.stringContaining("No proposal record was requested"),
+      href: "/book",
     });
+    expect(route.props).not.toHaveProperty("proposalId");
   });
 });

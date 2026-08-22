@@ -19,6 +19,7 @@ import {
   projectQuerySourcePosture,
 } from "@/features/platform-runtime/query-source-posture";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
+import type { WorkspaceReviewContext } from "@/shell/review-context";
 
 import {
   getAdvisoryPolicyEvaluation,
@@ -74,9 +75,11 @@ type SourceRefreshTransaction = {
 
 export default function ProposalLifecycleWorkspace({
   portfolioId,
+  reviewContext,
   mode,
 }: {
   portfolioId: string;
+  reviewContext?: WorkspaceReviewContext;
   mode: ProposalLifecycleMode;
 }) {
   const queryClient = useQueryClient();
@@ -142,12 +145,13 @@ export default function ProposalLifecycleWorkspace({
     () =>
       buildProposalLifecycleWorkspaceModel({
         portfolioId,
+        reviewContext,
         mode,
         proposals,
         hasMoreResults: Boolean(data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
       }),
-    [data?.next_cursor, mode, portfolioId, proposals, sourceWindow.hasPrevious],
+    [data?.next_cursor, mode, portfolioId, proposals, reviewContext, sourceWindow.hasPrevious],
   );
   const riskSelectionIsCurrent =
     riskSelection?.portfolioId === portfolioId &&

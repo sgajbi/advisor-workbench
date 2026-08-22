@@ -64,6 +64,7 @@ import {
   getProposalLifecycleModeDefinition,
   type ProposalLifecycleMode,
 } from "../proposal-lifecycle-workspace-view-model";
+import type { WorkspaceReviewContext } from "@/shell/review-context";
 import {
   ProposalAdvisorActionsPanel,
   ProposalEvidenceControlsPanel,
@@ -74,6 +75,7 @@ import {
 type Props = {
   proposalId: string;
   returnPortfolioId?: string;
+  returnReviewContext?: WorkspaceReviewContext;
   returnMode?: ProposalLifecycleMode;
 };
 
@@ -98,6 +100,7 @@ function isNotFound(error: unknown): boolean {
 export default function ProposalDetailView({
   proposalId,
   returnPortfolioId,
+  returnReviewContext,
   returnMode,
 }: Props) {
   const queryClient = useQueryClient();
@@ -120,6 +123,7 @@ export default function ProposalDetailView({
       key={proposalId}
       proposalId={proposalId}
       returnPortfolioId={returnPortfolioId}
+      returnReviewContext={returnReviewContext}
       returnMode={returnMode}
       revision={revision}
       onAdvanceRevision={advanceRevision}
@@ -130,13 +134,18 @@ export default function ProposalDetailView({
 function ProposalDetailWorkspace({
   proposalId,
   returnPortfolioId,
+  returnReviewContext,
   returnMode,
   revision,
   onAdvanceRevision,
 }: ProposalDetailWorkspaceProps) {
   const fallbackReturnHref =
     returnPortfolioId && returnMode
-      ? buildProposalLifecycleHref({ portfolioId: returnPortfolioId, mode: returnMode })
+      ? buildProposalLifecycleHref({
+          portfolioId: returnPortfolioId,
+          reviewContext: returnReviewContext,
+          mode: returnMode,
+        })
       : "/book";
   const returnLabel = returnPortfolioId && returnMode
     ? `Return to ${getProposalLifecycleModeDefinition(returnMode).title}`
@@ -569,6 +578,7 @@ function ProposalDetailWorkspace({
   const sourceReturnHref = sourcePortfolioId
     ? buildProposalLifecycleHref({
         portfolioId: sourcePortfolioId,
+        reviewContext: returnReviewContext,
         mode: returnMode ?? "approval-queue",
       })
     : fallbackReturnHref;
