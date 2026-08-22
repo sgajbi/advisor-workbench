@@ -79,7 +79,7 @@ describe("buildAdvisorBookHref", () => {
     expect(
       buildAdvisorBookHref(
         new URLSearchParams(
-          "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD&mode=summary",
+          "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD&selectedRecordId=ROW_001&batchId=BATCH_001&mode=summary",
         ),
       ),
     ).toBe(
@@ -91,12 +91,12 @@ describe("buildAdvisorBookHref", () => {
     expect(buildAdvisorBookHref(new URLSearchParams("mode=summary"))).toBe("/book");
   });
 
-  it("fails closed on an ambiguous repeated business date", () => {
+  it("uses a clean My Book address to recover from ambiguous context", () => {
     expect(
       buildAdvisorBookHref(
         new URLSearchParams("asOfDate=2026-04-10&asOfDate=2026-04-11"),
       ),
-    ).toBeNull();
+    ).toBe("/book");
   });
 });
 

@@ -121,7 +121,7 @@ describe("AppSwitcherNav", () => {
   it("carries the governed review context into every enabled workspace", () => {
     useSearchParamsMock.mockReturnValue(
       new URLSearchParams(
-        "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
+        "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=POSITION_001&batchId=BATCH_001&mode=risk",
       ),
     );
     usePlatformCapabilitiesMock.mockReturnValue({
@@ -142,6 +142,10 @@ describe("AppSwitcherNav", () => {
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
+    );
+    expect(screen.getByRole("link", { name: "Portfolio" })).not.toHaveAttribute(
+      "href",
+      expect.stringMatching(/selectedRecordId|batchId/),
     );
   });
 

@@ -5,6 +5,7 @@ import {
   buildReviewContextNavigationHref,
   parseReviewContext,
   REVIEW_PERIODS,
+  scopeReviewContextForWorkspace,
   serializeReviewContext,
   type ReviewContext,
   type ReviewContextField,
@@ -161,6 +162,15 @@ describe("governed review context", () => {
     expect(parseReviewContext(serializeReviewContext(COMPLETE_CONTEXT))).toEqual({
       status: "valid",
       context: COMPLETE_CONTEXT,
+    });
+  });
+
+  it("keeps review identity while removing identities owned by one screen", () => {
+    expect(scopeReviewContextForWorkspace(COMPLETE_CONTEXT)).toEqual({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      asOfDate: "2026-08-21",
+      period: "YTD",
+      reportingCurrency: "SGD",
     });
   });
 

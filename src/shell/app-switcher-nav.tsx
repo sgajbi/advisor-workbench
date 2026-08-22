@@ -9,7 +9,11 @@ import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capab
 
 import { resolveShellRouteContext } from "./app-registry";
 import styles from "./app-shell.module.css";
-import { buildReviewContextHref, parseReviewContext } from "./review-context";
+import {
+  buildReviewContextHref,
+  parseReviewContext,
+  scopeReviewContextForWorkspace,
+} from "./review-context";
 import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
@@ -39,7 +43,10 @@ export default function AppSwitcherNav() {
       label: workspace.label,
       href:
         !disabled && reviewContextResult.status === "valid"
-          ? buildReviewContextHref(workspace.href, reviewContextResult.context)
+          ? buildReviewContextHref(
+              workspace.href,
+              scopeReviewContextForWorkspace(reviewContextResult.context),
+            )
           : undefined,
       disabled,
       active: routeContext.workspaceId === workspace.id,
