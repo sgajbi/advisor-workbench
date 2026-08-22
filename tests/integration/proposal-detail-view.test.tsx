@@ -439,6 +439,12 @@ describe("ProposalDetailView", () => {
         <ProposalDetailView
           proposalId="pp-missing"
           returnPortfolioId="PB_SG_GLOBAL_BAL_001"
+          returnReviewContext={{
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+            asOfDate: "2026-08-21",
+            period: "YTD",
+            reportingCurrency: "SGD",
+          }}
           returnMode="approval-queue"
         />
       </QueryClientProvider>,
@@ -451,8 +457,25 @@ describe("ProposalDetailView", () => {
       screen.getByRole("link", { name: "Return to Approval Queue" }),
     ).toHaveAttribute(
       "href",
-      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
     );
+    expect(
+      screen.getByRole("link", { name: "Create New Proposal Draft" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
+  });
+
+  it("does not expose a portfolio-bound draft action without a valid portfolio identity", () => {
+    renderWithQueryClient("invalid proposal id");
+
+    expect(
+      screen.getByRole("heading", { name: "Invalid Proposal Identifier" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Create New Proposal Draft" }),
+    ).not.toBeInTheDocument();
   });
 
   it("submits draft to risk review", async () => {
