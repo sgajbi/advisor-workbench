@@ -41,10 +41,17 @@ describe("WorkbenchPage", () => {
           .includes("/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PF_1001&state=ACTIVE")
       )
     ).toBe(true);
-    expect(screen.getByRole("link", { name: /Rebalance Ready/i })).toHaveAttribute(
-      "href",
-      "/workbench/PF_1001?mode=waves"
-    );
+    const manageWorkAreas = screen.getByRole("navigation", { name: "Manage work areas" });
+    expect(
+      within(manageWorkAreas).getByRole("link", {
+        name: /Rebalance Waves Ready.*Open rebalance waves/i,
+      })
+    ).toHaveAttribute("href", "/workbench/PF_1001?mode=waves");
+    expect(
+      within(manageWorkAreas).getByRole("link", {
+        name: /Construction Alternatives Generated on request/i,
+      })
+    ).toHaveAttribute("href", "/workbench/PF_1001?mode=construction");
 
     const screenNav = screen.getByRole("navigation", { name: "Workbench screen navigation" });
     expect(within(screenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(
