@@ -11,6 +11,8 @@ import {
   SemanticBadge,
   SourceWindowNavigation,
   Text,
+  WorkbenchContextNotice,
+  buildWorkbenchUnsupportedReviewContextNotice,
   useSourceWindow,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
@@ -34,6 +36,10 @@ import {
   listProposals,
   recordAdvisoryPolicySignOffDecision,
 } from "../api";
+import {
+  buildAdvisoryJourneyHref,
+  type AdvisoryJourneyReviewContext,
+} from "../advisory-journey-navigation";
 import {
   buildProposalLifecycleWorkspaceModel,
   type ProposalLifecycleMode,
@@ -106,6 +112,22 @@ export default function ProposalLifecycleWorkspace({
   const [discussionRefreshTransaction, setDiscussionRefreshTransaction] =
     useState<SourceRefreshTransaction | null>(null);
   const sourceWindow = useSourceWindow(portfolioId);
+  const activeReviewContext: AdvisoryJourneyReviewContext = {
+    ...reviewContext,
+    portfolioId,
+  };
+  const proposalBuilderHref = buildAdvisoryJourneyHref(
+    activeReviewContext,
+    "proposal-builder",
+  );
+  const sourceContextNotice = buildWorkbenchUnsupportedReviewContextNotice({
+    title: "Proposal worklist scope",
+    subject: "Proposal lifecycle evidence",
+    destination: "proposal worklist",
+    requestedAsOfDate: reviewContext?.asOfDate,
+    requestedPeriod: reviewContext?.period,
+    requestedReportingCurrency: reviewContext?.reportingCurrency,
+  });
   const proposalQueryKey = [
     "proposal-lifecycle-workspace",
     portfolioId,
@@ -1046,12 +1068,15 @@ export default function ProposalLifecycleWorkspace({
       actions={
         <Link
           className="nav-link"
-          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+          href={proposalBuilderHref}
         >
           Build Proposal
         </Link>
       }
     >
+      {sourceContextNotice ? (
+        <WorkbenchContextNotice {...sourceContextNotice} />
+      ) : null}
       {mode !== "suitability" && proposalSourcePosture.isUnavailable ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Proposal lifecycle is unavailable. No fallback proposal queue is
@@ -1170,7 +1195,7 @@ export default function ProposalLifecycleWorkspace({
           action={
             <Link
               className="nav-link"
-              href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+              href={proposalBuilderHref}
             >
               Build advisor-use draft
             </Link>

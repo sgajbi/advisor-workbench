@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildWorkbenchSourceContextNotice } from "@/design-system";
+import {
+  buildWorkbenchSourceContextNotice,
+  buildWorkbenchUnsupportedReviewContextNotice,
+} from "@/design-system";
 
 describe("Workbench source context notice", () => {
   it("explains source date and currency differences in business language", () => {
@@ -42,6 +45,45 @@ describe("Workbench source context notice", () => {
         requestedReportingCurrency: "USD",
         sourceAsOfDate: "2026-05-13",
         sourceCurrency: "USD",
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("Workbench unsupported review-context notice", () => {
+  it("explains every carried selector that does not filter a source worklist", () => {
+    expect(
+      buildWorkbenchUnsupportedReviewContextNotice({
+        title: "Proposal worklist scope",
+        subject: "Proposal lifecycle evidence",
+        destination: "proposal worklist",
+        requestedAsOfDate: "2026-04-10",
+        requestedPeriod: "YTD",
+        requestedReportingCurrency: "SGD",
+      }),
+    ).toEqual({
+      title: "Proposal worklist scope",
+      body: "Proposal lifecycle evidence reflects current source state. The carried advisor review date 10 Apr 2026, review period YTD, and reporting currency SGD remain available across the wider review, but they do not filter this proposal worklist.",
+    });
+  });
+
+  it("uses singular business grammar and stays absent without carried selectors", () => {
+    expect(
+      buildWorkbenchUnsupportedReviewContextNotice({
+        title: "Queue scope",
+        subject: "Queue evidence",
+        destination: "queue",
+        requestedPeriod: "30D",
+      }),
+    ).toEqual({
+      title: "Queue scope",
+      body: "Queue evidence reflects current source state. The carried review period 30D remains available across the wider review, but it does not filter this queue.",
+    });
+    expect(
+      buildWorkbenchUnsupportedReviewContextNotice({
+        title: "Queue scope",
+        subject: "Queue evidence",
+        destination: "queue",
       }),
     ).toBeNull();
   });

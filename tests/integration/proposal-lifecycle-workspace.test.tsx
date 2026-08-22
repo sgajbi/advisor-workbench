@@ -2875,6 +2875,56 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("preserves review context in builder actions and discloses unsupported worklist selectors", async () => {
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-10",
+          period: "YTD",
+          reportingCurrency: "SGD",
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("link", { name: "Build Proposal" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+    );
+    expect(
+      screen.getByRole("complementary", { name: "Proposal worklist scope" }),
+    ).toHaveTextContent(
+      "The carried advisor review date 10 Apr 2026, review period YTD, and reporting currency SGD remain available across the wider review, but they do not filter this proposal worklist.",
+    );
+  });
+
+  it("preserves review context in the empty-worklist builder action", async () => {
+    listProposalsMock.mockResolvedValueOnce({ items: [], next_cursor: null });
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-10",
+          period: "YTD",
+          reportingCurrency: "SGD",
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("link", { name: "Build advisor-use draft" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+    );
+  });
+
   it("renders Gateway-backed suitability policy evaluations without raw policy payload language", async () => {
     renderWithQueryClient(
       <ProposalLifecycleWorkspace

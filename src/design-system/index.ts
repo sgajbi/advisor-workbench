@@ -128,6 +128,7 @@ export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-sum
 export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
 export {
+  buildWorkbenchUnsupportedReviewContextNotice,
   buildWorkbenchSourceContextNotice,
   default as WorkbenchContextNotice,
 } from "./components/workbench-context-notice";
