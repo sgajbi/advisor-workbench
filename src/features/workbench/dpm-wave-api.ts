@@ -4,6 +4,7 @@ import {
   fetchWorkbenchResource,
   observeWorkbenchMutation,
   observeWorkbenchResource,
+  type WorkbenchRequestTarget,
   type WorkbenchObservedOperation,
 } from "@/features/workbench/api-client";
 import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
@@ -140,7 +141,7 @@ export async function listDpmCampaignDefinitions(params?: {
   campaignStatus?: "ACTIVE" | "RETIRED";
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignDefinitionGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCampaignDefinitionGatewayResponse> {
   const query = new URLSearchParams();
   query.set("limit", String(params?.limit ?? 10));
   query.set("offset", String(params?.offset ?? 0));
@@ -154,7 +155,7 @@ export async function listDpmCampaignDefinitions(params?: {
     "dpm.waves.campaign-definitions.list",
     async () =>
       await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
-        "server",
+        target,
         "/dpm/command-center/waves/campaign-definitions",
         "DPM campaign definitions",
         query
@@ -202,12 +203,12 @@ export async function listDpmCampaignDiscovery(params?: {
 export async function getDpmCampaignDefinitionLifecycleEvents(params: {
   campaignId: string;
   campaignVersion: string;
-}): Promise<DpmCampaignDefinitionGatewayResponse> {
+}, target: WorkbenchRequestTarget = "client"): Promise<DpmCampaignDefinitionGatewayResponse> {
   return await observeWorkbenchResource(
     "dpm.waves.campaign-definitions.lifecycle-events",
     async () =>
       await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
-        "server",
+        target,
         `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
           params.campaignId
         )}/versions/${encodeURIComponent(params.campaignVersion)}/lifecycle-events`,
@@ -248,7 +249,7 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
   campaignVersion: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignDefinitionGatewayResponse> {
+}, target: WorkbenchRequestTarget = "client"): Promise<DpmCampaignDefinitionGatewayResponse> {
   const searchParams = new URLSearchParams();
   if (params.limit !== undefined) {
     searchParams.set("limit", String(params.limit));
@@ -261,7 +262,7 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
     "dpm.waves.campaign-definitions.launch-history",
     async () =>
       await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
-        "server",
+        target,
         `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
           params.campaignId
         )}/versions/${encodeURIComponent(params.campaignVersion)}/launch-history${
@@ -464,7 +465,8 @@ async function getDpmCampaignWorkflowEvidence(
     campaignVersion: string;
     limit?: number;
     offset?: number;
-  }
+  },
+  target: WorkbenchRequestTarget,
 ): Promise<DpmCampaignWorkflowGatewayResponse> {
   const query = new URLSearchParams();
   query.set("limit", String(params.limit ?? 10));
@@ -473,7 +475,7 @@ async function getDpmCampaignWorkflowEvidence(
     operation,
     async () =>
       await fetchWorkbenchResource<DpmCampaignWorkflowGatewayResponse>(
-        "server",
+        target,
         `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(
           params.campaignId
         )}/versions/${encodeURIComponent(params.campaignVersion)}/${pathSuffix}`,
@@ -519,12 +521,13 @@ export async function getDpmCampaignApprovalDecisions(params: {
   campaignVersion: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignWorkflowGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await getDpmCampaignWorkflowEvidence(
     "dpm.waves.campaign-approval-decisions.list",
     "approval-decisions",
     "DPM campaign approval decisions",
-    params
+    params,
+    target,
   );
 }
 
@@ -547,12 +550,13 @@ export async function getDpmCampaignAssignmentActions(params: {
   campaignVersion: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignWorkflowGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await getDpmCampaignWorkflowEvidence(
     "dpm.waves.campaign-assignment-actions.list",
     "assignment-actions",
     "DPM campaign assignment actions",
-    params
+    params,
+    target,
   );
 }
 
@@ -575,12 +579,13 @@ export async function getDpmCampaignAssignmentTasks(params: {
   campaignVersion: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignWorkflowGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await getDpmCampaignWorkflowEvidence(
     "dpm.waves.campaign-assignment-tasks.list",
     "assignment-tasks",
     "DPM campaign assignment tasks",
-    params
+    params,
+    target,
   );
 }
 
@@ -618,12 +623,13 @@ export async function getDpmCampaignMakerCheckerControls(params: {
   campaignVersion: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmCampaignWorkflowGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await getDpmCampaignWorkflowEvidence(
     "dpm.waves.campaign-maker-checker-controls.list",
     "maker-checker-controls",
     "DPM campaign maker-checker controls",
-    params
+    params,
+    target,
   );
 }
 

@@ -541,7 +541,10 @@ describe("useDpmWaveCommandCenterActions", () => {
         correlation_id: "corr-campaign-lifecycle-command",
       },
     });
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledWith({ limit: 10, offset: 0 });
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledWith(
+      { limit: 10, offset: 0 },
+      "client",
+    );
     expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
@@ -689,22 +692,34 @@ describe("useDpmWaveCommandCenterActions", () => {
         correlation_id: "corr-campaign-task-transition",
       },
     });
-    expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledWith({
-      campaignId: "campaign-holdings-202605",
-      campaignVersion: "2026.05",
-    });
-    expect(getDpmCampaignAssignmentActions).toHaveBeenCalledWith({
-      campaignId: "campaign-holdings-202605",
-      campaignVersion: "2026.05",
-    });
-    expect(getDpmCampaignAssignmentTasks).toHaveBeenCalledWith({
-      campaignId: "campaign-holdings-202605",
-      campaignVersion: "2026.05",
-    });
-    expect(getDpmCampaignMakerCheckerControls).toHaveBeenCalledWith({
-      campaignId: "campaign-holdings-202605",
-      campaignVersion: "2026.05",
-    });
+    expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledWith(
+      {
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      },
+      "client",
+    );
+    expect(getDpmCampaignAssignmentActions).toHaveBeenCalledWith(
+      {
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      },
+      "client",
+    );
+    expect(getDpmCampaignAssignmentTasks).toHaveBeenCalledWith(
+      {
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      },
+      "client",
+    );
+    expect(getDpmCampaignMakerCheckerControls).toHaveBeenCalledWith(
+      {
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      },
+      "client",
+    );
     expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
       evidenceRef: "task-review-001",
       correlationId: "corr-campaign-command",

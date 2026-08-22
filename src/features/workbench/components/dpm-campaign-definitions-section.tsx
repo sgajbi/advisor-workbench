@@ -324,7 +324,7 @@ function CampaignDecisionPane({
       {mode === "launch" ? (
         <>
           <DpmCampaignLaunchPostureCard
-            key={`${selectedCampaign.key}:${launchPosture.state}`}
+            key={`${selectedCampaign.key}:${launchPosture.state}:${launchPosture.launchedWaveId}`}
             previewReadinessPosture={previewReadinessPosture}
             launchPosture={launchPosture}
             selectedCampaign={selectedCampaign}
