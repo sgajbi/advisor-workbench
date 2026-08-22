@@ -275,7 +275,7 @@ describe("AppSwitcherNav", () => {
     expect(screen.queryByRole("link", { name: "Portfolio" })).not.toBeInTheDocument();
   });
 
-  it("returns the workspace disclosure to closed when route context changes", () => {
+  it("closes without remounting or losing trigger focus when route context changes", () => {
     usePlatformCapabilitiesMock.mockReturnValue({
       loading: false,
       partialFailure: false,
@@ -288,15 +288,17 @@ describe("AppSwitcherNav", () => {
     const { rerender } = render(<AppSwitcherNav />);
 
     const summaryTrigger = screen.getByRole("button", { name: /Switch workspace/i });
+    summaryTrigger.focus();
     fireEvent.click(summaryTrigger);
     expect(summaryTrigger).toHaveAttribute("aria-expanded", "true");
+    expect(summaryTrigger).toHaveFocus();
 
     useSearchParamsMock.mockReturnValue(new URLSearchParams("mode=risk"));
     rerender(<AppSwitcherNav />);
 
-    expect(screen.getByRole("button", { name: /Switch workspace/i })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    const riskTrigger = screen.getByRole("button", { name: /Switch workspace/i });
+    expect(riskTrigger).toBe(summaryTrigger);
+    expect(riskTrigger).toHaveAttribute("aria-expanded", "false");
+    expect(riskTrigger).toHaveFocus();
   });
 });

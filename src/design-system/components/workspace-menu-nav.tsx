@@ -19,18 +19,26 @@ export default function WorkspaceMenuNav({
   items,
   ariaLabel,
   className,
+  navigationIdentity,
 }: {
   items: WorkspaceMenuNavItem[];
   ariaLabel: string;
   className?: string;
+  navigationIdentity?: string;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [disclosureState, setDisclosureState] = useState({
+    expanded: false,
+    navigationIdentity,
+  });
   const disclosureId = useId();
   const disclosureRef = useRef<HTMLButtonElement>(null);
   const activeItem = items.find((item) => item.active) ?? null;
+  const expanded =
+    disclosureState.navigationIdentity === navigationIdentity &&
+    disclosureState.expanded;
 
   function close({ restoreFocus = false } = {}) {
-    setExpanded(false);
+    setDisclosureState({ expanded: false, navigationIdentity });
     if (restoreFocus) {
       disclosureRef.current?.focus();
     }
@@ -57,7 +65,9 @@ export default function WorkspaceMenuNav({
         aria-label={`Switch workspace. Current workspace ${activeItem?.label ?? "not selected"}`}
         aria-expanded={expanded}
         aria-controls={disclosureId}
-        onClick={() => setExpanded((current) => !current)}
+        onClick={() =>
+          setDisclosureState({ expanded: !expanded, navigationIdentity })
+        }
       >
         <span>
           <small>Workspace</small>
