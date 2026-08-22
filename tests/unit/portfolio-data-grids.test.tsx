@@ -917,7 +917,14 @@ describe("portfolio data grids", () => {
     );
 
     expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Book first trade/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Book first trade/i })).toHaveAttribute(
+      "href",
+      "/workbench/MANUAL_PB_USD_001?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&reportingCurrency=USD",
+    );
+    expect(screen.getByRole("link", { name: /Review readiness/i })).toHaveAttribute(
+      "href",
+      "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&reportingCurrency=USD#portfolio-attention",
+    );
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".portfolio-empty-state")).toBeTruthy();
     expect(screen.queryByTestId("mock-grid")).not.toBeInTheDocument();

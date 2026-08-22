@@ -3,6 +3,7 @@ import {
   scopeReviewContextForWorkspace,
   type ReviewContext,
 } from "@/shell/review-context";
+import { resolveShellDestinationReviewContextPolicy } from "@/shell/app-registry";
 
 export type PortfolioScreenNavigationKey =
   | "portfolio"
@@ -211,6 +212,9 @@ export function buildPortfolioScreenHref(
 ) {
   return buildReviewContextHref(
     href,
-    scopeReviewContextForWorkspace(reviewContext),
+    scopeReviewContextForWorkspace(
+      reviewContext,
+      resolveShellDestinationReviewContextPolicy(href),
+    ),
   );
 }

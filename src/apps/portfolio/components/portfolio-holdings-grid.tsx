@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity } from "../formatters";
+import { buildPortfolioScreenHref } from "../portfolio-screen-navigation";
 import {
   buildDefaultHoldingsColumnVisibility,
   buildExpandedHoldingsColumnVisibility,
@@ -70,6 +71,15 @@ export default function PortfolioHoldingsGrid({
   );
   const hasHiddenColumns = Object.values(columnVisibility).some((isVisible) => !isVisible);
   const pinImportantColumns = shouldPinPortfolioGridLeadColumns(columnMode);
+  const reviewContext = { portfolioId, asOfDate, reportingCurrency: baseCurrency };
+  const bookFirstTradeHref = buildPortfolioScreenHref(
+    `/workbench/${encodeURIComponent(portfolioId)}`,
+    reviewContext,
+  );
+  const reviewReadinessHref = buildPortfolioScreenHref(
+    "/portfolio#portfolio-attention",
+    reviewContext,
+  );
 
   const rowData = useMemo<HoldingsRow[]>(
     () => buildHoldingsRows(positions, baseCurrency),
@@ -327,8 +337,8 @@ export default function PortfolioHoldingsGrid({
           }}
           action={
             <>
-              <a href={`/workbench?portfolioId=${encodeURIComponent(portfolioId)}`}>Book first trade</a>
-              <a href={`/portfolio?portfolioId=${encodeURIComponent(portfolioId)}#portfolio-attention`}>Review readiness</a>
+              <a href={bookFirstTradeHref}>Book first trade</a>
+              <a href={reviewReadinessHref}>Review readiness</a>
             </>
           }
         />
