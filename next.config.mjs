@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
-const lotusEnvironment = process.env.LOTUS_ENVIRONMENT?.trim().toLowerCase() || "dev";
+const configuredLotusEnvironment = process.env.LOTUS_ENVIRONMENT
+  ?.trim()
+  .toLowerCase();
+const lotusEnvironment = configuredLotusEnvironment || "dev";
+const workbenchBuildEnvironment =
+  configuredLotusEnvironment || "unconfigured";
 const deploymentId =
   process.env.WORKBENCH_DEPLOYMENT_ID?.trim() ||
   (lotusEnvironment === "dev" ? "local-development" : undefined);
@@ -15,7 +20,7 @@ const nextConfig = {
   deploymentId,
   env: {
     WORKBENCH_BUILD_DEPLOYMENT_ID: deploymentId,
-    WORKBENCH_BUILD_ENVIRONMENT: lotusEnvironment,
+    WORKBENCH_BUILD_ENVIRONMENT: workbenchBuildEnvironment,
   },
   reactStrictMode: true,
   allowedDevOrigins: ["workbench.dev.lotus", "127.0.0.1", "localhost"],
