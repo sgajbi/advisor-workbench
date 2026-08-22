@@ -12,6 +12,7 @@ import type {
   PortfolioDetailDrawerState,
   PortfolioMetricDrawerKey,
 } from "./portfolio-detail-drawer-types";
+import { buildReviewContextHref } from "@/shell/review-context";
 
 export function buildMetricDrawer(
   metric: PortfolioMetricDrawerKey,
@@ -22,6 +23,12 @@ export function buildMetricDrawer(
     { label: "Portfolio", value: workspace.portfolio.portfolio_id },
     { label: "As of", value: formatDate(context.selectedAsOfDate) },
   ];
+  const reviewContext = {
+    portfolioId: workspace.portfolio.portfolio_id,
+    asOfDate: context.selectedAsOfDate,
+    period: context.timeWindow,
+    reportingCurrency: context.selectedReportingCurrency,
+  } as const;
 
   switch (metric) {
     case "aum":
@@ -72,7 +79,10 @@ export function buildMetricDrawer(
             ]),
           },
         ],
-        fullPageHref: `/workbench/${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
+        fullPageHref: buildReviewContextHref(
+          `/workbench/${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
+          reviewContext,
+        ),
         fullPageLabel: "Open operating workbench",
       };
     case "invested_assets":
@@ -121,7 +131,7 @@ export function buildMetricDrawer(
             ]),
           },
         ],
-        fullPageHref: `/positions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
+        fullPageHref: buildReviewContextHref("/positions", reviewContext),
         fullPageLabel: "Open allocation",
       };
     case "available_cash":
@@ -166,7 +176,7 @@ export function buildMetricDrawer(
             ),
           },
         ],
-        fullPageHref: `/cashflow?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
+        fullPageHref: buildReviewContextHref("/cashflow", reviewContext),
         fullPageLabel: "Open liquidity",
       };
   }

@@ -237,6 +237,22 @@ describe("design-system components", () => {
     );
   });
 
+  it("omits a full-record action when the owning screen cannot supply a governed address", () => {
+    render(
+      <DetailDrawer
+        open
+        kicker="Position"
+        title="UST 10Y"
+        summaryItems={[{ label: "Weight", value: "4.2%" }]}
+        tabs={[{ key: "summary", label: "Summary", content: <div>Summary content</div> }]}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Close" })).toBeVisible();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("renders core panel and row primitives with shared classes", () => {
     render(
       <Panel>

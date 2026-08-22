@@ -15,8 +15,8 @@ export type PortfolioDetailDrawerState = {
     label: string;
     content: ReactNode;
   }>;
-  fullPageHref: string;
-  fullPageLabel: string;
+  fullPageHref?: string;
+  fullPageLabel?: string;
 };
 
 export type PortfolioMetricDrawerKey = "aum" | "invested_assets" | "available_cash";

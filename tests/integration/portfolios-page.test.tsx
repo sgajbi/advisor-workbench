@@ -353,19 +353,19 @@ describe("PortfolioFoundationPage", () => {
       /AUM/i,
       "AUM",
       "Open operating workbench",
-      "/workbench/PORT_UI_1001"
+      "/workbench/PORT_UI_1001?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );
     await openKeyMetricDrawer(
       /Invested Assets/i,
       "Invested Assets",
       "Open allocation",
-      "/positions?portfolioId=PORT_UI_1001"
+      "/positions?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );
     await openKeyMetricDrawer(
       /^Cash:/i,
       "Available Cash",
       "Open liquidity",
-      "/cashflow?portfolioId=PORT_UI_1001"
+      "/cashflow?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));

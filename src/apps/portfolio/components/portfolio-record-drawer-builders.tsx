@@ -11,14 +11,12 @@ import {
   formatStatus,
 } from "../formatters";
 import type {
-  PortfolioTransactionDrilldownFilter,
   PortfolioTransactionView,
   PortfolioWorkspace,
 } from "../types";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import {
-  formatDrawerLabel,
   renderDrawerDefinitionList,
   renderDrawerParagraphs,
 } from "./portfolio-detail-drawer-shared";
@@ -26,7 +24,7 @@ import type { PortfolioDetailDrawerState } from "./portfolio-detail-drawer-types
 
 export function buildHoldingDrawer(
   row: HoldingsRow,
-  portfolioId: string,
+  _portfolioId: string,
   baseCurrency: string,
   relatedTransactionsState:
     | { state: "loading" }
@@ -83,60 +81,14 @@ export function buildHoldingDrawer(
         content: relatedTransactionsTab,
       },
     ],
-    fullPageHref:
-      options?.fullPageHref ??
-      `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
-    fullPageLabel: "Open transactions",
-  };
-}
-
-export function buildTransactionDrilldownDrawer(
-  filter: PortfolioTransactionDrilldownFilter,
-  workspace: PortfolioWorkspace,
-  transactions: PortfolioWorkspace["recent_transactions"],
-  baseCurrency: string
-): PortfolioDetailDrawerState {
-  return {
-    kicker: "Transaction Drill-Down",
-    title:
-      filter.kind === "activity"
-        ? formatActivityBucketLabel(filter.bucket)
-        : "Related Transactions",
-    subtitle: filter.label,
-    summaryItems: [
-      { label: "Matches", value: `${transactions.length}` },
-      { label: "Portfolio", value: workspace.portfolio.portfolio_id },
-      { label: "Window", value: `${formatDate(workspace.as_of_date)}` },
-    ],
-    tabs: [
-      {
-        key: "overview",
-        label: "Overview",
-        content: transactions.length
-          ? renderDrawerDefinitionList(
-              transactions.slice(0, 8).map((transaction) => [
-                `${formatBusinessDate(transaction.transaction_date)} ${formatStatus(
-                  transaction.transaction_type
-                )}`,
-                `${transaction.instrument_id} · ${formatBookedTransactionAmount(
-                  transaction,
-                  baseCurrency,
-                )}`,
-              ])
-            )
-          : renderDrawerParagraphs([
-              "No transactions in the current ledger window match this drill-down.",
-            ]),
-      },
-    ],
-    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
-    fullPageLabel: "Open transactions",
+    fullPageHref: options?.fullPageHref,
+    fullPageLabel: options?.fullPageHref ? "Open transactions" : undefined,
   };
 }
 
 export function buildTransactionDrawer(
   row: TransactionRow,
-  portfolioId: string,
+  _portfolioId: string,
   baseCurrency: string,
   actions?: {
     onOpenLinkedTransactionGroup?: (() => void) | null;
@@ -294,15 +246,9 @@ export function buildTransactionDrawer(
         ]),
       },
     ],
-    fullPageHref:
-      actions?.fullPageHref ??
-      `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
-    fullPageLabel: "Open transactions",
+    fullPageHref: actions?.fullPageHref,
+    fullPageLabel: actions?.fullPageHref ? "Open transactions" : undefined,
   };
-}
-
-function formatActivityBucketLabel(value: string): string {
-  return formatDrawerLabel(value.toLowerCase());
 }
 
 function buildHoldingRelatedTransactionsTab(
