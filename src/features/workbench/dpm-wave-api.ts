@@ -7,6 +7,15 @@ import {
   type WorkbenchObservedOperation,
 } from "@/features/workbench/api-client";
 import { getDpmAiWorkflowProfile } from "@/features/workbench/dpm-ai-workflow-profiles";
+import type {
+  DpmCampaignApprovalDecisionBody,
+  DpmCampaignAssignmentActionBody,
+  DpmCampaignAssignmentTaskBody,
+  DpmCampaignMakerCheckerBody,
+  DpmCampaignRetirementBody,
+  DpmCampaignSupersessionBody,
+  DpmCampaignTaskTransitionBody,
+} from "@/features/workbench/dpm-campaign-command-contracts";
 import {
   resolveDefaultCallerContext,
   resolveDefaultDpmContext,
@@ -263,14 +272,14 @@ export async function getDpmCampaignDefinitionLaunchHistory(params: {
   );
 }
 
-async function runDpmCampaignDefinitionLifecycleCommand(
+async function runDpmCampaignDefinitionLifecycleCommand<TBody extends object>(
   operation: WorkbenchObservedOperation,
   actionPath: "retire" | "supersede",
   label: string,
   params: {
     campaignId: string;
     campaignVersion: string;
-    body: Record<string, unknown>;
+    body: TBody;
     actorId?: string;
   }
 ): Promise<DpmCampaignDefinitionGatewayResponse> {
@@ -297,7 +306,7 @@ async function runDpmCampaignDefinitionLifecycleCommand(
 export async function retireDpmCampaignDefinition(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignRetirementBody;
   actorId?: string;
 }): Promise<DpmCampaignDefinitionGatewayResponse> {
   return await runDpmCampaignDefinitionLifecycleCommand(
@@ -311,7 +320,7 @@ export async function retireDpmCampaignDefinition(params: {
 export async function supersedeDpmCampaignDefinition(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignSupersessionBody;
   actorId?: string;
 }): Promise<DpmCampaignDefinitionGatewayResponse> {
   return await runDpmCampaignDefinitionLifecycleCommand(
@@ -474,14 +483,14 @@ async function getDpmCampaignWorkflowEvidence(
   );
 }
 
-async function createDpmCampaignWorkflowEvidence(
+async function createDpmCampaignWorkflowEvidence<TBody extends object>(
   operation: WorkbenchObservedOperation,
   pathSuffix: string,
   label: string,
   params: {
     campaignId: string;
     campaignVersion: string;
-    body: Record<string, unknown>;
+    body: TBody;
     actorId?: string;
   }
 ): Promise<DpmCampaignWorkflowGatewayResponse> {
@@ -522,7 +531,7 @@ export async function getDpmCampaignApprovalDecisions(params: {
 export async function createDpmCampaignApprovalDecision(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignApprovalDecisionBody;
   actorId?: string;
 }): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await createDpmCampaignWorkflowEvidence(
@@ -550,7 +559,7 @@ export async function getDpmCampaignAssignmentActions(params: {
 export async function createDpmCampaignAssignmentAction(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignAssignmentActionBody;
   actorId?: string;
 }): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await createDpmCampaignWorkflowEvidence(
@@ -578,7 +587,7 @@ export async function getDpmCampaignAssignmentTasks(params: {
 export async function createDpmCampaignAssignmentTask(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignAssignmentTaskBody;
   actorId?: string;
 }): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await createDpmCampaignWorkflowEvidence(
@@ -593,7 +602,7 @@ export async function createDpmCampaignAssignmentTaskTransition(params: {
   campaignId: string;
   campaignVersion: string;
   taskRef: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignTaskTransitionBody;
   actorId?: string;
 }): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await createDpmCampaignWorkflowEvidence(
@@ -621,7 +630,7 @@ export async function getDpmCampaignMakerCheckerControls(params: {
 export async function createDpmCampaignMakerCheckerControl(params: {
   campaignId: string;
   campaignVersion: string;
-  body: Record<string, unknown>;
+  body: DpmCampaignMakerCheckerBody;
   actorId?: string;
 }): Promise<DpmCampaignWorkflowGatewayResponse> {
   return await createDpmCampaignWorkflowEvidence(

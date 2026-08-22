@@ -263,7 +263,7 @@ const campaignWorkflowCommandResponse: DpmCampaignWorkflowGatewayResponse = {
   },
   data: {
     task_ref: "task-review-001",
-    transition_type: "MARK_SUPPORTABLE",
+    transition_type: "ACKNOWLEDGED",
     content_hash: "sha256:task-transition",
     reason_codes: ["campaign_assignment_task_transition_recorded"],
     operating_boundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
@@ -280,10 +280,9 @@ const campaignLifecycleCommandResponse: DpmCampaignDefinitionGatewayResponse = {
     campaign_id: "campaign-holdings-202605",
     campaign_version: "2026.05",
     status: "SUPERSEDED",
-    actor_id: "pm_sg_1",
-    reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
-    replacement_campaign_version: "2026.06",
-    replacement_content_hash: "sha256:campaign-replacement",
+    superseded_by: "pm_sg_1",
+    supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+    superseded_by_campaign_version: "2026.06",
     correlation_id: "corr-campaign-lifecycle-command",
     content_hash: "sha256:campaign-superseded",
     reason_codes: ["campaign_definition_superseded"],
@@ -520,10 +519,12 @@ describe("useDpmWaveCommandCenterActions", () => {
     await act(async () => {
       await result.current.recordCampaignLifecycleCommand({
         commandType: "supersede",
-        actorId: "pm_sg_1",
-        reasonCode: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
-        replacementCampaignVersion: "2026.06",
-        replacementContentHash: "sha256:campaign-replacement",
+        body: {
+          superseded_by_campaign_version: "2026.06",
+          superseded_by: "pm_sg_1",
+          supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+          correlation_id: "corr-campaign-lifecycle-command",
+        },
       });
     });
 
@@ -532,10 +533,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       campaignVersion: "2026.05",
       actorId: "pm_sg_1",
       body: {
-        actor_id: "pm_sg_1",
-        reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
-        replacement_campaign_version: "2026.06",
-        replacement_content_hash: "sha256:campaign-replacement",
+        superseded_by_campaign_version: "2026.06",
+        superseded_by: "pm_sg_1",
+        supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+        correlation_id: "corr-campaign-lifecycle-command",
       },
     });
     expect(listDpmCampaignDefinitions).toHaveBeenCalledWith({ limit: 10, offset: 0 });
@@ -547,7 +548,6 @@ describe("useDpmWaveCommandCenterActions", () => {
       commandLabel: "Supersede campaign",
       status: "SUPERSEDED",
       replacementCampaignVersion: "2026.06",
-      replacementContentHash: "sha256:campaign-replacement",
       contentHash: "sha256:campaign-superseded",
     });
   });
@@ -559,13 +559,17 @@ describe("useDpmWaveCommandCenterActions", () => {
     await act(async () => {
       await result.current.recordCampaignLifecycleCommand({
         commandType: "supersede",
-        actorId: "pm_sg_1",
-        reasonCode: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
+        body: {
+          superseded_by_campaign_version: "",
+          superseded_by: "pm_sg_1",
+          supersession_reason: "Candidate evidence was refreshed.",
+          correlation_id: "corr-campaign-lifecycle-command",
+        },
       });
     });
 
     expect(result.current.campaignLifecycleCommandError).toBe(
-      "Supersede requires replacement campaign version and content hash."
+      "Supersede requires an existing replacement campaign version."
     );
     expect(supersedeDpmCampaignDefinition).not.toHaveBeenCalled();
     expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();
@@ -587,8 +591,11 @@ describe("useDpmWaveCommandCenterActions", () => {
     await act(async () => {
       await result.current.recordCampaignLifecycleCommand({
         commandType: "retire",
-        actorId: "pm_sg_1",
-        reasonCode: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-lifecycle-command",
+        },
       });
     });
 
@@ -608,8 +615,11 @@ describe("useDpmWaveCommandCenterActions", () => {
         commandType: "task_transition",
         taskRef: "task-review-001",
         body: {
-          transition_type: "MARK_SUPPORTABLE",
-          actor_id: "pm_sg_1",
+          transition_type: "ACKNOWLEDGED",
+          transition_ref: "task-review-001:acknowledged",
+          transitioned_by: "pm_sg_1",
+          transition_reason: "Portfolio manager acknowledged the review task.",
+          correlation_id: "corr-campaign-task-transition",
         },
       });
     });
@@ -620,8 +630,11 @@ describe("useDpmWaveCommandCenterActions", () => {
       taskRef: "task-review-001",
       actorId: "pm_sg_1",
       body: {
-        transition_type: "MARK_SUPPORTABLE",
-        actor_id: "pm_sg_1",
+        transition_type: "ACKNOWLEDGED",
+        transition_ref: "task-review-001:acknowledged",
+        transitioned_by: "pm_sg_1",
+        transition_reason: "Portfolio manager acknowledged the review task.",
+        correlation_id: "corr-campaign-task-transition",
       },
     });
     expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledWith({
@@ -663,7 +676,13 @@ describe("useDpmWaveCommandCenterActions", () => {
         commandType: "assignment_task",
         body: {
           task_ref: "task-review-001",
-          actor_id: "pm_sg_1",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Portfolio manager review is required.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-campaign-task",
         },
       });
     });

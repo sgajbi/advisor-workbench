@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { ActionButton, MetricRow, ScreenStatePanel, SemanticBadge } from "@/design-system";
 import { resolveDefaultCallerContext } from "@/features/workbench/caller-context";
+import {
+  buildCampaignCommandCorrelationId,
+  type DpmCampaignLifecycleCommandInput,
+} from "@/features/workbench/dpm-campaign-command-contracts";
 import type {
   DpmCampaignDefinitionRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import type {
   DpmCampaignLifecycleCommandEvidence,
-  DpmCampaignLifecycleCommandInput,
 } from "@/features/workbench/use-dpm-wave-command-center-actions";
 
 type Props = {
@@ -27,16 +30,13 @@ export default function DpmCampaignLifecycleCommandCard({
   onRecordLifecycleCommand,
 }: Props) {
   const callerContext = resolveDefaultCallerContext();
-  const [actorId, setActorId] = useState(callerContext.actorId);
-  const [reasonCode, setReasonCode] = useState("CAMPAIGN_DEFINITION_RETIRED_BY_OWNER");
+  const actorId = callerContext.actorId;
+  const [reason, setReason] = useState("");
   const [replacementCampaignVersion, setReplacementCampaignVersion] = useState("");
-  const [replacementContentHash, setReplacementContentHash] = useState("");
 
   const actorMissing = actorId.trim().length === 0;
-  const reasonMissing = reasonCode.trim().length === 0;
-  const supersedeMissing =
-    replacementCampaignVersion.trim().length === 0 ||
-    replacementContentHash.trim().length === 0;
+  const reasonMissing = reason.trim().length === 0;
+  const supersedeMissing = replacementCampaignVersion.trim().length === 0;
   const retireDisabled = !selectedCampaign || pendingCommand || actorMissing || reasonMissing;
   const supersedeDisabled = retireDisabled || supersedeMissing;
 
@@ -46,8 +46,15 @@ export default function DpmCampaignLifecycleCommandCard({
     }
     await onRecordLifecycleCommand({
       commandType: "retire",
-      actorId: actorId.trim(),
-      reasonCode: reasonCode.trim(),
+      body: {
+        retired_by: actorId.trim(),
+        retirement_reason: reason.trim(),
+        correlation_id: buildCampaignCommandCorrelationId({
+          command: "retire",
+          campaignId: selectedCampaign!.campaignId,
+          campaignVersion: selectedCampaign!.campaignVersion,
+        }),
+      },
     });
   }
 
@@ -57,10 +64,16 @@ export default function DpmCampaignLifecycleCommandCard({
     }
     await onRecordLifecycleCommand({
       commandType: "supersede",
-      actorId: actorId.trim(),
-      reasonCode: reasonCode.trim(),
-      replacementCampaignVersion: replacementCampaignVersion.trim(),
-      replacementContentHash: replacementContentHash.trim(),
+      body: {
+        superseded_by_campaign_version: replacementCampaignVersion.trim(),
+        superseded_by: actorId.trim(),
+        supersession_reason: reason.trim(),
+        correlation_id: buildCampaignCommandCorrelationId({
+          command: "supersede",
+          campaignId: selectedCampaign!.campaignId,
+          campaignVersion: selectedCampaign!.campaignVersion,
+        }),
+      },
     });
   }
 
@@ -77,42 +90,31 @@ export default function DpmCampaignLifecycleCommandCard({
       </div>
       <div className="rebalance-campaign-workflow-command-grid">
         <label className="workbench-field-label" htmlFor="dpm-campaign-lifecycle-actor">
-          Actor
+          Responsible operator
           <input
             id="dpm-campaign-lifecycle-actor"
             className="workbench-input"
             value={actorId}
-            onChange={(event) => setActorId(event.target.value)}
-            disabled={pendingCommand}
+            readOnly
           />
         </label>
         <label className="workbench-field-label" htmlFor="dpm-campaign-lifecycle-reason">
-          Reason
-          <input
+          Business rationale
+          <textarea
             id="dpm-campaign-lifecycle-reason"
             className="workbench-input"
-            value={reasonCode}
-            onChange={(event) => setReasonCode(event.target.value)}
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
             disabled={pendingCommand}
           />
         </label>
         <label className="workbench-field-label" htmlFor="dpm-campaign-replacement-version">
-          Replacement Version
+          Active replacement version
           <input
             id="dpm-campaign-replacement-version"
             className="workbench-input"
             value={replacementCampaignVersion}
             onChange={(event) => setReplacementCampaignVersion(event.target.value)}
-            disabled={pendingCommand}
-          />
-        </label>
-        <label className="workbench-field-label" htmlFor="dpm-campaign-replacement-hash">
-          Replacement Hash
-          <input
-            id="dpm-campaign-replacement-hash"
-            className="workbench-input"
-            value={replacementContentHash}
-            onChange={(event) => setReplacementContentHash(event.target.value)}
             disabled={pendingCommand}
           />
         </label>
@@ -144,7 +146,6 @@ export default function DpmCampaignLifecycleCommandCard({
           <MetricRow label="Actor" value={commandEvidence.actor} />
           <MetricRow label="Reason" value={commandEvidence.reason} />
           <MetricRow label="Replacement Version" value={commandEvidence.replacementCampaignVersion} />
-          <MetricRow label="Replacement Hash" value={commandEvidence.replacementContentHash} />
           <MetricRow label="Correlation" value={commandEvidence.correlationId} />
           <MetricRow label="Source" value={commandEvidence.sourceService} />
           <MetricRow label="Upstream" value={commandEvidence.upstreamStatus} />
