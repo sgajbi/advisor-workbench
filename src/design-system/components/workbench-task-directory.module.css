@@ -93,4 +93,13 @@
   .link {
     min-height: 0;
   }
+
+  .heading {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .status {
+    text-align: left;
+  }
 }
