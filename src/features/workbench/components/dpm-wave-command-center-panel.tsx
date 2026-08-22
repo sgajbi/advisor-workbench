@@ -20,9 +20,8 @@ import type {
 import {
   buildDpmWaveMetricTiles,
   buildDpmWaveProposedChangeRows,
-  dpmWaveBadgeTone,
+  buildDpmWaveHeaderModel,
   dpmWaveStatePanelCopy,
-  formatDpmWaveDisplayDate,
   isDpmWaveActionBlocked,
   resolveDpmWaveLifecycleIndex,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
@@ -46,6 +45,8 @@ type Props = {
   campaignDiscoveryError?: string | null;
   campaignWorkflowError?: string | null;
   errorMessage?: string | null;
+  mandateType?: string | null;
+  portfolioCurrency?: string | null;
 };
 
 export default function DpmWaveCommandCenterPanel({
@@ -66,6 +67,8 @@ export default function DpmWaveCommandCenterPanel({
   campaignDiscoveryError = null,
   campaignWorkflowError = null,
   errorMessage = null,
+  mandateType = null,
+  portfolioCurrency = null,
 }: Props) {
   const {
     model,
@@ -153,7 +156,12 @@ export default function DpmWaveCommandCenterPanel({
     model.selectedWaveItemCount,
     model.selectedWaveIssueCount
   );
-  const asOfDate = formatDpmWaveDisplayDate(model.summaryRows[0]?.asOfDate);
+  const header = buildDpmWaveHeaderModel({
+    mandateType,
+    portfolioCurrency,
+    asOfDate: model.summaryRows[0]?.asOfDate,
+    proofState,
+  });
 
   return (
     <SectionBlock
@@ -161,11 +169,11 @@ export default function DpmWaveCommandCenterPanel({
       subtitle="Proposed rebalance, advisor review, and approval readiness."
       className="dpm-wave-command-center-panel rebalance-workspace"
       actions={
-        <div className="rebalance-context-row" aria-label="Rebalance context">
-          <span>Discretionary Balanced</span>
-          <span>USD</span>
-          <span>{asOfDate}</span>
-          <SemanticBadge tone={dpmWaveBadgeTone(proofState)}>Evidence available</SemanticBadge>
+        <div className="rebalance-context-row" aria-label="Rebalance source context">
+          <span>{header.mandateLabel}</span>
+          <span>{header.currencyLabel}</span>
+          <span>{header.asOfLabel}</span>
+          <SemanticBadge tone={header.proof.tone}>{header.proof.label}</SemanticBadge>
         </div>
       }
     >
@@ -183,6 +191,37 @@ export default function DpmWaveCommandCenterPanel({
         approvalBlocked={approvalBlocked}
         selectedWaveItemCount={model.selectedWaveItemCount}
         metricRows={model.metricRows}
+      />
+
+      <div className="rebalance-main-grid">
+        <DpmWaveActiveRebalanceSection
+          selectedWaveId={selectedWaveId}
+          selectedWaveState={model.selectedWaveState}
+          lifecycleIndex={lifecycleIndex}
+          approvalBlocked={approvalBlocked}
+          stagingBlocked={stagingBlocked}
+          handoffBlocked={handoffBlocked}
+          metricTiles={metricTiles}
+          pendingAction={pendingAction}
+          actionMessage={actionMessage}
+          onPreview={previewRebalance}
+          onCreate={createRebalance}
+          onReviewData={reviewDataReadiness}
+          onSimulate={runSimulation}
+          onRequestApproval={requestApproval}
+          onStage={stageRebalance}
+          onPrepareHandoff={prepareHandoff}
+          onOpenEvidencePack={openEvidencePack}
+        />
+
+        <DpmWaveRecommendedActionsSection approvalBlocked={approvalBlocked} />
+      </div>
+
+      <DpmWaveProposedChangesSection
+        rows={proposedRows}
+        selectedWaveId={selectedWaveId}
+        pendingAction={pendingAction}
+        onLoadProposedChanges={loadProposedChanges}
       />
 
       <DpmWaveDecisionSupport
@@ -229,37 +268,6 @@ export default function DpmWaveCommandCenterPanel({
         onLaunchCampaign={launchCampaign}
         onRecordLifecycleCommand={recordCampaignLifecycleCommand}
         onRecordWorkflowCommand={recordCampaignWorkflowCommand}
-      />
-
-      <div className="rebalance-main-grid">
-        <DpmWaveActiveRebalanceSection
-          selectedWaveId={selectedWaveId}
-          selectedWaveState={model.selectedWaveState}
-          lifecycleIndex={lifecycleIndex}
-          approvalBlocked={approvalBlocked}
-          stagingBlocked={stagingBlocked}
-          handoffBlocked={handoffBlocked}
-          metricTiles={metricTiles}
-          pendingAction={pendingAction}
-          actionMessage={actionMessage}
-          onPreview={previewRebalance}
-          onCreate={createRebalance}
-          onReviewData={reviewDataReadiness}
-          onSimulate={runSimulation}
-          onRequestApproval={requestApproval}
-          onStage={stageRebalance}
-          onPrepareHandoff={prepareHandoff}
-          onOpenEvidencePack={openEvidencePack}
-        />
-
-        <DpmWaveRecommendedActionsSection approvalBlocked={approvalBlocked} />
-      </div>
-
-      <DpmWaveProposedChangesSection
-        rows={proposedRows}
-        selectedWaveId={selectedWaveId}
-        pendingAction={pendingAction}
-        onLoadProposedChanges={loadProposedChanges}
       />
     </SectionBlock>
   );

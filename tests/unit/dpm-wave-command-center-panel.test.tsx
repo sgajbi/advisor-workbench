@@ -312,6 +312,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     render(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        mandateType="DPM_GLOBAL_BALANCED"
+        portfolioCurrency="SGD"
         waveList={waveResponse}
         campaignDefinitions={campaignDefinitionsResponse}
         campaignDiscovery={campaignDiscoveryResponse}
@@ -320,6 +322,11 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     expect(screen.getByRole("heading", { name: "Rebalance" })).toBeInTheDocument();
     expect(screen.getByText("Proposed rebalance, advisor review, and approval readiness.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
+      "Discretionary Global BalancedSGDAs of 03 May 2026Evidence not opened",
+    );
+    expect(screen.queryByText("Discretionary Balanced")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Filter" })).not.toBeInTheDocument();
     expect(screen.getAllByText("Simulation ready").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
@@ -333,6 +340,20 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
+
+    const activeRebalance = screen.getByRole("heading", { name: "Active Rebalance" });
+    const proposedChanges = screen.getByRole("heading", { name: "Proposed Changes" });
+    const decisionSupport = screen.getByRole("heading", { name: "Decision support" });
+    const campaignDefinitions = screen.getByRole("heading", { name: "Campaign Definitions" });
+    expect(activeRebalance.compareDocumentPosition(proposedChanges)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(proposedChanges.compareDocumentPosition(decisionSupport)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(decisionSupport.compareDocumentPosition(campaignDefinitions)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
 
     const table = screen.getByRole("table", { name: "Proposed rebalance changes" });
     expect(await within(table).findByText("AAPL US")).toBeInTheDocument();

@@ -3,7 +3,11 @@ import type {
   DpmWaveCommandCenterPanelState,
   DpmWaveMetricRow,
 } from "./dpm-wave-command-center-view-model";
-import { formatBusinessReason } from "./manage-workspace-view-model";
+import {
+  formatBusinessMandateType,
+  formatBusinessReason,
+  isBusinessValueAvailable,
+} from "./manage-workspace-view-model";
 
 export type DpmWaveMetricTile = {
   label: string;
@@ -37,6 +41,67 @@ export type DpmWaveStatePanelCopy = {
   title: string;
   body: string;
 };
+
+export type DpmWaveHeaderModel = {
+  mandateLabel: string;
+  currencyLabel: string;
+  asOfLabel: string;
+  proof: {
+    label: string;
+    tone: DpmWaveBadgeTone;
+  };
+};
+
+export function buildDpmWaveHeaderModel({
+  mandateType,
+  portfolioCurrency,
+  asOfDate,
+  proofState,
+}: {
+  mandateType?: string | null;
+  portfolioCurrency?: string | null;
+  asOfDate?: string | null;
+  proofState: string;
+}): DpmWaveHeaderModel {
+  return {
+    mandateLabel: isBusinessValueAvailable(mandateType)
+      ? formatBusinessMandateType(mandateType)
+      : "Mandate not reported",
+    currencyLabel: isBusinessValueAvailable(portfolioCurrency)
+      ? String(portfolioCurrency).trim().toUpperCase()
+      : "Currency not reported",
+    asOfLabel: isBusinessValueAvailable(asOfDate)
+      ? formatDpmWaveDisplayDate(String(asOfDate))
+      : "As of not reported",
+    proof: buildDpmWaveProofPosture(proofState),
+  };
+}
+
+export function buildDpmWaveProofPosture(state: string): DpmWaveHeaderModel["proof"] {
+  const normalized = state.trim().toUpperCase();
+  if (["READY", "COMPLETE"].includes(normalized)) {
+    return { label: "Evidence ready", tone: "success" };
+  }
+  if (normalized === "AVAILABLE") {
+    return { label: "Evidence not opened", tone: "default" };
+  }
+  if (normalized === "NOT_REQUESTED") {
+    return { label: "Evidence not requested", tone: "default" };
+  }
+  if (["PENDING", "IN_PROGRESS", "REQUESTED", "PREPARING"].includes(normalized)) {
+    return { label: "Evidence being prepared", tone: "warn" };
+  }
+  if (["PARTIAL", "DEGRADED", "REVIEW_REQUIRED"].includes(normalized)) {
+    return { label: "Evidence needs review", tone: "warn" };
+  }
+  if (normalized === "BLOCKED") {
+    return { label: "Evidence blocked", tone: "danger" };
+  }
+  if (["FAILED", "ERROR", "UNAVAILABLE", "UNSUPPORTED", "CANCELLED"].includes(normalized)) {
+    return { label: "Evidence unavailable", tone: "danger" };
+  }
+  return { label: "Evidence not reported", tone: "default" };
+}
 
 export function dpmWaveStatePanelCopy(
   state: DpmWaveCommandCenterPanelState,

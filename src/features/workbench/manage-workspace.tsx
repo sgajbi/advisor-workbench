@@ -12,6 +12,7 @@ import {
 } from "@/design-system";
 import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
 import ManageMandateHealth from "@/features/workbench/components/manage-mandate-health";
+import { readStringFromResponse } from "@/features/workbench/manage-workspace-view-model";
 import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
 import DpmCopilotWorkspace from "@/features/workbench/components/dpm-copilot-workspace";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
@@ -142,6 +143,11 @@ function renderManageMode(
         <>
           <DpmWaveCommandCenterPanel
             portfolioId={data.portfolio.portfolio.portfolio_id}
+            mandateType={
+              readStringFromResponse(data.mandate, "mandate_type") ??
+              readStringFromResponse(data.mandate, "type")
+            }
+            portfolioCurrency={data.portfolio.portfolio.base_currency}
             waveList={data.waves}
             campaignDefinitions={data.campaignDefinitions}
             campaignDiscovery={data.campaignDiscovery}

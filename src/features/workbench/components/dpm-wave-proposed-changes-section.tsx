@@ -31,7 +31,6 @@ export default function DpmWaveProposedChangesSection({
           >
             Load Changes
           </button>
-          <button type="button">Filter</button>
         </div>
       </div>
       <AnalyticsTable
