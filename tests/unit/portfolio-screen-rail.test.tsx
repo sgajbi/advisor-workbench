@@ -333,6 +333,48 @@ describe("PortfolioScreenRail", () => {
     expect(changeStep).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("returns focus to the visible workflow control after a desktop mode decision", () => {
+    const onSelect = vi.fn();
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="performance"
+        modeNavigationLabel="Performance surface navigation"
+        modeItems={[
+          {
+            key: "summary",
+            label: "Performance Overview",
+            detail: "Portfolio outcomes",
+            active: true,
+            onSelect: vi.fn(),
+          },
+          {
+            key: "analysis",
+            label: "Performance Analysis",
+            detail: "Attribution and diagnostics",
+            active: false,
+            onSelect,
+          },
+        ]}
+      />,
+    );
+
+    const workflow = screen.getByRole("group", {
+      name: "Performance surface navigation",
+    });
+    const changeStep = within(workflow).getByRole("button", {
+      name: /change workflow step/i,
+    });
+    fireEvent.click(changeStep);
+    fireEvent.click(
+      within(workflow).getByRole("button", { name: "Performance Analysis" }),
+    );
+
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(changeStep).toHaveFocus();
+    expect(changeStep).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("counts only actionable workflow steps while retaining unavailable discovery", () => {
     render(
       <PortfolioScreenRail
