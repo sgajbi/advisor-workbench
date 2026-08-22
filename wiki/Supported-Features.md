@@ -12,6 +12,25 @@ diagnostics are not supported features and are not shipped. The future authentic
 Home remains governed by Workbench issue #470 and must use supported source authority; Workbench
 must not reintroduce fabricated fallback business state while that dependency is unavailable.
 
+## Governed Review Continuity
+
+Workbench uses one governed URL context for portfolio, valuation date, review period, reporting
+currency, selected record, and source-accepted report batch. The common portfolio/date/period/
+currency context is preserved through supported Portfolio, Performance, Advice, Reporting, and
+Mandate management handoffs. Record and batch identity remains bounded to screens that can consume
+the corresponding source contract.
+
+Missing portfolio selection opens **My book**; repeated, malformed, unsupported, catalogue-missing,
+or source-conflicting context fails closed. Workbench does not substitute the canonical demo,
+configured, preferred, or first catalogue portfolio to keep a screen populated. A URL value is a
+request, not source evidence: every screen still requires its Gateway response to confirm the
+applicable portfolio and date/window/currency identity before showing analytical detail.
+
+Confirmed user decisions create browser-history entries. Source normalization may update the
+current entry. Back and Forward restore the matching source-backed review without remounting the
+complete workspace or discarding useful keyboard focus. This continuity contract does not add
+household, team, delegate, supervisor, entitlement, identity, or authentication capability.
+
 ## Current Implementation-Backed Surfaces
 
 | Surface                                 | Route                                                               | Backing contract                                                                                                                                                                                                                                                                                                                        | Current support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |

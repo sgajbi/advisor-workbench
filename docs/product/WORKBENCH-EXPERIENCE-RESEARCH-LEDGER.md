@@ -5849,3 +5849,73 @@ Optimized-production Playwright must prove invalid-date blocking, explicit recov
 request after recovery, keyboard usability, responsive layout, and zero page overflow. Advisor Book
 and Manage wiki guides plus repository context carry the durable policy; protected CI, exact-main
 validation, wiki publication/parity, issue closure, and branch hygiene remain required.
+
+## Governed Review Context And Cross-Workspace Continuity
+
+### Business job
+
+An advisor moving from whole-book selection into portfolio review, performance, advice, reporting,
+or mandate management must remain in the same portfolio, valuation date, review period, and
+reporting currency. A browser refresh, drill-in, or Back/Forward action must not silently substitute
+another book, revive an older source response, or make the advisor reconstruct the review context.
+
+### Current-product research
+
+Research was reviewed on 2026-08-23 from official product and web-platform sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes a connected advisor experience using a common portfolio language, whole-portfolio
+   views, book insights, next-best actions, and proposal workflows across the advisory lifecycle.
+2. [BlackRock Aladdin Wealth householding](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/insights/householding)
+   explains why account, group, and household scope matter to aggregate portfolio and risk review.
+   Lotus reserves scope identity but does not claim household support before Gateway publishes it.
+3. [MDN History API guidance](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API)
+   distinguishes a new user-visible history entry from normalization of the current entry.
+4. [WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) and
+   [Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) require a
+   predictable keyboard sequence and visible orientation as users move through a workflow.
+
+These sources inform continuity and interaction principles only. Lotus does not copy another
+product's layout, wording, visual identity, data model, or unsupported household capability.
+
+### Adopted decisions
+
+1. Use one typed, atomic URL contract for portfolio, valuation date, review period, reporting
+   currency, selected record, and report-batch identity instead of page-local parsing and defaults.
+2. Fail the complete review context closed when a governed value is repeated, malformed, or
+   unsupported; direct the user to **My book** when portfolio selection is absent or unconfirmed.
+3. Treat URL identity as a request, never as evidence. Render analytical detail only after the
+   Gateway response independently confirms the portfolio and applicable date, period, currency,
+   record, or batch identity.
+4. Preserve the common review fields through supported cross-workspace links. Clear selected-record
+   and batch identity when the destination cannot interpret them rather than leaking local state.
+5. Use browser-history `push` for confirmed user choices and `replace` only for source
+   normalization. Keep the mounted shell and restore focus to the persistent initiating control.
+6. Fence asynchronous results and caches by the complete source identity so an A-to-B-to-A route
+   sequence cannot publish an older response under a newer review.
+7. Prove the contract with unit round trips and negative input corpora, integration no-call and
+   source-mismatch boundaries, and optimized-production Portfolio-to-Performance Back/Forward and
+   focus evidence using a non-default source-backed portfolio.
+
+### Rejected decisions
+
+1. A canonical demo, configured, preferred, or first-catalogue portfolio as a hidden route default.
+2. Salvaging a valid-looking portfolio from an otherwise ambiguous or malformed address.
+3. Treating URL parameters, React state, fixture constants, or the previous screen's payload as
+   confirmation of current source evidence.
+4. Replacing browser history for user decisions, query-keying a page to force remounts, or moving
+   focus to the document body after a workspace transition.
+5. Preserving selected record or report batch across a destination that has no supported contract
+   for that identity.
+6. Inventing household, team, delegated, supervisory, entitlement, or authentication context under
+   this navigation contract.
+
+### Validation and publication decision
+
+Workbench #779 owns the slice. The shared contract, shell, Advisor Book, Portfolio and record
+screens, Performance, Proposal, Report Centre, Advisory, and Manage integrations carry focused
+failure, source-identity, race, history, focus, and no-call proof. The optimized-production browser
+journey uses `PB_SG_INCOME_001`, historical date `2026-02-24`, period `1Y`, and currency `USD` to
+prove Portfolio to Performance and browser Back without context or focus loss. Full repository
+gates, protected review/CI, exact-main validation, wiki publication/parity, issue closure, and
+branch hygiene remain required.
