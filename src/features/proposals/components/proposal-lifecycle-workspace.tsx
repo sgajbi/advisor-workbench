@@ -11,6 +11,7 @@ import {
   SemanticBadge,
   SourceWindowNavigation,
   Text,
+  useSourceWindow,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
@@ -49,7 +50,6 @@ import {
   buildProposalQueueWorkflowContext,
   buildSuitabilityReviewWorkflowContext,
 } from "../proposal-workflow-context-view-model";
-import { useProposalSourceWindow } from "../use-proposal-source-window";
 import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
 import { useProposalDiscussionPack } from "../use-proposal-discussion-pack";
 import PolicyReviewWorkspace from "./policy-review-workspace";
@@ -102,7 +102,7 @@ export default function ProposalLifecycleWorkspace({
   ] = useState<SourceRefreshTransaction | null>(null);
   const [discussionRefreshTransaction, setDiscussionRefreshTransaction] =
     useState<SourceRefreshTransaction | null>(null);
-  const sourceWindow = useProposalSourceWindow(portfolioId);
+  const sourceWindow = useSourceWindow(portfolioId);
   const proposalQueryKey = [
     "proposal-lifecycle-workspace",
     portfolioId,

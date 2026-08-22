@@ -12,6 +12,7 @@ import {
   SourceRefreshAction,
   SourceWindowNavigation,
   Text,
+  useSourceWindow,
   WorkbenchSummaryMetricStrip,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
@@ -21,7 +22,6 @@ import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-clie
 import { listProposals } from "../api";
 import { buildAdvisoryOverviewModel } from "../advisory-overview-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
-import { useProposalSourceWindow } from "../use-proposal-source-window";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./advisory-overview-workspace.module.css";
 
@@ -33,7 +33,7 @@ type SourceRefreshOutcome = {
 };
 
 export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId: string }) {
-  const sourceWindow = useProposalSourceWindow(portfolioId);
+  const sourceWindow = useSourceWindow(portfolioId);
   const [sourceRefreshOutcome, setSourceRefreshOutcome] = useState<SourceRefreshOutcome | null>(null);
   const proposalQuery = useQuery({
     queryKey: ["advisory-overview", portfolioId, sourceWindow.cursor],

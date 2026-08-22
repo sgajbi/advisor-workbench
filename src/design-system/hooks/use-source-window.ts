@@ -2,18 +2,24 @@
 
 import { useCallback, useState } from "react";
 
-type ProposalSourceHistory = {
+type SourceWindowHistory = {
   scopeKey: string;
   cursors: Array<string | undefined>;
   index: number;
 };
 
-function createInitialHistory(scopeKey: string): ProposalSourceHistory {
+function createInitialHistory(scopeKey: string): SourceWindowHistory {
   return { scopeKey, cursors: [undefined], index: 0 };
 }
 
-export function useProposalSourceWindow(scopeKey: string) {
-  const [sourceHistory, setSourceHistory] = useState<ProposalSourceHistory>(() =>
+/**
+ * Keeps bounded cursor history for a source-owned result set.
+ *
+ * Fetching and evidence identity remain with the consumer so domain workflows
+ * can fence late responses and retain the last confirmed source window.
+ */
+export function useSourceWindow(scopeKey: string) {
+  const [sourceHistory, setSourceHistory] = useState<SourceWindowHistory>(() =>
     createInitialHistory(scopeKey)
   );
   const activeHistory =
@@ -60,6 +66,10 @@ export function useProposalSourceWindow(scopeKey: string) {
 
   return {
     cursor: activeHistory.cursors[activeHistory.index],
+    previousCursor:
+      activeHistory.index > 0
+        ? activeHistory.cursors[activeHistory.index - 1]
+        : undefined,
     windowNumber: activeHistory.index + 1,
     hasPrevious: activeHistory.index > 0,
     showNext,
