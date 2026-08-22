@@ -117,7 +117,7 @@ Shared endpoint detail remains in [API Surface](API-Surface), and service owners
 | Partial populated view | Valid rows, **N in this view**, and **More attention items are available** | Continue through source views before drawing a whole-queue conclusion |
 | Complete empty view | **No open attention items** only after the source confirms no continuation | Continue the mandate review; this is not an enterprise all-clear |
 | Partial view with no selected-mandate row | Explicit statement that this source view cannot support a zero-attention conclusion | Continue to the next source view |
-| Continuation loading | Last confirmed rows remain visible; navigation reports that attention items are loading | Wait; repeated navigation is blocked without moving focus unexpectedly |
+| Continuation loading | Last confirmed rows remain visible; navigation reports that attention items are loading | Wait; repeated navigation is blocked, then focus returns to the activated control or nearest available source-view action |
 | Continuation failure | Last confirmed rows plus a named next/previous-view failure and **Retry source view** | Retry the same scoped Gateway read |
 | Permission blocked | Last confirmed evidence remains bounded; the requested view is not presented as current | Use an entitled role or approved support path |
 | Unavailable or malformed evidence | Attention items are unavailable and no zero conclusion is inferred | Verify the Gateway/Manage response through the support path |
@@ -161,9 +161,14 @@ action and destination.
   retry, and late-response fencing across portfolio and mandate changes.
 - `tests/unit/manage-overview-model.test.ts` proves Overview reports a partial first source view
   without converting it into unavailable evidence or a complete count.
+- `tests/e2e/manage-mandate-health-workspace.spec.ts` proves an optimized-production Workbench uses
+  the canonical portfolio, preserves correlation identity while moving from a partial first source
+  view to a complete second source view, distinguishes complete-empty from unavailable evidence,
+  retains keyboard focus, rejects a delayed prior-portfolio result after scope changes, and avoids
+  page-level horizontal overflow at 1440, 1024, 720, and 390 pixels.
 - `scripts/live/validation/browser-workflows.mjs` provides canonical route evidence for
-  `PB_SG_GLOBAL_BAL_001`; populated multi-window source proof remains a release requirement rather
-  than being inferred from route visibility.
+  `PB_SG_GLOBAL_BAL_001`; source-integrated live validation remains distinct from the deterministic
+  optimized-production multi-window browser proof.
 - Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
   controls.
 

@@ -777,6 +777,7 @@ describe("Workbench screen documentation governance", () => {
         "tests/unit/manage-workspace-components.test.tsx",
       ]),
       runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/manage-mandate-health-workspace.spec.ts",
         "scripts/live/validation/browser-workflows.mjs",
       ]),
       coverageException: null,
