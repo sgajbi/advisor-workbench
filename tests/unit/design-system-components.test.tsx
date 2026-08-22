@@ -55,6 +55,7 @@ import {
   WorkbenchStatusRow,
   WorkbenchSectionStack,
   WorkbenchStatusStrip,
+  WorkbenchTaskDirectory,
   WorkbenchSummaryToolbar,
   WorkbenchToolbarPlaceholder,
   WorkbenchSummaryVisualCard,
@@ -68,6 +69,34 @@ import {
 } from "@/design-system";
 
 describe("design-system components", () => {
+  it("renders a keyboard-reachable business task directory with source posture", () => {
+    render(
+      <WorkbenchTaskDirectory
+        ariaLabel="Portfolio management tasks"
+        items={[
+          {
+            key: "mandate",
+            title: "Mandate health",
+            description: "Review mandate evidence and resolve open items.",
+            status: "2 attention items",
+            href: "/workbench/PF_1001?mode=mandate",
+            actionLabel: "Open mandate health",
+          },
+        ]}
+      />
+    );
+
+    const directory = screen.getByRole("navigation", {
+      name: "Portfolio management tasks",
+    });
+    const link = within(directory).getByRole("link", {
+      name: /Mandate health.*2 attention items.*Open mandate health/i,
+    });
+
+    expect(link).toHaveAttribute("href", "/workbench/PF_1001?mode=mandate");
+    expect(within(directory).getByText("Review mandate evidence and resolve open items.")).toBeVisible();
+  });
+
   it("renders the compact workspace header with title and meta", () => {
     render(
         <WorkspaceHeader

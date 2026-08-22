@@ -49,6 +49,8 @@ export { default as WorkbenchChartShell } from "./components/workbench-chart-she
 export { default as WorkbenchECharts } from "./components/workbench-echarts";
 export { default as WorkbenchDecisionBrief } from "./components/workbench-decision-brief";
 export { default as WorkbenchDecisionWorkspace } from "./components/workbench-decision-workspace";
+export { default as WorkbenchTaskDirectory } from "./components/workbench-task-directory";
+export type { WorkbenchTaskDirectoryItem } from "./components/workbench-task-directory";
 export type {
   WorkbenchDecisionBriefAttention,
   WorkbenchDecisionBriefFact,
