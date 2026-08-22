@@ -127,7 +127,11 @@ export { default as WorkbenchSummaryMetricStrip } from "./components/workbench-s
 export type { WorkbenchSummaryMetricStripItem } from "./components/workbench-summary-metric-strip";
 export { default as WorkbenchLoadingState } from "./components/workbench-loading-state";
 export { default as WorkbenchInlineRefreshNote } from "./components/workbench-inline-refresh-note";
-export { default as WorkbenchContextNotice } from "./components/workbench-context-notice";
+export {
+  buildWorkbenchSourceContextNotice,
+  default as WorkbenchContextNotice,
+} from "./components/workbench-context-notice";
+export type { WorkbenchSourceContextNotice } from "./components/workbench-context-notice";
 export { default as WorkbenchIcon } from "./components/workbench-icon";
 export type { WorkbenchIconName } from "./components/workbench-icon";
 export {
