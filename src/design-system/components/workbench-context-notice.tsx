@@ -7,6 +7,21 @@ export type WorkbenchSourceContextNotice = Readonly<{
   body: string;
 }>;
 
+export function combineWorkbenchContextNotices({
+  title,
+  notices,
+}: {
+  title: string;
+  notices: readonly (WorkbenchSourceContextNotice | null | undefined)[];
+}): WorkbenchSourceContextNotice | null {
+  const bodies = [...new Set(
+    notices
+      .map((notice) => notice?.body.trim())
+      .filter((body): body is string => Boolean(body)),
+  )];
+  return bodies.length > 0 ? { title, body: bodies.join(" ") } : null;
+}
+
 export function buildWorkbenchSourceContextNotice({
   title,
   subject,

@@ -42,6 +42,9 @@ describe("WorkbenchPage", () => {
     expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
       /source base currency USD.*restatement to SGD is not supported/i,
     );
+    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+      /review period 3Y.*does not filter this mandate management workspace/i,
+    );
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();

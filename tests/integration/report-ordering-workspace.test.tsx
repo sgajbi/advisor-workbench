@@ -181,6 +181,22 @@ describe("ReportOrderingWorkspace", () => {
     batchStatusMock.mockResolvedValue(parseReportBatchStatus(buildReportBatchStatus()));
   });
 
+  it("keeps a carried unsupported review period visible as source-scope context", () => {
+    render(
+      <ReportOrderingWorkspace
+        portfolio={portfolio}
+        contextNotice={{
+          title: "Report source context",
+          body: "The carried review period YTD does not filter this report ordering workflow.",
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("Report source context")).toHaveTextContent(
+      /review period YTD.*does not filter this report ordering workflow/i,
+    );
+  });
+
   it("renders a source-backed advisor flow and keeps unavailable PDF disabled", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
 

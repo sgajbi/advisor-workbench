@@ -130,6 +130,7 @@ export { default as WorkbenchInlineRefreshNote } from "./components/workbench-in
 export {
   buildWorkbenchUnsupportedReviewContextNotice,
   buildWorkbenchSourceContextNotice,
+  combineWorkbenchContextNotices,
   default as WorkbenchContextNotice,
 } from "./components/workbench-context-notice";
 export type { WorkbenchSourceContextNotice } from "./components/workbench-context-notice";

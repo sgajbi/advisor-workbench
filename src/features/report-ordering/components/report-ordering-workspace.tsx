@@ -11,6 +11,8 @@ import {
   MainWithSideRailLayout,
   ScreenStatePanel,
   SemanticBadge,
+  type WorkbenchSourceContextNotice,
+  WorkbenchContextNotice,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
@@ -41,15 +43,18 @@ type ReportOrderingPortfolio = {
 export function ReportOrderingWorkspace({
   portfolio,
   initialBatchId,
+  contextNotice,
 }: {
   portfolio: ReportOrderingPortfolio;
   initialBatchId?: string;
+  contextNotice?: WorkbenchSourceContextNotice | null;
 }) {
   return (
     <ReportOrderingWorkspaceSession
       key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.sourceBaseCurrency}:${portfolio.reportingCurrency}:${initialBatchId ?? "new"}`}
       portfolio={portfolio}
       initialBatchId={initialBatchId}
+      contextNotice={contextNotice}
     />
   );
 }
@@ -57,9 +62,11 @@ export function ReportOrderingWorkspace({
 function ReportOrderingWorkspaceSession({
   portfolio,
   initialBatchId,
+  contextNotice,
 }: {
   portfolio: ReportOrderingPortfolio;
   initialBatchId?: string;
+  contextNotice?: WorkbenchSourceContextNotice | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -190,6 +197,7 @@ function ReportOrderingWorkspaceSession({
               }
             >
               <WorkbenchSectionStack className={styles.contentStack}>
+                {contextNotice ? <WorkbenchContextNotice {...contextNotice} /> : null}
                 {initialBatchId ? (
                   <ReportBatchStatusPanel
                     status={workflow.batchStatus}
