@@ -11,7 +11,7 @@ does not calculate a rebalance, approve a trade, or report execution.
 | --- | --- |
 | Canonical route | `/workbench/{portfolioId}?mode=waves` |
 | Navigation | **Manage**, then **Rebalance Waves** in the selected-portfolio workspace |
-| Supported scope | One selected portfolio, the active Manage wave returned through Gateway, and bounded campaign workflow evidence |
+| Supported scope | One selected portfolio, the active Manage wave returned through Gateway, and one selected Manage campaign decision at a time |
 | Primary reading order | Source context, readiness, active rebalance, proposed changes, optional decision support, then campaign administration |
 | Evidence posture | Source proof is separately labelled ready, not opened, not requested, being prepared, needing review, blocked, unavailable, or not reported |
 
@@ -29,6 +29,8 @@ The screen helps a portfolio manager answer five practical questions:
    request, staging, handoff preparation, or evidence review?
 5. Is optional internal commentary or campaign administration required after the selected
    portfolio decision has been reviewed?
+6. For a campaign in scope, which source record needs attention, what is its current readiness,
+   and is the next governed task review, governance, lifecycle control, or launch?
 
 The selected rebalance decision leads. AI-assisted material and campaign administration remain
 supporting workflows and do not displace the portfolio decision.
@@ -58,7 +60,16 @@ client-delivery authority, or execution authority.
    failure evidence.
 6. Prepare optional internal decision support or continue into campaign administration only when
    that broader workflow is relevant.
-7. Open the proof pack or supported downstream Manage handoff; do not infer execution from staging
+7. In campaign administration, choose one source record from the keyboard-operable worklist. Review
+   its identity, eligible portfolio count, source readiness, governance, and launch posture before
+   entering one task mode.
+8. Use **Review posture**, **Governance action**, **Lifecycle control**, or **Launch decision**. The
+   screen keeps one task visible at a time and places technical lifecycle and replay evidence behind
+   named disclosures.
+9. Confirm the stated consequence before a retirement, supersession, or launch command. A launch
+   confirmation is cleared when Manage returns a durable wave, preventing an immediate accidental
+   repeat.
+10. Open the proof pack or supported downstream Manage handoff; do not infer execution from staging
    or handoff readiness.
 
 ## Implemented Capabilities
@@ -77,8 +88,17 @@ client-delivery authority, or execution authority.
   available.
 - Offers governed AI-assisted PM memo and operations-brief preparation only after the selected
   rebalance decision and proposed changes in document order.
-- Presents active campaign definitions, candidate-source evidence, lifecycle and launch history,
-  preview and launch readiness, workflow audit evidence, and source-supported campaign controls.
+- Presents active campaign definitions as a reusable selected-record decision workspace rather than
+  a page-local table. The compact worklist retains campaign identity and source triage; the decision
+  pane refreshes only the selected campaign's lifecycle, launch, workflow, and readiness evidence.
+- Keeps every selected-campaign response, pending state, and error fenced to campaign id and version,
+  so a late response for Campaign A cannot appear under Campaign B.
+- Separates review, governance, lifecycle, and launch tasks; uses progressive disclosure for technical
+  trace; requires a human business rationale and explicit consequence acknowledgement for supported
+  lifecycle and launch mutations.
+- Routes browser-triggered campaign reads, refreshes, and commands through the same-origin Workbench
+  BFF. Server composition may contact Gateway server-side; the browser never contacts Manage or a
+  Gateway hostname directly.
 - Removes unsupported controls rather than rendering a no-op affordance; the proposed-change table
   has no browser-only filter.
 
@@ -93,7 +113,10 @@ client-delivery authority, or execution authority.
 | Stage or prepare handoff | The exact source action is enabled | Manage records staging or handoff posture; no order or execution is claimed |
 | Open evidence | A selected wave and supported proof action | Reads or requests source-owned evidence posture |
 | Prepare PM memo or operations brief | Selected wave plus governed AI workflow availability | Creates an internal review-gated workflow-pack result, not client communication |
-| Check or launch a campaign | Selected campaign and Manage-returned readiness package | Manage owns the durable campaign event and returned wave identity |
+| Review a campaign | Selected campaign id and version | Refreshes only that record's source evidence; no mutation |
+| Record a governance action | Exact selected campaign plus the typed action fields and business rationale | Manage owns the approval, assignment, task, transition, or maker-checker evidence |
+| Retire or supersede a campaign | Exact selected campaign, source-supported replacement where applicable, business rationale, and explicit consequence confirmation | Manage records the lifecycle change; Workbench refreshes definitions and exact lifecycle evidence |
+| Launch a campaign | Selected campaign, Manage-returned `READY` launch package, and explicit consequence confirmation | Manage owns the durable campaign event and returned wave identity; the confirmation resets after success |
 
 Pending actions disable conflicting controls. Success is shown only from the returned source
 response; failure remains visible and does not fabricate lifecycle progress.
@@ -108,7 +131,9 @@ response; failure remains visible and does not fabricate lifecycle progress.
 | Preview, source check, simulation, approval request, staging, and handoff | Sends bounded commands through the BFF; does not infer success | Manage through Gateway command contracts |
 | Proof pack and report-input posture | Maps exact returned evidence state to business copy | Manage and Report through Gateway |
 | PM memo and operations brief | Shows AI-assistance disclosure and returned source references | Manage and Lotus AI through Gateway workflow-pack contracts |
-| Campaign definition, candidate source, lifecycle, launch, and workflow evidence | Presents selected campaign evidence and sends only supported controls | Manage through Gateway campaign contracts |
+| Campaign definition and discovery worklist | Presents source records without inventing total-book priority, ownership, or SLA | Manage through Gateway campaign contracts |
+| Selected lifecycle, launch, approval, assignment, task, and maker-checker evidence | Fetches the selected id/version through `/api/bff/api/v1/...`; identity-fences pending, result, and error state | Manage through Gateway selected-campaign contracts |
+| Campaign lifecycle, governance, and launch commands | Sends the exact typed body through the BFF, waits for source persistence, then refreshes selected evidence | Manage through Gateway mutation contracts |
 
 The browser calls only `/api/bff/api/v1/...`. Shared endpoint detail is documented in
 [API Surface](API-Surface), and source ownership is documented in [Integrations](Integrations).
@@ -128,6 +153,8 @@ The browser calls only `/api/bff/api/v1/...`. Shared endpoint detail is document
 | Evidence being prepared | An exact source request is pending | Wait; conflicting actions remain disabled |
 | Evidence needs review, blocked, or unavailable | The badge names the non-ready state | Review the returned reason and owning source before proceeding |
 | Action failure | Business-safe error remains near the decision flow | Retry the same source action only after checking the context |
+| Campaign selection changes during refresh | New selection remains authoritative; late prior-record evidence is discarded | Continue with the selected campaign; repeat the source read only if its own state needs attention |
+| Successful campaign launch | Durable wave identity is shown and launch acknowledgement resets | Review the returned wave; do not repeat the command unless a new governed launch is intended |
 
 Reloading the route re-contacts the Workbench BFF. A screenshot or favourable badge does not
 replace the machine-readable response.
@@ -168,12 +195,18 @@ this guide is not a claim of competitor superiority.
 - `tests/unit/dpm-wave-command-center-panel.test.tsx` proves decision-first document order, no
   hard-coded context, no no-op Filter control, existing action gates, selected-wave fencing, and
   Gateway-backed campaign workflows.
+- `tests/unit/dpm-campaign-definitions-section.test.tsx`,
+  `tests/unit/use-dpm-wave-command-center-actions.test.ts`, and `tests/unit/workbench-api.test.ts`
+  prove the shared selected-record workspace, one-task-at-a-time controls, typed command bodies,
+  campaign-identity fencing, same-origin BFF routing, confirmation reset, and explicit failure.
 - `tests/integration/workbench-page.test.tsx` and
   `tests/unit/manage-workspace-components.test.tsx` prove selected-portfolio Manage composition.
 - `scripts/live/validation/browser-workflows.mjs` owns canonical populated Manage browser proof for
   `PB_SG_GLOBAL_BAL_001`; a route screenshot alone is not source-readiness evidence.
 - `tests/e2e/manage-rebalance-workspace.spec.ts` proves the optimized-production source context,
-  primary section order, proposed-change read, keyboard focus, 1440/1024/720/390 reflow, and zero
+  primary section order, proposed-change read, two-record keyboard selection, focus stability after
+  asynchronous evidence refresh, selected campaign identity, launch consequence gating, durable
+  launch response, repeat prevention, 1440/1024/720/390 reflow, clean browser runtime, and zero
   page-level horizontal overflow against a process-owned Gateway fixture.
 - Protected PR checks, exact-main releasability, production-browser reflow, wiki publication, and
   strict parity remain release controls.
