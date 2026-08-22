@@ -1198,7 +1198,9 @@ Important validation expectations:
     period, and reporting currency. `selectedRecordId` and `batchId` are screen-local identities:
     strip them when switching workspaces and retain them only within their owning record or batch
     flow. Missing, repeated, or malformed required identity fails closed to the shared recovery
-    surface; **My book** must remain a context-free recovery entry.
+    surface. **My book** must remain portfolio-neutral: it may retain only one valid explicit
+    business date because its source contract requires that date, and must strip portfolio, period,
+    currency, record, and batch identity.
 39. A context-dependent full-page action is available only when its exact governed destination can
     be built through the shared review-context authority. Do not invent default portfolio, date,
     period, currency, record, or batch values to keep a link visible. If the caller lacks the
