@@ -222,3 +222,28 @@ test("fails visibly without falling back to a global portfolio catalogue", async
   await expect(page.getByText(/Reference 502/i)).toHaveCount(0);
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toHaveCount(0);
 });
+
+test("fails closed on an invalid business date and recovers through explicit selection", async ({
+  page,
+}) => {
+  let advisorBookRequestCount = 0;
+  await mockShellFallback(page);
+  await page.route("**/api/bff/api/v1/advisor-book/portfolios?**", async (route) => {
+    advisorBookRequestCount += 1;
+    await route.fulfill({ json: advisorBookResponse });
+  });
+
+  await page.goto("/book?asOfDate=not-a-date", { waitUntil: "domcontentloaded" });
+
+  await expect(page.getByText("Business date not confirmed")).toBeVisible();
+  await expect(page.getByText(/Portfolio assignments have not been requested/i)).toBeVisible();
+  await expect(page.getByLabel("Business date")).toBeVisible();
+  expect(advisorBookRequestCount).toBe(0);
+
+  await page.getByLabel("Business date").fill("2026-04-10");
+  await page.getByRole("button", { name: "Review book" }).click();
+
+  await expect(page).toHaveURL(/asOfDate=2026-04-10/);
+  await expect(page.getByText("Available with limitations")).toBeVisible();
+  expect(advisorBookRequestCount).toBe(1);
+});

@@ -478,6 +478,11 @@ describe("manage workspace split components", () => {
     expect(screen.getByText("Decision Support")).toBeInTheDocument();
     expect(screen.getByText("Outcome Reviews")).toBeInTheDocument();
 
+    const portfolioContext = screen.getByLabelText("Manage portfolio context");
+    expect(within(portfolioContext).getByText("Business Date")).toBeInTheDocument();
+    expect(within(portfolioContext).getByText("13 May 2026")).toBeInTheDocument();
+    expect(within(portfolioContext).queryByText("2026-05-13")).not.toBeInTheDocument();
+
     const posture = screen.getByLabelText("Manage review posture");
     expect(within(posture).getByText("Attention Items")).toBeInTheDocument();
     expect(within(posture).getByText("2 open")).toBeInTheDocument();

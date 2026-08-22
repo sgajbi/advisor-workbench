@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioScreenRail from "../../src/apps/portfolio/components/portfolio-screen-rail";
 
@@ -48,6 +48,7 @@ function openPortfolioContextOptions() {
 
 describe("PortfolioScreenRail", () => {
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
     vi.clearAllMocks();
     usePathnameMock.mockReturnValue("/income");
     window.sessionStorage.clear();
@@ -70,6 +71,10 @@ describe("PortfolioScreenRail", () => {
         ],
       },
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("keeps the selected portfolio and active business view in the compact disclosure", () => {
@@ -485,6 +490,21 @@ describe("PortfolioScreenRail", () => {
     openPortfolioContextOptions();
 
     expect(useAdvisorBookMock).toHaveBeenCalledOnce();
+  });
+
+  it("does not request portfolio options while the business date is unconfirmed", () => {
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "");
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="income"
+      />,
+    );
+
+    openPortfolioContextOptions();
+
+    expect(useAdvisorBookMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/business date is confirmed in My book/i)).toBeInTheDocument();
   });
 
   it("does not claim membership when the selected portfolio is outside the returned book page", () => {

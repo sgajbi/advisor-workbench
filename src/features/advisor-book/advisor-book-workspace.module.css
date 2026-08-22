@@ -60,6 +60,14 @@
   font: inherit;
 }
 
+.businessDateRecovery {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) auto;
+  gap: 12px;
+  align-items: end;
+  width: min(100%, 480px);
+}
+
 .filterActions {
   display: flex;
   align-items: center;
@@ -169,6 +177,10 @@
 }
 
 @media (max-width: 640px) {
+  .businessDateRecovery {
+    grid-template-columns: 1fr;
+  }
+
   .filterToolbar {
     grid-template-columns: 1fr;
   }

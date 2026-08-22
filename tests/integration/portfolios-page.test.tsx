@@ -179,7 +179,9 @@ describe("PortfolioFoundationPage", () => {
     expect(within(keyMetrics).queryByRole("button", { name: /MTD Return/i })).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByRole("button", { name: /QTD Return/i })).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByRole("button", { name: /YTD Return/i })).not.toBeInTheDocument();
-    expect(screen.getAllByText("Generated 24 Feb 2026 • 14 report rows").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText("Generated 24 Feb 2026, 08:32 UTC • 14 report rows").length,
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.queryByRole("heading", { name: /^Income$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Activity$/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText("As of")).toHaveValue("2026-02-24");

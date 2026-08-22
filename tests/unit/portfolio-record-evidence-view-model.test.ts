@@ -329,7 +329,7 @@ describe("portfolio record evidence view model", () => {
       input: { status: "COMPLETE", generated_at_utc: "2026-05-12T00:00:00Z", row_count: 11 },
       expected: {
         state: "generated",
-        source: "Generated 12 May 2026",
+        source: "Generated 12 May 2026, 00:00 UTC",
         detail: "11 reportable rows in the latest generated snapshot",
         status: "Generated",
         tone: "success",
@@ -349,7 +349,7 @@ describe("portfolio record evidence view model", () => {
       input: { status: "PENDING", generated_at_utc: "2026-05-10T00:00:00Z", row_count: 8 },
       expected: {
         state: "pending",
-        source: "Last generated 10 May 2026",
+        source: "Last generated 10 May 2026, 00:00 UTC",
         detail: "8 reportable rows available; the current reporting refresh is not complete",
         status: "Pending",
         tone: "warn",
@@ -369,7 +369,7 @@ describe("portfolio record evidence view model", () => {
       input: { status: "STALE", generated_at_utc: "2026-05-01T00:00:00Z", row_count: 7 },
       expected: {
         state: "stale",
-        source: "Last generated 01 May 2026",
+        source: "Last generated 01 May 2026, 00:00 UTC",
         detail: "7 reportable rows available; confirm the current reporting source before client use",
         status: "Stale",
         tone: "warn",
@@ -409,7 +409,7 @@ describe("portfolio record evidence view model", () => {
       input: { status: "UNRECOGNIZED", generated_at_utc: "2026-05-01T00:00:00Z", row_count: 7 },
       expected: {
         state: "unavailable",
-        source: "Last generated 01 May 2026",
+        source: "Last generated 01 May 2026, 00:00 UTC",
         detail: "7 reportable rows retained; current output availability is not confirmed",
         status: "Unavailable",
         tone: "danger",

@@ -24,7 +24,10 @@ import type {
   AdvisorBookSortBy,
   AdvisorBookSortOrder,
 } from "../contracts";
-import { resolveAdvisorBookAsOfDate } from "../configuration";
+import {
+  resolveAdvisorBookAsOfDate,
+  type AdvisorBookAsOfDateResolution,
+} from "../configuration";
 import { buildPortfolioContextHref } from "../navigation";
 import { useAdvisorBook } from "../use-advisor-book";
 import {
@@ -51,9 +54,99 @@ function AdvisorBookWorkspaceContent({
 }: {
   searchParams: ReturnType<typeof useSearchParams>;
 }) {
+  const dateResolution = resolveAdvisorBookAsOfDate(searchParams.get("asOfDate"));
+
+  if (dateResolution.status === "not_confirmed") {
+    return (
+      <AdvisorBookDateRequired
+        dateResolution={dateResolution}
+        searchParams={searchParams}
+      />
+    );
+  }
+
+  return (
+    <AdvisorBookSourceWorkspace
+      asOfDate={dateResolution.value}
+      searchParams={searchParams}
+    />
+  );
+}
+
+function AdvisorBookDateRequired({
+  dateResolution,
+  searchParams,
+}: {
+  dateResolution: Extract<AdvisorBookAsOfDateResolution, { status: "not_confirmed" }>;
+  searchParams: ReturnType<typeof useSearchParams>;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const query = useMemo(() => queryFromSearchParams(searchParams), [searchParams]);
+  const [businessDate, setBusinessDate] = useState("");
+  const reason =
+    dateResolution.reason === "invalid_requested_date"
+      ? "The requested business date is not a valid calendar date."
+      : dateResolution.reason === "invalid_development_configuration"
+        ? "The configured local business date is not valid."
+        : "No business date has been confirmed for this book view.";
+
+  function confirmBusinessDate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const resolution = resolveAdvisorBookAsOfDate(businessDate);
+    if (resolution.status !== "confirmed") {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("asOfDate", resolution.value);
+    next.set("offset", "0");
+    router.replace(`${pathname}?${next.toString()}`);
+  }
+
+  return (
+    <ScreenStatePanel
+      kind="unavailable"
+      title="Business date not confirmed"
+      body={`${reason} Portfolio assignments have not been requested.`}
+      hint="Select the calendar date the own-book assignment should be reviewed against."
+      action={
+        <form
+          className={styles.businessDateRecovery}
+          onSubmit={confirmBusinessDate}
+          aria-label="Choose business date"
+        >
+          <div className={styles.field}>
+            <FieldLabel htmlFor="advisor-book-business-date">Business date</FieldLabel>
+            <input
+              id="advisor-book-business-date"
+              type="date"
+              value={businessDate}
+              onChange={(event) => setBusinessDate(event.target.value)}
+              required
+            />
+          </div>
+          <ActionButton type="submit" priority="primary">
+            Review book
+          </ActionButton>
+        </form>
+      }
+    />
+  );
+}
+
+function AdvisorBookSourceWorkspace({
+  asOfDate,
+  searchParams,
+}: {
+  asOfDate: string;
+  searchParams: ReturnType<typeof useSearchParams>;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const query = useMemo(
+    () => queryFromSearchParams(searchParams, asOfDate),
+    [asOfDate, searchParams],
+  );
   const queryClientId = query.clientId ?? "";
   const [clientId, setClientId] = useState(queryClientId);
   const [mandateType, setMandateType] = useState(query.mandateType ?? "");
@@ -332,12 +425,15 @@ function AdvisorBookWorkspaceContent({
   );
 }
 
-function queryFromSearchParams(searchParams: URLSearchParams | Readonly<URLSearchParams>): AdvisorBookQuery {
+function queryFromSearchParams(
+  searchParams: URLSearchParams | Readonly<URLSearchParams>,
+  asOfDate: string,
+): AdvisorBookQuery {
   const mandateType = searchParams.get("mandateType");
   const sortBy = searchParams.get("sortBy");
   const sortOrder = searchParams.get("sortOrder");
   return {
-    asOfDate: resolveAdvisorBookAsOfDate(searchParams.get("asOfDate")),
+    asOfDate,
     clientId: searchParams.get("clientId") || undefined,
     mandateType:
       mandateType === "ADVISORY" || mandateType === "DISCRETIONARY"
