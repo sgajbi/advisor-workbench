@@ -9,7 +9,7 @@ consolidated client, household, or book report.
 
 | Screen posture | Current truth |
 | --- | --- |
-| Canonical route | `/reports?portfolioId={portfolio_id}` |
+| Canonical route | `/reports?portfolioId={portfolio_id}`; an accepted portfolio bundle is addressable as `/reports?portfolioId={portfolio_id}&batchId={batch_id}` |
 | Navigation | **Reporting** in daily work within the shared portfolio context |
 | Supported scope | One selected portfolio, or at least two active portfolios explicitly selected from the current source-backed advisor book |
 | Evidence posture | Single-portfolio canonical runtime coverage plus production-browser bundle workflow and state-matrix proof; a multi-portfolio canonical seed remains required for certifying live bundle evidence |
@@ -84,6 +84,10 @@ controls and do not occur on this screen.
 - Refreshes source-owned batch posture after acceptance and presents portfolio-report count,
   complete, in-progress, and attention measures plus each portfolio's lifecycle, attempts, and
   support reference.
+- Rehydrates an addressed `batchId` from the exact Gateway batch-status contract without submitting
+  another request. Workbench publishes the addressed outcomes only when the source batch identity,
+  selected portfolio, review date, and any published reporting currency agree with the active
+  review context; a mismatch fails closed.
 - Presents recent request history as a comparison table when the module owns at least 54rem of
   content width, then as compact operational records below that capacity. This follows the module,
   not the browser viewport, so three-rail advisor layouts do not force a clipped table. Both presentations use the same
@@ -106,6 +110,7 @@ controls and do not occur on this screen.
 | Review the request | A valid report, date, output, sections, and eligible scope | None; Workbench records the exact browser intent as reviewed |
 | Submit the request | The current intent must still match the reviewed intent | Gateway records the idempotent report request or batch |
 | Refresh portfolio outcomes | An accepted batch handle | None; Workbench re-reads source-owned lifecycle truth |
+| Return to an addressed portfolio bundle | A valid `batchId` whose Gateway status agrees with the selected portfolio, review date, and any published reporting currency | None; Workbench re-reads the existing source batch and never resubmits it |
 | Create another report | A prior request has been accepted | None until the new request is separately reviewed and submitted |
 
 The browser never converts a failed submission into accepted posture and never presents a
@@ -120,7 +125,7 @@ outcomes remain separate and never inflate completion.
 | Approved report choices, fields, sections, outputs, and submission modes | Validated and presented through the Workbench BFF | Gateway over Lotus Report catalogue and capability contracts |
 | Advisor-book portfolio membership, active status, mandate, client reference, currency, and booking centre | Read through the Workbench BFF for selection; not reconstructed from the global portfolio catalogue | Gateway over Core `PortfolioManagerBookMembership:v1` |
 | Single-portfolio report request and acceptance | Submitted only after exact intent review with a bounded idempotency key | Gateway and Lotus Report portfolio-review contract |
-| Portfolio-bundle handle, materialized portfolios, item lifecycle, attempts, failure summary, and support reference | Submitted and refreshed through the BFF; no lifecycle is calculated from browser timers | Gateway and Lotus Report batch contracts |
+| Portfolio-bundle handle, materialized portfolios, item lifecycle, attempts, failure summary, and support reference | Submitted, rehydrated, and refreshed through the BFF; no lifecycle is calculated from browser timers and no URL address is treated as source proof | Gateway and Lotus Report batch contracts |
 | Recent single-portfolio report-data job history | Presented from the source response without implying archive or delivery | Gateway and Lotus Report job contract |
 | Caller role and portfolio scope | Browser-supplied authority is removed; development context is server-configured and non-development fails closed | Governed Workbench runtime context, with Gateway as final authorization boundary |
 
@@ -140,6 +145,8 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | Degraded or partial | Available evidence remains visible with source limitations | Use only evidenced portfolios and outputs; Gateway still fails closed on unverifiable membership |
 | Submission not accepted | An explicit failure with the reviewed setup retained for controlled retry | Retry only the unchanged reviewed intent or correct the setup and review again |
 | Partially complete bundle | Separate complete, in-progress, retryable, and terminal portfolio outcomes | Refresh outcomes; use the affected item's support reference if it remains unresolved |
+| Addressed bundle loading | The selected portfolio context remains visible while Workbench reads the exact Gateway batch | Wait for source confirmation; Workbench does not reconstruct outcomes from the URL or submit a replacement request |
+| Addressed bundle mismatch or unavailable | Explicit **Portfolio bundle could not be restored** evidence with no batch outcomes published | Return to the report setup or retry the exact source read after confirming the portfolio, review date, and currency context |
 | Outcome refresh unavailable | The accepted batch and its last source-confirmed output support posture remain visible, while current item posture is marked unavailable | Choose **Try Again** or **Refresh outcomes**; newer explicit source evidence replaces the retained posture, but absent evidence never implies support or completion |
 | Portfolio context changed | The prior portfolio's pending catalogue, history, submission, and outcome results cannot publish into the new workspace | Continue in the selected portfolio context; return deliberately if the prior workflow still needs attention |
 
@@ -175,7 +182,8 @@ implemented behavior; it is not a claim of bank approval or competitor superiori
 
 - Contract, API, view-model, state, hook, BFF-route, and integration tests cover single and bundle
   success and failure paths, explicit review, idempotency, authority stripping, selection fencing,
-  outcome refresh, and unsupported-action absence.
+  outcome refresh, direct-address rehydration, identity mismatch, Back/Forward stale-response
+  fencing, no-resubmission, and unsupported-action absence.
 - `tests/e2e/report-centre-state.smoke.spec.ts` runs against a production Workbench build and proves
   recovery, restricted, empty, accepted, multi-portfolio outcome, keyboard, responsive-boundary,
   mobile, contrast, and horizontal-overflow posture. It directly proves recent-request lifecycle
