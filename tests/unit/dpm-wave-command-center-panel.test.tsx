@@ -323,7 +323,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByRole("heading", { name: "Rebalance" })).toBeInTheDocument();
     expect(screen.getByText("Proposed rebalance, advisor review, and approval readiness.")).toBeInTheDocument();
     expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
-      "Discretionary Global BalancedSGDAs of 03 May 2026Evidence not opened",
+      "Discretionary Global BalancedSGDAs of 03 May 2026Evidence not requested",
     );
     expect(screen.queryByText("Discretionary Balanced")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Filter" })).not.toBeInTheDocument();
@@ -597,6 +597,46 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open Evidence Pack" }));
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
+  });
+
+  it("keeps blocked source evidence visibly blocked after the proof-pack response loads", async () => {
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue({
+      ...waveResponse,
+      supportability: {
+        ...waveResponse.supportability,
+        state: "blocked",
+        reason_codes: ["proof_pack_evidence_incomplete"],
+        blocked_actions: ["open_proof_pack"],
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "SIMULATION_READY",
+          proof_pack_posture: {
+            proof_pack_refs: [{ proof_pack_id: "ppack_1" }],
+          },
+        },
+      },
+    });
+
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
+      "Evidence not requested",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Open Evidence Pack" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
+        "Evidence blocked",
+      ),
+    );
+    expect(screen.queryByText("Evidence ready")).not.toBeInTheDocument();
   });
 
   it("prepares governed PM and operations decision support in the rebalance workflow", async () => {

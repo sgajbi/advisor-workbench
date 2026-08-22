@@ -368,6 +368,8 @@ describe("useDpmWaveCommandCenterActions", () => {
   it("derives the wave command-center model and auto-loads selected wave items through Gateway", async () => {
     const { result } = renderActions();
 
+    expect(result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
+
     expect(result.current.model.selectedWaveId).toBe("dwv_001");
     expect(result.current.selectedCampaign?.campaignId).toBe("campaign-holdings-202605");
     await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"));
@@ -428,6 +430,7 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await act(async () => result.current.openEvidencePack());
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
+    expect(result.current.model.proofPackStatus).toBe("READY");
     expect(result.current.actionMessage).toBe("Open evidence pack completed.");
   });
 

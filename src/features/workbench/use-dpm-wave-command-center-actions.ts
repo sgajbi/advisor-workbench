@@ -129,7 +129,6 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignLifecycleCommand: boolean;
   pendingCampaignWorkflowCommand: boolean;
   actionError: string | null;
-  proofPackLoaded: boolean;
   campaignLifecycleError: string | null;
   campaignLaunchHistoryError: string | null;
   campaignPreviewReadinessError: string | null;
@@ -795,7 +794,6 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError: actionError ?? selectedAiActionError,
-    proofPackLoaded: proofPackResponse?.waveId === model.selectedWaveId,
     campaignLifecycleError,
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,

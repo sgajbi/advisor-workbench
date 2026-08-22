@@ -83,7 +83,6 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError,
-    proofPackLoaded,
     campaignLifecycleError,
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
@@ -136,12 +135,6 @@ export default function DpmWaveCommandCenterPanel({
     model.state === "partial";
   const stagingBlocked = isDpmWaveActionBlocked(model.blockedActions, "stage");
   const handoffBlocked = isDpmWaveActionBlocked(model.blockedActions, "handoff");
-  const proofState =
-    model.proofPackRows.length > 0 || proofPackLoaded
-      ? "READY"
-      : model.reportInputStatus !== "NOT_REQUESTED"
-        ? model.reportInputStatus
-        : "AVAILABLE";
   const stateCopy = dpmWaveStatePanelCopy(model.state, portfolioId);
   const shouldShowStatePanel =
     Boolean(errorMessage) ||
@@ -160,7 +153,7 @@ export default function DpmWaveCommandCenterPanel({
     mandateType,
     portfolioCurrency,
     asOfDate: model.summaryRows[0]?.asOfDate,
-    proofState,
+    proofState: model.proofPackStatus,
   });
 
   return (

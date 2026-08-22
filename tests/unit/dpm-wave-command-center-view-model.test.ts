@@ -135,6 +135,41 @@ describe("DPM wave command-center view model", () => {
     expect(model.proofPackRows[0].value).toContain("sha256:proof");
     expect(model.handoffRows[0].label).toBe("dwh_1");
     expect(model.externalExecutionClaimed).toBe("No");
+    expect(model.proofPackStatus).toBe("READY");
+  });
+
+  it("preserves source-owned proof-pack supportability without inferring readiness", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveDetailSourceWaveId: "dwv_001",
+      waveDetail: {
+        ...waveListResponse,
+        supportability: {
+          ...waveListResponse.supportability,
+          state: "blocked",
+          reason_codes: ["proof_pack_evidence_incomplete"],
+          blocked_actions: ["open_proof_pack"],
+        },
+        data: {
+          wave: {
+            wave_id: "dwv_001",
+            state: "HANDOFF_READY",
+            proof_pack_posture: {
+              proof_pack_refs: [{ proof_pack_id: "ppack_1" }],
+            },
+          },
+        },
+      },
+    });
+
+    expect(model.proofPackRows).toHaveLength(1);
+    expect(model.proofPackStatus).toBe("BLOCKED");
+  });
+
+  it("keeps proof-pack posture not requested before source evidence is loaded", () => {
+    const model = buildDpmWaveCommandCenterModel({ waveList: waveListResponse });
+
+    expect(model.proofPackStatus).toBe("NOT_REQUESTED");
   });
 
   it("surfaces report-input and AI PM memo posture without deriving execution truth", () => {
