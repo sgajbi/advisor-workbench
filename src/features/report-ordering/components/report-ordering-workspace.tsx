@@ -192,6 +192,7 @@ function ReportOrderingWorkspaceSession({
                     requestedOutputFormats={workflow.batchRequestedOutputFormats}
                     error={workflow.batchStatusError}
                     onRefresh={() => void workflow.refreshBatchStatus()}
+                    onReturnToSetup={clearBatchAddress}
                   />
                 ) : workspaceState.kind !== "configuration" &&
                 workspaceState.kind !== "accepted" ? (

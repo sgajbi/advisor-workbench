@@ -11,12 +11,14 @@ export function ReportBatchStatusPanel({
   requestedOutputFormats,
   error,
   onRefresh,
+  onReturnToSetup,
 }: {
   status: ReportBatchStatus | null;
   acceptedHandle: ReportBatchReference | null;
   requestedOutputFormats: string[];
   error: string | null;
   onRefresh: () => void;
+  onReturnToSetup?: () => void;
 }) {
   const summary = status ? buildBatchSummary(status) : null;
   const lifecycle = status ? batchLifecycle(status.status) : null;
@@ -45,7 +47,16 @@ export function ReportBatchStatusPanel({
               ? `${error} The last source-confirmed outcomes remain visible below.`
               : error
           }
-          action={<ActionButton onClick={onRefresh}>Try Again</ActionButton>}
+          action={
+            <>
+              <ActionButton onClick={onRefresh}>Try Again</ActionButton>
+              {!status && onReturnToSetup ? (
+                <ActionButton priority="quiet" onClick={onReturnToSetup}>
+                  Return to report setup
+                </ActionButton>
+              ) : null}
+            </>
+          }
         />
       ) : null}
       {supportPosture ? (
