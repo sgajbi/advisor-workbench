@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
 
 import {
   AnalyticsTable,
@@ -19,8 +20,14 @@ import {
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
 
-export default function ManageOverview({ data }: { data: ManageWorkspaceData }) {
-  const model = buildManageOverviewModel(data);
+export default function ManageOverview({
+  data,
+  reviewContext,
+}: {
+  data: ManageWorkspaceData;
+  reviewContext: PortfolioReviewContext;
+}) {
+  const model = buildManageOverviewModel(data, reviewContext);
 
   return (
     <SectionBlock
@@ -110,7 +117,7 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
                       <Link
                         key="action"
                         href={buildManageModeHref(
-                          model.portfolioSummary.portfolioId,
+                          reviewContext,
                           "mandate"
                         )}
                       >

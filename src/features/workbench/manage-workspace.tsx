@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
+import { buildReviewContextHref } from "@/shell/review-context";
 import {
   AppPageShell,
   DegradedStatePanel,
@@ -36,9 +38,11 @@ import styles from "./manage-workspace.module.css";
 export function ManageWorkspace({
   data,
   mode,
+  reviewContext,
 }: {
   data: ManageWorkspaceData;
   mode: ManageMode;
+  reviewContext: PortfolioReviewContext;
 }) {
   const portfolio = data.portfolio.portfolio;
   const modeDefinition = getManageModeDefinition(mode);
@@ -64,7 +68,7 @@ export function ManageWorkspace({
             <PortfolioScreenRail
               portfolioId={portfolio.portfolio_id}
               activeScreen="manage"
-              modeItems={buildManageModeItems(portfolio.portfolio_id, mode)}
+              modeItems={buildManageModeItems(reviewContext, mode)}
               modeNavigationLabel="Manage workspace navigation"
             />
           }
@@ -86,11 +90,17 @@ export function ManageWorkspace({
               }
             >
               <WorkbenchSectionStack className="manage-page-sections">
-                {renderManageMode(mode, data, dpmMandateId)}
+                {renderManageMode(mode, data, dpmMandateId, reviewContext)}
               </WorkbenchSectionStack>
             </WorkbenchPageFrame>
           }
-          side={<ManageContextRail data={data} activeMode={mode} />}
+          side={
+            <ManageContextRail
+              data={data}
+              activeMode={mode}
+              reviewContext={reviewContext}
+            />
+          }
         />
       </WorkbenchPageContainer>
     </AppPageShell>
@@ -99,9 +109,11 @@ export function ManageWorkspace({
 
 export function ManageWorkspaceUnavailable({
   portfolioId,
+  reviewContext = { portfolioId },
   detail,
 }: {
   portfolioId: string;
+  reviewContext?: PortfolioReviewContext;
   detail: string;
 }) {
   return (
@@ -117,10 +129,13 @@ export function ManageWorkspaceUnavailable({
           status="Unavailable"
           actions={[
             {
-              href: `/performance?portfolioId=${encodeURIComponent(portfolioId)}`,
+              href: buildReviewContextHref("/performance", reviewContext),
               label: "Open Performance Workspace",
             },
-            { href: "/portfolio", label: "Return To Portfolio" },
+            {
+              href: buildReviewContextHref("/portfolio", reviewContext),
+              label: "Return To Portfolio",
+            },
           ]}
         >
           {detail}
@@ -133,7 +148,8 @@ export function ManageWorkspaceUnavailable({
 function renderManageMode(
   mode: ManageMode,
   data: ManageWorkspaceData,
-  mandateId: string | null
+  mandateId: string | null,
+  reviewContext: PortfolioReviewContext,
 ): ReactNode {
   switch (mode) {
     case "mandate":
@@ -242,6 +258,6 @@ function renderManageMode(
       );
     case "overview":
     default:
-      return <ManageOverview data={data} />;
+      return <ManageOverview data={data} reviewContext={reviewContext} />;
   }
 }

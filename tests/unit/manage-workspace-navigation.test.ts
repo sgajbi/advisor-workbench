@@ -16,14 +16,29 @@ describe("manage workspace navigation", () => {
   });
 
   it("builds stable manage mode links without leaking raw routing policy into the page", () => {
-    expect(buildManageModeHref("PB SG/001", "overview")).toBe("/workbench/PB%20SG%2F001");
-    expect(buildManageModeHref("PB SG/001", "proof")).toBe(
-      "/workbench/PB%20SG%2F001?mode=proof"
+    const reviewContext = {
+      portfolioId: "PB SG/001",
+      asOfDate: "2026-06-30",
+      period: "3Y" as const,
+      reportingCurrency: "SGD",
+      selectedRecordId: "wave-123",
+      batchId: "batch-456",
+    };
+    const governedQuery =
+      "portfolioId=PB+SG%2F001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD";
+
+    expect(buildManageModeHref(reviewContext, "overview")).toBe(
+      `/workbench/PB%20SG%2F001?${governedQuery}`,
     );
+    expect(buildManageModeHref(reviewContext, "proof")).toBe(
+      `/workbench/PB%20SG%2F001?${governedQuery}&mode=proof`,
+    );
+    expect(buildManageModeHref(reviewContext, "proof")).not.toContain("selectedRecordId");
+    expect(buildManageModeHref(reviewContext, "proof")).not.toContain("batchId");
   });
 
   it("builds dense rail items with one active front-office mode", () => {
-    const items = buildManageModeItems("PB_1", "reviews");
+    const items = buildManageModeItems({ portfolioId: "PB_1" }, "reviews");
 
     expect(items.map((item) => item.key)).toEqual([
       "overview",
@@ -40,7 +55,7 @@ describe("manage workspace navigation", () => {
     expect(items.find((item) => item.key === "reviews")).toMatchObject({
       label: "Reviews",
       detail: "Outcome review",
-      href: "/workbench/PB_1?mode=reviews",
+      href: "/workbench/PB_1?portfolioId=PB_1&mode=reviews",
     });
   });
 

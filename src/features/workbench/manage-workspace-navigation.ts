@@ -1,4 +1,6 @@
 import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
+import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
+import { buildReviewContextHref } from "@/shell/review-context";
 
 export type ManageMode =
   | "overview"
@@ -86,7 +88,7 @@ export const MANAGE_MODE_DEFINITIONS: ManageModeDefinition[] = [
 ];
 
 export function buildManageModeItems(
-  portfolioId: string,
+  reviewContext: PortfolioReviewContext,
   activeMode: ManageMode
 ): PortfolioScreenRailModeItem[] {
   return MANAGE_MODE_DEFINITIONS.map((mode) => ({
@@ -94,14 +96,29 @@ export function buildManageModeItems(
     label: mode.label,
     detail: mode.detail,
     active: activeMode === mode.key,
-    href: buildManageModeHref(portfolioId, mode.key),
+    href: buildManageModeHref(reviewContext, mode.key),
     title: mode.description,
   }));
 }
 
-export function buildManageModeHref(portfolioId: string, mode: ManageMode) {
-  const encoded = encodeURIComponent(portfolioId);
-  return mode === "overview" ? `/workbench/${encoded}` : `/workbench/${encoded}?mode=${mode}`;
+export function buildManageModeHref(
+  reviewContext: PortfolioReviewContext,
+  mode: ManageMode,
+) {
+  const {
+    portfolioId,
+    selectedRecordId: _selectedRecordId,
+    batchId: _batchId,
+    ...workspaceContext
+  } = reviewContext;
+  const destination =
+    mode === "overview"
+      ? `/workbench/${encodeURIComponent(portfolioId)}`
+      : `/workbench/${encodeURIComponent(portfolioId)}?mode=${mode}`;
+  return buildReviewContextHref(destination, {
+    ...workspaceContext,
+    portfolioId,
+  });
 }
 
 export function normalizeManageMode(value: string | undefined): ManageMode {
