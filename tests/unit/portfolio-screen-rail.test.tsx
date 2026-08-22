@@ -231,7 +231,7 @@ describe("PortfolioScreenRail", () => {
     const holdingsLink = screen.getByRole("link", { name: /holdings valuation/i });
     expect(holdingsLink).toHaveAttribute(
       "href",
-      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD",
     );
 
     holdingsLink.focus();
@@ -240,6 +240,49 @@ describe("PortfolioScreenRail", () => {
     expect(allWorkspaces).toHaveAttribute("aria-expanded", "false");
     expect(allWorkspaces).toHaveFocus();
     expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+  });
+
+  it("carries the source-confirmed date, period, and currency across screen links", () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/income?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
+
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="income"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /all workspaces/i }));
+    expect(screen.getByRole("link", { name: /holdings valuation/i })).toHaveAttribute(
+      "href",
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
+  });
+
+  it.each([
+    "/income?portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_OTHER_001",
+    "/income?portfolioId=PB_OTHER_001&period=YTD",
+  ])("blocks navigation for conflicting review context %s", (href) => {
+    window.history.replaceState({}, "", href);
+
+    render(
+      <PortfolioScreenRail
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        activeScreen="income"
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Review context needs attention",
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Workbench screen navigation" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /performance/i })).not.toBeInTheDocument();
   });
 
   it("keeps only the current workflow step visible until the advisor changes it", () => {
