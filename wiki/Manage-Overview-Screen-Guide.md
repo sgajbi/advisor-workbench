@@ -174,9 +174,15 @@ unsupported capability, and this guide is not a claim of competitor superiority.
   fabricated alternatives-available claim.
 - `tests/unit/design-system-components.test.tsx` proves the reusable task directory's semantic
   navigation, status evidence, full-card links, and action labels.
+- `tests/unit/manage-overview-responsive-css.test.ts` proves that posture, value, evidence, and task
+  layouts reflow from available content width instead of assuming a full-page viewport.
 - `tests/e2e/ui-smoke.spec.ts` proves the production-built Manage route resolves to its governed
-  screen or unavailable state. Focused populated runtime evidence remains required before using a
-  screenshot as demo-readiness proof.
+  screen or unavailable state.
+- Optimized-production diagnostic browser proof on `PB_SG_GLOBAL_BAL_001` verified 1440, 1024,
+  720, and 390 pixel viewports without page overflow; centre-rail evidence remained within its
+  parent boundary, and a task-directory link retained a visible two-pixel focus outline. The source
+  returned partial Manage evidence, so the artifacts under `output/playwright/issue-763/` are
+  diagnostic evidence and are not canonical demo-readiness screenshots.
 - Protected PR checks, exact-main releasability, wiki publication, and strict parity remain release
   controls.
 
