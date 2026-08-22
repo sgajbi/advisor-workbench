@@ -17,6 +17,7 @@ export default function PortfolioTransactionsRecordScreen(props: PortfolioRecord
           asOfDate={context.selectedAsOfDate}
           defaultStartDate={props.startDate ?? context.effectivePeriodStartDate}
           defaultEndDate={props.endDate ?? context.effectivePeriodEndDate}
+          initialSelectedRecordId={props.selectedRecordId}
         />
       ) : null}
     </PortfolioRecordScreenShell>
