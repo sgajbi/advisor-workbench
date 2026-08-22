@@ -68,6 +68,26 @@ service destinations without duplicating the active task. The same model reflows
 tablet, and compact widths. Links remain semantic links; disclosure buttons close on Escape and
 restore focus. A route being implemented does not override a disabled global capability posture.
 
+### Governed review context
+
+`src/shell/review-context.ts` is the single URL authority for portfolio, valuation date, period,
+reporting currency, selected record, and report-batch identity. It parses the governed fields as
+one atomic context: one repeated, malformed, or unsupported value invalidates the complete context
+before a screen requests source data. A route must not salvage a portfolio from an invalid address,
+substitute a demo or first-catalogue portfolio, or combine facts from different review states.
+
+The URL context and source-response identity are related but separate. A screen preserves a
+supplied date, period, or currency only when the owning Gateway response confirms it. Each async
+response must also confirm the portfolio and applicable valuation/window identity before it joins
+the visible workspace. Selected-record and batch identities remain screen-local and are cleared
+when their destination cannot interpret them; they do not become inferred cross-domain features.
+
+User decisions create browser history with `push`; `replace` is reserved for source normalization
+of the current entry. Back and Forward synchronize the matching source-backed props into the
+mounted workspace, invalidate obsolete requests and caches as one boundary, and keep focus on the
+stable visible control. Query-key remounts are not an acceptable history mechanism because they
+discard focus and local interaction continuity.
+
 ## Product-surface map
 
 - `Portfolio`
