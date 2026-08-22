@@ -4,7 +4,12 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error The documentation gate is a Node .mjs script without a TypeScript declaration.
-import { hasExactMarkdownHeading, isNextPageEntrypoint, validateModeAuthority, validateScreenDocumentation } from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+import {
+  hasExactMarkdownHeading,
+  isNextPageEntrypoint,
+  validateModeAuthority,
+  validateScreenDocumentation,
+} from "../../scripts/quality/check-workbench-screen-documentation.mjs";
 
 const rootDirectory = process.cwd();
 const registryPath = path.join(
@@ -22,21 +27,44 @@ function validate(registryData: ReturnType<typeof loadRegistry>) {
 
 describe("Workbench screen documentation governance", () => {
   it("recognizes only complete Markdown heading lines outside code fences", () => {
-    expect(hasExactMarkdownHeading("## Current Scope\n", "## Current Scope")).toBe(true);
-    expect(hasExactMarkdownHeading("See ## Current Scope.\n", "## Current Scope")).toBe(false);
-    expect(hasExactMarkdownHeading("## Current Scope And Limits\n", "## Current Scope")).toBe(false);
-    expect(hasExactMarkdownHeading("    ## Current Scope\n", "## Current Scope")).toBe(false);
-    expect(hasExactMarkdownHeading("```md\n## Current Scope\n```\n", "## Current Scope")).toBe(
-      false,
-    );
     expect(
-      hasExactMarkdownHeading("````md\n```\n## Current Scope\n````\n", "## Current Scope"),
+      hasExactMarkdownHeading("## Current Scope\n", "## Current Scope"),
+    ).toBe(true);
+    expect(
+      hasExactMarkdownHeading("See ## Current Scope.\n", "## Current Scope"),
     ).toBe(false);
     expect(
-      hasExactMarkdownHeading("~~~md\n~~~js\n## Current Scope\n~~~\n", "## Current Scope"),
+      hasExactMarkdownHeading(
+        "## Current Scope And Limits\n",
+        "## Current Scope",
+      ),
     ).toBe(false);
     expect(
-      hasExactMarkdownHeading("~~~md\nexample\n~~~   \n## Current Scope\n", "## Current Scope"),
+      hasExactMarkdownHeading("    ## Current Scope\n", "## Current Scope"),
+    ).toBe(false);
+    expect(
+      hasExactMarkdownHeading(
+        "```md\n## Current Scope\n```\n",
+        "## Current Scope",
+      ),
+    ).toBe(false);
+    expect(
+      hasExactMarkdownHeading(
+        "````md\n```\n## Current Scope\n````\n",
+        "## Current Scope",
+      ),
+    ).toBe(false);
+    expect(
+      hasExactMarkdownHeading(
+        "~~~md\n~~~js\n## Current Scope\n~~~\n",
+        "## Current Scope",
+      ),
+    ).toBe(false);
+    expect(
+      hasExactMarkdownHeading(
+        "~~~md\nexample\n~~~   \n## Current Scope\n",
+        "## Current Scope",
+      ),
     ).toBe(true);
   });
 
@@ -57,9 +85,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 23,
-      coverageExceptions: 13,
-      unmappedGuides: 13,
+      mappedGuides: 24,
+      coverageExceptions: 12,
+      unmappedGuides: 12,
     });
   });
 
@@ -84,7 +112,9 @@ describe("Workbench screen documentation governance", () => {
       "utf8",
     );
     expect(guide).toContain("persistent **Review and retain** rail");
-    expect(guide).toContain("evaluation without a proposal identity is not described as retained");
+    expect(guide).toContain(
+      "evaluation without a proposal identity is not described as retained",
+    );
     expect(guide.replaceAll("\r\n", "\n")).toContain(
       "not a claim of bank approval or competitor\nsuperiority",
     );
@@ -117,9 +147,55 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("one selected proposal");
     expect(guide).toContain("number shown is **in this view**");
-    expect(guide).toContain("Derives maker-checker posture from the complete selected evidence set");
-    expect(guide).toContain("empty approval register as unconfirmed requirements");
-    expect(guide).toContain("route context does not replace source proposal identity");
+    expect(guide).toContain(
+      "Derives maker-checker posture from the complete selected evidence set",
+    );
+    expect(guide).toContain(
+      "empty approval register as unconfirmed requirements",
+    );
+    expect(guide).toContain(
+      "route context does not replace source proposal identity",
+    );
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Suitability Review to one policy-authoritative decision-desk guide", () => {
+    const registry = loadRegistry();
+    const suitabilityReview = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "suitability-review",
+    );
+
+    expect(suitabilityReview).toMatchObject({
+      routePattern: "/proposals",
+      mode: "suitability",
+      navigationPosture: "capability-disabled",
+      wikiSlug: "Suitability-Review-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-advise"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/proposals/components/policy-review-workspace.tsx",
+        "src/features/proposals/proposal-policy-review-view-model.ts",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/proposal-workflow-context.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Suitability-Review-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain(
+      "generic proposal-list request is not made in this mode",
+    );
+    expect(guide).toContain(
+      "Success is\n  announced only after every source returns",
+    );
+    expect(guide).toContain(
+      "does not calculate whether a recommendation\nis suitable",
+    );
+    expect(guide).toContain("not a claim of competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -155,8 +231,12 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("Gateway persistence and the owning source reads reconcile");
-    expect(guide).toContain("routine/restricted/unavailable/not-found return context");
+    expect(guide).toContain(
+      "Gateway persistence and the owning source reads reconcile",
+    );
+    expect(guide).toContain(
+      "routine/restricted/unavailable/not-found return context",
+    );
     expect(guide).toContain("does not:\n\n- calculate suitability");
     expect(validate(registry).errors).toEqual([]);
   });
@@ -173,7 +253,12 @@ describe("Workbench screen documentation governance", () => {
       mode: "risk-impact",
       navigationPosture: "capability-disabled",
       wikiSlug: "Risk-And-Impact-Screen-Guide",
-      sourceOwners: ["lotus-gateway", "lotus-advise", "lotus-core", "lotus-risk"],
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-advise",
+        "lotus-core",
+        "lotus-risk",
+      ],
       implementationEvidence: expect.arrayContaining([
         "src/features/proposals/proposal-risk-impact-contract.ts",
         "src/features/proposals/components/proposal-risk-impact-workspace.tsx",
@@ -189,13 +274,19 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("never fans out risk-impact reads across the whole worklist");
+    expect(guide).toContain(
+      "never fans out risk-impact reads across the whole worklist",
+    );
     expect(guide).toContain("selected proposal\n  version");
     expect(guide).toContain("empty array as zero blockers");
     expect(guide).toContain("correlation ID");
     expect(guide).toContain("allocation delta, mandate compliance");
-    expect(guide).toContain("Container-aware reflow responds to the actual centre workspace");
-    expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
+    expect(guide).toContain(
+      "Container-aware reflow responds to the actual centre workspace",
+    );
+    expect(guide).toContain(
+      "not a claim of bank\napproval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -224,7 +315,11 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Implementation-Status-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Implementation-Status-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
@@ -234,7 +329,9 @@ describe("Workbench screen documentation governance", () => {
       "`order_fill_settlement_detail` is explicitly `not_supported`",
     );
     expect(guide).toContain("does not prove fill completeness, settlement");
-    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(guide).toContain(
+      "not a claim of bank approval or competitor\nsuperiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -262,15 +359,25 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Discussion-Pack-Review-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Discussion-Pack-Review-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("five independent controls");
-    expect(guide).toContain("never fans out discussion-pack reads across the\nworklist");
+    expect(guide).toContain(
+      "never fans out discussion-pack reads across the\nworklist",
+    );
     expect(guide).toContain("AI-assisted draft");
-    expect(guide).toContain("There is no publish, release, deliver, contact-client");
-    expect(guide).toContain("not a claim of bank\napproval or competitor superiority");
+    expect(guide).toContain(
+      "There is no publish, release, deliver, contact-client",
+    );
+    expect(guide).toContain(
+      "not a claim of bank\napproval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -284,21 +391,33 @@ describe("Workbench screen documentation governance", () => {
       businessName: "Data Product Catalogue",
       routePattern: "/data-products",
       wikiSlug: "Data-Product-Catalogue-Screen-Guide",
-      sourceOwners: ["lotus-gateway", "lotus-platform", "Lotus domain services"],
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-platform",
+        "Lotus domain services",
+      ],
       runtimeEvidence: ["tests/e2e/data-product-catalogue.spec.ts"],
       coverageException: null,
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Data-Product-Catalogue-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Data-Product-Catalogue-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("three independent Gateway reads");
-    expect(guide).toContain("optional-source failure never erases product identity");
+    expect(guide).toContain(
+      "optional-source failure never erases product identity",
+    );
     expect(guide).toContain("no certified total is invented");
     expect(guide).toContain("stable keyboard focus");
-    expect(guide).toContain("not a claim of bank approval or competitor\nsuperiority");
+    expect(guide).toContain(
+      "not a claim of bank approval or competitor\nsuperiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -314,13 +433,22 @@ describe("Workbench screen documentation governance", () => {
       coverageException: null,
     });
     const guide = fs
-      .readFileSync(path.join(rootDirectory, "wiki", "Positions-Screen-Guide.md"), "utf8")
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Positions-Screen-Guide.md"),
+        "utf8",
+      )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("only an explicit source `CURRENT` state is shown as **Current**");
+    expect(guide).toContain(
+      "only an explicit source `CURRENT` state is shown as **Current**",
+    );
     expect(guide).toContain("an absent state becomes **Not reported**");
-    expect(guide).toContain("unknown non-empty states fail closed to **Review required**");
+    expect(guide).toContain(
+      "unknown non-empty states fail closed to **Review required**",
+    );
     expect(guide).toContain("source-returned cash balances");
-    expect(guide).toContain("this guide is not a\nclaim of bank approval or competitor superiority");
+    expect(guide).toContain(
+      "this guide is not a\nclaim of bank approval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -339,7 +467,11 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Portfolio-Allocation-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Portfolio-Allocation-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
@@ -374,9 +506,13 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("Retains earlier proposals after a background refresh failure");
+    expect(guide).toContain(
+      "Retains earlier proposals after a background refresh failure",
+    );
     expect(guide).toContain("preserves keyboard focus");
-    expect(guide).toContain("the global Advisory app entry remains capability-disabled");
+    expect(guide).toContain(
+      "the global Advisory app entry remains capability-disabled",
+    );
     expect(guide).toContain(
       "not\n  production readiness, independent certification, bank approval, or competitor-superiority proof",
     );
@@ -407,11 +543,19 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("one action model with a capacity-aware comparison table");
-    expect(guide).toContain("Scopes pending, confirmed, partial, and failed acknowledgement");
+    expect(guide).toContain(
+      "one action model with a capacity-aware comparison table",
+    );
+    expect(guide).toContain(
+      "Scopes pending, confirmed, partial, and failed acknowledgement",
+    );
     expect(guide).toContain("compact inline evidence band");
-    expect(guide).toContain("Shows **Open proposal** only when the action carries a valid proposal identity");
-    expect(guide).toContain("manufacture navigation for source-reference types");
+    expect(guide).toContain(
+      "Shows **Open proposal** only when the action carries a valid proposal identity",
+    );
+    expect(guide).toContain(
+      "manufacture navigation for source-reference types",
+    );
     expect(guide).toContain("does not:\n\n- evaluate policy");
     expect(guide).toContain("does not copy another product's layout");
     expect(validate(registry).errors).toEqual([]);
@@ -437,10 +581,16 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "absent status\n  on an FX cash-settlement component is **Not reported**",
     );
-    expect(guide).toContain("other absent lifecycle status is\n  **Not applicable**");
+    expect(guide).toContain(
+      "other absent lifecycle status is\n  **Not applicable**",
+    );
     expect(guide).toContain("does not:\n\n- infer settlement success");
-    expect(guide).toContain("raw-code blotter, card mosaic, browser-inferred success state");
-    expect(guide).toContain("not a\nclaim of bank approval or competitor superiority");
+    expect(guide).toContain(
+      "raw-code blotter, card mosaic, browser-inferred success state",
+    );
+    expect(guide).toContain(
+      "not a\nclaim of bank approval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -464,7 +614,9 @@ describe("Workbench screen documentation governance", () => {
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("unknown buckets visible as **Excluded from net**");
     expect(guide).toContain("does not:\n\n- forecast dividends");
-    expect(guide).toContain("not a claim of bank approval or competitor superiority");
+    expect(guide).toContain(
+      "not a claim of bank approval or competitor superiority",
+    );
     expect(guide).toContain("complete named sequential keyboard\n  focus");
     expect(validate(registry).errors).toEqual([]);
   });
@@ -483,14 +635,22 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Projected-Cash-Movement-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Projected-Cash-Movement-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("current booked cash remains a separate fact");
-    expect(guide).toContain("bars for dated net movement from the cumulative movement line");
+    expect(guide).toContain(
+      "bars for dated net movement from the cumulative movement line",
+    );
     expect(guide).toContain("does not:\n\n- calculate opening cash");
-    expect(guide).toContain("not a claim of bank approval or\ncompetitor superiority");
+    expect(guide).toContain(
+      "not a claim of bank approval or\ncompetitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -517,7 +677,9 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("first advisor action is\naccepted without a second click");
+    expect(guide).toContain(
+      "first advisor action is\naccepted without a second click",
+    );
     expect(guide).toContain("six independent business tasks");
     expect(guide).toContain("same reviewed\n   intent or return to editing");
     expect(guide).toContain("does not:\n\n- activate or approve a portfolio");
@@ -549,7 +711,9 @@ describe("Workbench screen documentation governance", () => {
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("one atomic decision-context transaction");
     expect(guide).toContain("failed refresh never converts prior analytics");
-    expect(guide).toContain("composing Core portfolio/reference/benchmark context");
+    expect(guide).toContain(
+      "composing Core portfolio/reference/benchmark context",
+    );
     expect(guide).toContain("does not:\n\n- calculate time-weighted");
     expect(guide).toContain("not a claim of competitor\nsuperiority");
     expect(validate(registry).errors).toEqual([]);
@@ -577,15 +741,25 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Performance-Analysis-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Performance-Analysis-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("one published observation");
-    expect(guide).toContain("does not imply that the independent history request succeeded");
+    expect(guide).toContain(
+      "does not imply that the independent history request succeeded",
+    );
     expect(guide).toContain("convert a failed request into zero rows");
-    expect(guide).toContain("native pending disablement and post-request focus restoration");
-    expect(guide).toContain("same reusable selection component and request-shaping path");
+    expect(guide).toContain(
+      "native pending disablement and post-request focus restoration",
+    );
+    expect(guide).toContain(
+      "same reusable selection component and request-shaping path",
+    );
     expect(guide).toContain("44px narrow touch targets");
     expect(guide).toContain("does not\ncopy another product's layout");
     expect(validate(registry).errors).toEqual([]);
@@ -616,10 +790,14 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain("Exact source measures are\nevidence, not a mandate conclusion");
+    expect(guide).toContain(
+      "Exact source measures are\nevidence, not a mandate conclusion",
+    );
     expect(guide).toContain("No approved client mandate or house risk limit");
     expect(guide).toContain("does not:\n\n- classify risk as contained");
-    expect(guide).toContain("not a claim of\nbank approval or competitor superiority");
+    expect(guide).toContain(
+      "not a claim of\nbank approval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -646,7 +824,11 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Performance-Evidence-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Performance-Evidence-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
@@ -661,7 +843,8 @@ describe("Workbench screen documentation governance", () => {
   it("maps Performance Advisor Brief to one source-recorded internal-review guide", () => {
     const registry = loadRegistry();
     const advisorBrief = registry.surfaces.find(
-      (candidate: { id: string }) => candidate.id === "performance-advisor-brief",
+      (candidate: { id: string }) =>
+        candidate.id === "performance-advisor-brief",
     );
 
     expect(advisorBrief).toMatchObject({
@@ -687,7 +870,11 @@ describe("Workbench screen documentation governance", () => {
     });
     const guide = fs
       .readFileSync(
-        path.join(rootDirectory, "wiki", "Performance-Advisor-Brief-Screen-Guide.md"),
+        path.join(
+          rootDirectory,
+          "wiki",
+          "Performance-Advisor-Brief-Screen-Guide.md",
+        ),
         "utf8",
       )
       .replaceAll("\r\n", "\n");
@@ -723,10 +910,16 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "A portfolio bundle creates a separate report outcome for each portfolio",
     );
-    expect(guide).toContain("verify current membership and report eligibility again");
-    expect(guide).toContain("does not combine clients or hide partial\ncompletion");
+    expect(guide).toContain(
+      "verify current membership and report eligibility again",
+    );
+    expect(guide).toContain(
+      "does not combine clients or hide partial\ncompletion",
+    );
     expect(guide).toContain("multi-portfolio canonical seed remains required");
-    expect(guide).toContain("it is not a claim of bank approval or competitor superiority");
+    expect(guide).toContain(
+      "it is not a claim of bank approval or competitor superiority",
+    );
     expect(validate(registry).errors).toEqual([]);
   });
 
@@ -745,7 +938,11 @@ describe("Workbench screen documentation governance", () => {
       wikiSlug: "Portfolio-Review-Screen-Guide",
       coverageException: null,
     });
-    expect(portfolioAliases.map((route: { routePattern: string }) => route.routePattern)).toEqual(
+    expect(
+      portfolioAliases.map(
+        (route: { routePattern: string }) => route.routePattern,
+      ),
+    ).toEqual(
       expect.arrayContaining(["/", "/portfolio", "/portfolios", "/suite"]),
     );
     const guide = fs
@@ -755,23 +952,47 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("Workbench presentation classification");
-    expect(guide).toContain("not source-owned readiness, approval, or suitability authority");
+    expect(guide).toContain(
+      "not source-owned readiness, approval, or suitability authority",
+    );
     expect(guide).toContain("bounded Gateway `/workflow` projection");
-    expect(guide).toContain("it does not request the detailed `/insights` record slice");
-    expect(guide).toContain("the screen does not fabricate a completion action");
-    expect(guide).toContain("Workbench orders and labels the handoff but does not persist approval");
-    expect(guide).toContain("source-owned performance warnings and partial failures");
+    expect(guide).toContain(
+      "it does not request the detailed `/insights` record slice",
+    );
+    expect(guide).toContain(
+      "the screen does not fabricate a completion action",
+    );
+    expect(guide).toContain(
+      "Workbench orders and labels the handoff but does not persist approval",
+    );
+    expect(guide).toContain(
+      "source-owned performance warnings and partial failures",
+    );
     expect(guide).toContain("supporting-request outages visible");
-    expect(guide).toContain("retained but unrendered payload fields do not\nbecome visible evidence");
-    expect(guide).toContain("Manage failures carried in `partial_failures` are rendered");
+    expect(guide).toContain(
+      "retained but unrendered payload fields do not\nbecome visible evidence",
+    );
+    expect(guide).toContain(
+      "Manage failures carried in `partial_failures` are rendered",
+    );
     expect(guide).toContain("the affected analytical scope is named");
-    expect(guide).toContain("Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping");
+    expect(guide).toContain(
+      "Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping",
+    );
     expect(guide).toContain("Preparing portfolio review");
-    expect(guide).toContain("there is no background request loop or unimplemented page-local Retry");
+    expect(guide).toContain(
+      "there is no background request loop or unimplemented page-local Retry",
+    );
     expect(guide).toContain("without carrying portfolio or client identity");
-    expect(guide).toContain("only the Performance, Cashflow, or Reporting evidence actually present");
-    expect(guide).toContain("not calculation lineage or supportability certification");
-    expect(guide).toContain("Portfolio Review deliberately excludes record-oriented filters");
+    expect(guide).toContain(
+      "only the Performance, Cashflow, or Reporting evidence actually present",
+    );
+    expect(guide).toContain(
+      "not calculation lineage or supportability certification",
+    );
+    expect(guide).toContain(
+      "Portfolio Review deliberately excludes record-oriented filters",
+    );
     expect(guide).toContain(
       "a complete dated book summary replaces totals, valuation date, and position-coverage readiness together",
     );
@@ -781,7 +1002,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects a source route that disappears from the registry", () => {
     const registry = loadRegistry();
     registry.routeEntrypoints = registry.routeEntrypoints.filter(
-      (route: { entrypoint: string }) => route.entrypoint !== "src/app/reports/page.tsx",
+      (route: { entrypoint: string }) =>
+        route.entrypoint !== "src/app/reports/page.tsx",
     );
 
     expect(validate(registry).errors).toContain(
@@ -801,7 +1023,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects route patterns that drift from their Next.js entrypoint", () => {
     const registry = loadRegistry();
     registry.routeEntrypoints.find(
-      (route: { entrypoint: string }) => route.entrypoint === "src/app/proposals/[proposalId]/page.tsx",
+      (route: { entrypoint: string }) =>
+        route.entrypoint === "src/app/proposals/[proposalId]/page.tsx",
     ).routePattern = "/proposals/:proposalId";
 
     expect(validate(registry).errors).toContain(
@@ -812,7 +1035,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects an active mode removed from its canonical route mapping", () => {
     const registry = loadRegistry();
     const route = registry.routeEntrypoints.find(
-      (candidate: { routePattern: string }) => candidate.routePattern === "/performance",
+      (candidate: { routePattern: string }) =>
+        candidate.routePattern === "/performance",
     );
     route.canonicalSurfaceIds = route.canonicalSurfaceIds.filter(
       (surfaceId: string) => surfaceId !== "risk-review",
@@ -826,7 +1050,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects catalogue source-owner drift from the canonical registry", () => {
     const registry = loadRegistry();
     const surface = registry.surfaces.find(
-      (candidate: { id: string }) => candidate.id === "construction-alternatives",
+      (candidate: { id: string }) =>
+        candidate.id === "construction-alternatives",
     );
     surface.sourceOwners.push("lotus-risk");
 
@@ -838,7 +1063,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects catalogue business-name drift from the canonical registry", () => {
     const registry = loadRegistry();
     const surface = registry.surfaces.find(
-      (candidate: { id: string }) => candidate.id === "construction-alternatives",
+      (candidate: { id: string }) =>
+        candidate.id === "construction-alternatives",
     );
     surface.businessName = "Construction Scenario";
 
@@ -855,7 +1081,8 @@ describe("Workbench screen documentation governance", () => {
     surface.coverageException = {
       issue: 605,
       plannedSlice: "book-and-portfolio-entry-guides",
-      reason: "The guide is intentionally marked incomplete for this regression test.",
+      reason:
+        "The guide is intentionally marked incomplete for this regression test.",
     };
 
     expect(validate(registry).errors).toContain(
@@ -929,7 +1156,11 @@ describe("Workbench screen documentation governance", () => {
       (candidate: { id: string }) => candidate.id === "pm-operating-quality",
     );
 
-    expect(surface.sourceOwners).toEqual(["lotus-gateway", "lotus-manage", "lotus-ai"]);
+    expect(surface.sourceOwners).toEqual([
+      "lotus-gateway",
+      "lotus-manage",
+      "lotus-ai",
+    ]);
     expect(surface.implementationEvidence).toEqual(
       expect.arrayContaining([
         "src/features/workbench/pm-operating-quality-api.ts",
@@ -950,7 +1181,9 @@ describe("Workbench screen documentation governance", () => {
       (authority: { family: string }) => authority.family !== family,
     );
 
-    expect(validate(registry).errors).toContain(`Required mode authority is missing: ${family}.`);
+    expect(validate(registry).errors).toContain(
+      `Required mode authority is missing: ${family}.`,
+    );
   });
 
   it("rejects duplicate mode-authority families", () => {
@@ -974,7 +1207,8 @@ describe("Workbench screen documentation governance", () => {
   it("rejects drift from supported mode aliases", () => {
     const registry = loadRegistry();
     delete registry.modeAuthorities.find(
-      (authority: { family: string }) => authority.family === "performance-aliases",
+      (authority: { family: string }) =>
+        authority.family === "performance-aliases",
     ).surfaceMappings["advisor-brief"];
 
     expect(validate(registry).errors).toContain(
@@ -985,13 +1219,16 @@ describe("Workbench screen documentation governance", () => {
   it("rejects a source alias target that differs from its canonical registry target", () => {
     const registry = loadRegistry();
     const authority = registry.modeAuthorities.find(
-      (candidate: { family: string }) => candidate.family === "performance-aliases",
+      (candidate: { family: string }) =>
+        candidate.family === "performance-aliases",
     );
     const source = fs
       .readFileSync(path.join(rootDirectory, authority.source), "utf8")
       .replace('"advisor-brief": "advisor"', '"advisor-brief": "risk"');
 
-    expect(validateModeAuthority(authority, source, registry.surfaces)).toContain(
+    expect(
+      validateModeAuthority(authority, source, registry.surfaces),
+    ).toContain(
       "Mode authority performance-aliases source alias advisor-brief targets risk, but performance-advisor-brief-alias resolves to canonical mode advisor.",
     );
   });
@@ -1001,7 +1238,9 @@ describe("Workbench screen documentation governance", () => {
     const surface = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "portfolio-review",
     );
-    surface.implementationEvidence = ["src/features/portfolio/missing-screen.tsx"];
+    surface.implementationEvidence = [
+      "src/features/portfolio/missing-screen.tsx",
+    ];
 
     expect(validate(registry).errors).toContain(
       "Surface portfolio-review evidence does not exist: src/features/portfolio/missing-screen.tsx.",

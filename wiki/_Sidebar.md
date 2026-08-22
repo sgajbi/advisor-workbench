@@ -3,6 +3,7 @@
 [Home](Home)
 
 ### Orientation
+
 - [Overview](Overview)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
@@ -15,6 +16,7 @@
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
+- [Suitability Review](Suitability-Review-Screen-Guide)
 - [Proposal Detail](Proposal-Detail-Screen-Guide)
 - [Risk and Impact](Risk-And-Impact-Screen-Guide)
 - [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide)
@@ -35,6 +37,7 @@
 - [Getting Started](Getting-Started)
 
 ### Delivery
+
 - [Development Workflow](Development-Workflow)
 - [Validation and CI](Validation-and-CI)
 - [Operations Runbook](Operations-Runbook)
@@ -42,6 +45,7 @@
 - [Troubleshooting](Troubleshooting)
 
 ### Boundaries
+
 - [Integrations](Integrations)
 - [Security and Governance](Security-and-Governance)
 - [Supported Features](Supported-Features)

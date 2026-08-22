@@ -5,12 +5,12 @@
 This page records implemented Workbench integration boundaries. It distinguishes product traffic
 from operational probes and does not promote direct domain-service calls as supported UI paths.
 
-| Integration Path | Supported Use | Evidence |
-| --- | --- | --- |
-| Browser to Workbench | Product navigation and interaction | Route, component, and browser tests |
-| Workbench BFF to Gateway | Product data and workflow contracts | BFF tests, Gateway contract evidence, and canonical validation |
-| Runtime readiness probes | Bounded supportability diagnostics only | Canonical validation artifacts |
-| Workbench to domain service | Not a product path | Any exception must remain operational, source-safe, and explicitly governed |
+| Integration Path            | Supported Use                           | Evidence                                                                    |
+| --------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| Browser to Workbench        | Product navigation and interaction      | Route, component, and browser tests                                         |
+| Workbench BFF to Gateway    | Product data and workflow contracts     | BFF tests, Gateway contract evidence, and canonical validation              |
+| Runtime readiness probes    | Bounded supportability diagnostics only | Canonical validation artifacts                                              |
+| Workbench to domain service | Not a product path                      | Any exception must remain operational, source-safe, and explicitly governed |
 
 ## Primary backend posture
 
@@ -233,6 +233,12 @@ must travel through Gateway-shaped contracts.
     handoff and reconciliation, and the named downstream provider remains the execution system of
     record. Workbench never calls Advise or an execution provider directly and does not reinterpret
     downstream references as orders, fills, allocations, settlement, custody, or accounting proof.
+22. Suitability Review consumes the Advise-owned policy-review queue, evaluation, sign-off package,
+    workflow, and bounded evidence-request mutation only through the Workbench BFF and Gateway. The
+    queue is the screen's sole count authority; selected evidence reads do not fan out across every
+    row. Workbench requires exact selected identity agreement before action, keeps a failed compound
+    refresh unconfirmed, and does not calculate suitability, waive a policy finding, approve
+    sign-off, or authorize client publication.
 
 ## Ownership Diagram
 
