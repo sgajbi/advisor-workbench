@@ -5,6 +5,7 @@ import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-n
 import { buildReviewContextHref } from "@/shell/review-context";
 import {
   AppPageShell,
+  buildWorkbenchSourceContextNotice,
   DegradedStatePanel,
   MainWithSideRailLayout,
   SemanticBadge,
@@ -34,7 +35,6 @@ import {
   type ManageWorkspaceData,
 } from "@/features/workbench/manage-workspace-data";
 import { isManageExceptionEvidenceAvailable } from "@/features/workbench/manage-workspace-view-model";
-import { buildManageSourceContextNotice } from "@/features/workbench/manage-source-context";
 import styles from "./manage-workspace.module.css";
 
 export function ManageWorkspace({
@@ -56,8 +56,11 @@ export function ManageWorkspace({
       data.mandateHealthError ||
       !data.mandateHealth
   );
-  const contextNotice = buildManageSourceContextNotice({
-    reviewContext,
+  const contextNotice = buildWorkbenchSourceContextNotice({
+    title: "Mandate source context",
+    subject: "Mandate management",
+    requestedAsOfDate: reviewContext.asOfDate,
+    requestedReportingCurrency: reviewContext.reportingCurrency,
     sourceAsOfDate: data.portfolio.as_of_date,
     sourceCurrency: portfolio.base_currency,
   });

@@ -3,8 +3,10 @@ import {
   getWorkbenchApiErrorStatus,
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
-import { AppPageShell } from "@/design-system";
-import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
+import {
+  AppPageShell,
+  buildWorkbenchSourceContextNotice,
+} from "@/design-system";
 import {
   parseReviewContext,
 } from "@/shell/review-context";
@@ -145,7 +147,9 @@ export default async function PerformanceAnalyticsPage({
         initialBenchmark={benchmark}
         initialAsOfDate={reviewContextResult.context.asOfDate}
         initialReportingCurrency={reviewContextResult.context.reportingCurrency}
-        initialContextNotice={buildPerformanceContextNotice({
+        initialContextNotice={buildWorkbenchSourceContextNotice({
+          title: "Performance source context",
+          subject: "Performance",
           requestedAsOfDate: reviewContextResult.context.asOfDate,
           requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
           sourceAsOfDate: workspaceSummary?.as_of_date,
@@ -154,44 +158,6 @@ export default async function PerformanceAnalyticsPage({
       />
     </AppPageShell>
   );
-}
-
-export function buildPerformanceContextNotice({
-  requestedAsOfDate,
-  requestedReportingCurrency,
-  sourceAsOfDate,
-  sourceCurrency,
-}: {
-  requestedAsOfDate?: string;
-  requestedReportingCurrency?: string;
-  sourceAsOfDate?: string;
-  sourceCurrency?: string;
-}): { title: string; body: string } | null {
-  const limitations: string[] = [];
-  if (
-    requestedAsOfDate &&
-    sourceAsOfDate &&
-    requestedAsOfDate !== sourceAsOfDate
-  ) {
-    limitations.push(
-      `Performance uses the source valuation date ${formatBusinessDateValue(sourceAsOfDate)}; the advisor review date ${formatBusinessDateValue(requestedAsOfDate)} remains available when you return to other workspaces.`,
-    );
-  }
-  if (
-    requestedReportingCurrency &&
-    sourceCurrency &&
-    requestedReportingCurrency !== sourceCurrency
-  ) {
-    limitations.push(
-      `Performance is presented in source base currency ${sourceCurrency}; reporting-currency restatement to ${requestedReportingCurrency} is not supported by this contract.`,
-    );
-  }
-  return limitations.length > 0
-    ? {
-        title: "Performance source context",
-        body: limitations.join(" "),
-      }
-    : null;
 }
 
 function getSearchParamValue(
