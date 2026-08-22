@@ -125,6 +125,32 @@ export function serializeReviewContext(context: ReviewContext): URLSearchParams 
   return searchParams;
 }
 
+/**
+ * Composes a local Workbench destination with one authoritative review
+ * context. Any stale governed fields already present in the destination are
+ * removed before the supplied context is written; page-local parameters and
+ * fragments retain their order and multiplicity.
+ */
+export function buildReviewContextHref(
+  href: string,
+  context: ReviewContext,
+): string {
+  const { pathname, search, hash } = splitLocalHref(href);
+  const localSearchParams = new URLSearchParams(search);
+
+  for (const field of REVIEW_CONTEXT_FIELDS) {
+    localSearchParams.delete(REVIEW_CONTEXT_QUERY_KEYS[field]);
+  }
+
+  const combinedSearchParams = serializeReviewContext(context);
+  for (const [key, value] of localSearchParams) {
+    combinedSearchParams.append(key, value);
+  }
+
+  const query = combinedSearchParams.toString();
+  return `${pathname}${query ? `?${query}` : ""}${hash}`;
+}
+
 function getSearchParamValues(
   searchParams: ReviewContextSearchParams,
   key: string,
@@ -171,4 +197,23 @@ function isBoundedSourceIdentity(value: string, maximumLength: number): boolean 
     value === value.trim() &&
     !CONTROL_CHARACTER_PATTERN.test(value)
   );
+}
+
+function splitLocalHref(href: string): {
+  pathname: string;
+  search: string;
+  hash: string;
+} {
+  if (!href.startsWith("/") || href.startsWith("//")) {
+    throw new TypeError("Review-context destinations must be local absolute paths.");
+  }
+
+  const hashIndex = href.indexOf("#");
+  const hash = hashIndex >= 0 ? href.slice(hashIndex) : "";
+  const pathAndSearch = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+  const queryIndex = pathAndSearch.indexOf("?");
+  const pathname = queryIndex >= 0 ? pathAndSearch.slice(0, queryIndex) : pathAndSearch;
+  const search = queryIndex >= 0 ? pathAndSearch.slice(queryIndex + 1) : "";
+
+  return { pathname, search, hash };
 }
