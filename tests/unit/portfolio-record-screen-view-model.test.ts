@@ -166,6 +166,13 @@ describe("portfolio record screen view model", () => {
       endDate: "2026-05-12",
     });
   });
+
+  it("resolves the carried year-to-date window without a hidden 30-day fallback", () => {
+    expect(resolvePortfolioRecordScreenWindow("2026-05-12", "YTD")).toEqual({
+      startDate: "2026-01-01",
+      endDate: "2026-05-12",
+    });
+  });
 });
 
 function buildWorkspace(): PortfolioWorkspace {

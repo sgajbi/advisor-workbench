@@ -1,10 +1,13 @@
 import PortfolioTransactionsRecordScreen from "@/apps/portfolio/components/portfolio-transactions-record-screen";
-import { loadPortfolioRecordScreenData } from "@/apps/portfolio/portfolio-record-screen-data";
+import {
+  loadPortfolioRecordScreenData,
+  type PortfolioRecordScreenSearchParams,
+} from "@/apps/portfolio/portfolio-record-screen-data";
 
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string }>;
+  searchParams: Promise<PortfolioRecordScreenSearchParams>;
 }) {
   return <PortfolioTransactionsRecordScreen {...(await loadPortfolioRecordScreenData({ searchParams }))} />;
 }

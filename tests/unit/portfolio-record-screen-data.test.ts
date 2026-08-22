@@ -53,4 +53,81 @@ describe("portfolio record screen data", () => {
     expect(apiMocks.getPortfolioWorkspaceDetailedDetails).toHaveBeenCalledTimes(1);
     expect(result.workspace?.workflow_actions?.[0]?.title).toBe("Review source evidence");
   });
+
+  it.each([
+    {},
+    { portfolioId: ["PB_ONE", "PB_TWO"] },
+    { portfolioId: "PB_SG_GLOBAL_BAL_001", period: "ONE_YEAR" },
+  ])("does not call a source for invalid or missing review context %o", async (search) => {
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve(search),
+    });
+
+    expect(result.workspace).toBeNull();
+    expect(result.reviewContextError).toBeTruthy();
+    expect(apiMocks.getPortfolioCatalog).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceShell).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
+  });
+
+  it("does not fetch records for a portfolio absent from the source catalogue", async () => {
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve({ portfolioId: "PB_NOT_ASSIGNED_001" }),
+    });
+
+    expect(result.workspace).toBeNull();
+    expect(result.reviewContextError).toMatch(/No alternative portfolio/i);
+    expect(apiMocks.getPortfolioCatalog).toHaveBeenCalledOnce();
+    expect(apiMocks.getPortfolioWorkspaceShell).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
+  });
+
+  it("uses the carried period for every source-backed record request", async () => {
+    const shell = await apiMocks.getPortfolioWorkspaceShell();
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve({
+        portfolioId: shell.portfolio.portfolio_id,
+        asOfDate: shell.as_of_date,
+        period: "YTD",
+        reportingCurrency: shell.portfolio.base_currency,
+      }),
+    });
+
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).toHaveBeenCalledWith(
+      shell.portfolio.portfolio_id,
+      expect.objectContaining({
+        timeWindow: "YTD",
+        reportStartDate: `${shell.as_of_date.slice(0, 4)}-01-01`,
+        reportEndDate: shell.as_of_date,
+      }),
+    );
+    expect(apiMocks.getPortfolioWorkspaceDetailedDetails).toHaveBeenCalledWith(
+      shell.portfolio.portfolio_id,
+      expect.objectContaining({
+        startDate: `${shell.as_of_date.slice(0, 4)}-01-01`,
+        endDate: shell.as_of_date,
+      }),
+    );
+    expect(result).toMatchObject({
+      timeWindow: "YTD",
+      startDate: `${shell.as_of_date.slice(0, 4)}-01-01`,
+      endDate: shell.as_of_date,
+    });
+  });
+
+  it("stops before detail reads when the record surface cannot support the period", async () => {
+    const shell = await apiMocks.getPortfolioWorkspaceShell();
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve({
+        portfolioId: shell.portfolio.portfolio_id,
+        period: "5Y",
+      }),
+    });
+
+    expect(result.workspace).toBeNull();
+    expect(result.reviewContextError).toMatch(/not supported/i);
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
+  });
 });

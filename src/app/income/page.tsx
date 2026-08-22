@@ -1,10 +1,13 @@
 import PortfolioIncomeRecordScreen from "@/apps/portfolio/components/portfolio-income-record-screen";
-import { loadPortfolioRecordScreenData } from "@/apps/portfolio/portfolio-record-screen-data";
+import {
+  loadPortfolioRecordScreenData,
+  type PortfolioRecordScreenSearchParams,
+} from "@/apps/portfolio/portfolio-record-screen-data";
 
 export default async function IncomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string }>;
+  searchParams: Promise<PortfolioRecordScreenSearchParams>;
 }) {
   return <PortfolioIncomeRecordScreen {...(await loadPortfolioRecordScreenData({ searchParams }))} />;
 }

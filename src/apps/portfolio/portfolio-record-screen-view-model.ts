@@ -1,6 +1,10 @@
 import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
 import type { PortfolioWorkspace } from "./types";
+import {
+  resolveEffectivePeriod,
+  type PortfolioTimeWindow,
+} from "./view-model";
 
 export type PortfolioRecordScreenKind = "allocation" | "positions" | "transactions" | "income" | "cashflow";
 
@@ -209,13 +213,18 @@ export function buildPortfolioRecordHeaderKpis(
   ];
 }
 
-export function resolvePortfolioRecordScreenWindow(asOfDate: string) {
-  const end = new Date(`${asOfDate.slice(0, 10)}T00:00:00Z`);
-  const start = new Date(end);
-  start.setUTCDate(start.getUTCDate() - 30);
-
+export function resolvePortfolioRecordScreenWindow(
+  asOfDate: string,
+  timeWindow: PortfolioTimeWindow = "30D",
+  inceptionDate?: string | null,
+) {
+  const period = resolveEffectivePeriod(
+    asOfDate,
+    timeWindow,
+    inceptionDate,
+  );
   return {
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
+    startDate: period.startDate,
+    endDate: period.endDate,
   };
 }
