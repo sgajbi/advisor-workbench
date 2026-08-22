@@ -218,6 +218,40 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBe(false);
   });
 
+  it("withholds a stale explicit source window before analytical detail is requested", async () => {
+    installPerformancePageFetchScenario(
+      buildPerformancePresentationScenario({
+        workspaceOverrides: {
+          period: "EXPLICIT",
+          report_start_date: "2025-12-01",
+          report_end_date: "2026-02-23",
+        },
+      }),
+      { portfolioId: "PF_1001" },
+    );
+
+    await renderPerformancePage({
+      portfolioId: "PF_1001",
+      period: "EXPLICIT",
+      reportStartDate: "2026-01-01",
+      reportEndDate: "2026-02-24",
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Review context needs attention" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/selected portfolio or performance period is not confirmed/i),
+    ).toBeInTheDocument();
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        input.toString().includes("/performance/details"),
+      ),
+    ).toBe(false);
+  });
+
   it("preserves source-confirmed valuation context through a user-selected workspace mode", async () => {
     installPerformancePageFetchMock();
 

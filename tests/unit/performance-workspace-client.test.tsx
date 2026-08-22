@@ -210,6 +210,45 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
+  it("rehydrates initial detail when its explicit bounds do not match the confirmed summary", async () => {
+    const explicitWindow = {
+      period: "EXPLICIT",
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-02-24",
+    };
+    getDetailsClientMock.mockResolvedValueOnce(buildDetails(explicitWindow));
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary(explicitWindow)}
+        initialDetails={buildDetails({
+          ...explicitWindow,
+          report_start_date: "2025-12-01",
+        })}
+        initialPortfolioId="PF_1001"
+        initialPeriod="EXPLICIT"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(getDetailsClientMock).toHaveBeenCalledWith(
+        "PF_1001",
+        expect.objectContaining({
+          period: "EXPLICIT",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-02-24",
+        }),
+      );
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+  });
+
   it("accepts returned valuation metadata that is not part of Performance request identity", async () => {
     getDetailsClientMock.mockResolvedValueOnce(
       buildDetails({ as_of_date: "2026-02-23" }),
