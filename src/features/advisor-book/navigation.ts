@@ -17,9 +17,13 @@ export function buildPortfolioContextHref({
   if (reviewContextResult.status === "invalid") {
     return "/book";
   }
+  const changesPortfolio =
+    reviewContextResult.context.portfolioId !== undefined &&
+    reviewContextResult.context.portfolioId !== portfolioId;
   const workspaceContext = {
     ...scopeReviewContextForWorkspace(reviewContextResult.context),
     portfolioId,
+    ...(changesPortfolio ? { reportingCurrency: undefined } : {}),
   };
   const query = new URLSearchParams(searchParams.toString());
 

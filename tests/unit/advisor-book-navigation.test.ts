@@ -33,7 +33,7 @@ describe("advisor-book context navigation", () => {
     ).toBe("/portfolio?portfolioId=PB_001&asOfDate=2026-04-10");
   });
 
-  it("drops record and batch identities when changing the portfolio", () => {
+  it("drops record, batch, and unconfirmed currency identity when changing the portfolio", () => {
     expect(
       buildPortfolioContextHref({
         pathname: "/reports",
@@ -43,7 +43,21 @@ describe("advisor-book context navigation", () => {
         portfolioId: "PB_NEW",
       }),
     ).toBe(
-      "/reports?portfolioId=PB_NEW&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&view=progress",
+      "/reports?portfolioId=PB_NEW&asOfDate=2026-04-10&period=YTD&view=progress",
+    );
+  });
+
+  it("retains confirmed currency when reselecting the same portfolio", () => {
+    expect(
+      buildPortfolioContextHref({
+        pathname: "/reports",
+        searchParams: new URLSearchParams(
+          "portfolioId=PB_CURRENT&reportingCurrency=SGD&view=progress",
+        ),
+        portfolioId: "PB_CURRENT",
+      }),
+    ).toBe(
+      "/reports?portfolioId=PB_CURRENT&reportingCurrency=SGD&view=progress",
     );
   });
 });
