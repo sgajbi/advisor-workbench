@@ -61,7 +61,6 @@ const REVIEW_CONTEXT_FIELDS = Object.keys(
   REVIEW_CONTEXT_QUERY_KEYS,
 ) as ReviewContextField[];
 
-const REVIEW_PERIOD_SET = new Set<string>(REVIEW_PERIODS);
 const REPORTING_CURRENCY_PATTERN = /^[A-Z]{3}$/;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 
@@ -107,7 +106,7 @@ export function parseReviewContext(
 }
 
 export function isReviewPeriod(value: string): value is ReviewPeriod {
-  return REVIEW_PERIOD_SET.has(value);
+  return REVIEW_PERIODS.some((period) => period === value);
 }
 
 /**

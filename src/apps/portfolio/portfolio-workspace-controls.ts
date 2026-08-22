@@ -29,10 +29,6 @@ export type PortfolioReviewControlResolution =
       issues: readonly PortfolioReviewControlIssue[];
     }>;
 
-const PORTFOLIO_TIME_WINDOW_SET = new Set<string>(
-  PORTFOLIO_TIME_WINDOW_OPTIONS,
-);
-
 export function resolvePortfolioReviewControls(
   workspace: PortfolioWorkspace,
   reviewContext: ReviewContext,
@@ -41,7 +37,11 @@ export function resolvePortfolioReviewControls(
   const issues: PortfolioReviewControlIssue[] = [];
 
   if (reviewContext.period) {
-    if (PORTFOLIO_TIME_WINDOW_SET.has(reviewContext.period)) {
+    if (
+      (PORTFOLIO_TIME_WINDOW_OPTIONS as readonly string[]).includes(
+        reviewContext.period,
+      )
+    ) {
       controls.timeWindow = reviewContext.period as PortfolioTimeWindow;
     } else {
       issues.push("unsupported_period");
