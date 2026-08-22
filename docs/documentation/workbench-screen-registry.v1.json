@@ -660,19 +660,23 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "wikiSlug": "Rebalance-Waves-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-manage", "lotus-report", "lotus-ai"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/dpm-wave-api.ts",
+        "src/features/workbench/dpm-wave-command-center-view-model.ts",
+        "src/features/workbench/dpm-wave-command-center-panel-helpers.ts",
+        "src/features/workbench/components/dpm-wave-command-center-panel.tsx",
+        "src/features/workbench/use-dpm-wave-command-center-actions.ts"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/manage-rebalance-workspace.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-core-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "construction-alternatives",

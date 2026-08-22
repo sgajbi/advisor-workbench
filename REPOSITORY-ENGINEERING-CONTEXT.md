@@ -166,6 +166,11 @@ Current repository posture:
     `external_execution_claimed` posture. Workbench must not discover global campaign cohorts,
     calculate campaign membership or readiness, infer campaign lifecycle state, mutate assignment or
     maker-checker state, or operate campaign-definition upsert locally.
+    Rebalance context must use the loaded mandate type, portfolio currency, and wave as-of date or
+    show an explicit not-reported value; never insert a default mandate or currency. Evidence copy
+    must distinguish ready, not opened, not requested, pending, partial, blocked, unavailable, and
+    unreported posture. Keep selected-wave readiness, action, and proposed changes before optional
+    AI decision support and campaign administration in DOM, keyboard, and visual order.
 11. Manage `mode=construction` renders the RFC-0039 DPM construction alternatives lab from Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*`. Workbench sends a stateful
     manage/core source selector through Gateway, preserves manage-owned alternatives,

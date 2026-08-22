@@ -87,9 +87,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 25,
-      coverageExceptions: 11,
-      unmappedGuides: 11,
+      mappedGuides: 26,
+      coverageExceptions: 10,
+      unmappedGuides: 10,
     });
   });
 
@@ -755,6 +755,50 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
     expect(guide).toContain("does not:\n\n- calculate portfolio value");
+    expect(guide).toContain("not a claim of competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Rebalance Waves to one decision-first source-context guide", () => {
+    const registry = loadRegistry();
+    const rebalanceWaves = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "rebalance-waves",
+    );
+
+    expect(rebalanceWaves).toMatchObject({
+      routePattern: "/workbench/{portfolioId}",
+      mode: "waves",
+      wikiSlug: "Rebalance-Waves-Screen-Guide",
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-core",
+        "lotus-manage",
+        "lotus-report",
+        "lotus-ai",
+      ],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/workbench/dpm-wave-command-center-panel-helpers.ts",
+        "src/features/workbench/components/dpm-wave-command-center-panel.tsx",
+        "src/features/workbench/use-dpm-wave-command-center-actions.ts",
+      ]),
+      runtimeEvidence: expect.arrayContaining([
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/manage-rebalance-workspace.spec.ts",
+      ]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Rebalance-Waves-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("source-reported mandate type, portfolio currency, and as-of date");
+    expect(guide).toContain("Evidence not opened or not requested");
+    expect(guide.replaceAll(/\s+/g, " ")).toContain(
+      "selected rebalance decision and proposed changes in document order",
+    );
+    expect(guide).toContain("does not:\n\n- calculate proposed trades");
     expect(guide).toContain("not a claim of competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });

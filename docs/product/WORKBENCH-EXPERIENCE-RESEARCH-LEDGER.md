@@ -5653,3 +5653,60 @@ of fabricated alternatives availability. The governed screen
 guide and registry document Gateway/Core/Manage authority and remove only the Manage Overview #605
 coverage exception. Production-browser route proof, protected CI, exact-main validation, wiki
 publication, strict parity, issue closure, and branch hygiene remain required.
+
+## Rebalance Waves Decision-First Source Context
+
+### Business job
+
+A portfolio manager needs to confirm the governing mandate, currency, date, readiness, proposed
+changes, blocked actions, and evidence posture before requesting approval or a downstream handoff.
+Optional AI commentary and campaign administration should support that decision rather than lead
+the screen.
+
+### Current-product research
+
+Research was reviewed on 2026-08-22 from official platform and accessibility sources:
+
+1. [BlackRock Aladdin compliance](https://www.blackrock.com/aladdin/benefits/compliance) describes
+   personalized exception dashboards and resolution workflow with responsibility and ageing.
+2. [BlackRock Aladdin Wealth personalized portfolio management](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/personalized-portfolio-management-technology)
+   describes scaled oversight, exception-led workflow, institutional analytics, and necessary
+   checks at the right time with human control.
+3. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes high-scale rebalancing and exception-based review while respecting portfolio
+   preferences and restrictions.
+4. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) governs logical reading/focus order, status
+   communication, keyboard operation, target size, and reflow.
+
+Research informs hierarchy and interaction principles only. Lotus does not copy competitor layout,
+language, branding, calculation, or unsupported capability.
+
+### Adopted decisions
+
+1. Source mandate, currency, and date from the current workspace; use explicit not-reported copy
+   for absent or governed-unavailable values.
+2. Give each proof state distinct business copy instead of using one optimistic label with changing
+   colour.
+3. Put selected-wave readiness, active actions, and proposed changes before AI-assisted outputs and
+   campaign administration in DOM, keyboard, and visual order.
+4. Remove controls that have no supported behavior.
+5. Preserve Gateway-only actions, source-owned readiness, selected-wave identity fencing, and
+   explicit no-order/no-execution boundaries.
+
+### Rejected decisions
+
+1. Defaulting every mandate to Discretionary Balanced or every portfolio to USD.
+2. Treating not-opened, pending, failed, or blocked proof as available evidence.
+3. Leading a portfolio decision with AI generation or broad campaign administration.
+4. Adding browser-owned filters, priority, readiness, mandate impact, order, execution, or
+   settlement state.
+5. Adding another component library, global CSS family, or decorative lifecycle visual.
+
+### Validation and publication decision
+
+Workbench #769 owns this slice. Focused model and component tests prove source-context fallbacks,
+proof-state language, primary section order, and removal of the no-op control. The complete guide
+removes only the Rebalance Waves #605 exception. Process-owned optimized-production browser proof
+now covers source context, keyboard focus, proposed-change loading, section order, reflow, and zero
+page overflow at 1440, 1024, 720, and 390 pixels. Full gates, protected CI, exact-main validation,
+wiki publication/parity, issue closure, and branch hygiene remain required.

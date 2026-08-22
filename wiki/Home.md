@@ -60,6 +60,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - Exception-led mandate posture, active attention, and portfolio-management handoffs:
   [Manage Overview](Manage-Overview-Screen-Guide)
+- Source-backed rebalance readiness, proposed changes, controlled actions, and evidence posture:
+  [Rebalance Waves](Rebalance-Waves-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
@@ -137,6 +139,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Risk Review](Risk-Review-Screen-Guide)
 - [Performance Evidence](Performance-Evidence-Screen-Guide)
 - [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
+- [Manage Overview](Manage-Overview-Screen-Guide)
+- [Rebalance Waves](Rebalance-Waves-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report Centre](Report-Centre-Screen-Guide)
