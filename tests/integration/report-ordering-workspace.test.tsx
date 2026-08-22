@@ -320,21 +320,46 @@ describe("ReportOrderingWorkspace", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
-  it("treats an omitted batch currency as the source base currency", async () => {
-    const sourceBaseBatch = {
+  it("keeps polling when an addressed batch omits its source-base currency", async () => {
+    const runningSourceBaseBatch = {
+      ...buildReportBatchStatus(),
+      reporting_currency: null,
+      status: "running" as const,
+      completed_at: null,
+    };
+    const completedSourceBaseBatch = {
       ...buildReportBatchStatus(),
       reporting_currency: null,
     };
-    batchStatusMock.mockResolvedValueOnce(parseReportBatchStatus(sourceBaseBatch));
+    batchStatusMock
+      .mockResolvedValueOnce(parseReportBatchStatus(runningSourceBaseBatch))
+      .mockResolvedValueOnce(parseReportBatchStatus(completedSourceBaseBatch));
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      render(
+        <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_1" />,
+      );
 
-    render(
-      <ReportOrderingWorkspace portfolio={portfolio} initialBatchId="rbch_1" />,
-    );
+      expect(
+        await screen.findByLabelText("Status In progress"),
+      ).toBeInTheDocument();
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(true),
+      );
+      const poll = timerSpy.mock.calls.find(([, delay]) => delay === 5_000)?.[0];
 
-    expect(
-      await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/does not match the selected review date/i)).not.toBeInTheDocument();
+      await act(async () => {
+        (poll as () => void)();
+      });
+
+      expect(await screen.findByText("Needs retry")).toBeInTheDocument();
+      expect(batchStatusMock).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByText(/returned report setup did not match the reviewed request/i),
+      ).not.toBeInTheDocument();
+    } finally {
+      timerSpy.mockRestore();
+    }
   });
 
   it("rejects an omitted batch currency for a restated reporting context", async () => {
