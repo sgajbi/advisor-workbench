@@ -1,5 +1,6 @@
 import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import { isDevelopmentAuthorityEnvironment } from "@/features/workbench/authority-mode";
+import { parseReviewContext } from "@/shell/review-context";
 
 export type AdvisorBookAsOfDateResolution =
   | {
@@ -12,6 +13,7 @@ export type AdvisorBookAsOfDateResolution =
       reason:
         | "invalid_requested_date"
         | "ambiguous_requested_date"
+        | "invalid_review_context"
         | "date_not_configured"
         | "invalid_development_configuration"
         | "development_date_not_allowed";
@@ -29,12 +31,23 @@ function resolveWorkbenchBuildEnvironment(): string | undefined {
 export function resolveAdvisorBookAsOfDateFromSearchParams(
   searchParams: SearchParamsReader,
 ): AdvisorBookAsOfDateResolution {
-  const requestedDates = searchParams.getAll("asOfDate");
-  if (requestedDates.length > 1) {
-    return { status: "not_confirmed", reason: "ambiguous_requested_date" };
+  const reviewContextResult = parseReviewContext(searchParams);
+  if (reviewContextResult.status === "invalid") {
+    const dateIssue = reviewContextResult.issues.find(
+      (issue) => issue.field === "asOfDate",
+    );
+    if (dateIssue?.code === "ambiguous") {
+      return { status: "not_confirmed", reason: "ambiguous_requested_date" };
+    }
+    return {
+      status: "not_confirmed",
+      reason: dateIssue ? "invalid_requested_date" : "invalid_review_context",
+    };
   }
 
-  return resolveAdvisorBookAsOfDate(requestedDates[0] ?? null);
+  return resolveAdvisorBookAsOfDate(
+    reviewContextResult.context.asOfDate ?? null,
+  );
 }
 
 export function resolveAdvisorBookAsOfDate(

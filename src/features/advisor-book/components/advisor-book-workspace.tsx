@@ -6,6 +6,7 @@ import { FormEvent, useMemo, useState } from "react";
 
 import {
   ActionButton,
+  ActionLink,
   AnalyticsTable,
   DefinitionList,
   FieldLabel,
@@ -89,6 +90,8 @@ function AdvisorBookDateRequired({
       ? "The requested business date is not a valid calendar date."
       : dateResolution.reason === "ambiguous_requested_date"
         ? "The requested business date was supplied more than once and cannot be confirmed."
+      : dateResolution.reason === "invalid_review_context"
+        ? "The portfolio review address contains conflicting or unsupported context."
       : dateResolution.reason === "invalid_development_configuration"
         ? "The configured local business date is not valid."
         : dateResolution.reason === "development_date_not_allowed"
@@ -114,7 +117,9 @@ function AdvisorBookDateRequired({
       title="Business date not confirmed"
       body={`${reason} Portfolio assignments have not been requested.`}
       hint="Select the calendar date the own-book assignment should be reviewed against."
-      action={
+      action={dateResolution.reason === "invalid_review_context" ? (
+        <ActionLink href="/book">Reset review context</ActionLink>
+      ) : (
         <form
           className={styles.businessDateRecovery}
           onSubmit={confirmBusinessDate}
@@ -134,7 +139,7 @@ function AdvisorBookDateRequired({
             Review book
           </ActionButton>
         </form>
-      }
+      )}
     />
   );
 }
