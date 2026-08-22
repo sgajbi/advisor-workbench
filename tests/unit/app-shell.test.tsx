@@ -76,8 +76,14 @@ describe("AppShell", () => {
 
 describe("buildAdvisorBookHref", () => {
   it("preserves the active review date when returning to the advisor book", () => {
-    expect(buildAdvisorBookHref(new URLSearchParams("asOfDate=2026-04-22&mode=summary"))).toBe(
-      "/book?asOfDate=2026-04-22",
+    expect(
+      buildAdvisorBookHref(
+        new URLSearchParams(
+          "portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD&mode=summary",
+        ),
+      ),
+    ).toBe(
+      "/book?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&period=YTD&reportingCurrency=SGD",
     );
   });
 
@@ -85,12 +91,12 @@ describe("buildAdvisorBookHref", () => {
     expect(buildAdvisorBookHref(new URLSearchParams("mode=summary"))).toBe("/book");
   });
 
-  it("omits an ambiguous repeated business date", () => {
+  it("fails closed on an ambiguous repeated business date", () => {
     expect(
       buildAdvisorBookHref(
         new URLSearchParams("asOfDate=2026-04-10&asOfDate=2026-04-11"),
       ),
-    ).toBe("/book");
+    ).toBeNull();
   });
 });
 
