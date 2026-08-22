@@ -652,7 +652,10 @@
         "tests/unit/manage-workspace-components.test.tsx",
         "tests/unit/workbench-api.test.ts"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "tests/e2e/manage-mandate-health-workspace.spec.ts",
+        "scripts/live/validation/browser-workflows.mjs"
+      ],
       "supportOwner": "lotus-workbench",
       "coverageException": null
     },
