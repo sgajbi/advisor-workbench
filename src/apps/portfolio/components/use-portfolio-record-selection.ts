@@ -4,10 +4,7 @@ import { useCallback, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import {
-  buildReviewContextHref,
-  parseReviewContext,
-} from "@/shell/review-context";
+import { buildPortfolioRecordSelectionHref } from "../portfolio-record-selection";
 
 type PortfolioRecordSelectionState = Readonly<{
   sourceKey: string;
@@ -37,22 +34,18 @@ export function usePortfolioRecordSelection({
 
   const navigateToRecord = useCallback(
     (recordId: string | null) => {
-      const reviewContextResult = parseReviewContext(searchParams);
-      if (reviewContextResult.status === "invalid") {
+      const href = buildPortfolioRecordSelectionHref({
+        pathname,
+        searchParams,
+        portfolioId,
+        selectedRecordId: recordId ?? undefined,
+      });
+      if (!href) {
         return;
       }
 
       setSelectionState({ sourceKey, recordId });
-      const currentQuery = searchParams?.toString() ?? "";
-      const currentHref = `${pathname}${currentQuery ? `?${currentQuery}` : ""}`;
-      router.push(
-        buildReviewContextHref(currentHref, {
-          ...reviewContextResult.context,
-          portfolioId,
-          selectedRecordId: recordId ?? undefined,
-        }),
-        { scroll: false },
-      );
+      router.push(href, { scroll: false });
     },
     [pathname, portfolioId, router, searchParams, sourceKey],
   );
