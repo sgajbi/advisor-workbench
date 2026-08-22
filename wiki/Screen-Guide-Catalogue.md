@@ -94,7 +94,7 @@ while the user moves from attention posture into construction, review, and evide
 
 | Business screen           | Route or mode                                | Posture | Guide status         | Source authority              |
 | ------------------------- | -------------------------------------------- | ------- | -------------------- | ----------------------------- |
-| Manage Overview           | `/workbench/{portfolioId}?mode=overview`     | Active  | Guide planned — #605 | Gateway and Manage            |
+| [Manage Overview](Manage-Overview-Screen-Guide) | `/workbench/{portfolioId}?mode=overview` | Active | Guide available | Gateway, Core, and Manage |
 | Mandate Health            | `/workbench/{portfolioId}?mode=mandate`      | Active  | Guide planned — #605 | Gateway and Manage            |
 | Rebalance Waves           | `/workbench/{portfolioId}?mode=waves`        | Active  | Guide planned — #605 | Gateway and Manage            |
 | Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active  | Guide planned — #605 | Gateway and Manage            |

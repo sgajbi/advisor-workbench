@@ -58,6 +58,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Performance Evidence](Performance-Evidence-Screen-Guide)
 - Source-backed internal talking points, supportability, and confirmed human-review workflow:
   [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
+- Exception-led mandate posture, active attention, and portfolio-management handoffs:
+  [Manage Overview](Manage-Overview-Screen-Guide)
 - Source-backed relationship-manager book flow:
   [Advisor Book Workflow](Advisor-Book-Workflow)
 - Reviewed single-portfolio and own-book bundle reporting flow:
