@@ -71,6 +71,9 @@ current only after the matching summary and detail contracts both confirm the re
 
 - Presents source-returned portfolio, benchmark, active, annualised, and money-weighted performance
   only when the selected contract publishes usable evidence.
+- Enters the standard `YTD` period when no reporting selection is present; Workbench does not attach
+  a portfolio-specific fixed start or end date. Explicit windows are sent only after the URL or
+  advisor selection supplies them.
 - Supports source-admitted standard or explicit reporting windows, net or gross basis, monthly or
   supported alternative frequency, and available benchmark choices.
 - Presents one source-returned observation as a compact exact comparison with period, zero baseline,

@@ -13,7 +13,7 @@ const DEFAULT_DPM_CONTEXT = {
   mandateId: "MANDATE_PB_SG_GLOBAL_BAL_001",
   modelPortfolioId: "MODEL_PB_SG_GLOBAL_BAL_DPM",
   bookingCenterCode: "Singapore",
-  sourceAsOfDate: "2026-04-10",
+  sourceAsOfDate: "",
   commandCenterTenantId: "default",
   commandCenterPortfolioManagerId: "PM_SG_DPM_001",
   commandCenterBookId: "BOOK_SG_BALANCED_DPM",

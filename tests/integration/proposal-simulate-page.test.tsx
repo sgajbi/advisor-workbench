@@ -12,10 +12,17 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => ({
-  default: ({ initialPortfolioId }: { initialPortfolioId?: string }) => (
+  default: ({
+    initialPortfolioId,
+    initialAsOfDate,
+  }: {
+    initialPortfolioId?: string;
+    initialAsOfDate?: string;
+  }) => (
     <section>
       <h1>Create Advisory Proposal</h1>
       <p>{initialPortfolioId}</p>
+      <p data-testid="initial-advisory-date">{initialAsOfDate || "Not confirmed"}</p>
     </section>
   ),
 }));
@@ -57,12 +64,16 @@ describe("ProposalSimulatePage", () => {
   it("renders proposal simulation with the selected portfolio", async () => {
     render(
       await ProposalSimulatePage({
-        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_UI_1001",
+          asOfDate: "2026-04-10",
+        }),
       })
     );
 
     expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
     expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("2026-04-10");
     expect(screen.getByRole("heading", { name: "Draft not yet persisted" })).toBeInTheDocument();
     expect(screen.getByText("No persisted advisory workflow record")).toBeInTheDocument();
   });
@@ -75,6 +86,7 @@ describe("ProposalSimulatePage", () => {
     );
 
     expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("Not confirmed");
   });
 });
 

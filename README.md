@@ -254,6 +254,10 @@ WORKBENCH_DPM_BOOKING_CENTER_CODE=Singapore
 WORKBENCH_DPM_SOURCE_AS_OF_DATE=2026-04-10
 ```
 
+`WORKBENCH_DPM_SOURCE_AS_OF_DATE` is optional local construction context. When it is absent,
+Workbench uses the source-returned portfolio business date for construction requests; it does not
+fall back to an in-code demonstration date.
+
 `NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE` is an explicitly configured request fixture for the
 governed local-development runtime, not an in-code or production fallback. An explicit URL date
 takes precedence; an invalid URL date never falls back to this value. Without either a valid request

@@ -5819,6 +5819,16 @@ business-date authority, prescribe Lotus branding, or justify a new date library
    **UTC** in visible output.
 6. Reuse the design-system formatter authority for Advisor Book, Manage context, and Domain Product
    timestamps; remove page-local date formatting and raw ISO presentation.
+7. Remove fixed route defaults beyond Advisor Book: Performance Summary enters the source-supported
+   `YTD` period unless the URL supplies an explicit window; Proposal Builder starts with the
+   advisory date unconfirmed unless the URL supplies a valid calendar date; construction uses the
+   returned portfolio date when its bounded DPM development fixture is absent.
+8. Treat date-like transaction fields as calendar dates only after the complete source value is
+   either a valid business date or an offset-bearing timestamp; reject malformed and unzoned
+   strings before extracting calendar components.
+9. Keep an unavailable Portfolio Review source context date empty and label its period **Business
+   date not confirmed**; never use a historical sentinel date merely to keep range calculation code
+   running before the source workspace arrives.
 
 ### Rejected decisions
 

@@ -78,7 +78,6 @@ const schema = z.object({
 
 type FormInput = z.infer<typeof schema>;
 
-const DEFAULT_ADVISORY_AS_OF_DATE = "2026-04-10";
 const DEFAULT_CANONICAL_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
 
 function createUiIdempotencyKey(): string {
@@ -120,8 +119,10 @@ function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
 
 export default function ProposalSimulateForm({
   initialPortfolioId = DEFAULT_CANONICAL_PORTFOLIO_ID,
+  initialAsOfDate = "",
 }: {
   initialPortfolioId?: string;
+  initialAsOfDate?: string;
 }) {
   const isHydrated = useClientMounted();
   const [defaultIdempotencyKey] = useState(createUiIdempotencyKey);
@@ -136,7 +137,7 @@ export default function ProposalSimulateForm({
       createdBy: "advisor_1",
       proposalTitle: "Tactical rebalance proposal",
       portfolioId: initialPortfolioId,
-      asOfDate: DEFAULT_ADVISORY_AS_OF_DATE,
+      asOfDate: initialAsOfDate,
       mandateId:
         initialPortfolioId === "PB_SG_GLOBAL_BAL_001"
           ? "MANDATE_PB_SG_GLOBAL_BAL_001"

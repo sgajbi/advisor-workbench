@@ -20,16 +20,6 @@ const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
   DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
 };
-const DEFAULT_PERFORMANCE_WINDOW_BY_PORTFOLIO: Record<
-  string,
-  { period: string; reportStartDate: string; reportEndDate: string }
-> = {
-  PB_SG_GLOBAL_BAL_001: {
-    period: "EXPLICIT",
-    reportStartDate: "2026-01-01",
-    reportEndDate: "2026-04-10",
-  },
-};
 async function getPortfolioOptions(limit = 8): Promise<Array<{ id: string; label: string }>> {
   try {
     const response = await fetch(`${resolveGatewayBaseUrl()}/api/v1/lookups/portfolios?limit=${limit}`, {
@@ -72,16 +62,12 @@ export default async function PerformanceAnalyticsPage({
     defaultPortfolioId ||
     portfolios[0]?.id ||
     null;
-  const portfolioDefaultWindow = selectedPortfolioId
-    ? DEFAULT_PERFORMANCE_WINDOW_BY_PORTFOLIO[selectedPortfolioId]
-    : undefined;
   const requestedReportStartDate = resolvedSearch.reportStartDate?.trim();
   const requestedReportEndDate = resolvedSearch.reportEndDate?.trim();
   const hasRequestedDateWindow = Boolean(requestedReportStartDate || requestedReportEndDate);
   const period =
     resolvedSearch.period?.trim() ||
-    (hasRequestedDateWindow ? "EXPLICIT" : portfolioDefaultWindow?.period) ||
-    "YTD";
+    (hasRequestedDateWindow ? "EXPLICIT" : "YTD");
   const detailBasis = resolvedSearch.detailBasis?.trim() || "NET";
   const legacyDetailDimension = resolvedSearch.detailDimension?.trim();
   const contributionDimension =
@@ -94,12 +80,8 @@ export default async function PerformanceAnalyticsPage({
   const benchmark =
     resolvedSearch.benchmark?.trim() ||
     (selectedPortfolioId ? DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId] : undefined);
-  const reportStartDate =
-    requestedReportStartDate ||
-    (period === "EXPLICIT" ? portfolioDefaultWindow?.reportStartDate : undefined);
-  const reportEndDate =
-    requestedReportEndDate ||
-    (period === "EXPLICIT" ? portfolioDefaultWindow?.reportEndDate : undefined);
+  const reportStartDate = requestedReportStartDate;
+  const reportEndDate = requestedReportEndDate;
   const workspaceRequest = {
     period,
     chartFrequency,
