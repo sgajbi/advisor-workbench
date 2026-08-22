@@ -17,7 +17,10 @@ describe("portfolio record screen data", () => {
     const shell = buildPortfolioWorkspace();
     apiMocks.getPortfolioCatalog.mockResolvedValue([shell.portfolio]);
     apiMocks.getPortfolioWorkspaceShell.mockResolvedValue(shell);
-    apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValue({ positions: [] });
+    apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValue({
+      as_of_date: shell.as_of_date,
+      positions: [],
+    });
     apiMocks.getPortfolioWorkspaceDetailedDetails.mockResolvedValue({
       workflow_actions: [
         {
@@ -130,4 +133,29 @@ describe("portfolio record screen data", () => {
     expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
     expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["missing", null],
+    ["unqualified", { positions: [] }],
+    ["stale", { as_of_date: "2026-08-20", positions: [] }],
+  ] as const)(
+    "withholds %s source evidence that does not confirm the requested valuation date",
+    async (_posture, summaryDetails) => {
+      const shell = await apiMocks.getPortfolioWorkspaceShell();
+      apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValueOnce(
+        summaryDetails,
+      );
+
+      const result = await loadPortfolioRecordScreenData({
+        searchParams: Promise.resolve({
+          portfolioId: shell.portfolio.portfolio_id,
+          asOfDate: shell.as_of_date,
+        }),
+      });
+
+      expect(result.workspace).toBeNull();
+      expect(result.reviewContextError).toMatch(/did not confirm/i);
+      expect(apiMocks.mergePortfolioWorkspace).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -97,6 +97,20 @@ export function applyPortfolioControlPatch(
   return next;
 }
 
+/**
+ * Admits analytical evidence only when the source confirms the same valuation
+ * date as the control transaction. This keeps delayed or tolerant responses
+ * from being merged under a newer review context.
+ */
+export function isPortfolioReviewResponseCurrent<
+  Response extends Readonly<{ as_of_date?: string }>,
+>(
+  response: Response | null,
+  controls: Pick<PortfolioWorkspaceControls, "asOfDate">,
+): response is Response & Readonly<{ as_of_date: string }> {
+  return response?.as_of_date === controls.asOfDate;
+}
+
 export function buildPortfolioReviewHref({
   pathname,
   searchParams,

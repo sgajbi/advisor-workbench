@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
+  isPortfolioReviewResponseCurrent,
   resolvePortfolioReviewControls,
 } from "@/apps/portfolio/portfolio-workspace-controls";
 import type { PortfolioWorkspace } from "@/apps/portfolio/types";
@@ -140,6 +141,20 @@ describe("portfolio review-context controls", () => {
       ],
     });
   });
+
+  it.each([
+    [null, false],
+    [{}, false],
+    [{ as_of_date: "2026-08-20" }, false],
+    [{ as_of_date: "2026-08-21" }, true],
+  ] as const)(
+    "admits only source evidence for the requested valuation date: %o",
+    (response, expected) => {
+      expect(isPortfolioReviewResponseCurrent(response, CONTROLS)).toBe(
+        expected,
+      );
+    },
+  );
 });
 
 describe("portfolio review navigation", () => {

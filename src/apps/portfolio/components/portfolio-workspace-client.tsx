@@ -19,6 +19,7 @@ import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recove
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
+  isPortfolioReviewResponseCurrent,
 } from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
@@ -349,10 +350,7 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    if (
-      !details ||
-      details.as_of_date !== requestedContext.selectedAsOfDate
-    ) {
+    if (!isPortfolioReviewResponseCurrent(details, requestedControls)) {
       setControlTransition({
         sourceKey: initialWorkspaceSourceKey,
         status: "failed",
