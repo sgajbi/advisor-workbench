@@ -7,6 +7,8 @@ export default function SourceWindowNavigation({
   hasPrevious,
   hasNext,
   isLoading = false,
+  itemLabel = "proposals",
+  viewLabel = "Proposal view",
   onPrevious,
   onNext,
 }: {
@@ -15,6 +17,8 @@ export default function SourceWindowNavigation({
   hasPrevious: boolean;
   hasNext: boolean;
   isLoading?: boolean;
+  itemLabel?: string;
+  viewLabel?: string;
   onPrevious: () => void;
   onNext: () => void;
 }) {
@@ -29,13 +33,13 @@ export default function SourceWindowNavigation({
         disabled={!hasPrevious || isLoading}
         onClick={onPrevious}
       >
-        Previous proposals
+        Previous {itemLabel}
       </ActionButton>
       <span className={styles.label} aria-live="polite">
-        {isLoading ? "Loading proposals" : `Proposal view ${currentWindow}`}
+        {isLoading ? `Loading ${itemLabel}` : `${viewLabel} ${currentWindow}`}
       </span>
       <ActionButton priority="quiet" disabled={!hasNext || isLoading} onClick={onNext}>
-        Next proposals
+        Next {itemLabel}
       </ActionButton>
     </nav>
   );

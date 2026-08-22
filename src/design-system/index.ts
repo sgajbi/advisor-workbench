@@ -85,6 +85,7 @@ export {
   useSourceRefreshAction,
   type SourceRefreshState,
 } from "./hooks/use-source-refresh-action";
+export { useSourceWindow } from "./hooks/use-source-window";
 export { default as SourceWindowNavigation } from "./components/source-window-navigation";
 export { default as SectionHeader } from "./components/section-header";
 export { default as SectionBlock } from "./components/section-block";
