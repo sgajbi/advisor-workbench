@@ -621,7 +621,9 @@ export default function ProposalLifecycleWorkspace({
         portfolioId,
         isLoading: policySourcePosture.isInitialLoading,
         isRefreshing: policySourcePosture.isRefreshing,
-        permissionBlocked: policyQueuePosture.isPermissionBlocked,
+        permissionBlocked:
+          policyQueuePosture.isPermissionBlocked ||
+          policyEvidencePosture.isPermissionBlocked,
         hasError:
           policyQueuePosture.isUnavailable &&
           !policyQueuePosture.isPermissionBlocked,

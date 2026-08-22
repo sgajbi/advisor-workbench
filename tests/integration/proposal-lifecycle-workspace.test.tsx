@@ -2533,6 +2533,45 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
 
+  it("keeps the shared suitability posture restricted when selected evidence denies access", async () => {
+    getAdvisoryPolicyEvaluationMock.mockRejectedValueOnce(
+      new Error(
+        'Policy evaluation failed (403): {"detail":"evaluation access denied"}',
+      ),
+    );
+
+    renderWithQueryClient(
+      <ProposalWorkflowContextProvider
+        initialModel={buildNeutralProposalWorkflowContext({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          surfaceLabel: "Proposal lifecycle",
+        })}
+      >
+        <ProposalLifecycleWorkspace
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mode="suitability"
+        />
+        <ProposalWorkflowContextRail />
+      </ProposalWorkflowContextProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Policy evidence access is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Suitability reviews are restricted",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Restricted")).toBeInTheDocument();
+    expect(screen.queryByText("Source current")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Request more evidence" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("withholds review actions when selected policy sources disagree on identity", async () => {
     getAdvisoryPolicyWorkflowMock.mockResolvedValueOnce({
       evaluation_id: "pev_other",
