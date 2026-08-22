@@ -35,7 +35,8 @@ export function buildHoldingDrawer(
         state: "ready";
         asOfDate?: string;
         transactions: PortfolioWorkspace["recent_transactions"];
-      }
+      },
+  options?: { fullPageHref?: string },
 ): PortfolioDetailDrawerState {
   const relatedTransactionsTab = buildHoldingRelatedTransactionsTab(
     relatedTransactionsState,
@@ -82,7 +83,9 @@ export function buildHoldingDrawer(
         content: relatedTransactionsTab,
       },
     ],
-    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
+    fullPageHref:
+      options?.fullPageHref ??
+      `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
     fullPageLabel: "Open transactions",
   };
 }
@@ -141,6 +144,7 @@ export function buildTransactionDrawer(
     onOpenSwapEvent?: (() => void) | null;
     onOpenNearLegGroup?: (() => void) | null;
     onOpenFarLegGroup?: (() => void) | null;
+    fullPageHref?: string;
   }
 ): PortfolioDetailDrawerState {
   const hasLinkedGroupAction =
@@ -290,7 +294,9 @@ export function buildTransactionDrawer(
         ]),
       },
     ],
-    fullPageHref: `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
+    fullPageHref:
+      actions?.fullPageHref ??
+      `/transactions?portfolioId=${encodeURIComponent(portfolioId)}`,
     fullPageLabel: "Open transactions",
   };
 }

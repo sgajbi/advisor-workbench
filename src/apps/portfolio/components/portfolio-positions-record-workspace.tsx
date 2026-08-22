@@ -38,7 +38,7 @@ export default function PortfolioPositionsRecordWorkspace({
       ),
     [workspace.cash_balances, workspace.positions],
   );
-  const { selectedRecordId, openRecord, closeRecord } =
+  const { selectedRecordId, listHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
       initialSelectedRecordId,
@@ -77,8 +77,15 @@ export default function PortfolioPositionsRecordWorkspace({
             ),
           }
         : { state: "error" },
+      { fullPageHref: listHref ?? undefined },
     );
-  }, [asOfDate, availability.activityAvailable, selectedHolding, workspace]);
+  }, [
+    asOfDate,
+    availability.activityAvailable,
+    listHref,
+    selectedHolding,
+    workspace,
+  ]);
 
   return (
     <>
