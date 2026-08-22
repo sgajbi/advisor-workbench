@@ -9,10 +9,12 @@ describe("PortfolioHoldingsGrid empty states", () => {
 
     render(
       <PortfolioHoldingsGrid
-        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-10",
+        }}
         positions={[]}
         baseCurrency="USD"
-        asOfDate="2026-04-10"
         columnMode="expanded"
         filterLabel="Sector: Technology"
         onClearFilter={onClearFilter}
@@ -32,10 +34,12 @@ describe("PortfolioHoldingsGrid empty states", () => {
   it("retains the portfolio onboarding state when the source book is empty", () => {
     render(
       <PortfolioHoldingsGrid
-        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-10",
+        }}
         positions={[]}
         baseCurrency="USD"
-        asOfDate="2026-04-10"
         columnMode="essential"
       />,
     );

@@ -10,6 +10,12 @@ import {
 describe("proposal policy review view model", () => {
   it("turns policy evaluation records into advisor-facing suitability review rows", () => {
     const model = buildPolicyReviewQueueModel({
+      reviewContext: {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-10",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      },
       records: [
         {
           evaluation_id: "pev_001",
@@ -42,7 +48,7 @@ describe("proposal policy review view model", () => {
       openRequirements: "1 approval dependency, 1 disclosure review",
       evidencePosture: "1 evidence gap",
       nextAction: "Complete required approval review.",
-      href: "/proposals/PRP-SUITABILITY?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=suitability",
+      href: "/proposals/PRP-SUITABILITY?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&fromMode=suitability",
     });
     expect(JSON.stringify(model)).not.toContain("PENDING_REVIEW");
     expect(JSON.stringify(model)).not.toContain("advisor_reviewed_disclosure");

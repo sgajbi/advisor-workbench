@@ -11,6 +11,7 @@ import {
   filterRecentTransactionsForHolding,
 } from "../portfolio-booked-holdings-view-model";
 import type { PortfolioWorkspace } from "../types";
+import type { PortfolioTimeWindow } from "../view-model";
 import { buildHoldingDrawer } from "./portfolio-detail-drawer-builders";
 import PortfolioDetailDrawerController from "./portfolio-detail-drawer-controller";
 import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
@@ -21,10 +22,14 @@ import { usePortfolioRecordSelection } from "./use-portfolio-record-selection";
 export default function PortfolioPositionsRecordWorkspace({
   workspace,
   asOfDate,
+  timeWindow,
+  reportingCurrency,
   initialSelectedRecordId,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
+  timeWindow: PortfolioTimeWindow;
+  reportingCurrency: string;
   initialSelectedRecordId?: string;
 }) {
   const availability = buildPositionsReviewAvailability(
@@ -112,10 +117,14 @@ export default function PortfolioPositionsRecordWorkspace({
         />
       ) : null}
       <PortfolioHoldingsGrid
-        portfolioId={workspace.portfolio.portfolio_id}
+        reviewContext={{
+          portfolioId: workspace.portfolio.portfolio_id,
+          asOfDate,
+          period: timeWindow,
+          reportingCurrency,
+        }}
         positions={bookedHoldings}
         baseCurrency={workspace.portfolio.base_currency}
-        asOfDate={asOfDate}
         columnMode="expanded"
         kicker="Position inventory"
         title={availability.inventoryComplete ? "Booked holdings" : "Available holdings"}

@@ -12,7 +12,10 @@ import TextField from "@mui/material/TextField";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity } from "../formatters";
-import { buildPortfolioScreenHref } from "../portfolio-screen-navigation";
+import {
+  buildPortfolioScreenHref,
+  type PortfolioReviewContext,
+} from "../portfolio-screen-navigation";
 import {
   buildDefaultHoldingsColumnVisibility,
   buildExpandedHoldingsColumnVisibility,
@@ -35,10 +38,9 @@ import PortfolioModuleState from "./portfolio-module-state";
 import PortfolioRecordGridShell from "./portfolio-record-grid-shell";
 
 type HoldingsGridProps = {
-  portfolioId: string;
+  reviewContext: PortfolioReviewContext;
   positions: PortfolioPositionView[];
   baseCurrency: string;
-  asOfDate: string;
   columnMode: "essential" | "expanded";
   kicker?: string;
   title?: string;
@@ -51,18 +53,20 @@ type HoldingsGridProps = {
 export type { HoldingsRow };
 
 export default function PortfolioHoldingsGrid({
-  portfolioId,
+  reviewContext,
   positions,
   baseCurrency,
-  asOfDate,
   columnMode,
   kicker = "Positions",
   title = "Holdings",
-  description = `As of ${formatDate(asOfDate)} in ${baseCurrency}`,
+  description,
   filterLabel,
   onClearFilter,
   onRowSelect,
 }: HoldingsGridProps) {
+  const { portfolioId, asOfDate } = reviewContext;
+  const resolvedDescription =
+    description ?? `As of ${formatDate(asOfDate)} in ${baseCurrency}`;
   const gridApiRef = useRef<GridApi<HoldingsRow> | null>(null);
   const [chooserAnchor, setChooserAnchor] = useState<HTMLElement | null>(null);
   const [quickSearch, setQuickSearch] = useState("");
@@ -71,7 +75,6 @@ export default function PortfolioHoldingsGrid({
   );
   const hasHiddenColumns = Object.values(columnVisibility).some((isVisible) => !isVisible);
   const pinImportantColumns = shouldPinPortfolioGridLeadColumns(columnMode);
-  const reviewContext = { portfolioId, asOfDate, reportingCurrency: baseCurrency };
   const bookFirstTradeHref = buildPortfolioScreenHref(
     `/workbench/${encodeURIComponent(portfolioId)}`,
     reviewContext,
@@ -211,7 +214,7 @@ export default function PortfolioHoldingsGrid({
     <PortfolioRecordGridShell
       kicker={kicker}
       title={title}
-      description={description}
+      description={resolvedDescription}
       summaryLabel={formatCount(rowData.length, "holding")}
       summaryValue={formatCurrency(sumHoldingsMarketValue(rowData), baseCurrency)}
       searchControl={

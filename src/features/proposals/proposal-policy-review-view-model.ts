@@ -1,4 +1,5 @@
 import type { SemanticBadgeTone } from "@/design-system";
+import type { WorkspaceReviewContext } from "@/shell/review-context";
 
 import type {
   AdvisoryPolicyEvaluationRecord,
@@ -87,11 +88,14 @@ export function resolvePolicyReviewSelection({
 
 export function buildPolicyReviewQueueModel({
   records,
+  reviewContext,
 }: {
   records: AdvisoryPolicyEvaluationRecord[];
+  reviewContext?: WorkspaceReviewContext;
 }): PolicyReviewQueueModel {
   const rows = records.map((record) => {
     const proposalId = stringValue(record.proposal_id, "Proposal not reported");
+    const portfolioId = stringValue(record.portfolio_id, "");
     const policyStatus = policyStatusLabel(record.evaluation_status);
     const approvalDependencies = stringArray(record.approval_dependencies);
     const disclosureRequirements = stringArray(record.disclosure_requirements);
@@ -103,7 +107,7 @@ export function buildPolicyReviewQueueModel({
         record.evaluation_id,
         "Evaluation not reported",
       ),
-      portfolioId: stringValue(record.portfolio_id, "Portfolio not reported"),
+      portfolioId: portfolioId || "Portfolio not reported",
       proposalId,
       proposalVersion: stringValue(
         record.proposal_version_id,
@@ -134,7 +138,12 @@ export function buildPolicyReviewQueueModel({
       evidencePosture: evidencePosture(sourceGaps),
       href: buildProposalDetailHref({
         proposalId,
-        portfolioId: stringValue(record.portfolio_id, ""),
+        reviewContext: portfolioId
+          ? {
+              ...reviewContext,
+              portfolioId,
+            }
+          : undefined,
         fromMode: "suitability",
       }),
     };

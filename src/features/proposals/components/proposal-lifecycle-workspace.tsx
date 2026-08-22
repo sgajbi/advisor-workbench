@@ -280,8 +280,9 @@ export default function ProposalLifecycleWorkspace({
     () =>
       buildPolicyReviewQueueModel({
         records: policyQueueQuery.data?.items ?? [],
+        reviewContext,
       }),
-    [policyQueueQuery.data?.items],
+    [policyQueueQuery.data?.items, reviewContext],
   );
   const resolvedPolicyEvaluationId = resolvePolicyReviewSelection({
     rows: policyReviewModel.rows,
@@ -929,6 +930,7 @@ export default function ProposalLifecycleWorkspace({
 
     const selectedReview = buildPolicyReviewQueueModel({
       records: queueResult.data.items ?? [],
+      reviewContext,
     }).rows.find((row) => row.evaluationId === selectedPolicyEvaluationId);
     if (!selectedReview) {
       throw new Error(
