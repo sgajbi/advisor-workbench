@@ -1,32 +1,41 @@
 import ProposalSimulateForm from "@/features/proposals/components/proposal-simulate-form";
-import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
-import ProposalWorkspaceShell, {
-  resolveProposalPortfolioId,
-} from "@/features/proposals/components/proposal-workspace-shell";
+import ProposalWorkspaceShell from "@/features/proposals/components/proposal-workspace-shell";
 import { buildSimulationProposalWorkflowContext } from "@/features/proposals/proposal-workflow-context-view-model";
+import ReviewContextRecovery from "@/shell/review-context-recovery";
 import {
-  type ProposalRouteSearchParam,
-  resolveSingleProposalSearchParam,
-} from "@/features/proposals/proposal-route-search-params";
+  parseReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 export default async function ProposalSimulatePage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    portfolioId?: ProposalRouteSearchParam;
-    asOfDate?: ProposalRouteSearchParam;
-  }>;
+  searchParams: Promise<ReviewContextSearchParams>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const portfolioId = resolveProposalPortfolioId(
-    resolveSingleProposalSearchParam(resolvedSearchParams.portfolioId),
-  );
-  const requestedAsOfDate = resolveSingleProposalSearchParam(
-    resolvedSearchParams.asOfDate,
-  )?.trim();
-  const initialAsOfDate = isBusinessDateValue(requestedAsOfDate)
-    ? requestedAsOfDate ?? ""
-    : "";
+  const reviewContextResult = parseReviewContext(resolvedSearchParams);
+  if (reviewContextResult.status === "invalid") {
+    return (
+      <ReviewContextRecovery
+        body="The proposal address contains repeated or unsupported review context. No portfolio was substituted and no proposal draft was opened."
+        href="/book"
+        actionLabel="Select a portfolio from My book"
+      />
+    );
+  }
+
+  const portfolioId = reviewContextResult.context.portfolioId;
+  if (!portfolioId) {
+    return (
+      <ReviewContextRecovery
+        body="Select a source-confirmed portfolio from My book before starting a proposal. No demo portfolio was substituted."
+        href="/book"
+        actionLabel="Select a portfolio from My book"
+      />
+    );
+  }
+
+  const initialAsOfDate = reviewContextResult.context.asOfDate ?? "";
   return (
     <ProposalWorkspaceShell
       portfolioId={portfolioId}
