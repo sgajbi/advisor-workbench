@@ -289,7 +289,11 @@ describe("manage workspace split components", () => {
       },
       "client"
     );
-    await waitFor(() => expect(document.activeElement).toBe(nextAction));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("button", { name: "Previous attention items" })
+      )
+    );
   });
 
   it("retains the last confirmed exception window when continuation loading fails", async () => {
