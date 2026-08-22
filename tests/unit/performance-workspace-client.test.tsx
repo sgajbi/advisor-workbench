@@ -186,6 +186,57 @@ describe("PerformanceWorkspaceClient", () => {
     restoreFocusMock.mockReset();
   });
 
+  it("withholds stale initial detail and rehydrates it from the confirmed source identity", async () => {
+    getDetailsClientMock.mockResolvedValueOnce(buildDetails());
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails({ portfolio_id: "PF_OTHER" })}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+  });
+
+  it("withholds fetched detail that does not confirm the summary valuation identity", async () => {
+    getDetailsClientMock.mockResolvedValueOnce(
+      buildDetails({ as_of_date: "2026-02-23" }),
+    );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("0");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+      expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
+    });
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("does not reuse an earlier selector target for a targetless retry", async () => {
     const detailFailure = Object.assign(new Error("Performance details unavailable"), {
       status: 502,

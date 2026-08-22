@@ -15,6 +15,7 @@ import {
 } from "./performance-workspace-modes";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 import type { PerformanceWorkspaceLoadIssue } from "./components/performance-workspace-types";
+import { isPerformanceSummarySourceCurrent } from "./performance-source-identity";
 
 type LookupEnvelope = {
   items?: Array<{ id: string; label: string }>;
@@ -146,16 +147,16 @@ export default async function PerformanceAnalyticsPage({
 
   if (
     workspaceSummary &&
-    ((reviewContextResult.context.asOfDate &&
-      reviewContextResult.context.asOfDate !== workspaceSummary.as_of_date) ||
-      (reviewContextResult.context.reportingCurrency &&
-        reviewContextResult.context.reportingCurrency !==
-          workspaceSummary.portfolio.base_currency))
+    !isPerformanceSummarySourceCurrent(workspaceSummary, {
+      portfolioId: selectedPortfolioId,
+      asOfDate: reviewContextResult.context.asOfDate,
+      reportingCurrency: reviewContextResult.context.reportingCurrency,
+    })
   ) {
     return (
       <AppPageShell pageKey="performance" className="performance-page portfolio-page">
         <ReviewContextRecovery
-          body="The selected valuation date or reporting currency is not supported by the source-confirmed performance summary. No analytical detail was requested."
+          body="The selected portfolio, valuation date, or reporting currency is not confirmed by the performance source. No analytical detail was requested."
           href={buildReviewContextHref("/performance", {
             portfolioId: selectedPortfolioId,
             asOfDate: workspaceSummary.as_of_date,
@@ -181,6 +182,13 @@ export default async function PerformanceAnalyticsPage({
         initialChartFrequency={chartFrequency}
         initialMode={initialMode}
         initialBenchmark={benchmark}
+        initialAsOfDate={
+          workspaceSummary?.as_of_date ?? reviewContextResult.context.asOfDate
+        }
+        initialReportingCurrency={
+          workspaceSummary?.portfolio.base_currency ??
+          reviewContextResult.context.reportingCurrency
+        }
       />
     </AppPageShell>
   );

@@ -219,7 +219,7 @@ describe("PerformanceAnalyticsPage", () => {
     await renderPerformancePage(searchParams);
 
     expect(
-      screen.getByText(/not supported by the source-confirmed performance summary/i),
+      screen.getByText(/not confirmed by the performance source/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Use available performance context" }),
