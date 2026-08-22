@@ -145,7 +145,12 @@ Current repository posture:
    receiving Workbench defaults. Technical identifiers use progressive disclosure. Workbench does
    not calculate mandate health, infer readiness or priority from exception count, merge exceptions,
    attach book-level actions to an exception, generate remediation narrative locally, or call
-   `lotus-manage`/`lotus-ai` directly.
+   `lotus-manage`/`lotus-ai` directly. Overview must fail closed when the mandate risk profile or
+   attention-window evidence is missing: it must not default risk posture, claim zero exceptions,
+   or advertise generated construction alternatives that it has not fetched. Lead with named
+   evidence gaps and active attention before navigation. Reuse `WorkbenchTaskDirectory` when a
+   screen needs a compact set of source-owned business handoffs; keep task title, purpose, source
+   status, and action label together instead of recreating feature-card grids.
 10. Manage `mode=waves` renders the RFC-0041 DPM rebalance-wave command-center panel through
     Gateway `/api/v1/dpm/command-center/waves*`, preserving manage-owned wave lifecycle, item
     state, source-readiness state, supportability, report-input refs, proof-pack refs, handoff refs,

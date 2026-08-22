@@ -5597,3 +5597,56 @@ historical evidence, selected-only reads, permission handling, and atomic refres
 Playwright proves the BFF request, source boundary, focus-stable confirmation, and zero-overflow
 reflow at 1440, 1280, 1024, 720, and 390 pixels. Protected PR, exact-main validation, canonical
 source proof, wiki publication, strict parity, issue closure, and branch hygiene remain required.
+
+## Manage Overview Exception-Led Decision Flow
+
+### Business job
+
+A portfolio manager needs a rapid selected-mandate checkpoint that distinguishes source-confirmed
+operating posture from missing evidence, leads with actionable exceptions, and provides a clear
+handoff to the Manage workspace required for the next decision.
+
+### Current-product research
+
+Research was reviewed on 2026-08-22 from official wealth-platform sources:
+
+1. [BlackRock Aladdin Wealth personalized portfolio management](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/personalized-portfolio-management-technology)
+   supports connected portfolio-management workflow and evidence-backed portfolio context.
+2. [BlackRock Aladdin compliance](https://www.blackrock.com/aladdin/benefits/compliance)
+   supports exception-led monitoring and movement from identified issues into review workflow.
+3. [BlackRock Aladdin Wealth manage business at scale](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/manage-business-at-scale)
+   supports a unified working context across portfolio-management tasks.
+
+Research informed the business hierarchy and workflow principles only. Lotus does not copy a
+competitor's layout, wording, branding, calculations, or unsupported capability, and research is
+not source authority for product state.
+
+### Adopted decisions
+
+1. Lead with incomplete evidence and active exceptions before secondary navigation.
+2. Keep selected-portfolio facts, mandate posture, exception worklist, and next business handoff in
+   one reading path.
+3. Treat a missing mandate risk profile as **Not reported**, not **Balanced**.
+4. Claim zero attention items only from a complete, non-degraded, untruncated source window.
+5. Describe Construction Alternatives as **Generated on request** because Overview does not fetch
+   or prove an existing alternative set.
+6. Replace the page-local feature-card mosaic and raw attention table with reusable semantic
+   Workbench patterns.
+
+### Rejected decisions
+
+1. Decorative confidence scores, invented readiness, browser priority, or optimistic defaults.
+2. Whole-book, household, team, SLA, supervisory, or enterprise queue claims absent from contract.
+3. Claiming alternatives, workflow completion, approval, execution, or settlement from route access
+   or a favourable badge.
+4. Adding a new framework, visualization library, global CSS, or one-off component family for this
+   screen.
+
+### Validation and publication decision
+
+Workbench #763 owns this slice. Focused design-system, view-model, and component tests prove the
+fail-closed risk profile, bounded attention evidence, business task handoffs, semantic table and
+navigation structure, and absence of fabricated alternatives availability. The governed screen
+guide and registry document Gateway/Core/Manage authority and remove only the Manage Overview #605
+coverage exception. Production-browser route proof, protected CI, exact-main validation, wiki
+publication, strict parity, issue closure, and branch hygiene remain required.

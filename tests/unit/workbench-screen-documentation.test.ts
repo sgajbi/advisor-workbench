@@ -87,9 +87,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 24,
-      coverageExceptions: 12,
-      unmappedGuides: 12,
+      mappedGuides: 25,
+      coverageExceptions: 11,
+      unmappedGuides: 11,
     });
   });
 
@@ -718,6 +718,39 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("does not:\n\n- calculate time-weighted");
     expect(guide).toContain("not a claim of competitor\nsuperiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Manage Overview to one exception-led source-truthful guide", () => {
+    const registry = loadRegistry();
+    const manageOverview = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "manage-overview",
+    );
+
+    expect(manageOverview).toMatchObject({
+      routePattern: "/workbench/{portfolioId}",
+      mode: "overview",
+      wikiSlug: "Manage-Overview-Screen-Guide",
+      sourceOwners: ["lotus-gateway", "lotus-core", "lotus-manage"],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/workbench/manage-overview-model.ts",
+        "src/features/workbench/components/manage-overview.tsx",
+        "src/design-system/components/workbench-task-directory.tsx",
+      ]),
+      runtimeEvidence: expect.arrayContaining(["tests/e2e/ui-smoke.spec.ts"]),
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Manage-Overview-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("operates as a work checkpoint rather than a feature catalogue");
+    expect(guide).toContain("absent value is **Not\n  reported**");
+    expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
+    expect(guide).toContain("does not:\n\n- calculate portfolio value");
+    expect(guide).toContain("not a claim of competitor superiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

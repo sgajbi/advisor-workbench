@@ -612,19 +612,21 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "wikiSlug": "Manage-Overview-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-core", "lotus-manage"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/manage-overview-model.ts",
+        "src/features/workbench/components/manage-overview.tsx",
+        "src/design-system/components/workbench-task-directory.tsx",
+        "tests/unit/manage-overview-model.test.ts",
+        "tests/unit/manage-workspace-components.test.tsx",
+        "tests/unit/design-system-components.test.tsx"
       ],
-      "runtimeEvidence": [],
+      "runtimeEvidence": ["tests/e2e/ui-smoke.spec.ts"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-core-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "mandate-health",
