@@ -8,7 +8,10 @@ import {
   mergePortfolioWorkspace,
 } from "./api";
 import { resolveSelectedPortfolioId } from "./portfolio-selection";
-import { resolvePortfolioReviewControls } from "./portfolio-workspace-controls";
+import {
+  isPortfolioReviewResponseCurrent,
+  resolvePortfolioReviewControls,
+} from "./portfolio-workspace-controls";
 import { resolvePortfolioRecordScreenWindow } from "./portfolio-record-screen-view-model";
 import type { PortfolioWorkspace } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
@@ -104,11 +107,21 @@ export async function loadPortfolioRecordScreenData({
     }),
   ]);
 
+  if (!isPortfolioReviewResponseCurrent(summaryDetails, controls)) {
+    return {
+      portfolioId: selectedPortfolioId,
+      workspace: null,
+      timeWindow: controls.timeWindow,
+      reviewContextError:
+        "The portfolio source did not confirm the requested valuation date. No record evidence was displayed.",
+    };
+  }
+
   const workspace = mergePortfolioWorkspace(shell, {
-    ...(summaryDetails ?? {}),
+    ...summaryDetails,
     ...(detailedDetails ?? {}),
     record_data_availability: {
-      positions: summaryDetails ? "ready" : "unavailable",
+      positions: "ready",
       liquidity: detailedDetails?.record_data_availability.liquidity ?? "unavailable",
       transactions: detailedDetails?.record_data_availability.transactions ?? "unavailable",
     },
