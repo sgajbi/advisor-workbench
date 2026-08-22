@@ -306,8 +306,9 @@ Implemented:
    Gateway/Manage, source readiness, applied filters, warnings, lineage count, next action, and
    no-OMS/no-client-contact boundaries without local cohort discovery,
 10. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
-    bounded Gateway-backed retire/supersede controls that require actor, reason, and replacement
-    lineage for supersede, then refreshes campaign definitions and lifecycle evidence without
+    bounded Gateway-backed retire/supersede controls that use current caller identity, require a
+    business rationale and explicit consequence confirmation, and limit supersession to an existing
+    active version; accepted commands refresh definitions and exact lifecycle evidence without
     inferring lifecycle state or recalculating membership locally,
 11. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
     displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
@@ -315,15 +316,22 @@ Implemented:
     state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
     routing, fills, settlement, or OMS execution,
 12. checks campaign preview readiness and launch-package readiness through Gateway and enables
-    launch only when Manage returns `READY`, preserving source-owned reason codes, blocked actions,
-    source posture, durable wave, and idempotency evidence without recomputing membership,
-    readiness, maker-checker workflow, trade approval, staging, or OMS execution locally,
-13. renders read-only Manage campaign workflow audit evidence from Gateway operating queue,
+    launch only when Manage returns `READY` and the user confirms the durable-wave consequence;
+    preserves source-owned reason codes, blocked actions, source posture, durable wave, and
+    idempotency evidence; and clears confirmation after success to prevent an immediate repeat,
+    without recomputing membership, readiness, maker-checker workflow, trade approval, staging, or
+    OMS execution locally,
+13. renders Manage campaign workflow audit evidence from Gateway operating queue,
     approval inbox, workflow board, assignment plan, workflow automation, approval-decision,
     assignment-action, assignment-task, and maker-checker read endpoints, preserving source refs,
     count/page metadata, reason codes, content hashes, task-transition posture, and operating
-    boundaries without mutating assignment or maker-checker state,
-14. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
+    boundaries; supported approval, assignment, task, transition, and maker-checker commands use
+    exact typed Manage fields, human rationale, and source-confirmed refresh rather than local state,
+14. presents campaign administration as one keyboard-operable selected-record worklist and one
+    decision pane with review, governance, lifecycle, and launch modes; every pending state, result,
+    and error is fenced to campaign id/version, and every browser-triggered campaign request uses
+    the same-origin Workbench BFF,
+15. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
     report-input refs,
     workflow-pack run ids, request bodies, or response bodies as metric labels.
 

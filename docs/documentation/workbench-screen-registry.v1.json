@@ -669,6 +669,9 @@
         "src/features/workbench/dpm-wave-command-center-view-model.ts",
         "src/features/workbench/dpm-wave-command-center-panel-helpers.ts",
         "src/features/workbench/components/dpm-wave-command-center-panel.tsx",
+        "src/features/workbench/components/dpm-campaign-definitions-section.tsx",
+        "src/features/workbench/dpm-campaign-command-contracts.ts",
+        "src/features/workbench/dpm-campaign-workflow-command-builder.ts",
         "src/features/workbench/use-dpm-wave-command-center-actions.ts"
       ],
       "runtimeEvidence": [

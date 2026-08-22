@@ -165,9 +165,11 @@ promote dormant labels into product ownership just because historical route file
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/retire`
   and
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/supersede`,
-  refreshes campaign definitions and lifecycle evidence after accepted commands, and renders
-  returned status, actor, reason, replacement version/hash, correlation id, content hash, reason
-  codes, and operating boundaries without browser-owned lifecycle truth. It also opens append-only launch history from
+  using the current caller identity, a human business rationale, the exact Manage retirement or
+  supersession fields, and an existing active replacement version where applicable. It refreshes
+  campaign definitions and exact lifecycle evidence only after an accepted command, and renders
+  returned status, actor, reason, replacement version, correlation id, content hash, reason codes,
+  and operating boundaries without browser-owned lifecycle truth. It also opens append-only launch history from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`
   and displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
   correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
@@ -199,7 +201,10 @@ promote dormant labels into product ownership just because historical route file
   Gateway-backed approval-decision, assignment-action, assignment-task, assignment-task
   transition, and maker-checker-control evidence, then refresh the source-owned evidence lists
   and show Gateway-returned correlation/source/upstream/content-hash evidence without browser-owned
-  workflow state. It
+  workflow state. All browser-triggered selected-campaign reads, refreshes, and mutations use
+  `/api/bff/api/v1/...`; server-side workspace composition can use the canonical Gateway origin.
+  Campaign id/version fencing prevents a late result or error from being relabelled under another
+  selected campaign. It
   renders manage-owned wave lifecycle, item state, source-readiness state, supportability,
   report-input refs, proof-pack refs, handoff refs, lotus-ai workflow-pack run posture, and
   `external_execution_claimed` posture without direct `lotus-manage` or `lotus-ai` calls, local

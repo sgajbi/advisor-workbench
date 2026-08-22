@@ -5710,3 +5710,71 @@ removes only the Rebalance Waves #605 exception. Process-owned optimized-product
 now covers source context, keyboard focus, proposed-change loading, section order, reflow, and zero
 page overflow at 1440, 1024, 720, and 390 pixels. Full gates, protected CI, exact-main validation,
 wiki publication/parity, issue closure, and branch hygiene remain required.
+
+## Rebalance Campaign Selected-Record Decision Workflow
+
+### Business job
+
+A portfolio manager or campaign operator needs to scan the governed campaigns in scope, choose one
+exact id/version, understand its source and governance posture, and complete one controlled review,
+governance, lifecycle, or launch task without mixing evidence between records or mistaking a launch
+for trade execution.
+
+### Current-product research
+
+Research was reviewed on 2026-08-22 from official product and accessibility sources:
+
+1. [BlackRock Aladdin compliance](https://www.blackrock.com/aladdin/benefits/compliance) describes
+   personalized exception dashboards and resolution workflow with responsibility, comments, and
+   ageing. This supports attention-led triage and source-backed workflow evidence.
+2. [BlackRock Aladdin Wealth personalized portfolio management](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/personalized-portfolio-management-technology)
+   describes scaled oversight, exception-led workflow, institutional analytics, and necessary
+   checks at the right time with human control.
+3. [Temenos Wealth Front Office](https://www.temenos.com/products/wealth-management/wealth-front-office/)
+   describes structured tasks and opportunities, interactive dashboards, prioritized action, and
+   automation that retains human intervention.
+4. [IBM Carbon data-table guidance](https://carbondesignsystem.com/components/data-table/usage/)
+   distinguishes single-record selection and progressive detail from spreadsheet replacement, and
+   documents keyboard-tested interaction and density variants.
+5. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) governs keyboard operation, focus order, status
+   communication, target size, and reflow.
+
+Research informs workflow hierarchy and interaction principles only. Lotus does not copy a
+competitor's visual language, brand, calculation, or unsupported capability.
+
+### Adopted decisions
+
+1. Use one compact source worklist and one selected decision pane rather than a wide flat table plus
+   every detail panel.
+2. Keep source identity, readiness, governance, eligible count, and next action together; refresh
+   detail only for the exact selected campaign.
+3. Separate review, governance, lifecycle, and launch into one visible task mode at a time, with
+   technical trace behind native progressive disclosure.
+4. Preserve keyboard selection and focus while source evidence refreshes, and discard late results
+   for a prior record.
+5. Require human business rationale and consequence acknowledgement for lifecycle and launch
+   mutations; show success only from the returned source response.
+6. Reuse Workbench decision-workspace, record-selector, metric-strip, badge, action, and state
+   patterns. Keep the new layout in a feature CSS Module and remove the superseded table.
+
+### Rejected decisions
+
+1. Copying Aladdin, Temenos, or Carbon visual styling or adding another component library.
+2. Treating a campaign catalogue as a spreadsheet or showing all evidence/actions simultaneously.
+3. Inventing advisor owner, client/household, SLA, priority, trade, order, fill, settlement, or
+   client-contact fields that Manage does not publish.
+4. Browser-owned membership, readiness, lifecycle, approval, or maker-checker inference.
+5. Direct browser calls to Gateway or Manage, optimistic success, retained consequence confirmation,
+   or a generic command body that can drift from the source contract.
+6. Leading with AI-generated recommendation; this governed operating task has no supported AI action.
+
+### Validation and publication decision
+
+Workbench #772 and merged Gateway #567 own this slice. Four signed Workbench commits cover typed
+contracts, selected-campaign fencing, selected-record UX, and BFF/browser correctness. Focused API,
+builder, hook, model, component, and panel proof is green. Process-owned optimized-production
+browser proof uses two campaigns and validates BFF-only requests, keyboard selection, selected
+identity, focus stability after asynchronous refresh, launch consequence gating, durable-wave
+evidence, repeat prevention, clean runtime, 1440/1024/720/390 reflow, and zero page overflow. Full
+repository gates, protected review/CI, exact-main validation, wiki publication/parity, issue closure,
+and branch hygiene remain required.
