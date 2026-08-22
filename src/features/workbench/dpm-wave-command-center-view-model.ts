@@ -176,6 +176,7 @@ export type DpmWaveCommandCenterPanelModel = {
   remediationOwner: string;
   selectedWaveId: string | null;
   selectedWaveState: string;
+  selectedWaveAsOfDate: string;
   selectedWaveItemCount: string;
   selectedWaveIssueCount: string;
   selectedWaveSupportabilityReason: string;
@@ -298,6 +299,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   const waveAiMemo = waveAiMemoSelection.response;
   const operationsHandoffSummary = operationsHandoffSummarySelection.response;
   const selectedListRecord = findSelectedWaveListRecord(params.waveList?.data, selectedWaveId);
+  const selectedListRow = listRows.find((row) => row.waveId === selectedWaveId);
   const metricSource = firstRecord(
     waveRecord?.aggregate_metrics,
     params.actionResponse?.data.aggregate_metrics,
@@ -316,6 +318,10 @@ export function buildDpmWaveCommandCenterModel(params: {
     remediationOwner: supportability?.remediation_owner ?? "N/A",
     selectedWaveId,
     selectedWaveState,
+    selectedWaveAsOfDate:
+      readString(waveRecord ?? {}, "as_of_date") ||
+      selectedListRow?.asOfDate ||
+      "N/A",
     selectedWaveItemCount: formatValue(
       supportability?.item_count ?? readValue(metricSource, "item_count") ?? itemRows.length
     ),
@@ -325,7 +331,7 @@ export function buildDpmWaveCommandCenterModel(params: {
         readValue(selectedListRecord ?? {}, "issue_count")
     ),
     selectedWaveSupportabilityReason:
-      listRows.find((row) => row.waveId === selectedWaveId)?.supportabilityReason ||
+      selectedListRow?.supportabilityReason ||
       firstNonEmpty(supportability?.reason_codes) ||
       "N/A",
     reportInputRef: readReportInputRef(params.waveReportInput?.data, waveAiMemo),

@@ -599,6 +599,45 @@ describe("DpmWaveCommandCenterPanel", () => {
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
   });
 
+  it("renders source context for the selected wave rather than the first list row", async () => {
+    render(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={{
+          ...waveResponse,
+          supportability: {
+            ...waveResponse.supportability,
+            wave_id: "dwv_002",
+          },
+          data: {
+            items: [
+              {
+                wave_id: "dwv_001",
+                state: "CREATED",
+                as_of_date: "2026-05-01",
+              },
+              {
+                wave_id: "dwv_002",
+                state: "SIMULATION_READY",
+                as_of_date: "2026-05-09",
+              },
+            ],
+          },
+        }}
+      />,
+    );
+
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_002"));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
+        "As of 09 May 2026",
+      ),
+    );
+    expect(screen.getByLabelText("Rebalance source context")).not.toHaveTextContent(
+      "As of 01 May 2026",
+    );
+  });
+
   it("keeps blocked source evidence visibly blocked after the proof-pack response loads", async () => {
     vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue({
       ...waveResponse,

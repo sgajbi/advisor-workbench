@@ -172,6 +172,54 @@ describe("DPM wave command-center view model", () => {
     expect(model.proofPackStatus).toBe("NOT_REQUESTED");
   });
 
+  it("binds the decision date to the selected wave and prefers selected action detail", () => {
+    const multiWaveList: DpmWaveGatewayResponse = {
+      ...waveListResponse,
+      supportability: {
+        ...waveListResponse.supportability,
+        wave_id: "dwv_002",
+      },
+      data: {
+        items: [
+          {
+            wave_id: "dwv_001",
+            state: "CREATED",
+            as_of_date: "2026-05-01",
+          },
+          {
+            wave_id: "dwv_002",
+            state: "SIMULATION_READY",
+            as_of_date: "2026-05-09",
+          },
+        ],
+      },
+    };
+
+    expect(
+      buildDpmWaveCommandCenterModel({ waveList: multiWaveList }).selectedWaveAsOfDate,
+    ).toBe("2026-05-09");
+
+    expect(
+      buildDpmWaveCommandCenterModel({
+        waveList: multiWaveList,
+        actionResponse: {
+          ...waveListResponse,
+          supportability: {
+            ...waveListResponse.supportability,
+            wave_id: "dwv_002",
+          },
+          data: {
+            wave: {
+              wave_id: "dwv_002",
+              state: "SIMULATION_READY",
+              as_of_date: "2026-05-10",
+            },
+          },
+        },
+      }).selectedWaveAsOfDate,
+    ).toBe("2026-05-10");
+  });
+
   it("surfaces report-input and AI PM memo posture without deriving execution truth", () => {
     const aiMemoResponse: DpmWaveAiPmMemoResponse = {
       correlation_id: "corr-wave-ai-memo",
