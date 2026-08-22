@@ -8,7 +8,7 @@ import {
 
 describe("portfolio screen navigation", () => {
   it("builds encoded portfolio-scoped routes for every Workbench screen", () => {
-    const items = buildPortfolioScreenNavigationItems("PB SG/001");
+    const items = buildPortfolioScreenNavigationItems({ portfolioId: "PB SG/001" });
 
     expect(items.map((item) => item.key)).toEqual([
       "portfolio",
@@ -25,35 +25,58 @@ describe("portfolio screen navigation", () => {
       "manage",
     ]);
     expect(items.find((item) => item.key === "allocation")?.href).toBe(
-      "/allocation?portfolioId=PB%20SG%2F001"
+      "/allocation?portfolioId=PB+SG%2F001"
     );
     expect(items.find((item) => item.key === "positions")?.href).toBe(
-      "/positions?portfolioId=PB%20SG%2F001"
+      "/positions?portfolioId=PB+SG%2F001"
     );
     expect(items.find((item) => item.key === "income")?.href).toBe(
-      "/income?portfolioId=PB%20SG%2F001"
+      "/income?portfolioId=PB+SG%2F001"
     );
     expect(items.find((item) => item.key === "risk")?.href).toBe(
-      "/performance?mode=risk&portfolioId=PB%20SG%2F001"
+      "/performance?portfolioId=PB+SG%2F001&mode=risk"
     );
     expect(items.find((item) => item.key === "advisory")?.href).toBe(
-      "/recommendations?portfolioId=PB%20SG%2F001"
+      "/recommendations?portfolioId=PB+SG%2F001"
     );
     expect(items.find((item) => item.key === "reports")?.href).toBe(
-      "/reports?portfolioId=PB%20SG%2F001"
+      "/reports?portfolioId=PB+SG%2F001"
     );
-    expect(items.find((item) => item.key === "manage")?.href).toBe("/workbench/PB%20SG%2F001");
+    expect(items.find((item) => item.key === "manage")?.href).toBe(
+      "/workbench/PB%20SG%2F001?portfolioId=PB+SG%2F001",
+    );
   });
 
   it("preserves existing query strings when appending portfolio context", () => {
-    expect(buildPortfolioScreenHref("/performance?mode=risk", "PB_1")).toBe(
-      "/performance?mode=risk&portfolioId=PB_1"
+    expect(
+      buildPortfolioScreenHref("/performance?mode=risk", {
+        portfolioId: "PB_1",
+      }),
+    ).toBe(
+      "/performance?portfolioId=PB_1&mode=risk",
+    );
+  });
+
+  it("carries the complete governed review context across the screen rail", () => {
+    const items = buildPortfolioScreenNavigationItems({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      asOfDate: "2026-08-21",
+      period: "YTD",
+      reportingCurrency: "SGD",
+      selectedRecordId: "SG000001",
+    });
+
+    expect(items.find((item) => item.key === "positions")?.href).toBe(
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=SG000001",
+    );
+    expect(items.find((item) => item.key === "risk")?.href).toBe(
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=SG000001&mode=risk",
     );
   });
 
   it("keeps five business domains primary and groups the remaining tasks", () => {
     const model = buildPortfolioScreenNavigationModel(
-      "PB_SG_GLOBAL_BAL_001",
+      { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       "income",
     );
 
@@ -85,7 +108,7 @@ describe("portfolio screen navigation", () => {
 
   it("does not repeat a primary destination as a separate current task", () => {
     const model = buildPortfolioScreenNavigationModel(
-      "PB_SG_GLOBAL_BAL_001",
+      { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       "performance",
     );
 
@@ -94,7 +117,7 @@ describe("portfolio screen navigation", () => {
 
   it("does not duplicate an active specialist task in the workspace directory", () => {
     const model = buildPortfolioScreenNavigationModel(
-      "PB_SG_GLOBAL_BAL_001",
+      { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       "income",
     );
 
