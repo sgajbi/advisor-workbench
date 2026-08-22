@@ -152,7 +152,7 @@ export default function DpmWaveCommandCenterPanel({
   const header = buildDpmWaveHeaderModel({
     mandateType,
     portfolioCurrency,
-    asOfDate: model.summaryRows[0]?.asOfDate,
+    asOfDate: model.selectedWaveAsOfDate,
     proofState: model.proofPackStatus,
   });
 
