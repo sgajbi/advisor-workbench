@@ -174,6 +174,27 @@ describe("governed review context", () => {
     });
   });
 
+  it("omits a period that the destination workspace cannot honour", () => {
+    const performanceContext = {
+      ...COMPLETE_CONTEXT,
+      period: "5Y" as const,
+    };
+
+    expect(
+      scopeReviewContextForWorkspace(performanceContext, "/portfolio"),
+    ).toEqual({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      asOfDate: "2026-08-21",
+      reportingCurrency: "SGD",
+    });
+    expect(
+      scopeReviewContextForWorkspace(performanceContext, "/reports"),
+    ).not.toHaveProperty("period");
+    expect(
+      scopeReviewContextForWorkspace(performanceContext, "/performance"),
+    ).toHaveProperty("period", "5Y");
+  });
+
   it("refuses to serialize invalid programmatic context", () => {
     expect(() =>
       serializeReviewContext({ reportingCurrency: "US Dollar" }),
