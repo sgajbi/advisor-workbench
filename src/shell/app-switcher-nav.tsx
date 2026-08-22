@@ -9,6 +9,7 @@ import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capab
 
 import { resolveShellRouteContext } from "./app-registry";
 import styles from "./app-shell.module.css";
+import { buildReviewContextHref, parseReviewContext } from "./review-context";
 import { getWorkspaceDisabledTitle } from "./workspace-supportability-copy";
 
 export default function AppSwitcherNav() {
@@ -18,6 +19,7 @@ export default function AppSwitcherNav() {
   const searchParams = useSearchParams();
   const routeContext = resolveShellRouteContext(pathname, searchParams);
   const routeIdentity = `${pathname ?? ""}?${searchParams.toString()}`;
+  const reviewContextResult = parseReviewContext(searchParams);
   const workspaceDescriptors =
     shellBootstrapSource === "contract"
       ? normalized.shellBootstrap.workspaces
@@ -30,13 +32,20 @@ export default function AppSwitcherNav() {
   }
 
   const items = workspaceDescriptors.map((workspace) => {
+    const reviewContextInvalid = reviewContextResult.status === "invalid";
+    const disabled = !workspace.enabled || reviewContextInvalid;
     return {
       key: workspace.id,
       label: workspace.label,
-      href: workspace.enabled ? workspace.href : undefined,
-      disabled: !workspace.enabled,
+      href:
+        !disabled && reviewContextResult.status === "valid"
+          ? buildReviewContextHref(workspace.href, reviewContextResult.context)
+          : undefined,
+      disabled,
       active: routeContext.workspaceId === workspace.id,
-      title: buildWorkspaceTitle(workspace),
+      title: reviewContextInvalid
+        ? "Review context is invalid. Correct the portfolio, date, period, or currency selection before switching workspaces."
+        : buildWorkspaceTitle(workspace),
     };
   });
 
