@@ -1,0 +1,27 @@
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.78fr) minmax(28rem, 1.22fr);
+  align-items: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.worklist,
+.decision {
+  min-width: 0;
+}
+
+.decision {
+  position: sticky;
+  top: var(--space-4);
+}
+
+@media (max-width: 1160px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .decision {
+    position: static;
+  }
+}
