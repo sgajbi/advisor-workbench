@@ -181,11 +181,53 @@ describe("portfolio review-context controls", () => {
   ] as const)(
     "admits only source evidence for the requested date, period, and currency: %o",
     (response, expected) => {
-      expect(isPortfolioReviewResponseCurrent(response, CONTROLS)).toBe(
-        expected,
-      );
+      expect(
+        isPortfolioReviewResponseCurrent(response, CONTROLS, {
+          timeWindow: CONTROLS.timeWindow,
+          reportStartDate: "2026-01-01",
+          reportEndDate: CONTROLS.asOfDate,
+        }),
+      ).toBe(expected);
     },
   );
+
+  it("matches the default 30D control to its exact EXPLICIT source window", () => {
+    const controls = { ...CONTROLS, timeWindow: "30D" as const };
+    const performanceWindow = {
+      timeWindow: controls.timeWindow,
+      reportStartDate: "2026-07-22",
+      reportEndDate: controls.asOfDate,
+    };
+
+    expect(
+      isPortfolioReviewResponseCurrent(
+        {
+          as_of_date: controls.asOfDate,
+          performance: {
+            period: "EXPLICIT",
+            report_start_date: performanceWindow.reportStartDate,
+            report_end_date: performanceWindow.reportEndDate,
+          },
+        },
+        controls,
+        performanceWindow,
+      ),
+    ).toBe(true);
+    expect(
+      isPortfolioReviewResponseCurrent(
+        {
+          as_of_date: controls.asOfDate,
+          performance: {
+            period: "EXPLICIT",
+            report_start_date: "2026-07-21",
+            report_end_date: performanceWindow.reportEndDate,
+          },
+        },
+        controls,
+        performanceWindow,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("portfolio review navigation", () => {

@@ -75,6 +75,7 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
       <div data-testid="shell-status">{workspaceStatus}</div>
       <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
       <div data-testid="market-value">{workspace?.summary?.market_value_base ?? "none"}</div>
+      <div data-testid="position-count">{workspace?.positions.length ?? "none"}</div>
       <div data-testid="insight-key">{workspace?.insights?.[0]?.key ?? "none"}</div>
       <div data-testid="exception-key">{workspace?.exception_summaries?.[0]?.key ?? "none"}</div>
       <div data-testid="workflow-action">{workspace?.workflow_actions?.[0]?.title ?? "none"}</div>
@@ -445,6 +446,32 @@ describe("PortfolioWorkspaceClient", () => {
     expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByRole("alert")).toHaveTextContent("Review context was not changed");
     expect(routerPushMock).not.toHaveBeenCalled();
+  });
+
+  it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue({
+      as_of_date: initialWorkspace.as_of_date,
+      positions: [{ security_id: "EQ_1" }],
+      performance: {
+        period: "EXPLICIT",
+        report_start_date: "2026-02-26",
+        report_end_date: "2026-03-28",
+      },
+    });
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("position-count")).toHaveTextContent("1");
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("adopts a changed server-rendered workspace snapshot even when summary request parameters are unchanged", async () => {

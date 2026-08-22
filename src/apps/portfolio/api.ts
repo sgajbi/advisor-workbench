@@ -7,6 +7,7 @@ import type {
   PortfolioWorkspace,
 } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
+import { buildPortfolioPerformanceWindowQuery } from "./portfolio-performance-window";
 import {
   resolveGatewayBaseUrl,
   resolveWorkbenchApiBase,
@@ -415,7 +416,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
   }
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
-    const performanceQuery = buildPortfolioPerformanceSnapshotQuery(params);
+    const performanceQuery = buildPortfolioPerformanceWindowQuery(params);
     const bookQuery = buildPortfolioBookQuery(params);
     const summaryQuery = buildPortfolioSummaryWindowQuery(params);
     const workflowQuery = new URLSearchParams();
@@ -424,7 +425,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
     }
     const performancePeriods = ["MTD", "QTD", "YTD"] as const;
     const performancePeriodQueries = performancePeriods.map((timeWindow) =>
-      buildPortfolioPerformanceSnapshotQuery({
+      buildPortfolioPerformanceWindowQuery({
         ...params,
         timeWindow,
         usesCustomDateRange: false,
@@ -893,26 +894,6 @@ export function mergePortfolioWorkspace(
 
 function settledPortfolioPayload<T>(result: PromiseSettledResult<T | null>): T | null {
   return result.status === "fulfilled" ? result.value : null;
-}
-
-function buildPortfolioPerformanceSnapshotQuery(params: {
-  timeWindow: PortfolioTimeWindow;
-  reportStartDate: string;
-  reportEndDate: string;
-  usesCustomDateRange?: boolean;
-}) {
-  const query = new URLSearchParams();
-  const useExplicitWindow =
-    params.usesCustomDateRange || params.timeWindow === "7D" || params.timeWindow === "30D";
-
-  query.set("period", useExplicitWindow ? "EXPLICIT" : params.timeWindow);
-  query.set("report_end_date", params.reportEndDate);
-
-  if (useExplicitWindow) {
-    query.set("report_start_date", params.reportStartDate);
-  }
-
-  return query;
 }
 
 function buildPortfolioBookQuery(params: {
