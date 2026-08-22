@@ -1,6 +1,5 @@
 import {
-  buildReviewContextHref,
-  parseReviewContext,
+  buildReviewContextNavigationHref,
   type ReviewContextSearchParams,
 } from "@/shell/review-context";
 
@@ -15,16 +14,12 @@ export function buildPortfolioRecordSelectionHref({
   portfolioId: string;
   selectedRecordId?: string;
 }): string | null {
-  const reviewContextResult = parseReviewContext(searchParams);
-  if (reviewContextResult.status === "invalid") {
-    return null;
-  }
-
-  const currentQuery = searchParams.toString();
-  const currentHref = `${pathname}${currentQuery ? `?${currentQuery}` : ""}`;
-  return buildReviewContextHref(currentHref, {
-    ...reviewContextResult.context,
-    portfolioId,
-    selectedRecordId,
+  return buildReviewContextNavigationHref({
+    pathname,
+    searchParams,
+    patch: {
+      portfolioId,
+      selectedRecordId,
+    },
   });
 }
