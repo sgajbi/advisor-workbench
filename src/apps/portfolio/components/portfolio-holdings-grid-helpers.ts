@@ -94,29 +94,34 @@ export function buildHoldingsRows(
   positions: PortfolioPositionView[],
   baseCurrency: string,
 ): HoldingsRow[] {
-  return positions.map((position) => {
-    const positionState = buildPortfolioPositionState(position);
+  return positions.map((position) => buildHoldingRow(position, baseCurrency));
+}
 
-    return {
-      securityId: position.security_id,
-      instrument: position.instrument_name,
-      assetClass: formatStatus(position.asset_class),
-      quantity: position.quantity,
-      price: position.market_price ?? null,
-      marketValue: position.market_value_base ?? null,
-      costBasis: position.cost_basis_base ?? null,
-      weight: position.weight_pct ?? null,
-      upl: position.unrealized_gain_loss_base ?? null,
-      currency: position.currency ?? baseCurrency,
-      status: positionState.label,
-      statusKind: positionState.kind,
-      statusTone: positionState.tone,
-      sector: formatStatus(position.sector),
-      heldSince: position.held_since_date ?? null,
-      isin: position.isin ?? null,
-      raw: position,
-    };
-  });
+export function buildHoldingRow(
+  position: PortfolioPositionView,
+  baseCurrency: string,
+): HoldingsRow {
+  const positionState = buildPortfolioPositionState(position);
+
+  return {
+    securityId: position.security_id,
+    instrument: position.instrument_name,
+    assetClass: formatStatus(position.asset_class),
+    quantity: position.quantity,
+    price: position.market_price ?? null,
+    marketValue: position.market_value_base ?? null,
+    costBasis: position.cost_basis_base ?? null,
+    weight: position.weight_pct ?? null,
+    upl: position.unrealized_gain_loss_base ?? null,
+    currency: position.currency ?? baseCurrency,
+    status: positionState.label,
+    statusKind: positionState.kind,
+    statusTone: positionState.tone,
+    sector: formatStatus(position.sector),
+    heldSince: position.held_since_date ?? null,
+    isin: position.isin ?? null,
+    raw: position,
+  };
 }
 
 export function countUnpricedHoldings(positions: PortfolioPositionView[]): number {

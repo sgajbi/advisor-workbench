@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+
+import Button from "@mui/material/Button";
 
 import { formatDate } from "../formatters";
 import {
@@ -11,17 +13,20 @@ import {
 import type { PortfolioWorkspace } from "../types";
 import { buildHoldingDrawer } from "./portfolio-detail-drawer-builders";
 import PortfolioDetailDrawerController from "./portfolio-detail-drawer-controller";
-import PortfolioHoldingsGrid, { type HoldingsRow } from "./portfolio-holdings-grid";
+import PortfolioHoldingsGrid from "./portfolio-holdings-grid";
+import { buildHoldingRow } from "./portfolio-holdings-grid-helpers";
 import PortfolioModuleState from "./portfolio-module-state";
+import { usePortfolioRecordSelection } from "./use-portfolio-record-selection";
 
 export default function PortfolioPositionsRecordWorkspace({
   workspace,
   asOfDate,
+  initialSelectedRecordId,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
+  initialSelectedRecordId?: string;
 }) {
-  const [selectedHolding, setSelectedHolding] = useState<HoldingsRow | null>(null);
   const availability = buildPositionsReviewAvailability(
     workspace.record_data_availability,
   );
@@ -32,6 +37,26 @@ export default function PortfolioPositionsRecordWorkspace({
         workspace.cash_balances ?? [],
       ),
     [workspace.cash_balances, workspace.positions],
+  );
+  const { selectedRecordId, openRecord, closeRecord } =
+    usePortfolioRecordSelection({
+      portfolioId: workspace.portfolio.portfolio_id,
+      initialSelectedRecordId,
+    });
+  const selectedHolding = useMemo(
+    () => {
+      const holding = bookedHoldings.find(
+        (candidate) => candidate.security_id === selectedRecordId,
+      );
+      return holding
+        ? buildHoldingRow(holding, workspace.portfolio.base_currency)
+        : null;
+    },
+    [bookedHoldings, selectedRecordId, workspace.portfolio.base_currency],
+  );
+  const handleHoldingSelect = useCallback(
+    (holding: { securityId: string }) => openRecord(holding.securityId),
+    [openRecord],
   );
   const detailDrawer = useMemo(() => {
     if (!selectedHolding) {
@@ -66,6 +91,19 @@ export default function PortfolioPositionsRecordWorkspace({
           hint={availability.partialState.hint}
         />
       ) : null}
+      {selectedRecordId && !selectedHolding ? (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          title="Holding is not in this confirmed portfolio view"
+          body="The requested holding identity was not returned for the selected portfolio and valuation date. No alternative holding was opened."
+          action={
+            <Button size="small" variant="outlined" onClick={closeRecord}>
+              Clear holding review
+            </Button>
+          }
+        />
+      ) : null}
       <PortfolioHoldingsGrid
         portfolioId={workspace.portfolio.portfolio_id}
         positions={bookedHoldings}
@@ -81,11 +119,11 @@ export default function PortfolioPositionsRecordWorkspace({
             : `Available booked records as of ${formatDate(asOfDate)} in ` +
               `${workspace.portfolio.base_currency}. The inventory remains partial until unavailable detail is restored.`
         }
-        onRowSelect={setSelectedHolding}
+        onRowSelect={handleHoldingSelect}
       />
       <PortfolioDetailDrawerController
         detailDrawer={detailDrawer}
-        onClose={() => setSelectedHolding(null)}
+        onClose={closeRecord}
       />
     </>
   );

@@ -94,6 +94,7 @@ describe("portfolio record screen data", () => {
         asOfDate: shell.as_of_date,
         period: "YTD",
         reportingCurrency: shell.portfolio.base_currency,
+        selectedRecordId: "EQ_US_1",
       }),
     });
 
@@ -116,6 +117,7 @@ describe("portfolio record screen data", () => {
       timeWindow: "YTD",
       startDate: `${shell.as_of_date.slice(0, 4)}-01-01`,
       endDate: shell.as_of_date,
+      selectedRecordId: "EQ_US_1",
     });
   });
 
