@@ -314,6 +314,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(batchStatusMock).toHaveBeenCalledWith("rbch_1");
     expect(await screen.findByText("Report data complete")).toBeInTheDocument();
     expect(screen.getByText("Needs retry")).toBeInTheDocument();
+    expect(screen.getByText("2 selected portfolios")).toBeInTheDocument();
     expect(submitBatchMock).not.toHaveBeenCalled();
     expect(submitMock).not.toHaveBeenCalled();
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -108,12 +108,6 @@ function ReportOrderingWorkspaceSession({
     initialBatchId,
     onBatchAccepted: commitBatchAddress,
   });
-  useEffect(() => {
-    if (workflow.batchPortfolioIds.length > 0) {
-      setSelectedPortfolioIds(workflow.batchPortfolioIds);
-      setPortfolioSelectionState("ready");
-    }
-  }, [workflow.batchPortfolioIds]);
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
   const focusIntentRef = useRef(0);
@@ -279,7 +273,11 @@ function ReportOrderingWorkspaceSession({
                   submissionState={workflow.submissionState}
                   supportReference={workflow.supportReference}
                   scopeLabel={scopeMode === "explicit_portfolio_batch"
-                    ? `${selectedPortfolioIds.length} selected portfolios`
+                    ? workflow.batchPortfolioIds.length > 0
+                      ? `${workflow.batchPortfolioIds.length} selected portfolios`
+                      : initialBatchId
+                        ? "Addressed portfolio bundle"
+                        : `${selectedPortfolioIds.length} selected portfolios`
                     : "Selected portfolio"}
                   isPortfolioBundle={scopeMode === "explicit_portfolio_batch"}
                   onReview={() => {
