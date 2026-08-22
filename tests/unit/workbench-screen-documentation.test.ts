@@ -4,12 +4,14 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error The documentation gate is a Node .mjs script without a TypeScript declaration.
-import {
+import * as screenDocumentationModule from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+
+const {
   hasExactMarkdownHeading,
   isNextPageEntrypoint,
   validateModeAuthority,
   validateScreenDocumentation,
-} from "../../scripts/quality/check-workbench-screen-documentation.mjs";
+} = screenDocumentationModule;
 
 const rootDirectory = process.cwd();
 const registryPath = path.join(
