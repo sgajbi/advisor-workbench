@@ -78,7 +78,9 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
             <span>
               {model.hasCompleteExceptionEvidence
                 ? `${model.exceptionRows.length} items pending`
-                : "Evidence unavailable"}
+                : model.hasAvailableExceptionEvidence
+                  ? `${model.exceptionRows.length} shown; more available`
+                  : "Evidence unavailable"}
             </span>
           </div>
           <AnalyticsTable
@@ -95,7 +97,7 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
               { key: "action", label: "Next step" },
             ]}
             rows={
-              model.hasCompleteExceptionEvidence
+              model.hasAvailableExceptionEvidence
                 ? model.exceptionRows.slice(0, 4).map((row) => ({
                     key: row.key,
                     cells: [
@@ -124,6 +126,11 @@ export default function ManageOverview({ data }: { data: ManageWorkspaceData }) 
                     title: "No active attention items",
                     body: "The current source window reports no open mandate attention items.",
                   }
+                : model.hasAvailableExceptionEvidence
+                  ? {
+                      title: "More attention items are available",
+                      body: "The first source view has no selected-mandate items. Open Mandate Health to continue through the source views.",
+                    }
                 : {
                     title: "Attention evidence unavailable",
                     body: "No zero-attention conclusion has been inferred. Open Mandate Health when source evidence is available.",

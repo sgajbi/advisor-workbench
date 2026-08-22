@@ -12,8 +12,8 @@ import {
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,
+  getManageExceptionEvidencePosture,
   isBusinessValueAvailable,
-  isManageExceptionEvidenceComplete,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
@@ -41,13 +41,19 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
     buildManageExceptionRows(data.commandCenterExceptions),
     commandModel.mandateId
   );
-  const hasCompleteExceptionEvidence = isManageExceptionEvidenceComplete(data);
+  const exceptionEvidencePosture = getManageExceptionEvidencePosture(
+    data.commandCenterExceptions,
+    data.commandCenterExceptionsError
+  );
+  const hasAvailableExceptionEvidence = exceptionEvidencePosture !== "unavailable";
+  const hasCompleteExceptionEvidence = exceptionEvidencePosture === "complete";
   const activeExceptionCount = hasCompleteExceptionEvidence ? exceptionRows.length : null;
   const latestActivities = buildManageActivityRows(
     commandModel,
     portfolioWave,
     reviewModel,
-    activeExceptionCount
+    exceptionEvidencePosture,
+    exceptionRows.length
   );
   const latestProofPackId = firstNonEmpty(
     reviewModel.items.find((item) => item.proofPackId !== "N/A")?.proofPackId,
@@ -66,7 +72,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       ? "Mandate health"
       : null,
     hasRiskProfile ? null : "Mandate risk profile",
-    !hasCompleteExceptionEvidence ? "Mandate attention items" : null,
+    !hasAvailableExceptionEvidence ? "Mandate attention items" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
     data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError
@@ -79,7 +85,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const dataTone = toneForState(commandModel.dataCompletenessState);
   const rebalanceTone = toneForState(portfolioWave.state);
   const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
-  const hasActiveAttention = activeExceptionCount !== null && activeExceptionCount > 0;
+  const hasActiveAttention = hasAvailableExceptionEvidence && exceptionRows.length > 0;
 
   return {
     portfolioSummary: {
@@ -120,7 +126,12 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       {
         key: "attention",
         label: "Active Attention Items",
-        value: activeExceptionCount === null ? "Not available" : String(activeExceptionCount),
+        value:
+          exceptionEvidencePosture === "unavailable"
+            ? "Not available"
+            : exceptionEvidencePosture === "partial"
+              ? `${exceptionRows.length} shown`
+              : String(exceptionRows.length),
         icon: activeExceptionCount === 0 ? "check_circle" : "warning",
         tone: activeExceptionCount === 0 ? "success" : "warn",
         progress: null,
@@ -134,6 +145,8 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       progress: number | null;
     }>,
     exceptionRows,
+    exceptionEvidencePosture,
+    hasAvailableExceptionEvidence,
     hasCompleteExceptionEvidence,
     activeRebalance: {
       triggerType: portfolioWave.triggerType,
@@ -148,9 +161,11 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
         title: "Mandate Health",
         description: "Review mandate evidence and resolve open attention items.",
         metric:
-          activeExceptionCount === null
+          exceptionEvidencePosture === "unavailable"
             ? "Attention evidence unavailable"
-            : `${activeExceptionCount} attention items`,
+            : exceptionEvidencePosture === "partial"
+              ? `${exceptionRows.length} in the first source view; more available`
+              : `${exceptionRows.length} attention items`,
         href: buildManageModeHref(portfolioId, "mandate"),
         actionLabel: "Open mandate health",
       },
@@ -222,7 +237,8 @@ function buildManageActivityRows(
   commandModel: CommandModel,
   portfolioWave: PortfolioWaveOverview,
   reviewModel: ReviewModel,
-  activeExceptionCount: number | null
+  exceptionEvidencePosture: "complete" | "partial" | "unavailable",
+  visibleExceptionCount: number
 ) {
   const rows = [
     commandModel.latestMonitoringRunId !== "N/A"
@@ -230,9 +246,11 @@ function buildManageActivityRows(
           key: "monitoring",
           time: businessLastReviewed(commandModel.latestMonitoringRunStatus),
           event:
-            activeExceptionCount === null
+            exceptionEvidencePosture === "unavailable"
               ? "Daily mandate review completed; attention-item evidence is unavailable."
-              : `Daily mandate review completed with ${activeExceptionCount} attention items.`,
+              : exceptionEvidencePosture === "partial"
+                ? `Daily mandate review returned ${visibleExceptionCount} attention items in the first source view; more are available.`
+                : `Daily mandate review completed with ${visibleExceptionCount} attention items.`,
         }
       : null,
     portfolioWave.waveId

@@ -282,10 +282,15 @@ describe("manage overview model", () => {
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
+    expect(model.hasAvailableExceptionEvidence).toBe(true);
+    expect(model.exceptionEvidencePosture).toBe("partial");
     expect(model.postureCards.find((card) => card.key === "attention")?.value).toBe(
-      "Not available"
+      "2 shown"
     );
-    expect(model.latestActivities[0]?.event).toContain("evidence is unavailable");
+    expect(model.latestActivities[0]?.event).toContain(
+      "2 attention items in the first source view; more are available"
+    );
+    expect(model.blockedSurfaces).not.toContain("Mandate attention items");
   });
 
   it("preserves an unknown source issue count when wave evidence is unavailable", () => {

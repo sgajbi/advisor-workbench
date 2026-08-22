@@ -214,7 +214,7 @@ describe("manage workspace split components", () => {
       },
     };
 
-    render(<ManageMandateHealth data={data} />);
+    const { rerender } = render(<ManageMandateHealth data={data} />);
 
     expect(screen.getByText("More attention items are available")).toBeInTheDocument();
     expect(screen.getByText("2 in this view")).toBeInTheDocument();
@@ -225,6 +225,14 @@ describe("manage workspace split components", () => {
     expect(screen.queryByText("No open items")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next attention items" })).toBeEnabled();
     expect(screen.getByText("Attention-item source view 1")).toBeInTheDocument();
+
+    rerender(<ManageOverview data={data} />);
+    expect(screen.getByText("2 shown; more available")).toBeInTheDocument();
+    expect(screen.getByText("2 shown")).toBeInTheDocument();
+
+    rerender(<ManageContextRail data={data} activeMode="mandate" />);
+    const posture = screen.getByLabelText("Manage review posture");
+    expect(within(posture).getByText("2 shown; more available")).toBeInTheDocument();
   });
 
   it("loads the next exception window through the BFF and confirms its source identity", async () => {
