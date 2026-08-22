@@ -1,3 +1,8 @@
+import {
+  buildReviewContextHref,
+  type ReviewContext,
+} from "@/shell/review-context";
+
 export type PortfolioScreenNavigationKey =
   | "portfolio"
   | "allocation"
@@ -203,9 +208,7 @@ export function buildPortfolioScreenHref(
   href: string,
   reviewContext: PortfolioReviewContext,
 ) {
-  return buildReviewContextHref(href, reviewContext);
+  const { selectedRecordId: _selectedRecordId, ...workspaceContext } =
+    reviewContext;
+  return buildReviewContextHref(href, workspaceContext);
 }
-import {
-  buildReviewContextHref,
-  type ReviewContext,
-} from "@/shell/review-context";

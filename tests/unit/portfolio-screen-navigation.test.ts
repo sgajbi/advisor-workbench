@@ -57,7 +57,7 @@ describe("portfolio screen navigation", () => {
     );
   });
 
-  it("carries the complete governed review context across the screen rail", () => {
+  it("carries review context while clearing route-scoped record identity", () => {
     const items = buildPortfolioScreenNavigationItems({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       asOfDate: "2026-08-21",
@@ -67,10 +67,10 @@ describe("portfolio screen navigation", () => {
     });
 
     expect(items.find((item) => item.key === "positions")?.href).toBe(
-      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=SG000001",
+      "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
     );
     expect(items.find((item) => item.key === "risk")?.href).toBe(
-      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&selectedRecordId=SG000001&mode=risk",
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk",
     );
   });
 
