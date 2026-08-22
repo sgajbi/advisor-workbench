@@ -200,8 +200,34 @@ describe("manage workspace split components", () => {
     expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
     expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Manage work areas")).toBeInTheDocument();
+    const taskDirectory = screen.getByRole("navigation", { name: "Manage work areas" });
+    expect(within(taskDirectory).getByRole("link", { name: /Mandate Health/i })).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?mode=mandate"
+    );
+    expect(within(taskDirectory).getByText("Generated on request")).toBeInTheDocument();
+    expect(screen.queryByText("Alternatives available")).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Mandate attention worklist" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recent Operating Activity" })).toBeInTheDocument();
     expect(screen.queryByText("Execute Trade")).not.toBeInTheDocument();
+  });
+
+  it("renders missing mandate risk profile as incomplete evidence", () => {
+    const data = buildManageWorkspaceData();
+    data.mandate = {
+      ...data.mandate!,
+      data: {
+        ...data.mandate!.data,
+        risk_profile: null,
+      },
+    };
+
+    render(<ManageOverview data={data} />);
+
+    expect(screen.getByText("Not reported")).toBeInTheDocument();
+    expect(screen.getByText("Evidence incomplete")).toBeInTheDocument();
+    expect(screen.getByText(/Mandate risk profile/)).toBeInTheDocument();
+    expect(screen.queryByText("Ready for review")).not.toBeInTheDocument();
   });
 
   it("renders the context rail without exposing client communication actions", () => {

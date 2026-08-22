@@ -871,8 +871,7 @@
   box-shadow: none;
 }
 
-.manageScope :global(.manage-overview-card-header),
-.manageScope :global(.manage-module-card-header) {
+.manageScope :global(.manage-overview-card-header) {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -901,8 +900,7 @@
   line-height: 18px;
 }
 
-.manageScope :global(.manage-overview-card-header strong),
-.manageScope :global(.manage-module-card-header strong) {
+.manageScope :global(.manage-overview-card-header strong) {
   color: #131b2e;
   font-size: 14px;
   font-weight: 700;
@@ -911,7 +909,7 @@
 
 .manageScope :global(.manage-overview-card-header > a),
 .manageScope :global(.manage-overview-table a),
-.manageScope :global(.manage-module-action) {
+.manageScope :global(.manage-overview-analytics-table a) {
   color: #725b26;
   font-size: 12px;
   font-weight: 700;
@@ -921,7 +919,7 @@
 
 .manageScope :global(.manage-overview-card-header > a:hover),
 .manageScope :global(.manage-overview-table a:hover),
-.manageScope :global(.manage-module-card:hover .manage-module-action) {
+.manageScope :global(.manage-overview-analytics-table a:hover) {
   text-decoration: underline;
 }
 
@@ -956,99 +954,8 @@
   line-height: 18px;
 }
 
-.manageScope :global(.manage-module-grid) {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-}
-
 .manageScope :global(.manage-overview-grid-label) {
   grid-column: 1 / -1;
-}
-
-.manageScope :global(.manage-module-card) {
-  display: grid;
-  gap: 8px;
-  min-height: 140px;
-  align-content: start;
-  padding: 18px;
-  border: 1px solid #c6c6cd;
-  border-radius: 2px;
-  background: #ffffff;
-  color: inherit;
-  text-decoration: none;
-  box-shadow: none;
-}
-
-.manageScope :global(.manage-module-card:hover) {
-  border-color: #725b26;
-  background: #fffdf7;
-}
-
-.manageScope :global(.manage-module-icon) {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #c6c6cd;
-  border-radius: 2px;
-  color: #343941;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.manageScope :global(.manage-module-icon[data-icon="health_and_safety"]::before) {
-  content: "H";
-}
-
-.manageScope :global(.manage-module-icon[data-icon="refresh"]::before) {
-  content: "R";
-}
-
-.manageScope :global(.manage-module-icon[data-icon="architecture"]::before) {
-  content: "A";
-}
-
-.manageScope :global(.manage-module-icon[data-icon="memory"]::before) {
-  content: "M";
-}
-
-.manageScope :global(.manage-module-icon[data-icon="rate_review"]::before) {
-  content: "RV";
-  font-size: 9px;
-}
-
-.manageScope :global(.manage-module-icon[data-icon="description"]::before) {
-  content: "E";
-}
-
-.manageScope :global(.manage-module-card:hover .manage-module-icon) {
-  border-color: #725b26;
-  color: #343941;
-}
-
-.manageScope :global(.manage-module-card > strong) {
-  color: #343941;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.manage-module-metric) {
-  color: #131b2e;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 26px;
-}
-
-.manageScope :global(.manage-module-detail) {
-  color: #45464d;
-  font-size: 12px;
-  line-height: 16px;
 }
 
 .manageScope :global(.manage-overview-table) {
@@ -4012,7 +3919,6 @@
   .manageScope :global(.manage-mandate-secondary-grid),
   .manageScope :global(.mandate-health-review-workspace),
   .manageScope :global(.manage-overview-focus-grid),
-  .manageScope :global(.manage-module-grid),
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
   .manageScope :global(.dpm-ai-workflow-result),

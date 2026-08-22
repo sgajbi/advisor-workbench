@@ -57,12 +57,14 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const pmQualityScoreRunCount = data.pmOperatingQualityScoreRuns?.supportability.count ?? 0;
   const pmQualityFairnessAnalysisCount =
     data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
+  const riskProfile = readStringFromResponse(data.mandate, "risk_profile");
   const blockedSurfaces = [
     data.commandCenterError ||
     data.mandateHealthError ||
     !data.mandateHealth
       ? "Mandate health"
       : null,
+    riskProfile ? null : "Mandate risk profile",
     !hasCompleteExceptionEvidence ? "Mandate attention items" : null,
     data.wavesError ? "Rebalance waves" : null,
     data.portfolioMemoryError ? "Portfolio memory" : null,
@@ -76,6 +78,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
   const dataTone = toneForState(commandModel.dataCompletenessState);
   const rebalanceTone = toneForState(waveModel.selectedWaveState);
   const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
+  const hasActiveAttention = activeExceptionCount !== null && activeExceptionCount > 0;
 
   return {
     portfolioSummary: {
@@ -84,7 +87,7 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       marketValue: formatAmount(portfolio.overview.market_value_base),
       cashWeight: formatPct(portfolio.overview.cash_weight_pct),
       positionCount: portfolio.overview.position_count,
-      riskProfile: readStringFromResponse(data.mandate, "risk_profile") ?? "Balanced",
+      riskProfile: riskProfile ?? "Not reported",
     },
     postureCards: [
       {
@@ -142,62 +145,75 @@ export function buildManageOverviewModel(data: ManageWorkspaceData) {
       {
         key: "mandate",
         title: "Mandate Health",
-        icon: "health_and_safety",
+        description: "Review mandate evidence and resolve open attention items.",
         metric:
           activeExceptionCount === null
             ? "Attention evidence unavailable"
             : `${activeExceptionCount} attention items`,
         href: buildManageModeHref(portfolioId, "mandate"),
+        actionLabel: "Open mandate health",
       },
       {
         key: "waves",
-        title: "Rebalance",
-        icon: "refresh",
+        title: "Rebalance Waves",
+        description: "Review proposed changes, readiness, and source-reported issues.",
         metric: businessStateLabel(waveModel.selectedWaveState),
         href: buildManageModeHref(portfolioId, "waves"),
+        actionLabel: "Open rebalance waves",
       },
       {
         key: "construction",
-        title: "Construction",
-        icon: "architecture",
-        metric: "Alternatives available",
+        title: "Construction Alternatives",
+        description: "Generate and compare supported portfolio alternatives on demand.",
+        metric: "Generated on request",
         href: buildManageModeHref(portfolioId, "construction"),
+        actionLabel: "Open construction",
       },
       {
         key: "memory",
         title: "Portfolio Memory",
-        icon: "memory",
+        description: "Review source-owned decisions and portfolio operating events.",
         metric: `${memoryModel.eventCount} events`,
         href: buildManageModeHref(portfolioId, "memory"),
+        actionLabel: "Open portfolio memory",
       },
       {
         key: "quality",
         title: "PM Operating Quality",
-        icon: "manage_accounts",
-        metric: `${
+        description: "Review governance, score-run, and fairness-analysis evidence.",
+        metric: formatEvidenceRecordCount(
           pmQualityFairnessAnalysisCount || pmQualityScoreRunCount || pmQualityPolicyCount
-        } evidence rows`,
+        ),
         href: buildManageModeHref(portfolioId, "quality"),
+        actionLabel: "Open operating quality",
       },
       {
         key: "reviews",
         title: "Outcome Reviews",
-        icon: "rate_review",
+        description: "Assess post-decision outcomes and required follow-up.",
         metric: `${reviewModel.items.length} reviews`,
         href: buildManageModeHref(portfolioId, "reviews"),
+        actionLabel: "Open outcome reviews",
       },
       {
         key: "proof",
         title: "Evidence Pack",
-        icon: "description",
+        description: "Inspect governed evidence and downstream handoff posture.",
         metric: latestProofPackId !== "N/A" ? "Evidence available" : "Not requested",
         href: buildManageModeHref(portfolioId, "proof"),
+        actionLabel: "Open evidence pack",
       },
     ],
     latestActivities,
     blockedSurfaces,
-    overviewPostureLabel: blockedSurfaces.length ? "Needs attention" : "Evidence Available",
-    overviewPostureTone: (blockedSurfaces.length ? "warn" : "success") as SemanticBadgeTone,
+    overviewPostureLabel: blockedSurfaces.length
+      ? "Evidence incomplete"
+      : hasActiveAttention
+        ? "Action required"
+        : "Ready for review",
+    overviewPostureTone: (blockedSurfaces.length || hasActiveAttention
+      ? "warn"
+      : "success") as SemanticBadgeTone,
   };
 }
 
@@ -229,7 +245,7 @@ function buildManageActivityRows(
       ? {
           key: "review",
           time: businessStateLabel(reviewModel.items[0].state),
-          event: "Outcome review evidence available for advisor review.",
+          event: "Outcome review evidence available for portfolio-manager review.",
         }
       : null,
   ].filter((row): row is NonNullable<typeof row> => Boolean(row));
@@ -260,4 +276,8 @@ function formatPct(value: number | null | undefined): string {
     return "N/A";
   }
   return `${value.toFixed(2)}%`;
+}
+
+function formatEvidenceRecordCount(count: number): string {
+  return `${count} evidence ${count === 1 ? "record" : "records"}`;
 }
