@@ -171,29 +171,25 @@ describe("PerformanceAnalyticsPage", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("does not substitute another portfolio when the requested identity is unavailable", async () => {
-    const fetchMock = vi.fn(async (input: string | URL) => {
-      if (input.toString().includes("/api/v1/lookups/portfolios")) {
-        return {
-          ok: true,
-          json: async () => ({
-            items: [{ id: "DEMO_ADV_USD_001", label: "Global Balanced Mandate" }],
-          }),
-        } as Response;
-      }
-      return { ok: false, status: 404, json: async () => ({}) } as Response;
-    });
+  it("lets the authoritative summary confirm a portfolio beyond any bounded lookup page", async () => {
+    const fetchMock = vi.fn(async (_input: string | URL) =>
+      ({ ok: false, status: 404, text: async () => "not found" }) as Response
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await renderPerformancePage({ portfolioId: "PF_NOT_IN_CATALOGUE" });
 
-    expect(screen.getByText(/No alternative portfolio was substituted/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Choose another portfolio" })).toHaveAttribute(
-      "href",
-      "/book",
-    );
+    expect(
+      screen.getByRole("region", { name: "Performance workspace unavailable" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Performance data unavailable")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0]?.[0].toString()).toContain("/api/v1/lookups/portfolios");
+    expect(fetchMock.mock.calls[0]?.[0].toString()).toContain(
+      "/api/v1/workbench/PF_NOT_IN_CATALOGUE/performance/summary",
+    );
+    expect(fetchMock.mock.calls[0]?.[0].toString()).not.toContain(
+      "/api/v1/lookups/portfolios",
+    );
   });
 
   it("keeps analytics usable while explaining unsupported review date and currency controls", async () => {
@@ -206,7 +202,7 @@ describe("PerformanceAnalyticsPage", () => {
     });
 
     expect(screen.getByTestId("workbench-context-notice")).toBeInTheDocument();
-    expect(screen.getByText(/source valuation date 2026-02-24/i)).toBeInTheDocument();
+    expect(screen.getByText(/source valuation date 24 Feb 2026/i)).toBeInTheDocument();
     expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
     expect(await findWorkflowControl(/^Performance Overview/i)).toBeInTheDocument();
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
@@ -231,6 +227,8 @@ describe("PerformanceAnalyticsPage", () => {
       period: "YTD",
       reportingCurrency: "USD",
     });
+
+    expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
 
     fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
 
