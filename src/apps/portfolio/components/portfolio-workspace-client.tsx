@@ -53,13 +53,15 @@ export default function PortfolioWorkspaceClient({
   portfolios,
   selectedPortfolioId,
   initialWorkspace,
+  initialControls,
 }: {
   portfolios: PortfolioCatalogResponse["items"];
   selectedPortfolioId: string | null;
   initialWorkspace: PortfolioWorkspace | null;
+  initialControls?: PortfolioWorkspaceControls;
 }) {
   const [controls, setControls] = useState<PortfolioWorkspaceControls>(
-    buildInitialPortfolioControls(initialWorkspace)
+    initialControls ?? buildInitialPortfolioControls(initialWorkspace)
   );
   const initialWorkspaceSourceKey = useMemo(
     () => buildPortfolioWorkspaceSourceKey(selectedPortfolioId, initialWorkspace),
