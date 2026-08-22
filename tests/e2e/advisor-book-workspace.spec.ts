@@ -226,6 +226,7 @@ test("fails visibly without falling back to a global portfolio catalogue", async
 test("fails closed on an invalid business date and recovers through explicit selection", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   let advisorBookRequestCount = 0;
   await mockShellFallback(page);
   await page.route("**/api/bff/api/v1/advisor-book/portfolios?**", async (route) => {
@@ -237,13 +238,33 @@ test("fails closed on an invalid business date and recovers through explicit sel
 
   await expect(page.getByText("Business date not confirmed")).toBeVisible();
   await expect(page.getByText(/Portfolio assignments have not been requested/i)).toBeVisible();
-  await expect(page.getByLabel("Business date")).toBeVisible();
+  const businessDate = page.getByLabel("Business date", { exact: true });
+  const reviewBook = page.getByRole("button", { name: "Review book" });
+  await expect(businessDate).toBeVisible();
   expect(advisorBookRequestCount).toBe(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 
-  await page.getByLabel("Business date").fill("2026-04-10");
-  await page.getByRole("button", { name: "Review book" }).click();
+  await businessDate.focus();
+  await businessDate.fill("2026-04-10");
+  for (let index = 0; index < 5; index += 1) {
+    if (await reviewBook.evaluate((element) => document.activeElement === element)) {
+      break;
+    }
+    await page.keyboard.press("Tab");
+  }
+  await expect(reviewBook).toBeFocused();
+  await page.keyboard.press("Enter");
 
   await expect(page).toHaveURL(/asOfDate=2026-04-10/);
   await expect(page.getByText("Available with limitations")).toBeVisible();
   expect(advisorBookRequestCount).toBe(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 });
