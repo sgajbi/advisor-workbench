@@ -16,7 +16,10 @@ import type {
 } from "@/features/workbench/types";
 
 import { buildPerformanceHref } from "../navigation";
-import { isPerformanceDetailsSourceCurrent } from "../performance-source-identity";
+import {
+  isPerformanceDetailsSourceCurrent,
+  isPerformanceSummarySourceCurrent,
+} from "../performance-source-identity";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
@@ -459,12 +462,14 @@ export default function PerformanceWorkspaceClient({
       if (refreshesSummary) {
         const summaryKey = buildSummaryCacheKey(requestedControls);
         const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
-        resolvedSummary =
+        resolvedSummary = requireCurrentPerformanceSummary(
           cachedSummary ??
-          (await getWorkbenchPerformanceWorkspaceSummaryClient(
-            requestedControls.portfolioId,
-            buildSummaryRequest(requestedControls)
-          ));
+            (await getWorkbenchPerformanceWorkspaceSummaryClient(
+              requestedControls.portfolioId,
+              buildSummaryRequest(requestedControls)
+            )),
+          requestedControls,
+        );
         summaryCacheRef.current.set(summaryKey, resolvedSummary);
         detailRequestControls = buildResolvedSummaryControls(requestedControls, resolvedSummary);
       }
@@ -729,6 +734,21 @@ function requireCurrentPerformanceDetails(
     throw new Error("Performance analytical detail did not confirm the requested source identity.");
   }
   return details;
+}
+
+function requireCurrentPerformanceSummary(
+  summary: WorkbenchPerformanceWorkspaceSummary,
+  controls: PerformanceControlState,
+): WorkbenchPerformanceWorkspaceSummary {
+  if (
+    !isPerformanceSummarySourceCurrent(summary, {
+      portfolioId: controls.portfolioId,
+      period: controls.period,
+    })
+  ) {
+    throw new Error("Performance summary did not confirm the requested source identity.");
+  }
+  return summary;
 }
 
 function buildRefreshStatus(

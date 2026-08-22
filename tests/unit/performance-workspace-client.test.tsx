@@ -1129,6 +1129,58 @@ describe("PerformanceWorkspaceClient", () => {
     );
   });
 
+  it("rejects and does not cache a summary that confirms a different period", async () => {
+    const threeYearSummary = buildSummary({
+      period: "3Y",
+      report_start_date: "2023-03-28",
+    });
+    const threeYearDetails = buildDetails({
+      period: "3Y",
+      report_start_date: "2023-03-28",
+    });
+    getSummaryClientMock
+      .mockResolvedValueOnce(buildSummary({ period: "YTD" }))
+      .mockResolvedValueOnce(threeYearSummary);
+    getDetailsClientMock.mockResolvedValueOnce(threeYearDetails);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+      expect(screen.getByTestId("refresh-scope")).toHaveTextContent("summary");
+      expect(screen.getByTestId("period")).toHaveTextContent("YTD");
+    });
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Retry Selection" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+    });
+    expect(getSummaryClientMock).toHaveBeenCalledTimes(2);
+    expect(getDetailsClientMock).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps confirmed analytical detail after a rejected dimension change instead of loading forever", async () => {
     const failedRequest = Object.assign(new Error("Performance details unavailable"), {
       status: 502,
