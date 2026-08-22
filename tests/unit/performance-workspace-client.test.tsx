@@ -237,6 +237,41 @@ describe("PerformanceWorkspaceClient", () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
+  it("synchronizes browser-history mode props without remounting focused workspace controls", async () => {
+    const props = {
+      initialSummary: buildSummary(),
+      initialDetails: buildDetails(),
+      initialPortfolioId: "PF_1001",
+      initialPeriod: "YTD",
+      initialDetailBasis: "NET",
+      initialContributionDimension: "asset_class",
+      initialAttributionDimension: "asset_class",
+      initialChartFrequency: "monthly",
+      initialBenchmark: "BMK_GLOBAL_BALANCED_60_40",
+    } as const;
+    const { rerender } = render(
+      <PerformanceWorkspaceClient {...props} initialMode="summary" />
+    );
+    const stableControl = screen.getByRole("button", { name: "Switch Analysis Mode" });
+    stableControl.focus();
+
+    rerender(<PerformanceWorkspaceClient {...props} initialMode="analysis" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("analysis");
+    });
+    expect(document.activeElement).toBe(stableControl);
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
+
+    rerender(<PerformanceWorkspaceClient {...props} initialMode="summary" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mode")).toHaveTextContent("summary");
+    });
+    expect(document.activeElement).toBe(stableControl);
+  });
+
   it("does not reuse an earlier selector target for a targetless retry", async () => {
     const detailFailure = Object.assign(new Error("Performance details unavailable"), {
       status: 502,

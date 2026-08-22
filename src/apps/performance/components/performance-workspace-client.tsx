@@ -204,6 +204,15 @@ export default function PerformanceWorkspaceClient({
       : new Map()
   );
 
+  useEffect(() => {
+    if (modeRef.current === initialMode) {
+      return;
+    }
+    modeRef.current = initialMode;
+    setMode(initialMode);
+    setRefreshConfirmation(null);
+  }, [initialMode]);
+
   const workspace = useMemo<WorkbenchPerformanceWorkspace | null>(() => {
     if (!summary) {
       return null;

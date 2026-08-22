@@ -119,6 +119,27 @@ async function openPerformanceWorkbench(
   return { portfolioId, available: true };
 }
 
+function expectGovernedPerformanceContext(
+  url: string,
+  expected: {
+    portfolioId: string;
+    asOfDate: string;
+    period: string;
+    reportingCurrency: string;
+    mode?: string;
+  },
+) {
+  const currentUrl = new URL(url);
+  expect(currentUrl.pathname).toBe('/performance');
+  expect(currentUrl.searchParams.get('portfolioId')).toBe(expected.portfolioId);
+  expect(currentUrl.searchParams.get('asOfDate')).toBe(expected.asOfDate);
+  expect(currentUrl.searchParams.get('period')).toBe(expected.period);
+  expect(currentUrl.searchParams.get('reportingCurrency')).toBe(
+    expected.reportingCurrency,
+  );
+  expect(currentUrl.searchParams.get('mode')).toBe(expected.mode ?? null);
+}
+
 async function expectContributorGroupsToRemainSeparate(page: Page) {
   const contributors = page.getByTestId('performance-contributor-group-contributors');
   const detractors = page.getByTestId('performance-contributor-group-detractors');
@@ -792,6 +813,87 @@ test.describe('Performance workbench smoke', () => {
         await expect(navigation).not.toBeVisible();
       }
     }
+  });
+
+  test('review context and focus survive Performance mode Back and Forward navigation', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic history proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+    const portfolioId = await resolveSmokePortfolioId(request);
+    expect(portfolioId).not.toBeNull();
+    const summary = await loadPerformanceSmokeSummary(request, portfolioId!);
+    const reviewUrl = new URL(
+      buildPerformanceSmokePagePath(portfolioId!),
+      'http://workbench.local',
+    );
+    reviewUrl.searchParams.set('asOfDate', summary.as_of_date);
+    reviewUrl.searchParams.set('reportingCurrency', summary.portfolio.base_currency);
+
+    await page.goto(`${reviewUrl.pathname}${reviewUrl.search}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.getByRole('heading', { name: /^Performance$/i })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const navigation = page.getByRole('navigation', {
+      name: 'Workbench screen navigation',
+    });
+    const changeWorkflow = navigation.getByRole('button', {
+      name: /Change workflow step/i,
+    });
+    await changeWorkflow.click();
+    const analysis = navigation.getByRole('button', {
+      name: 'Performance Analysis',
+    });
+    await analysis.focus();
+    await analysis.click();
+
+    await expect(changeWorkflow).toBeFocused();
+    await expect(
+      navigation.getByRole('button', { name: 'Performance Analysis' }),
+    ).toHaveAttribute('aria-current', 'page');
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: 'YTD',
+      reportingCurrency: summary.portfolio.base_currency,
+      mode: 'analysis',
+    });
+
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await expect(changeWorkflow).toBeFocused();
+    await expect(
+      navigation.getByRole('button', { name: 'Performance Overview' }),
+    ).toHaveAttribute('aria-current', 'page');
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: 'YTD',
+      reportingCurrency: summary.portfolio.base_currency,
+    });
+
+    await page.goForward({ waitUntil: 'domcontentloaded' });
+    await expect(changeWorkflow).toBeFocused();
+    await expect(
+      navigation.getByRole('button', { name: 'Performance Analysis' }),
+    ).toHaveAttribute('aria-current', 'page');
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: 'YTD',
+      reportingCurrency: summary.portfolio.base_currency,
+      mode: 'analysis',
+    });
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('Risk Review keeps exact evidence primary and mandate judgement explicit', async ({

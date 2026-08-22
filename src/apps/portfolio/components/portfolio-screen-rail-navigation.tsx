@@ -19,7 +19,9 @@ type PortfolioScreenRailNavigationProps = {
   activeScreen: PortfolioScreenNavigationKey;
   modeItems?: PortfolioScreenRailModeItem[];
   modeNavigationLabel: string;
-  onDestinationSelected: () => void;
+  onDestinationSelected: (
+    options?: { restoreCompactFocus?: boolean },
+  ) => void;
 };
 
 function isModeItemActionable(item: PortfolioScreenRailModeItem) {
@@ -49,10 +51,15 @@ export default function PortfolioScreenRailNavigation({
     0,
   );
 
-  function closeNestedNavigation() {
+  function closeNestedNavigation({
+    restoreWorkflowFocus = false,
+  }: { restoreWorkflowFocus?: boolean } = {}) {
     setDirectoryExpanded(false);
     setWorkflowExpanded(false);
-    onDestinationSelected();
+    onDestinationSelected({ restoreCompactFocus: expanded });
+    if (restoreWorkflowFocus && !expanded) {
+      workflowButtonRef.current?.focus();
+    }
   }
 
   function restoreDisclosureFocus(
@@ -78,7 +85,7 @@ export default function PortfolioScreenRailNavigation({
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cx(styles.link, active && styles.linkActive)}
-        onClick={closeNestedNavigation}
+        onClick={() => closeNestedNavigation()}
       >
         <span>{item.label}</span>
         <small>{item.detail}</small>
@@ -114,7 +121,7 @@ export default function PortfolioScreenRailNavigation({
           aria-current={item.active ? "page" : undefined}
           className={className}
           title={item.title}
-          onClick={closeNestedNavigation}
+          onClick={() => closeNestedNavigation({ restoreWorkflowFocus: true })}
         >
           {content}
         </Link>
@@ -132,7 +139,7 @@ export default function PortfolioScreenRailNavigation({
         title={item.title}
         onClick={() => {
           item.onSelect?.();
-          closeNestedNavigation();
+          closeNestedNavigation({ restoreWorkflowFocus: true });
         }}
       >
         {content}
