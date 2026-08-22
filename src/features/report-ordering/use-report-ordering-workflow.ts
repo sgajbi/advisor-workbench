@@ -294,7 +294,7 @@ export function useReportOrderingWorkflow({
         portfolioIds: [...response.materialized_portfolio_ids].sort(),
         asOfDate: response.as_of_date,
         requestedOutputFormats: [...response.requested_output_formats].sort(),
-        reportingCurrency: confirmedReportingCurrency,
+        reportingCurrency: response.reporting_currency,
       };
       setBatchWorkspaceState({
         portfolioId,
