@@ -16,6 +16,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { buildPerformanceHref } from "../navigation";
+import { isPerformanceDetailsSourceCurrent } from "../performance-source-identity";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
@@ -39,6 +40,8 @@ type PerformanceWorkspaceClientProps = {
   initialChartFrequency: string;
   initialMode?: PerformanceWorkspaceMode;
   initialBenchmark?: string;
+  initialAsOfDate?: string;
+  initialReportingCurrency?: string;
 };
 
 type PerformanceControlState = {
@@ -51,6 +54,8 @@ type PerformanceControlState = {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 };
 
 type PerformanceDetailsStatus = "idle" | "loading" | "ready" | "failed";
@@ -86,8 +91,23 @@ export default function PerformanceWorkspaceClient({
   initialChartFrequency,
   initialMode = "summary",
   initialBenchmark,
+  initialAsOfDate,
+  initialReportingCurrency,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
+  const sourceConfirmedInitialDetails = useMemo(
+    () =>
+      initialDetails &&
+      initialSummary &&
+      isPerformanceDetailsSourceCurrent(initialDetails, {
+        portfolioId: initialSummary.portfolio_id,
+        asOfDate: initialSummary.as_of_date,
+        period: initialSummary.period,
+      })
+        ? initialDetails
+        : null,
+    [initialDetails, initialSummary],
+  );
   const initialControls = useMemo<PerformanceControlState | null>(
     () =>
       initialPortfolioId
@@ -99,20 +119,24 @@ export default function PerformanceWorkspaceClient({
             initialAttributionDimension,
             initialChartFrequency,
             initialBenchmark,
+            initialAsOfDate,
+            initialReportingCurrency,
             initialSummary,
-            initialDetails,
+            initialDetails: sourceConfirmedInitialDetails,
           })
         : null,
     [
       initialAttributionDimension,
+      initialAsOfDate,
       initialBenchmark,
       initialChartFrequency,
       initialContributionDimension,
       initialDetailBasis,
-      initialDetails,
       initialPeriod,
       initialPortfolioId,
+      initialReportingCurrency,
       initialSummary,
+      sourceConfirmedInitialDetails,
     ]
   );
   const initialSummaryKey = useMemo(
@@ -140,7 +164,7 @@ export default function PerformanceWorkspaceClient({
     initialSummary ? null : initialLoadIssue ?? null
   );
   const [details, setDetails] = useState<WorkbenchPerformanceWorkspaceDetails | null>(
-    initialDetails ?? null
+    sourceConfirmedInitialDetails
   );
   const [mode, setMode] = useState<PerformanceWorkspaceMode>(initialMode);
   const modeRef = useRef<PerformanceWorkspaceMode>(initialMode);
@@ -157,21 +181,26 @@ export default function PerformanceWorkspaceClient({
   const lastSourceControlFocusTargetRef = useRef<PerformanceSourceControlFocusTarget | null>(null);
 
   const initialDetailsKey = useMemo(
-    () => (initialControls && initialDetails ? buildDetailsCacheKey(initialControls) : null),
+    () =>
+      initialControls && sourceConfirmedInitialDetails
+        ? buildDetailsCacheKey(initialControls)
+        : null,
     [
-      initialDetails,
       initialControls,
+      sourceConfirmedInitialDetails,
     ]
   );
   const [detailsStatus, setDetailsStatus] = useState<PerformanceDetailsStatus>(
-    initialDetails ? "ready" : initialSummary ? "idle" : "failed"
+    sourceConfirmedInitialDetails ? "ready" : initialSummary ? "idle" : "failed"
   );
 
   const summaryCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceSummary | null>>(
     initialSummaryKey ? new Map([[initialSummaryKey, initialSummary]]) : new Map()
   );
   const detailsCacheRef = useRef<Map<string, WorkbenchPerformanceWorkspaceDetails>>(
-    initialDetailsKey && initialDetails ? new Map([[initialDetailsKey, initialDetails]]) : new Map()
+    initialDetailsKey && sourceConfirmedInitialDetails
+      ? new Map([[initialDetailsKey, sourceConfirmedInitialDetails]])
+      : new Map()
   );
 
   const workspace = useMemo<WorkbenchPerformanceWorkspace | null>(() => {
@@ -217,6 +246,8 @@ export default function PerformanceWorkspaceClient({
       attributionDimension: initialAttributionDimension,
       chartFrequency: initialChartFrequency,
       benchmark: initialBenchmark,
+      asOfDate: initialAsOfDate,
+      reportingCurrency: initialReportingCurrency,
       reportStartDate: initialSummary?.report_start_date,
       reportEndDate: initialSummary?.report_end_date,
     };
@@ -230,6 +261,7 @@ export default function PerformanceWorkspaceClient({
     });
   }, [
     initialAttributionDimension,
+    initialAsOfDate,
     initialBenchmark,
     initialChartFrequency,
     initialContributionDimension,
@@ -237,6 +269,7 @@ export default function PerformanceWorkspaceClient({
     initialDetailBasis,
     initialPeriod,
     initialPortfolioId,
+    initialReportingCurrency,
     initialSummary?.report_end_date,
     initialSummary?.report_start_date,
     mode,
@@ -256,9 +289,12 @@ export default function PerformanceWorkspaceClient({
       };
     }
 
-    let resolvedDetails = await getWorkbenchPerformanceWorkspaceDetailsClient(
-      nextControls.portfolioId,
-      buildDetailsRequest(nextControls)
+    let resolvedDetails = requireCurrentPerformanceDetails(
+      await getWorkbenchPerformanceWorkspaceDetailsClient(
+        nextControls.portfolioId,
+        buildDetailsRequest(nextControls),
+      ),
+      nextControls,
     );
     let resolvedControls = buildResolvedDetailControls(nextControls, resolvedDetails);
 
@@ -286,10 +322,13 @@ export default function PerformanceWorkspaceClient({
         const cachedNormalizedDetails = detailsCacheRef.current.get(normalizedDetailsKey);
         resolvedDetails =
           cachedNormalizedDetails ??
-          (await getWorkbenchPerformanceWorkspaceDetailsClient(
-            resolvedControls.portfolioId,
-            buildDetailsRequest(resolvedControls)
-          ));
+          requireCurrentPerformanceDetails(
+            await getWorkbenchPerformanceWorkspaceDetailsClient(
+              resolvedControls.portfolioId,
+              buildDetailsRequest(resolvedControls),
+            ),
+            resolvedControls,
+          );
       }
     }
 
@@ -567,6 +606,8 @@ function buildResolvedSummaryControls(
     benchmark: resolvedSummary.benchmark_code ?? undefined,
     reportStartDate: resolvedSummary.report_start_date,
     reportEndDate: resolvedSummary.report_end_date,
+    asOfDate: resolvedSummary.as_of_date,
+    reportingCurrency: resolvedSummary.portfolio.base_currency,
   };
 }
 
@@ -583,7 +624,24 @@ function buildResolvedDetailControls(
     benchmark: resolvedDetails.benchmark_code ?? requestedControls.benchmark,
     reportStartDate: resolvedDetails.report_start_date,
     reportEndDate: resolvedDetails.report_end_date,
+    asOfDate: resolvedDetails.as_of_date,
   };
+}
+
+function requireCurrentPerformanceDetails(
+  details: WorkbenchPerformanceWorkspaceDetails,
+  controls: PerformanceControlState,
+): WorkbenchPerformanceWorkspaceDetails {
+  if (
+    !isPerformanceDetailsSourceCurrent(details, {
+      portfolioId: controls.portfolioId,
+      asOfDate: controls.asOfDate,
+      period: controls.period,
+    })
+  ) {
+    throw new Error("Performance analytical detail did not confirm the requested source identity.");
+  }
+  return details;
 }
 
 function buildRefreshStatus(
@@ -750,6 +808,8 @@ function resolveInitialControls({
   initialAttributionDimension,
   initialChartFrequency,
   initialBenchmark,
+  initialAsOfDate,
+  initialReportingCurrency,
   initialSummary,
   initialDetails,
 }: {
@@ -760,6 +820,8 @@ function resolveInitialControls({
   initialAttributionDimension: string;
   initialChartFrequency: string;
   initialBenchmark?: string;
+  initialAsOfDate?: string;
+  initialReportingCurrency?: string;
   initialSummary: WorkbenchPerformanceWorkspaceSummary | null;
   initialDetails?: WorkbenchPerformanceWorkspaceDetails | null;
 }): PerformanceControlState {
@@ -778,5 +840,8 @@ function resolveInitialControls({
       initialBenchmark,
     reportStartDate: initialDetails?.report_start_date ?? initialSummary?.report_start_date,
     reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
+    asOfDate: initialDetails?.as_of_date ?? initialSummary?.as_of_date ?? initialAsOfDate,
+    reportingCurrency:
+      initialSummary?.portfolio.base_currency ?? initialReportingCurrency,
   };
 }
