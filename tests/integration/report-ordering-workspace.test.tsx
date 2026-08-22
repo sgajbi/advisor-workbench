@@ -375,6 +375,12 @@ describe("ReportOrderingWorkspace", () => {
       screen.queryByRole("table", { name: "Portfolio report bundle outcomes" }),
     ).not.toBeInTheDocument();
     expect(submitBatchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Return to report setup" }));
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD",
+      { scroll: false },
+    );
   });
 
   it("keeps a late Back-navigation batch response out of the current address", async () => {
