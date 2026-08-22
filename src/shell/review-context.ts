@@ -48,6 +48,11 @@ export type ReviewContextSearchParams =
   | null
   | undefined;
 
+export type WorkspaceReviewContext = Pick<
+  ReviewContext,
+  "portfolioId" | "asOfDate" | "period" | "reportingCurrency"
+>;
+
 const REVIEW_CONTEXT_QUERY_KEYS = {
   portfolioId: "portfolioId",
   asOfDate: "asOfDate",
@@ -128,6 +133,28 @@ export function serializeReviewContext(context: ReviewContext): URLSearchParams 
   }
 
   return searchParams;
+}
+
+/**
+ * Projects the durable review identity that may cross workspace boundaries.
+ * Record and batch identities are deliberately screen-local and must be
+ * reselected or source-rehydrated by their owning workspace.
+ */
+export function scopeReviewContextForWorkspace(
+  context: ReviewContext,
+): WorkspaceReviewContext {
+  const {
+    portfolioId,
+    asOfDate,
+    period,
+    reportingCurrency,
+  } = context;
+  return {
+    ...(portfolioId ? { portfolioId } : {}),
+    ...(asOfDate ? { asOfDate } : {}),
+    ...(period ? { period } : {}),
+    ...(reportingCurrency ? { reportingCurrency } : {}),
+  };
 }
 
 /**
