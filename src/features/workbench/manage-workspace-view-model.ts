@@ -37,18 +37,22 @@ export type MandateHealthRow = {
   reasons: string;
 };
 
+export type ManageExceptionEvidencePosture = "complete" | "partial" | "unavailable";
+
 type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
 
 export function buildManageExceptionRows(
   exceptions: ManageWorkspaceData["commandCenterExceptions"]
 ): ManageExceptionRow[] {
   const records = extractRecords(asRecord(exceptions?.data).items ?? asRecord(exceptions?.data).exceptions);
-  return records.map((record, index) => {
+  return records.flatMap((record) => {
     const exceptionId =
       readString(record, "exception_id") ||
-      readString(record, "monitoring_exception_id") ||
-      `exception-${index + 1}`;
-    return {
+      readString(record, "monitoring_exception_id");
+    if (!exceptionId) {
+      return [];
+    }
+    return [{
       key: exceptionId,
       mandateId: readString(record, "mandate_id"),
       monitoringRunId: readString(record, "monitoring_run_id") || "N/A",
@@ -78,7 +82,7 @@ export function buildManageExceptionRows(
         readString(record, "next_action") ||
         readString(record, "recommended_action") ||
         "N/A",
-    };
+    }];
   });
 }
 
@@ -94,22 +98,51 @@ export function filterManageExceptionRowsForMandate(
 }
 
 export function isManageExceptionEvidenceComplete(data: ManageWorkspaceData): boolean {
-  if (data.commandCenterExceptionsError || !data.commandCenterExceptions) {
-    return false;
+  return getManageExceptionEvidencePosture(
+    data.commandCenterExceptions,
+    data.commandCenterExceptionsError
+  ) === "complete";
+}
+
+export function isManageExceptionEvidenceAvailable(data: ManageWorkspaceData): boolean {
+  return getManageExceptionEvidencePosture(
+    data.commandCenterExceptions,
+    data.commandCenterExceptionsError
+  ) !== "unavailable";
+}
+
+export function getManageExceptionEvidencePosture(
+  exceptions: ManageWorkspaceData["commandCenterExceptions"],
+  error: string | null
+): ManageExceptionEvidencePosture {
+  if (error || !exceptions) {
+    return "unavailable";
   }
-  const supportabilityState = data.commandCenterExceptions.supportability.state
+  const supportabilityState = exceptions.supportability.state
     .trim()
     .toUpperCase();
   if (!["COMPLETE", "READY", "SUPPORTED"].includes(supportabilityState)) {
-    return false;
+    return "unavailable";
   }
-  const responseData = asRecord(data.commandCenterExceptions.data);
+  const responseData = asRecord(exceptions.data);
   const hasExceptionRows =
     Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
-  const hasCompletePageMetadata =
-    Object.prototype.hasOwnProperty.call(responseData, "next_cursor") &&
-    responseData.next_cursor === null;
-  return hasExceptionRows && hasCompletePageMetadata;
+  if (!hasExceptionRows || !Object.prototype.hasOwnProperty.call(responseData, "next_cursor")) {
+    return "unavailable";
+  }
+  if (responseData.next_cursor === null) {
+    return "complete";
+  }
+  return typeof responseData.next_cursor === "string" && responseData.next_cursor.trim()
+    ? "partial"
+    : "unavailable";
+}
+
+export function getManageExceptionNextCursor(
+  exceptions: ManageWorkspaceData["commandCenterExceptions"]
+): string | null {
+  const nextCursor = asRecord(exceptions?.data).next_cursor;
+  return typeof nextCursor === "string" && nextCursor.trim() ? nextCursor : null;
 }
 
 export function buildMandateSourceReadinessRows(

@@ -8,6 +8,8 @@ import {
   formatBusinessMandateType,
   formatBusinessOwner,
   formatBusinessReason,
+  getManageExceptionEvidencePosture,
+  getManageExceptionNextCursor,
   toneForState,
 } from "../../src/features/workbench/manage-workspace-view-model";
 
@@ -94,5 +96,64 @@ describe("manage workspace business presentation", () => {
       expect.objectContaining({ key: "exception-current", mandateId: "mandate-current" }),
     ]);
     expect(filterManageExceptionRowsForMandate(rows, "N/A")).toEqual([]);
+  });
+
+  it("rejects exception rows without a source-owned identity", () => {
+    const rows = buildManageExceptionRows({
+      correlation_id: "corr-exceptions",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:exceptions",
+        state: "SUPPORTED",
+        partial_readiness_reasons: [],
+      },
+      data: {
+        items: [
+          { mandate_id: "mandate-current", title: "Missing identity" },
+          { monitoring_exception_id: "monitoring-exception-1" },
+        ],
+      },
+    });
+
+    expect(rows).toEqual([
+      expect.objectContaining({ key: "monitoring-exception-1" }),
+    ]);
+  });
+
+  it("separates an available partial source window from complete and unavailable evidence", () => {
+    const response = {
+      correlation_id: "corr-exceptions",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      supportability: {
+        source_service: "lotus-manage",
+        authority: "lotus-manage:exceptions",
+        state: "SUPPORTED",
+        partial_readiness_reasons: [],
+      },
+      data: { items: [{ exception_id: "exception-1" }], next_cursor: "window-2" },
+    };
+
+    expect(getManageExceptionEvidencePosture(response, null)).toBe("partial");
+    expect(getManageExceptionNextCursor(response)).toBe("window-2");
+    expect(
+      getManageExceptionEvidencePosture(
+        { ...response, data: { ...response.data, next_cursor: null } },
+        null
+      )
+    ).toBe("complete");
+    expect(
+      getManageExceptionEvidencePosture(
+        { ...response, data: { ...response.data, next_cursor: 2 } },
+        null
+      )
+    ).toBe("unavailable");
+    expect(getManageExceptionEvidencePosture(response, "Gateway timeout")).toBe(
+      "unavailable"
+    );
   });
 });
