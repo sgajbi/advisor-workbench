@@ -72,6 +72,7 @@ export function useReportOrderingWorkflow({
   scopeMode = "single_portfolio",
   selectedPortfolioIds = [portfolioId],
   portfolioSelectionState = "ready",
+  onBatchAccepted,
 }: {
   portfolioId: string;
   asOfDate: string;
@@ -79,6 +80,7 @@ export function useReportOrderingWorkflow({
   scopeMode?: ReportOrderingScopeMode;
   selectedPortfolioIds?: string[];
   portfolioSelectionState?: "loading" | "ready" | "error";
+  onBatchAccepted?: (batchId: string) => void;
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
   const [catalogueState, setCatalogueState] =
@@ -523,6 +525,7 @@ export function useReportOrderingWorkflow({
           status: null,
           error: null,
         });
+        onBatchAccepted?.(batchHandle.batch_id);
         await loadBatchStatus(batchHandle.batch_id, batchIntent);
         if (
           !isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration) ||
@@ -562,6 +565,7 @@ export function useReportOrderingWorkflow({
     currentScopeFingerprint,
     scopeMode,
     selectedPortfolioIds,
+    onBatchAccepted,
   ]);
 
   const startAnotherReport = useCallback(() => {

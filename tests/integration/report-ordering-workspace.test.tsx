@@ -23,6 +23,14 @@ import {
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
 
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/reports",
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
 vi.mock("@/features/report-ordering/api", () => ({
   getPortfolioReviewBatchStatus: vi.fn(),
   getReportOrderingOptions: vi.fn(),
@@ -147,6 +155,11 @@ const portfolio = {
 describe("ReportOrderingWorkspace", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState(
+      {},
+      "",
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD",
+    );
     advisorBookMock.mockReturnValue(buildAdvisorBookResult());
     optionsMock.mockResolvedValue(
       parseReportOrderingResponse(buildReportOrderingResponse()),
@@ -277,6 +290,10 @@ describe("ReportOrderingWorkspace", () => {
       idempotencyKey: expect.stringMatching(/^workbench-report-order-/),
     }));
     expect(batchStatusMock).toHaveBeenCalledWith("rbch_1");
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/reports?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&batchId=rbch_1",
+      { scroll: false },
+    );
     expect(submitMock).not.toHaveBeenCalled();
   });
 
@@ -872,6 +889,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.queryByRole("heading", { name: "Portfolio bundle not accepted" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Approved report" })).toBeInTheDocument();
     expect(batchStatusMock).not.toHaveBeenCalled();
+    expect(routerPushMock).not.toHaveBeenCalled();
   });
 
   it("rejects a late report acceptance after A-to-B-to-A workspace navigation", async () => {
