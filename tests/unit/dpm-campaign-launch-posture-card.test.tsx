@@ -78,7 +78,14 @@ describe("DpmCampaignLaunchPostureCard", () => {
     ).toBeInTheDocument();
     expect(within(readinessBoundaries).getByText("Manage preview-readiness required")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Launch Campaign" }));
+    const launchButton = screen.getByRole("button", { name: "Launch governed wave" });
+    expect(launchButton).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+      }),
+    );
+    fireEvent.click(launchButton);
 
     expect(onLaunchCampaign).toHaveBeenCalledWith(campaign);
     expect(screen.queryByRole("button", { name: /trade/i })).not.toBeInTheDocument();
@@ -104,7 +111,7 @@ describe("DpmCampaignLaunchPostureCard", () => {
     expect(screen.getByText("Select a campaign definition to check launch readiness.")).toBeInTheDocument();
     expect(screen.getByText("Campaign preview readiness needs Manage source evidence")).toBeInTheDocument();
     expect(screen.getByText("Campaign launch needs source readiness")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Launch Campaign" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
     expect(onLaunchCampaign).not.toHaveBeenCalled();
   });
 });

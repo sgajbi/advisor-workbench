@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ActionButton, ScreenStatePanel } from "@/design-system";
 import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
 import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
@@ -35,6 +36,7 @@ export default function DpmCampaignLaunchPostureCard({
   pendingLaunchKey,
   onLaunchCampaign,
 }: Props) {
+  const [confirmed, setConfirmed] = useState(false);
   const displayedReason =
     launchPosture.state !== "NOT_CHECKED" ? launchPosture.reason : previewReadinessPosture.reason;
 
@@ -106,13 +108,34 @@ export default function DpmCampaignLaunchPostureCard({
         />
       </div>
       <div className="rebalance-action-row">
-        <span>{formatBusinessReason(displayedReason)}</span>
+        <div>
+          <span>{formatBusinessReason(displayedReason)}</span>
+          {selectedCampaign && launchPosture.canLaunch ? (
+            <label className="workbench-confirmation" htmlFor="dpm-campaign-launch-confirmation">
+              <input
+                id="dpm-campaign-launch-confirmation"
+                type="checkbox"
+                checked={confirmed}
+                onChange={(event) => setConfirmed(event.target.checked)}
+                disabled={Boolean(pendingLaunchKey)}
+              />
+              <span>
+                I reviewed the source readiness and understand this creates a durable campaign wave only.
+              </span>
+            </label>
+          ) : null}
+        </div>
         <ActionButton
           priority="primary"
           onClick={() => selectedCampaign && onLaunchCampaign(selectedCampaign)}
-          disabled={!selectedCampaign || !launchPosture.canLaunch || Boolean(pendingLaunchKey)}
+          disabled={
+            !selectedCampaign ||
+            !launchPosture.canLaunch ||
+            !confirmed ||
+            Boolean(pendingLaunchKey)
+          }
         >
-          {selectedLaunchPending ? "Launching" : "Launch Campaign"}
+          {selectedLaunchPending ? "Launching durable wave" : "Launch governed wave"}
         </ActionButton>
       </div>
     </div>

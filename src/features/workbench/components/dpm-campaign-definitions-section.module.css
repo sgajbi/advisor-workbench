@@ -1,0 +1,203 @@
+.section {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+}
+
+.sectionHeader,
+.paneHeader,
+.identityHeader,
+.nextAction {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sectionHeader h3,
+.identityHeader h4 {
+  margin: 2px 0 0;
+}
+
+.sectionHeader p,
+.identityHeader p,
+.paneHeader span {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.15rem;
+}
+
+.workspace {
+  grid-template-columns: minmax(18rem, 0.72fr) minmax(32rem, 1.28fr);
+}
+
+.worklist,
+.decision,
+.decisionPane {
+  min-width: 0;
+}
+
+.worklist,
+.decision {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--panel-alt);
+}
+
+.paneHeader {
+  margin-bottom: var(--space-3);
+}
+
+.decisionPane {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.nextAction {
+  align-items: center;
+  padding: 10px 12px;
+  border-left: 3px solid var(--brand-highlight);
+  background: color-mix(in srgb, var(--brand-highlight) 5%, var(--panel));
+}
+
+.nextAction > div {
+  display: grid;
+  gap: 2px;
+}
+
+.nextAction strong {
+  font-size: 0.825rem;
+  line-height: 1.2rem;
+}
+
+.nextAction > span {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.modeSelector {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+}
+
+.modeSelector button {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: calc(var(--radius-control) - 3px);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.modeSelector button:hover {
+  background: var(--panel-alt);
+  color: var(--text);
+}
+
+.modeSelector button[aria-pressed="true"] {
+  background: var(--brand-strong);
+  color: var(--panel);
+  box-shadow: var(--elevation-subtle);
+}
+
+.modeSelector button:focus-visible,
+.disclosure summary:focus-visible {
+  outline: 2px solid var(--brand-highlight);
+  outline-offset: 2px;
+}
+
+.disclosure {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+}
+
+.disclosure summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.disclosure[open] summary {
+  margin-bottom: var(--space-3);
+}
+
+.section :global(.workbench-confirmation) {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-control);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.15rem;
+}
+
+.section :global(.workbench-confirmation input) {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+@media (max-width: 1080px) {
+  .workspace {
+    grid-template-columns: minmax(16rem, 0.68fr) minmax(27rem, 1.32fr);
+  }
+
+  .modeSelector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .section {
+    padding: var(--space-3);
+  }
+
+  .sectionHeader,
+  .identityHeader,
+  .nextAction {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modeSelector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modeSelector button {
+    transition: none;
+  }
+}
