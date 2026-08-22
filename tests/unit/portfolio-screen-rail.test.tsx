@@ -515,7 +515,7 @@ describe("PortfolioScreenRail", () => {
 
     expect(option).toHaveAttribute(
       "href",
-      "/income?period=YTD&portfolioId=PB_SG_INCOME_002",
+      "/income?portfolioId=PB_SG_INCOME_002&period=YTD",
     );
     fireEvent.click(option);
     expect(window.sessionStorage.getItem("lotus:advisor-book-context-focus")).toBe("true");
@@ -540,7 +540,7 @@ describe("PortfolioScreenRail", () => {
       screen.getByRole("link", { name: /Income Mandate CIF_SG_002/i }),
     ).toHaveAttribute(
       "href",
-      "/performance?mode=summary&period=YTD&portfolioId=PB_SG_INCOME_002",
+      "/performance?portfolioId=PB_SG_INCOME_002&period=YTD&mode=summary",
     );
 
     window.history.replaceState(
@@ -559,7 +559,7 @@ describe("PortfolioScreenRail", () => {
       screen.getByRole("link", { name: /Income Mandate CIF_SG_002/i }),
     ).toHaveAttribute(
       "href",
-      "/performance?mode=risk&period=YTD&portfolioId=PB_SG_INCOME_002",
+      "/performance?portfolioId=PB_SG_INCOME_002&period=YTD&mode=risk",
     );
   });
 
