@@ -15,6 +15,7 @@ const nextConfig = {
   deploymentId,
   env: {
     WORKBENCH_BUILD_DEPLOYMENT_ID: deploymentId,
+    WORKBENCH_BUILD_ENVIRONMENT: lotusEnvironment,
   },
   reactStrictMode: true,
   allowedDevOrigins: ["workbench.dev.lotus", "127.0.0.1", "localhost"],

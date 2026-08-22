@@ -91,6 +91,8 @@ function AdvisorBookDateRequired({
         ? "The requested business date was supplied more than once and cannot be confirmed."
       : dateResolution.reason === "invalid_development_configuration"
         ? "The configured local business date is not valid."
+        : dateResolution.reason === "development_date_not_allowed"
+          ? "A local business date cannot be used in this environment."
         : "No business date has been confirmed for this book view.";
 
   function confirmBusinessDate(event: FormEvent<HTMLFormElement>) {
