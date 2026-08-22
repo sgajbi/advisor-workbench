@@ -108,7 +108,7 @@ describe("AdvisorBookWorkspace", () => {
     expect(within(table).getByText("Discretionary mandate")).toBeInTheDocument();
     expect(within(table).getByRole("link", { name: "Global Balanced Mandate" })).toHaveAttribute(
       "href",
-      "/portfolio?asOfDate=2026-04-10&portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10",
     );
     expect(screen.getByText("Own book only")).toBeInTheDocument();
     expect(

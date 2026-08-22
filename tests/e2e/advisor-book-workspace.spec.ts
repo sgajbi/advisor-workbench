@@ -186,7 +186,7 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
     page.getByRole("link", { name: "Global Balanced Mandate" }),
   ).toHaveAttribute(
     "href",
-    "/portfolio?asOfDate=2026-04-10&portfolioId=PB_SG_GLOBAL_BAL_001",
+    "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10",
   );
 });
 
