@@ -21,6 +21,10 @@ import {
   buildFixtureRiskRolling,
   buildFixtureRiskSummary,
 } from '../../src/apps/performance/risk-workspace-view-model';
+import {
+  GOVERNED_REVIEW_PORTFOLIO_ID,
+  handleGovernedReviewPortfolioRequest,
+} from './governed-review-context-fixture';
 
 export type PerformanceFixtureGatewayScenario =
   | 'populated'
@@ -59,6 +63,10 @@ export async function startPerformanceFixtureGateway({
             id: 'PB_SG_GLOBAL_BAL_001',
             label: 'Global Balanced Mandate',
           },
+          {
+            id: GOVERNED_REVIEW_PORTFOLIO_ID,
+            label: 'Income Preservation Mandate',
+          },
         ],
       });
       return;
@@ -76,6 +84,10 @@ export async function startPerformanceFixtureGateway({
           normalized: fallbackNormalizedCapabilities(),
         },
       });
+      return;
+    }
+
+    if (handleGovernedReviewPortfolioRequest(requestUrl, response)) {
       return;
     }
 
