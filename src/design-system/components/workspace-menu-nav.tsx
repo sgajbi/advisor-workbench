@@ -110,7 +110,7 @@ export default function WorkspaceMenuNav({
                 )}
                 title={item.title}
                 aria-current={item.active ? "page" : undefined}
-                onClick={() => close()}
+                onClick={() => close({ restoreFocus: true })}
               >
                 {item.label}
                 <small>{item.active ? "Current workspace" : "Open workspace"}</small>

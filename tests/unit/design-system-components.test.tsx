@@ -148,6 +148,33 @@ describe("design-system components", () => {
     expect(disclosure).toHaveFocus();
   });
 
+  it("restores focus to the workspace trigger after a workspace is selected", () => {
+    render(
+      <WorkspaceMenuNav
+        ariaLabel="Workspace Navigation"
+        items={[
+          { key: "portfolio", label: "Portfolio", href: "/portfolio", active: true },
+          { key: "performance", label: "Performance", href: "/performance" },
+        ]}
+      />
+    );
+
+    const disclosure = screen.getByRole("button", {
+      name: "Switch workspace. Current workspace Portfolio",
+    });
+    fireEvent.click(disclosure);
+    const performance = screen.getByRole("link", { name: "Performance" });
+    performance.addEventListener("click", (event) => event.preventDefault(), {
+      capture: true,
+      once: true,
+    });
+    performance.focus();
+    fireEvent.click(performance);
+
+    expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    expect(disclosure).toHaveFocus();
+  });
+
   it("resets detail drawer tab selection when reopening the same item", () => {
     const onClose = vi.fn();
     const { rerender } = render(
