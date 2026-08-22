@@ -95,6 +95,66 @@ describe("PortfolioFoundationPage", () => {
     vi.unstubAllGlobals();
   });
 
+  it("does not call a source when governed review context is ambiguous", async () => {
+    const fetchSpy = stubPortfolioApis();
+
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({
+          portfolioId: ["PORT_UI_1001", "PB_OTHER_001"],
+          asOfDate: "2026-02-24",
+        }),
+      }),
+    );
+
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/No portfolio information was requested/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Reset review context" })).toHaveAttribute(
+      "href",
+      "/portfolio",
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("hydrates a supported review period from the governed URL context", async () => {
+    stubPortfolioApis();
+
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_UI_1001",
+          asOfDate: "2026-02-24",
+          period: "YTD",
+          reportingCurrency: "USD",
+        }),
+      }),
+    );
+
+    expect(screen.getByRole("radio", { name: "YTD" })).toBeChecked();
+    expect(screen.getByText(/Period YTD\./i)).toBeInTheDocument();
+  });
+
+  it("does not request analytical detail for unsupported portfolio context", async () => {
+    const fetchSpy = stubPortfolioApis();
+
+    render(
+      await PortfolioFoundationPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_UI_1001",
+          asOfDate: "2026-02-24",
+          period: "5Y",
+          reportingCurrency: "USD",
+        }),
+      }),
+    );
+
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/not supported by this portfolio's source capabilities/i)).toBeInTheDocument();
+    expect(
+      fetchSpy.mock.calls.some(([input]) => String(input).includes("/summary-details")),
+    ).toBe(false);
+  });
+
   it("renders the summary workspace for fast portfolio review", async () => {
     const fetchSpy = stubPortfolioApis();
 
