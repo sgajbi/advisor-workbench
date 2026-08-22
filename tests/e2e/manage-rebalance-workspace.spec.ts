@@ -69,6 +69,8 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
     await expect(
       page.getByRole("button", { name: "Filter", exact: true }),
     ).toHaveCount(0);
+    await expect(page.getByText("check_circle", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("chevron_right", { exact: true })).toHaveCount(0);
 
     const order = await page.evaluate(() => {
       const ids = [

@@ -16,7 +16,7 @@ describe("DpmWaveActiveRebalanceSection", () => {
     const onPreview = vi.fn();
     const onCreate = vi.fn();
 
-    render(
+    const { container } = render(
       <DpmWaveActiveRebalanceSection
         selectedWaveId="dwv_001"
         selectedWaveState="SIMULATION_READY"
@@ -41,6 +41,8 @@ describe("DpmWaveActiveRebalanceSection", () => {
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
     expect(screen.getByLabelText("Rebalance lifecycle")).toHaveTextContent("Simulation");
     expect(screen.getByText("Approval can proceed after advisor review.")).toBeInTheDocument();
+    expect(screen.queryByText("check_circle")).not.toBeInTheDocument();
+    expect(container.querySelectorAll("svg")).toHaveLength(1);
     expect(screen.getByLabelText("Rebalance metrics")).toHaveTextContent("4.8%");
     expect(screen.getByText("Simulate completed.")).toBeInTheDocument();
 
@@ -81,6 +83,7 @@ describe("DpmWaveActiveRebalanceSection", () => {
     expect(within(actions).getByRole("button", { name: "Stage" })).toBeDisabled();
     expect(within(actions).getByRole("button", { name: "Prepare Handoff" })).toBeDisabled();
     expect(screen.getByText("Resolve mandate attention items before approval.")).toBeInTheDocument();
+    expect(screen.queryByText("warning")).not.toBeInTheDocument();
   });
 
   it("keeps wave-specific actions disabled until a source wave is selected", () => {
