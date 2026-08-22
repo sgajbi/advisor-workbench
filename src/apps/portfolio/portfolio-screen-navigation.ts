@@ -39,6 +39,8 @@ export type PortfolioScreenNavigationModel = {
   directoryGroups: PortfolioScreenNavigationGroup[];
 };
 
+export type PortfolioReviewContext = ReviewContext & Readonly<{ portfolioId: string }>;
+
 export type PortfolioScreenRailModeItem = {
   key: string;
   label: string;
@@ -153,18 +155,21 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
 ];
 
 export function buildPortfolioScreenNavigationItems(
-  portfolioId: string
+  reviewContext: PortfolioReviewContext,
 ): PortfolioScreenNavigationItem[] {
   return [
     ...PORTFOLIO_SCREEN_NAVIGATION_ITEMS.map((item) => ({
       ...item,
-      href: buildPortfolioScreenHref(item.href, portfolioId),
+      href: buildPortfolioScreenHref(item.href, reviewContext),
     })),
     {
       key: "manage",
       label: "Mandate management",
       detail: "Mandate and operating workflow",
-      href: `/workbench/${encodeURIComponent(portfolioId)}`,
+      href: buildPortfolioScreenHref(
+        `/workbench/${encodeURIComponent(reviewContext.portfolioId)}`,
+        reviewContext,
+      ),
       group: "operations",
       primary: true,
     },
@@ -172,10 +177,10 @@ export function buildPortfolioScreenNavigationItems(
 }
 
 export function buildPortfolioScreenNavigationModel(
-  portfolioId: string,
+  reviewContext: PortfolioReviewContext,
   activeScreen: PortfolioScreenNavigationKey,
 ): PortfolioScreenNavigationModel {
-  const items = buildPortfolioScreenNavigationItems(portfolioId);
+  const items = buildPortfolioScreenNavigationItems(reviewContext);
   const primaryItems = items.filter((item) => item.primary);
   const activeItem = items.find((item) => item.key === activeScreen) ?? null;
 
@@ -194,10 +199,13 @@ export function buildPortfolioScreenNavigationModel(
   };
 }
 
-export function buildPortfolioScreenHref(href: string, portfolioId: string) {
-  if (href.startsWith("/workbench/")) {
-    return href;
-  }
-  const separator = href.includes("?") ? "&" : "?";
-  return `${href}${separator}portfolioId=${encodeURIComponent(portfolioId)}`;
+export function buildPortfolioScreenHref(
+  href: string,
+  reviewContext: PortfolioReviewContext,
+) {
+  return buildReviewContextHref(href, reviewContext);
 }
+import {
+  buildReviewContextHref,
+  type ReviewContext,
+} from "@/shell/review-context";

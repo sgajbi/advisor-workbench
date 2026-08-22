@@ -28,7 +28,7 @@ export default function PortfolioScreenRail({
 }) {
   const pathname = usePathname();
   const navigationModel = buildPortfolioScreenNavigationModel(
-    portfolioId,
+    { portfolioId },
     activeScreen,
   );
   const [navigationExpanded, setNavigationExpanded] = useState(false);
