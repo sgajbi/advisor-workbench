@@ -203,6 +203,51 @@ export default function PerformanceWorkspaceClient({
       ? new Map([[initialDetailsKey, sourceConfirmedInitialDetails]])
       : new Map()
   );
+  const initialRouteControlsKey = useMemo(
+    () =>
+      initialControls ? buildPerformanceControlsHref(initialControls) : null,
+    [initialControls],
+  );
+  const acceptedRouteControlsKeyRef = useRef(initialRouteControlsKey);
+
+  useEffect(() => {
+    if (
+      !initialControls ||
+      !initialRouteControlsKey ||
+      acceptedRouteControlsKeyRef.current === initialRouteControlsKey
+    ) {
+      return;
+    }
+
+    acceptedRouteControlsKeyRef.current = initialRouteControlsKey;
+    requestSequenceRef.current += 1;
+    initialDetailsRequestedRef.current = Boolean(sourceConfirmedInitialDetails);
+    setSummary(initialSummary);
+    setDetails(sourceConfirmedInitialDetails);
+    setDetailsStatus(
+      sourceConfirmedInitialDetails ? "ready" : initialSummary ? "idle" : "failed",
+    );
+    setControls(initialControls);
+    setLoadIssue(initialSummary ? null : initialLoadIssue ?? null);
+    setPendingRefresh(null);
+    setRefreshFailure(null);
+    setRefreshConfirmation(null);
+    summaryCacheRef.current = initialSummaryKey
+      ? new Map([[initialSummaryKey, initialSummary]])
+      : new Map();
+    detailsCacheRef.current =
+      sourceConfirmedInitialDetails && initialDetailsKey
+        ? new Map([[initialDetailsKey, sourceConfirmedInitialDetails]])
+        : new Map();
+  }, [
+    initialControls,
+    initialDetailsKey,
+    initialLoadIssue,
+    initialRouteControlsKey,
+    initialSummary,
+    initialSummaryKey,
+    sourceConfirmedInitialDetails,
+  ]);
 
   useEffect(() => {
     if (modeRef.current === initialMode) {
@@ -444,6 +489,9 @@ export default function PerformanceWorkspaceClient({
         requestedControls,
         confirmedControls: resolvedDetails.controls,
       });
+      acceptedRouteControlsKeyRef.current = buildPerformanceControlsHref(
+        resolvedDetails.controls,
+      );
       startTransition(() => {
         router.push(buildPerformanceControlsHref(resolvedDetails.controls, modeRef.current), {
           scroll: false,
@@ -504,6 +552,9 @@ export default function PerformanceWorkspaceClient({
           buildPerformanceControlsHref(resolvedDetails.controls) !==
           buildPerformanceControlsHref(controls)
         ) {
+          acceptedRouteControlsKeyRef.current = buildPerformanceControlsHref(
+            resolvedDetails.controls,
+          );
           startTransition(() => {
             router.replace(
               buildPerformanceControlsHref(resolvedDetails.controls, modeRef.current),

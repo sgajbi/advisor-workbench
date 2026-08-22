@@ -892,6 +892,47 @@ test.describe('Performance workbench smoke', () => {
       mode: 'analysis',
     });
 
+    const sourceSelection = page.getByRole('group', {
+      name: 'Performance Analysis source selection',
+    });
+    const threeYearHorizon = sourceSelection.getByRole('radio', { name: '3Y' });
+    await threeYearHorizon.focus();
+    await threeYearHorizon.click();
+    await expect(threeYearHorizon).toHaveAttribute('aria-checked', 'true');
+    await expect(threeYearHorizon).toBeFocused();
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: '3Y',
+      reportingCurrency: summary.portfolio.base_currency,
+      mode: 'analysis',
+    });
+
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await expect(sourceSelection.getByRole('radio', { name: 'YTD' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await expect(threeYearHorizon).toBeFocused();
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: 'YTD',
+      reportingCurrency: summary.portfolio.base_currency,
+      mode: 'analysis',
+    });
+
+    await page.goForward({ waitUntil: 'domcontentloaded' });
+    await expect(threeYearHorizon).toHaveAttribute('aria-checked', 'true');
+    await expect(threeYearHorizon).toBeFocused();
+    expectGovernedPerformanceContext(page.url(), {
+      portfolioId: portfolioId!,
+      asOfDate: summary.as_of_date,
+      period: '3Y',
+      reportingCurrency: summary.portfolio.base_currency,
+      mode: 'analysis',
+    });
+
     await runtime.assertStylesAreHeadManaged();
     expect(runtime.snapshot()).toEqual([]);
   });

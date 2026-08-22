@@ -272,6 +272,73 @@ describe("PerformanceWorkspaceClient", () => {
     expect(document.activeElement).toBe(stableControl);
   });
 
+  it("atomically synchronizes source-confirmed route props across browser history", async () => {
+    const stableProps = {
+      initialPortfolioId: "PF_1001",
+      initialDetailBasis: "NET",
+      initialContributionDimension: "asset_class",
+      initialAttributionDimension: "asset_class",
+      initialChartFrequency: "monthly",
+      initialBenchmark: "BMK_GLOBAL_BALANCED_60_40",
+    } as const;
+    const ytdSummary = buildSummary();
+    const ytdDetails = buildDetails();
+    const threeYearSummary = buildSummary({
+      period: "3Y",
+      report_start_date: "2023-02-25",
+      net_performance: {
+        ...ytdSummary.net_performance,
+        portfolio_return_pct: 18.4,
+      },
+    });
+    const threeYearDetails = buildDetails({
+      period: "3Y",
+      report_start_date: "2023-02-25",
+    });
+    const { rerender } = render(
+      <PerformanceWorkspaceClient
+        {...stableProps}
+        initialSummary={ytdSummary}
+        initialDetails={ytdDetails}
+        initialPeriod="YTD"
+      />
+    );
+    const stableControl = screen.getByRole("button", { name: "Switch Analysis Mode" });
+    stableControl.focus();
+
+    rerender(
+      <PerformanceWorkspaceClient
+        {...stableProps}
+        initialSummary={threeYearSummary}
+        initialDetails={threeYearDetails}
+        initialPeriod="3Y"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("period")).toHaveTextContent("3Y");
+      expect(screen.getByTestId("return")).toHaveTextContent("18.4");
+    });
+    expect(document.activeElement).toBe(stableControl);
+
+    rerender(
+      <PerformanceWorkspaceClient
+        {...stableProps}
+        initialSummary={ytdSummary}
+        initialDetails={ytdDetails}
+        initialPeriod="YTD"
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("period")).toHaveTextContent("YTD");
+      expect(screen.getByTestId("return")).toHaveTextContent(DEFAULT_PORTFOLIO_RETURN);
+    });
+    expect(document.activeElement).toBe(stableControl);
+    expect(pushMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("does not reuse an earlier selector target for a targetless retry", async () => {
     const detailFailure = Object.assign(new Error("Performance details unavailable"), {
       status: 502,
