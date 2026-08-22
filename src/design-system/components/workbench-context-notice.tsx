@@ -49,6 +49,51 @@ export function buildWorkbenchSourceContextNotice({
     : null;
 }
 
+export function buildWorkbenchUnsupportedReviewContextNotice({
+  title,
+  subject,
+  destination,
+  requestedAsOfDate,
+  requestedPeriod,
+  requestedReportingCurrency,
+}: {
+  title: string;
+  subject: string;
+  destination: string;
+  requestedAsOfDate?: string;
+  requestedPeriod?: string;
+  requestedReportingCurrency?: string;
+}): WorkbenchSourceContextNotice | null {
+  const selectors = [
+    requestedAsOfDate
+      ? `advisor review date ${formatBusinessDateValue(requestedAsOfDate)}`
+      : null,
+    requestedPeriod ? `review period ${requestedPeriod}` : null,
+    requestedReportingCurrency
+      ? `reporting currency ${requestedReportingCurrency}`
+      : null,
+  ].filter((selector): selector is string => Boolean(selector));
+
+  if (selectors.length === 0) {
+    return null;
+  }
+
+  return {
+    title,
+    body: `${subject} reflects current source state. The carried ${formatBusinessList(selectors)} ${selectors.length === 1 ? "remains" : "remain"} available across the wider review, but ${selectors.length === 1 ? "it does" : "they do"} not filter this ${destination}.`,
+  };
+}
+
+function formatBusinessList(items: readonly string[]): string {
+  if (items.length <= 1) {
+    return items[0] ?? "";
+  }
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+  return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
+}
+
 /**
  * A compact, non-blocking explanation of how a source interprets carried
  * business context. Use it when a workspace remains usable but does not
