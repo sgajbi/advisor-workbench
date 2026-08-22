@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -31,6 +31,15 @@ export function usePortfolioRecordSelection({
     selectionState.sourceKey === sourceKey
       ? selectionState.recordId
       : (initialSelectedRecordId ?? null);
+  const listHref = useMemo(
+    () =>
+      buildPortfolioRecordSelectionHref({
+        pathname,
+        searchParams,
+        portfolioId,
+      }),
+    [pathname, portfolioId, searchParams],
+  );
 
   const navigateToRecord = useCallback(
     (recordId: string | null) => {
@@ -52,6 +61,7 @@ export function usePortfolioRecordSelection({
 
   return {
     selectedRecordId,
+    listHref,
     openRecord: useCallback(
       (recordId: string) => navigateToRecord(recordId),
       [navigateToRecord],

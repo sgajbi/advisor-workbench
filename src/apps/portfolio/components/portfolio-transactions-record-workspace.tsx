@@ -34,7 +34,7 @@ export default function PortfolioTransactionsRecordWorkspace({
     useState<TransactionRow | null>(null);
   const [externalFilter, setExternalFilter] =
     useState<PortfolioTransactionDrilldownFilter | null>(null);
-  const { selectedRecordId, openRecord, closeRecord } =
+  const { selectedRecordId, listHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
       initialSelectedRecordId,
@@ -118,9 +118,10 @@ export default function PortfolioTransactionsRecordWorkspace({
               label: `Far-leg booking group ${raw.far_leg_group_id}`,
             })
           : null,
+        fullPageHref: listHref ?? undefined,
       },
     );
-  }, [handleCloseRecord, selectedTransaction, workspace]);
+  }, [handleCloseRecord, listHref, selectedTransaction, workspace]);
 
   return (
     <>

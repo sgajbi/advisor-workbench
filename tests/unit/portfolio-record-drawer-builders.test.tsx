@@ -48,6 +48,20 @@ describe("portfolio record drawer builders", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the caller-governed list address without rebuilding context", () => {
+    const href =
+      "/transactions?portfolioId=PORT_UI_1001&asOfDate=2026-03-20&period=YTD&reportingCurrency=SGD";
+    const holdingDrawer = buildHoldingDrawer(
+      holdingRow,
+      "PORT_UI_1001",
+      "USD",
+      { state: "loading" },
+      { fullPageHref: href },
+    );
+
+    expect(holdingDrawer.fullPageHref).toBe(href);
+  });
+
   it("renders source-backed holding transactions when the ledger fetch succeeds", () => {
     const drawer = buildHoldingDrawer(holdingRow, "PORT_UI_1001", "USD", {
       state: "ready",
