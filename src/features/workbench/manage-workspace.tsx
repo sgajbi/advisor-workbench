@@ -162,12 +162,14 @@ function renderManageMode(
             campaignMakerCheckerControls={data.campaignMakerCheckerControls}
             campaignDefinitionsError={data.campaignDefinitionsError}
             campaignDiscoveryError={data.campaignDiscoveryError}
-            campaignWorkflowError={
+            campaignWorkflowSummaryError={
               data.campaignOperatingQueueError ??
               data.campaignApprovalInboxError ??
               data.campaignWorkflowBoardError ??
               data.campaignAssignmentPlanError ??
-              data.campaignWorkflowAutomationError ??
+              data.campaignWorkflowAutomationError
+            }
+            campaignWorkflowError={
               data.campaignApprovalDecisionsError ??
               data.campaignAssignmentActionsError ??
               data.campaignAssignmentTasksError ??

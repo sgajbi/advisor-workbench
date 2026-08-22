@@ -13,6 +13,7 @@ import {
   firstDpmWaveBusinessValue,
   formatDpmWaveDisplayDate,
   isDpmWaveActionBlocked,
+  resolveCampaignWorkflowEvidenceError,
   resolveDpmWaveLifecycleIndex,
 } from "../../src/features/workbench/dpm-wave-command-center-panel-helpers";
 import type {
@@ -66,6 +67,23 @@ const itemRows: DpmWaveItemRow[] = [
 ];
 
 describe("DPM wave command-center panel helpers", () => {
+  it("clears a server preload error after a successful client evidence refresh", () => {
+    expect(
+      resolveCampaignWorkflowEvidenceError({
+        initialError: "Campaign workflow evidence was unavailable during server rendering.",
+        refreshError: null,
+        refreshResolved: true,
+      }),
+    ).toBeNull();
+    expect(
+      resolveCampaignWorkflowEvidenceError({
+        initialError: "Campaign workflow evidence was unavailable during server rendering.",
+        refreshError: null,
+        refreshResolved: false,
+      }),
+    ).toBe("Campaign workflow evidence was unavailable during server rendering.");
+  });
+
   it("exports the governed rebalance lifecycle display steps", () => {
     expect(DPM_WAVE_LIFECYCLE_STEPS).toEqual([
       "Preview",

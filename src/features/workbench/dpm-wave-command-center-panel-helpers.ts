@@ -52,6 +52,18 @@ export type DpmWaveHeaderModel = {
   };
 };
 
+export function resolveCampaignWorkflowEvidenceError({
+  initialError,
+  refreshError,
+  refreshResolved,
+}: {
+  initialError?: string | null;
+  refreshError?: string | null;
+  refreshResolved: boolean;
+}): string | null {
+  return refreshResolved ? refreshError ?? null : refreshError ?? initialError ?? null;
+}
+
 export function buildDpmWaveHeaderModel({
   mandateType,
   portfolioCurrency,

@@ -557,6 +557,34 @@ describe("useDpmWaveCommandCenterActions", () => {
     });
   });
 
+  it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
+    vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
+      new Error("Campaign definitions refresh failed"),
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-retire",
+        },
+      });
+    });
+
+    expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
+      commandLabel: "Retire campaign",
+      contentHash: "sha256:campaign-retired",
+    });
+    expect(result.current.campaignLifecycleCommandError).toBeNull();
+    expect(result.current.campaignLifecycleError).toBe(
+      "Lifecycle action was recorded, but refreshed campaign evidence could not be loaded. Reload source evidence to confirm the campaign's new lifecycle posture.",
+    );
+  });
+
   it("never renders a late campaign A response under campaign B", async () => {
     const twoCampaigns: DpmCampaignDefinitionGatewayResponse = {
       ...campaignDefinitions,
@@ -728,6 +756,41 @@ describe("useDpmWaveCommandCenterActions", () => {
     });
     expect(result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef).toBe(
       "task-review-001"
+    );
+    expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
+  });
+
+  it("preserves accepted governance evidence when the follow-up refresh fails", async () => {
+    vi.mocked(getDpmCampaignApprovalDecisions).mockRejectedValueOnce(
+      new Error("Campaign approvals refresh failed"),
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.recordCampaignWorkflowCommand({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-review-001",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Portfolio manager review is required.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-campaign-task",
+        },
+      });
+    });
+
+    expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
+      evidenceRef: "task-review-001",
+      contentHash: "sha256:task-transition",
+    });
+    expect(result.current.campaignWorkflowCommandError).toBeNull();
+    expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
+    expect(result.current.campaignWorkflowEvidenceError).toBe(
+      "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
     );
   });
 

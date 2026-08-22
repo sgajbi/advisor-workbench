@@ -23,6 +23,7 @@ import {
   buildDpmWaveHeaderModel,
   dpmWaveStatePanelCopy,
   isDpmWaveActionBlocked,
+  resolveCampaignWorkflowEvidenceError,
   resolveDpmWaveLifecycleIndex,
 } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import { useDpmWaveCommandCenterActions } from "@/features/workbench/use-dpm-wave-command-center-actions";
@@ -43,6 +44,7 @@ type Props = {
   campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
   campaignDefinitionsError?: string | null;
   campaignDiscoveryError?: string | null;
+  campaignWorkflowSummaryError?: string | null;
   campaignWorkflowError?: string | null;
   errorMessage?: string | null;
   mandateType?: string | null;
@@ -65,6 +67,7 @@ export default function DpmWaveCommandCenterPanel({
   campaignMakerCheckerControls = null,
   campaignDefinitionsError = null,
   campaignDiscoveryError = null,
+  campaignWorkflowSummaryError = null,
   campaignWorkflowError = null,
   errorMessage = null,
   mandateType = null,
@@ -91,6 +94,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignLifecycleCommandError,
     campaignWorkflowCommandError,
     campaignWorkflowEvidenceError,
+    campaignWorkflowEvidenceResolved,
     campaignLifecycleCommandEvidence,
     campaignWorkflowCommandEvidence,
     actionMessage,
@@ -239,12 +243,17 @@ export default function DpmWaveCommandCenterPanel({
         previewReadinessPosture={model.campaignPreviewReadinessPosture}
         launchPosture={model.campaignLaunchPosture}
         workflowSummaryRows={model.campaignWorkflowSummaryRows}
+        workflowSummaryError={campaignWorkflowSummaryError}
         workflowEvidenceRows={model.campaignWorkflowEvidenceRows}
         lifecycleError={campaignLifecycleError}
         launchHistoryError={campaignLaunchHistoryError}
         previewReadinessError={campaignPreviewReadinessError}
         launchError={campaignLaunchError}
-        workflowError={campaignWorkflowEvidenceError ?? campaignWorkflowError}
+        workflowError={resolveCampaignWorkflowEvidenceError({
+          initialError: campaignWorkflowError,
+          refreshError: campaignWorkflowEvidenceError,
+          refreshResolved: campaignWorkflowEvidenceResolved,
+        })}
         pendingLifecycleKey={pendingCampaignLifecycleKey}
         pendingLaunchHistoryKey={pendingCampaignLaunchHistoryKey}
         pendingPreviewReadinessKey={pendingCampaignPreviewReadinessKey}

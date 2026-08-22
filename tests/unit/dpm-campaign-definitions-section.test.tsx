@@ -209,4 +209,63 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(screen.getByText("Source evidence needs attention")).toHaveAttribute("role", "alert");
     expect(screen.queryByText("Source evidence current")).not.toBeInTheDocument();
   });
+
+  it("keeps book-wide workflow posture outside the selected campaign evidence", async () => {
+    const callbacks = renderWorkspace({
+      workflowSummaryRows: [
+        {
+          key: "operating-queue",
+          surface: "Operating Queue",
+          state: "READY",
+          itemCount: "12",
+          page: "1-10 of 12",
+          sourceRefs: "4",
+          reasonCodes: "SOURCE_WINDOW_READY",
+          contentHash: "sha256:book-window",
+          operatingBoundaries: "NO_OMS_EXECUTION_CLAIM",
+        },
+      ],
+    });
+
+    await waitFor(() => expect(callbacks.onLoadWorkflowEvidence).toHaveBeenCalledWith(campaign));
+    expect(screen.getByText("Book-wide campaign workflow")).toBeInTheDocument();
+    expect(
+      screen.getByText(/These totals describe the book-wide workflow, not the selected campaign/),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Governance action" }));
+    fireEvent.click(screen.getByText("Source evidence and operating audit"));
+    expect(
+      screen.getByRole("table", { name: "Book-wide campaign workflow summary" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: "Selected campaign governance evidence history" }),
+    ).toBeInTheDocument();
+  });
+
+  it("prevents a repeated lifecycle action after source persistence is confirmed", async () => {
+    const callbacks = renderWorkspace({
+      lifecycleError:
+        "Lifecycle action was recorded, but refreshed campaign evidence could not be loaded.",
+      lifecycleCommandEvidence: {
+        commandLabel: "Retire campaign",
+        status: "RETIRED",
+        actor: "pm_sg_1",
+        reason: "The campaign review cycle is complete.",
+        replacementCampaignVersion: "N/A",
+        correlationId: "corr-campaign-retire",
+        sourceService: "lotus-manage",
+        upstreamStatus: "200",
+        contentHash: "sha256:campaign-retired",
+        reasonCodes: "campaign_definition_retired",
+        operatingBoundaries: "NO_OMS_EXECUTION_CLAIM",
+      },
+    });
+
+    await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign));
+    fireEvent.click(screen.getByRole("button", { name: "Lifecycle control" }));
+    expect(screen.getByRole("button", { name: "Lifecycle action recorded" })).toBeDisabled();
+    expect(screen.getByLabelText("Lifecycle action")).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Reload lifecycle evidence" }));
+    await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledTimes(2));
+  });
 });
