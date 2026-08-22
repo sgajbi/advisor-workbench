@@ -5,6 +5,7 @@ import {
 } from "@/design-system";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
+import { buildReviewContextHref } from "@/shell/review-context";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
@@ -55,6 +56,10 @@ export default function ManageContextRail({
   const hasEvidence = reviewModel.items.some((item) => item.proofPackId !== "N/A");
   const hasTraceableMonitoring =
     commandModel.correlationId !== "N/A" || commandModel.sourceRunId !== "N/A";
+  const portfolioReturnHref = buildReviewContextHref(
+    "/portfolio",
+    reviewContext,
+  );
   const nextActions =
     activeMode === "mandate"
       ? [
@@ -158,7 +163,7 @@ export default function ManageContextRail({
               {label}
             </a>
           ))}
-          <a href={`/portfolio?portfolioId=${encodeURIComponent(portfolio.portfolio_id)}`}>
+          <a href={portfolioReturnHref}>
             Return to Portfolio
           </a>
         </div>

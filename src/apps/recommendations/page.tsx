@@ -1,4 +1,8 @@
 import AdvisoryOverviewWorkspace from "@/features/proposals/components/advisory-overview-workspace";
+import {
+  WorkbenchContextNotice,
+  buildWorkbenchUnsupportedReviewContextNotice,
+} from "@/design-system";
 import AdvisoryCopilotWorkspace from "@/features/proposals/components/advisory-copilot-workspace";
 import AdvisoryOpportunitiesWorkspace from "@/features/proposals/components/advisory-opportunities-workspace";
 import AdvisorCockpitWorkspace from "@/features/proposals/components/advisor-cockpit-workspace";
@@ -61,6 +65,15 @@ export default async function RecommendationsAppPage({
       ? requestedMode
       : "overview";
   const definition = getAdvisoryJourneyDefinition(activeMode);
+  const sourceContextNotice = buildWorkbenchUnsupportedReviewContextNotice({
+    title: "Advisory workspace scope",
+    subject: "Advisory evidence",
+    destination: "advisory workspace",
+    requestedAsOfDate: reviewContextResult.context.asOfDate,
+    requestedPeriod: reviewContextResult.context.period,
+    requestedReportingCurrency:
+      reviewContextResult.context.reportingCurrency,
+  });
   return (
     <ProposalWorkspaceShell
       reviewContext={{ ...reviewContextResult.context, portfolioId }}
@@ -77,6 +90,9 @@ export default async function RecommendationsAppPage({
         activeMode === "cockpit" ? "inline-boundary" : "rail"
       }
     >
+      {sourceContextNotice ? (
+        <WorkbenchContextNotice {...sourceContextNotice} />
+      ) : null}
       {activeMode === "cockpit" ? (
         <AdvisorCockpitWorkspace portfolioId={portfolioId} />
       ) : activeMode === "copilot" ? (
