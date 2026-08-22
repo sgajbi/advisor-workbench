@@ -45,7 +45,10 @@ import {
   buildPolicyReviewQueueModel,
   resolvePolicyReviewSelection,
 } from "../proposal-policy-review-view-model";
-import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
+import {
+  buildProposalQueueWorkflowContext,
+  buildSuitabilityReviewWorkflowContext,
+} from "../proposal-workflow-context-view-model";
 import { useProposalSourceWindow } from "../use-proposal-source-window";
 import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
 import { useProposalDiscussionPack } from "../use-proposal-discussion-pack";
@@ -119,9 +122,10 @@ export default function ProposalLifecycleWorkspace({
   const proposalQuery = useQuery({
     queryKey: proposalQueryKey,
     queryFn: readProposalWindow,
+    enabled: mode !== "suitability",
     ...workbenchStrictQueryDefaults,
   });
-  const { data, isLoading } = proposalQuery;
+  const { data } = proposalQuery;
   const policyQueueQuery = useQuery({
     queryKey: ["advisory-policy-review-queue", portfolioId],
     queryFn: async () =>
@@ -287,16 +291,6 @@ export default function ProposalLifecycleWorkspace({
     policyReviewModel.rows.some(
       (row) => row.evaluationId === policySelection.evaluationId,
     );
-  if (
-    mode === "suitability" &&
-    resolvedPolicyEvaluationId &&
-    !policySelectionIsCurrent
-  ) {
-    setPolicySelection({
-      portfolioId,
-      evaluationId: resolvedPolicyEvaluationId,
-    });
-  }
   const selectedPolicyEvaluationId = policySelectionIsCurrent
     ? policySelection.evaluationId
     : resolvedPolicyEvaluationId;
@@ -457,6 +451,56 @@ export default function ProposalLifecycleWorkspace({
     portfolioId,
     selectedPolicyReview,
   ]);
+  const selectedPolicyWorkflowContext = useMemo(() => {
+    if (
+      mode !== "suitability" ||
+      !selectedPolicyReview ||
+      !policyEvidenceModel
+    ) {
+      return undefined;
+    }
+
+    const blockers = policyEvidenceModel.sourceIdentityAligned
+      ? [
+          ...policyEvidenceModel.sourceGaps,
+          ...policyEvidenceModel.workflowBlockers,
+        ].slice(0, 4)
+      : ["Selected policy identity does not agree across source evidence."];
+
+    return {
+      proposalId: policyEvidenceModel.proposalId,
+      title: !policyEvidenceModel.sourceIdentityAligned
+        ? "Selected policy evidence is unconfirmed"
+        : policyEvidenceModel.policyStatus === "Ready"
+          ? "Policy evidence ready for review"
+          : policyEvidenceModel.nextAction,
+      summary: !policyEvidenceModel.sourceIdentityAligned
+        ? "The selected evaluation, proposal and supporting policy package do not agree."
+        : `${policyEvidenceModel.policyStatus}. ${policyEvidenceModel.sourcePosture}.`,
+      currentPosture: !policyEvidenceModel.sourceIdentityAligned
+        ? "Source identity conflict"
+        : `${policyEvidenceModel.policyStatus} · ${policyEvidenceModel.workflowStatus}`,
+      nextAction: !policyEvidenceModel.sourceIdentityAligned
+        ? "Recheck the selected policy identity before taking an advisory action."
+        : policyEvidenceModel.nextAction,
+      blockers,
+      facts: [
+        { label: "Proposal", value: policyEvidenceModel.proposalId },
+        { label: "Version", value: policyEvidenceModel.proposalVersion },
+        { label: "Policy", value: policyEvidenceModel.policyPack },
+        {
+          label: "Sign-off",
+          value: policyEvidenceModel.signOffPackagePosture,
+        },
+      ],
+      sourceLabel: "Gateway-backed selected suitability evidence",
+      boundaryNote:
+        "Selected policy evidence is shown only when evaluation, proposal, portfolio, version, package, and workflow identities agree.",
+      hasEvidenceGap:
+        !policyEvidenceModel.sourceIdentityAligned ||
+        policyEvidenceModel.sourceGaps.length > 0,
+    };
+  }, [mode, policyEvidenceModel, selectedPolicyReview]);
   const approvalEvidenceModel = useMemo(() => {
     if (
       !selectedApprovalProposal ||
@@ -572,7 +616,26 @@ export default function ProposalLifecycleWorkspace({
   const policyEvidenceIdentityMismatch =
     policyEvidenceModel?.sourceIdentityAligned === false;
   const workflowContextModel = useMemo(() => {
-    const policySourcesActive = mode === "suitability";
+    if (mode === "suitability") {
+      return buildSuitabilityReviewWorkflowContext({
+        portfolioId,
+        isLoading: policySourcePosture.isInitialLoading,
+        isRefreshing: policySourcePosture.isRefreshing,
+        permissionBlocked: policyQueuePosture.isPermissionBlocked,
+        hasError:
+          policyQueuePosture.isUnavailable &&
+          !policyQueuePosture.isPermissionBlocked,
+        hasRefreshFailure: policySourcePosture.hasRefreshFailure,
+        hasUnavailableEvidence:
+          (policyEvidencePosture.isUnavailable &&
+            !policyEvidencePosture.isPermissionBlocked) ||
+          policyEvidenceIdentityMismatch,
+        totalCount: policyReviewModel.totalCount,
+        actionCount: policyReviewModel.actionCount,
+        selectedEvidence: selectedPolicyWorkflowContext,
+      });
+    }
+
     const approvalSourcesActive =
       mode === "approval-queue" && Boolean(selectedApprovalProposal);
     const riskSourceActive =
@@ -613,7 +676,6 @@ export default function ProposalLifecycleWorkspace({
         (approvalSourcesActive &&
           !approvalEvidenceModel &&
           approvalEvidencePosture.isInitialLoading) ||
-        (policySourcesActive && policySourcePosture.isInitialLoading) ||
         (riskSourceActive && riskImpactPosture.isInitialLoading) ||
         (discussionSourceActive && discussionPackPosture.isInitialLoading) ||
         (implementationSourceActive &&
@@ -621,7 +683,6 @@ export default function ProposalLifecycleWorkspace({
       isRefreshing:
         proposalSourcePosture.isRefreshing ||
         (approvalSourcesActive && approvalEvidencePosture.isRefreshing) ||
-        (policySourcesActive && policySourcePosture.isRefreshing) ||
         (riskSourceActive && riskImpactPosture.isRefreshing) ||
         (discussionSourceActive &&
           (discussionPackPosture.isRefreshing ||
@@ -633,7 +694,6 @@ export default function ProposalLifecycleWorkspace({
       hasRestrictedEvidence:
         (approvalSourcesActive &&
           approvalEvidencePosture.isPermissionBlocked) ||
-        (policySourcesActive && policySourcePosture.isPermissionBlocked) ||
         (riskSourceActive && riskImpactPosture.isPermissionBlocked) ||
         (discussionSourceActive && discussionPackPosture.isPermissionBlocked) ||
         (implementationSourceActive &&
@@ -645,10 +705,6 @@ export default function ProposalLifecycleWorkspace({
         (approvalSourcesActive &&
           approvalEvidencePosture.isUnavailable &&
           !approvalEvidencePosture.isPermissionBlocked) ||
-        (policySourcesActive &&
-          ((policySourcePosture.isUnavailable &&
-            !policySourcePosture.isPermissionBlocked) ||
-            policyEvidenceIdentityMismatch)) ||
         (riskSourceActive &&
           ((riskImpactPosture.isUnavailable &&
             !riskImpactPosture.isPermissionBlocked) ||
@@ -667,7 +723,6 @@ export default function ProposalLifecycleWorkspace({
       hasProposalRefreshFailure: proposalSourcePosture.hasRefreshFailure,
       hasSupportingEvidenceRefreshFailure:
         (approvalSourcesActive && approvalEvidencePosture.hasRefreshFailure) ||
-        (policySourcesActive && policySourcePosture.hasRefreshFailure) ||
         (riskSourceActive && riskImpactPosture.hasRefreshFailure) ||
         (discussionSourceActive &&
           (discussionPackPosture.hasRefreshFailure ||
@@ -706,10 +761,14 @@ export default function ProposalLifecycleWorkspace({
     model,
     policySourcePosture.hasRefreshFailure,
     policySourcePosture.isInitialLoading,
-    policySourcePosture.isPermissionBlocked,
     policySourcePosture.isRefreshing,
-    policySourcePosture.isUnavailable,
     policyEvidenceIdentityMismatch,
+    policyEvidencePosture.isPermissionBlocked,
+    policyEvidencePosture.isUnavailable,
+    policyQueuePosture.isPermissionBlocked,
+    policyQueuePosture.isUnavailable,
+    policyReviewModel.actionCount,
+    policyReviewModel.totalCount,
     portfolioId,
     proposalSourcePosture.hasRefreshFailure,
     proposalSourcePosture.isInitialLoading,
@@ -736,6 +795,7 @@ export default function ProposalLifecycleWorkspace({
     selectedDiscussionProposal,
     selectedDiscussionWorkflowContext,
     selectedRiskProposal,
+    selectedPolicyWorkflowContext,
     sourceWindow.hasPrevious,
     sourceWindow.windowNumber,
   ]);
@@ -846,6 +906,61 @@ export default function ProposalLifecycleWorkspace({
     }
   }
 
+  async function refreshSuitabilityReview() {
+    const queueResult = await policyQueueQuery.refetch();
+    if (queueResult.isError || !queueResult.data) {
+      throw (
+        queueResult.error ??
+        new Error(
+          "The suitability worklist refresh did not return source data.",
+        )
+      );
+    }
+
+    if (!selectedPolicyEvaluationId) {
+      return [queueResult];
+    }
+
+    const selectedReview = buildPolicyReviewQueueModel({
+      records: queueResult.data.items ?? [],
+    }).rows.find((row) => row.evaluationId === selectedPolicyEvaluationId);
+    if (!selectedReview) {
+      throw new Error(
+        "The selected policy evaluation is no longer present in the suitability worklist.",
+      );
+    }
+
+    const evidenceResults = await Promise.all([
+      policyEvaluationQuery.refetch(),
+      policySignOffPackageQuery.refetch(),
+      policyWorkflowQuery.refetch(),
+    ]);
+    const failedResult = evidenceResults.find(
+      (result) => result.isError || result.error !== null,
+    );
+    if (failedResult) {
+      throw (
+        failedResult.error ??
+        new Error("The selected suitability evidence refresh did not complete.")
+      );
+    }
+
+    const refreshedEvidence = buildPolicyEvaluationEvidenceModel({
+      evaluation: evidenceResults[0].data,
+      signOffPackage: evidenceResults[1].data,
+      workflow: evidenceResults[2].data,
+      selectedReview,
+      portfolioId,
+    });
+    if (!refreshedEvidence?.sourceIdentityAligned) {
+      throw new Error(
+        "The refreshed suitability evidence does not agree on the selected policy identity.",
+      );
+    }
+
+    return [queueResult, ...evidenceResults];
+  }
+
   async function refetchProposalWindow() {
     const result = await proposalQuery.refetch();
     if (result.isError || !result.data) {
@@ -857,24 +972,39 @@ export default function ProposalLifecycleWorkspace({
     return result.data;
   }
 
-  if (isLoading) {
+  const activeQueuePosture =
+    mode === "suitability" ? policyQueuePosture : proposalSourcePosture;
+
+  if (activeQueuePosture.isInitialLoading) {
     return (
       <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
           <CircularProgress size={16} />
-          <Text variant="body">Loading proposal lifecycle...</Text>
+          <Text variant="body">
+            {mode === "suitability"
+              ? "Loading suitability reviews..."
+              : "Loading proposal lifecycle..."}
+          </Text>
         </Stack>
       </SectionBlock>
     );
   }
 
-  if (proposalSourcePosture.isPermissionBlocked) {
+  if (activeQueuePosture.isPermissionBlocked) {
     return (
       <SectionBlock>
         <ScreenStatePanel
           kind="permission_blocked"
-          title="Proposal access is not available"
-          body="Your current role does not permit this portfolio's proposal workflow to be viewed."
+          title={
+            mode === "suitability"
+              ? "Suitability review access is not available"
+              : "Proposal access is not available"
+          }
+          body={
+            mode === "suitability"
+              ? "Your current role does not permit this portfolio's policy-review worklist to be viewed."
+              : "Your current role does not permit this portfolio's proposal workflow to be viewed."
+          }
           surface="default"
         />
       </SectionBlock>
@@ -886,20 +1016,24 @@ export default function ProposalLifecycleWorkspace({
       title={
         mode === "approval-queue"
           ? "Review desk"
-          : mode === "discussion-pack"
-            ? "Conversation preparation desk"
-            : mode === "implementation"
-              ? "Implementation follow-up desk"
-              : model.title
+          : mode === "suitability"
+            ? "Suitability decision desk"
+            : mode === "discussion-pack"
+              ? "Conversation preparation desk"
+              : mode === "implementation"
+                ? "Implementation follow-up desk"
+                : model.title
       }
       subtitle={
         mode === "approval-queue"
           ? "Select a proposal, confirm its source posture, and continue to the full review record."
-          : mode === "discussion-pack"
-            ? "Select a proposal, verify advisor-use material, and resolve every client-control boundary before the meeting."
-            : mode === "implementation"
-              ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
-              : model.subtitle
+          : mode === "suitability"
+            ? "Select a policy evaluation, confirm its client and product constraints, and resolve the next evidence requirement."
+            : mode === "discussion-pack"
+              ? "Select a proposal, verify advisor-use material, and resolve every client-control boundary before the meeting."
+              : mode === "implementation"
+                ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
+                : model.subtitle
       }
       actions={
         <Link
@@ -910,13 +1044,13 @@ export default function ProposalLifecycleWorkspace({
         </Link>
       }
     >
-      {proposalSourcePosture.isUnavailable ? (
+      {mode !== "suitability" && proposalSourcePosture.isUnavailable ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           Proposal lifecycle is unavailable. No fallback proposal queue is
           shown.
         </Alert>
       ) : null}
-      {proposalSourcePosture.hasRefreshFailure ? (
+      {mode !== "suitability" && proposalSourcePosture.hasRefreshFailure ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
           The proposal view could not be refreshed. Previously retrieved rows
           remain visible while the source is rechecked.
@@ -931,34 +1065,36 @@ export default function ProposalLifecycleWorkspace({
         </Alert>
       ) : null}
 
-      <div className={styles.decisionPanel}>
-        <div>
-          <Text variant="microLabel">Advisor Decision</Text>
-          <Text variant="subsectionTitle" as="h2">
-            {model.primaryDecision}
-          </Text>
-          <Text variant="secondary">{model.recommendedAction}</Text>
-        </div>
-        <div
-          className={styles.countStrip}
-          aria-label="Proposal lifecycle counts"
-        >
+      {mode !== "suitability" ? (
+        <div className={styles.decisionPanel}>
           <div>
-            <span>{model.totalCount}</span>
-            <strong>In view</strong>
+            <Text variant="microLabel">Advisor Decision</Text>
+            <Text variant="subsectionTitle" as="h2">
+              {model.primaryDecision}
+            </Text>
+            <Text variant="secondary">{model.recommendedAction}</Text>
           </div>
-          {mode === "implementation" ? null : (
+          <div
+            className={styles.countStrip}
+            aria-label="Proposal lifecycle counts"
+          >
             <div>
-              <span>{model.attentionCount}</span>
-              <strong>
-                {mode === "approval-queue"
-                  ? "Not execution-ready"
-                  : "Need action"}
-              </strong>
+              <span>{model.totalCount}</span>
+              <strong>In view</strong>
             </div>
-          )}
+            {mode === "implementation" ? null : (
+              <div>
+                <span>{model.attentionCount}</span>
+                <strong>
+                  {mode === "approval-queue"
+                    ? "Not execution-ready"
+                    : "Need action"}
+                </strong>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {mode === "suitability" ? (
         <PolicyReviewWorkspace
@@ -992,6 +1128,7 @@ export default function ProposalLifecycleWorkspace({
             reviewRequestMatchesSelection &&
             Boolean(requestMoreEvidenceMutation.error)
           }
+          onRefresh={refreshSuitabilityReview}
           onRequestMoreEvidence={() => {
             if (
               selectedPolicyEvaluationId &&
@@ -1010,7 +1147,7 @@ export default function ProposalLifecycleWorkspace({
         />
       ) : null}
 
-      {proposalSourcePosture.isUnavailable ? (
+      {mode === "suitability" ? null : proposalSourcePosture.isUnavailable ? (
         <ScreenStatePanel
           kind="error"
           title="Proposal lifecycle unavailable"
@@ -1216,7 +1353,8 @@ export default function ProposalLifecycleWorkspace({
           </table>
         </div>
       )}
-      {!proposalSourcePosture.isPermissionBlocked &&
+      {mode !== "suitability" &&
+      !proposalSourcePosture.isPermissionBlocked &&
       (!proposalSourcePosture.isUnavailable || sourceWindow.hasPrevious) ? (
         <SourceWindowNavigation
           ariaLabel="Proposal queue navigation"

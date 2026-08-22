@@ -332,4 +332,21 @@ describe("app route entrypoints", () => {
     expect(screen.getAllByText("PORT_1001").length).toBeGreaterThan(0);
     expect(screen.getByText("risk-impact")).toBeInTheDocument();
   });
+
+  it("gives Suitability Review the full-width decision desk presentation", async () => {
+    render(
+      await ProposalsPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PORT_1001",
+          mode: "suitability",
+        }),
+      }),
+    );
+
+    expect(screen.getByTestId("proposal-workspace-shell")).toHaveAttribute(
+      "data-context-presentation",
+      "inline-boundary",
+    );
+    expect(screen.getByText("suitability")).toBeInTheDocument();
+  });
 });

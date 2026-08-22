@@ -14,7 +14,9 @@ export default async function ProposalsPage({
   searchParams?: Promise<{ portfolioId?: string; mode?: string }>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const portfolioId = resolveProposalPortfolioId(resolvedSearchParams.portfolioId);
+  const portfolioId = resolveProposalPortfolioId(
+    resolvedSearchParams.portfolioId,
+  );
   const activeMode = normalizeAdvisoryJourneyMode(resolvedSearchParams.mode);
   const lifecycleMode = normalizeProposalLifecycleMode(activeMode);
   const lifecycleDefinition = getProposalLifecycleModeDefinition(lifecycleMode);
@@ -25,6 +27,9 @@ export default async function ProposalsPage({
       activeMode={lifecycleMode}
       title={lifecycleDefinition.title}
       subtitle={lifecycleDefinition.subtitle}
+      workflowContextPresentation={
+        lifecycleMode === "suitability" ? "inline-boundary" : "rail"
+      }
     >
       <ProposalLifecycleWorkspace
         key={`${portfolioId}:${lifecycleMode}`}
