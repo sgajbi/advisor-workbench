@@ -33,6 +33,15 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
+    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+      "Mandate source context",
+    );
+    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+      /source valuation date 13 May 2026.*advisor review date 30 Jun 2026/i,
+    );
+    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+      /source base currency USD.*restatement to SGD is not supported/i,
+    );
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();

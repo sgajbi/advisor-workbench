@@ -27,6 +27,28 @@ type ShellWorkspaceDefinition = Readonly<{
   }>[];
 }>;
 
+const PERIODS_WITHOUT_PAGE_LOCAL_BOUNDS = [
+  "7D",
+  "30D",
+  "MTD",
+  "QTD",
+  "YTD",
+  "1Y",
+  "3Y",
+  "5Y",
+  "SI",
+] as const satisfies readonly ReviewPeriod[];
+
+const PORTFOLIO_REVIEW_PERIODS = [
+  "7D",
+  "30D",
+  "MTD",
+  "QTD",
+  "YTD",
+  "1Y",
+  "SI",
+] as const satisfies readonly ReviewPeriod[];
+
 const SHELL_WORKSPACE_DEFINITIONS: Record<ShellWorkspaceId, ShellWorkspaceDefinition> = {
   portfolio: {
     matchers: [
@@ -47,23 +69,58 @@ const SHELL_WORKSPACE_DEFINITIONS: Record<ShellWorkspaceId, ShellWorkspaceDefini
       {
         matchers: [
           "/allocation",
+          "/book",
+          "/intake",
+          "/manage",
           "/portfolio",
+          "/portfolios",
           "/positions",
           "/transactions",
           "/income",
           "/cashflow",
           "/reports",
+          "/workbench",
         ],
         reviewContext: {
-          acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"],
+          acceptedPeriods: PORTFOLIO_REVIEW_PERIODS,
         },
       },
     ],
   },
-  performance: { matchers: ["/performance"] },
+  performance: {
+    matchers: ["/performance"],
+    destinationPolicies: [
+      {
+        matchers: ["/performance"],
+        reviewContext: {
+          acceptedPeriods: PERIODS_WITHOUT_PAGE_LOCAL_BOUNDS,
+        },
+      },
+    ],
+  },
   risk: { matchers: ["/performance"] },
-  proposal: { matchers: ["/proposals"] },
-  advisory: { matchers: ["/recommendations"] },
+  proposal: {
+    matchers: ["/proposals"],
+    destinationPolicies: [
+      {
+        matchers: ["/proposals"],
+        reviewContext: {
+          acceptedPeriods: PERIODS_WITHOUT_PAGE_LOCAL_BOUNDS,
+        },
+      },
+    ],
+  },
+  advisory: {
+    matchers: ["/recommendations"],
+    destinationPolicies: [
+      {
+        matchers: ["/recommendations"],
+        reviewContext: {
+          acceptedPeriods: PERIODS_WITHOUT_PAGE_LOCAL_BOUNDS,
+        },
+      },
+    ],
+  },
 };
 
 export function resolveShellRouteContext(
