@@ -130,6 +130,7 @@ describe("PortfolioScreenRail", () => {
     fireEvent.click(within(navigation).getByRole("link", { name: /holdings/i }));
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
+    expect(disclosure).toHaveFocus();
     expect(
       screen.getByRole("navigation", { name: "Workbench screen navigation" }),
     ).toHaveAttribute("data-navigation-state", "collapsed");
