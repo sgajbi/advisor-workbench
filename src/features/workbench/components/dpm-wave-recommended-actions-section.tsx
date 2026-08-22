@@ -1,5 +1,7 @@
 "use client";
 
+import { WorkbenchIcon } from "@/design-system";
+
 type Props = {
   approvalBlocked: boolean;
 };
@@ -39,9 +41,7 @@ function RecommendedAction({ title, detail }: { title: string; detail: string })
         <strong>{title}</strong>
         <small>{detail}</small>
       </span>
-      <span className="material-symbols-outlined" aria-hidden="true">
-        chevron_right
-      </span>
+      <WorkbenchIcon name="chevron-right" />
     </button>
   );
 }

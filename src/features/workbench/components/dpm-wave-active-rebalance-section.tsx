@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionButton } from "@/design-system";
+import { ActionButton, WorkbenchIcon } from "@/design-system";
 import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type { DpmWaveMetricTile } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
 import {
@@ -76,16 +76,12 @@ export default function DpmWaveActiveRebalanceSection({
 
       {approvalBlocked ? (
         <div className="rebalance-alert" role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">
-            warning
-          </span>
+          <WorkbenchIcon name="warning" />
           <span>Resolve mandate attention items before approval.</span>
         </div>
       ) : (
         <div className="rebalance-ready-note" role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">
-            check_circle
-          </span>
+          <WorkbenchIcon name="success" />
           <span>Approval can proceed after advisor review.</span>
         </div>
       )}
