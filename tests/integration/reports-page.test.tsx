@@ -81,4 +81,34 @@ describe("reports page", () => {
     expect(screen.queryByText(/source-backed portfolio context/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
   });
+
+  it.each([
+    {},
+    { portfolioId: ["PB_SG_GLOBAL_BAL_001", "PB_OTHER_001"] },
+  ])("makes no source calls without one governed report context: %o", async (searchParams) => {
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve(searchParams),
+      }),
+    );
+
+    expect(screen.getByText("Portfolio reporting context is unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
+    expect(catalogMock).not.toHaveBeenCalled();
+    expect(shellMock).not.toHaveBeenCalled();
+  });
+
+  it("does not request report choices for unsupported review controls", async () => {
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          period: "5Y",
+        }),
+      }),
+    );
+
+    expect(screen.getByText(/not supported for report ordering/i)).toBeInTheDocument();
+    expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
+  });
 });

@@ -1,6 +1,7 @@
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import { resolveSelectedPortfolioId } from "@/apps/portfolio/portfolio-selection";
+import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
 import {
   AppPageShell,
   DegradedStatePanel,
@@ -8,23 +9,58 @@ import {
   WorkbenchPageContainer,
   WorkbenchPageFrame,
 } from "@/design-system";
+import {
+  parseReviewContext,
+  type ReviewContextSearchParams,
+} from "@/shell/review-context";
 
 import { ReportOrderingWorkspace } from "./components/report-ordering-workspace";
 
 export async function ReportOrderingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ portfolioId?: string }>;
+  searchParams: Promise<ReviewContextSearchParams>;
 }) {
-  const [portfolios, resolvedSearch] = await Promise.all([
-    getPortfolioCatalog(),
-    searchParams,
-  ]);
-  const portfolioId = resolveSelectedPortfolioId(portfolios, resolvedSearch.portfolioId);
+  const resolvedSearch = await searchParams;
+  const reviewContextResult = parseReviewContext(resolvedSearch);
+  if (reviewContextResult.status === "invalid") {
+    return (
+      <ReportOrderingUnavailable
+        portfolioId={null}
+        reason="The report address contains repeated or unsupported review context. No report catalogue was requested."
+      />
+    );
+  }
+  if (!reviewContextResult.context.portfolioId) {
+    return (
+      <ReportOrderingUnavailable
+        portfolioId={null}
+        reason="Select a source-confirmed portfolio from My book before preparing a report. No demo portfolio was substituted."
+      />
+    );
+  }
+
+  const portfolios = await getPortfolioCatalog();
+  const portfolioId = resolveSelectedPortfolioId(
+    portfolios,
+    reviewContextResult.context.portfolioId,
+  );
   const workspace = portfolioId ? await getPortfolioWorkspaceShell(portfolioId) : null;
 
   if (!portfolioId || !workspace) {
     return <ReportOrderingUnavailable portfolioId={portfolioId} />;
+  }
+  const controlResolution = resolvePortfolioReviewControls(
+    workspace,
+    reviewContextResult.context,
+  );
+  if (controlResolution.status === "invalid") {
+    return (
+      <ReportOrderingUnavailable
+        portfolioId={portfolioId}
+        reason="The selected date, period, or reporting currency is not supported for report ordering. No report catalogue was requested."
+      />
+    );
   }
 
   return (
@@ -32,14 +68,21 @@ export async function ReportOrderingPage({
       portfolio={{
         portfolioId,
         displayName: workspace.portfolio.display_name,
-        asOfDate: workspace.as_of_date,
-        baseCurrency: workspace.portfolio.base_currency,
+        asOfDate: controlResolution.controls.asOfDate,
+        baseCurrency: controlResolution.controls.reportingCurrency,
       }}
     />
   );
 }
 
-function ReportOrderingUnavailable({ portfolioId }: { portfolioId: string | null }) {
+function ReportOrderingUnavailable({
+  portfolioId,
+  reason =
+    "Select an available portfolio before preparing a report request. No report choices or submission controls are shown without confirmed portfolio context.",
+}: {
+  portfolioId: string | null;
+  reason?: string;
+}) {
   return (
     <AppPageShell pageKey="reports" className="portfolio-page">
       <WorkbenchPageContainer className="portfolio-page-container">
@@ -60,11 +103,10 @@ function ReportOrderingUnavailable({ portfolioId }: { portfolioId: string | null
                 tone="warn"
                 status="Unavailable"
                 actions={[
-                  { href: "/portfolio", label: "Return To Portfolio" },
+                  { href: "/book", label: "Open My Book" },
                 ]}
               >
-                Select an available portfolio before preparing a report request. No report choices
-                or submission controls are shown without confirmed portfolio context.
+                {reason}
               </DegradedStatePanel>
             </WorkbenchPageFrame>
           }
