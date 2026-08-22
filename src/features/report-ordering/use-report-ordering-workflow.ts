@@ -92,7 +92,10 @@ export function useReportOrderingWorkflow({
   selectedPortfolioIds?: string[];
   portfolioSelectionState?: "loading" | "ready" | "error";
   initialBatchId?: string;
-  onBatchAccepted?: (batchId: string) => void;
+  onBatchAccepted?: (
+    batchId: string,
+    context: Readonly<{ asOfDate: string; reportingCurrency: string }>,
+  ) => void;
 }) {
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
   const [catalogueState, setCatalogueState] =
@@ -647,7 +650,10 @@ export function useReportOrderingWorkflow({
           status: null,
           error: null,
         });
-        onBatchAccepted?.(batchHandle.batch_id);
+        onBatchAccepted?.(batchHandle.batch_id, {
+          asOfDate: batchIntent.asOfDate,
+          reportingCurrency: batchIntent.reportingCurrency ?? sourceBaseCurrency,
+        });
         await loadBatchStatus(batchHandle.batch_id, batchIntent);
         if (
           !isActiveWorkspaceGeneration(portfolioId, submissionWorkspaceGeneration) ||
@@ -688,6 +694,7 @@ export function useReportOrderingWorkflow({
     scopeMode,
     activeScopePortfolioIds,
     onBatchAccepted,
+    sourceBaseCurrency,
   ]);
 
   const startAnotherReport = useCallback(() => {

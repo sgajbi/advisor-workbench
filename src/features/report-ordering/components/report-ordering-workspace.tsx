@@ -71,12 +71,17 @@ function ReportOrderingWorkspaceSession({
   const [portfolioSelectionState, setPortfolioSelectionState] =
     useState<"loading" | "ready" | "error">("loading");
   const commitBatchAddress = useCallback(
-    (batchId: string) => {
+    (
+      batchId: string,
+      context: Readonly<{ asOfDate: string; reportingCurrency: string }>,
+    ) => {
       const href = buildReviewContextNavigationHref({
         pathname,
         searchParams,
         patch: {
           portfolioId: portfolio.portfolioId,
+          asOfDate: context.asOfDate,
+          reportingCurrency: context.reportingCurrency,
           batchId,
         },
       });
