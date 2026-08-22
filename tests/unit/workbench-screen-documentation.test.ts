@@ -712,6 +712,10 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("one atomic decision-context transaction");
+    expect(guide).toContain("never substitutes\n  the canonical demo portfolio");
+    expect(guide).toContain("browser-history `push`");
+    expect(guide).toContain("synchronizes Back and Forward into the mounted client");
+    expect(guide).toContain("3Y returns to YTD and forward to 3Y");
     expect(guide).toContain("failed refresh never converts prior analytics");
     expect(guide).toContain(
       "composing Core portfolio/reference/benchmark context",

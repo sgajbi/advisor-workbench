@@ -10,7 +10,7 @@ strategy, approve a recommendation, or publish a client report.
 
 | Screen posture | Current truth |
 | --- | --- |
-| Canonical route | `/performance?portfolioId={portfolio_id}`; Summary is the default mode, while explicit `mode=summary` is accepted as an equivalent entry |
+| Canonical route | `/performance?portfolioId={portfolio_id}`; Summary is the default mode, while source-confirmed `asOfDate`, `period`, and `reportingCurrency` remain in the address when supplied by the entering workflow |
 | Navigation | **Performance** in the global workspace navigation, then **Performance Overview** in the selected-portfolio rail |
 | Supported scope | One Gateway-backed portfolio, one source-confirmed reporting window, return basis, frequency, and benchmark selection |
 | Primary reading order | Reporting scope, portfolio and benchmark return, active return, return path, horizon comparison, then contributor leadership |
@@ -66,11 +66,20 @@ investment suitability, or supervisory authority.
 
 Changing an analytical selection is a read-only request. The visible selection and URL become
 current only after the matching summary and detail contracts both confirm the requested context.
+Advisor decisions add browser-history entries; source normalization corrects the current entry.
+Back and Forward restore the confirmed mode and analytical context without remounting the workspace
+or moving focus away from the active rail or source control.
 
 ## Implemented Capabilities
 
 - Presents source-returned portfolio, benchmark, active, annualised, and money-weighted performance
   only when the selected contract publishes usable evidence.
+- Requires an explicit source-catalogue portfolio. A missing, repeated, malformed, or unavailable
+  identity produces a business recovery state before analytical reads; Workbench never substitutes
+  the canonical demo portfolio or the first catalogue result.
+- Keeps URL review context separate from internal source identity. A supplied valuation date or
+  reporting currency proceeds only when the summary confirms it; summary and detail payloads with
+  another portfolio, valuation date, or period are withheld instead of being composed.
 - Enters the standard `YTD` period when no reporting selection is present; Workbench does not attach
   a portfolio-specific fixed start or end date. Explicit windows are sent only after the URL or
   advisor selection supplies them.
@@ -100,6 +109,9 @@ current only after the matching summary and detail contracts both confirm the re
   without manufacturing unavailable analytics.
 - Treats a selection change as one atomic decision-context transaction: requested labels, figures,
   and URL are committed together only after the source confirms summary and detail.
+- Uses browser-history `push` for confirmed advisor mode and source-control decisions, reserves
+  `replace` for source normalization, and synchronizes Back and Forward into the mounted client
+  without discarding keyboard focus or accepting an obsolete request.
 - Keeps the prior source-confirmed result visibly labelled with its original context during a
   refresh or failure and offers an explicit source retry after failure.
 - Announces pending and failed refresh states without moving focus, locks conflicting controls
@@ -121,6 +133,7 @@ current only after the matching summary and detail contracts both confirm the re
 | Identify contributor leadership | Confirmed contribution detail and source capability | None; Workbench does not recommend a trade |
 | Retry an unconfirmed selection | Explicit failed refresh with retained requested and confirmed contexts | None; re-contacts Gateway and Performance authority |
 | Continue to deeper review | Available selected-portfolio Performance mode | None from Summary |
+| Return to an earlier confirmed view | Existing browser-history entry with valid governed context | None; restores the matching source-backed read state |
 
 Viewing, changing controls, or retrying does not create a recommendation, proposal, report order,
 client communication, portfolio instruction, trade, order, execution, settlement, or approval.
@@ -136,6 +149,8 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | Zero, one, or multiple horizon observations | Chooses a truthful empty, exact-table, or comparison presentation without manufacturing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` over Performance authority |
 | Horizon loading, failure, permission block, exact retry, success-only cache, and obsolete-request fencing | Owns browser request state independently from Summary selection confirmation | Workbench over the matching Gateway response |
 | Pending, failed, requested, and source-confirmed selection context | Owns the browser transaction state; never relabels retained source data | Workbench over the matching Gateway responses |
+| Portfolio, valuation date, period, reporting currency, selected record, and report-batch address context | Parses one atomic governed context, rejects repeated or malformed values, and serializes supported fields once in stable order | Workbench navigation over source-confirmed identities; no new domain capability is inferred |
+| Back and Forward mode or analytical selection | Synchronizes server-confirmed route props into the mounted workspace, resets caches as one boundary, and fences obsolete responses | Browser history plus matching Gateway responses |
 | Retry | Repeats the exact failed selection through the Workbench BFF | Gateway and Performance |
 
 Workbench uses the BFF and Gateway. It does not call Performance or Core directly. Shared contract
@@ -147,6 +162,9 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Initial loading | Bounded workspace loading with no fabricated performance result | Wait for the selected portfolio contract |
+| Missing or ambiguous portfolio | **Review context needs attention** with no portfolio lookup or analytical request for missing/invalid identity | Return to **My book** and select a source-confirmed portfolio |
+| Portfolio not in source catalogue | Explicit no-substitution recovery after the bounded catalogue read; no performance summary is requested | Choose another portfolio from **My book** |
+| Valuation or currency mismatch | Explicit source-context recovery after summary validation; analytical detail is not requested | Use the source-confirmed performance context or return to **My book** |
 | Ready | Confirmed scope, headline outcome, return path, horizon context, contributors, and supportability | Continue the review |
 | Selection pending | Requested and source-confirmed contexts shown separately; prior figures keep their confirmed labels and controls are locked | Wait for both summary and detail confirmation |
 | Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
@@ -227,6 +245,10 @@ superiority.
 - The existing populated and unavailable Performance scenarios remain the regression proof for
   complete and degraded source contracts. Canonical live validation remains the release evidence
   for the governed front-office stack.
+- The populated optimized-production history journey proves that portfolio, valuation date, period,
+  reporting currency, and Analysis mode survive user selection, Back, and Forward. It also proves
+  3Y returns to YTD and forward to 3Y from source-confirmed responses, keeps focus on the visible
+  desktop workflow or horizon control, retains head-managed styles, and admits no browser errors.
 - The populated asymmetric-contributor scenario proves that one source-populated group and one
   source-confirmed empty group never overlap. It asserts rendered group separation and zero
   internal horizontal overflow at 1800, 1440, 1024, 768, and 519 pixels; reviewed evidence under
