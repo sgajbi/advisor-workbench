@@ -37,6 +37,13 @@ import {
 } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import type { DpmAiWorkflowGatewayEnvelope } from "@/features/workbench/dpm-ai-workflow-contract";
 import type { DpmAiWorkflowFamily } from "@/features/workbench/dpm-ai-workflow-profiles";
+import {
+  campaignCommandActorId,
+  type DpmCampaignLifecycleCommandInput,
+  type DpmCampaignLifecycleCommandType,
+  type DpmCampaignWorkflowCommandInput,
+  type DpmCampaignWorkflowCommandType,
+} from "@/features/workbench/dpm-campaign-command-contracts";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmCampaignWorkflowGatewayResponse,
@@ -67,19 +74,6 @@ type UseDpmWaveCommandCenterActionsInput = {
   campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 };
 
-export type DpmCampaignWorkflowCommandType =
-  | "approval_decision"
-  | "assignment_action"
-  | "assignment_task"
-  | "task_transition"
-  | "maker_checker_control";
-
-export type DpmCampaignWorkflowCommandInput = {
-  commandType: DpmCampaignWorkflowCommandType;
-  body: Record<string, unknown>;
-  taskRef?: string;
-};
-
 export type DpmCampaignWorkflowCommandEvidence = {
   commandLabel: string;
   evidenceRef: string;
@@ -91,23 +85,12 @@ export type DpmCampaignWorkflowCommandEvidence = {
   operatingBoundaries: string;
 };
 
-export type DpmCampaignLifecycleCommandType = "retire" | "supersede";
-
-export type DpmCampaignLifecycleCommandInput = {
-  commandType: DpmCampaignLifecycleCommandType;
-  actorId: string;
-  reasonCode: string;
-  replacementCampaignVersion?: string;
-  replacementContentHash?: string;
-};
-
 export type DpmCampaignLifecycleCommandEvidence = {
   commandLabel: string;
   status: string;
   actor: string;
   reason: string;
   replacementCampaignVersion: string;
-  replacementContentHash: string;
   correlationId: string;
   sourceService: string;
   upstreamStatus: string;
@@ -672,17 +655,21 @@ export function useDpmWaveCommandCenterActions({
       );
       return;
     }
-    const actorId = command.actorId.trim();
-    const reasonCode = command.reasonCode.trim();
-    const replacementCampaignVersion = command.replacementCampaignVersion?.trim() ?? "";
-    const replacementContentHash = command.replacementContentHash?.trim() ?? "";
-    if (!actorId || !reasonCode) {
+    const actorId = campaignCommandActorId(command).trim();
+    const reason =
+      command.commandType === "retire"
+        ? command.body.retirement_reason.trim()
+        : command.body.supersession_reason.trim();
+    if (!actorId || !reason || !command.body.correlation_id.trim()) {
       setCampaignLifecycleCommandError("Campaign lifecycle command requires actor and reason.");
       return;
     }
-    if (command.commandType === "supersede" && (!replacementCampaignVersion || !replacementContentHash)) {
+    if (
+      command.commandType === "supersede" &&
+      !command.body.superseded_by_campaign_version.trim()
+    ) {
       setCampaignLifecycleCommandError(
-        "Supersede requires replacement campaign version and content hash."
+        "Supersede requires an existing replacement campaign version."
       );
       return;
     }
@@ -690,24 +677,20 @@ export function useDpmWaveCommandCenterActions({
     setCampaignLifecycleCommandError(null);
     setCampaignLifecycleCommandEvidence(null);
     try {
-      const body: Record<string, unknown> = {
-        actor_id: actorId,
-        reason_code: reasonCode,
-      };
-      if (command.commandType === "supersede") {
-        body.replacement_campaign_version = replacementCampaignVersion;
-        body.replacement_content_hash = replacementContentHash;
-      }
-      const params = {
-        campaignId: selectedCampaign.campaignId,
-        campaignVersion: selectedCampaign.campaignVersion,
-        body,
-        actorId,
-      };
       const response =
         command.commandType === "retire"
-          ? await retireDpmCampaignDefinition(params)
-          : await supersedeDpmCampaignDefinition(params);
+          ? await retireDpmCampaignDefinition({
+              campaignId: selectedCampaign.campaignId,
+              campaignVersion: selectedCampaign.campaignVersion,
+              body: command.body,
+              actorId,
+            })
+          : await supersedeDpmCampaignDefinition({
+              campaignId: selectedCampaign.campaignId,
+              campaignVersion: selectedCampaign.campaignVersion,
+              body: command.body,
+              actorId,
+            });
       setCampaignLifecycleCommandEvidence(
         buildCampaignLifecycleCommandEvidence(command.commandType, response)
       );
@@ -749,25 +732,28 @@ export function useDpmWaveCommandCenterActions({
     setCampaignWorkflowCommandError(null);
     setCampaignWorkflowCommandEvidence(null);
     try {
-      const params = {
+      const commandContext = {
         campaignId: selectedCampaign.campaignId,
         campaignVersion: selectedCampaign.campaignVersion,
-        body: command.body,
-        actorId: readString(command.body.actor_id),
+        actorId: campaignCommandActorId(command),
       };
       const response =
         command.commandType === "approval_decision"
-          ? await createDpmCampaignApprovalDecision(params)
+          ? await createDpmCampaignApprovalDecision({ ...commandContext, body: command.body })
           : command.commandType === "assignment_action"
-            ? await createDpmCampaignAssignmentAction(params)
+            ? await createDpmCampaignAssignmentAction({ ...commandContext, body: command.body })
             : command.commandType === "assignment_task"
-              ? await createDpmCampaignAssignmentTask(params)
+              ? await createDpmCampaignAssignmentTask({ ...commandContext, body: command.body })
               : command.commandType === "task_transition"
                 ? await createDpmCampaignAssignmentTaskTransition({
-                    ...params,
-                    taskRef: command.taskRef ?? "",
+                    ...commandContext,
+                    taskRef: command.taskRef,
+                    body: command.body,
                   })
-                : await createDpmCampaignMakerCheckerControl(params);
+                : await createDpmCampaignMakerCheckerControl({
+                    ...commandContext,
+                    body: command.body,
+                  });
       setCampaignWorkflowCommandEvidence(
         buildCampaignWorkflowCommandEvidence(command.commandType, response)
       );
@@ -842,10 +828,20 @@ function buildCampaignLifecycleCommandEvidence(
   return {
     commandLabel: commandType === "retire" ? "Retire campaign" : "Supersede campaign",
     status: readString(data.status) || readString(data.supportability_state) || "N/A",
-    actor: readString(data.actor_id) || readString(data.actor) || "N/A",
-    reason: readString(data.reason_code) || formatList(data.reason_codes),
-    replacementCampaignVersion: readString(data.replacement_campaign_version) || "N/A",
-    replacementContentHash: readString(data.replacement_content_hash) || "N/A",
+    actor:
+      readString(data.retired_by) ||
+      readString(data.superseded_by) ||
+      readString(data.actor_id) ||
+      readString(data.actor) ||
+      "N/A",
+    reason:
+      readString(data.retirement_reason) ||
+      readString(data.supersession_reason) ||
+      formatList(data.reason_codes),
+    replacementCampaignVersion:
+      readString(data.superseded_by_campaign_version) ||
+      readString(data.replacement_campaign_version) ||
+      "N/A",
     correlationId: readString(data.correlation_id) || response.correlation_id,
     sourceService: response.source_service,
     upstreamStatus: String(response.upstream_status),

@@ -2164,28 +2164,67 @@ describe("workbench api", () => {
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
       actorId: "pm_sg_1",
-      body: { decision_ref: "decision-sensitive-001", actor_id: "pm_sg_1" },
+      body: {
+        decision_type: "APPROVED",
+        decision_ref: "decision-sensitive-001",
+        decided_by: "pm_sg_1",
+        decision_reason: "The source evidence is complete.",
+        correlation_id: "corr-approval",
+      },
     });
     await createDpmCampaignAssignmentAction({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-      body: { action_ref: "action-sensitive-001", actor_id: "pm_sg_1" },
+      body: {
+        action_type: "ASSIGNED",
+        action_ref: "action-sensitive-001",
+        recorded_by: "pm_sg_1",
+        action_reason: "Assign the campaign review to the responsible PM.",
+        assigned_actor_ids: ["pm_sg_2"],
+        escalation_tier: "PM",
+        sla_posture: "ON_TRACK",
+        correlation_id: "corr-assignment",
+      },
     });
     await createDpmCampaignAssignmentTask({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-      body: { task_ref: "task-sensitive-001", actor_id: "pm_sg_1" },
+      body: {
+        task_ref: "task-sensitive-001",
+        task_type: "ASSIGNMENT",
+        opened_by: "pm_sg_1",
+        task_reason: "PM acknowledgement is required.",
+        assigned_actor_ids: ["pm_sg_2"],
+        escalation_tier: "PM",
+        sla_posture: "ON_TRACK",
+        correlation_id: "corr-task",
+      },
     });
     await createDpmCampaignAssignmentTaskTransition({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
       taskRef: "task-sensitive-001",
-      body: { transition_type: "MARK_SUPPORTABLE", actor_id: "pm_sg_1" },
+      body: {
+        transition_type: "ACKNOWLEDGED",
+        transition_ref: "task-sensitive-001:acknowledged",
+        transitioned_by: "pm_sg_1",
+        transition_reason: "The PM acknowledged the campaign review task.",
+        correlation_id: "corr-transition",
+      },
     });
     await createDpmCampaignMakerCheckerControl({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
-      body: { control_ref: "control-sensitive-001", actor_id: "pm_sg_1" },
+      body: {
+        control_action: "REVIEW_COMPLETED",
+        control_ref: "control-sensitive-001",
+        recorded_by: "pm_sg_1",
+        submitter_actor_id: "pm_sg_1",
+        reviewer_actor_id: "governance_sg_1",
+        control_outcome: "PASSED",
+        control_reason: "Independent review completed.",
+        correlation_id: "corr-control",
+      },
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -2197,25 +2236,25 @@ describe("workbench api", () => {
       expect.arrayContaining([
         expect.objectContaining({
           url: expect.stringContaining("/approval-decisions"),
-          body: { body: { decision_ref: "decision-sensitive-001", actor_id: "pm_sg_1" } },
+          body: { body: expect.objectContaining({ decision_type: "APPROVED", decided_by: "pm_sg_1" }) },
         }),
         expect.objectContaining({
           url: expect.stringContaining("/assignment-actions"),
-          body: { body: { action_ref: "action-sensitive-001", actor_id: "pm_sg_1" } },
+          body: { body: expect.objectContaining({ action_type: "ASSIGNED", recorded_by: "pm_sg_1" }) },
         }),
         expect.objectContaining({
           url: expect.stringContaining("/assignment-tasks"),
-          body: { body: { task_ref: "task-sensitive-001", actor_id: "pm_sg_1" } },
+          body: { body: expect.objectContaining({ task_ref: "task-sensitive-001", opened_by: "pm_sg_1" }) },
         }),
         expect.objectContaining({
           url: expect.stringContaining("/assignment-tasks/task-sensitive-001/transitions"),
           body: {
-            body: { transition_type: "MARK_SUPPORTABLE", actor_id: "pm_sg_1" },
+            body: expect.objectContaining({ transition_type: "ACKNOWLEDGED", transitioned_by: "pm_sg_1" }),
           },
         }),
         expect.objectContaining({
           url: expect.stringContaining("/maker-checker-controls"),
-          body: { body: { control_ref: "control-sensitive-001", actor_id: "pm_sg_1" } },
+          body: { body: expect.objectContaining({ control_action: "REVIEW_COMPLETED", recorded_by: "pm_sg_1" }) },
         }),
       ])
     );
@@ -2458,8 +2497,9 @@ describe("workbench api", () => {
       campaignVersion: "2026.05",
       actorId: "pm_sg_1",
       body: {
-        actor_id: "pm_sg_1",
-        reason_code: "CAMPAIGN_DEFINITION_RETIRED_BY_OWNER",
+        retired_by: "pm_sg_1",
+        retirement_reason: "The campaign review cycle is complete.",
+        correlation_id: "corr-retire",
       },
     });
     await supersedeDpmCampaignDefinition({
@@ -2467,10 +2507,10 @@ describe("workbench api", () => {
       campaignVersion: "2026.05",
       actorId: "pm_sg_1",
       body: {
-        actor_id: "pm_sg_1",
-        reason_code: "CAMPAIGN_DEFINITION_REPLACED_BY_SOURCE_REFRESH",
-        replacement_campaign_version: "2026.06",
-        replacement_content_hash: "sha256:campaign-replacement",
+        superseded_by_campaign_version: "2026.06",
+        superseded_by: "pm_sg_1",
+        supersession_reason: "Candidate evidence was refreshed.",
+        correlation_id: "corr-supersede",
       },
     });
 
@@ -2482,7 +2522,7 @@ describe("workbench api", () => {
       "/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings-202605/versions/2026.05/supersede"
     );
     expect(fetchMock.mock.calls[1][1]?.body).toContain(
-      '"replacement_content_hash":"sha256:campaign-replacement"'
+      '"superseded_by_campaign_version":"2026.06"'
     );
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("wave-campaign-retire");

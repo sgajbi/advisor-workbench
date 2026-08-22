@@ -65,7 +65,8 @@ describe("DpmCampaignWorkflowAuditCard", () => {
       />
     );
 
-    expect(screen.getByText("Campaign Workflow Audit")).toBeInTheDocument();
+    expect(screen.getByText("Governance action")).toBeInTheDocument();
+    expect(screen.getByText("Source evidence and operating audit")).toBeInTheDocument();
     expect(screen.getByText("Operating Queue")).toBeInTheDocument();
     expect(screen.getAllByText("Assignment Task").length).toBeGreaterThan(0);
     expect(screen.getByText("sha256:task")).toBeInTheDocument();
@@ -86,8 +87,8 @@ describe("DpmCampaignWorkflowAuditCard", () => {
       />
     );
 
-    expect(screen.getByText("Select a Manage campaign definition")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Record Workflow Evidence" })).toBeDisabled();
+    expect(screen.getByText("Select a campaign to act")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Record governance action" })).not.toBeInTheDocument();
   });
 
   it("submits bounded task-transition evidence through the provided Gateway action", async () => {
@@ -101,21 +102,29 @@ describe("DpmCampaignWorkflowAuditCard", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText("Command"), {
+    fireEvent.change(screen.getByLabelText("Business action"), {
       target: { value: "task_transition" },
     });
-    fireEvent.change(screen.getByLabelText("Task ref"), {
+    fireEvent.change(screen.getByLabelText("Existing task reference"), {
       target: { value: "task-review-001" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Record Workflow Evidence" }));
+    fireEvent.change(screen.getByLabelText("Business rationale"), {
+      target: { value: "The portfolio manager acknowledged the review task." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record governance action" }));
 
     await waitFor(() => expect(onRecordWorkflowCommand).toHaveBeenCalledTimes(1));
     expect(onRecordWorkflowCommand).toHaveBeenCalledWith({
       commandType: "task_transition",
       taskRef: "task-review-001",
       body: {
-        transition_type: "MARK_SUPPORTABLE",
-        actor_id: expect.any(String),
+        transition_type: "ACKNOWLEDGED",
+        transition_ref: "task-review-001:acknowledged",
+        transitioned_by: expect.any(String),
+        transition_reason: "The portfolio manager acknowledged the review task.",
+        correlation_id: expect.stringContaining(
+          "workbench-campaign-task_transition-campaign-holdings-202605-2026.05-",
+        ),
       },
     });
   });
@@ -142,9 +151,9 @@ describe("DpmCampaignWorkflowAuditCard", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "Recording" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Recording source evidence" })).toBeDisabled();
     expect(screen.getByText("Gateway rejected campaign workflow command.")).toBeInTheDocument();
     expect(screen.getByText("corr-campaign-command")).toBeInTheDocument();
-    expect(screen.getByText("sha256:task")).toBeInTheDocument();
+    expect(screen.queryByText("sha256:task")).not.toBeInTheDocument();
   });
 });

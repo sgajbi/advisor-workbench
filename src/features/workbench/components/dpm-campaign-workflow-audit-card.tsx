@@ -1,19 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { ActionButton, AnalyticsTable, MetricRow, ScreenStatePanel, SemanticBadge } from "@/design-system";
+import {
+  ActionButton,
+  AnalyticsTable,
+  MetricRow,
+  ScreenStatePanel,
+  SemanticBadge,
+} from "@/design-system";
 import { resolveDefaultCallerContext } from "@/features/workbench/caller-context";
+import type {
+  DpmCampaignWorkflowCommandInput,
+  DpmCampaignWorkflowCommandType,
+} from "@/features/workbench/dpm-campaign-command-contracts";
+import {
+  buildDpmCampaignWorkflowCommand,
+  type DpmCampaignWorkflowCommandForm,
+} from "@/features/workbench/dpm-campaign-workflow-command-builder";
 import DpmWaveStateBadge from "@/features/workbench/components/dpm-wave-state-badge";
 import type {
   DpmCampaignDefinitionRow,
   DpmCampaignWorkflowEvidenceRow,
   DpmCampaignWorkflowSummaryRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import type {
-  DpmCampaignWorkflowCommandEvidence,
-  DpmCampaignWorkflowCommandInput,
-  DpmCampaignWorkflowCommandType,
-} from "@/features/workbench/use-dpm-wave-command-center-actions";
+import type { DpmCampaignWorkflowCommandEvidence } from "@/features/workbench/use-dpm-wave-command-center-actions";
 
 type Props = {
   summaryRows: DpmCampaignWorkflowSummaryRow[];
@@ -26,36 +36,12 @@ type Props = {
   onRecordWorkflowCommand: (command: DpmCampaignWorkflowCommandInput) => Promise<void>;
 };
 
-const COMMAND_OPTIONS: Array<{
-  value: DpmCampaignWorkflowCommandType;
-  label: string;
-  referenceLabel: string;
-}> = [
-  {
-    value: "approval_decision",
-    label: "Approval Decision",
-    referenceLabel: "Decision ref",
-  },
-  {
-    value: "assignment_action",
-    label: "Assignment Action",
-    referenceLabel: "Action ref",
-  },
-  {
-    value: "assignment_task",
-    label: "Assignment Task",
-    referenceLabel: "Task ref",
-  },
-  {
-    value: "task_transition",
-    label: "Task Transition",
-    referenceLabel: "Task ref",
-  },
-  {
-    value: "maker_checker_control",
-    label: "Maker-Checker Control",
-    referenceLabel: "Control ref",
-  },
+const COMMAND_OPTIONS: Array<{ value: DpmCampaignWorkflowCommandType; label: string }> = [
+  { value: "approval_decision", label: "Record approval decision" },
+  { value: "assignment_action", label: "Update responsibility" },
+  { value: "assignment_task", label: "Open review task" },
+  { value: "task_transition", label: "Progress review task" },
+  { value: "maker_checker_control", label: "Record independent review" },
 ];
 
 export default function DpmCampaignWorkflowAuditCard({
@@ -69,27 +55,51 @@ export default function DpmCampaignWorkflowAuditCard({
   onRecordWorkflowCommand,
 }: Props) {
   const callerContext = resolveDefaultCallerContext();
-  const [commandType, setCommandType] =
-    useState<DpmCampaignWorkflowCommandType>("assignment_task");
-  const [actorId, setActorId] = useState(callerContext.actorId);
-  const [reference, setReference] = useState("");
-  const [transitionType, setTransitionType] = useState("MARK_SUPPORTABLE");
-  const selectedOption = COMMAND_OPTIONS.find((option) => option.value === commandType)!;
+  const [form, setForm] = useState<DpmCampaignWorkflowCommandForm>({
+    commandType: "assignment_task",
+    actorId: callerContext.actorId,
+    reference: "",
+    rationale: "",
+    assignedActorIds: "",
+    approvalDecision: "APPROVED",
+    assignmentAction: "ASSIGNED",
+    assignmentTaskType: "ASSIGNMENT",
+    taskTransition: "ACKNOWLEDGED",
+    escalationTier: "NONE",
+    slaPosture: "ON_TRACK",
+    controlAction: "SUBMITTED_FOR_REVIEW",
+    controlOutcome: "PENDING",
+    submitterActorId: callerContext.actorId,
+    reviewerActorId: "",
+  });
   const commandUnavailable = !selectedCampaign;
-  const referenceRequired = reference.trim().length === 0;
-  const submitDisabled = commandUnavailable || pendingCommand || referenceRequired;
+  const needsAssignee =
+    form.commandType === "assignment_task" || form.commandType === "assignment_action";
+  const submitDisabled =
+    commandUnavailable ||
+    pendingCommand ||
+    !form.actorId.trim() ||
+    !form.reference.trim() ||
+    !form.rationale.trim() ||
+    (needsAssignee && !form.assignedActorIds.trim());
+
+  function updateForm<Key extends keyof DpmCampaignWorkflowCommandForm>(
+    key: Key,
+    value: DpmCampaignWorkflowCommandForm[Key],
+  ) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
 
   async function submitCommand() {
-    if (submitDisabled) {
+    if (submitDisabled || !selectedCampaign) {
       return;
     }
     await onRecordWorkflowCommand(
-      buildCampaignWorkflowCommand({
-        commandType,
-        actorId: actorId.trim(),
-        reference: reference.trim(),
-        transitionType,
-      })
+      buildDpmCampaignWorkflowCommand({
+        campaignId: selectedCampaign.campaignId,
+        campaignVersion: selectedCampaign.campaignVersion,
+        form,
+      }),
     );
   }
 
@@ -97,250 +107,348 @@ export default function DpmCampaignWorkflowAuditCard({
     <div className="rebalance-campaign-evidence" aria-labelledby="campaign-workflow-audit-title">
       <div className="rebalance-table-heading">
         <div>
-          <h4 id="campaign-workflow-audit-title">Campaign Workflow Audit</h4>
-          <p>Manage-owned operating queue, approval, assignment, and maker-checker evidence.</p>
+          <h4 id="campaign-workflow-audit-title">Governance action</h4>
+          <p>Record one source-owned approval, responsibility, task, or independent-review event.</p>
         </div>
-        <SemanticBadge tone={error ? "warn" : summaryRows.length || evidenceRows.length ? "success" : "default"}>
-          {error ? "Needs attention" : summaryRows.length || evidenceRows.length ? "Loaded" : "Not loaded"}
+        <SemanticBadge tone={commandUnavailable ? "default" : commandError ? "warn" : "success"}>
+          {commandUnavailable ? "Select a campaign" : commandError ? "Needs attention" : "Manage backed"}
         </SemanticBadge>
       </div>
-      {error ? (
+
+      {selectedCampaign ? (
+        <div className="rebalance-campaign-workflow-command" aria-label="Campaign governance action">
+          <div className="rebalance-campaign-workflow-command-header">
+            <div>
+              <strong>{selectedCampaign.displayName}</strong>
+              <span>Version {selectedCampaign.campaignVersion}</span>
+            </div>
+            <SemanticBadge tone={pendingCommand ? "warn" : "default"}>
+              {pendingCommand ? "Recording" : selectedCampaign.governanceState}
+            </SemanticBadge>
+          </div>
+
+          <div className="rebalance-campaign-workflow-command-grid">
+            <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-command-type">
+              Business action
+              <select
+                id="dpm-campaign-workflow-command-type"
+                className="workbench-input"
+                value={form.commandType}
+                onChange={(event) => updateForm("commandType", event.target.value as DpmCampaignWorkflowCommandType)}
+                disabled={pendingCommand}
+              >
+                {COMMAND_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-actor">
+              Responsible operator
+              <input id="dpm-campaign-workflow-actor" className="workbench-input" value={form.actorId} readOnly />
+            </label>
+            <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-reference">
+              {form.commandType === "task_transition" ? "Existing task reference" : "Governance reference"}
+              <input
+                id="dpm-campaign-workflow-reference"
+                className="workbench-input"
+                value={form.reference}
+                onChange={(event) => updateForm("reference", event.target.value)}
+                disabled={pendingCommand}
+              />
+            </label>
+            <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-rationale">
+              Business rationale
+              <textarea
+                id="dpm-campaign-workflow-rationale"
+                className="workbench-input"
+                value={form.rationale}
+                onChange={(event) => updateForm("rationale", event.target.value)}
+                disabled={pendingCommand}
+              />
+            </label>
+            <CommandSpecificFields form={form} updateForm={updateForm} disabled={pendingCommand} />
+          </div>
+
+          <div className="rebalance-campaign-workflow-command-row">
+            <ActionButton priority="primary" onClick={submitCommand} disabled={submitDisabled}>
+              {pendingCommand ? "Recording source evidence" : "Record governance action"}
+            </ActionButton>
+            <span>No trade, order, client-contact, or external workflow action is performed.</span>
+          </div>
+        </div>
+      ) : (
         <ScreenStatePanel
-          kind="partial"
+          kind="empty"
           surface="portfolio"
-          title="Campaign workflow evidence needs attention"
-          body={error}
+          title="Select a campaign to act"
+          body="Choose a Manage campaign definition to review its posture and record a governed action."
         />
+      )}
+
+      {commandError ? (
+        <ScreenStatePanel kind="partial" surface="portfolio" title="Governance action was not recorded" body={commandError} />
       ) : null}
-      <div
-        className="rebalance-campaign-workflow-command"
-        aria-label="DPM campaign workflow command control"
-      >
-        <div className="rebalance-campaign-workflow-command-header">
-          <div>
-            <strong>Workflow Evidence Control</strong>
-            <span>
-              {selectedCampaign
-                ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
-                : "Select a Manage campaign definition"}
-            </span>
-          </div>
-          <SemanticBadge tone={commandUnavailable ? "default" : commandError ? "warn" : "success"}>
-            {commandUnavailable ? "Unavailable" : commandError ? "Needs attention" : "Gateway backed"}
-          </SemanticBadge>
-        </div>
-        <div className="rebalance-campaign-workflow-command-grid">
-          <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-command-type">
-            Command
-            <select
-              id="dpm-campaign-workflow-command-type"
-              className="workbench-input"
-              value={commandType}
-              onChange={(event) => setCommandType(event.target.value as DpmCampaignWorkflowCommandType)}
-              disabled={pendingCommand}
-            >
-              {COMMAND_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-actor">
-            Actor
-            <input
-              id="dpm-campaign-workflow-actor"
-              className="workbench-input"
-              value={actorId}
-              onChange={(event) => setActorId(event.target.value)}
-              disabled={pendingCommand}
-            />
-          </label>
-          <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-reference">
-            {selectedOption.referenceLabel}
-            <input
-              id="dpm-campaign-workflow-reference"
-              className="workbench-input"
-              value={reference}
-              onChange={(event) => setReference(event.target.value)}
-              disabled={pendingCommand}
-            />
-          </label>
-          <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-transition">
-            Transition
-            <select
-              id="dpm-campaign-workflow-transition"
-              className="workbench-input"
-              value={transitionType}
-              onChange={(event) => setTransitionType(event.target.value)}
-              disabled={pendingCommand || commandType !== "task_transition"}
-            >
-              <option value="MARK_SUPPORTABLE">Mark supportable</option>
-              <option value="REQUEST_EVIDENCE_REVIEW">Request evidence review</option>
-              <option value="RETURN_FOR_SOURCE_REVIEW">Return for source review</option>
-            </select>
-          </label>
-        </div>
-        <div className="rebalance-campaign-workflow-command-row">
-          <ActionButton priority="secondary" onClick={submitCommand} disabled={submitDisabled}>
-            {pendingCommand ? "Recording" : "Record Workflow Evidence"}
-          </ActionButton>
-          <span>
-            Source evidence only; no order, OMS, client-contact, or external workflow action is
-            enabled.
-          </span>
-        </div>
-        {commandError ? (
-          <ScreenStatePanel
-            kind="partial"
-            surface="portfolio"
-            title="Campaign workflow command needs attention"
-            body={commandError}
-          />
-        ) : null}
-        {commandEvidence ? (
-          <div
-            className="rebalance-campaign-workflow-command-evidence"
-            aria-label="DPM campaign workflow command evidence"
-          >
-            <MetricRow label="Command" value={commandEvidence.commandLabel} />
-            <MetricRow label="Evidence Ref" value={commandEvidence.evidenceRef} />
-            <MetricRow label="Correlation" value={commandEvidence.correlationId} />
-            <MetricRow label="Source" value={commandEvidence.sourceService} />
-            <MetricRow label="Upstream" value={commandEvidence.upstreamStatus} />
-            <MetricRow label="Content Hash" value={commandEvidence.contentHash} />
-            <MetricRow label="Reason Codes" value={commandEvidence.reasonCodes} />
-            <MetricRow label="Boundaries" value={commandEvidence.operatingBoundaries} />
-          </div>
-        ) : null}
-      </div>
-      <AnalyticsTable
-        ariaLabel="DPM campaign workflow audit summary"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "surface", label: "Surface" },
-          { key: "state", label: "State" },
-          { key: "items", label: "Items", align: "right" },
-          { key: "page", label: "Page" },
-          { key: "sources", label: "Source Refs", align: "right" },
-          { key: "reasons", label: "Reason Codes" },
-          { key: "hash", label: "Content Hash" },
-          { key: "boundaries", label: "Operating Boundaries" },
-        ]}
-        rows={summaryRows.map((row) => ({
-          key: row.key,
-          cells: [
-            row.surface,
-            <DpmWaveStateBadge key={`${row.key}-state`} state={row.state} />,
-            row.itemCount,
-            row.page,
-            row.sourceRefs,
-            row.reasonCodes,
-            row.contentHash,
-            row.operatingBoundaries,
-          ],
-        }))}
-        emptyState={{
-          title: "No campaign workflow summary loaded",
-          body: "Gateway has not returned Manage campaign workflow audit summary evidence.",
-        }}
-      />
-      <AnalyticsTable
-        ariaLabel="DPM campaign workflow evidence"
-        variant="portfolio"
-        density="compact"
-        columns={[
-          { key: "type", label: "Evidence Type" },
-          { key: "ref", label: "Reference" },
-          { key: "status", label: "Status" },
-          { key: "actor", label: "Actor" },
-          { key: "recorded", label: "Recorded" },
-          { key: "reasons", label: "Reason Codes" },
-          { key: "sources", label: "Source Refs", align: "right" },
-          { key: "hash", label: "Content Hash" },
-          { key: "transition", label: "Task Transition" },
-          { key: "boundaries", label: "Boundaries" },
-        ]}
-        rows={evidenceRows.map((row) => ({
-          key: row.key,
-          cells: [
-            row.evidenceType,
-            row.evidenceRef,
-            <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,
-            row.actor,
-            row.recordedAt,
-            row.reasonCodes,
-            row.sourceRefs,
-            row.contentHash,
-            row.transitionPosture,
-            row.operatingBoundaries,
-          ],
-        }))}
-        emptyState={{
-          title: "No campaign workflow evidence loaded",
-          body: "Approval decisions, assignment actions, assignment tasks, and maker-checker controls remain source-owned in Manage.",
-        }}
-      />
+      {commandEvidence ? <CommandEvidence evidence={commandEvidence} /> : null}
+      {error ? (
+        <ScreenStatePanel kind="partial" surface="portfolio" title="Campaign governance evidence needs attention" body={error} />
+      ) : null}
+
+      <details className="rebalance-campaign-disclosure">
+        <summary>Source evidence and operating audit</summary>
+        <p>Inspect source references, append-only workflow evidence, hashes, and boundaries.</p>
+        <CampaignWorkflowTables summaryRows={summaryRows} evidenceRows={evidenceRows} />
+      </details>
     </div>
   );
 }
 
-function buildCampaignWorkflowCommand(params: {
-  commandType: DpmCampaignWorkflowCommandType;
-  actorId: string;
-  reference: string;
-  transitionType: string;
-}): DpmCampaignWorkflowCommandInput {
-  const actorId = params.actorId || resolveDefaultCallerContext().actorId;
-  switch (params.commandType) {
-    case "approval_decision":
-      return {
-        commandType: params.commandType,
-        body: {
-          decision_ref: params.reference,
-          decision_type: "WORKFLOW_REVIEW_RECORDED",
-          actor_id: actorId,
-          reason_codes: ["WORKBENCH_CAMPAIGN_APPROVAL_DECISION_RECORDED"],
-        },
-      };
-    case "assignment_action":
-      return {
-        commandType: params.commandType,
-        body: {
-          action_ref: params.reference,
-          action_type: "ASSIGN_FOR_REVIEW",
-          actor_id: actorId,
-          reason_codes: ["WORKBENCH_CAMPAIGN_ASSIGNMENT_ACTION_RECORDED"],
-        },
-      };
-    case "assignment_task":
-      return {
-        commandType: params.commandType,
-        body: {
-          task_ref: params.reference,
-          actor_id: actorId,
-          reason_codes: ["WORKBENCH_CAMPAIGN_ASSIGNMENT_TASK_RECORDED"],
-        },
-      };
-    case "task_transition":
-      return {
-        commandType: params.commandType,
-        taskRef: params.reference,
-        body: {
-          transition_type: params.transitionType,
-          actor_id: actorId,
-        },
-      };
-    case "maker_checker_control":
-      return {
-        commandType: params.commandType,
-        body: {
-          control_ref: params.reference,
-          control_type: "MAKER_CHECKER_REVIEW",
-          actor_id: actorId,
-          reason_codes: ["WORKBENCH_CAMPAIGN_MAKER_CHECKER_CONTROL_RECORDED"],
-        },
-      };
-  }
+function CommandSpecificFields({
+  form,
+  updateForm,
+  disabled,
+}: {
+  form: DpmCampaignWorkflowCommandForm;
+  updateForm: <Key extends keyof DpmCampaignWorkflowCommandForm>(
+    key: Key,
+    value: DpmCampaignWorkflowCommandForm[Key],
+  ) => void;
+  disabled: boolean;
+}) {
+  const needsAssignee =
+    form.commandType === "assignment_task" || form.commandType === "assignment_action";
+  return (
+    <>
+      {form.commandType === "approval_decision" ? (
+        <label className="workbench-field-label" htmlFor="dpm-campaign-approval-decision">
+          Decision
+          <select
+            id="dpm-campaign-approval-decision"
+            className="workbench-input"
+            value={form.approvalDecision}
+            onChange={(event) => updateForm("approvalDecision", event.target.value as typeof form.approvalDecision)}
+            disabled={disabled}
+          >
+            <option value="APPROVED">Approve</option>
+            <option value="REJECTED">Reject</option>
+            <option value="REQUIRES_REMEDIATION">Require remediation</option>
+          </select>
+        </label>
+      ) : null}
+      {form.commandType === "assignment_action" ? (
+        <label className="workbench-field-label" htmlFor="dpm-campaign-assignment-action">
+          Responsibility update
+          <select
+            id="dpm-campaign-assignment-action"
+            className="workbench-input"
+            value={form.assignmentAction}
+            onChange={(event) => updateForm("assignmentAction", event.target.value as typeof form.assignmentAction)}
+            disabled={disabled}
+          >
+            <option value="ASSIGNED">Assign</option>
+            <option value="REASSIGNED">Reassign</option>
+            <option value="ESCALATED">Escalate</option>
+            <option value="DEESCALATED">Reduce escalation</option>
+            <option value="RESOLVED">Resolve</option>
+          </select>
+        </label>
+      ) : null}
+      {form.commandType === "assignment_task" ? (
+        <label className="workbench-field-label" htmlFor="dpm-campaign-task-type">
+          Review task
+          <select
+            id="dpm-campaign-task-type"
+            className="workbench-input"
+            value={form.assignmentTaskType}
+            onChange={(event) => updateForm("assignmentTaskType", event.target.value as typeof form.assignmentTaskType)}
+            disabled={disabled}
+          >
+            <option value="ASSIGNMENT">Responsibility assignment</option>
+            <option value="APPROVAL_REMEDIATION">Approval remediation</option>
+            <option value="ENTITLEMENT_REVIEW">Entitlement review</option>
+            <option value="EXPIRY_REVIEW">Expiry review</option>
+            <option value="ESCALATION">Escalation review</option>
+          </select>
+        </label>
+      ) : null}
+      {form.commandType === "task_transition" ? (
+        <label className="workbench-field-label" htmlFor="dpm-campaign-task-transition">
+          Task progress
+          <select
+            id="dpm-campaign-task-transition"
+            className="workbench-input"
+            value={form.taskTransition}
+            onChange={(event) => updateForm("taskTransition", event.target.value as typeof form.taskTransition)}
+            disabled={disabled}
+          >
+            <option value="ACKNOWLEDGED">Acknowledge</option>
+            <option value="STARTED">Start review</option>
+            <option value="BLOCKED">Mark blocked</option>
+            <option value="UNBLOCKED">Clear blocker</option>
+            <option value="RESOLVED">Resolve</option>
+            <option value="CANCELLED">Cancel</option>
+            <option value="REASSIGNED">Reassign</option>
+            <option value="ESCALATED">Escalate</option>
+            <option value="DUE_DATE_CHANGED">Change due date</option>
+          </select>
+        </label>
+      ) : null}
+      {needsAssignee ? (
+        <>
+          <label className="workbench-field-label" htmlFor="dpm-campaign-assignees">
+            Responsible colleague IDs
+            <input
+              id="dpm-campaign-assignees"
+              className="workbench-input"
+              value={form.assignedActorIds}
+              onChange={(event) => updateForm("assignedActorIds", event.target.value)}
+              placeholder="Separate multiple IDs with commas"
+              disabled={disabled}
+            />
+          </label>
+          <label className="workbench-field-label" htmlFor="dpm-campaign-escalation">
+            Escalation level
+            <select
+              id="dpm-campaign-escalation"
+              className="workbench-input"
+              value={form.escalationTier}
+              onChange={(event) => updateForm("escalationTier", event.target.value as typeof form.escalationTier)}
+              disabled={disabled}
+            >
+              <option value="NONE">No escalation</option>
+              <option value="PM">Portfolio management</option>
+              <option value="OPS">Operations</option>
+              <option value="GOVERNANCE">Governance</option>
+            </select>
+          </label>
+          <label className="workbench-field-label" htmlFor="dpm-campaign-sla">
+            Service posture
+            <select
+              id="dpm-campaign-sla"
+              className="workbench-input"
+              value={form.slaPosture}
+              onChange={(event) => updateForm("slaPosture", event.target.value as typeof form.slaPosture)}
+              disabled={disabled}
+            >
+              <option value="ON_TRACK">On track</option>
+              <option value="ATTENTION">Attention required</option>
+              <option value="BREACHED_OR_BLOCKED">Breached or blocked</option>
+            </select>
+          </label>
+        </>
+      ) : null}
+      {form.commandType === "maker_checker_control" ? (
+        <MakerCheckerFields form={form} updateForm={updateForm} disabled={disabled} />
+      ) : null}
+    </>
+  );
+}
+
+function MakerCheckerFields({
+  form,
+  updateForm,
+  disabled,
+}: {
+  form: DpmCampaignWorkflowCommandForm;
+  updateForm: <Key extends keyof DpmCampaignWorkflowCommandForm>(key: Key, value: DpmCampaignWorkflowCommandForm[Key]) => void;
+  disabled: boolean;
+}) {
+  return (
+    <>
+      <label className="workbench-field-label" htmlFor="dpm-campaign-control-action">
+        Independent-review step
+        <select
+          id="dpm-campaign-control-action"
+          className="workbench-input"
+          value={form.controlAction}
+          onChange={(event) => updateForm("controlAction", event.target.value as typeof form.controlAction)}
+          disabled={disabled}
+        >
+          <option value="SUBMITTED_FOR_REVIEW">Submit for review</option>
+          <option value="REVIEWER_ASSIGNED">Assign reviewer</option>
+          <option value="REVIEW_COMPLETED">Complete review</option>
+          <option value="CONTROL_EXCEPTION_RAISED">Raise control exception</option>
+          <option value="CONTROL_EXCEPTION_RESOLVED">Resolve control exception</option>
+        </select>
+      </label>
+      <label className="workbench-field-label" htmlFor="dpm-campaign-control-outcome">
+        Review outcome
+        <select
+          id="dpm-campaign-control-outcome"
+          className="workbench-input"
+          value={form.controlOutcome}
+          onChange={(event) => updateForm("controlOutcome", event.target.value as typeof form.controlOutcome)}
+          disabled={disabled}
+        >
+          <option value="PENDING">Pending</option>
+          <option value="PASSED">Passed</option>
+          <option value="FAILED">Failed</option>
+          <option value="EXCEPTION_OPEN">Exception open</option>
+          <option value="EXCEPTION_RESOLVED">Exception resolved</option>
+        </select>
+      </label>
+      <label className="workbench-field-label" htmlFor="dpm-campaign-maker">
+        Submitting colleague
+        <input id="dpm-campaign-maker" className="workbench-input" value={form.submitterActorId} onChange={(event) => updateForm("submitterActorId", event.target.value)} disabled={disabled} />
+      </label>
+      <label className="workbench-field-label" htmlFor="dpm-campaign-checker">
+        Independent reviewer
+        <input id="dpm-campaign-checker" className="workbench-input" value={form.reviewerActorId} onChange={(event) => updateForm("reviewerActorId", event.target.value)} disabled={disabled} />
+      </label>
+    </>
+  );
+}
+
+function CommandEvidence({ evidence }: { evidence: DpmCampaignWorkflowCommandEvidence }) {
+  return (
+    <div className="rebalance-campaign-workflow-command-evidence" aria-label="Recorded campaign governance evidence" role="status">
+      <MetricRow label="Recorded action" value={evidence.commandLabel} />
+      <MetricRow label="Evidence reference" value={evidence.evidenceRef} />
+      <MetricRow label="Source" value={evidence.sourceService} />
+      <MetricRow label="Source status" value={evidence.upstreamStatus} />
+      <MetricRow label="Correlation" value={evidence.correlationId} />
+    </div>
+  );
+}
+
+function CampaignWorkflowTables({ summaryRows, evidenceRows }: { summaryRows: DpmCampaignWorkflowSummaryRow[]; evidenceRows: DpmCampaignWorkflowEvidenceRow[] }) {
+  return (
+    <>
+      <AnalyticsTable
+        ariaLabel="Campaign workflow source summary"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "surface", label: "Business queue" },
+          { key: "state", label: "State" },
+          { key: "items", label: "Items", align: "right" },
+          { key: "page", label: "Window" },
+          { key: "sources", label: "Sources", align: "right" },
+          { key: "reasons", label: "Reason codes" },
+          { key: "hash", label: "Content hash" },
+          { key: "boundaries", label: "Operating boundaries" },
+        ]}
+        rows={summaryRows.map((row) => ({ key: row.key, cells: [row.surface, <DpmWaveStateBadge key={`${row.key}-state`} state={row.state} />, row.itemCount, row.page, row.sourceRefs, row.reasonCodes, row.contentHash, row.operatingBoundaries] }))}
+        emptyState={{ title: "No workflow summary loaded", body: "Manage has not returned campaign workflow summary evidence for this selection." }}
+      />
+      <AnalyticsTable
+        ariaLabel="Campaign governance evidence history"
+        variant="portfolio"
+        density="compact"
+        columns={[
+          { key: "type", label: "Evidence" },
+          { key: "ref", label: "Reference" },
+          { key: "status", label: "Status" },
+          { key: "actor", label: "Operator" },
+          { key: "recorded", label: "Recorded" },
+          { key: "reasons", label: "Reason codes" },
+          { key: "sources", label: "Sources", align: "right" },
+          { key: "hash", label: "Content hash" },
+          { key: "transition", label: "Task progress" },
+          { key: "boundaries", label: "Boundaries" },
+        ]}
+        rows={evidenceRows.map((row) => ({ key: row.key, cells: [row.evidenceType, row.evidenceRef, <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />, row.actor, row.recordedAt, row.reasonCodes, row.sourceRefs, row.contentHash, row.transitionPosture, row.operatingBoundaries] }))}
+        emptyState={{ title: "No governance history loaded", body: "Approvals, responsibilities, tasks, and independent reviews remain source-owned in Manage." }}
+      />
+    </>
+  );
 }

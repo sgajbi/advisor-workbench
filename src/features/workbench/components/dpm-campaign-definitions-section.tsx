@@ -11,10 +11,12 @@ import DpmCampaignLaunchHistoryCard, {
 import DpmCampaignLaunchPostureCard from "@/features/workbench/components/dpm-campaign-launch-posture-card";
 import DpmCampaignWorkflowAuditCard from "@/features/workbench/components/dpm-campaign-workflow-audit-card";
 import type {
-  DpmCampaignLifecycleCommandEvidence,
   DpmCampaignLifecycleCommandInput,
-  DpmCampaignWorkflowCommandEvidence,
   DpmCampaignWorkflowCommandInput,
+} from "@/features/workbench/dpm-campaign-command-contracts";
+import type {
+  DpmCampaignLifecycleCommandEvidence,
+  DpmCampaignWorkflowCommandEvidence,
 } from "@/features/workbench/use-dpm-wave-command-center-actions";
 import type {
   DpmCampaignDefinitionRow,
