@@ -64,7 +64,10 @@ import {
   getProposalLifecycleModeDefinition,
   type ProposalLifecycleMode,
 } from "../proposal-lifecycle-workspace-view-model";
-import type { WorkspaceReviewContext } from "@/shell/review-context";
+import {
+  buildReviewContextHref,
+  type WorkspaceReviewContext,
+} from "@/shell/review-context";
 import {
   ProposalAdvisorActionsPanel,
   ProposalEvidenceControlsPanel,
@@ -150,6 +153,12 @@ function ProposalDetailWorkspace({
   const returnLabel = returnPortfolioId && returnMode
     ? `Return to ${getProposalLifecycleModeDefinition(returnMode).title}`
     : "Open My book";
+  const proposalDraftHref = returnPortfolioId
+    ? buildReviewContextHref("/proposals/simulate", {
+        ...returnReviewContext,
+        portfolioId: returnPortfolioId,
+      })
+    : null;
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -492,9 +501,11 @@ function ProposalDetailWorkspace({
           <Link href={fallbackReturnHref} className="nav-link">
             {returnLabel}
           </Link>
-          <Link href="/proposals/simulate" className="nav-link">
-            Create New Proposal Draft
-          </Link>
+          {proposalDraftHref ? (
+            <Link href={proposalDraftHref} className="nav-link">
+              Create New Proposal Draft
+            </Link>
+          ) : null}
         </Stack>
       </SectionBlock>
     );
@@ -510,9 +521,11 @@ function ProposalDetailWorkspace({
           <Link href={fallbackReturnHref} className="nav-link">
             {returnLabel}
           </Link>
-          <Link href="/proposals/simulate" className="nav-link">
-            Create New Proposal Draft
-          </Link>
+          {proposalDraftHref ? (
+            <Link href={proposalDraftHref} className="nav-link">
+              Create New Proposal Draft
+            </Link>
+          ) : null}
         </Stack>
       </SectionBlock>
     );
