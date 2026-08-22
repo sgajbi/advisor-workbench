@@ -7,7 +7,10 @@ import { fallbackNormalizedCapabilities } from "@/features/platform-capabilities
 import { usePlatformCapabilities } from "@/features/platform-capabilities/use-platform-capabilities";
 import type { PlatformShellWorkspaceDescriptor } from "@/features/platform-capabilities/types";
 
-import { resolveShellRouteContext } from "./app-registry";
+import {
+  resolveShellDestinationReviewContextPolicy,
+  resolveShellRouteContext,
+} from "./app-registry";
 import styles from "./app-shell.module.css";
 import {
   buildReviewContextHref,
@@ -47,7 +50,7 @@ export default function AppSwitcherNav() {
               workspace.href,
               scopeReviewContextForWorkspace(
                 reviewContextResult.context,
-                workspace.href,
+                resolveShellDestinationReviewContextPolicy(workspace.href),
               ),
             )
           : undefined,
