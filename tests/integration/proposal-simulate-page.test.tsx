@@ -3,13 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import ProposalSimulatePage from "../../src/app/proposals/simulate/page";
 
-const redirectMock = vi.fn((target: string) => {
-  throw new Error(`REDIRECT:${target}`);
-});
-
-vi.mock("next/navigation", () => ({
-  redirect: (target: string) => redirectMock(target),
-}));
+const proposalFormRenderMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => ({
   default: ({
@@ -18,13 +12,16 @@ vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => 
   }: {
     initialPortfolioId?: string;
     initialAsOfDate?: string;
-  }) => (
-    <section>
-      <h1>Create Advisory Proposal</h1>
-      <p>{initialPortfolioId}</p>
-      <p data-testid="initial-advisory-date">{initialAsOfDate || "Not confirmed"}</p>
-    </section>
-  ),
+  }) => {
+    proposalFormRenderMock({ initialPortfolioId, initialAsOfDate });
+    return (
+      <section>
+        <h1>Create Advisory Proposal</h1>
+        <p>{initialPortfolioId}</p>
+        <p data-testid="initial-advisory-date">{initialAsOfDate || "Not confirmed"}</p>
+      </section>
+    );
+  },
 }));
 
 vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () => ({
@@ -51,13 +48,11 @@ vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () =
       {children}
     </section>
   ),
-  resolveProposalPortfolioId: (portfolioId?: string | null) =>
-    portfolioId?.trim() || "PB_SG_GLOBAL_BAL_001",
 }));
 
 describe("ProposalSimulatePage", () => {
   afterEach(() => {
-    redirectMock.mockClear();
+    proposalFormRenderMock.mockClear();
     vi.unstubAllGlobals();
   });
 
@@ -78,15 +73,20 @@ describe("ProposalSimulatePage", () => {
     expect(screen.getByText("No persisted advisory workflow record")).toBeInTheDocument();
   });
 
-  it("defaults proposal simulation to the canonical front-office portfolio", async () => {
+  it("requires a source-confirmed portfolio instead of substituting the demo book", async () => {
     render(
       await ProposalSimulatePage({
         searchParams: Promise.resolve({}),
       })
     );
 
-    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("Not confirmed");
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/No demo portfolio was substituted/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Select a portfolio from My book" })).toHaveAttribute(
+      "href",
+      "/book",
+    );
+    expect(proposalFormRenderMock).not.toHaveBeenCalled();
   });
 
   it("fails closed when proposal context query parameters are repeated", async () => {
@@ -99,8 +99,9 @@ describe("ProposalSimulatePage", () => {
       })
     );
 
-    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("Not confirmed");
+    expect(screen.getByText("Review context needs attention")).toBeInTheDocument();
+    expect(screen.getByText(/repeated or unsupported review context/i)).toBeInTheDocument();
+    expect(proposalFormRenderMock).not.toHaveBeenCalled();
   });
 });
 
