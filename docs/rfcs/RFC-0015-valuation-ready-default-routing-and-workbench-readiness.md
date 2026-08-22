@@ -1,5 +1,12 @@
 # RFC-0015: Valuation-Ready Default Routing and Workbench Readiness
 
+- Status: SUPERSEDED IN PART BY GOVERNED REVIEW CONTEXT (#779)
+
+The valuation-readiness presentation remains historical implementation truth. The default-portfolio
+and proposal-default routing described below has been retired: unscoped entry now routes to the
+Gateway-backed **My Book** selector, proposal entry requires explicit review context, and canonical
+local proof uses an explicit seeded URL.
+
 ## Problem Statement
 Initial user flows in Decision Console and Proposal Simulation can route to non-valued or non-existent portfolio IDs, creating a broken first-use experience where valuation and holdings context appear unusable.
 
@@ -34,4 +41,4 @@ Initial user flows in Decision Console and Proposal Simulation can route to non-
 4. Validate by rebuilding `lotus-workbench` and navigating `/workbench` and `/proposals/simulate`.
 
 ## Status
-IMPLEMENTED
+SUPERSEDED IN PART BY GOVERNED REVIEW CONTEXT (#779)
