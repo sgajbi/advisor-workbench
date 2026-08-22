@@ -34,7 +34,8 @@ type ReportOrderingPortfolio = {
   portfolioId: string;
   displayName: string;
   asOfDate: string;
-  baseCurrency: string;
+  sourceBaseCurrency: string;
+  reportingCurrency: string;
 };
 
 export function ReportOrderingWorkspace({
@@ -46,7 +47,7 @@ export function ReportOrderingWorkspace({
 }) {
   return (
     <ReportOrderingWorkspaceSession
-      key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.baseCurrency}:${initialBatchId ?? "new"}`}
+      key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.sourceBaseCurrency}:${portfolio.reportingCurrency}:${initialBatchId ?? "new"}`}
       portfolio={portfolio}
       initialBatchId={initialBatchId}
     />
@@ -101,7 +102,8 @@ function ReportOrderingWorkspaceSession({
   const workflow = useReportOrderingWorkflow({
     portfolioId: portfolio.portfolioId,
     asOfDate: portfolio.asOfDate,
-    reportingCurrency: portfolio.baseCurrency,
+    sourceBaseCurrency: portfolio.sourceBaseCurrency,
+    reportingCurrency: portfolio.reportingCurrency,
     scopeMode,
     selectedPortfolioIds,
     portfolioSelectionState,
@@ -178,7 +180,7 @@ function ReportOrderingWorkspaceSession({
               actions={
                 <>
                   <SemanticBadge>{portfolio.displayName}</SemanticBadge>
-                  <SemanticBadge>{portfolio.baseCurrency}</SemanticBadge>
+                  <SemanticBadge>{portfolio.reportingCurrency}</SemanticBadge>
                 </>
               }
             >

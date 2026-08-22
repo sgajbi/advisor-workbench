@@ -64,11 +64,19 @@ type BatchWorkspaceState = {
   error: string | null;
 };
 
+function resolveConfirmedBatchReportingCurrency(
+  responseCurrency: string | null,
+  sourceBaseCurrency: string,
+) {
+  return responseCurrency ?? sourceBaseCurrency;
+}
+
 type HistoryLoadState = "loading" | "ready" | "permission_blocked" | "error";
 
 export function useReportOrderingWorkflow({
   portfolioId,
   asOfDate,
+  sourceBaseCurrency,
   reportingCurrency,
   scopeMode = "single_portfolio",
   selectedPortfolioIds = [portfolioId],
@@ -78,6 +86,7 @@ export function useReportOrderingWorkflow({
 }: {
   portfolioId: string;
   asOfDate: string;
+  sourceBaseCurrency: string;
   reportingCurrency: string;
   scopeMode?: ReportOrderingScopeMode;
   selectedPortfolioIds?: string[];
@@ -260,10 +269,13 @@ export function useReportOrderingWorkflow({
         });
         return false;
       }
+      const confirmedReportingCurrency = resolveConfirmedBatchReportingCurrency(
+        response.reporting_currency,
+        sourceBaseCurrency,
+      );
       if (
         response.as_of_date !== asOfDate ||
-        (response.reporting_currency !== null &&
-          response.reporting_currency !== reportingCurrency)
+        confirmedReportingCurrency !== reportingCurrency
       ) {
         setBatchWorkspaceState({
           portfolioId,
@@ -279,7 +291,7 @@ export function useReportOrderingWorkflow({
         portfolioIds: [...response.materialized_portfolio_ids].sort(),
         asOfDate: response.as_of_date,
         requestedOutputFormats: [...response.requested_output_formats].sort(),
-        reportingCurrency: response.reporting_currency,
+        reportingCurrency: confirmedReportingCurrency,
       };
       setBatchWorkspaceState({
         portfolioId,
@@ -311,7 +323,13 @@ export function useReportOrderingWorkflow({
       });
       return false;
     }
-  }, [asOfDate, isActiveWorkspaceGeneration, portfolioId, reportingCurrency]);
+  }, [
+    asOfDate,
+    isActiveWorkspaceGeneration,
+    portfolioId,
+    reportingCurrency,
+    sourceBaseCurrency,
+  ]);
 
   useEffect(() => {
     if (

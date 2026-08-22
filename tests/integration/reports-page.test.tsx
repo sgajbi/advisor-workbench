@@ -14,7 +14,13 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
     portfolio,
     initialBatchId,
   }: {
-    portfolio: { portfolioId: string; displayName: string; asOfDate: string; baseCurrency: string };
+    portfolio: {
+      portfolioId: string;
+      displayName: string;
+      asOfDate: string;
+      sourceBaseCurrency: string;
+      reportingCurrency: string;
+    };
     initialBatchId?: string;
   }) => (
     <div>
@@ -22,7 +28,8 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       <span>{portfolio.portfolioId}</span>
       <span>{portfolio.displayName}</span>
       <span>{portfolio.asOfDate}</span>
-      <span>{portfolio.baseCurrency}</span>
+      <span data-testid="source-base-currency">{portfolio.sourceBaseCurrency}</span>
+      <span data-testid="reporting-currency">{portfolio.reportingCurrency}</span>
       <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
     </div>
   ),
@@ -66,7 +73,49 @@ describe("reports page", () => {
     expect(screen.getByRole("heading", { name: "Report Centre Workspace" })).toBeInTheDocument();
     expect(screen.getByText("Global Balanced Mandate")).toBeInTheDocument();
     expect(screen.getByText("2026-04-22")).toBeInTheDocument();
-    expect(screen.getByText("SGD")).toBeInTheDocument();
+    expect(screen.getByTestId("source-base-currency")).toHaveTextContent("SGD");
+    expect(screen.getByTestId("reporting-currency")).toHaveTextContent("SGD");
+  });
+
+  it("keeps source base currency distinct from a governed reporting restatement", async () => {
+    shellMock.mockResolvedValueOnce({
+      as_of_date: "2026-04-22",
+      portfolio: {
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        display_name: "Global Balanced Mandate",
+        client_id: "CLIENT_001",
+        base_currency: "SGD",
+        booking_center_code: "SG",
+      },
+      control_capabilities: {
+        historical_snapshots: {
+          state: "supported",
+          reason: "available",
+          requested_as_of_date: "2026-04-22",
+          effective_as_of_date: "2026-04-22",
+          module_capabilities: [],
+        },
+        reporting_currency_restatement: {
+          state: "supported",
+          reason: "available",
+          requested_reporting_currency: "USD",
+          effective_reporting_currency: "USD",
+          supported_currencies: ["SGD", "USD"],
+          module_capabilities: [],
+        },
+      },
+    } as unknown as Awaited<ReturnType<typeof getPortfolioWorkspaceShell>>);
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          reportingCurrency: "USD",
+        }),
+      }),
+    );
+
+    expect(screen.getByTestId("source-base-currency")).toHaveTextContent("SGD");
+    expect(screen.getByTestId("reporting-currency")).toHaveTextContent("USD");
   });
 
   it("fails closed when portfolio workspace context cannot be loaded", async () => {
