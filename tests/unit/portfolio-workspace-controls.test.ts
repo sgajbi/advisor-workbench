@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { applyPortfolioControlPatch } from "@/apps/portfolio/portfolio-workspace-controls";
+import {
+  applyPortfolioControlPatch,
+  resolvePortfolioReviewControls,
+} from "@/apps/portfolio/portfolio-workspace-controls";
+import type { PortfolioWorkspace } from "@/apps/portfolio/types";
 import type { PortfolioWorkspaceControls } from "@/apps/portfolio/view-model";
 
 const CONTROLS: PortfolioWorkspaceControls = {
@@ -63,6 +67,76 @@ describe("portfolio workspace control patch", () => {
       customEndDate: "2026-08-21",
       viewMode: "detailed",
       columnMode: "expanded",
+    });
+  });
+});
+
+describe("portfolio review-context controls", () => {
+  const workspace = {
+    as_of_date: "2026-08-21",
+    portfolio: { base_currency: "USD" },
+    control_capabilities: {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        earliest_available_as_of_date: "2026-01-01",
+        latest_available_as_of_date: "2026-08-21",
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "available",
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD", "SGD"],
+      },
+    },
+  } as PortfolioWorkspace;
+
+  it("hydrates only source-supported portfolio controls", () => {
+    expect(
+      resolvePortfolioReviewControls(workspace, {
+        asOfDate: "2026-06-30",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      }),
+    ).toMatchObject({
+      status: "valid",
+      controls: {
+        asOfDate: "2026-06-30",
+        timeWindow: "YTD",
+        reportingCurrency: "SGD",
+      },
+    });
+  });
+
+  it("accepts source defaults even when optional controls are not supported", () => {
+    const unsupportedWorkspace = {
+      ...workspace,
+      control_capabilities: undefined,
+    } as PortfolioWorkspace;
+
+    expect(
+      resolvePortfolioReviewControls(unsupportedWorkspace, {
+        asOfDate: "2026-08-21",
+        reportingCurrency: "USD",
+        period: "30D",
+      }),
+    ).toMatchObject({ status: "valid" });
+  });
+
+  it("fails the complete consumer context when controls exceed source support", () => {
+    expect(
+      resolvePortfolioReviewControls(workspace, {
+        asOfDate: "2025-12-31",
+        period: "5Y",
+        reportingCurrency: "EUR",
+      }),
+    ).toEqual({
+      status: "invalid",
+      issues: [
+        "unsupported_period",
+        "unsupported_as_of_date",
+        "unsupported_reporting_currency",
+      ],
     });
   });
 });

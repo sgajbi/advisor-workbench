@@ -1,4 +1,73 @@
-import type { PortfolioWorkspaceControls } from "./view-model";
+import type { ReviewContext } from "@/shell/review-context";
+
+import type { PortfolioWorkspace } from "./types";
+import {
+  buildInitialPortfolioControls,
+  getPortfolioCurrencyOptions,
+  PORTFOLIO_TIME_WINDOW_OPTIONS,
+  type PortfolioTimeWindow,
+  type PortfolioWorkspaceControls,
+} from "./view-model";
+
+export type PortfolioReviewControlIssue =
+  | "unsupported_as_of_date"
+  | "unsupported_period"
+  | "unsupported_reporting_currency";
+
+export type PortfolioReviewControlResolution =
+  | Readonly<{
+      status: "valid";
+      controls: PortfolioWorkspaceControls;
+    }>
+  | Readonly<{
+      status: "invalid";
+      issues: readonly PortfolioReviewControlIssue[];
+    }>;
+
+const PORTFOLIO_TIME_WINDOW_SET = new Set<string>(
+  PORTFOLIO_TIME_WINDOW_OPTIONS,
+);
+
+export function resolvePortfolioReviewControls(
+  workspace: PortfolioWorkspace,
+  reviewContext: ReviewContext,
+): PortfolioReviewControlResolution {
+  const controls = buildInitialPortfolioControls(workspace);
+  const issues: PortfolioReviewControlIssue[] = [];
+
+  if (reviewContext.period) {
+    if (PORTFOLIO_TIME_WINDOW_SET.has(reviewContext.period)) {
+      controls.timeWindow = reviewContext.period as PortfolioTimeWindow;
+    } else {
+      issues.push("unsupported_period");
+    }
+  }
+
+  if (reviewContext.asOfDate) {
+    if (canUsePortfolioAsOfDate(workspace, reviewContext.asOfDate)) {
+      controls.asOfDate = reviewContext.asOfDate;
+    } else {
+      issues.push("unsupported_as_of_date");
+    }
+  }
+
+  if (reviewContext.reportingCurrency) {
+    if (
+      canUsePortfolioReportingCurrency(
+        workspace,
+        reviewContext.reportingCurrency,
+      )
+    ) {
+      controls.reportingCurrency = reviewContext.reportingCurrency;
+    } else {
+      issues.push("unsupported_reporting_currency");
+    }
+  }
+
+  return issues.length > 0
+    ? { status: "invalid", issues }
+    : { status: "valid", controls };
+}
 
 /**
  * Applies only the control changes the advisor requested. Switching a review
@@ -21,4 +90,38 @@ export function applyPortfolioControlPatch(
   }
 
   return next;
+}
+
+function canUsePortfolioAsOfDate(
+  workspace: PortfolioWorkspace,
+  asOfDate: string,
+): boolean {
+  if (asOfDate === workspace.as_of_date) {
+    return true;
+  }
+
+  const capability = workspace.control_capabilities?.historical_snapshots;
+  return Boolean(
+    capability?.state === "supported" &&
+      capability.earliest_available_as_of_date &&
+      capability.latest_available_as_of_date &&
+      asOfDate >= capability.earliest_available_as_of_date &&
+      asOfDate <= capability.latest_available_as_of_date,
+  );
+}
+
+function canUsePortfolioReportingCurrency(
+  workspace: PortfolioWorkspace,
+  reportingCurrency: string,
+): boolean {
+  const defaultCurrency = buildInitialPortfolioControls(workspace).reportingCurrency;
+  if (reportingCurrency === defaultCurrency) {
+    return true;
+  }
+
+  return Boolean(
+    workspace.control_capabilities?.reporting_currency_restatement.state ===
+      "supported" &&
+      getPortfolioCurrencyOptions(workspace).includes(reportingCurrency),
+  );
 }
