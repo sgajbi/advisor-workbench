@@ -181,17 +181,21 @@ describe("governed review context", () => {
     };
 
     expect(
-      scopeReviewContextForWorkspace(performanceContext, "/portfolio"),
+      scopeReviewContextForWorkspace(performanceContext, {
+        acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"],
+      }),
     ).toEqual({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       asOfDate: "2026-08-21",
       reportingCurrency: "SGD",
     });
     expect(
-      scopeReviewContextForWorkspace(performanceContext, "/reports"),
+      scopeReviewContextForWorkspace(performanceContext, {
+        acceptedPeriods: ["YTD"],
+      }),
     ).not.toHaveProperty("period");
     expect(
-      scopeReviewContextForWorkspace(performanceContext, "/performance"),
+      scopeReviewContextForWorkspace(performanceContext),
     ).toHaveProperty("period", "5Y");
   });
 

@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  resolveShellDestinationReviewContextPolicy,
   resolveShellRouteContext,
   type ShellRouteContext,
 } from "@/shell/app-registry";
@@ -103,5 +104,19 @@ describe("resolveShellRouteContext", () => {
       scope: "workspace",
       workspaceId: "proposal",
     });
+  });
+
+  it("declares destination-specific review periods with the shell routes", () => {
+    expect(
+      resolveShellDestinationReviewContextPolicy("/reports?mode=history"),
+    ).toEqual({
+      acceptedPeriods: ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"],
+    });
+    expect(
+      resolveShellDestinationReviewContextPolicy("/performance?mode=risk"),
+    ).toBeUndefined();
+    expect(
+      resolveShellDestinationReviewContextPolicy("/book"),
+    ).toBeUndefined();
   });
 });
