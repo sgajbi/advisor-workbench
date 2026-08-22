@@ -10,7 +10,7 @@ function getPortfolioReviewPageHeading(page: Page) {
 
 function getPortfolioFoundationPageHeading(page: Page) {
   return page.getByRole('heading', {
-    name: /^Portfolio$|^Portfolio Review$|^Portfolio context unavailable$/i,
+    name: /^Portfolio$|^Portfolio Review$|^Portfolio context unavailable$|^Review context needs attention$/i,
   });
 }
 
@@ -73,6 +73,13 @@ test.describe('UI smoke checks', () => {
   test('portfolio foundation page renders core sections', async ({ page }) => {
     await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
     await expect(getPortfolioFoundationPageHeading(page)).toBeVisible();
+    await expect(
+      page.getByText(/Select a source-confirmed portfolio from My book/i),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open My book' })).toHaveAttribute(
+      'href',
+      '/book',
+    );
   });
 
   test('legacy Suite entry follows canonical Home without fabricated business state', async ({ page }) => {
