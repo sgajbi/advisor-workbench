@@ -1,0 +1,185 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useSourceWindow } from "@/design-system";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
+import { getDpmCommandCenterExceptions } from "@/features/workbench/dpm-command-center-api";
+import {
+  getManageExceptionEvidencePosture,
+  getManageExceptionNextCursor,
+} from "@/features/workbench/manage-workspace-view-model";
+
+import type { ManageWorkspaceData } from "./manage-workspace-data";
+
+type ExceptionResponse = ManageWorkspaceData["commandCenterExceptions"];
+type NavigationDirection = "next" | "previous";
+
+type VisibleWindow = {
+  scopeKey: string;
+  response: ExceptionResponse;
+  sourceError: string | null;
+};
+
+type FailedNavigation = {
+  cursor: string | undefined;
+  direction: NavigationDirection;
+  permissionBlocked: boolean;
+};
+
+function initialVisibleWindow({
+  scopeKey,
+  response,
+  sourceError,
+}: {
+  scopeKey: string;
+  response: ExceptionResponse;
+  sourceError: string | null;
+}): VisibleWindow {
+  return { scopeKey, response, sourceError };
+}
+
+export function useManageExceptionSourceWindow({
+  portfolioId,
+  mandateId,
+  initialResponse,
+  initialError,
+}: {
+  portfolioId: string;
+  mandateId: string | null;
+  initialResponse: ExceptionResponse;
+  initialError: string | null;
+}) {
+  const scopeKey = `${portfolioId}::${mandateId ?? "mandate-unavailable"}::ACTIVE`;
+  const sourceWindow = useSourceWindow(scopeKey);
+  const [visibleWindow, setVisibleWindow] = useState<VisibleWindow>(() =>
+    initialVisibleWindow({
+      scopeKey,
+      response: initialResponse,
+      sourceError: initialError,
+    })
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [failedNavigation, setFailedNavigation] = useState<FailedNavigation | null>(null);
+  const activeScopeRef = useRef(scopeKey);
+  const requestGenerationRef = useRef(0);
+  const activeWindow =
+    visibleWindow.scopeKey === scopeKey
+      ? visibleWindow
+      : initialVisibleWindow({
+          scopeKey,
+          response: initialResponse,
+          sourceError: initialError,
+        });
+
+  if (visibleWindow.scopeKey !== scopeKey) {
+    setVisibleWindow(activeWindow);
+    setIsLoading(false);
+    setFailedNavigation(null);
+  }
+
+  useEffect(() => {
+    activeScopeRef.current = scopeKey;
+    requestGenerationRef.current += 1;
+  }, [scopeKey]);
+
+  const loadWindow = useCallback(
+    async (cursor: string | undefined, direction: NavigationDirection) => {
+      if (isLoading) {
+        return;
+      }
+      const initiatingScope = scopeKey;
+      const requestGeneration = ++requestGenerationRef.current;
+      setIsLoading(true);
+      setFailedNavigation(null);
+
+      try {
+        const response = await getDpmCommandCenterExceptions(
+          {
+            portfolioId,
+            mandateId: mandateId ?? undefined,
+            state: "ACTIVE",
+            limit: 25,
+            cursor,
+          },
+          "client"
+        );
+        if (
+          requestGenerationRef.current !== requestGeneration ||
+          activeScopeRef.current !== initiatingScope
+        ) {
+          return;
+        }
+        if (getManageExceptionEvidencePosture(response, null) === "unavailable") {
+          throw new Error("The returned attention-item window is not reviewable.");
+        }
+
+        setVisibleWindow({ scopeKey: initiatingScope, response, sourceError: null });
+        if (direction === "next") {
+          sourceWindow.showNext(cursor);
+        } else {
+          sourceWindow.showPrevious();
+        }
+      } catch (error) {
+        if (
+          requestGenerationRef.current === requestGeneration &&
+          activeScopeRef.current === initiatingScope
+        ) {
+          setFailedNavigation({
+            cursor,
+            direction,
+            permissionBlocked: isWorkbenchPermissionBlockedError(error),
+          });
+        }
+      } finally {
+        if (
+          requestGenerationRef.current === requestGeneration &&
+          activeScopeRef.current === initiatingScope
+        ) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [isLoading, mandateId, portfolioId, scopeKey, sourceWindow]
+  );
+
+  const nextCursor = getManageExceptionNextCursor(activeWindow.response);
+  const showNext = useCallback(
+    async () => await loadWindow(nextCursor ?? undefined, "next"),
+    [loadWindow, nextCursor]
+  );
+  const showPrevious = useCallback(
+    async () => await loadWindow(sourceWindow.previousCursor, "previous"),
+    [loadWindow, sourceWindow.previousCursor]
+  );
+  const retry = useCallback(
+    async () => {
+      if (failedNavigation) {
+        await loadWindow(failedNavigation.cursor, failedNavigation.direction);
+      }
+    },
+    [failedNavigation, loadWindow]
+  );
+
+  return {
+    response: activeWindow.response,
+    sourceError: activeWindow.sourceError,
+    evidencePosture: getManageExceptionEvidencePosture(
+      activeWindow.response,
+      activeWindow.sourceError
+    ),
+    nextCursor,
+    currentWindow: sourceWindow.windowNumber,
+    hasPrevious: sourceWindow.hasPrevious,
+    isLoading,
+    navigationFailure: failedNavigation
+      ? {
+          direction: failedNavigation.direction,
+          permissionBlocked: failedNavigation.permissionBlocked,
+        }
+      : null,
+    showNext,
+    showPrevious,
+    retry,
+  };
+}

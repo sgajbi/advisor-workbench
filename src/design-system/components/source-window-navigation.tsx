@@ -30,7 +30,8 @@ export default function SourceWindowNavigation({
     <nav className={styles.navigation} aria-label={ariaLabel}>
       <ActionButton
         priority="quiet"
-        disabled={!hasPrevious || isLoading}
+        disabled={!hasPrevious}
+        aria-disabled={!hasPrevious || isLoading}
         onClick={onPrevious}
       >
         Previous {itemLabel}
@@ -38,7 +39,12 @@ export default function SourceWindowNavigation({
       <span className={styles.label} aria-live="polite">
         {isLoading ? `Loading ${itemLabel}` : `${viewLabel} ${currentWindow}`}
       </span>
-      <ActionButton priority="quiet" disabled={!hasNext || isLoading} onClick={onNext}>
+      <ActionButton
+        priority="quiet"
+        disabled={!hasNext}
+        aria-disabled={!hasNext || isLoading}
+        onClick={onNext}
+      >
         Next {itemLabel}
       </ActionButton>
     </nav>

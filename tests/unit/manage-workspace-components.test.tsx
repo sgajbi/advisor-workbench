@@ -1,12 +1,27 @@
 import React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import ManageContextRail from "../../src/features/workbench/components/manage-context-rail";
 import DpmCopilotWorkspace from "../../src/features/workbench/components/dpm-copilot-workspace";
 import ManageMandateHealth from "../../src/features/workbench/components/manage-mandate-health";
 import ManageOverview from "../../src/features/workbench/components/manage-overview";
+import { getDpmCommandCenterExceptions } from "../../src/features/workbench/dpm-command-center-api";
 import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
+
+vi.mock("@/features/workbench/dpm-command-center-api", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("@/features/workbench/dpm-command-center-api")
+  >();
+  return {
+    ...actual,
+    getDpmCommandCenterExceptions: vi.fn(),
+  };
+});
+
+afterEach(() => {
+  vi.mocked(getDpmCommandCenterExceptions).mockReset();
+});
 
 describe("manage workspace split components", () => {
   it("binds the selected attention item to its source-owned owner, action, and evidence", () => {
@@ -187,6 +202,203 @@ describe("manage workspace split components", () => {
     const posture = screen.getByLabelText("Manage review posture");
     expect(within(posture).getByText("Not available")).toBeInTheDocument();
     expect(within(posture).queryByText("0 open")).not.toBeInTheDocument();
+  });
+
+  it("keeps a valid partial exception window reviewable without claiming a whole queue", () => {
+    const data = buildManageWorkspaceData();
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions!,
+      data: {
+        ...data.commandCenterExceptions!.data,
+        next_cursor: "attention-window-2",
+      },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("More attention items are available")).toBeInTheDocument();
+    expect(screen.getByText("2 in this view")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Benchmark mapping requires review" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Evidence unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByText("No open items")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next attention items" })).toBeEnabled();
+    expect(screen.getByText("Attention-item source view 1")).toBeInTheDocument();
+  });
+
+  it("loads the next exception window through the BFF and confirms its source identity", async () => {
+    const data = buildManageWorkspaceData();
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions!,
+      data: {
+        ...data.commandCenterExceptions!.data,
+        next_cursor: "attention-window-2",
+      },
+    };
+    vi.mocked(getDpmCommandCenterExceptions).mockResolvedValue({
+      ...data.commandCenterExceptions,
+      correlation_id: "corr_attention_window_2",
+      data: {
+        next_cursor: null,
+        items: [
+          {
+            exception_id: "exc_window_2",
+            mandate_id: "mandate_001",
+            severity: "HIGH",
+            title: "Concentration threshold requires review",
+            state: "ACTIVE",
+          },
+        ],
+      },
+    });
+
+    render(<ManageMandateHealth data={data} />);
+    const nextAction = screen.getByRole("button", { name: "Next attention items" });
+    nextAction.focus();
+    fireEvent.click(nextAction);
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Concentration threshold requires review",
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Attention-item source view 2")).toBeInTheDocument();
+    const queue = screen.getByLabelText("Mandate attention items").closest("section");
+    expect(queue).toHaveAttribute("data-source-window", "2");
+    expect(queue).toHaveAttribute("data-source-posture", "complete");
+    expect(queue).toHaveAttribute(
+      "data-source-correlation-id",
+      "corr_attention_window_2"
+    );
+    expect(getDpmCommandCenterExceptions).toHaveBeenCalledWith(
+      {
+        portfolioId: "PF_1001",
+        mandateId: "mandate_001",
+        state: "ACTIVE",
+        limit: 25,
+        cursor: "attention-window-2",
+      },
+      "client"
+    );
+    await waitFor(() => expect(document.activeElement).toBe(nextAction));
+  });
+
+  it("retains the last confirmed exception window when continuation loading fails", async () => {
+    const data = buildManageWorkspaceData();
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions!,
+      data: {
+        ...data.commandCenterExceptions!.data,
+        next_cursor: "attention-window-2",
+      },
+    };
+    vi.mocked(getDpmCommandCenterExceptions).mockRejectedValue(
+      new Error("Gateway unavailable")
+    );
+
+    render(<ManageMandateHealth data={data} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next attention items" }));
+
+    expect(
+      await screen.findByText("The next attention-item view could not be loaded")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Attention-item source view 1")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Benchmark mapping requires review" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry source view" })).toBeEnabled();
+    expect(screen.queryByText("No open items")).not.toBeInTheDocument();
+  });
+
+  it("ignores a late exception window after portfolio and mandate scope changes", async () => {
+    const firstScope = buildManageWorkspaceData();
+    firstScope.commandCenterExceptions = {
+      ...firstScope.commandCenterExceptions!,
+      data: {
+        ...firstScope.commandCenterExceptions!.data,
+        next_cursor: "attention-window-2",
+      },
+    };
+    let resolveLateWindow: (
+      value: NonNullable<typeof firstScope.commandCenterExceptions>
+    ) => void = () => undefined;
+    vi.mocked(getDpmCommandCenterExceptions).mockReturnValue(
+      new Promise((resolve) => {
+        resolveLateWindow = resolve;
+      })
+    );
+
+    const { rerender } = render(<ManageMandateHealth data={firstScope} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next attention items" }));
+
+    const nextScope = buildManageWorkspaceData();
+    nextScope.portfolio = {
+      ...nextScope.portfolio,
+      portfolio: {
+        ...nextScope.portfolio.portfolio,
+        portfolio_id: "PF_2002",
+      },
+    };
+    nextScope.mandate = {
+      ...nextScope.mandate!,
+      data: {
+        ...nextScope.mandate!.data,
+        mandate_id: "mandate_002",
+      },
+    };
+    nextScope.mandateHealth = {
+      ...nextScope.mandateHealth!,
+      data: {
+        ...nextScope.mandateHealth!.data,
+        mandate_id: "mandate_002",
+      },
+    };
+    nextScope.commandCenterExceptions = {
+      ...nextScope.commandCenterExceptions!,
+      correlation_id: "corr_new_scope",
+      data: {
+        next_cursor: null,
+        items: [
+          {
+            exception_id: "exc_new_scope",
+            mandate_id: "mandate_002",
+            severity: "MEDIUM",
+            title: "New scope exception",
+            state: "ACTIVE",
+          },
+        ],
+      },
+    };
+    rerender(<ManageMandateHealth data={nextScope} />);
+
+    await act(async () => {
+      resolveLateWindow({
+        ...firstScope.commandCenterExceptions!,
+        correlation_id: "corr_stale_scope",
+        data: {
+          next_cursor: null,
+          items: [
+            {
+              exception_id: "exc_stale_scope",
+              mandate_id: "mandate_001",
+              severity: "HIGH",
+              title: "Stale scope exception",
+              state: "ACTIVE",
+            },
+          ],
+        },
+      });
+      await Promise.resolve();
+    });
+
+    expect(
+      screen.getByRole("button", { name: "New scope exception" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Stale scope exception")).not.toBeInTheDocument();
+    const queue = screen.getByLabelText("Mandate attention items").closest("section");
+    expect(queue).toHaveAttribute("data-source-window", "1");
+    expect(queue).toHaveAttribute("data-source-correlation-id", "corr_new_scope");
   });
 
   it("renders overview operating posture from Gateway-backed manage data", () => {
