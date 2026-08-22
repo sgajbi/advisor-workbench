@@ -5,7 +5,10 @@ import {
 } from "@/features/workbench/api";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import { AppPageShell } from "@/design-system";
-import { parseReviewContext } from "@/shell/review-context";
+import {
+  buildReviewContextHref,
+  parseReviewContext,
+} from "@/shell/review-context";
 import ReviewContextRecovery from "@/shell/review-context-recovery";
 import {
   normalizePerformanceWorkspaceMode,
@@ -139,6 +142,29 @@ export default async function PerformanceAnalyticsPage({
         : "unavailable",
       status: getWorkbenchApiErrorStatus(error) ?? undefined,
     };
+  }
+
+  if (
+    workspaceSummary &&
+    ((reviewContextResult.context.asOfDate &&
+      reviewContextResult.context.asOfDate !== workspaceSummary.as_of_date) ||
+      (reviewContextResult.context.reportingCurrency &&
+        reviewContextResult.context.reportingCurrency !==
+          workspaceSummary.portfolio.base_currency))
+  ) {
+    return (
+      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
+        <ReviewContextRecovery
+          body="The selected valuation date or reporting currency is not supported by the source-confirmed performance summary. No analytical detail was requested."
+          href={buildReviewContextHref("/performance", {
+            portfolioId: selectedPortfolioId,
+            asOfDate: workspaceSummary.as_of_date,
+            reportingCurrency: workspaceSummary.portfolio.base_currency,
+          })}
+          actionLabel="Use available performance context"
+        />
+      </AppPageShell>
+    );
   }
 
   return (

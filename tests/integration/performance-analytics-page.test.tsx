@@ -196,6 +196,46 @@ describe("PerformanceAnalyticsPage", () => {
     expect(fetchMock.mock.calls[0]?.[0].toString()).toContain("/api/v1/lookups/portfolios");
   });
 
+  it.each([
+    {
+      name: "valuation date",
+      searchParams: {
+        portfolioId: "DEMO_ADV_USD_001",
+        asOfDate: "2026-02-23",
+      },
+    },
+    {
+      name: "reporting currency",
+      searchParams: {
+        portfolioId: "DEMO_ADV_USD_001",
+        reportingCurrency: "EUR",
+      },
+    },
+  ])("withholds analytical detail when the requested $name is not source-confirmed", async ({
+    searchParams,
+  }) => {
+    installPerformancePageFetchMock();
+
+    await renderPerformancePage(searchParams);
+
+    expect(
+      screen.getByText(/not supported by the source-confirmed performance summary/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Use available performance context" }),
+    ).toHaveAttribute(
+      "href",
+      "/performance?portfolioId=DEMO_ADV_USD_001&asOfDate=2026-02-24&reportingCurrency=USD",
+    );
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001"),
+      ),
+    ).toBe(false);
+  });
+
   it("uses the shared full-width workstation shell instead of a centered page container", async () => {
     installPerformancePageFetchMock();
 
