@@ -32,8 +32,8 @@ export default function DetailDrawer({
     label: string;
     content: ReactNode;
   }>;
-  fullPageHref: string;
-  fullPageLabel: string;
+  fullPageHref?: string;
+  fullPageLabel?: string;
   onClose: () => void;
 }) {
   const drawerIdentity = `${open ? "open" : "closed"}:${kicker}:${title}`;
@@ -104,9 +104,11 @@ export default function DetailDrawer({
           <Button variant="outlined" onClick={handleClose}>
             Close
           </Button>
-          <Button component="a" href={fullPageHref} variant="contained">
-            {fullPageLabel}
-          </Button>
+          {fullPageHref && fullPageLabel ? (
+            <Button component="a" href={fullPageHref} variant="contained">
+              {fullPageLabel}
+            </Button>
+          ) : null}
         </div>
       </div>
     </Drawer>

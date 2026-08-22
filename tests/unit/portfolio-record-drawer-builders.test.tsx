@@ -46,6 +46,8 @@ describe("portfolio record drawer builders", () => {
     expect(
       screen.getByText("Loading the latest related transactions for this holding.")
     ).toBeInTheDocument();
+    expect(drawer.fullPageHref).toBeUndefined();
+    expect(drawer.fullPageLabel).toBeUndefined();
   });
 
   it("uses the caller-governed list address without rebuilding context", () => {
@@ -160,6 +162,9 @@ describe("portfolio record drawer builders", () => {
       onOpenNearLegGroup,
       onOpenFarLegGroup,
     });
+
+    expect(drawer.fullPageHref).toBeUndefined();
+    expect(drawer.fullPageLabel).toBeUndefined();
 
     render(
       <div>
