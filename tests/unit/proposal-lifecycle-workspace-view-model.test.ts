@@ -46,6 +46,12 @@ describe("proposal lifecycle workspace view model", () => {
   it("filters risk-impact mode to proposals waiting for risk review", () => {
     const model = buildProposalLifecycleWorkspaceModel({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
+      reviewContext: {
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-08-21",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      },
       mode: "risk-impact",
       proposals,
     });
@@ -64,7 +70,7 @@ describe("proposal lifecycle workspace view model", () => {
         creator: "Recorded by source",
         createdOn: "19 Aug 2026, 09:30 UTC",
         nextAction: "Risk officer approval needed",
-        href: "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=risk-impact",
+        href: "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&fromMode=risk-impact",
       }),
     ]);
   });

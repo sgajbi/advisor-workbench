@@ -64,6 +64,7 @@ export default async function ProposalsPage({
       <ProposalLifecycleWorkspace
         key={`${portfolioId}:${lifecycleMode}`}
         portfolioId={portfolioId}
+        reviewContext={{ ...reviewContextResult.context, portfolioId }}
         mode={lifecycleMode}
       />
     </ProposalWorkspaceShell>

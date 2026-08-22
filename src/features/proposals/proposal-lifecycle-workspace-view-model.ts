@@ -1,6 +1,10 @@
 import type { AdvisoryJourneyMode } from "./advisory-journey-navigation";
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
 import {
+  buildReviewContextHref,
+  type WorkspaceReviewContext,
+} from "@/shell/review-context";
+import {
   proposalNextAction,
   proposalReadinessLabel,
   proposalReadinessTone,
@@ -167,12 +171,14 @@ function attentionCount(rows: ProposalLifecycleRow[]): number {
 
 export function buildProposalLifecycleWorkspaceModel({
   portfolioId,
+  reviewContext,
   mode,
   proposals,
   hasMoreResults = false,
   hasPreviousResults = false,
 }: {
   portfolioId: string;
+  reviewContext?: WorkspaceReviewContext;
   mode: ProposalLifecycleMode;
   proposals: ProposalSummary[];
   hasMoreResults?: boolean;
@@ -210,7 +216,7 @@ export function buildProposalLifecycleWorkspaceModel({
     }),
     href: buildProposalDetailHref({
       proposalId: proposal.proposal_id,
-      portfolioId,
+      reviewContext: { ...reviewContext, portfolioId },
       fromMode: mode,
     }),
   }));
@@ -241,25 +247,30 @@ export function buildProposalLifecycleWorkspaceModel({
 
 export function buildProposalDetailHref({
   proposalId,
+  reviewContext,
   portfolioId,
   fromMode,
 }: {
   proposalId: string;
-  portfolioId: string;
+  reviewContext?: WorkspaceReviewContext;
+  portfolioId?: string;
   fromMode: ProposalLifecycleMode;
 }): string {
-  const query = new URLSearchParams({ portfolioId, fromMode });
-  return `/proposals/${encodeURIComponent(proposalId)}?${query.toString()}`;
+  return buildReviewContextHref(
+    `/proposals/${encodeURIComponent(proposalId)}?fromMode=${encodeURIComponent(fromMode)}`,
+    reviewContext ?? (portfolioId ? { portfolioId } : {}),
+  );
 }
 
 export function buildProposalLifecycleHref({
   portfolioId,
+  reviewContext,
   mode,
 }: {
   portfolioId: string;
+  reviewContext?: WorkspaceReviewContext;
   mode: ProposalLifecycleMode;
 }): string {
-  const query = new URLSearchParams({ portfolioId });
-  if (mode !== "approval-queue") query.set("mode", mode);
-  return `/proposals?${query.toString()}`;
+  const href = mode === "approval-queue" ? "/proposals" : `/proposals?mode=${mode}`;
+  return buildReviewContextHref(href, { ...reviewContext, portfolioId });
 }
