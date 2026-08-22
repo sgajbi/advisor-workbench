@@ -81,6 +81,16 @@ describe("advisor-book business-date resolution", () => {
     },
   );
 
+  it("rejects a development date when the build environment is unconfigured", () => {
+    vi.stubEnv("WORKBENCH_BUILD_ENVIRONMENT", "unconfigured");
+    vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "2026-04-10");
+
+    expect(resolveAdvisorBookAsOfDate(null)).toEqual({
+      status: "not_confirmed",
+      reason: "development_date_not_allowed",
+    });
+  });
+
   it("does not invent a date when development configuration is absent or invalid", () => {
     vi.stubEnv("NEXT_PUBLIC_WORKBENCH_ADVISOR_BOOK_AS_OF_DATE", "");
     expect(resolveAdvisorBookAsOfDate(null)).toEqual({
