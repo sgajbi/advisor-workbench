@@ -52,7 +52,7 @@ export default async function ProposalsPage({
   const lifecycleDefinition = getProposalLifecycleModeDefinition(lifecycleMode);
   return (
     <ProposalWorkspaceShell
-      portfolioId={portfolioId}
+      reviewContext={{ ...reviewContextResult.context, portfolioId }}
       activeScreen="proposal"
       activeMode={lifecycleMode}
       title={lifecycleDefinition.title}

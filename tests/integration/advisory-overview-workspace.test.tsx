@@ -50,7 +50,9 @@ describe("AdvisoryOverviewWorkspace", () => {
   });
 
   it("renders portfolio-scoped advisory posture and priority actions", async () => {
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     await waitFor(() => {
       expect(listProposalsMock).toHaveBeenCalledWith({
@@ -97,7 +99,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
     const view = render(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace portfolioId="portfolio-a" />
+        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-a" }} />
       </QueryClientProvider>
     );
 
@@ -113,7 +115,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     listProposalsMock.mockClear();
     view.rerender(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace portfolioId="portfolio-b" />
+        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-b" }} />
       </QueryClientProvider>
     );
 
@@ -129,7 +131,9 @@ describe("AdvisoryOverviewWorkspace", () => {
   it("does not show fallback proposals when the advisory queue fails", async () => {
     listProposalsMock.mockRejectedValueOnce(new Error("gateway unavailable"));
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     expect(await screen.findByText("Advisory priorities are unavailable")).toBeInTheDocument();
     expect(
@@ -175,7 +179,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
     const view = render(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace portfolioId="portfolio-a" />
+        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-a" }} />
       </QueryClientProvider>
     );
 
@@ -184,7 +188,7 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     view.rerender(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace portfolioId="portfolio-b" />
+        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-b" }} />
       </QueryClientProvider>
     );
     fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
@@ -213,7 +217,9 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("gateway unavailable"))
       .mockImplementationOnce(async () => await pendingRetry);
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
     retry.focus();
@@ -239,7 +245,9 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("gateway unavailable"))
       .mockRejectedValueOnce(new Error("gateway still unavailable"));
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
     retry.focus();
@@ -266,7 +274,9 @@ describe("AdvisoryOverviewWorkspace", () => {
         next_cursor: null,
       });
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     const refresh = await screen.findByRole("button", { name: "Refresh advisory priorities" });
     refresh.focus();
@@ -291,7 +301,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("newer refresh unavailable"));
 
     const { queryClient } = renderWithQueryClient(
-      <AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
@@ -328,7 +338,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       });
 
     const { queryClient } = renderWithQueryClient(
-      <AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
@@ -361,7 +371,9 @@ describe("AdvisoryOverviewWorkspace", () => {
       next_cursor: "cursor-2",
     });
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     expect(await screen.findByText("Income allocation review")).toBeInTheDocument();
     expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
@@ -374,7 +386,9 @@ describe("AdvisoryOverviewWorkspace", () => {
   });
 
   it("keeps active proposal work ahead of summary and lifecycle orientation in DOM order", async () => {
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     const decision = await screen.findByTestId("advisory-decision-brief");
     const worklist = screen.getByTestId("advisory-priority-worklist");
@@ -391,7 +405,9 @@ describe("AdvisoryOverviewWorkspace", () => {
       new Error("Proposal list failed (403): forbidden")
     );
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     expect(
       await screen.findByText("Advisory proposal access is not available")
@@ -408,7 +424,9 @@ describe("AdvisoryOverviewWorkspace", () => {
       })
       .mockRejectedValueOnce(new Error("gateway unavailable"));
 
-    renderWithQueryClient(<AdvisoryOverviewWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />);
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+    );
 
     fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
     expect(await screen.findByText("This proposal window is unavailable")).toBeInTheDocument();

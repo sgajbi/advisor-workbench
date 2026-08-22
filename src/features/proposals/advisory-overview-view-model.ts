@@ -1,4 +1,8 @@
-import { buildAdvisoryJourneyHref } from "./advisory-journey-navigation";
+import {
+  buildAdvisoryJourneyHref,
+  type AdvisoryJourneyReviewContext,
+} from "./advisory-journey-navigation";
+import { buildReviewContextHref } from "@/shell/review-context";
 import {
   proposalNextAction,
   proposalReadinessLabel,
@@ -89,18 +93,24 @@ function recommendedAction(items: ProposalSummary[]): string {
 }
 
 export function buildAdvisoryOverviewModel({
-  portfolioId,
+  reviewContext,
   proposals,
   hasMoreResults = false,
   hasPreviousResults = false,
   windowNumber = 1,
 }: {
-  portfolioId: string;
+  reviewContext: AdvisoryJourneyReviewContext;
   proposals: ProposalSummary[];
   hasMoreResults?: boolean;
   hasPreviousResults?: boolean;
   windowNumber?: number;
 }): AdvisoryOverviewModel {
+  const {
+    portfolioId,
+    selectedRecordId: _selectedRecordId,
+    batchId: _batchId,
+    ...workspaceContext
+  } = reviewContext;
   const reviewBlockers = countByState(proposals, ["RISK_REVIEW", "COMPLIANCE_REVIEW"]);
   const awaitingClient = countByState(proposals, ["AWAITING_CLIENT_CONSENT"]);
   const executionReady = countByState(proposals, ["EXECUTION_READY"]);
@@ -123,7 +133,10 @@ export function buildAdvisoryOverviewModel({
       readiness: proposalReadinessLabel(proposal.current_state),
       readinessTone: proposalReadinessTone(proposal.current_state),
       nextAction: proposalNextAction(proposal.current_state),
-      href: `/proposals/${proposal.proposal_id}`,
+      href: buildReviewContextHref(
+        `/proposals/${encodeURIComponent(proposal.proposal_id)}`,
+        workspaceContext,
+      ),
     }));
 
   return {
@@ -167,7 +180,7 @@ export function buildAdvisoryOverviewModel({
         value: "Ideas",
         valueLabel: "Upstream workspace",
         tone: "default",
-        href: buildAdvisoryJourneyHref(portfolioId, "opportunities"),
+        href: buildAdvisoryJourneyHref(reviewContext, "opportunities"),
       },
       {
         key: "construct",
@@ -177,7 +190,7 @@ export function buildAdvisoryOverviewModel({
         value: String(drafts),
         valueLabel: drafts === 1 ? "visible draft" : "visible drafts",
         tone: drafts > 0 ? "default" : "success",
-        href: buildAdvisoryJourneyHref(portfolioId, "proposal-builder"),
+        href: buildAdvisoryJourneyHref(reviewContext, "proposal-builder"),
       },
       {
         key: "deliver",
@@ -187,7 +200,7 @@ export function buildAdvisoryOverviewModel({
         value: String(deliverCount),
         valueLabel: deliverCount === 1 ? "visible handoff" : "visible handoffs",
         tone: deliverCount > 0 ? "warn" : "success",
-        href: buildAdvisoryJourneyHref(portfolioId, "approval-queue"),
+        href: buildAdvisoryJourneyHref(reviewContext, "approval-queue"),
       },
       {
         key: "implement",
@@ -197,7 +210,7 @@ export function buildAdvisoryOverviewModel({
         value: String(executionReady),
         valueLabel: executionReady === 1 ? "visible handoff" : "visible handoffs",
         tone: executionReady > 0 ? "success" : "default",
-        href: buildAdvisoryJourneyHref(portfolioId, "implementation"),
+        href: buildAdvisoryJourneyHref(reviewContext, "implementation"),
       },
     ],
     proposalRows,

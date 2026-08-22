@@ -33,7 +33,7 @@ describe("buildAdvisoryOverviewModel", () => {
     ];
 
     const model = buildAdvisoryOverviewModel({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       proposals,
     });
 
@@ -66,7 +66,7 @@ describe("buildAdvisoryOverviewModel", () => {
 
   it("counts an execution-ready proposal as an implementation follow-up", () => {
     const model = buildAdvisoryOverviewModel({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       proposals: [
         {
           proposal_id: "PRP-READY",
@@ -83,7 +83,12 @@ describe("buildAdvisoryOverviewModel", () => {
 
   it("keeps lifecycle handoffs portfolio scoped", () => {
     const model = buildAdvisoryOverviewModel({
-      portfolioId: "PB SG/001",
+      reviewContext: {
+        portfolioId: "PB SG/001",
+        asOfDate: "2026-06-30",
+        period: "YTD",
+        reportingCurrency: "SGD",
+      },
       proposals: [],
     });
 
@@ -93,14 +98,15 @@ describe("buildAdvisoryOverviewModel", () => {
       tone: "success",
     });
     expect(model.lifecycleStages.find((stage) => stage.key === "construct")).toMatchObject({
-      href: "/proposals/simulate?portfolioId=PB%20SG%2F001",
+      href:
+        "/proposals/simulate?portfolioId=PB+SG%2F001&asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
       value: "0",
     });
   });
 
   it("discloses that metrics and ranking cover a partial source window", () => {
     const model = buildAdvisoryOverviewModel({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
       proposals: [
         {
           proposal_id: "PRP-DRAFT",

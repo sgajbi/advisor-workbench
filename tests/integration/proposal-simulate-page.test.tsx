@@ -27,18 +27,18 @@ vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => 
 vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () => ({
   default: ({
     title,
-    portfolioId,
+    reviewContext,
     workflowContext,
     children,
   }: {
     title: string;
-    portfolioId: string;
+    reviewContext: { portfolioId: string };
     workflowContext?: { title: string; sourceLabel: string };
     children: React.ReactNode;
   }) => (
     <section>
       <h1>{title}</h1>
-      <p>{portfolioId}</p>
+      <p>{reviewContext.portfolioId}</p>
       {workflowContext ? (
         <aside>
           <h2>{workflowContext.title}</h2>

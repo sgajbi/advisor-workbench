@@ -32,7 +32,7 @@ export default async function RecommendationsAppPage({
   const definition = getAdvisoryJourneyDefinition(activeMode);
   return (
     <ProposalWorkspaceShell
-      portfolioId={portfolioId}
+      reviewContext={{ portfolioId }}
       activeScreen="advisory"
       activeMode={activeMode}
       title={definition.title}
@@ -58,7 +58,7 @@ export default async function RecommendationsAppPage({
           selectedCandidateId={resolvedSearch.candidateId}
         />
       ) : (
-        <AdvisoryOverviewWorkspace portfolioId={portfolioId} />
+        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId }} />
       )}
     </ProposalWorkspaceShell>
   );

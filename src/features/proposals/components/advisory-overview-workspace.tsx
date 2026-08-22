@@ -20,6 +20,10 @@ import { projectQuerySourcePosture } from "@/features/platform-runtime/query-sou
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
 
 import { listProposals } from "../api";
+import {
+  buildAdvisoryJourneyHref,
+  type AdvisoryJourneyReviewContext,
+} from "../advisory-journey-navigation";
 import { buildAdvisoryOverviewModel } from "../advisory-overview-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
@@ -32,7 +36,12 @@ type SourceRefreshOutcome = {
   state: "pending" | "confirmed" | "failed";
 };
 
-export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId: string }) {
+export default function AdvisoryOverviewWorkspace({
+  reviewContext,
+}: {
+  reviewContext: AdvisoryJourneyReviewContext;
+}) {
+  const { portfolioId } = reviewContext;
   const sourceWindow = useSourceWindow(portfolioId);
   const [sourceRefreshOutcome, setSourceRefreshOutcome] = useState<SourceRefreshOutcome | null>(null);
   const proposalQuery = useQuery({
@@ -49,14 +58,14 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
   const model = useMemo(
     () =>
       buildAdvisoryOverviewModel({
-        portfolioId,
+        reviewContext,
         proposals,
         hasMoreResults: Boolean(proposalQuery.data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
         windowNumber: sourceWindow.windowNumber,
       }),
     [
-      portfolioId,
+      reviewContext,
       proposalQuery.data?.next_cursor,
       proposals,
       sourceWindow.hasPrevious,
@@ -154,7 +163,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
       {proposalQuery.data && !sourcePosture.isPermissionBlocked ? (
         <Link
           className="nav-link"
-          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+          href={buildAdvisoryJourneyHref(reviewContext, "proposal-builder")}
         >
           Build Proposal
         </Link>
@@ -305,7 +314,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
                 Priority Advisory Actions
               </Text>
             </div>
-            <Link href={`/proposals?portfolioId=${encodeURIComponent(portfolioId)}`}>
+            <Link href={buildAdvisoryJourneyHref(reviewContext, "approval-queue")}>
               Open Approval Queue
             </Link>
           </div>
@@ -340,7 +349,7 @@ export default function AdvisoryOverviewWorkspace({ portfolioId }: { portfolioId
                 !model.hasPartialWindow ? (
                   <Link
                     className="nav-link"
-                    href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+                    href={buildAdvisoryJourneyHref(reviewContext, "proposal-builder")}
                   >
                     Build advisor-use draft
                   </Link>

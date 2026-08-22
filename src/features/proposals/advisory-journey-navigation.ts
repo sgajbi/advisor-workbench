@@ -1,4 +1,11 @@
 import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
+import {
+  buildReviewContextHref,
+  type ReviewContext,
+} from "@/shell/review-context";
+
+export type AdvisoryJourneyReviewContext = ReviewContext &
+  Readonly<{ portfolioId: string }>;
 
 export type AdvisoryJourneyMode =
   | "overview"
@@ -195,34 +202,48 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
 ];
 
 export function buildAdvisoryJourneyHref(
-  portfolioId: string,
+  reviewContext: AdvisoryJourneyReviewContext,
   mode: AdvisoryJourneyMode,
 ): string {
-  const encoded = encodeURIComponent(portfolioId);
+  const {
+    selectedRecordId: _selectedRecordId,
+    batchId: _batchId,
+    ...workspaceContext
+  } = reviewContext;
+  let destination: string;
   switch (mode) {
     case "overview":
-      return `/recommendations?portfolioId=${encoded}`;
+      destination = "/recommendations";
+      break;
     case "opportunities":
-      return `/recommendations?portfolioId=${encoded}&mode=opportunities`;
+      destination = "/recommendations?mode=opportunities";
+      break;
     case "cockpit":
-      return `/recommendations?portfolioId=${encoded}&mode=cockpit`;
+      destination = "/recommendations?mode=cockpit";
+      break;
     case "copilot":
-      return `/recommendations?portfolioId=${encoded}&mode=copilot`;
+      destination = "/recommendations?mode=copilot";
+      break;
     case "proof":
-      return `/recommendations?portfolioId=${encoded}&mode=proof`;
+      destination = "/recommendations?mode=proof";
+      break;
     case "proposal-builder":
-      return `/proposals/simulate?portfolioId=${encoded}`;
+      destination = "/proposals/simulate";
+      break;
     case "client-context":
-      return `/portfolio?portfolioId=${encoded}`;
+      destination = "/portfolio";
+      break;
     case "approval-queue":
-      return `/proposals?portfolioId=${encoded}`;
+      destination = "/proposals";
+      break;
     default:
-      return `/proposals?portfolioId=${encoded}&mode=${mode}`;
+      destination = `/proposals?mode=${mode}`;
   }
+  return buildReviewContextHref(destination, workspaceContext);
 }
 
 export function buildAdvisoryJourneyModeItems(
-  portfolioId: string,
+  reviewContext: AdvisoryJourneyReviewContext,
   activeMode: AdvisoryJourneyMode,
 ): PortfolioScreenRailModeItem[] {
   return ADVISORY_JOURNEY_DEFINITIONS.filter(
@@ -232,7 +253,7 @@ export function buildAdvisoryJourneyModeItems(
     label: definition.label,
     detail: definition.detail,
     active: activeMode === definition.key,
-    href: buildAdvisoryJourneyHref(portfolioId, definition.key),
+    href: buildAdvisoryJourneyHref(reviewContext, definition.key),
     title: definition.description,
   }));
 }
