@@ -10,7 +10,7 @@ vi.mock("../../src/features/proposals/components/proposal-simulate-form", () => 
     initialPortfolioId,
     initialAsOfDate,
   }: {
-    initialPortfolioId?: string;
+    initialPortfolioId: string;
     initialAsOfDate?: string;
   }) => {
     proposalFormRenderMock({ initialPortfolioId, initialAsOfDate });

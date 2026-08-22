@@ -136,13 +136,14 @@ function deferred<T>() {
   return { promise, reject, resolve };
 }
 
-function renderForm(initialPortfolioId?: string) {
+function renderForm(initialPortfolioId = "PB_SG_GLOBAL_BAL_001") {
   const queryClient = new QueryClient();
-  const portfolioId = initialPortfolioId ?? "PB_SG_GLOBAL_BAL_001";
   const view = render(
     <QueryClientProvider client={queryClient}>
       <ProposalWorkflowContextProvider
-        initialModel={buildSimulationProposalWorkflowContext({ portfolioId })}
+        initialModel={buildSimulationProposalWorkflowContext({
+          portfolioId: initialPortfolioId,
+        })}
       >
         <ProposalSimulateForm
           initialPortfolioId={initialPortfolioId}

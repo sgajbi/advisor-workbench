@@ -78,8 +78,6 @@ const schema = z.object({
 
 type FormInput = z.infer<typeof schema>;
 
-const DEFAULT_CANONICAL_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
-
 function createUiIdempotencyKey(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return `ui-${crypto.randomUUID()}`;
@@ -118,10 +116,10 @@ function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
 }
 
 export default function ProposalSimulateForm({
-  initialPortfolioId = DEFAULT_CANONICAL_PORTFOLIO_ID,
+  initialPortfolioId,
   initialAsOfDate = "",
 }: {
-  initialPortfolioId?: string;
+  initialPortfolioId: string;
   initialAsOfDate?: string;
 }) {
   const isHydrated = useClientMounted();
