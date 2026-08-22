@@ -121,7 +121,9 @@ export default function PortfolioScreenRail({
           activeScreen={activeScreen}
           modeItems={modeItems}
           modeNavigationLabel={modeNavigationLabel}
-          onDestinationSelected={() => closeCompactNavigation()}
+          onDestinationSelected={() =>
+            closeCompactNavigation({ restoreFocus: true })
+          }
         />
       )}
     </Panel>
