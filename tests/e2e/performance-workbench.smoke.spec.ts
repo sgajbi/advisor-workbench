@@ -611,6 +611,7 @@ test.describe('Performance workbench smoke', () => {
     const comparisonDisplay = page.getByText('Adjust comparison display');
     await comparisonDisplay.focus();
     await page.keyboard.press('Enter');
+    const comparisonDisclosure = comparisonDisplay.locator('xpath=ancestor::details[1]');
     const evidenceColumns = page.getByLabel('Evidence columns');
     await expect(evidenceColumns).toBeVisible();
     await evidenceColumns.focus();
@@ -628,6 +629,20 @@ test.describe('Performance workbench smoke', () => {
       await page.setViewportSize({ width, height: 1000 });
       await comparisonContext.scrollIntoViewIfNeeded();
       await expect(comparisonContext).toBeVisible();
+      const disclosureBox = await comparisonDisclosure.boundingBox();
+      expect(disclosureBox).not.toBeNull();
+      for (const comparisonControl of [
+        page.getByLabel('Evidence columns'),
+        page.getByLabel('Basis comparison'),
+        page.getByLabel('Return comparison'),
+      ]) {
+        const controlBox = await comparisonControl.boundingBox();
+        expect(controlBox).not.toBeNull();
+        expect(controlBox!.x).toBeGreaterThanOrEqual(disclosureBox!.x - 1);
+        expect(controlBox!.x + controlBox!.width).toBeLessThanOrEqual(
+          disclosureBox!.x + disclosureBox!.width + 1,
+        );
+      }
       await driversModule.scrollIntoViewIfNeeded();
       await expectContributorGroupsToRemainSeparate(page);
       await expect(calculationEvidenceSummary).toBeVisible();
