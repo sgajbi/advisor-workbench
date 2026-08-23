@@ -252,6 +252,27 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(within(table).getByText("Gross Return")).toBeInTheDocument();
     expect(within(table).queryByText("Net Return")).not.toBeInTheDocument();
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        returnView="absolute"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Basis comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Return comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
+        "Uses analysis selectionNet basis · Absolute return view",
+      );
+    });
+    const resetTable = screen.getByLabelText("Multi-horizon return table");
+    expect(within(resetTable).getByText("Net Return")).toBeInTheDocument();
+    expect(within(resetTable).queryByText("Gross Return")).not.toBeInTheDocument();
   });
 
   it("reuses cached horizon data when rerendered with the same analytical inputs", async () => {
