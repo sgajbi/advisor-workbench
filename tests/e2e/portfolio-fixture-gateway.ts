@@ -136,7 +136,14 @@ export async function startPortfolioFixtureGateway({
       `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/performance-snapshot`
     ) {
       const period = requestUrl.searchParams.get('period') ?? 'EXPLICIT';
-      sendJson(response, buildPerformanceResponse(period));
+      sendJson(
+        response,
+        buildPerformanceResponse({
+          period,
+          reportStartDate: requestUrl.searchParams.get('report_start_date'),
+          reportEndDate: requestUrl.searchParams.get('report_end_date'),
+        })
+      );
       return;
     }
 
@@ -755,10 +762,20 @@ function buildTransactionSettlementMatrix() {
   ];
 }
 
-function buildPerformanceResponse(period: string) {
+function buildPerformanceResponse({
+  period,
+  reportStartDate,
+  reportEndDate,
+}: {
+  period: string;
+  reportStartDate: string | null;
+  reportEndDate: string | null;
+}) {
   return {
     period,
     as_of_date: AS_OF_DATE,
+    report_start_date: reportStartDate,
+    report_end_date: reportEndDate,
     benchmark_code: 'BMK_GLOBAL_BALANCED_60_40',
     portfolio_return_pct:
       period === 'MTD' ? null : period === 'QTD' ? 1.8 : period === 'YTD' ? 4.6 : 2.4,

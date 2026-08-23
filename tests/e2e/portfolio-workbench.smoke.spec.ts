@@ -6,6 +6,7 @@ import {
   measureGrid,
 } from './workbench-smoke-helpers';
 import {
+  collectReviewContextOwnershipEvidence,
   collectFocusableDomOrder,
   measureViewportEvidence,
   traverseSequentialKeyboardFocus,
@@ -286,6 +287,7 @@ test.describe('Portfolio workbench smoke', () => {
   });
 
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
+    test.setTimeout(90_000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPortfolioReview(page, request);
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
@@ -294,7 +296,11 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('QTD Return')).toBeVisible();
     await expect(page.getByText('YTD Return')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Income/i })).toBeVisible();
+    const allWorkspaces = page.getByRole('button', { name: /All workspaces/i });
+    await allWorkspaces.click();
+    await expect(page.getByRole('link', { name: /Income and activity/i })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(allWorkspaces).toBeFocused();
     await expect(page.getByRole('button', { name: /^Filters/i })).toHaveCount(0);
 
     if (process.env.PORTFOLIO_E2E_FIXTURE === 'cashflow') {
@@ -356,6 +362,13 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByRole('heading', { name: 'Book Context' })).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Review Evidence' })).toBeVisible();
       await expect(reviewContext.getByText(session.portfolioId!, { exact: true })).toHaveCount(1);
+      const identityOwnership = await collectReviewContextOwnershipEvidence(page, [
+        session.portfolioId!,
+        'CLIENT_SG_001',
+        'Singapore',
+      ]);
+      expect(identityOwnership.every((fact) => fact.presentInReviewContext)).toBe(true);
+      expect(identityOwnership.every((fact) => !fact.presentOutsideReviewContext)).toBe(true);
       await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
       await expect(page.getByText('Valuation date', { exact: true })).toBeVisible();
       await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
@@ -389,7 +402,7 @@ test.describe('Portfolio workbench smoke', () => {
           expect(visibleHeaderRegions[0].left).toBeLessThan(visibleHeaderRegions[1].left);
         }
 
-        const disclosure = page.getByRole('button', { name: /Current view Portfolio Review/ });
+        const disclosure = page.getByRole('button', { name: /Current view Portfolio review/i });
         await disclosure.focus();
         const focusIndicator = await disclosure.evaluate((element) => {
           const style = getComputedStyle(element);

@@ -26,12 +26,14 @@ export async function collectFocusableDomOrder(root: Locator) {
       .filter((element) => {
         const htmlElement = element as HTMLElement;
         const style = getComputedStyle(htmlElement);
+        const closedDetails = htmlElement.closest('details:not([open])');
         return (
           htmlElement.getClientRects().length > 0 &&
           htmlElement.tabIndex >= 0 &&
           style.display !== 'none' &&
           style.visibility !== 'hidden' &&
-          htmlElement.getAttribute('aria-hidden') !== 'true'
+          htmlElement.getAttribute('aria-hidden') !== 'true' &&
+          (!closedDetails || htmlElement.tagName === 'SUMMARY')
         );
       })
       .map((element, index) => {
@@ -187,4 +189,39 @@ export async function measureViewportEvidence(page: Page) {
       scrollWidth: document.documentElement.scrollWidth,
     },
   }));
+}
+
+export async function collectReviewContextOwnershipEvidence(
+  page: Page,
+  facts: readonly string[],
+) {
+  return page.evaluate((expectedFacts) => {
+    const reviewContext = document.querySelector<HTMLElement>(
+      '[data-testid="review-context-strip"]'
+    );
+    const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+    const reviewContextText = normalize(reviewContext?.textContent ?? '');
+    const renderedOutsideText: string[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const parent = node.parentElement;
+      if (
+        parent &&
+        !parent.closest('[data-testid="review-context-strip"]') &&
+        !['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(parent.tagName) &&
+        parent.getClientRects().length > 0
+      ) {
+        renderedOutsideText.push(node.textContent ?? '');
+      }
+      node = walker.nextNode();
+    }
+    const outsideText = normalize(renderedOutsideText.join(' '));
+
+    return expectedFacts.map((fact) => ({
+      fact,
+      presentInReviewContext: reviewContextText.includes(fact),
+      presentOutsideReviewContext: outsideText.includes(fact),
+    }));
+  }, facts);
 }
