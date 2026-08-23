@@ -139,7 +139,6 @@ export default function PortfolioWorkspaceView({
                       summaryHeader={
                         <PortfolioSummaryHeaderSection
                           workspace={workspace}
-                          context={context}
                           onOpenMetricDrawer={(metric) =>
                             setDetailDrawer(buildMetricDrawer(metric, workspace, context))
                           }

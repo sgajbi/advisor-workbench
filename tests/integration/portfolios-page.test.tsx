@@ -213,20 +213,16 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".lotus-workstation-header")).toBeFalsy();
     expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
     expect(document.querySelector(".workstation-shell-main .portfolio-hero")).toBeTruthy();
-    const hero = screen.getByRole("heading", { name: /Global Balanced/i }).closest(".portfolio-hero");
+    const strip = screen.getByTestId("review-context-strip");
+    const hero = document.querySelector(".portfolio-hero");
     expect(hero).toBeTruthy();
     expect(hero?.classList.contains("portfolio-book-hero")).toBe(true);
-    expect(hero?.querySelector(".portfolio-hero-header")).toBeTruthy();
-    expect(hero?.querySelector(".portfolio-hero-label")).toBeTruthy();
-    expect(within(hero as HTMLElement).getByText("Selected portfolio")).toHaveClass(
-      "portfolio-hero-label"
-    );
-    expect(within(hero as HTMLElement).queryByText("Portfolio book PORT_UI_1001")).not.toBeInTheDocument();
+    expect(hero?.querySelector(".portfolio-hero-header")).toBeNull();
+    expect(within(strip).getByText("Global Balanced")).toBeInTheDocument();
+    expect(within(strip).getByText("USD")).toBeInTheDocument();
+    expect(within(strip).getByText("CIF_1001")).not.toBeVisible();
+    expect(within(strip).getByText("Singapore")).toBeInTheDocument();
     expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeNull();
-    expect(within(hero as HTMLElement).getByText("USD")).toBeInTheDocument();
-    expect(within(hero as HTMLElement).getByText("CIF_1001")).toBeInTheDocument();
-    expect(within(hero as HTMLElement).getByText("Singapore")).toBeInTheDocument();
-    expect(within(hero as HTMLElement).getByText("Active")).toBeInTheDocument();
     expect(within(hero as HTMLElement).queryByText("2 portfolios")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Book identity and status for rapid front-office orientation.")
@@ -272,7 +268,7 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("button", { name: "Filters" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export portfolio data" })).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: /Book Context/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Book Context/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Reporting Readiness/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Portfolio Insights/i })).not.toBeInTheDocument();
@@ -313,11 +309,11 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Activity summary")).not.toBeInTheDocument();
     expect(document.querySelectorAll(".workbench-rail-card")).toHaveLength(1);
     expect(document.querySelector(".portfolio-evidence-card.workbench-rail-card")).toBeTruthy();
-    expect(document.querySelector(".portfolio-context-card")).toBeTruthy();
+    expect(document.querySelector(".portfolio-context-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-context-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-readiness-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
-    expect(document.querySelectorAll(".portfolio-side-card").length).toBeGreaterThanOrEqual(2);
+    expect(document.querySelectorAll(".portfolio-side-card")).toHaveLength(1);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Evidence Coverage" })).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
@@ -427,9 +423,9 @@ describe("PortfolioFoundationPage", () => {
       expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("heading", { name: /Book Context/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Book Context/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Reporting Readiness/i })).not.toBeInTheDocument();
-    expect(screen.getByText("Identity")).toBeInTheDocument();
+    expect(screen.queryByText("Identity")).not.toBeInTheDocument();
     expect(screen.queryByText("Book Setup")).not.toBeInTheDocument();
     const detailedCluster = document.querySelector(".portfolio-detailed-cluster");
     expect(detailedCluster).toBeFalsy();
@@ -466,12 +462,13 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("tab", { name: "Detailed" })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Summary" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Copy Portfolio/i }));
+    fireEvent.click(screen.getByText("Support details"));
+    fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio ID" }));
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith("PORT_UI_1001");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Copy Client/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy Client ID" }));
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith("CIF_1001");
     });
