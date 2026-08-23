@@ -19,6 +19,9 @@ export default function PerformanceObservationTrail({
     if (index === 1) {
       return { ...column, width: "8.75rem", stickyOffset: "4.75rem" };
     }
+    if (column.key === "portfolioCumulative" || column.key === "benchmarkCumulative") {
+      return { ...column, headerWrap: true };
+    }
     return column;
   });
 
@@ -33,7 +36,7 @@ export default function PerformanceObservationTrail({
       metaClassName="performance-chart-observation-header-meta"
     >
       <p className={styles.scrollHint}>
-        Period and window remain visible while you review cumulative results.
+        Scroll for returns; Period and Window stay visible.
       </p>
       <AnalyticsTable
         ariaLabel="Return path observation table"

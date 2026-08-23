@@ -124,6 +124,7 @@ function SelectOption({
         onChange={(event) => onChange(event.target.value)}
         SelectProps={{ native: true }}
         slotProps={{ htmlInput: { "aria-label": label } }}
+        sx={comparisonSelectSx}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value} disabled={option.disabled}>
@@ -134,6 +135,23 @@ function SelectOption({
     </div>
   );
 }
+
+const comparisonSelectSx = {
+  width: "100%",
+  "& .MuiInputBase-root": {
+    minHeight: "36px",
+    background: "var(--panel)",
+  },
+  "& .MuiInputBase-root.Mui-focused": {
+    outline: "2px solid rgba(54, 95, 139, 0.78)",
+    outlineOffset: "2px",
+  },
+  "@media (max-width: 640px)": {
+    "& .MuiInputBase-root": {
+      minHeight: "44px",
+    },
+  },
+} as const;
 
 function formatSelectionLabel(value: string) {
   const businessLabels: Record<string, string> = {

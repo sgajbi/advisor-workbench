@@ -1,0 +1,55 @@
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.tooltipItem,
+.item {
+  min-width: 0;
+}
+
+.tooltipItem {
+  display: block;
+}
+
+.item {
+  display: grid;
+  height: 100%;
+  gap: 0.16rem;
+  padding: 0.6rem 0.72rem 0.58rem;
+  border: 1px solid rgba(32, 44, 61, 0.08);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 252, 0.96));
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: var(--type-micro-label-size);
+  font-weight: var(--type-micro-label-weight);
+  line-height: var(--type-micro-label-line-height);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+}
+
+.value {
+  color: var(--brand-strong);
+  font-size: var(--type-metric-l-size);
+  font-weight: var(--type-metric-l-weight);
+  line-height: var(--type-metric-l-line-height);
+  font-variant-numeric: var(--type-financial-numeric);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,5 +1,7 @@
 import Tooltip from "@mui/material/Tooltip";
 
+import styles from "./performance-return-path-summary.module.css";
+
 type PerformanceReturnPathSummaryItem = {
   key: string;
   label: string;
@@ -14,18 +16,19 @@ export default function PerformanceReturnPathSummary({
 }) {
   return (
     <section
-      className="performance-chart-readout-strip performance-return-path-summary"
+      className={styles.summary}
       aria-label="Return decision readout"
     >
       {items.map((item) => {
         const card = (
           <div
             key={item.key}
-            className="performance-chart-readout-primary"
+            className={styles.item}
             title={item.definition}
+            data-return-metric={item.key}
           >
-            <span className="performance-chart-readout-eyebrow">{item.label}</span>
-            <strong>{item.value}</strong>
+            <span className={styles.label}>{item.label}</span>
+            <strong className={styles.value}>{item.value}</strong>
           </div>
         );
 
@@ -35,7 +38,7 @@ export default function PerformanceReturnPathSummary({
 
         return (
           <Tooltip key={item.key} title={item.definition} arrow>
-            <span>{card}</span>
+            <span className={styles.tooltipItem}>{card}</span>
           </Tooltip>
         );
       })}

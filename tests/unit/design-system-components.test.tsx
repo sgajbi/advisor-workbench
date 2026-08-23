@@ -848,7 +848,12 @@ describe("design-system components", () => {
             width: "8.75rem",
             stickyOffset: "4.75rem",
           },
-          { key: "portfolio", label: "Portfolio", align: "right" },
+          {
+            key: "portfolio",
+            label: "Cumulative Portfolio",
+            align: "right",
+            headerWrap: true,
+          },
         ]}
         rows={[{ key: "row-1", cells: ["Jan", "1-31 Jan 2026", "1.20%"] }]}
       />
@@ -873,6 +878,9 @@ describe("design-system components", () => {
       left: "0px",
       zIndex: "2",
     });
+    expect(
+      screen.getByRole("columnheader", { name: "Cumulative Portfolio" }),
+    ).toHaveStyle({ whiteSpace: "normal", lineHeight: "1.2" });
   });
 
   it("renders dense analytics tables through the shared frame contract", () => {
