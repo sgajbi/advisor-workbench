@@ -18,10 +18,12 @@ turn incomplete evidence into an investment conclusion.
 | Primary next action | Explain a confirmed driver, qualify a limitation, change an available segment, or continue to evidence review |
 
 The current mode exposes one compact governed analysis bar beside the evidence it controls.
-Summary, Analysis, and Risk reuse the same horizon, return-basis, observation-frequency, benchmark,
-and custom-window selection path; no mode renders a second local context. Exact dates appear only
-when **Custom dates** is selected. **Absolute**, **Relative**, and **Combined** remain Return History
-display choices in Summary and deliberately do not appear as attribution source selectors.
+Summary and Analysis reuse the same horizon, return-basis, observation-frequency, benchmark, and
+custom-window selection path. Risk reuses the component for its supported horizon, basis,
+benchmark, and custom-window subset but omits Frequency because current governed Risk requests do
+not consume it. No mode renders a second local context. Exact dates appear only when **Custom
+dates** is selected. **Absolute**, **Relative**, and **Combined** remain Return History display
+choices in Summary and deliberately do not appear as attribution source selectors.
 
 ## Business Purpose
 
@@ -72,7 +74,8 @@ advice approval, or client-publication authority.
 - Presents Gateway-backed contribution and attribution detail without calculating effects in the
   browser.
 - Exposes source-backed horizon, basis, frequency, benchmark, and progressively disclosed explicit
-  dates through the same reusable selection component and request-shaping path as Summary and Risk.
+  dates through the same reusable selection component and request-shaping path as Summary. Risk
+  uses that component only for its supported subset and does not expose Frequency.
 - Applies the selection as one source transaction; downstream analysis inherits the confirmed
   context and does not repeat horizon or benchmark controls.
 - Keeps the prior confirmed view under its original labels while a new selection is pending or

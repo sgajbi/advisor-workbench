@@ -1152,9 +1152,11 @@ Important validation expectations:
     optimized-production semantic, focus, height, responsive, and overflow proof.
 34. Source-selection controls belong beside every Performance decision view that they govern.
     Summary, Analysis, and Risk must reuse one component and one complete request-shaping path for
-    horizon, basis, explicit review window, frequency, and benchmark. Render that control bar once
-    per mode, but expose only controls consumed by that mode's governed source request; a shared
-    control must not imply unsupported authority. Downstream comparison and risk panels inherit
+    the controls their governed source requests support. Horizon, basis, explicit review window,
+    and benchmark apply across the three modes; frequency applies to Summary and Analysis but not
+    the current Risk contract. Render that control bar once per mode, but expose only controls
+    consumed by that mode's governed source request; a shared control must not imply unsupported
+    authority. Downstream comparison and risk panels inherit
     only their supported confirmed source context instead of adding page-local selectors. Keep
     exact dates behind the Custom dates disclosure, comparison
     display overrides behind their own disclosure, return-view presentation local to the Summary

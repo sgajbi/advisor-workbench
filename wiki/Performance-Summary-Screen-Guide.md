@@ -88,8 +88,8 @@ or moving focus away from the active rail or source control.
 ## Implemented Capabilities
 
 - Uses one compact governed analysis bar for Horizon, Basis, Frequency, Benchmark, Custom window,
-  and Summary-only Return view. Analysis and Risk reuse the same source selection rather than
-  rendering another page-local context.
+  and Summary-only Return view. Analysis reuses the complete source selection; Risk reuses the
+  supported subset without Frequency. Neither mode renders another page-local context.
 - Keeps exact start and end dates behind the Custom dates disclosure and preserves their complete
   values and Apply action across desktop, tablet, and compact layouts.
 - Defaults Return History to the six-column Absolute portfolio-versus-benchmark review. Relative
