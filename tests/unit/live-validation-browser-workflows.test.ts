@@ -132,7 +132,8 @@ describe("live validation browser workflow helpers", () => {
     const source = browserWorkflowModule.validatePortfolioPanels.toString();
 
     expect(source).toContain('name: "Review context"');
-    expect(source).toContain("reviewContext.getByText(portfolioId");
+    expect(source).toContain('getByTestId("review-context-strip")');
+    expect(source).toContain("reviewContextStrip.getByText(portfolioId");
     expect(source).toContain('reviewContext.getByText("Mandate"');
     expect(source).toContain('reviewContext.getByText("Business date"');
     expect(source).not.toContain("Balanced Mandate");
