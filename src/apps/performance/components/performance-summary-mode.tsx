@@ -7,7 +7,12 @@ import {
 } from "@/design-system";
 
 import PerformanceChartPanel from "./performance-chart-panel";
-import type { PerformanceChartViewMode } from "./performance-chart-panel-helpers";
+import {
+  hasActiveReturnSeries,
+  hasBenchmarkReturnSeries,
+  resolveChartViewMode,
+  type PerformanceChartViewMode,
+} from "./performance-chart-panel-helpers";
 import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
 import PerformanceSummaryContributorsSection from "./performance-summary-contributors-section";
 import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
@@ -31,7 +36,15 @@ export default function PerformanceSummaryMode({
   topContributors,
   bottomContributors,
 }: PerformanceSummaryModeProps) {
-  const [returnView, setReturnView] = useState<PerformanceChartViewMode>("absolute");
+  const [preferredReturnView, setPreferredReturnView] =
+    useState<PerformanceChartViewMode>("absolute");
+  const returnPoints =
+    detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart;
+  const effectiveReturnView = resolveChartViewMode({
+    preferredMode: preferredReturnView,
+    hasBenchmarkSeries: hasBenchmarkReturnSeries(returnPoints),
+    hasActiveSeries: hasActiveReturnSeries(returnPoints),
+  });
 
   return (
     <PerformanceWorkspaceStageSurface
@@ -42,7 +55,7 @@ export default function PerformanceSummaryMode({
       <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
         <PerformanceChartPanel
           title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
-          points={detailBasis === "GROSS" ? workspace.gross_chart : workspace.net_chart}
+          points={returnPoints}
           summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
           portfolioId={workspace.portfolio.portfolio_id}
           period={period}
@@ -60,8 +73,8 @@ export default function PerformanceSummaryMode({
           onRequestChange={onRequestChange ?? (() => undefined)}
           isUpdating={isUpdating}
           isDetailsPending={isDetailsPending}
-          returnView={returnView}
-          onReturnViewChange={setReturnView}
+          returnView={effectiveReturnView}
+          onReturnViewChange={setPreferredReturnView}
           id="performance-trend"
         />
       </WorkspaceGrid>
@@ -79,7 +92,7 @@ export default function PerformanceSummaryMode({
             reportStartDate={workspace.report_start_date}
             reportEndDate={workspace.report_end_date}
             benchmarkOptions={workspace.benchmark_options ?? []}
-            returnView={returnView}
+            returnView={effectiveReturnView}
             onRequestChange={onRequestChange}
           />
         </section>
