@@ -14,10 +14,15 @@ The system is designed to keep portfolio, performance, risk, proposal, and advis
 
 ## Font Strategy
 
-Operational UI uses a single sans-serif family:
+Operational UI uses a deliberately small self-hosted IBM Plex Sans set:
 
-- self-hosted `Inter` variable face for weights 100–900
-- fallback: `Inter`, `ui-sans-serif`, `system-ui`, `-apple-system`, `BlinkMacSystemFont`, `"Segoe UI"`, `sans-serif`
+- 400 for business reading and table values
+- 500 for routine labels and metadata
+- 600 for headings, actions, selected states, and decision-critical values
+- fallback: `"IBM Plex Sans"`, `ui-sans-serif`, `system-ui`, `-apple-system`, `BlinkMacSystemFont`, `"Segoe UI"`, `sans-serif`
+
+The application does not request interpolated or one-off weights. Routine Workbench surfaces must
+not introduce 650, 675, 700, 720, 735, 750, 760, or 800 as a substitute for hierarchy.
 
 The self-hosted Cormorant Garamond 700 face is reserved for Lotus brand expression, currently the
 shell wordmark. Self-hosted IBM Plex Mono 400 and 500 are reserved for technical evidence and
@@ -26,9 +31,9 @@ identifiers; they must not replace the operational reading face.
 ## Delivery And Supply-Chain Control
 
 Font delivery is same-origin and uses the built-in Next.js local-font pipeline. The browser must
-not contact Google Fonts or another public font service. Inter and the visible Lotus wordmark face
-are preloaded; evidence faces load only when used so routine advisor screens do not pay for
-technical typography they do not render.
+not contact Google Fonts or another public font service. IBM Plex Sans and the visible Lotus
+wordmark face are preloaded; evidence faces load only when used so routine advisor screens do not
+pay for technical typography they do not render.
 
 Governed truth lives in:
 
@@ -44,6 +49,25 @@ Governed truth lives in:
 Do not add a public CSS import, CDN font URL, unlicensed font file, page-local `@font-face`, or a new
 font package. A font change requires an issue-backed brand, accessibility, payload, provenance,
 license, fallback, browser, and responsive-geometry review.
+
+## Productive Type Contract
+
+Workbench uses a productive scale for dense, task-focused business software. Density comes from
+alignment, grouping, and progressive detail rather than tiny text or indiscriminate emphasis.
+
+| Role | Default size | Weight | Use |
+| --- | ---: | ---: | --- |
+| Workspace and page title | 24px | 600 | Current business task |
+| Section and panel title | 18px | 600 | Decision or evidence grouping |
+| Subsection title | 14px | 600 | Compact inner grouping |
+| Body and table cell | 14px | 400 | Business reading and record values |
+| Supporting copy | 13px | 400 | Secondary context that remains readable |
+| Label and table header | 12px | 500/600 | Routine field and column orientation |
+| Compact metric | 18px | 600 | Financial and analytical scan anchor |
+| Primary metric | 28px | 600 | Deliberately prominent outcome only |
+
+Routine labels use sentence or title case with restrained `0.01em` tracking. Uppercase and wider
+tracking are reserved for genuine eyebrow, status-code, badge, or technical-evidence roles.
 
 ## Numeric Typography
 
@@ -124,15 +148,44 @@ Interactive nav and controls should use the shared button typography:
 
 ### Labels and Metadata
 
-- `dataLabel`: compact uppercase data labels
-- `microLabel`: eyebrow labels and control labels
+- `dataLabel`: compact sentence-case business labels
+- `microLabel`: compact metadata and control labels; uppercase only when the content is a genuine
+  eyebrow or code
 - `metadata`: IDs, dates, timestamps, audit context
 
 ## Casing Rules
 
 - sentence case: body copy, helper text, controls, buttons
 - title case: page and section headings where the surrounding surface already uses title case
-- uppercase only: `dataLabel`, `microLabel`, `tableHeader`, `badgeLabel`
+- uppercase only: genuine eyebrow, status-code, and badge roles; routine data labels, control
+  labels, and table headers remain sentence or title case
+
+## Financial Geometry
+
+Currency values, percentages, dates, and other compact decision values must remain indivisible.
+Use tabular numerals with normal word breaking and no wrapping; reflow the containing grid before
+allowing a value such as `SGD 1,250,000.00` to collide with another metric. The shared Portfolio
+health strip therefore renders as three columns by two rows on wide screens, two columns at narrow
+desktop and tablet widths, and one column on compact phones.
+
+Long technical identifiers are a separate evidence role and may wrap at safe boundaries.
+
+## Typeface Selection Evidence
+
+Issue #829 compared pinned IBM Plex Sans 1.1.0 and Inter 4.1 assets in the same optimized Workbench
+build. The isolated Playwright comparison captures Portfolio Review at 1440, 1024, 768, and 519
+pixels, injects each candidate independently, records computed type and containment evidence, and
+fails on page overflow, metric overflow, or wrapped financial values:
+
+```bash
+npm run test:e2e:typography:compare
+```
+
+Both candidates passed. IBM Plex Sans was selected because it preserved a professional productive
+software character while reducing the operational font payload from 352,240 bytes to 196,820
+bytes and rendering the longest tested AUM/Invested value at 168 pixels rather than Inter's 177
+pixels. This is a measured Workbench decision, not a claim that one family is universally more
+legible or accessible.
 
 ## Implementation Notes
 
@@ -149,6 +202,9 @@ Centralized typography lives in:
 `src/app/globals.css` is import-only and must not receive new typography declarations.
 
 Shared components should prefer semantic variants over page-local font classes.
+
+Component-specific layout and typography belong in an owned CSS module. Do not restore migrated
+KPI, Portfolio health-strip, Proposal, or record-selector selectors to the legacy global layers.
 
 ## Normalization Targets
 
