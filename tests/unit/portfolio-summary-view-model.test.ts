@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPortfolioDecisionBrief,
   buildPortfolioSourceLimitations,
   buildPortfolioSummaryAttentionItems,
   buildPortfolioSummaryReadiness,
@@ -11,6 +12,21 @@ import {
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 
 describe("portfolio summary view model", () => {
+  it("retains source-owned portfolio lifecycle in the decision brief", () => {
+    const workspace = buildWorkspace({
+      profile: {
+        ...buildWorkspace().profile,
+        status: "CLOSING",
+      },
+    });
+
+    expect(buildPortfolioDecisionBrief(workspace).rows).toContainEqual({
+      label: "Portfolio status",
+      value: "Closing",
+      support: "Source-owned portfolio lifecycle",
+    });
+  });
+
   it("prefers source allocation buckets and preserves portfolio weights", () => {
     const workspace = buildWorkspace({
       allocations: [

@@ -2,7 +2,7 @@
 
 import { Panel } from "@/design-system";
 
-import { formatCurrency, formatDate, formatPct } from "../formatters";
+import { formatCurrency, formatPct } from "../formatters";
 import {
   getPortfolioSummaryValueToneClass,
   resolvePortfolioPerformancePeriodReturns,
@@ -22,8 +22,6 @@ export default function PortfolioSummaryHeaderSection({
   onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
 }) {
   const performanceReturns = resolvePortfolioPerformancePeriodReturns(workspace);
-  const valuationDate = formatDate(workspace.as_of_date);
-
   return (
     <section
       id="portfolio-summary"
@@ -38,7 +36,7 @@ export default function PortfolioSummaryHeaderSection({
               value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Total portfolio market value in the portfolio base currency at the stated valuation date.",
-              support: `Valuation as of ${valuationDate}`,
+              support: "Portfolio base currency",
               onClick: () => onOpenMetricDrawer("aum"),
             },
             {
@@ -51,7 +49,7 @@ export default function PortfolioSummaryHeaderSection({
               ),
               definition:
                 "Market value currently invested in funded holdings, excluding operational cash inventory.",
-              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM · ${valuationDate}`,
+              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
               onClick: () => onOpenMetricDrawer("invested_assets"),
             },
             {
@@ -60,7 +58,7 @@ export default function PortfolioSummaryHeaderSection({
               value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Available cash inventory in the portfolio base currency across published cash balances.",
-              support: `${formatPct(workspace.summary.cash_weight_pct)} cash · ${valuationDate}`,
+              support: `${formatPct(workspace.summary.cash_weight_pct)} of AUM`,
               onClick: () => onOpenMetricDrawer("available_cash"),
             },
             {
