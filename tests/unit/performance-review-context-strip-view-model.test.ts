@@ -58,4 +58,16 @@ describe("performance review context strip view model", () => {
     expect(model.mandateType).toBeUndefined();
     expect(model.sourceState).toBe("partial");
   });
+
+  it("leaves an absent performance date unconfirmed for the shared strip", () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    workspace.as_of_date = "";
+
+    expect(
+      buildPerformanceReviewContextStrip({
+        workspace,
+        portfolioContext: null,
+      }).businessDate,
+    ).toBeNull();
+  });
 });
