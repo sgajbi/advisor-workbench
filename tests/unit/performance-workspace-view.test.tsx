@@ -278,7 +278,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-frame-header.workbench-page-header")).toBeTruthy();
     expect(document.querySelector(".workbench-page-frame-body.performance-page-frame-body")).toBeTruthy();
     expect(document.querySelector(".workbench-section-stack.performance-page-sections")).toBeTruthy();
-    expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
+    expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
     expect(screen.getByRole("link", { name: /Holdings/i })).toHaveAttribute(

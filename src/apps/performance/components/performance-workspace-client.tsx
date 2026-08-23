@@ -3,6 +3,8 @@
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { AppPageShell } from "@/design-system";
+import type { PortfolioWorkspace } from "@/apps/portfolio/types";
 import {
   getWorkbenchPerformanceWorkspaceDetailsClient,
   getWorkbenchPerformanceWorkspaceSummaryClient,
@@ -25,6 +27,7 @@ import { assemblePerformanceWorkspace } from "../workspace-assembler";
 import { getNormalizedInitialPerformanceDetailControls } from "../performance-detail-control-resolution";
 import { restorePerformanceSourceControlFocus } from "./performance-source-control-focus";
 import PerformanceWorkspaceView from "./performance-workspace-view";
+import { buildPerformanceReviewContextStrip } from "../performance-review-context-strip-view-model";
 import type {
   PerformanceSourceControlFocusTarget,
   PerformanceWorkspaceLoadIssue,
@@ -46,6 +49,7 @@ type PerformanceWorkspaceClientProps = {
   initialAsOfDate?: string;
   initialReportingCurrency?: string;
   initialContextNotice?: { title: string; body: string } | null;
+  initialPortfolioContext?: PortfolioWorkspace | null;
 };
 
 type PerformanceControlState = {
@@ -99,6 +103,7 @@ export default function PerformanceWorkspaceClient({
   initialAsOfDate,
   initialReportingCurrency,
   initialContextNotice,
+  initialPortfolioContext = null,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
   const sourceConfirmedInitialDetails = useMemo(
@@ -597,12 +602,28 @@ export default function PerformanceWorkspaceClient({
       });
   }, [controls, details, mode, resolveDetailsForControls, router, summary]);
 
+  const shellContextNotice = initialContextNotice
+    ? {
+        label: initialContextNotice.title,
+        message: initialContextNotice.body,
+        tone: "attention" as const,
+      }
+    : null;
+
   return (
-    <PerformanceWorkspaceView
+    <AppPageShell
+      pageKey="performance"
+      className="performance-page portfolio-page"
+      reviewContext={buildPerformanceReviewContextStrip({
+        workspace: workspace ?? summary,
+        portfolioContext: initialPortfolioContext,
+        notice: shellContextNotice,
+      })}
+    >
+      <PerformanceWorkspaceView
       workspace={workspace}
       loadIssue={loadIssue}
       refreshStatus={refreshStatus}
-      contextNotice={initialContextNotice}
       mode={mode}
       period={controls?.period ?? initialPeriod}
       detailBasis={controls?.detailBasis ?? initialDetailBasis}
@@ -634,7 +655,8 @@ export default function PerformanceWorkspaceClient({
       }}
       isUpdating={isUpdating}
       isDetailsPending={isDetailsPending}
-    />
+      />
+    </AppPageShell>
   );
 }
 
