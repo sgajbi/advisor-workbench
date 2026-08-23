@@ -11,6 +11,7 @@ import {
   buildWorkbenchUnsupportedReviewContextNotice,
   DegradedStatePanel,
   MainWithSideRailLayout,
+  type ReviewContextStripModel,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
 } from "@/design-system";
@@ -63,6 +64,7 @@ export async function ReportOrderingPage({
     return (
       <ReportOrderingUnavailable
         portfolioId={portfolioId}
+        reviewContext={buildPortfolioReviewContextStrip(workspace)}
         reason="The selected date, period, or reporting currency is not supported for report ordering. No report catalogue was requested."
       />
     );
@@ -98,17 +100,19 @@ export async function ReportOrderingPage({
 
 function ReportOrderingUnavailable({
   portfolioId,
+  reviewContext = buildUnavailableReviewContextStrip(),
   reason =
     "Select an available portfolio before preparing a report request. No report choices or submission controls are shown without confirmed portfolio context.",
 }: {
   portfolioId: string | null;
+  reviewContext?: ReviewContextStripModel;
   reason?: string;
 }) {
   return (
     <AppPageShell
       pageKey="reports"
       className="portfolio-page"
-      reviewContext={buildUnavailableReviewContextStrip()}
+      reviewContext={reviewContext}
     >
       <WorkbenchPageContainer className="portfolio-page-container">
         <MainWithSideRailLayout
