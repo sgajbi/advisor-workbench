@@ -123,6 +123,11 @@ describe("PortfolioFoundationPage", () => {
       "/portfolio",
     );
     expect(fetchSpy).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Portfolio Review" })).toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toHaveAttribute(
+      "data-source-state",
+      "unavailable",
+    );
   });
 
   it("hydrates a supported review period from the governed URL context", async () => {
