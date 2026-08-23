@@ -10,13 +10,8 @@ function getPortfolioReviewPageHeading(page: Page) {
 
 function getPortfolioFoundationPageHeading(page: Page) {
   return page.getByRole('heading', {
-    name: /^Portfolio$|^Portfolio Review$|^Portfolio context unavailable$|^Review context needs attention$/i,
-  });
-}
-
-function getPortfolioUnavailableHeading(page: Page) {
-  return page.getByRole('heading', {
-    name: /^Portfolio unavailable$|^Portfolio context unavailable$|^Review context needs attention$/i,
+    level: 1,
+    name: /^Portfolio$|^Portfolio Review$/i,
   });
 }
 
@@ -41,8 +36,7 @@ test.describe('UI smoke checks', () => {
     {
       path: '/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001',
       assertReady: async (page: Page) => {
-        const unavailableHeading = getPortfolioUnavailableHeading(page);
-        await expect(getPortfolioReviewPageHeading(page).or(unavailableHeading)).toBeVisible({
+        await expect(getPortfolioFoundationPageHeading(page)).toBeVisible({
           timeout: 60000,
         });
 
