@@ -25,23 +25,12 @@
 
 :where(.label) {
   color: var(--text-muted);
-  font-size: var(--workbench-analytic-support-size);
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 :where(.value) {
   color: var(--brand-strong);
-  font-size: 1rem;
-  font-weight: 750;
-  font-variant-numeric: var(--type-financial-numeric);
-  line-height: 1.2;
 }
 
 :where(.support) {
   color: var(--text-muted);
-  font-size: var(--workbench-analytic-context-value-size);
-  line-height: 1.42;
 }
