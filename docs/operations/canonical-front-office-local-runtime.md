@@ -444,6 +444,12 @@ and a bounded request-more-evidence decision, and then render the Suitability Re
 same source-owned queue. The validator records this as
 `POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
 route-only screenshot.
+Every RFC-0025 mutation binds its deterministic idempotency key to both the normalized request body
+and the exact route resource: policy-pack id/version, proposal id/version, or policy-evaluation id.
+An exact replay therefore keeps the same key, while a later canonical run that creates a new
+proposal/version cannot collide with retained evidence from an earlier run. Do not replace this
+contract with random keys, database cleanup, or conflict swallowing; repeatability must preserve
+source-owned replay and conflict semantics.
 RFC-0026 advisor cockpit checks then read the Gateway-backed cockpit action list, dedicated
 house-view cohort seed, preparation-packet route, operating snapshot, and supportability posture for the same portfolio,
 record an idempotent advisor acknowledgement, preserve blocked client-publication posture, and render

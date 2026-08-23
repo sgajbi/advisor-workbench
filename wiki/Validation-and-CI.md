@@ -156,6 +156,9 @@ concurrency group.
 - Docker parity for production-like runtime assumptions
 - executable canonical Compose ownership and reused-stack safety
 - canonical seeded-data validation for integrated product proof
+- repeatable canonical mutations whose deterministic idempotency keys bind the exact route resource
+  and normalized request body; retained evidence from an earlier run must not force database cleanup
+  or permit a source-owned conflict to be hidden
 - dependency posture for browser-delivered code and the Node-based build/test toolchain
 - immutable official Node LTS/glibc runtime provenance, unprivileged execution, production-only
   standalone traced runtime dependencies, no runtime package-manager toolchain, fixable
