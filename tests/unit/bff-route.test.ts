@@ -22,6 +22,7 @@ describe("BFF proxy route", () => {
     "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_IDEA_AUTH_MODE",
     "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
+    "WORKBENCH_REPORTING_CALLER_ROLE",
     "WORKBENCH_REPORTING_AUTH_MODE",
     "WORKBENCH_ADVISOR_BOOK_AUTH_MODE",
     "WORKBENCH_ADVISOR_BOOK_ACTOR_ID",
@@ -682,6 +683,26 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
+  it("rejects a report-ordering role outside the source catalogue vocabulary", async () => {
+    process.env.WORKBENCH_REPORTING_CALLER_ROLE = "relationship_manager";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-ordering/options?scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      code: "reporting_authority_configuration_rejected",
+      status: "rejected",
+    });
+  });
+
   it("applies the read capability to Advisor Cockpit object lookup", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"data":{}}', { status: 200 }));
@@ -1114,6 +1135,7 @@ describe("BFF proxy route", () => {
     process.env.WORKBENCH_ADVISOR_BOOK_REGION = "EMEA";
     process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
     process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
+    process.env.WORKBENCH_REPORTING_CALLER_ROLE = "portfolio_manager";
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
 
@@ -1146,7 +1168,7 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
-    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
+    expect(upstreamHeaders.get("X-Role")).toBe("portfolio_manager");
     expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
@@ -1238,7 +1260,7 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
-    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
@@ -1278,7 +1300,7 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
-    expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002",
@@ -1374,7 +1396,7 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-ch");
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
-    expect(upstreamHeaders.get("X-Role")).toBe("RELATIONSHIP_MANAGER");
+    expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
     expect(upstreamHeaders.get("Cookie")).toBeNull();
   });

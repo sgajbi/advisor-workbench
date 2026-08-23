@@ -1984,6 +1984,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,
+      assertListHasItems: browserHelpers.assertListHasItems,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });

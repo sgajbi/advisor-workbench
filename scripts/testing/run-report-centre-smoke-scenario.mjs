@@ -25,6 +25,7 @@ const child = spawn(
       REPORT_CENTRE_E2E_FIXTURE_PORT: String(fixturePort),
       WORKBENCH_E2E_FIXTURE_GATEWAY: "report-centre",
       WORKBENCH_REPORTING_AUTH_MODE: "development_configured",
+      WORKBENCH_REPORTING_CALLER_ROLE: "client_advisor",
       WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS: [
         "PB_REPORT_READY_001",
         "PB_REPORT_RECOVERY_001",
