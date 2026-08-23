@@ -175,7 +175,7 @@ async function installCandidate(
       )
       .join("\n"),
   });
-  await page.evaluate(async () => {
+  await page.evaluate(async (candidate) => {
     document.documentElement.style.setProperty(
       "--font-ui",
       `"${candidate.family}", ui-sans-serif, system-ui, sans-serif`
