@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
-  buildPortfolioRecordHeaderMeta,
   buildPortfolioRecordScreenSubtitle,
   getPortfolioRecordScreenCopy,
   resolvePortfolioRecordScreenWindow,
@@ -14,11 +12,9 @@ describe("portfolio record screen view model", () => {
   it("keeps screen copy centralized for the standalone record pages", () => {
     expect(getPortfolioRecordScreenCopy("positions")).toMatchObject({
       title: "Positions",
-      kicker: "Booked holdings",
     });
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
       title: "Allocation",
-      kicker: "Allocation review",
       subtitle:
         "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
     });
@@ -26,7 +22,6 @@ describe("portfolio record screen view model", () => {
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("booked income");
     expect(getPortfolioRecordScreenCopy("cashflow")).toMatchObject({
       title: "Cashflow",
-      kicker: "Projected cash movement",
     });
     expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain(
       "not projected cash balances"
@@ -38,16 +33,6 @@ describe("portfolio record screen view model", () => {
 
     expect(buildPortfolioRecordScreenSubtitle("positions")).toBe(
       "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity."
-    );
-    expect(buildPortfolioRecordDisplayName(workspace)).toBe("Global Balanced Mandate");
-    expect(
-      buildPortfolioRecordDisplayName({
-        ...workspace,
-        portfolio: { ...workspace.portfolio, display_name: workspace.portfolio.portfolio_id },
-      })
-    ).toBe("Balanced Mandate");
-    expect(buildPortfolioRecordHeaderMeta(workspace)).toBe(
-      "Discretionary mandate · USD · As of 12 May 2026 · CIF_SG_000184"
     );
     expect(buildPortfolioRecordHeaderKpis(workspace)).toEqual([
       { label: "AUM", value: "1,000,000 USD" },

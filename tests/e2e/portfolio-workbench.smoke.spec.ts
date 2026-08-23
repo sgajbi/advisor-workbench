@@ -1068,7 +1068,7 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openPositionsPortfolio(page, request);
     test.skip(!session.available, 'Portfolio positions upstream unavailable in standalone smoke environment.');
 
-    const headerKpis = page.locator('.portfolio-record-standalone-kpis');
+    const headerKpis = page.getByRole('region', { name: 'Positions key figures' });
     await expect(headerKpis.getByText('Invested', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Cash', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Window', { exact: true })).toHaveCount(0);
@@ -1329,7 +1329,7 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openTransactionsPortfolio(page, request);
     test.skip(!session.available, 'Portfolio transactions upstream unavailable in standalone smoke environment.');
 
-    const headerKpis = page.locator('.portfolio-record-standalone-kpis');
+    const headerKpis = page.getByRole('region', { name: 'Transactions key figures' });
     await expect(headerKpis.getByText('Portfolio Currency', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Latest Booking', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('30D Entries', { exact: true })).toBeVisible();

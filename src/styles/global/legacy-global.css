@@ -1170,17 +1170,6 @@
   align-self: start;
 }
 
-.portfolio-record-standalone-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
-  align-items: end;
-  padding: 20px 24px;
-  border: 1px solid #cfd6df;
-  border-radius: 6px;
-  background: #ffffff;
-}
-
 .portfolio-record-evidence-rail {
   display: grid;
   gap: 12px;
@@ -1312,14 +1301,7 @@
   border-color: #d8dadc;
 }
 
-.portfolio-record-standalone-header > div:first-child {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.portfolio-record-standalone-header span,
-.portfolio-record-standalone-kpis span {
+.portfolio-record-key-figures dt {
   color: #59616f;
   font-size: 10px;
   font-weight: 750;
@@ -1328,32 +1310,16 @@
   text-transform: uppercase;
 }
 
-.portfolio-record-standalone-header h1 {
-  margin: 0;
-  color: #171a1f;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 32px;
-  letter-spacing: 0;
-  overflow-wrap: anywhere;
-}
-
-.portfolio-record-standalone-header p {
-  margin: 0;
-  color: #59616f;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.portfolio-record-standalone-kpis {
+.portfolio-record-key-figures dl {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  margin: 0;
   border: 1px solid #d8dde5;
+  border-radius: 6px;
   background: #f8fafc;
 }
 
-.portfolio-record-standalone-kpis div {
+.portfolio-record-key-figures dl > div {
   display: grid;
   gap: 2px;
   min-width: 128px;
@@ -1361,11 +1327,12 @@
   border-left: 1px solid #d8dde5;
 }
 
-.portfolio-record-standalone-kpis div:first-child {
+.portfolio-record-key-figures dl > div:first-child {
   border-left: 0;
 }
 
-.portfolio-record-standalone-kpis strong {
+.portfolio-record-key-figures dd {
+  margin: 0;
   color: #171a1f;
   font-size: 13px;
   font-weight: 700;
@@ -11346,17 +11313,6 @@
 @media (max-width: 560px) {
   .app-page-shell .workbench-page-container {
     padding: 16px;
-  }
-}
-
-@media (max-width: 1500px) {
-  .portfolio-record-standalone-header {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .portfolio-record-standalone-kpis {
-    justify-content: flex-start;
   }
 }
 

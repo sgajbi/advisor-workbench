@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate, formatPct, formatStatus } from "./formatters";
+import { formatCurrency, formatDate, formatPct } from "./formatters";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
 import type { PortfolioWorkspace } from "./types";
 import {
@@ -11,7 +11,6 @@ export type PortfolioRecordScreenKind = "allocation" | "positions" | "transactio
 export type PortfolioRecordScreenCopy = {
   title: string;
   subtitle: string;
-  kicker: string;
 };
 
 export type PortfolioRecordHeaderKpi = {
@@ -26,29 +25,24 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   allocation: {
     title: "Allocation",
     subtitle: "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
-    kicker: "Allocation review",
   },
   positions: {
     title: "Positions",
     subtitle:
       "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity.",
-    kicker: "Booked holdings",
   },
   transactions: {
     title: "Transactions",
     subtitle: "Review booked activity, settlement state, booking components, and source lineage.",
-    kicker: "Booked activity review",
   },
   income: {
     title: "Income & Activity",
     subtitle: "Review booked income, deductions, and portfolio cash movements in reporting currency.",
-    kicker: "Booked income and cash movement",
   },
   cashflow: {
     title: "Cashflow",
     subtitle:
       "Review expected dated net cash movements across the selected horizon. Figures show movement, not projected cash balances.",
-    kicker: "Projected cash movement",
   },
 };
 
@@ -63,24 +57,6 @@ export function buildPortfolioRecordScreenSubtitle(
 ): string {
   const copy = getPortfolioRecordScreenCopy(screen);
   return copy.subtitle;
-}
-
-export function buildPortfolioRecordDisplayName(workspace: PortfolioWorkspace): string {
-  if (workspace.portfolio.display_name && workspace.portfolio.display_name !== workspace.portfolio.portfolio_id) {
-    return workspace.portfolio.display_name;
-  }
-
-  return `${formatStatus(workspace.profile.risk_exposure)} Mandate`;
-}
-
-export function buildPortfolioRecordHeaderMeta(workspace: PortfolioWorkspace): string {
-  const parts = [
-    `${formatStatus(workspace.profile.portfolio_type)} mandate`,
-    workspace.portfolio.base_currency,
-    `As of ${formatDate(workspace.as_of_date)}`,
-    workspace.portfolio.client_id,
-  ].filter(Boolean);
-  return parts.join(" · ");
 }
 
 export function buildPortfolioRecordHeaderKpis(

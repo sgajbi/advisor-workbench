@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { vi } from "vitest";
 
 import PortfolioRecordScreenShell from "../../src/apps/portfolio/components/portfolio-record-screen-shell";
+import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 vi.mock("../../src/apps/portfolio/components/portfolio-screen-rail", () => ({
   default: ({ portfolioId }: { portfolioId: string }) => (
@@ -15,6 +16,26 @@ vi.mock("../../src/apps/portfolio/components/portfolio-page-layout", () => ({
 }));
 
 describe("PortfolioRecordScreenShell", () => {
+  it("keeps source identity in the shell review context and out of record content", () => {
+    const workspace = buildPortfolioWorkspace();
+
+    render(
+      <PortfolioRecordScreenShell
+        screen="positions"
+        portfolioId={workspace.portfolio.portfolio_id}
+        workspace={workspace}
+      />,
+    );
+
+    const recordContent = document.querySelector(".portfolio-record-screen-main");
+    expect(recordContent).not.toBeNull();
+    expect(recordContent).toHaveTextContent("Positions");
+    expect(recordContent).toHaveTextContent("Invested");
+    expect(recordContent).not.toHaveTextContent("Global Balanced Mandate");
+    expect(recordContent).not.toHaveTextContent("CIF_SG_000184");
+    expect(recordContent).not.toHaveTextContent("12 May 2026");
+  });
+
   it("retains portfolio navigation while the main record surface explains recovery", () => {
     render(
       <PortfolioRecordScreenShell
