@@ -1,7 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const actionTableMinimumCapacity = 64 * 16;
 
 async function mockAdvisorCockpit(
   page: Page,
@@ -213,15 +212,20 @@ test("qualifies cached advisor evidence until acknowledgement reconciliation com
     waitUntil: "domcontentloaded",
   });
 
-  const compactActions = page.getByTestId("advisor-cockpit-action-records");
-  await expect(compactActions).toBeVisible();
-  const policyAction = compactActions.locator(
-    '[data-action-item-id="aci_policy_review_001"]',
+  const actionWorkspace = page.getByTestId("advisor-cockpit-action-records");
+  await expect(actionWorkspace).toBeVisible();
+  const actionWorklist = actionWorkspace.getByRole("listbox", {
+    name: "Advisor action review worklist",
+  });
+  const liquidityAction = actionWorklist.getByRole("option", {
+    name: /Liquidity evidence review/,
+  });
+  const selectedDecision = actionWorkspace.getByRole("region", {
+    name: "Selected advisor action",
+  });
+  const policyButton = selectedDecision.locator(
+    '[data-action-item-id="aci_policy_review_001"] button',
   );
-  const liquidityAction = compactActions.locator(
-    '[data-action-item-id="aci_liquidity_review_002"]',
-  );
-  const policyButton = policyAction.locator("button");
   await policyButton.focus();
   await policyButton.click();
 
@@ -230,12 +234,11 @@ test("qualifies cached advisor evidence until acknowledgement reconciliation com
   ).toBeVisible();
   await expect(page.getByText("Confirmation in progress")).toBeVisible();
   await expect(
-    compactActions.getByText("Policy evaluation requires compliance review."),
+    selectedDecision.getByText("Policy evaluation requires compliance review."),
   ).toBeVisible();
   await expect(policyButton).toHaveText("Confirming...");
   await expect(policyButton).toBeDisabled();
   await expect(policyButton).toBeFocused();
-  await expect(liquidityAction.locator("button")).toHaveText("Acknowledge review");
   await expect(liquidityAction).not.toContainText("Confirming current advisor evidence");
   expect(mockState.acknowledgementRequests()).toBe(1);
 
@@ -246,13 +249,18 @@ test("qualifies cached advisor evidence until acknowledgement reconciliation com
   await expect(policyButton).toHaveText("Acknowledged");
   await expect(policyButton).toBeDisabled();
   await expect(policyButton).toBeFocused();
-  await expect(liquidityAction.locator("button")).toHaveText("Acknowledge review");
-  await expect(liquidityAction.locator("button")).toBeEnabled();
+  await liquidityAction.click();
+  await expect(selectedDecision).toContainText(
+    "Confirm liquidity evidence with the portfolio team.",
+  );
+  await expect(
+    selectedDecision.getByRole("button", { name: "Acknowledge review" }),
+  ).toBeEnabled();
   expect(mockState.acknowledgedActionIds()).toEqual(["aci_policy_review_001"]);
   expect(mockState.acknowledgementRequests()).toBe(1);
 });
 
-test("keeps advisor action evidence and review controls visible by module capacity", async ({
+test("keeps one advisor decision workflow usable at every supported viewport", async ({
   page,
 }) => {
   await mockAdvisorCockpit(page);
@@ -261,21 +269,7 @@ test("keeps advisor action evidence and review controls visible by module capaci
     { name: "workstation", width: 1440, height: 1000 },
     { name: "tablet", width: 1024, height: 900 },
     { name: "compact", width: 519, height: 900 },
-    {
-      name: "boundary-table",
-      width: 1800,
-      height: 1000,
-      worklistWidth: actionTableMinimumCapacity,
-    },
-    {
-      name: "boundary-records",
-      width: 1800,
-      height: 1000,
-      worklistWidth: actionTableMinimumCapacity - 1,
-    },
   ];
-  let tablePresentations = 0;
-  let compactPresentations = 0;
 
   for (const viewport of viewports) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -300,50 +294,50 @@ test("keeps advisor action evidence and review controls visible by module capaci
       "href",
       "/proposals/proposal_sg_001",
     );
-    if (viewport.worklistWidth !== undefined) {
-      await worklist.evaluate((element, width) => {
-        element.style.width = `${width}px`;
-      }, viewport.worklistWidth);
-    }
-    const capacity = await worklist.evaluate((element) => element.clientWidth);
-    if (viewport.worklistWidth !== undefined) {
-      expect(capacity).toBe(viewport.worklistWidth);
-    }
-    const table = page.getByTestId("advisor-cockpit-action-table");
     const records = page.getByTestId("advisor-cockpit-action-records");
-
-    if (capacity >= actionTableMinimumCapacity) {
-      tablePresentations += 1;
-      await expect(table).toBeVisible();
-      await expect(records).toBeHidden();
-      await expect(
-        table.getByRole("button", { name: "Acknowledge review" }).first(),
-      ).toBeVisible();
-      await expect(
-        table.getByText("Review policy evidence before client discussion."),
-      ).toBeVisible();
-    } else {
-      compactPresentations += 1;
-      await expect(records).toBeVisible();
-      await expect(table).toBeHidden();
-      const policyAction = records.getByRole("article", {
-        name: "Policy review required",
-      });
-      const reviewButton = policyAction.getByRole("button", {
-        name: "Acknowledge review",
-      });
-      await expect(reviewButton).toBeVisible();
-      await expect(
-        policyAction.getByText("Review policy evidence before client discussion."),
-      ).toBeVisible();
-      expect(
-        await reviewButton.evaluate((element) =>
-          Math.min(
-            element.getBoundingClientRect().width,
-            element.getBoundingClientRect().height,
-          ),
+    await expect(records).toBeVisible();
+    const actionWorklist = records.getByRole("listbox", {
+      name: "Advisor action review worklist",
+    });
+    const options = actionWorklist.getByRole("option");
+    await expect(options).toHaveCount(2);
+    const selectedDecision = records.getByRole("region", {
+      name: "Selected advisor action",
+    });
+    const reviewButton = selectedDecision.getByRole("button", {
+      name: "Acknowledge review",
+    });
+    await expect(reviewButton).toBeVisible();
+    await expect(selectedDecision).toContainText(
+      "Review policy evidence before client discussion.",
+    );
+    await expect(
+      records.getByText("Policy review required", { exact: true }),
+    ).toHaveCount(1);
+    const decisionId = await selectedDecision.getAttribute("id");
+    expect(decisionId).not.toBeNull();
+    await expect(options.first()).toHaveAttribute("aria-controls", decisionId!);
+    expect(
+      await reviewButton.evaluate((element) =>
+        Math.min(
+          element.getBoundingClientRect().width,
+          element.getBoundingClientRect().height,
         ),
-      ).toBeGreaterThanOrEqual(44);
+      ),
+    ).toBeGreaterThanOrEqual(44);
+
+    const [firstActionBox, decisionBox] = await Promise.all([
+      options.first().boundingBox(),
+      selectedDecision.boundingBox(),
+    ]);
+    expect(firstActionBox).not.toBeNull();
+    expect(decisionBox).not.toBeNull();
+    if (viewport.name === "workstation") {
+      expect(firstActionBox!.y).toBeLessThan(900);
+      expect(decisionBox!.y).toBeLessThan(900);
+    }
+    if (viewport.name === "compact") {
+      expect(decisionBox!.y).toBeGreaterThan(firstActionBox!.y);
     }
 
     const readinessHeading = page.getByText(/^Preparation data$/i);
@@ -382,7 +376,4 @@ test("keeps advisor action evidence and review controls visible by module capaci
       });
     }
   }
-
-  expect(tablePresentations).toBeGreaterThan(0);
-  expect(compactPresentations).toBeGreaterThan(0);
 });
