@@ -34,7 +34,7 @@ export default function PerformanceMultiHorizonPanel({
   reportStartDate,
   reportEndDate,
   benchmarkOptions = [],
-  returnView = "combined",
+  returnView = "absolute",
   onRequestChange,
 }: {
   portfolioId: string;

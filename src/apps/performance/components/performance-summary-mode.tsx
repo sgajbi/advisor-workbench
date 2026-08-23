@@ -31,7 +31,7 @@ export default function PerformanceSummaryMode({
   topContributors,
   bottomContributors,
 }: PerformanceSummaryModeProps) {
-  const [returnView, setReturnView] = useState<PerformanceChartViewMode>("combined");
+  const [returnView, setReturnView] = useState<PerformanceChartViewMode>("absolute");
 
   return (
     <PerformanceWorkspaceStageSurface

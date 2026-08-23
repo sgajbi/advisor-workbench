@@ -642,7 +642,7 @@ describe("PerformanceAnalyticsPage", () => {
         /portfolio/i
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
-      expect(screen.getByText("Observation trail")).toBeInTheDocument();
+      expect(screen.getByText("Return history")).toBeInTheDocument();
       expect(
         mainShell?.querySelector("[data-performance-horizon-review-bar='true']"),
       ).toBeTruthy();
@@ -653,6 +653,7 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.queryByRole("radiogroup", { name: "Horizon table view" })).not.toBeInTheDocument();
       expect(screen.queryByRole("radiogroup", { name: "Horizon basis view" })).not.toBeInTheDocument();
       expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "Absolute" })).toBeChecked();
       expect(mainShell?.querySelectorAll("[data-workbench-choice-group]").length).toBeLessThanOrEqual(3);
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
@@ -697,8 +698,17 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       within(chartSummaryBand as HTMLElement).queryByText("Period Range / Basis")
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText("Observation trail"));
-    expect(screen.getByLabelText("Return path observation table")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Return history"));
+    const returnHistory = screen.getByLabelText("Return path observation table");
+    expect(returnHistory).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Return history columns" })).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+    expect(within(returnHistory).getByText("Portfolio")).toBeInTheDocument();
+    expect(within(returnHistory).getByText("Benchmark")).toBeInTheDocument();
+    expect(within(returnHistory).queryByText("Active")).not.toBeInTheDocument();
+    expect(within(returnHistory).queryByText("Cum. Active")).not.toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 

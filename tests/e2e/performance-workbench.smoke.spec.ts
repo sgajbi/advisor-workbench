@@ -607,7 +607,7 @@ test.describe('Performance workbench smoke', () => {
 
     const comparisonContext = page.getByLabel('Horizon comparison display context');
     await expect(comparisonContext).toContainText('Uses analysis selection');
-    await expect(comparisonContext).toContainText('Net basis · Combined return view');
+    await expect(comparisonContext).toContainText('Net basis · Absolute return view');
     const comparisonDisplay = page.getByText('Adjust comparison display');
     await comparisonDisplay.focus();
     await page.keyboard.press('Enter');

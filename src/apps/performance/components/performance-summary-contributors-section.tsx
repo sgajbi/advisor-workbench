@@ -76,7 +76,7 @@ export default function PerformanceSummaryContributorsSection({
       >
         <AnalyticsTable
           ariaLabel="Contributor instrument detail table"
-          className="performance-contributors-table performance-chart-observation-table"
+          className="performance-contributors-table"
           density="compact"
           variant="observation"
           columns={presentation.rankedTableModel.columns}
@@ -136,12 +136,12 @@ export default function PerformanceSummaryContributorsSection({
             contribution={workspace.contribution}
             level={workspace.contribution.levels[0]}
             ariaLabel="Aggregate contributor summary"
-            className="performance-contributors-table performance-chart-observation-table"
+            className="performance-contributors-table"
           />
         ) : (
           <AnalyticsTable
             ariaLabel="Aggregate contributor summary"
-            className="performance-contributors-table performance-chart-observation-table"
+            className="performance-contributors-table"
             density="compact"
             variant="observation"
             columns={presentation.tableModel.columns}

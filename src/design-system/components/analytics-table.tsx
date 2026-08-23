@@ -14,6 +14,8 @@ export type AnalyticsTableColumn = {
   key: string;
   label: string;
   align?: "left" | "right" | "center";
+  width?: number | string;
+  stickyOffset?: number | string;
 };
 
 export type AnalyticsTableRow = {
@@ -67,6 +69,7 @@ export default function AnalyticsTable({
   emptyState,
   loadingState,
   scrollRegionLabel,
+  tableMinWidth,
 }: {
   ariaLabel: string;
   columns: AnalyticsTableColumn[];
@@ -79,6 +82,7 @@ export default function AnalyticsTable({
   emptyState?: AnalyticsTableState;
   loadingState?: AnalyticsTableState;
   scrollRegionLabel?: string;
+  tableMinWidth?: number | string;
 }) {
   const hasRows = rows.length > 0;
   const state = !hasRows ? (loadingState ?? emptyState ?? null) : null;
@@ -120,6 +124,8 @@ export default function AnalyticsTable({
         size="small"
         aria-label={ariaLabel}
         sx={{
+          minWidth: tableMinWidth,
+          tableLayout: tableMinWidth ? "fixed" : undefined,
           "& td, & th": {
             fontVariantNumeric: "tabular-nums slashed-zero",
             fontFeatureSettings: '"tnum" 1, "zero" 1',
@@ -141,6 +147,7 @@ export default function AnalyticsTable({
                   column.align === "right" && "analytics-table-cell-numeric",
                 )}
                 sx={headerCellSx}
+                style={getColumnCellStyle(column, "header")}
               >
                 {column.label}
               </TableCell>
@@ -211,6 +218,7 @@ export default function AnalyticsTable({
                           "analytics-table-cell-numeric",
                       )}
                       sx={bodyCellSx}
+                      style={getColumnCellStyle(column, "body")}
                     >
                       {cell}
                     </TableCell>
@@ -236,6 +244,7 @@ export default function AnalyticsTable({
                         "analytics-table-cell-numeric",
                     )}
                     sx={footerCellSx}
+                    style={getColumnCellStyle(column, "footer")}
                   >
                     {cell}
                   </TableCell>
@@ -247,6 +256,27 @@ export default function AnalyticsTable({
       </Table>
     </TableContainer>
   );
+}
+
+function getColumnCellStyle(
+  column: AnalyticsTableColumn | undefined,
+  section: "header" | "body" | "footer",
+): React.CSSProperties | undefined {
+  if (!column || (column.width === undefined && column.stickyOffset === undefined)) {
+    return undefined;
+  }
+
+  return {
+    ...(column.width !== undefined ? { width: column.width } : {}),
+    ...(column.stickyOffset !== undefined
+      ? {
+          position: "sticky",
+          left: column.stickyOffset,
+          zIndex: section === "header" ? 3 : 2,
+          backgroundColor: "inherit",
+        }
+      : {}),
+  };
 }
 
 function getHeaderCellSx(density: AnalyticsTableDensity) {

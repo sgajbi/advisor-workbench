@@ -1005,7 +1005,7 @@ export async function validatePerformanceSummaryPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText(/Observation trail/i)).toBeVisible({
+  await expect(page.getByText(/Return history/i)).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(page.getByText(/\d+\s+periods?/i)).toBeVisible({

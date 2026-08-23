@@ -106,7 +106,7 @@ describe("PerformanceChartPanel", () => {
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];
     let seriesNames = series.map((entry) => entry?.name);
-    fireEvent.click(screen.getByText("Observation trail"));
+    fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
 
     expect(seriesNames).toContain("Active");
@@ -297,7 +297,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,250,000");
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
-    fireEvent.click(screen.getByText("Observation trail"));
+    fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
     expect(within(observationTable).getByText("Cum. Portfolio")).toBeInTheDocument();
     expect(within(observationTable).getByText("Cum. Benchmark")).toBeInTheDocument();
@@ -828,7 +828,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Active");
 
-    fireEvent.click(screen.getByText("Observation trail"));
+    fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
     expect(within(observationTable).getByText("Active")).toBeInTheDocument();
     expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
@@ -865,7 +865,7 @@ describe("PerformanceChartPanel", () => {
   it("keeps evidence disclosure compact while leaving values in the readout rather than the legend", () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    const disclosure = screen.getByText("Observation trail").closest("summary");
+    const disclosure = screen.getByText("Return history").closest("summary");
     expect(disclosure).not.toBeNull();
     expect(disclosure).toHaveTextContent("1 period");
     expect(disclosure).not.toHaveTextContent("Open evidence");

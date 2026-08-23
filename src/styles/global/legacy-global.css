@@ -4273,8 +4273,8 @@
   }
 
 .performance-layout {
-  --workstation-rail-width: 260px;
-  --workstation-side-width: 296px;
+  --workstation-rail-width: 240px;
+  --workstation-side-width: 260px;
   grid-template-columns: var(--workstation-rail-width) minmax(0, 1fr) var(--workstation-side-width);
   width: 100%;
   max-width: none;
@@ -8222,8 +8222,7 @@
   overflow: hidden;
 }
 
-.analytics-table-variant-observation.analytics-table-frame,
-.performance-chart-observation-table.analytics-table-frame {
+.analytics-table-variant-observation.analytics-table-frame {
   border-color: rgba(32, 44, 61, 0.08);
   border-radius: 12px;
   background: #fbfcfd;
@@ -8291,8 +8290,7 @@
   content: "Collapse";
 }
 
-.analytics-table-variant-observation.analytics-table-frame .MuiTableHead-root .MuiTableCell-root,
-.performance-chart-observation-table.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
+.analytics-table-variant-observation.analytics-table-frame .MuiTableHead-root .MuiTableCell-root {
   background: #f5f7fa;
   color: #4f5d70;
   font-size: var(--type-table-header-size);
@@ -8302,21 +8300,18 @@
   padding-bottom: 0.7rem;
 }
 
-.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root,
-.performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root {
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root {
   padding-top: 0.72rem;
   padding-bottom: 0.72rem;
   border-bottom-color: rgba(221, 226, 232, 0.58);
   color: #1f2937;
 }
 
-.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even),
-.performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
   background: rgba(247, 249, 251, 0.82);
 }
 
-.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root:nth-child(n + 3),
-.performance-chart-observation-table.analytics-table-frame .MuiTableBody-root .MuiTableCell-root:nth-child(n + 3) {
+.analytics-table-variant-observation.analytics-table-frame .MuiTableBody-root .MuiTableCell-root:nth-child(n + 3) {
   text-align: right;
 }
 
