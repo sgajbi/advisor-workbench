@@ -4,6 +4,12 @@ const DEFAULT_LOTUS_ENVIRONMENT = "dev";
 const DISALLOWED_LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
 const OWNED_E2E_FIXTURE_GATEWAYS = [
   {
+    mode: "playwright-smoke",
+    portEnvironmentVariable: "PLAYWRIGHT_E2E_FIXTURE_PORT",
+    scenarioEnvironmentVariable: "PLAYWRIGHT_E2E_FIXTURE",
+    scenarios: new Set(["source-context"]),
+  },
+  {
     mode: "performance",
     portEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE_PORT",
     scenarioEnvironmentVariable: "PERFORMANCE_E2E_FIXTURE",
@@ -70,7 +76,8 @@ function isOwnedE2eFixtureGateway(
   }
 
   const fixturePort = environment[fixture.portEnvironmentVariable]?.trim();
-  const fixtureScenario = environment[fixture.scenarioEnvironmentVariable]?.trim() ?? "";
+  const fixtureScenario =
+    environment[fixture.scenarioEnvironmentVariable]?.trim() ?? "";
   return (
     fixture.scenarios.has(fixtureScenario) &&
     parsed.protocol === "http:" &&
@@ -93,7 +100,7 @@ function assertCanonicalGatewayBaseUrl(
     !isOwnedE2eFixtureGateway(parsed, environment)
   ) {
     throw new Error(
-      `BFF_BASE_URL must use a canonical Lotus hostname, not local loopback (${hostname}).`
+      `BFF_BASE_URL must use a canonical Lotus hostname, not local loopback (${hostname}).`,
     );
   }
 
@@ -104,7 +111,9 @@ export function resolveLotusEnvironment(
   environment: RuntimeEnvironment = process.env,
 ): string {
   const configured = environment.LOTUS_ENVIRONMENT?.trim().toLowerCase();
-  return configured && configured.length > 0 ? configured : DEFAULT_LOTUS_ENVIRONMENT;
+  return configured && configured.length > 0
+    ? configured
+    : DEFAULT_LOTUS_ENVIRONMENT;
 }
 
 export function resolveGatewayBaseUrl(
@@ -117,9 +126,10 @@ export function resolveGatewayBaseUrl(
 
   const lotusEnvironment = resolveLotusEnvironment(environment);
   const protocol = lotusEnvironment === "dev" ? "http" : "https";
-  const host = lotusEnvironment === "prod" || lotusEnvironment === "production"
-    ? "gateway.lotus"
-    : `gateway.${lotusEnvironment}.lotus`;
+  const host =
+    lotusEnvironment === "prod" || lotusEnvironment === "production"
+      ? "gateway.lotus"
+      : `gateway.${lotusEnvironment}.lotus`;
   return assertCanonicalGatewayBaseUrl(`${protocol}://${host}`, environment);
 }
 

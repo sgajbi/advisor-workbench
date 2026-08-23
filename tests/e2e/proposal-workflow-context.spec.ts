@@ -1729,7 +1729,7 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   });
 });
 
-test("loads and confirms the combined portfolio book for the governed advisory date", async ({
+test("uses the source-confirmed advisory date instead of stale route context", async ({
   page,
 }) => {
   const requestedDates: string[] = [];
@@ -1743,14 +1743,15 @@ test("loads and confirms the combined portfolio book for the governed advisory d
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
   await expect(evidence).toHaveAttribute(
     "data-requested-as-of-date",
-    "2026-04-11",
+    advisoryAsOfDate,
   );
   await expect(evidence).toHaveAttribute(
     "data-effective-as-of-date",
-    "2026-04-11",
+    advisoryAsOfDate,
   );
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  expect(requestedDates).toContain("2026-04-11");
+  expect(requestedDates).toContain(advisoryAsOfDate);
+  expect(requestedDates).not.toContain("2026-04-11");
   await expect(page.getByLabel("Advisory As-of Date")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Evaluate Workspace" }),

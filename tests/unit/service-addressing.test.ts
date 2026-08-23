@@ -12,14 +12,18 @@ describe("service addressing", () => {
   const originalFixtureGateway = process.env.WORKBENCH_E2E_FIXTURE_GATEWAY;
   const originalFixtureScenario = process.env.PERFORMANCE_E2E_FIXTURE;
   const originalFixturePort = process.env.PERFORMANCE_E2E_FIXTURE_PORT;
-  const originalReportCentreFixtureScenario = process.env.REPORT_CENTRE_E2E_FIXTURE;
-  const originalReportCentreFixturePort = process.env.REPORT_CENTRE_E2E_FIXTURE_PORT;
+  const originalReportCentreFixtureScenario =
+    process.env.REPORT_CENTRE_E2E_FIXTURE;
+  const originalReportCentreFixturePort =
+    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT;
   const originalPortfolioFixtureScenario = process.env.PORTFOLIO_E2E_FIXTURE;
   const originalPortfolioFixturePort = process.env.PORTFOLIO_E2E_FIXTURE_PORT;
   const originalPmQualityFixtureScenario = process.env.PM_QUALITY_E2E_FIXTURE;
   const originalPmQualityFixturePort = process.env.PM_QUALITY_E2E_FIXTURE_PORT;
   const originalManageFixtureScenario = process.env.MANAGE_E2E_FIXTURE;
   const originalManageFixturePort = process.env.MANAGE_E2E_FIXTURE_PORT;
+  const originalPlaywrightFixtureScenario = process.env.PLAYWRIGHT_E2E_FIXTURE;
+  const originalPlaywrightFixturePort = process.env.PLAYWRIGHT_E2E_FIXTURE_PORT;
 
   afterEach(() => {
     process.env.BFF_BASE_URL = originalBffBaseUrl;
@@ -28,13 +32,16 @@ describe("service addressing", () => {
     process.env.PERFORMANCE_E2E_FIXTURE = originalFixtureScenario;
     process.env.PERFORMANCE_E2E_FIXTURE_PORT = originalFixturePort;
     process.env.REPORT_CENTRE_E2E_FIXTURE = originalReportCentreFixtureScenario;
-    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = originalReportCentreFixturePort;
+    process.env.REPORT_CENTRE_E2E_FIXTURE_PORT =
+      originalReportCentreFixturePort;
     process.env.PORTFOLIO_E2E_FIXTURE = originalPortfolioFixtureScenario;
     process.env.PORTFOLIO_E2E_FIXTURE_PORT = originalPortfolioFixturePort;
     process.env.PM_QUALITY_E2E_FIXTURE = originalPmQualityFixtureScenario;
     process.env.PM_QUALITY_E2E_FIXTURE_PORT = originalPmQualityFixturePort;
     process.env.MANAGE_E2E_FIXTURE = originalManageFixtureScenario;
     process.env.MANAGE_E2E_FIXTURE_PORT = originalManageFixturePort;
+    process.env.PLAYWRIGHT_E2E_FIXTURE = originalPlaywrightFixtureScenario;
+    process.env.PLAYWRIGHT_E2E_FIXTURE_PORT = originalPlaywrightFixturePort;
   });
 
   it("uses the explicit BFF base URL when configured", () => {
@@ -42,7 +49,9 @@ describe("service addressing", () => {
     process.env.LOTUS_ENVIRONMENT = "uat";
 
     expect(resolveGatewayBaseUrl()).toBe("https://gateway.custom.example");
-    expect(resolveWorkbenchApiBase("server")).toBe("https://gateway.custom.example/api/v1");
+    expect(resolveWorkbenchApiBase("server")).toBe(
+      "https://gateway.custom.example/api/v1",
+    );
   });
 
   it("defaults server-side gateway resolution to the canonical dev hostname", () => {
@@ -50,7 +59,9 @@ describe("service addressing", () => {
     delete process.env.LOTUS_ENVIRONMENT;
 
     expect(resolveGatewayBaseUrl()).toBe("http://gateway.dev.lotus");
-    expect(resolveWorkbenchApiBase("server")).toBe("http://gateway.dev.lotus/api/v1");
+    expect(resolveWorkbenchApiBase("server")).toBe(
+      "http://gateway.dev.lotus/api/v1",
+    );
   });
 
   it("switches to environment-scoped hostnames for non-dev environments", () => {
@@ -64,7 +75,27 @@ describe("service addressing", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:8000/";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
+    );
+  });
+
+  it("allows only the exact process-owned Playwright source fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18160/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "playwright-smoke";
+    process.env.PLAYWRIGHT_E2E_FIXTURE = "source-context";
+    process.env.PLAYWRIGHT_E2E_FIXTURE_PORT = "18160";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18160");
+  });
+
+  it("rejects a Playwright source fixture whose scenario is not governed", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18160/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "playwright-smoke";
+    process.env.PLAYWRIGHT_E2E_FIXTURE = "proposal-success";
+    process.env.PLAYWRIGHT_E2E_FIXTURE_PORT = "18160";
+
+    expect(() => resolveGatewayBaseUrl()).toThrow(
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
@@ -219,7 +250,7 @@ describe("service addressing", () => {
     process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
@@ -230,7 +261,7 @@ describe("service addressing", () => {
     process.env.PM_QUALITY_E2E_FIXTURE_PORT = "18140";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
@@ -241,7 +272,7 @@ describe("service addressing", () => {
     process.env.PORTFOLIO_E2E_FIXTURE_PORT = "18120";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
@@ -252,7 +283,7 @@ describe("service addressing", () => {
     process.env.REPORT_CENTRE_E2E_FIXTURE_PORT = "18101";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
@@ -263,7 +294,7 @@ describe("service addressing", () => {
     process.env.PERFORMANCE_E2E_FIXTURE_PORT = "18100";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(
-      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback"
+      "BFF_BASE_URL must use a canonical Lotus hostname, not local loopback",
     );
   });
 
