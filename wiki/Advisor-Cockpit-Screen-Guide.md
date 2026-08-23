@@ -70,10 +70,13 @@ portfolio ownership, or production identity posture.
   actions without recomputing those counts in the browser.
 - Preserves action identity, version, family, status, priority, owner, review window, reason,
   evidence, source-gap, dependency, and next-action truth returned by Advise.
-- Uses one action model with a capacity-aware comparison table when the module is wide enough and
-  complete operational records when workstation rails or compact devices reduce its canvas.
-- Keeps evidence and the next business action together in both presentations; no required action
-  is hidden behind horizontal scrolling.
+- Uses the shared decision-first worklist: compact action rows identify priority, owner, and review
+  window once; one selected-action pane holds the complete evidence and permitted next action.
+- Supports Arrow Up and Arrow Down movement through action rows, Enter transfer into the associated
+  decision pane, stable addressable row/detail relationships, and stacked presentation when the
+  module no longer owns enough inline width.
+- Keeps evidence and the next business action together in the selected pane; repeated card stacks
+  and horizontally hidden action fields are not part of the operating path.
 - Uses the full advisor work canvas for Cockpit actions and retains the unique source-and-scope
   boundary as a compact inline evidence band instead of an unrelated empty workflow rail.
 - Shows **Open proposal** only when the action carries a valid proposal identity with an existing
@@ -172,14 +175,14 @@ identity, data, or unsupported capability.
 - Focused view-model and readiness-presentation tests prove business-language projection,
   fail-closed source posture, totals-versus-detail qualification, and operating boundaries.
 - `tests/unit/advisor-cockpit-action-worklist.test.tsx` proves semantic parity between table and
-  record presentations, exact selected-action feedback, failure posture, and fail-closed action
-  controls.
+  selected-decision evidence, keyboard selection and detail transfer, exact selected-action
+  feedback, failure posture, and fail-closed action controls.
 - `tests/e2e/advisor-cockpit-business-readiness.spec.ts` proves source-backed rendering, selected
   action persistence, reconciliation, focus stability, 44-pixel minimum action targets,
-  capacity-driven table/record presentation at the exact 64rem boundary and one pixel below,
-  one visible valid proposal handoff, absence of fabricated reference routes, inline source
-  boundary, removal of duplicate generic context, readiness-label separation, compact measure
-  density, and zero page overflow at 1800, 1440, 1024, and 519 pixels.
+  worklist/detail association and responsive stacking, one visible valid proposal handoff,
+  absence of fabricated reference routes, inline source boundary, removal of duplicate generic
+  context and repeated action titles, compact measure density, the first decision row above 900
+  pixels at 1440, and zero page overflow at 1800, 1440, 1024, and 519 pixels.
 - Canonical validation uses `PB_SG_GLOBAL_BAL_001`, verifies the Gateway contract family and
   idempotent acknowledgement, and captures the governed Advisor Cockpit screenshot only after
   source validation passes.

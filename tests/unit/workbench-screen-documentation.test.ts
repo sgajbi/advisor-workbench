@@ -546,7 +546,13 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain(
-      "one action model with a capacity-aware comparison table",
+      "Uses the shared decision-first worklist: compact action rows identify priority",
+    );
+    expect(advisorCockpit?.implementationEvidence).toEqual(
+      expect.arrayContaining([
+        "src/design-system/components/workbench-worklist.tsx",
+        "tests/unit/workbench-worklist.test.tsx",
+      ]),
     );
     expect(guide).toContain(
       "Scopes pending, confirmed, partial, and failed acknowledgement",
@@ -739,9 +745,12 @@ describe("Workbench screen documentation governance", () => {
       implementationEvidence: expect.arrayContaining([
         "src/features/workbench/manage-overview-model.ts",
         "src/features/workbench/components/manage-overview.tsx",
-        "src/design-system/components/workbench-task-directory.tsx",
+        "src/design-system/components/workbench-worklist.tsx",
+        "tests/unit/workbench-worklist.test.tsx",
       ]),
-      runtimeEvidence: expect.arrayContaining(["tests/e2e/ui-smoke.spec.ts"]),
+      runtimeEvidence: expect.arrayContaining([
+        "tests/e2e/manage-overview-workspace.spec.ts",
+      ]),
       coverageException: null,
     });
     const guide = fs
@@ -758,6 +767,7 @@ describe("Workbench screen documentation governance", () => {
       "only when both carry the same source wave identity; row evidence remains authoritative",
     );
     expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
+    expect(guide).toContain("Uses the shared decision-first worklist");
     expect(guide).toContain("does not:\n\n- calculate portfolio value");
     expect(guide).toContain("not a claim of competitor superiority");
     expect(validate(registry).errors).toEqual([]);
