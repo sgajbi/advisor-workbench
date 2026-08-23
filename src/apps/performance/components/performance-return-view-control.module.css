@@ -1,14 +1,8 @@
-.toolbar {
-  display: grid;
-  gap: 0.42rem;
-}
-
 .panel {
   display: grid;
   gap: 0.24rem;
   min-width: 0;
-  padding: 0.6rem 0.68rem;
-  border: 1px solid rgb(32 44 61 / 6%);
-  border-radius: 12px;
-  background: rgb(248 250 252 / 78%);
+  justify-self: start;
+  padding-top: 0.42rem;
+  border-top: 1px solid var(--border-subtle);
 }

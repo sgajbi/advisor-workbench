@@ -264,10 +264,10 @@ describe("PerformanceChartPanel", () => {
       )
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelector(".performance-analysis-date-inputs")).toBeTruthy();
+    expect(document.querySelector("[data-performance-date-form='true']")).toBeTruthy();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
-    expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
-    expect(document.querySelectorAll(".performance-analysis-control-slot")).toHaveLength(5);
+    expect(document.querySelector("[data-performance-analysis-control-bar='true']")).toBeTruthy();
+    expect(document.querySelectorAll("[data-performance-control-slot]")).toHaveLength(5);
     expect(screen.getByRole("radiogroup", { name: "Horizon" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Return-path presentation" })).toBeInTheDocument();

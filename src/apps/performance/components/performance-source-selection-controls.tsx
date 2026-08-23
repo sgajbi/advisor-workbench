@@ -9,6 +9,7 @@ import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
+import { formatDate } from "../formatters";
 import { BASIS_OPTIONS, CHART_FREQUENCY_OPTIONS, PERIOD_OPTIONS } from "../navigation";
 import {
   buildPerformanceControlSelectionPatch,
@@ -86,6 +87,7 @@ export default function PerformanceSourceSelectionControls({
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
   const availableStartDate = capabilities.returnPath.earliestAvailableDate;
   const availableEndDate = capabilities.returnPath.latestAvailableDate;
+  const windowLabel = `${formatDate(reportStartDate)} – ${formatDate(reportEndDate)}`;
 
   useEffect(() => {
     const updateCompleted = wasUpdatingRef.current && !isUpdating;
@@ -166,213 +168,205 @@ export default function PerformanceSourceSelectionControls({
   if (!isHydrated) {
     return (
       <div
-        className={`performance-analysis-control-bar ${styles.controls}`}
+        className={styles.controls}
         role="group"
         aria-label={ariaLabel}
         aria-busy="true"
       >
-        <ControlCluster className="performance-analysis-control-cluster-selection">
-          <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
-            <StaticControlValue>{period}</StaticControlValue>
-          </ControlSlot>
-          <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
-            <StaticControlValue>{detailBasis}</StaticControlValue>
-          </ControlSlot>
-        </ControlCluster>
-        <ControlCluster className="performance-analysis-control-cluster-window">
-          <ControlSlot label="Window" className="performance-analysis-control-slot-dates">
-            <StaticControlValue>{reportStartDate} to {reportEndDate}</StaticControlValue>
-          </ControlSlot>
-        </ControlCluster>
-        <ControlCluster className="performance-analysis-control-cluster-comparison">
-          <ControlSlot label="Frequency" className="performance-analysis-control-slot-frequency">
-            <StaticControlValue>{chartFrequency}</StaticControlValue>
-          </ControlSlot>
-          <ControlSlot label="Benchmark" className="performance-analysis-control-slot-benchmark-select">
-            <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
-          </ControlSlot>
-        </ControlCluster>
+        <ControlSlot label="Horizon" className={styles.horizonSlot}>
+          <StaticControlValue>{period}</StaticControlValue>
+        </ControlSlot>
+        <ControlSlot label="Basis" className={styles.basisSlot}>
+          <StaticControlValue>{detailBasis}</StaticControlValue>
+        </ControlSlot>
+        <ControlSlot label="Frequency" className={styles.frequencySlot}>
+          <StaticControlValue>{chartFrequency}</StaticControlValue>
+        </ControlSlot>
+        <ControlSlot label="Benchmark" className={styles.benchmarkSlot}>
+          <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
+        </ControlSlot>
+        <div className={styles.windowSummaryStatic}>
+          <FieldLabel>Custom window</FieldLabel>
+          <StaticControlValue>{windowLabel}</StaticControlValue>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={`performance-analysis-control-bar ${styles.controls}`}
+      className={styles.controls}
       role="group"
       aria-label={ariaLabel}
       data-performance-source-control-region="true"
     >
-      <ControlCluster className="performance-analysis-control-cluster-selection">
-        <ControlSlot label="Horizon" className="performance-analysis-control-slot-horizon">
-          <WorkbenchChoiceGroup
-            value={period}
-            onChange={(value) =>
-              updateSelection(
-                {
-                  period: value,
-                  reportStartDate: undefined,
-                  reportEndDate: undefined,
-                },
-                { kind: "choice", groupLabel: "Horizon", optionLabel: value }
-              )
-            }
-            ariaLabel="Horizon"
-            className={choiceStyles.horizon}
-            density="compact"
-            options={PERIOD_OPTIONS.map((option) => ({
-              key: option,
-              label: option,
-              disabled: isUpdating,
-            }))}
-          />
-        </ControlSlot>
+      <ControlSlot label="Horizon" className={styles.horizonSlot}>
+        <WorkbenchChoiceGroup
+          value={period}
+          onChange={(value) =>
+            updateSelection(
+              {
+                period: value,
+                reportStartDate: undefined,
+                reportEndDate: undefined,
+              },
+              { kind: "choice", groupLabel: "Horizon", optionLabel: value }
+            )
+          }
+          ariaLabel="Horizon"
+          className={choiceStyles.horizon}
+          density="compact"
+          options={PERIOD_OPTIONS.map((option) => ({
+            key: option,
+            label: option,
+            disabled: isUpdating,
+          }))}
+        />
+      </ControlSlot>
 
-        <ControlSlot label="Basis" className="performance-analysis-control-slot-basis">
-          <WorkbenchChoiceGroup
-            value={detailBasis}
-            onChange={(value) =>
-              updateSelection(
-                { detailBasis: value },
-                { kind: "choice", groupLabel: "Basis", optionLabel: value }
-              )
-            }
-            ariaLabel="Basis"
-            className={choiceStyles.horizon}
-            density="compact"
-            options={BASIS_OPTIONS.map((option) => ({
-              key: option,
-              label: option,
-              disabled: isUpdating,
-            }))}
-          />
-        </ControlSlot>
-      </ControlCluster>
+      <ControlSlot label="Basis" className={styles.basisSlot}>
+        <WorkbenchChoiceGroup
+          value={detailBasis}
+          onChange={(value) =>
+            updateSelection(
+              { detailBasis: value },
+              { kind: "choice", groupLabel: "Basis", optionLabel: value }
+            )
+          }
+          ariaLabel="Basis"
+          className={choiceStyles.horizon}
+          density="compact"
+          options={BASIS_OPTIONS.map((option) => ({
+            key: option,
+            label: option,
+            disabled: isUpdating,
+          }))}
+        />
+      </ControlSlot>
 
-      <ControlCluster className="performance-analysis-control-cluster-window">
+      <ControlSlot label="Frequency" className={styles.frequencySlot}>
+        <TextField
+          select
+          size="small"
+          value={chartFrequency}
+          onChange={(event) =>
+            updateSelection(
+              { chartFrequency: event.target.value },
+              { kind: "field", fieldLabel: "Frequency" },
+              event.currentTarget
+            )
+          }
+          disabled={isUpdating}
+          sx={selectControlSx}
+          SelectProps={{ native: true }}
+          slotProps={{
+            htmlInput: {
+              "aria-label": "Frequency",
+              suppressHydrationWarning: true,
+            },
+          }}
+        >
+          {CHART_FREQUENCY_OPTIONS.map((option) => (
+            <option
+              key={option.value}
+              value={option.value}
+              disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
+            >
+              {option.label}
+            </option>
+          ))}
+        </TextField>
+      </ControlSlot>
+
+      <ControlSlot label="Benchmark" className={styles.benchmarkSlot}>
+        <TextField
+          select
+          size="small"
+          value={benchmark ?? ""}
+          onChange={(event) =>
+            updateSelection(
+              { benchmark: event.target.value || undefined },
+              { kind: "field", fieldLabel: "Benchmark" },
+              event.currentTarget,
+            )
+          }
+          disabled={isUpdating}
+          sx={selectControlSx}
+          SelectProps={{ native: true }}
+          slotProps={{
+            htmlInput: {
+              "aria-label": "Benchmark",
+              suppressHydrationWarning: true,
+            },
+          }}
+        >
+          {resolvedBenchmarkOptions.map((option) => (
+            <option key={option.benchmark_code} value={option.benchmark_code}>
+              {getPerformanceBenchmarkOptionLabel(option)}
+            </option>
+          ))}
+        </TextField>
+      </ControlSlot>
+
+      <details
+        className={styles.windowDisclosure}
+        open={period === "EXPLICIT" ? true : undefined}
+        data-performance-control-slot="custom-window"
+        data-performance-window-control="true"
+      >
+        <summary className={styles.windowSummary}>
+          <span className={styles.windowSummaryLabel}>Custom window</span>
+          <span className={styles.windowSummaryValue}>{windowLabel}</span>
+        </summary>
         <form
-          className="performance-analysis-control-slot performance-analysis-control-slot-dates"
+          className={styles.dateForm}
+          data-performance-date-form="true"
           onSubmit={applyExplicitDates}
         >
-          <FieldLabel>Window</FieldLabel>
-          <div className="performance-analysis-date-row">
-            <div className="performance-analysis-date-inputs">
-              <TextField
-                size="small"
-                type="date"
-                value={activeDateDraft.fromDate}
-                slotProps={{
-                  htmlInput: {
-                    "aria-label": "From",
-                    min: availableStartDate,
-                    max: activeDateDraft.toDate || reportEndDate,
-                    suppressHydrationWarning: true,
-                  },
-                }}
-                onChange={(event) =>
-                  setDateDraft({ ...activeDateDraft, fromDate: event.currentTarget.value })
-                }
-              />
-              <TextField
-                size="small"
-                type="date"
-                value={activeDateDraft.toDate}
-                slotProps={{
-                  htmlInput: {
-                    "aria-label": "To",
-                    min: activeDateDraft.fromDate || reportStartDate,
-                    max: availableEndDate,
-                    suppressHydrationWarning: true,
-                  },
-                }}
-                onChange={(event) =>
-                  setDateDraft({ ...activeDateDraft, toDate: event.currentTarget.value })
-                }
-              />
-            </div>
-            <ActionButton
-              type="submit"
-              priority="primary"
-              disabled={isUpdating}
-              className="performance-analysis-apply-button"
-            >
-              {isUpdating ? "Updating..." : "Apply"}
-            </ActionButton>
-          </div>
+          <TextField
+            size="small"
+            type="date"
+            value={activeDateDraft.fromDate}
+            slotProps={{
+              htmlInput: {
+                "aria-label": "From",
+                min: availableStartDate,
+                max: activeDateDraft.toDate || reportEndDate,
+                suppressHydrationWarning: true,
+              },
+            }}
+            onChange={(event) =>
+              setDateDraft({ ...activeDateDraft, fromDate: event.currentTarget.value })
+            }
+          />
+          <TextField
+            size="small"
+            type="date"
+            value={activeDateDraft.toDate}
+            slotProps={{
+              htmlInput: {
+                "aria-label": "To",
+                min: activeDateDraft.fromDate || reportStartDate,
+                max: availableEndDate,
+                suppressHydrationWarning: true,
+              },
+            }}
+            onChange={(event) =>
+              setDateDraft({ ...activeDateDraft, toDate: event.currentTarget.value })
+            }
+          />
+          <ActionButton
+            type="submit"
+            priority="primary"
+            disabled={isUpdating}
+            className={styles.applyButton}
+          >
+            {isUpdating ? "Updating..." : "Apply"}
+          </ActionButton>
         </form>
-      </ControlCluster>
-
-      <ControlCluster className="performance-analysis-control-cluster-comparison">
-        <ControlSlot label="Frequency" className="performance-analysis-control-slot-frequency">
-          <TextField
-            select
-            size="small"
-            value={chartFrequency}
-            onChange={(event) =>
-              updateSelection(
-                { chartFrequency: event.target.value },
-                { kind: "field", fieldLabel: "Frequency" },
-                event.currentTarget
-              )
-            }
-            disabled={isUpdating}
-            sx={selectControlSx}
-            SelectProps={{ native: true }}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "Frequency",
-                suppressHydrationWarning: true,
-              },
-            }}
-          >
-            {CHART_FREQUENCY_OPTIONS.map((option) => (
-              <option
-                key={option.value}
-                value={option.value}
-                disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
-              >
-                {option.label}
-              </option>
-            ))}
-          </TextField>
-        </ControlSlot>
-
-        <ControlSlot label="Benchmark" className="performance-analysis-control-slot-benchmark-select">
-          <TextField
-            select
-            size="small"
-            value={benchmark ?? ""}
-            onChange={(event) =>
-              updateSelection(
-                { benchmark: event.target.value || undefined },
-                { kind: "field", fieldLabel: "Benchmark" },
-                event.currentTarget,
-              )
-            }
-            disabled={isUpdating}
-            sx={selectControlSx}
-            SelectProps={{ native: true }}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "Benchmark",
-                suppressHydrationWarning: true,
-              },
-            }}
-          >
-            {resolvedBenchmarkOptions.map((option) => (
-              <option key={option.benchmark_code} value={option.benchmark_code}>
-                {getPerformanceBenchmarkOptionLabel(option)}
-              </option>
-            ))}
-          </TextField>
-        </ControlSlot>
-      </ControlCluster>
+      </details>
     </div>
   );
-}
-
-function ControlCluster({ className, children }: { className: string; children: ReactNode }) {
-  return <div className={`performance-analysis-control-cluster ${className}`}>{children}</div>;
 }
 
 function ControlSlot({
@@ -385,7 +379,10 @@ function ControlSlot({
   children: ReactNode;
 }) {
   return (
-    <div className={["performance-analysis-control-slot", className].filter(Boolean).join(" ")}>
+    <div
+      className={[styles.slot, className].filter(Boolean).join(" ")}
+      data-performance-control-slot={label.toLowerCase()}
+    >
       <FieldLabel>{label}</FieldLabel>
       {children}
     </div>
@@ -394,7 +391,7 @@ function ControlSlot({
 
 function StaticControlValue({ children }: { children: ReactNode }) {
   return (
-    <Text variant="cardTitle" as="div" className="performance-analysis-static-value">
+    <Text variant="cardTitle" as="div" className={styles.staticValue}>
       {children}
     </Text>
   );

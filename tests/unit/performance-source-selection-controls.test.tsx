@@ -98,6 +98,12 @@ describe("PerformanceSourceSelectionControls", () => {
     render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
 
     await screen.findByRole("group", { name: "Performance Analysis source selection" });
+    const customWindowSummary = screen.getByText("Custom window").closest("summary");
+    const customWindow = customWindowSummary?.closest("details");
+    expect(customWindowSummary).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
+    expect(customWindow).not.toHaveAttribute("open");
+    fireEvent.click(customWindowSummary!);
+    expect(customWindow).toHaveAttribute("open");
     fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-02-01" } });
     fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-03-31" } });
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
