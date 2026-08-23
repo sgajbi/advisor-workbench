@@ -1361,16 +1361,23 @@ Most relevant current governance:
     belong only in the collapsed support disclosure. Evidence mode remains read-only and owns no
     performance calculation, certification, client-release approval, or local retry authority.
 15. Workbench typography is a governed same-origin product asset, not a public runtime service.
-    Load Inter UI, Cormorant brand display, and IBM Plex Mono evidence roles only through
+    Load IBM Plex Sans UI in static 400/500/600 weights, Cormorant brand display, and IBM Plex Mono
+    evidence roles only through
     `src/app/fonts.ts` and their semantic custom properties. Keep exact upstream release/commit,
     SIL OFL license, and SHA-256 truth in `config/font-assets.json`; `npm run quality:font-assets`
     must remain in the blocking lint chain. Preserve the narrow `.gitattributes` binary and
     LF-license rules so checksums remain stable across developer and CI platforms. Do not add a
     Google Fonts import, CDN URL, page-local
     `@font-face`, font package, or direct family declaration that bypasses the shared tokens.
-    Preserve Inter and the visible wordmark face as the only root preloads; evidence faces should
-    load on demand. Any typography replacement requires issue-backed brand, accessibility,
-    payload, fallback, license, optimized-browser, and responsive-geometry evidence.
+    Preserve IBM Plex Sans and the visible wordmark face as the only root preloads; evidence faces
+    should load on demand. Use the canonical productive roles: 24px workspace/page titles, 18px
+    section/panel titles, 14px business reading and table values, and 12px routine labels/headers,
+    with only 400/500/600 weights. Do not use forced uppercase or wide tracking for routine
+    business labels, and do not allow financial values to wrap or break within a metric. Reflow the
+    containing component instead. Component-specific typography belongs in its owned CSS module,
+    not the legacy global layer. Any typography replacement requires issue-backed brand,
+    accessibility, payload, fallback, license, optimized-browser, and responsive-geometry evidence;
+    `npm run test:e2e:typography:compare` is the reproducible candidate-comparison path.
 16. Optional Allocation look-through coverage must remain distinct from the direct allocation
     already confirmed by the selected portfolio book. Model checking, available, unsupported, and
     failed states explicitly; accept unsupported only from a valid allocation response; retain
