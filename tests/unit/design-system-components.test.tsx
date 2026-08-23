@@ -877,6 +877,10 @@ describe("design-system components", () => {
       position: "sticky",
       left: "0px",
       zIndex: "2",
+      backgroundColor: "var(--analytics-table-pinned-background, #ffffff)",
+    });
+    expect(screen.getByText("Jan").closest("tr")).toHaveStyle({
+      "--analytics-table-pinned-background": "#ffffff",
     });
     expect(
       screen.getByRole("columnheader", { name: "Cumulative Portfolio" }),
