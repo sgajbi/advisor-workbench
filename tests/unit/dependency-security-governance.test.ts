@@ -140,6 +140,10 @@ describe("dependency security governance", () => {
     expect(makefile).toMatch(/lint:\r?\n\tnpm run lint/);
     expect(makefile).toMatch(/check: security lint typecheck test-coverage build/);
     expect(nextConfig).toContain("ignoreDuringBuilds: true");
+    expect(eslintConfig).toContain("NEXT_DEVELOPMENT_DIRECTORY");
+    expect(eslintConfig).toContain("NEXT_PRODUCTION_DIRECTORY");
+    expect(eslintConfig).toContain("`${NEXT_DEVELOPMENT_DIRECTORY}/**`");
+    expect(eslintConfig).toContain("`${NEXT_PRODUCTION_DIRECTORY}/**`");
     expect(eslintConfig).toContain('files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"]');
     expect(eslintConfig).not.toContain('"tests/**"');
     expect(eslintConfig).not.toContain('"scripts/**"');
