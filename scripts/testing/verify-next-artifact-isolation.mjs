@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -62,6 +62,23 @@ export async function probeWorkbenchAssets({ origin, fetchImpl = fetch }) {
 }
 
 async function run() {
+  const sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+  }).trim();
+  const worktreeChanges = execFileSync("git", ["status", "--porcelain"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+  }).trim();
+  if (worktreeChanges) {
+    throw new Error(
+      "Next.js artifact isolation evidence requires a clean committed worktree.",
+    );
+  }
+
+  const packageJson = JSON.parse(
+    readFileSync(resolve(projectRoot, "package.json"), "utf8"),
+  );
   const port = parsePort(process.env.NEXT_ARTIFACT_ISOLATION_PORT?.trim() || "31983");
   const origin = `http://127.0.0.1:${port}`;
   const startedAt = new Date();
@@ -136,6 +153,9 @@ async function run() {
     const evidence = {
       schema_version: "1.0.0",
       outcome: "passed",
+      source_commit: sourceCommit,
+      node_version: process.version,
+      next_version: packageJson.dependencies?.next ?? "not-reported",
       started_at: startedAt.toISOString(),
       completed_at: new Date().toISOString(),
       development_directory: NEXT_DEVELOPMENT_DIRECTORY,
