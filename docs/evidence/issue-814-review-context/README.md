@@ -37,33 +37,33 @@ and the source-owned next action. No success, completeness, or execution state i
 The strip owns portfolio, client, mandate, booking centre, business date, and currency orientation;
 the surrounding screen uses that context rather than repeating it.
 
-## Full-page renders
+## Diagnostic full-page renders
 
 ### 1440 pixels
 
-![Portfolio Review at 1440 pixels](./portfolio-review-1440.png)
+![Diagnostic Portfolio Review at 1440 pixels](./diagnostic-portfolio-review-1440.png)
 
 ### 1024 pixels
 
-![Portfolio Review at 1024 pixels](./portfolio-review-1024.png)
+![Diagnostic Portfolio Review at 1024 pixels](./diagnostic-portfolio-review-1024.png)
 
 ### 768 pixels
 
-![Portfolio Review at 768 pixels](./portfolio-review-768.png)
+![Diagnostic Portfolio Review at 768 pixels](./diagnostic-portfolio-review-768.png)
 
 ### 519 pixels
 
-![Portfolio Review at 519 pixels](./portfolio-review-519.png)
+![Diagnostic Portfolio Review at 519 pixels](./diagnostic-portfolio-review-519.png)
 
-## Review-context close-ups
+## Diagnostic review-context close-ups
 
 ### 1440 pixels
 
-![Review context at 1440 pixels](./review-context-close-up-1440.png)
+![Diagnostic review context at 1440 pixels](./diagnostic-review-context-close-up-1440.png)
 
 ### 519 pixels
 
-![Review context at 519 pixels](./review-context-close-up-519.png)
+![Diagnostic review context at 519 pixels](./diagnostic-review-context-close-up-519.png)
 
 Machine-readable measurements and keyboard evidence are in
 [`portfolio-review-accessibility-evidence.json`](./portfolio-review-accessibility-evidence.json).
