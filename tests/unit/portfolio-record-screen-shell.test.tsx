@@ -77,12 +77,12 @@ describe("PortfolioRecordScreenShell", () => {
   );
 
   it.each(["income", "positions", "cashflow", "transactions"] as const)(
-    "withholds %s portfolio navigation when no source identity is confirmed",
+    "withholds %s portfolio navigation when a route identity is not source-confirmed",
     (screenKind) => {
       render(
         <PortfolioRecordScreenShell
           screen={screenKind}
-          portfolioId={null}
+          portfolioId="PB_UNCONFIRMED_001"
           portfolioContext={null}
           workspace={null}
           reviewContextError="Select a source-confirmed portfolio from My book before opening portfolio records."

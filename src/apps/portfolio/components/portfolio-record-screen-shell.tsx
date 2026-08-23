@@ -26,7 +26,6 @@ import PortfolioScreenRail from "./portfolio-screen-rail";
 
 export default function PortfolioRecordScreenShell({
   screen,
-  portfolioId,
   portfolioContext,
   workspace,
   timeWindow,
@@ -56,9 +55,9 @@ export default function PortfolioRecordScreenShell({
         className="portfolio-layout portfolio-record-screen-layout"
         mainClassName="portfolio-main portfolio-record-screen-main"
         rail={
-          portfolioId ? (
+          confirmedReviewContext ? (
             <PortfolioScreenRail
-              portfolioId={portfolioId}
+              portfolioId={confirmedReviewContext.portfolio.portfolio_id}
               activeScreen={screen}
             />
           ) : undefined
