@@ -74,6 +74,23 @@ describe("portfolio review context strip view model", () => {
     });
   });
 
+  it("keeps unrequested source reporting echoes labelled as base currency", () => {
+    const workspace = buildPortfolioWorkspace();
+    workspace.income_summary = {
+      ...workspace.income_summary!,
+      reporting_currency: "SGD",
+    };
+    workspace.activity_summary = {
+      ...workspace.activity_summary!,
+      reporting_currency: "SGD",
+    };
+
+    expect(buildPortfolioReviewContextStrip(workspace).currency).toEqual({
+      kind: "base",
+      value: "USD",
+    });
+  });
+
   it("marks incomplete source context as partial without inventing missing facts", () => {
     const workspace = buildPortfolioWorkspace({
       portfolio: {
