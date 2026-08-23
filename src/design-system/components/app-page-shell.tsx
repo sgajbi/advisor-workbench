@@ -1,15 +1,18 @@
 import { cx } from "../utils/cx";
 
+import ReviewContextStrip, { type ReviewContextStripModel } from "./review-context-strip";
 import { WorkstationPage } from "./workspace-layout";
 
 export default function AppPageShell({
   children,
   className,
   pageKey,
+  reviewContext,
 }: {
   children: React.ReactNode;
   className?: string;
   pageKey?: string;
+  reviewContext?: ReviewContextStripModel;
 }) {
   return (
     <WorkstationPage
@@ -19,6 +22,7 @@ export default function AppPageShell({
         className
       )}
     >
+      {reviewContext ? <ReviewContextStrip context={reviewContext} /> : null}
       {children}
     </WorkstationPage>
   );
