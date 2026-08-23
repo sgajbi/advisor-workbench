@@ -1013,6 +1013,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(
       navigation.getByRole('button', { name: 'Performance Analysis' }),
     ).toHaveAttribute('aria-current', 'page');
+    await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('analysis');
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,
@@ -1026,6 +1027,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(
       navigation.getByRole('button', { name: 'Performance Overview' }),
     ).toHaveAttribute('aria-current', 'page');
+    await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBeNull();
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,
@@ -1038,6 +1040,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(
       navigation.getByRole('button', { name: 'Performance Analysis' }),
     ).toHaveAttribute('aria-current', 'page');
+    await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('analysis');
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,
