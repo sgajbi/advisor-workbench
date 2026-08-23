@@ -294,17 +294,24 @@ export default function PortfolioWorkspaceClient({
         controls,
         request.params,
       );
+      const sourceOverrideRequested = hasPortfolioSourceControlOverride(
+        controls,
+        workspaceState,
+      );
       let completedRequestKey = scopedRequestKey;
       if (responseIsCurrent) {
         setWorkspaceState((current) =>
           current ? mergePortfolioWorkspace(current, details) : current
         );
+        if (sourceOverrideRequested) {
+          setControlTransition({
+            sourceKey: initialWorkspaceSourceKey,
+            status: "confirmed",
+            requestedControls: controls,
+          });
+        }
       } else {
         const requestedControls = controls;
-        const sourceOverrideRequested = hasPortfolioSourceControlOverride(
-          controls,
-          workspaceState,
-        );
         if (sourceOverrideRequested) {
           const confirmedControls = restorePortfolioSourceControls(
             controls,
@@ -462,12 +469,21 @@ export default function PortfolioWorkspaceClient({
     controlTransition?.sourceKey === initialWorkspaceSourceKey
       ? controlTransition
       : null;
+  const acceptedReportingCurrency =
+    workspace &&
+    activeControlTransition?.status === "confirmed" &&
+    activeControlTransition.requestedControls.reportingCurrency !==
+      workspace.portfolio.base_currency
+      ? activeControlTransition.requestedControls.reportingCurrency
+      : undefined;
 
   return (
     <PortfolioPageLayout
       reviewContext={
         workspace
-          ? buildPortfolioReviewContextStrip(workspace)
+          ? buildPortfolioReviewContextStrip(workspace, {
+              acceptedReportingCurrency,
+            })
           : buildUnavailableReviewContextStrip()
       }
     >

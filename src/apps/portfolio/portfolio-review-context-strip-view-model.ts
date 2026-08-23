@@ -10,6 +10,7 @@ import type { PortfolioWorkspace } from "./types";
 
 export type PortfolioReviewContextStripOptions = {
   notice?: ReviewContextStripModel["notice"];
+  acceptedReportingCurrency?: string | null;
 };
 
 export function buildPortfolioReviewContextStrip(
@@ -17,13 +18,17 @@ export function buildPortfolioReviewContextStrip(
   options: PortfolioReviewContextStripOptions = {},
 ): ReviewContextStripModel {
   return buildReviewContextStripModel(
-    buildPortfolioReviewContextSource(workspace),
+    buildPortfolioReviewContextSource(
+      workspace,
+      options.acceptedReportingCurrency,
+    ),
     options.notice,
   );
 }
 
 export function buildPortfolioReviewContextSource(
   workspace: PortfolioWorkspace,
+  acceptedReportingCurrency?: string | null,
 ): ReviewContextSource {
   const mandateType = workspace.profile.portfolio_type
     ? formatStatus(workspace.profile.portfolio_type)
@@ -42,13 +47,21 @@ export function buildPortfolioReviewContextSource(
       ? formatBusinessDate(workspace.as_of_date)
       : null,
     baseCurrency: workspace.portfolio.base_currency,
-    acceptedReportingCurrency: resolveAcceptedReportingCurrency(workspace),
+    acceptedReportingCurrency: resolveAcceptedReportingCurrency(
+      workspace,
+      acceptedReportingCurrency,
+    ),
   };
 }
 
 function resolveAcceptedReportingCurrency(
   workspace: PortfolioWorkspace,
+  acceptedReportingCurrency?: string | null,
 ): string | null {
+  if (acceptedReportingCurrency) {
+    return acceptedReportingCurrency;
+  }
+
   const capability = workspace.control_capabilities?.reporting_currency_restatement;
   const requestedReportingCurrency = capability?.requested_reporting_currency;
   if (

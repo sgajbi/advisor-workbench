@@ -74,6 +74,19 @@ describe("portfolio review context strip view model", () => {
     });
   });
 
+  it("shows a reporting currency after the caller proves the control transaction", () => {
+    const workspace = buildPortfolioWorkspace();
+
+    expect(
+      buildPortfolioReviewContextStrip(workspace, {
+        acceptedReportingCurrency: "SGD",
+      }).currency,
+    ).toEqual({
+      kind: "reporting",
+      value: "SGD",
+    });
+  });
+
   it("keeps unrequested source reporting echoes labelled as base currency", () => {
     const workspace = buildPortfolioWorkspace();
     workspace.income_summary = {
