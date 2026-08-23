@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import WorkbenchPage from "../../src/app/workbench/[portfolioId]/page";
+import { expectReviewContextOwns } from "../review-context-census";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/workbench/PF_1001",
@@ -46,6 +47,12 @@ describe("WorkbenchPage", () => {
     expect(reviewContext).toHaveTextContent(
       /review period 3Y.*does not filter this mandate management workspace/i,
     );
+    expectReviewContextOwns([
+      "PF_1001",
+      "CL_1001",
+      "Singapore",
+      "13 May 2026",
+    ]);
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();

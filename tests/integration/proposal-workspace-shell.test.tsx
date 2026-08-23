@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import ProposalWorkspaceShell from "@/features/proposals/components/proposal-workspace-shell";
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
+import { expectReviewContextOwns } from "../review-context-census";
 
 const portfolioApiMocks = vi.hoisted(() => ({
   getPortfolioWorkspaceShell: vi.fn(),
@@ -48,7 +49,12 @@ describe("ProposalWorkspaceShell", () => {
     const decisionSummary = screen.getByLabelText("Advisory decision summary");
     expect(within(decisionSummary).queryByText("Portfolio")).not.toBeInTheDocument();
     expect(screen.getByText("Advisor use only")).toBeInTheDocument();
-    expect(screen.getAllByText(portfolioContext.portfolio.portfolio_id)).toHaveLength(1);
+    expectReviewContextOwns([
+      portfolioContext.portfolio.portfolio_id,
+      portfolioContext.portfolio.client_id,
+      "Singapore",
+      "12 May 2026",
+    ]);
   });
 
   it("keeps advisory content usable without inventing identity when supporting context fails", async () => {

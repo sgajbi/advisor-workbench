@@ -22,6 +22,7 @@ import {
   buildReportJobListResponse,
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
+import { expectReviewContextOwns } from "../review-context-census";
 
 const routerPushMock = vi.fn();
 
@@ -205,8 +206,12 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
       /review period YTD.*does not filter this report ordering workflow/i,
     );
-    expect(screen.getAllByText("Global Balanced Mandate")).toHaveLength(1);
-    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001")).toHaveLength(1);
+    expectReviewContextOwns([
+      "PB_SG_GLOBAL_BAL_001",
+      "CIF_SG_000184",
+      "Singapore",
+      "22 Apr 2026",
+    ]);
   });
 
   it("renders a source-backed advisor flow and keeps unavailable PDF disabled", async () => {
