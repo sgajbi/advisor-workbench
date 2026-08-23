@@ -40,19 +40,19 @@ test.describe('UI smoke checks', () => {
           timeout: 60000,
         });
 
-        const sourceRecoveryHeading = page.getByRole('heading', {
-          name: 'Review context needs attention',
-          exact: true,
-        });
-        if (await sourceRecoveryHeading.isVisible().catch(() => false)) {
-          await expect(
-            page.getByText(/No alternative portfolio was substituted/i),
-          ).toBeVisible();
-          await expect(page.getByRole('link', { name: 'Choose another portfolio' })).toHaveAttribute(
-            'href',
-            '/book',
-          );
-        }
+        await expect(
+          page.getByRole('heading', {
+            name: 'Review context needs attention',
+            exact: true,
+          }),
+        ).toBeVisible();
+        await expect(
+          page.getByText(/No alternative portfolio was substituted/i),
+        ).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Choose another portfolio' })).toHaveAttribute(
+          'href',
+          '/book',
+        );
       },
     },
   ] as const;
@@ -151,29 +151,82 @@ test.describe('UI smoke checks', () => {
       timeout: 60000,
     });
 
-    const currentView = page.getByRole('button', { name: /Current view Income/i });
     const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
     const workspaceHeading = page.getByRole('heading', { name: /^Income & Activity$/i });
 
     await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
+    await expect(
+      page.getByRole('heading', { name: 'Review context needs attention', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        'The selected portfolio could not be confirmed for this record view. No alternative portfolio was substituted.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open My book' })).toHaveAttribute('href', '/book');
     await expect(page.getByText('No portfolio', { exact: true })).toHaveCount(0);
     await expect(page.locator('a[href*="portfolioId=No"]')).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Review context' })).toContainText(
-      /PB_SG_GLOBAL_BAL_001|Portfolio not confirmed/,
+      'Portfolio not confirmed',
     );
+    await expect(page.getByTestId('portfolio-screen-rail')).toHaveCount(0);
+    await expect(navigation).toHaveCount(0);
+
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasOverflow).toBeFalsy();
+  });
+
+  test('proposal builder rail remains deterministic across supported shell widths', async ({ page }) => {
+    test.setTimeout(120000);
+    await page.setViewportSize({ width: 519, height: 900 });
+    await page.goto(
+      '/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&reportingCurrency=USD',
+      { waitUntil: 'domcontentloaded', timeout: 60000 },
+    );
+
+    const workspaceHeading = page.getByRole('heading', { name: 'Proposal Workspace', exact: true });
+    const currentView = page.getByRole('button', { name: /Current view Builder/i });
+    const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
+
+    await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
+    await expect(currentView).toBeVisible();
     await expect(currentView).toHaveAttribute('aria-expanded', 'false');
     await expect(navigation).toBeHidden();
     await currentView.click();
+    await expect(currentView).toHaveAttribute('aria-expanded', 'true');
     await expect(navigation).toBeVisible();
-    await expect(
-      navigation.getByRole('link', {
-        name: /Income and activity Booked income, fees, and taxes/i,
-      }),
-    ).toHaveAttribute('aria-current', 'page');
+    await expect(navigation.getByRole('link', { name: 'Builder', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await page.keyboard.press('Escape');
+    await expect(currentView).toHaveAttribute('aria-expanded', 'false');
+    await expect(navigation).toBeHidden();
+    await expect(currentView).toBeFocused();
 
     const headingBox = await workspaceHeading.boundingBox();
     expect(headingBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(900);
-    const hasOverflow = await page.evaluate(
+
+    let hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasOverflow).toBeFalsy();
+
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(currentView).toBeVisible();
+    await expect(navigation).toBeHidden();
+    hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasOverflow).toBeFalsy();
+
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await expect(currentView).toBeHidden();
+    await expect(navigation).toBeVisible();
+    hasOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
     expect(hasOverflow).toBeFalsy();
