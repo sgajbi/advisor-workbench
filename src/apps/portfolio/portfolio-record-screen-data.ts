@@ -7,7 +7,10 @@ import {
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
 } from "./api";
-import { resolveSelectedPortfolioId } from "./portfolio-selection";
+import {
+  isPortfolioWorkspaceIdentityConfirmed,
+  resolveSelectedPortfolioId,
+} from "./portfolio-selection";
 import {
   isPortfolioReviewResponseCurrent,
   resolvePortfolioReviewControls,
@@ -63,12 +66,13 @@ export async function loadPortfolioRecordScreenData({
     portfolios,
     reviewContextResult.context.portfolioId,
   );
-  const shell = selectedPortfolioId ? await getPortfolioWorkspaceShell(selectedPortfolioId) : null;
+  const shell = selectedPortfolioId
+    ? await getPortfolioWorkspaceShell(selectedPortfolioId)
+    : null;
 
   if (
     !selectedPortfolioId ||
-    !shell ||
-    shell.portfolio.portfolio_id !== selectedPortfolioId
+    !isPortfolioWorkspaceIdentityConfirmed(shell, selectedPortfolioId)
   ) {
     return {
       portfolioId: selectedPortfolioId,
@@ -142,8 +146,10 @@ export async function loadPortfolioRecordScreenData({
     ...(detailedDetails ?? {}),
     record_data_availability: {
       positions: "ready",
-      liquidity: detailedDetails?.record_data_availability.liquidity ?? "unavailable",
-      transactions: detailedDetails?.record_data_availability.transactions ?? "unavailable",
+      liquidity:
+        detailedDetails?.record_data_availability.liquidity ?? "unavailable",
+      transactions:
+        detailedDetails?.record_data_availability.transactions ?? "unavailable",
     },
   });
 

@@ -1,9 +1,13 @@
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
-import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
-import { resolveSelectedPortfolioId } from "@/apps/portfolio/portfolio-selection";
 import {
-  buildPortfolioReviewContextStrip,
-} from "@/apps/portfolio/portfolio-review-context-strip-view-model";
+  getPortfolioCatalog,
+  getPortfolioWorkspaceShell,
+} from "@/apps/portfolio/api";
+import {
+  isPortfolioWorkspaceIdentityConfirmed,
+  resolveSelectedPortfolioId,
+} from "@/apps/portfolio/portfolio-selection";
+import { buildPortfolioReviewContextStrip } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
 import {
@@ -51,10 +55,20 @@ export async function ReportOrderingPage({
     portfolios,
     reviewContextResult.context.portfolioId,
   );
-  const workspace = portfolioId ? await getPortfolioWorkspaceShell(portfolioId) : null;
+  const workspace = portfolioId
+    ? await getPortfolioWorkspaceShell(portfolioId)
+    : null;
 
   if (!portfolioId || !workspace) {
     return <ReportOrderingUnavailable portfolioId={portfolioId} />;
+  }
+  if (!isPortfolioWorkspaceIdentityConfirmed(workspace, portfolioId)) {
+    return (
+      <ReportOrderingUnavailable
+        portfolioId={portfolioId}
+        reason="The portfolio source did not confirm the selected portfolio identity. No report catalogue was requested."
+      />
+    );
   }
   const controlResolution = resolvePortfolioReviewControls(
     workspace,
@@ -101,8 +115,7 @@ export async function ReportOrderingPage({
 function ReportOrderingUnavailable({
   portfolioId,
   reviewContext = buildUnavailableReviewContextStrip(),
-  reason =
-    "Select an available portfolio before preparing a report request. No report choices or submission controls are shown without confirmed portfolio context.",
+  reason = "Select an available portfolio before preparing a report request. No report choices or submission controls are shown without confirmed portfolio context.",
 }: {
   portfolioId: string | null;
   reviewContext?: ReviewContextStripModel;
@@ -118,7 +131,10 @@ function ReportOrderingUnavailable({
         <MainWithSideRailLayout
           rail={
             portfolioId ? (
-              <PortfolioScreenRail portfolioId={portfolioId} activeScreen="reports" />
+              <PortfolioScreenRail
+                portfolioId={portfolioId}
+                activeScreen="reports"
+              />
             ) : undefined
           }
           main={
@@ -131,9 +147,7 @@ function ReportOrderingUnavailable({
                 title="Portfolio reporting context is unavailable"
                 tone="warn"
                 status="Unavailable"
-                actions={[
-                  { href: "/book", label: "Open My Book" },
-                ]}
+                actions={[{ href: "/book", label: "Open My Book" }]}
               >
                 {reason}
               </DegradedStatePanel>
@@ -145,9 +159,7 @@ function ReportOrderingUnavailable({
   );
 }
 
-function toReviewContextNotice(
-  notice: { title: string; body: string } | null,
-) {
+function toReviewContextNotice(notice: { title: string; body: string } | null) {
   return notice
     ? {
         label: notice.title,
