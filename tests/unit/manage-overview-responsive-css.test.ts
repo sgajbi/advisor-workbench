@@ -4,8 +4,44 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("Manage Overview responsive composition", () => {
-  it("lets overview grids reflow from their available content width", () => {
-    const css = readFileSync(
+  const overviewCss = readFileSync(
+    path.join(
+      process.cwd(),
+      "src/features/workbench/components/manage-overview.module.css",
+    ),
+    "utf8",
+  );
+
+  it("reflows compact summary and posture strips without shrinking business text", () => {
+    expect(overviewCss).toMatch(
+      /\.portfolioSummary\s*\{[\s\S]*?grid-template-columns: minmax\(14rem, 1\.5fr\) repeat\(3, minmax\(8rem, 1fr\)\);/,
+    );
+    expect(overviewCss).toMatch(
+      /\.postureStrip\s*\{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/,
+    );
+    expect(overviewCss).toMatch(
+      /@media \(max-width: 1080px\)[\s\S]*?\.portfolioSummary,[\s\S]*?\.postureStrip\s*\{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+    );
+    expect(overviewCss).toMatch(
+      /@media \(max-width: 519px\)[\s\S]*?\.portfolioSummary,[\s\S]*?\.postureStrip,[\s\S]*?\.evidenceGrid\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
+    );
+    expect(overviewCss).not.toContain("font-size: 11px");
+  });
+
+  it("keeps financial values intact and decision handoffs keyboard-sized", () => {
+    expect(overviewCss).toMatch(
+      /\.financialValue\s*\{[\s\S]*?white-space: nowrap;/,
+    );
+    expect(overviewCss).toMatch(
+      /\.actionLink\s*\{[\s\S]*?min-height: 44px;/,
+    );
+    expect(overviewCss).toMatch(
+      /\.decisionWorkspace :global\(\[data-workbench-record-selector\]\)\s*\{[\s\S]*?max-height: 31rem;[\s\S]*?overflow-y: auto;/,
+    );
+  });
+
+  it("removes the retired duplicate overview card and activity styles", () => {
+    const workspaceCss = readFileSync(
       path.join(
         process.cwd(),
         "src/features/workbench/manage-workspace.module.css",
@@ -13,35 +49,10 @@ describe("Manage Overview responsive composition", () => {
       "utf8",
     );
 
-    expect(css).toMatch(
-      /\.manageScope :global\(\.manage-decision-readiness-grid\)\s*\{[\s\S]*?grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 14rem\), 1fr\)\);/,
-    );
-    expect(css).toMatch(
-      /\.manageScope :global\(\.manage-portfolio-value-band\)\s*\{[\s\S]*?grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 16rem\), 1fr\)\);/,
-    );
-    expect(css).toMatch(
-      /\.manageScope :global\(\.manage-overview-focus-grid\)\s*\{[\s\S]*?grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 18rem\), 1fr\)\);/,
-    );
-    expect(css).not.toContain("minmax(360px, 5fr)");
-    expect(css).toMatch(
-      /@media \(max-width: 720px\)[\s\S]*?\.manageScope :global\(\.manage-decision-readiness-grid\),[\s\S]*?\.manageScope :global\(\.manage-portfolio-value-band dl\),[\s\S]*?grid-template-columns: 1fr;/,
-    );
-  });
-
-  it("keeps task status below its business title at every card width", () => {
-    const css = readFileSync(
-      path.join(
-        process.cwd(),
-        "src/design-system/components/workbench-task-directory.module.css",
-      ),
-      "utf8",
-    );
-
-    expect(css).toMatch(
-      /\.heading\s*\{[\s\S]*?display: grid;[\s\S]*?gap: 0\.2rem;/,
-    );
-    expect(css).toMatch(
-      /\.status\s*\{[\s\S]*?text-align: left;/,
-    );
+    expect(workspaceCss).not.toContain("manage-decision-readiness-card");
+    expect(workspaceCss).not.toContain("manage-portfolio-value-band");
+    expect(workspaceCss).not.toContain("manage-overview-focus-grid");
+    expect(workspaceCss).not.toContain("manage-overview-activity");
+    expect(workspaceCss).not.toContain("manage-rebalance-evidence");
   });
 });

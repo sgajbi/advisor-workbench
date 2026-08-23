@@ -53,11 +53,11 @@ describe("WorkbenchPage", () => {
     });
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio Management Decisions" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
-    expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What needs review now" })).toBeInTheDocument();
+    expect(screen.getAllByText("Benchmark mapping requires review")).toHaveLength(1);
     expect(
       fetchMock.mock.calls.some(([input]) =>
         input
@@ -65,23 +65,12 @@ describe("WorkbenchPage", () => {
           .includes("/api/v1/dpm/command-center/exceptions?tenant_id=default&portfolio_manager_id=PM_SG_DPM_001&limit=25&portfolio_id=PF_1001&state=ACTIVE")
       )
     ).toBe(true);
-    const manageWorkAreas = screen.getByRole("navigation", { name: "Manage work areas" });
-    expect(
-      within(manageWorkAreas).getByRole("link", {
-        name: /Rebalance Waves Ready.*Open rebalance waves/i,
-      })
-    ).toHaveAttribute(
+    fireEvent.click(screen.getByRole("option", { name: /Review the active rebalance/i }));
+    expect(screen.getByRole("link", { name: "Open rebalance waves" })).toHaveAttribute(
       "href",
       "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=waves",
     );
-    expect(
-      within(manageWorkAreas).getByRole("link", {
-        name: /Construction Alternatives Generated on request/i,
-      })
-    ).toHaveAttribute(
-      "href",
-      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-06-30&period=3Y&reportingCurrency=SGD&mode=construction",
-    );
+    expect(screen.queryByRole("navigation", { name: "Manage work areas" })).not.toBeInTheDocument();
 
     const screenNav = screen.getByRole("navigation", { name: "Workbench screen navigation" });
     expect(within(screenNav).getByRole("link", { name: /Portfolio/i })).toHaveAttribute(

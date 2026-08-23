@@ -15,25 +15,25 @@ describe("manage overview model", () => {
       positionCount: 12,
       riskProfile: "Balanced",
     });
-    expect(model.postureCards).toEqual(
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "mandate",
-          label: "Mandate Health",
+          label: "Mandate health",
           value: "Needs attention",
           tone: "warn",
-          progress: 82,
+          support: "82% source health score",
         }),
         expect.objectContaining({
           key: "attention",
-          label: "Active Attention Items",
+          label: "Active attention",
           value: "2",
           tone: "warn",
-          progress: null,
+          support: "Selected mandate",
         }),
       ])
     );
-    expect(model.postureCards.map((card) => card.key)).not.toContain("approval");
+    expect(model.postureItems.map((item) => item.key)).not.toContain("approval");
     expect(model.activeRebalance).toMatchObject({
       state: "READY",
       supportabilityState: "SUPPORTED",
@@ -41,43 +41,26 @@ describe("manage overview model", () => {
     });
     expect(model.activeRebalance).not.toHaveProperty("steps");
     expect(model.activeRebalance).not.toHaveProperty("approvalReadiness");
-    expect(model.moduleItems).toEqual(
+    expect(model.decisionItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          key: "quality",
-          title: "PM Operating Quality",
-          metric: "1 evidence record",
-          href: "/workbench/PF_1001?portfolioId=PF_1001&mode=quality",
+          key: "attention:exc_001",
+          title: "Benchmark mapping requires review",
+          status: "High",
+          actionHref: "/workbench/PF_1001?portfolioId=PF_1001&mode=mandate",
         }),
         expect.objectContaining({
-          key: "proof",
-          title: "Evidence Pack",
-          metric: "Evidence available",
-          href: "/workbench/PF_1001?portfolioId=PF_1001&mode=proof",
+          key: "rebalance:wave_001",
+          title: "Review the active rebalance",
+          status: "Supported",
+          actionHref: "/workbench/PF_1001?portfolioId=PF_1001&mode=waves",
         }),
       ])
     );
-    expect(model.latestActivities.map((activity) => activity.key)).toEqual([
-      "monitoring",
-      "wave",
-      "review",
-    ]);
     expect(model.blockedSurfaces).toEqual([]);
     expect(model.overviewPostureLabel).toBe("Action required");
     expect(model.overviewPostureTone).toBe("warn");
-    expect(model.moduleItems).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          key: "construction",
-          metric: "Generated on request",
-          actionLabel: "Open construction",
-        }),
-        expect.objectContaining({
-          key: "reviews",
-          metric: "1 review",
-        }),
-      ])
-    );
+    expect(model.decisionItems).toHaveLength(3);
   });
 
   it("keeps partial posture source-owned and exposes blocked surfaces without local capability claims", () => {
@@ -91,14 +74,10 @@ describe("manage overview model", () => {
       })
     );
 
-    expect(model.blockedSurfaces).toEqual([
-      "Mandate health",
-      "PM operating quality",
-      "Outcome reviews",
-    ]);
+    expect(model.blockedSurfaces).toEqual(["Mandate health"]);
     expect(model.overviewPostureLabel).toBe("Evidence incomplete");
     expect(model.overviewPostureTone).toBe("warn");
-    expect(model.postureCards).toEqual(
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "mandate",
@@ -107,8 +86,8 @@ describe("manage overview model", () => {
         }),
       ])
     );
-    expect(model.moduleItems.map((item) => item.title)).not.toContain("Client Communication");
-    expect(model.moduleItems.map((item) => item.title)).not.toContain("Trade Approval");
+    expect(model.decisionItems.map((item) => item.title)).not.toContain("Client Communication");
+    expect(model.decisionItems.map((item) => item.title)).not.toContain("Trade Approval");
   });
 
   it("does not infer a balanced mandate when the source omits risk profile", () => {
@@ -203,7 +182,7 @@ describe("manage overview model", () => {
         })
       );
 
-      expect(model.postureCards).toEqual(
+      expect(model.postureItems).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             key: "mandate",
@@ -224,7 +203,7 @@ describe("manage overview model", () => {
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
-    expect(model.postureCards).toEqual(
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "attention",
@@ -233,16 +212,14 @@ describe("manage overview model", () => {
         }),
       ])
     );
-    expect(model.moduleItems).toEqual(
+    expect(model.decisionItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          key: "mandate",
-          metric: "Attention evidence unavailable",
+          key: "attention:evidence-unavailable",
+          title: "Mandate attention evidence is unavailable",
+          status: "Not available",
         }),
       ])
-    );
-    expect(model.latestActivities[0]?.event).toBe(
-      "Daily mandate review completed; attention-item evidence is unavailable."
     );
     expect(model.blockedSurfaces).toContain("Mandate attention items");
   });
@@ -262,7 +239,7 @@ describe("manage overview model", () => {
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
-    expect(model.postureCards.find((card) => card.key === "attention")?.value).toBe(
+    expect(model.postureItems.find((item) => item.key === "attention")?.value).toBe(
       "Not available"
     );
   });
@@ -284,11 +261,16 @@ describe("manage overview model", () => {
     expect(model.hasCompleteExceptionEvidence).toBe(false);
     expect(model.hasAvailableExceptionEvidence).toBe(true);
     expect(model.exceptionEvidencePosture).toBe("partial");
-    expect(model.postureCards.find((card) => card.key === "attention")?.value).toBe(
+    expect(model.postureItems.find((item) => item.key === "attention")?.value).toBe(
       "2 shown"
     );
-    expect(model.latestActivities[0]?.event).toContain(
-      "2 attention items in the first source view; more are available"
+    expect(model.decisionItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "attention:more-available",
+          status: "Partial",
+        }),
+      ]),
     );
     expect(model.blockedSurfaces).not.toContain("Mandate attention items");
   });
@@ -333,7 +315,7 @@ describe("manage overview model", () => {
       supportabilityState: "N/A",
       supportabilityReason: "SELECTED_PORTFOLIO_WAVE_NOT_CONFIRMED",
     });
-    expect(model.postureCards).toEqual(
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "rebalance",
@@ -341,12 +323,15 @@ describe("manage overview model", () => {
         }),
       ]),
     );
-    expect(model.moduleItems).toEqual(
+    expect(model.decisionItems).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: "waves", metric: "Not available" }),
+        expect.objectContaining({
+          key: "rebalance:unconfirmed",
+          title: "Confirm selected-portfolio rebalance evidence",
+          status: "Not available",
+        }),
       ]),
     );
-    expect(model.latestActivities.map((activity) => activity.key)).not.toContain("wave");
   });
 
   it("uses response supportability only when its wave identity matches the selected row", () => {
@@ -378,15 +363,17 @@ describe("manage overview model", () => {
     );
 
     expect(model.activeRebalance).toEqual({
+      waveId: "wave_001",
       triggerType: "EXPLICIT_PORTFOLIO_LIST",
       state: "READY",
       supportabilityState: "PARTIAL",
+      itemCount: "6",
       issueCount: "2",
       supportabilityReason: "SOURCE_REVIEW_REQUIRED",
     });
-    expect(model.latestActivities.find((activity) => activity.key === "wave")?.event).toBe(
-      "6 proposed rebalance changes prepared for review.",
-    );
+    expect(
+      model.decisionItems.find((decision) => decision.kind === "rebalance")?.facts,
+    ).toContainEqual({ label: "Proposed changes", value: "6" });
   });
 
   it("keeps row evidence authoritative over matched response supportability", () => {
@@ -414,9 +401,9 @@ describe("manage overview model", () => {
       issueCount: "0",
       supportabilityReason: "WAVE_READY",
     });
-    expect(model.latestActivities.find((activity) => activity.key === "wave")?.event).toBe(
-      "4 proposed rebalance changes prepared for review.",
-    );
+    expect(
+      model.decisionItems.find((decision) => decision.kind === "rebalance")?.facts,
+    ).toContainEqual({ label: "Proposed changes", value: "4" });
   });
 
   it.each([null, "wave_other"])(
@@ -451,9 +438,11 @@ describe("manage overview model", () => {
       );
 
       expect(model.activeRebalance).toEqual({
+        waveId: "wave_001",
         triggerType: "EXPLICIT_PORTFOLIO_LIST",
         state: "N/A",
         supportabilityState: "N/A",
+        itemCount: "N/A",
         issueCount: "N/A",
         supportabilityReason: "N/A",
       });
@@ -496,16 +485,19 @@ describe("manage overview model", () => {
 
     const model = buildManageOverviewModel(data);
 
-    expect(model.exceptionRows.map((row) => row.key)).toEqual(["exc_001", "exc_002"]);
-    expect(model.postureCards).toEqual(
+    expect(
+      model.decisionItems
+        .filter((decision) => decision.kind === "attention")
+        .map((decision) => decision.key),
+    ).toEqual(["attention:exc_001", "attention:exc_002"]);
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: "attention", value: "2" }),
       ])
     );
-    expect(model.latestActivities[0]?.event).toContain("2 attention items");
   });
 
-  it("uses the operating activity fallback when source-backed activity is absent", () => {
+  it("keeps a confirmed zero-attention posture without inventing an attention decision", () => {
     const base = buildManageWorkspaceData();
     const model = buildManageOverviewModel(
       buildManageWorkspaceData({
@@ -533,14 +525,8 @@ describe("manage overview model", () => {
       })
     );
 
-    expect(model.latestActivities).toEqual([
-      {
-        key: "empty",
-        time: "N/A",
-        event: "No recent operating activity.",
-      },
-    ]);
-    expect(model.postureCards).toEqual(
+    expect(model.decisionItems.map((decision) => decision.kind)).toEqual(["rebalance"]);
+    expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: "attention",

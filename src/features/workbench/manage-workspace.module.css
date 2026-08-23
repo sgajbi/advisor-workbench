@@ -56,12 +56,10 @@
   color: #45464d;
 }
 
-.manageScope :global(.manage-overview-panel .workbench-summary-metric-strip),
 .manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.manageScope :global(.manage-overview-panel .workbench-summary-metric-strip > .workbench-summary-metric-card),
 .manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip > .workbench-summary-metric-card) {
   position: relative;
   min-height: 82px;
@@ -75,7 +73,6 @@
     0 1px 2px rgba(19, 27, 46, 0.04);
 }
 
-.manageScope :global(.manage-overview-panel .workbench-summary-metric-strip > .workbench-summary-metric-card::before),
 .manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip > .workbench-summary-metric-card::before) {
   content: "";
   position: absolute;
@@ -85,14 +82,12 @@
   background: #e2c383;
 }
 
-.manageScope :global(.manage-overview-panel .workbench-summary-metric-label),
 .manageScope :global(.manage-mandate-panel .workbench-summary-metric-label) {
   color: #5f6670;
   font-size: 10px;
   letter-spacing: 0.06em;
 }
 
-.manageScope :global(.manage-overview-panel .workbench-summary-metric-value),
 .manageScope :global(.manage-mandate-panel .workbench-summary-metric-value) {
   color: #131b2e;
   font-size: 18px;
@@ -685,183 +680,7 @@
   line-height: 16px;
 }
 
-.manageScope :global(.manage-decision-readiness-grid) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: 12px;
-}
-
-.manageScope :global(.manage-decision-readiness-card) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  min-height: 110px;
-  padding: 18px 20px;
-  border: 1px solid #c6c6cd;
-  border-radius: 2px;
-  background: #ffffff;
-}
-
-.manageScope :global(.manage-decision-readiness-card > div:first-child) {
-  display: grid;
-  gap: 6px;
-}
-
-.manageScope :global(.manage-decision-readiness-card span:first-child) {
-  color: #343941;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.manage-decision-readiness-card strong) {
-  color: #000000;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 30px;
-}
-
-.manageScope :global(.manage-status-icon) {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.manageScope :global(.manage-status-icon[data-icon="warning"]::before) {
-  content: "!";
-}
-
-.manageScope :global(.manage-status-icon[data-icon="pending"]::before) {
-  content: "...";
-  transform: translateY(-2px);
-}
-
-.manageScope :global(.manage-status-icon[data-icon="check_circle"]::before),
-.manageScope :global(.manage-status-icon[data-icon="verified"]::before) {
-  content: "OK";
-  font-size: 9px;
-  letter-spacing: 0.02em;
-}
-
-.manageScope :global(.manage-status-icon[data-icon="block"]::before) {
-  content: "X";
-}
-
-.manageScope :global(.manage-status-icon[data-icon="info"]::before) {
-  content: "i";
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-style: italic;
-}
-
-.manageScope :global(.manage-decision-readiness-card > .manage-status-icon) {
-  align-self: center;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-danger > .manage-status-icon) {
-  color: #ba1a1a;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-warn > .manage-status-icon) {
-  color: #d97706;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-success > .manage-status-icon) {
-  color: #0f8a3b;
-}
-
-.manageScope :global(.manage-readiness-meter) {
-  grid-column: 1 / -1;
-  height: 4px;
-  overflow: hidden;
-  background: #f2f4f6;
-}
-
-.manageScope :global(.manage-readiness-meter i) {
-  display: block;
-  height: 100%;
-  background: #76777d;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-danger .manage-readiness-meter i) {
-  background: #ba1a1a;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-warn .manage-readiness-meter i) {
-  background: #f59e0b;
-}
-
-.manageScope :global(.manage-decision-readiness-card.is-success .manage-readiness-meter i) {
-  background: #0f9d45;
-}
-
-.manageScope :global(.manage-portfolio-value-band) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  align-items: center;
-  gap: 24px;
-  padding: 28px 30px;
-  border: 1px solid #131b2e;
-  border-radius: 2px;
-  background: #131b2e;
-  color: #ffffff;
-}
-
-.manageScope :global(.manage-portfolio-value-band > div) {
-  display: grid;
-  gap: 8px;
-}
-
-.manageScope :global(.manage-portfolio-value-band span),
-.manageScope :global(.manage-portfolio-value-band dt) {
-  color: #bec6e0;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.manage-portfolio-value-band strong) {
-  color: #ffffff;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 40px;
-}
-
-.manageScope :global(.manage-portfolio-value-band dl) {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 0;
-}
-
-.manageScope :global(.manage-portfolio-value-band dd) {
-  margin: 6px 0 0;
-  color: #ffffff;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 30px;
-}
-
-.manageScope :global(.manage-overview-focus-grid) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-  gap: 16px;
-}
-
-.manageScope :global(.manage-overview-card),
-.manageScope :global(.manage-overview-table-card),
-.manageScope :global(.manage-overview-activity) {
+.manageScope :global(.manage-overview-table-card) {
   display: grid;
   min-width: 0;
   gap: 0;
@@ -924,37 +743,6 @@
   text-decoration: underline;
 }
 
-.manageScope :global(.manage-rebalance-evidence) {
-  display: grid;
-  gap: 0;
-  margin: 0;
-}
-
-.manageScope :global(.manage-rebalance-evidence > div) {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.4fr);
-  gap: 16px;
-  padding: 12px 20px;
-  border-top: 1px solid #e0e3e5;
-}
-
-.manageScope :global(.manage-rebalance-evidence dt) {
-  color: #5f6068;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.manage-rebalance-evidence dd) {
-  margin: 0;
-  color: #131b2e;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 18px;
-}
-
 .manageScope :global(.manage-overview-grid-label) {
   grid-column: 1 / -1;
 }
@@ -997,56 +785,6 @@
 
 .manageScope :global(.manage-overview-table tbody tr:nth-child(even):hover td) {
   background: #f7f9fb;
-}
-
-.manageScope :global(.manage-activity-list),
-.manageScope :global(.manage-activity-timeline) {
-  display: grid;
-}
-
-.manageScope :global(.manage-activity-row) {
-  display: flex;
-  gap: 14px;
-  min-height: auto;
-  padding: 14px 18px;
-  align-items: center;
-  border-top: 1px solid #e0e3e5;
-  color: #45464d;
-  font-size: 12px;
-  line-height: 16px;
-}
-
-.manageScope :global(.manage-activity-row:first-child) {
-  border-top: 0;
-}
-
-.manageScope :global(.manage-activity-row i) {
-  width: 8px;
-  height: 8px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #0f8a3b;
-}
-
-.manageScope :global(.manage-activity-row div) {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.manageScope :global(.manage-activity-row strong) {
-  color: #000000;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.manageScope :global(.manage-activity-row strong) {
-  color: #191c1e;
-  font-size: 13px;
-  line-height: 18px;
 }
 
 .manageScope :global(.manage-context-rail) {
@@ -3919,7 +3657,6 @@
   .manageScope :global(.manage-mandate-primary-grid),
   .manageScope :global(.manage-mandate-secondary-grid),
   .manageScope :global(.mandate-health-review-workspace),
-  .manageScope :global(.manage-overview-focus-grid),
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
   .manageScope :global(.dpm-ai-workflow-result),
@@ -3960,20 +3697,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .manageScope :global(.manage-decision-readiness-grid) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .manageScope :global(.manage-portfolio-value-band) {
-    align-items: flex-start;
-    gap: 20px;
-  }
-
-  .manageScope :global(.manage-portfolio-value-band dl) {
-    width: 100%;
-    gap: 24px;
-  }
-
   .manageScope :global(.portfolio-memory-detail-snapshot) {
     padding-left: 0;
     border-left: 0;
@@ -3995,10 +3718,7 @@
 
   .manageScope :global(.mandate-health-summary-grid),
   .manageScope :global(.mandate-review-facts),
-  .manageScope :global(.mandate-technical-evidence dl > div),
-  .manageScope :global(.manage-decision-readiness-grid),
-  .manageScope :global(.manage-portfolio-value-band dl),
-  .manageScope :global(.manage-rebalance-evidence > div) {
+  .manageScope :global(.mandate-technical-evidence dl > div) {
     grid-template-columns: 1fr;
   }
 
@@ -4007,28 +3727,9 @@
     padding: 14px;
   }
 
-  .manageScope :global(.manage-portfolio-value-band) {
-    gap: 16px;
-    padding: 18px;
-  }
-
-  .manageScope :global(.manage-portfolio-value-band dl) {
-    gap: 14px;
-  }
-
-  .manageScope :global(.manage-portfolio-value-band strong) {
-    font-size: 28px;
-    line-height: 34px;
-  }
-
   .manageScope :global(.manage-overview-card-header) {
     flex-wrap: wrap;
     padding: 14px;
-  }
-
-  .manageScope :global(.manage-rebalance-evidence > div) {
-    gap: 4px;
-    padding: 11px 14px;
   }
 
   .manageScope :global(.rebalance-summary-strip),
