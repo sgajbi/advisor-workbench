@@ -954,8 +954,12 @@ Important validation expectations:
    stack or another worktree owns port `3000`. An explicit port must bind the production server,
    readiness probe, and browser base URL to the same listener and must disable existing-server
    reuse so current-worktree proof cannot silently exercise stale code,
-   and run the generated `.next/standalone/server.js` directly after staging `.next/static` beside
-   it. Do not substitute `next start` for a repository configured with `output: standalone`,
+   and run the generated `.next-build/standalone/server.js` directly after staging
+   `.next-build/static` beside it. Development owns `.next-dev`; production validation owns
+   `.next-build`; no governed command may return to one mutable `.next` tree. Run
+   `npm run test:next-artifact-isolation` to prove the development page and every published client
+   asset remain available through a clean production build. Do not substitute `next start` for a
+   repository configured with `output: standalone`,
 5. Docker and build validation remain part of the merge gate,
 6. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
    validation-only NGINX image, run the two-replica scale proof against that same Workbench image,

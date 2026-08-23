@@ -5,6 +5,49 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Advisor workstation build continuity: complete client assets during validation
+
+### Business job
+
+An advisor workstation must remain interactive while engineers validate a release. Missing client
+chunks can leave source-backed panels visibly loading without executing their browser lifecycle,
+which is operationally indistinguishable from a slow or failed domain service and undermines the
+truthfulness of front-office evidence.
+
+### Current-product and professional-standard research
+
+Research was reviewed on 2026-08-24 from official Next.js documentation for custom build
+directories, configuration phases, generated TypeScript declarations, and the Next 16 isolated
+development-build design. The applicable pattern is explicit artifact ownership between development
+and production processes, with generated declarations treated as generated state. The research
+informs a compatibility-preserving Next 15 implementation; it is not a framework-upgrade claim.
+
+### Adopted
+
+- Use stable phase-aware `distDir` support in the pinned Next 15.5 runtime: `.next-dev` for the
+  interactive host and `.next-build` for production validation.
+- Keep both paths in-project, centrally named, and bounded before deletion.
+- Prove the rendered page and every referenced client asset throughout the production build, not
+  only the compiler exit code.
+- Ignore regenerated `next-env.d.ts` and recreate it through `next typegen` before TypeScript.
+
+### Rejected
+
+- Upgrade to Next 16 only to consume `isolatedDevBuild`; #624 owns deliberate framework
+  certification.
+- Retry missing-chunk builds, stop the shared workstation, or weaken browser assertions.
+- Let scripts choose arbitrary output directories or allow cleanup outside the repository.
+- Treat server-rendered loading copy as proof that the client lifecycle hydrated.
+
+### Validation and publication decision
+
+Workbench #833 owns the implementation and protected concurrency gate. Issue #836 remains a
+separate source-lifecycle tracker until the isolated browser runtime proves whether its Performance
+loading symptom survives. The architecture note, repository context, CI wiki, focused tests,
+protected review, exact-main validation, wiki publication/parity, issue closure, and clean branch
+restoration are required. No Gateway/API/OpenAPI, calculation, authentication, entitlement, or
+product-screen behavior changed.
+
 ## Discussion Pack Review: source-backed conversation preparation
 
 ### Business job
