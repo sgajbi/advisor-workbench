@@ -1153,8 +1153,10 @@ Important validation expectations:
 34. Source-selection controls belong beside every Performance decision view that they govern.
     Summary, Analysis, and Risk must reuse one component and one complete request-shaping path for
     horizon, basis, explicit review window, frequency, and benchmark. Render that control bar once
-    per mode; downstream comparison and risk panels inherit the confirmed source context instead of
-    adding page-local selectors. Keep exact dates behind the Custom dates disclosure, comparison
+    per mode, but expose only controls consumed by that mode's governed source request; a shared
+    control must not imply unsupported authority. Downstream comparison and risk panels inherit
+    only their supported confirmed source context instead of adding page-local selectors. Keep
+    exact dates behind the Custom dates disclosure, comparison
     display overrides behind their own disclosure, return-view presentation local to the Summary
     Return History module, and analytical segment selection local to Analysis. Preserve the
     last confirmed evidence and labels while a new selection is pending or failed; restore the

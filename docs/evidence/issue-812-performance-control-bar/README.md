@@ -6,9 +6,11 @@ review evidence, not canonical live-service proof, a client demo pack, or bank c
 
 ## Proven Product Behaviour
 
-- Performance Summary, Analysis, and Risk render one shared source-selection control bar.
-- Horizon, return basis, frequency, and benchmark remain visible; exact dates are disclosed only
-  when **Custom dates** is selected.
+- Performance Summary, Analysis, and Risk render one shared, capability-aware source-selection
+  control bar.
+- Horizon, return basis, and benchmark remain visible across those modes; Frequency remains visible
+  only where the governed source request consumes it. Exact dates are disclosed only when
+  **Custom dates** is selected.
 - Explicit date inputs retain their complete value and action at every tested width.
 - Summary defaults to the six-column **Absolute** Return History review. **Relative** and
   **Combined** are optional display choices, not additional source selectors.
