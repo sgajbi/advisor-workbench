@@ -2,6 +2,8 @@
 
 import { KpiStatTile } from "@/design-system";
 
+import styles from "./portfolio-health-strip.module.css";
+
 type HealthTile = {
   key: string;
   label: string;
@@ -18,9 +20,13 @@ export default function PortfolioHealthStrip({
   tiles: HealthTile[];
 }) {
   return (
-    <div className="portfolio-summary-band" role="group" aria-label="Portfolio key metrics">
+    <div
+      className={`portfolio-summary-band ${styles.strip}`}
+      role="group"
+      aria-label="Portfolio key metrics"
+    >
       {tiles.map((tile) => (
-        <div key={tile.key} className="portfolio-summary-band-item">
+        <div key={tile.key} className={`portfolio-summary-band-item ${styles.item}`}>
           <KpiStatTile
             label={tile.label}
             value={tile.value}
@@ -28,6 +34,7 @@ export default function PortfolioHealthStrip({
             definition={tile.definition}
             valueTone={tile.tone}
             onClick={tile.onClick}
+            density="compact"
           />
         </div>
       ))}
