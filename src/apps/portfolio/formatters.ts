@@ -72,20 +72,6 @@ export function formatStatus(value: string | null | undefined): string {
     .replace(/\b\w/g, (segment) => segment.toUpperCase());
 }
 
-export function formatBookingCenter(value: string | null | undefined): string {
-  if (!value) {
-    return "N/A";
-  }
-
-  const normalized = value.trim().toUpperCase();
-  switch (normalized) {
-    case "SG":
-      return "Singapore";
-    default:
-      return value;
-  }
-}
-
 function formatCompactNumber(value: number, maximumFractionDigits: number): string {
   return formatNumber(value, {
     maximumFractionDigits,
