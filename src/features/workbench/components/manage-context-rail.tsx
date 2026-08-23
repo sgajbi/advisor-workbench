@@ -3,7 +3,6 @@ import {
   Text,
   WorkbenchRailCard,
 } from "@/design-system";
-import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
 import { buildReviewContextHref } from "@/shell/review-context";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
@@ -12,14 +11,10 @@ import {
   businessStateLabel,
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
-  formatBusinessBook,
-  formatBusinessMandateType,
   getManageExceptionEvidencePosture,
-  readStringFromResponse,
 } from "@/features/workbench/manage-workspace-view-model";
 import {
   buildManageModeHref,
-  getManageModeDefinition,
   type ManageMode,
 } from "@/features/workbench/manage-workspace-navigation";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
@@ -34,8 +29,6 @@ export default function ManageContextRail({
   activeMode: ManageMode;
   reviewContext: PortfolioReviewContext;
 }) {
-  const portfolio = data.portfolio.portfolio;
-  const modeDefinition = getManageModeDefinition(activeMode);
   const commandModel = buildDpmCommandCenterPanelModel({
     commandCenter: data.commandCenter,
     exceptions: data.commandCenterExceptions,
@@ -79,36 +72,6 @@ export default function ManageContextRail({
 
   return (
     <div className="manage-context-rail">
-      <WorkbenchRailCard>
-        <div className="manage-context-rail-header">
-          <Text variant="label">Decision Support</Text>
-          <strong>{modeDefinition.title}</strong>
-        </div>
-        <DefinitionList
-          ariaLabel="Manage portfolio context"
-          items={[
-            { label: "Client", value: portfolio.client_id },
-            { label: "Booking Centre", value: portfolio.booking_center_code },
-            {
-              label: "Mandate Type",
-              value: formatBusinessMandateType(
-                readStringFromResponse(data.mandate, "mandate_type")
-              ),
-            },
-            {
-              label: "Portfolio Manager Book",
-              value: formatBusinessBook(readStringFromResponse(data.mandate, "pm_book_id")),
-            },
-            {
-              label: "Business Date",
-              value: formatBusinessDateValue(data.portfolio.as_of_date, {
-                nullDisplay: "Not confirmed",
-              }),
-            },
-          ]}
-        />
-      </WorkbenchRailCard>
-
       <WorkbenchRailCard>
         <div className="manage-context-rail-header">
           <Text variant="label">Review Posture</Text>

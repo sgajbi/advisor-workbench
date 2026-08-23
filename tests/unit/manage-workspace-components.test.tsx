@@ -498,7 +498,7 @@ describe("manage workspace split components", () => {
     expect(screen.queryByText("Ready for review")).not.toBeInTheDocument();
   });
 
-  it("renders the context rail without exposing client communication actions", () => {
+  it("renders decision posture and actions without repeating shell-owned identity", () => {
     render(
       <ManageContextRail
         data={buildManageWorkspaceData()}
@@ -512,13 +512,8 @@ describe("manage workspace split components", () => {
       />,
     );
 
-    expect(screen.getByText("Decision Support")).toBeInTheDocument();
-    expect(screen.getByText("Outcome Reviews")).toBeInTheDocument();
-
-    const portfolioContext = screen.getByLabelText("Manage portfolio context");
-    expect(within(portfolioContext).getByText("Business Date")).toBeInTheDocument();
-    expect(within(portfolioContext).getByText("13 May 2026")).toBeInTheDocument();
-    expect(within(portfolioContext).queryByText("2026-05-13")).not.toBeInTheDocument();
+    expect(screen.queryByText("Decision Support")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
 
     const posture = screen.getByLabelText("Manage review posture");
     expect(within(posture).getByText("Attention Items")).toBeInTheDocument();

@@ -1,5 +1,10 @@
+import type { ReviewContextStripModel } from "@/design-system";
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import type { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
-import { preserveBusinessAcronyms } from "@/features/workbench/business-label-formatters";
+import {
+  formatBusinessBookingCenter,
+  preserveBusinessAcronyms,
+} from "@/features/workbench/business-label-formatters";
 
 import type { ManageWorkspaceData } from "./manage-workspace-data";
 
@@ -45,6 +50,43 @@ export type ManageExceptionRowsResult = {
 export type ManageExceptionEvidencePosture = "complete" | "partial" | "unavailable";
 
 type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
+
+export function buildManageReviewContextStrip(
+  data: ManageWorkspaceData,
+  notice?: ReviewContextStripModel["notice"],
+): ReviewContextStripModel {
+  const portfolio = data.portfolio.portfolio;
+  const mandateValue = readStringFromResponse(data.mandate, "mandate_type");
+  const mandateType = mandateValue
+    ? formatBusinessMandateType(mandateValue)
+    : null;
+  const bookingCenter = formatBusinessBookingCenter(
+    portfolio.booking_center_code,
+  );
+  const sourceState = [
+    portfolio.client_id,
+    mandateType,
+    bookingCenter,
+    data.portfolio.as_of_date,
+    portfolio.base_currency,
+  ].every(Boolean)
+    ? "confirmed"
+    : "partial";
+
+  return {
+    portfolioName: mandateType ?? "Managed portfolio",
+    portfolioId: portfolio.portfolio_id,
+    clientId: portfolio.client_id,
+    mandateType,
+    bookingCenter,
+    businessDate: formatBusinessDateValue(data.portfolio.as_of_date, {
+      nullDisplay: "Not confirmed",
+    }),
+    reportingCurrency: portfolio.base_currency,
+    sourceState,
+    notice,
+  };
+}
 
 export function buildManageExceptionRows(
   exceptions: ManageWorkspaceData["commandCenterExceptions"]
