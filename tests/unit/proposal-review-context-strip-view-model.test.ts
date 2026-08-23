@@ -29,7 +29,7 @@ describe("proposal review context strip view model", () => {
         portfolioContext: buildPortfolioWorkspace(),
       }),
     ).toEqual({
-      portfolioName: "Portfolio context unavailable",
+      portfolioName: "Portfolio not confirmed",
       sourceState: "unavailable",
       notice: {
         label: "Supporting context unavailable",
