@@ -16,6 +16,7 @@ import {
   mergePortfolioWorkspace,
 } from "../api";
 import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recovery-observability";
+import { isPortfolioWorkspaceIdentityConfirmed } from "../portfolio-selection";
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
@@ -36,9 +37,7 @@ import {
 } from "../view-model";
 import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
 import PortfolioPageLayout from "./portfolio-page-layout";
-import {
-  buildPortfolioReviewContextStrip,
-} from "../portfolio-review-context-strip-view-model";
+import { buildPortfolioReviewContextStrip } from "../portfolio-review-context-strip-view-model";
 import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
@@ -87,13 +86,26 @@ export default function PortfolioWorkspaceClient({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const confirmedInitialWorkspace = isPortfolioWorkspaceIdentityConfirmed(
+    initialWorkspace,
+    selectedPortfolioId,
+  )
+    ? initialWorkspace
+    : null;
   const initialWorkspaceSourceKey = useMemo(
-    () => buildPortfolioWorkspaceSourceKey(selectedPortfolioId, initialWorkspace),
-    [initialWorkspace, selectedPortfolioId]
+    () =>
+      buildPortfolioWorkspaceSourceKey(
+        selectedPortfolioId,
+        confirmedInitialWorkspace,
+      ),
+    [confirmedInitialWorkspace, selectedPortfolioId],
   );
   const initialControlValues = useMemo(
-    () => initialControls ?? buildInitialPortfolioControls(initialWorkspace),
-    [initialControls, initialWorkspace],
+    () =>
+      confirmedInitialWorkspace && initialControls
+        ? initialControls
+        : buildInitialPortfolioControls(confirmedInitialWorkspace),
+    [confirmedInitialWorkspace, initialControls],
   );
   const [controlDraft, setControlDraft] = useState<PortfolioControlStateDraft>({
     sourceKey: initialWorkspaceSourceKey,
@@ -116,8 +128,7 @@ export default function PortfolioWorkspaceClient({
             : initialControlValues;
         return {
           sourceKey: initialWorkspaceSourceKey,
-          controls:
-            typeof next === "function" ? next(currentControls) : next,
+          controls: typeof next === "function" ? next(currentControls) : next,
         };
       });
     },
@@ -125,23 +136,24 @@ export default function PortfolioWorkspaceClient({
   );
   const [workspaceDraft, setWorkspaceDraft] = useState<WorkspaceStateDraft>({
     sourceKey: initialWorkspaceSourceKey,
-    workspace: initialWorkspace,
+    workspace: confirmedInitialWorkspace,
   });
   const initialShellRequestState: ShellRequestState = {
     sourceKey: initialWorkspaceSourceKey,
-    status: initialWorkspace ? "loaded" : "idle",
+    status: confirmedInitialWorkspace ? "loaded" : "idle",
   };
   const shellRequestRef = useRef<ShellRequestState>(initialShellRequestState);
-  const [shellRequestState, setShellRequestState] =
-    useState<ShellRequestState>(initialShellRequestState);
+  const [shellRequestState, setShellRequestState] = useState<ShellRequestState>(
+    initialShellRequestState,
+  );
   const workspaceState =
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
       ? workspaceDraft.workspace
-      : initialWorkspace;
+      : confirmedInitialWorkspace;
   const activeShellRequestStatus =
     shellRequestState.sourceKey === initialWorkspaceSourceKey
       ? shellRequestState.status
-      : initialWorkspace
+      : confirmedInitialWorkspace
         ? "loaded"
         : "idle";
   const setWorkspaceState = useCallback(
@@ -155,25 +167,27 @@ export default function PortfolioWorkspaceClient({
         const currentWorkspace =
           current.sourceKey === initialWorkspaceSourceKey
             ? current.workspace
-            : initialWorkspace;
+            : confirmedInitialWorkspace;
         return {
           sourceKey: initialWorkspaceSourceKey,
-          workspace:
-            typeof next === "function" ? next(currentWorkspace) : next,
+          workspace: typeof next === "function" ? next(currentWorkspace) : next,
         };
       });
     },
-    [initialWorkspace, initialWorkspaceSourceKey],
+    [confirmedInitialWorkspace, initialWorkspaceSourceKey],
   );
   const interactiveReady = useClientMounted();
-  const summaryRequestRef = useRef<{ key: string; status: "loading" | "loaded" } | null>(null);
+  const summaryRequestRef = useRef<{
+    key: string;
+    status: "loading" | "loaded";
+  } | null>(null);
   const controlRequestSequence = useRef(0);
   const controlRequestSourceKey = useRef(initialWorkspaceSourceKey);
   const [controlTransition, setControlTransition] =
     useState<PortfolioControlTransition | null>(null);
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
-    [controls, workspaceState]
+    [controls, workspaceState],
   );
 
   useEffect(() => {
@@ -190,7 +204,7 @@ export default function PortfolioWorkspaceClient({
       if (shellRequestRef.current.sourceKey !== initialWorkspaceSourceKey) {
         const resetState: ShellRequestState = {
           sourceKey: initialWorkspaceSourceKey,
-          status: initialWorkspace ? "loaded" : "idle",
+          status: confirmedInitialWorkspace ? "loaded" : "idle",
         };
         shellRequestRef.current = resetState;
         setShellRequestState(resetState);
@@ -198,7 +212,7 @@ export default function PortfolioWorkspaceClient({
       if (
         !selectedPortfolioId ||
         workspaceState ||
-        initialWorkspace ||
+        confirmedInitialWorkspace ||
         shellRequestRef.current.status !== "idle"
       ) {
         return;
@@ -210,12 +224,18 @@ export default function PortfolioWorkspaceClient({
       };
       shellRequestRef.current = loadingState;
       setShellRequestState(loadingState);
-      const shellWorkspace = await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
+      const shellWorkspace =
+        await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
       if (cancelled) {
         return;
       }
 
-      if (shellWorkspace) {
+      if (
+        isPortfolioWorkspaceIdentityConfirmed(
+          shellWorkspace,
+          selectedPortfolioId,
+        )
+      ) {
         setControls((current) => {
           const defaults = buildInitialPortfolioControls(shellWorkspace);
           return {
@@ -257,7 +277,7 @@ export default function PortfolioWorkspaceClient({
       }
     };
   }, [
-    initialWorkspace,
+    confirmedInitialWorkspace,
     initialWorkspaceSourceKey,
     selectedPortfolioId,
     setControls,
@@ -273,7 +293,10 @@ export default function PortfolioWorkspaceClient({
         return;
       }
 
-      const request = buildPortfolioSummaryDetailsRequest(selectedPortfolioId, context);
+      const request = buildPortfolioSummaryDetailsRequest(
+        selectedPortfolioId,
+        context,
+      );
       const scopedRequestKey = `${initialWorkspaceSourceKey}|${request.key}`;
       if (summaryRequestRef.current?.key === scopedRequestKey) {
         return;
@@ -283,7 +306,7 @@ export default function PortfolioWorkspaceClient({
       const details = await getPortfolioWorkspaceSummaryDetailsOnce(
         scopedRequestKey,
         selectedPortfolioId,
-        request.params
+        request.params,
       );
       if (cancelled) {
         return;
@@ -301,7 +324,7 @@ export default function PortfolioWorkspaceClient({
       let completedRequestKey = scopedRequestKey;
       if (responseIsCurrent) {
         setWorkspaceState((current) =>
-          current ? mergePortfolioWorkspace(current, details) : current
+          current ? mergePortfolioWorkspace(current, details) : current,
         );
         if (sourceOverrideRequested) {
           setControlTransition({
@@ -345,7 +368,10 @@ export default function PortfolioWorkspaceClient({
           });
         }
       }
-      summaryRequestRef.current = { key: completedRequestKey, status: "loaded" };
+      summaryRequestRef.current = {
+        key: completedRequestKey,
+        status: "loaded",
+      };
     }
 
     void loadSummaryDetails();
@@ -368,7 +394,7 @@ export default function PortfolioWorkspaceClient({
 
   const workspace = useMemo(
     () => derivePortfolioWorkspace(workspaceState, controls),
-    [controls, workspaceState]
+    [controls, workspaceState],
   );
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
     const nextControls = applyPortfolioControlPatch(controls, patch);
@@ -496,7 +522,8 @@ export default function PortfolioWorkspaceClient({
             workspace
               ? "ready"
               : selectedPortfolioId &&
-                  (activeShellRequestStatus === "idle" || activeShellRequestStatus === "loading")
+                  (activeShellRequestStatus === "idle" ||
+                    activeShellRequestStatus === "loading")
                 ? "loading"
                 : "unavailable"
           }
@@ -521,8 +548,12 @@ export default function PortfolioWorkspaceClient({
                   context={context}
                   onControlsChange={handleControlsChange}
                   onExport={handleExport}
-                  quickActions={workspaceState ? getOrderedWorkflowCues(workspaceState) : []}
-                  contextChangePending={activeControlTransition?.status === "pending"}
+                  quickActions={
+                    workspaceState ? getOrderedWorkflowCues(workspaceState) : []
+                  }
+                  contextChangePending={
+                    activeControlTransition?.status === "pending"
+                  }
                 />
                 {activeControlTransition ? (
                   <PortfolioControlTransitionStatus
@@ -626,14 +657,17 @@ function getPortfolioWorkspaceSummaryDetailsOnce(
     reportStartDate: string;
     reportEndDate: string;
     usesCustomDateRange?: boolean;
-  }
+  },
 ) {
   const existingRequest = summaryDetailsInflightRequests.get(requestKey);
   if (existingRequest) {
     return existingRequest;
   }
 
-  const request = getPortfolioWorkspaceSummaryDetails(portfolioId, params).finally(() => {
+  const request = getPortfolioWorkspaceSummaryDetails(
+    portfolioId,
+    params,
+  ).finally(() => {
     summaryDetailsInflightRequests.delete(requestKey);
   });
   summaryDetailsInflightRequests.set(requestKey, request);

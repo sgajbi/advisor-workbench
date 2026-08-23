@@ -23,43 +23,57 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../../src/apps/portfolio/api", () => ({
-  getPortfolioWorkspaceShell: (...args: unknown[]) => getShellWorkspaceMock(...args),
-  getPortfolioWorkspaceSummaryDetails: (...args: unknown[]) => getSummaryDetailsMock(...args),
+  getPortfolioWorkspaceShell: (...args: unknown[]) =>
+    getShellWorkspaceMock(...args),
+  getPortfolioWorkspaceSummaryDetails: (...args: unknown[]) =>
+    getSummaryDetailsMock(...args),
   mergePortfolioWorkspace: (
     current: PortfolioWorkspace,
-    details: Partial<PortfolioWorkspace>
+    details: Partial<PortfolioWorkspace>,
   ) => ({ ...current, ...details }),
 }));
 
-vi.mock("../../src/apps/portfolio/components/portfolio-workspace-toolbar", () => ({
-  default: ({
-    controls,
-    onControlsChange,
-  }: {
-    controls: {
-      viewMode: "summary" | "detailed";
-      timeWindow: "30D" | "YTD" | "1Y";
-    };
-    onControlsChange: (patch: {
-      viewMode?: "summary" | "detailed";
-      timeWindow?: "30D" | "YTD" | "1Y";
-    }) => void;
-  }) => (
-    <div>
-      <div data-testid="view-mode">{controls.viewMode}</div>
-      <div data-testid="time-window">{controls.timeWindow}</div>
-      <button type="button" onClick={() => onControlsChange({ viewMode: "detailed" })}>
-        Switch Detailed
-      </button>
-      <button type="button" onClick={() => onControlsChange({ timeWindow: "YTD" })}>
-        Select YTD
-      </button>
-      <button type="button" onClick={() => onControlsChange({ timeWindow: "1Y" })}>
-        Select 1Y
-      </button>
-    </div>
-  ),
-}));
+vi.mock(
+  "../../src/apps/portfolio/components/portfolio-workspace-toolbar",
+  () => ({
+    default: ({
+      controls,
+      onControlsChange,
+    }: {
+      controls: {
+        viewMode: "summary" | "detailed";
+        timeWindow: "30D" | "YTD" | "1Y";
+      };
+      onControlsChange: (patch: {
+        viewMode?: "summary" | "detailed";
+        timeWindow?: "30D" | "YTD" | "1Y";
+      }) => void;
+    }) => (
+      <div>
+        <div data-testid="view-mode">{controls.viewMode}</div>
+        <div data-testid="time-window">{controls.timeWindow}</div>
+        <button
+          type="button"
+          onClick={() => onControlsChange({ viewMode: "detailed" })}
+        >
+          Switch Detailed
+        </button>
+        <button
+          type="button"
+          onClick={() => onControlsChange({ timeWindow: "YTD" })}
+        >
+          Select YTD
+        </button>
+        <button
+          type="button"
+          onClick={() => onControlsChange({ timeWindow: "1Y" })}
+        >
+          Select 1Y
+        </button>
+      </div>
+    ),
+  }),
+);
 
 vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
   default: ({
@@ -74,12 +88,24 @@ vi.mock("../../src/apps/portfolio/components/portfolio-workspace", () => ({
     <div>
       {toolbar}
       <div data-testid="shell-status">{workspaceStatus}</div>
-      <div data-testid="portfolio-id">{workspace?.portfolio?.portfolio_id ?? "none"}</div>
-      <div data-testid="market-value">{workspace?.summary?.market_value_base ?? "none"}</div>
-      <div data-testid="position-count">{workspace?.positions.length ?? "none"}</div>
-      <div data-testid="insight-key">{workspace?.insights?.[0]?.key ?? "none"}</div>
-      <div data-testid="exception-key">{workspace?.exception_summaries?.[0]?.key ?? "none"}</div>
-      <div data-testid="workflow-action">{workspace?.workflow_actions?.[0]?.title ?? "none"}</div>
+      <div data-testid="portfolio-id">
+        {workspace?.portfolio?.portfolio_id ?? "none"}
+      </div>
+      <div data-testid="market-value">
+        {workspace?.summary?.market_value_base ?? "none"}
+      </div>
+      <div data-testid="position-count">
+        {workspace?.positions.length ?? "none"}
+      </div>
+      <div data-testid="insight-key">
+        {workspace?.insights?.[0]?.key ?? "none"}
+      </div>
+      <div data-testid="exception-key">
+        {workspace?.exception_summaries?.[0]?.key ?? "none"}
+      </div>
+      <div data-testid="workflow-action">
+        {workspace?.workflow_actions?.[0]?.title ?? "none"}
+      </div>
     </div>
   ),
 }));
@@ -165,7 +191,8 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
     routerPushMock.mockReset();
 
-    let confirmDetails: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    let confirmDetails:
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
     getSummaryDetailsMock.mockReturnValueOnce(
       new Promise((resolve) => {
         confirmDetails = resolve;
@@ -176,7 +203,9 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
-    expect(screen.getByRole("status")).toHaveTextContent("Confirming review context");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Confirming review context",
+    );
     expect(routerPushMock).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -185,7 +214,9 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => {
       expect(screen.getByTestId("time-window")).toHaveTextContent("YTD");
     });
-    expect(screen.getByRole("status")).toHaveTextContent("Review context confirmed");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Review context confirmed",
+    );
     expect(routerPushMock).toHaveBeenCalledWith(
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=YTD&reportingCurrency=USD",
       { scroll: false },
@@ -260,7 +291,8 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
 
     let confirmYtd: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
-    let confirmOneYear: ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    let confirmOneYear:
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
     getSummaryDetailsMock
       .mockReturnValueOnce(
         new Promise((resolve) => {
@@ -281,7 +313,9 @@ describe("PortfolioWorkspaceClient", () => {
     await act(async () => {
       confirmOneYear?.({ as_of_date: "2026-03-28", positions: [] });
     });
-    await waitFor(() => expect(screen.getByTestId("time-window")).toHaveTextContent("1Y"));
+    await waitFor(() =>
+      expect(screen.getByTestId("time-window")).toHaveTextContent("1Y"),
+    );
 
     await act(async () => {
       confirmYtd?.({ as_of_date: "2026-03-28", positions: [] });
@@ -315,8 +349,7 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
 
     let confirmFirstPortfolio:
-      | ((value: Partial<PortfolioWorkspace>) => void)
-      | undefined;
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
     getSummaryDetailsMock.mockReturnValueOnce(
       new Promise((resolve) => {
         confirmFirstPortfolio = resolve;
@@ -388,11 +421,13 @@ describe("PortfolioWorkspaceClient", () => {
           selectedPortfolioId="MANUAL_PB_USD_001"
           initialWorkspace={buildWorkspace()}
         />
-      </StrictMode>
+      </StrictMode>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("MANUAL_PB_USD_001");
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+        "MANUAL_PB_USD_001",
+      );
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
@@ -447,9 +482,15 @@ describe("PortfolioWorkspaceClient", () => {
     );
     expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
-    expect(screen.getByRole("alert")).toHaveTextContent("Review context was not changed");
-    expect(screen.getByTestId("review-context-strip")).toHaveTextContent("28 Mar 2026");
-    expect(screen.getByTestId("review-context-strip")).not.toHaveTextContent("20 Mar 2026");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Review context was not changed",
+    );
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "28 Mar 2026",
+    );
+    expect(screen.getByTestId("review-context-strip")).not.toHaveTextContent(
+      "20 Mar 2026",
+    );
     expect(routerReplaceMock).toHaveBeenCalledWith(
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
@@ -527,9 +568,12 @@ describe("PortfolioWorkspaceClient", () => {
     const strip = screen.getByTestId("review-context-strip");
     expect(strip).toHaveTextContent("28 Mar 2026");
     expect(strip).not.toHaveTextContent("20 Mar 2026");
-    const baseCurrencyFact = within(strip).getByText("Base currency").parentElement;
+    const baseCurrencyFact =
+      within(strip).getByText("Base currency").parentElement;
     expect(baseCurrencyFact).toHaveTextContent("USD");
-    expect(within(strip).queryByText("Reporting currency")).not.toBeInTheDocument();
+    expect(
+      within(strip).queryByText("Reporting currency"),
+    ).not.toBeInTheDocument();
   });
 
   it("promotes an alternate currency only after source detail confirms it", async () => {
@@ -572,9 +616,9 @@ describe("PortfolioWorkspaceClient", () => {
 
     const strip = screen.getByTestId("review-context-strip");
     await waitFor(() => {
-      expect(within(strip).getByText("Reporting currency").parentElement).toHaveTextContent(
-        "SGD",
-      );
+      expect(
+        within(strip).getByText("Reporting currency").parentElement,
+      ).toHaveTextContent("SGD");
     });
     expect(within(strip).queryByText("Base currency")).not.toBeInTheDocument();
   });
@@ -614,7 +658,7 @@ describe("PortfolioWorkspaceClient", () => {
       .mockReturnValueOnce(
         new Promise((resolve) => {
           firstDetailsRequest.resolve = resolve;
-        })
+        }),
       )
       .mockResolvedValueOnce({
         positions: [],
@@ -656,7 +700,7 @@ describe("PortfolioWorkspaceClient", () => {
         ]}
         selectedPortfolioId="MANUAL_PB_USD_001"
         initialWorkspace={initialWorkspace}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -676,11 +720,13 @@ describe("PortfolioWorkspaceClient", () => {
         ]}
         selectedPortfolioId="MANUAL_PB_USD_001"
         initialWorkspace={refreshedWorkspace}
-      />
+      />,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
     });
     await waitFor(() => {
       expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
@@ -694,7 +740,9 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
     });
   });
 
@@ -725,11 +773,13 @@ describe("PortfolioWorkspaceClient", () => {
           selectedPortfolioId="MANUAL_PB_USD_001"
           initialWorkspace={null}
         />
-      </StrictMode>
+      </StrictMode>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("MANUAL_PB_USD_001");
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+        "MANUAL_PB_USD_001",
+      );
     });
 
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
@@ -746,6 +796,52 @@ describe("PortfolioWorkspaceClient", () => {
       reportEndDate: "2026-03-28",
       usesCustomDateRange: false,
     });
+  });
+
+  it("withholds a foreign server-rendered shell and never publishes its identity", async () => {
+    getShellWorkspaceMock.mockResolvedValue(null);
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace("PB_FOREIGN_001")}
+        initialControls={buildInitialPortfolioControls(
+          buildWorkspace("PB_FOREIGN_001"),
+        )}
+      />,
+    );
+
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
+    expect(screen.queryByText("PB_FOREIGN_001")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("shell-status")).toHaveTextContent(
+        "unavailable",
+      );
+    });
+    expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a foreign recovery shell before requesting or rendering details", async () => {
+    getShellWorkspaceMock.mockResolvedValue(buildWorkspace("PB_FOREIGN_001"));
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={null}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("shell-status")).toHaveTextContent(
+        "unavailable",
+      );
+    });
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
+    expect(screen.queryByText("PB_FOREIGN_001")).not.toBeInTheDocument();
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
   });
 
   it("stops after one unavailable shell request instead of retrying continuously", async () => {
@@ -772,7 +868,7 @@ describe("PortfolioWorkspaceClient", () => {
           selectedPortfolioId="MANUAL_PB_USD_001"
           initialWorkspace={null}
         />
-      </StrictMode>
+      </StrictMode>,
     );
 
     await waitFor(() => {
@@ -785,7 +881,9 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("shell-status")).toHaveTextContent("unavailable");
+      expect(screen.getByTestId("shell-status")).toHaveTextContent(
+        "unavailable",
+      );
     });
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
     expect(getSummaryDetailsMock).not.toHaveBeenCalled();
@@ -849,7 +947,9 @@ describe("PortfolioWorkspaceClient", () => {
       shellResolvers.get("PORTFOLIO_B")?.(buildWorkspace("PORTFOLIO_B"));
     });
     await waitFor(() => {
-      expect(screen.getByTestId("portfolio-id")).toHaveTextContent("PORTFOLIO_B");
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+        "PORTFOLIO_B",
+      );
     });
     await waitFor(() => {
       expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSelectedPortfolioId } from "../../src/apps/portfolio/portfolio-selection";
+import {
+  isPortfolioWorkspaceIdentityConfirmed,
+  resolveSelectedPortfolioId,
+} from "../../src/apps/portfolio/portfolio-selection";
 
 describe("portfolio selection", () => {
   it("accepts only an explicitly requested portfolio confirmed by the catalogue", () => {
@@ -31,5 +34,22 @@ describe("portfolio selection", () => {
         "PB_NOT_ASSIGNED_001",
       ),
     ).toBeNull();
+  });
+
+  it("confirms a workspace only when its source identity matches the selected portfolio", () => {
+    const workspace = {
+      portfolio: { portfolio_id: "PB_SG_GLOBAL_BAL_001" },
+    };
+
+    expect(
+      isPortfolioWorkspaceIdentityConfirmed(workspace, "PB_SG_GLOBAL_BAL_001"),
+    ).toBe(true);
+    expect(
+      isPortfolioWorkspaceIdentityConfirmed(workspace, "PB_FOREIGN_001"),
+    ).toBe(false);
+    expect(isPortfolioWorkspaceIdentityConfirmed(workspace, null)).toBe(false);
+    expect(
+      isPortfolioWorkspaceIdentityConfirmed(null, "PB_SG_GLOBAL_BAL_001"),
+    ).toBe(false);
   });
 });
