@@ -1216,7 +1216,10 @@ test.describe('Performance workbench smoke', () => {
         page.getByRole('combobox', { name: 'Frequency' }),
       ).toHaveCount(0);
       await expect(
-        page.getByRole('group', { name: 'Risk analysis source selection' }),
+        page.getByRole('group', {
+          name: 'Risk analysis source selection',
+          exact: true,
+        }),
       ).toHaveAttribute('data-performance-frequency-control', 'hidden');
 
       const executiveEvidence = page.getByRole('region', {
