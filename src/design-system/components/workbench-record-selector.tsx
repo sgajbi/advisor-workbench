@@ -29,6 +29,8 @@ export default function WorkbenchRecordSelector<T extends string>({
   onSelectionChange,
   className,
   layout = "list",
+  detailId,
+  onOpenDetail,
 }: {
   ariaLabel: string;
   items: ReadonlyArray<WorkbenchRecordSelectorItem<T>>;
@@ -36,6 +38,8 @@ export default function WorkbenchRecordSelector<T extends string>({
   onSelectionChange: (key: T) => void;
   className?: string;
   layout?: "list" | "grid";
+  detailId?: string;
+  onOpenDetail?: (key: T) => void;
 }) {
   const optionRefs = useRef(new Map<T, HTMLButtonElement>());
   const enabledItems = items.filter((item) => !item.disabled);
@@ -99,6 +103,7 @@ export default function WorkbenchRecordSelector<T extends string>({
             role="option"
             aria-selected={selected}
             aria-disabled={item.disabled || undefined}
+            aria-controls={!item.disabled ? detailId : undefined}
             tabIndex={index === tabStopIndex ? 0 : -1}
             className={cx(styles.item, selected && styles.selected)}
             data-state={selected ? "selected" : "unselected"}
@@ -106,7 +111,15 @@ export default function WorkbenchRecordSelector<T extends string>({
               if (!item.disabled && item.key !== selectedKey)
                 onSelectionChange(item.key);
             }}
-            onKeyDown={(event) => moveSelection(event, item.key)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !item.disabled) {
+                event.preventDefault();
+                if (item.key !== selectedKey) onSelectionChange(item.key);
+                onOpenDetail?.(item.key);
+                return;
+              }
+              moveSelection(event, item.key);
+            }}
           >
             <span className={styles.heading}>
               <span className={styles.identity}>
