@@ -141,17 +141,17 @@ test.describe('UI smoke checks', () => {
     ).toBeVisible({ timeout: 60000 });
   });
 
-  test('portfolio review navigation prioritizes the selected workspace when stacked', async ({ page }) => {
+  test('workspace navigation prioritizes the selected business task when stacked', async ({ page }) => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 519, height: 900 });
-    await page.goto('/income?portfolioId=PB_SG_GLOBAL_BAL_001', {
+    await page.goto('/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&reportingCurrency=USD', {
       waitUntil: 'domcontentloaded',
       timeout: 60000,
     });
 
-    const currentView = page.getByRole('button', { name: /Current view Income/i });
+    const currentView = page.getByRole('button', { name: /Current view Builder/i });
     const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
-    const workspaceHeading = page.getByRole('heading', { name: /^Income & Activity$/i });
+    const workspaceHeading = page.getByRole('heading', { name: /^Proposal Workspace$/i });
 
     await expect(currentView).toBeVisible({ timeout: 60000 });
     await expect(currentView).toHaveAttribute('aria-expanded', 'false');
@@ -162,12 +162,12 @@ test.describe('UI smoke checks', () => {
 
     await currentView.click();
     await expect(navigation).toBeVisible();
-    const activeIncomeLink = navigation.getByRole('link', {
-      name: /Income and activity Booked income, fees, and taxes/i,
+    const activeProposalLink = navigation.getByRole('link', {
+      name: /Proposals Advice lifecycle and approvals/i,
     });
-    await expect(activeIncomeLink).toHaveAttribute('aria-current', 'page');
-    await activeIncomeLink.focus();
-    await activeIncomeLink.press('Escape');
+    await expect(activeProposalLink).toHaveAttribute('aria-current', 'page');
+    await activeProposalLink.focus();
+    await activeProposalLink.press('Escape');
     await expect(navigation).toBeHidden();
     await expect(currentView).toBeFocused();
 
