@@ -52,7 +52,6 @@ export default function PerformanceMultiHorizonPanel({
   returnView?: PerformanceChartViewMode;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
-  const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const inheritedBasis = detailBasis === "GROSS" ? "gross" : "net";
   const request = useMemo(
     () => ({
@@ -236,13 +235,11 @@ export default function PerformanceMultiHorizonPanel({
               key={`${detailBasis}:${returnView}`}
               rows={rows}
               reportingCurrency={reportingCurrency}
-              tableView={tableView}
               inheritedBasis={inheritedBasis}
               inheritedReturnView={returnView}
               selectedPeriodLabel={presentation.selectedPeriodLabel}
               hasRelativeVisual={hasRelativeVisual}
               isMultiObservation={isMultiObservation}
-              onTableViewChange={setTableView}
             />
           </>
         ) : (
@@ -261,24 +258,21 @@ export default function PerformanceMultiHorizonPanel({
 function PerformanceHorizonComparisonContent({
   rows,
   reportingCurrency,
-  tableView,
   inheritedBasis,
   inheritedReturnView,
   selectedPeriodLabel,
   hasRelativeVisual,
   isMultiObservation,
-  onTableViewChange,
 }: {
   rows: NonNullable<WorkbenchPerformanceHorizonComparison["rows"]>;
   reportingCurrency: string;
-  tableView: PerformanceHorizonTableView;
   inheritedBasis: PerformanceHorizonBasisView;
   inheritedReturnView: PerformanceChartViewMode;
   selectedPeriodLabel: string;
   hasRelativeVisual: boolean;
   isMultiObservation: boolean;
-  onTableViewChange: (value: PerformanceHorizonTableView) => void;
 }) {
+  const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
   const [basisSelection, setBasisSelection] =
     useState<PerformanceHorizonBasisSelection>("inherit");
   const [visualSelection, setVisualSelection] =
@@ -320,7 +314,7 @@ function PerformanceHorizonComparisonContent({
           resolvedVisualMode={resolvedVisualMode}
           hasRelativeVisual={hasRelativeVisual}
           showVisualMode={isMultiObservation}
-          onTableViewChange={onTableViewChange}
+          onTableViewChange={setTableView}
           onBasisSelectionChange={setBasisSelection}
           onVisualSelectionChange={setVisualSelection}
         />

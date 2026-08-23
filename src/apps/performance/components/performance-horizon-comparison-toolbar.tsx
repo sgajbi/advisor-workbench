@@ -40,18 +40,43 @@ export default function PerformanceHorizonComparisonToolbar({
   onBasisSelectionChange,
   onVisualSelectionChange,
 }: PerformanceHorizonComparisonToolbarProps) {
-  const hasOverride = basisSelection !== "inherit" || visualSelection !== "inherit";
+  const hasOverride =
+    tableView !== "combined" ||
+    basisSelection !== "inherit" ||
+    visualSelection !== "inherit";
+  const hasInheritedVisualAdjustment =
+    visualSelection === "inherit" &&
+    (inheritedReturnView === "combined" ||
+      (inheritedReturnView === "relative" && resolvedVisualMode !== "relative"));
+  const displayState = hasOverride
+    ? "override"
+    : hasInheritedVisualAdjustment
+      ? "adjusted"
+      : "inherited";
   const basisLabel = basisSelection === "inherit" ? inheritedBasis : basisSelection;
-  const returnLabel = visualSelection === "inherit" ? inheritedReturnView : resolvedVisualMode;
+  const contextLabel = hasOverride
+    ? "Comparison display override"
+    : hasInheritedVisualAdjustment
+      ? "Horizon view adjusted to available evidence"
+      : "Uses analysis selection";
+  const evidenceLabel =
+    tableView === "returns"
+      ? "Returns only"
+      : tableView === "economics"
+        ? "Portfolio economics"
+        : null;
 
   return (
     <div
       className={styles.frame}
-      data-performance-comparison-display={hasOverride ? "override" : "inherited"}
+      data-performance-comparison-display={displayState}
     >
       <div className={styles.inheritance} aria-label="Horizon comparison display context">
-        <span>{hasOverride ? "Comparison display override" : "Uses analysis selection"}</span>
-        <strong>{formatSelectionLabel(basisLabel)} basis · {formatSelectionLabel(returnLabel)} return view</strong>
+        <span>{contextLabel}</span>
+        <strong>
+          {formatSelectionLabel(basisLabel)} basis · {formatSelectionLabel(resolvedVisualMode)} return view
+          {evidenceLabel ? ` · ${evidenceLabel}` : ""}
+        </strong>
       </div>
       <details className={styles.disclosure}>
         <summary>Adjust comparison display</summary>
