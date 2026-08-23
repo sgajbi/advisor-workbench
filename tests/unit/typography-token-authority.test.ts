@@ -6,6 +6,12 @@ import { describe, expect, it } from "vitest";
 const TYPOGRAPHY_TOKEN_DECLARATION =
   /^\s*(--(?:type-[a-z0-9-]+|text-(?:2xs|xs|sm|md|lg|xl|2xl|3xl)|leading-(?:tight|snug|body)|tracking-(?:label|micro|table|badge|tight))):/gim;
 
+const MIGRATED_PRODUCTIVE_SURFACES = [
+  "src/design-system/components/workbench-record-selector.module.css",
+  "src/features/proposals/components/proposal-builder-workflow-rail.module.css",
+  "src/features/proposals/components/proposal-simulate-form.module.css",
+] as const;
+
 function collectCssFiles(directory: string): string[] {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = path.join(directory, entry.name);
@@ -56,5 +62,33 @@ describe("typography token authority", () => {
     expect(selectorCss).not.toMatch(/font-size:\s*(?:11px|0\.6875rem)/);
     expect(selectorCss).not.toMatch(/font-weight:\s*(?:650|700|800)/);
     expect(selectorCss).not.toContain("text-transform: uppercase");
+  });
+
+  it.each(MIGRATED_PRODUCTIVE_SURFACES)(
+    "rejects raw type sizes and inflated emphasis in %s",
+    (relativePath) => {
+      const css = fs.readFileSync(
+        path.resolve(__dirname, `../../${relativePath}`),
+        "utf8"
+      );
+
+      expect(css).not.toMatch(/font-size:\s*\d+(?:\.\d+)?(?:px|rem)/);
+      expect(css).not.toMatch(/font-weight:\s*(?:650|675|700|720|735|750|760|800)/);
+      expect(css).not.toContain("text-transform: uppercase");
+    }
+  );
+
+  it("keeps Proposal Builder financial summary values indivisible", () => {
+    const proposalCss = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../../src/features/proposals/components/proposal-simulate-form.module.css"
+      ),
+      "utf8"
+    );
+
+    expect(proposalCss).toMatch(
+      /\.summaryStrip strong,[\s\S]*?\.impactSummaryGrid strong\s*\{[\s\S]*?white-space:\s*nowrap;/
+    );
   });
 });

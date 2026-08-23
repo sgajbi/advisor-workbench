@@ -27,21 +27,31 @@
 .outputGrid span,
 .impactSummaryGrid span {
   color: #5f6670;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 15px;
-  text-transform: uppercase;
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--tracking-label);
+  line-height: var(--type-label-line-height);
+  text-transform: none;
 }
 
 .summaryStrip strong,
-.resultGrid strong,
-.outputGrid strong,
 .impactSummaryGrid strong {
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
+  color: #131b2e;
+  font-size: var(--type-panel-title-size);
+  font-weight: var(--type-panel-title-weight);
+  line-height: var(--type-panel-title-line-height);
+}
+
+.resultGrid strong,
+.outputGrid strong {
   overflow-wrap: anywhere;
   color: #131b2e;
-  font-size: 16px;
-  line-height: 22px;
+  font-size: var(--type-body-size);
+  font-weight: 600;
+  line-height: var(--type-body-line-height);
 }
 
 .workspaceGrid {
@@ -83,15 +93,16 @@
 .resultPanel h3 {
   margin: 0;
   color: #191c1e;
-  font-size: 16px;
-  line-height: 22px;
+  font-size: var(--type-panel-title-size);
+  font-weight: var(--type-panel-title-weight);
+  line-height: var(--type-panel-title-line-height);
 }
 
 .panelHeader p {
   margin: 3px 0 0;
   color: #45464d;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
 }
 
 .panelHeader > span {
@@ -101,9 +112,9 @@
   border-radius: 999px;
   background: #fff6e8;
   color: #5b4300;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 15px;
+  font-size: var(--type-badge-size);
+  font-weight: var(--type-badge-weight);
+  line-height: var(--type-badge-line-height);
 }
 
 .evidencePanel {
@@ -135,6 +146,7 @@
   overflow-wrap: anywhere;
   color: var(--brand-strong);
   font-size: var(--type-body-size);
+  font-weight: 600;
   line-height: var(--type-body-line-height);
 }
 
@@ -197,7 +209,7 @@
   width: 100%;
   min-width: 780px;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--type-table-cell-size);
 }
 
 .positionsTable th {
@@ -205,33 +217,36 @@
   border-bottom: 1px solid #c6c6cd;
   background: #f2f4f6;
   color: #45464d;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  line-height: 15px;
+  font-size: var(--type-table-header-size);
+  font-weight: var(--type-table-header-weight);
+  letter-spacing: var(--tracking-table);
+  line-height: var(--type-table-header-line-height);
   text-align: left;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .positionsTable td {
   padding: 9px 10px;
   border-bottom: 1px solid #e0e3e5;
   color: #191c1e;
-  line-height: 18px;
+  font-size: var(--type-table-cell-size);
+  font-weight: var(--type-table-cell-weight);
+  line-height: var(--type-table-cell-line-height);
   vertical-align: top;
 }
 
 .positionsTable td:first-child strong {
   display: block;
   color: #191c1e;
-  font-size: 13px;
+  font-size: var(--type-table-cell-size);
 }
 
 .positionsTable td:first-child span {
   display: block;
   margin-top: 2px;
   color: #5f6670;
-  font-size: 11px;
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line-height);
 }
 
 .positionActions {
@@ -246,8 +261,8 @@
   border-radius: 4px;
   background: #fbfcfd;
   color: #45464d;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
 }
 
 .impactSummaryGrid {
@@ -267,12 +282,12 @@
 
 .positive {
   color: #047857 !important;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .negative {
   color: #b91c1c !important;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .stickyRail {
