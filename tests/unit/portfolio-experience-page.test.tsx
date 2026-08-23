@@ -55,4 +55,42 @@ describe("PortfolioExperiencePage", () => {
     );
     expect(screen.queryByTestId("portfolio-workspace-client")).not.toBeInTheDocument();
   });
+
+  it("withholds foreign source identity before unsupported-control recovery", async () => {
+    const selectedWorkspace = buildPortfolioWorkspace();
+    const foreignWorkspace = buildPortfolioWorkspace({
+      portfolio: {
+        ...selectedWorkspace.portfolio,
+        portfolio_id: "PB_FOREIGN_001",
+        display_name: "Foreign mandate",
+        client_id: "CLIENT_FOREIGN_001",
+      },
+    });
+    getPortfolioCatalogMock.mockResolvedValue([selectedWorkspace.portfolio]);
+    getPortfolioWorkspaceShellMock.mockResolvedValue(foreignWorkspace);
+
+    render(
+      await PortfolioExperiencePage({
+        searchParams: Promise.resolve({
+          portfolioId: selectedWorkspace.portfolio.portfolio_id,
+          asOfDate: "2024-01-01",
+        }),
+      }),
+    );
+
+    expect(
+      screen.getByText(/source did not confirm the selected portfolio identity/i),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "Portfolio not confirmed",
+    );
+    expect(screen.queryByText("Foreign mandate")).not.toBeInTheDocument();
+    expect(screen.queryByText("CLIENT_FOREIGN_001")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Choose another portfolio" }),
+    ).toHaveAttribute("href", "/book");
+    expect(
+      screen.queryByTestId("portfolio-workspace-client"),
+    ).not.toBeInTheDocument();
+  });
 });

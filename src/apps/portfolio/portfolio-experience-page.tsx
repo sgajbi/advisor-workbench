@@ -5,7 +5,10 @@ import {
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "./api";
 import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
-import { resolveSelectedPortfolioId } from "./portfolio-selection";
+import {
+  isPortfolioWorkspaceIdentityConfirmed,
+  resolveSelectedPortfolioId,
+} from "./portfolio-selection";
 import { resolvePortfolioReviewControls } from "./portfolio-workspace-controls";
 import { buildPortfolioReviewContextStrip } from "./portfolio-review-context-strip-view-model";
 
@@ -68,6 +71,24 @@ export default async function PortfolioExperiencePage({
         bodyClassName="portfolio-page-frame-body"
         sectionClassName="portfolio-page-sections"
         body="The selected portfolio is not available in the source-confirmed portfolio catalogue. No alternative portfolio was substituted."
+        href="/book"
+        actionLabel="Choose another portfolio"
+      />
+    );
+  }
+  if (
+    workspace &&
+    !isPortfolioWorkspaceIdentityConfirmed(workspace, selectedPortfolioId)
+  ) {
+    return (
+      <ReviewContextPageRecovery
+        pageKey="portfolio"
+        pageTitle="Portfolio Review"
+        pageSubtitle="Confirm the review portfolio before using decision evidence."
+        frameClassName="portfolio-page-frame"
+        bodyClassName="portfolio-page-frame-body"
+        sectionClassName="portfolio-page-sections"
+        body="The portfolio source did not confirm the selected portfolio identity. No portfolio context or analytical detail was displayed."
         href="/book"
         actionLabel="Choose another portfolio"
       />
