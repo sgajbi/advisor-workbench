@@ -23,6 +23,13 @@ function isAlreadyActivePolicyPackError(error) {
   );
 }
 
+function buildAdvisoryPolicyMutationIdempotencyKey(prefix, resource, requestBody) {
+  return buildPayloadScopedIdempotencyKey(prefix, {
+    resource,
+    request: requestBody,
+  });
+}
+
 async function ensureAdvisoryPolicyPackActive({ summary, scenario, gatewayBaseUrl, timeoutMs }) {
   const version = await fetchJson(
     summary,
@@ -57,7 +64,14 @@ async function ensureAdvisoryPolicyPackActive({ summary, scenario, gatewayBaseUr
       method: "POST",
       body: validateBody,
       headers: {
-        "Idempotency-Key": buildPayloadScopedIdempotencyKey("wb-policy-pack-validate", validateBody),
+        "Idempotency-Key": buildAdvisoryPolicyMutationIdempotencyKey(
+          "wb-policy-pack-validate",
+          {
+            policy_pack_id: scenario.policyPackId,
+            policy_version: scenario.policyVersion,
+          },
+          validateBody
+        ),
       },
     }
   );
@@ -85,7 +99,14 @@ async function ensureAdvisoryPolicyPackActive({ summary, scenario, gatewayBaseUr
         method: "POST",
         body: activateBody,
         headers: {
-          "Idempotency-Key": buildPayloadScopedIdempotencyKey("wb-policy-pack-activate", activateBody),
+          "Idempotency-Key": buildAdvisoryPolicyMutationIdempotencyKey(
+            "wb-policy-pack-activate",
+            {
+              policy_pack_id: scenario.policyPackId,
+              policy_version: scenario.policyVersion,
+            },
+            activateBody
+          ),
         },
       }
     );
@@ -135,7 +156,14 @@ export async function createCanonicalPolicyEvaluation({
       method: "POST",
       body: createBody,
       headers: {
-        "Idempotency-Key": buildPayloadScopedIdempotencyKey("wb-policy-evaluation", createBody),
+        "Idempotency-Key": buildAdvisoryPolicyMutationIdempotencyKey(
+          "wb-policy-evaluation",
+          {
+            proposal_id: proposalId,
+            proposal_version_id: proposalVersionId,
+          },
+          createBody
+        ),
       },
     }
   );
@@ -238,8 +266,9 @@ export async function createCanonicalPolicyEvaluation({
       method: "POST",
       body: reviewDecisionBody,
       headers: {
-        "Idempotency-Key": buildPayloadScopedIdempotencyKey(
+        "Idempotency-Key": buildAdvisoryPolicyMutationIdempotencyKey(
           "wb-policy-review-request",
+          { evaluation_id: evaluationId },
           reviewDecisionBody
         ),
       },

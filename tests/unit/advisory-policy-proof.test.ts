@@ -53,12 +53,16 @@ function policyPackVersionResponse(): Response {
   });
 }
 
-function createdEvaluationResponse({ portfolioId = PORTFOLIO_ID } = {}): Response {
+function createdEvaluationResponse({
+  portfolioId = PORTFOLIO_ID,
+  evaluationId = "pev_001",
+  evaluationHash = "evaluation-hash",
+} = {}): Response {
   return jsonResponse({
     data: {
       record: {
-        evaluation_id: "pev_001",
-        evaluation_hash: "evaluation-hash",
+        evaluation_id: evaluationId,
+        evaluation_hash: evaluationHash,
         evaluation_status: "PENDING_REVIEW",
         portfolio_id: portfolioId,
       },
@@ -66,12 +70,12 @@ function createdEvaluationResponse({ portfolioId = PORTFOLIO_ID } = {}): Respons
   });
 }
 
-function reviewQueueResponse({ portfolioId = PORTFOLIO_ID } = {}): Response {
+function reviewQueueResponse({ portfolioId = PORTFOLIO_ID, evaluationId = "pev_001" } = {}): Response {
   return jsonResponse({
     data: {
       items: [
         {
-          evaluation_id: "pev_001",
+          evaluation_id: evaluationId,
           evaluation_status: "PENDING_REVIEW",
           portfolio_id: portfolioId,
         },
@@ -100,6 +104,65 @@ function signOffPackageResponse(): Response {
       },
     },
   });
+}
+
+function successfulFetchMock({
+  evaluationId = "pev_001",
+  evaluationHash = "evaluation-hash",
+} = {}) {
+  return vi
+    .fn()
+    .mockResolvedValueOnce(policyPackVersionResponse())
+    .mockResolvedValueOnce(jsonResponse({ data: { status: "validated" } }))
+    .mockResolvedValueOnce(jsonResponse({ data: { status: "active" } }))
+    .mockResolvedValueOnce(createdEvaluationResponse({ evaluationId, evaluationHash }))
+    .mockResolvedValueOnce(reviewQueueResponse({ evaluationId }))
+    .mockResolvedValueOnce(workflowResponse())
+    .mockResolvedValueOnce(signOffPackageResponse())
+    .mockResolvedValueOnce(jsonResponse({ data: { status: "recorded" } }));
+}
+
+function readIdempotencyKey(fetchMock: ReturnType<typeof vi.fn>, callIndex: number): string {
+  const options = fetchMock.mock.calls[callIndex]?.[1] as RequestInit | undefined;
+  const headers = options?.headers as Record<string, string> | undefined;
+  const key = headers?.["Idempotency-Key"];
+  if (!key) {
+    throw new Error(`Fetch call ${callIndex} did not carry an Idempotency-Key header.`);
+  }
+  return key;
+}
+
+async function captureMutationKeys({
+  scenario = canonicalScenario(),
+  proposalId = "proposal_001",
+  proposalVersionId = "version_001",
+  evaluationId = "pev_001",
+  evaluationHash = "evaluation-hash",
+}: {
+  scenario?: CanonicalScenario;
+  proposalId?: string;
+  proposalVersionId?: string;
+  evaluationId?: string;
+  evaluationHash?: string;
+} = {}) {
+  const fetchMock = successfulFetchMock({ evaluationId, evaluationHash });
+  vi.stubGlobal("fetch", fetchMock);
+
+  await createCanonicalPolicyEvaluation({
+    summary: { apiChecks: [], workflowPackChecks: [] },
+    scenario,
+    gatewayBaseUrl: "http://gateway.dev.lotus",
+    proposalId,
+    proposalVersionId,
+    timeoutMs: 1000,
+  });
+
+  return {
+    validate: readIdempotencyKey(fetchMock, 1),
+    activate: readIdempotencyKey(fetchMock, 2),
+    create: readIdempotencyKey(fetchMock, 3),
+    signOff: readIdempotencyKey(fetchMock, 7),
+  };
 }
 
 afterEach(() => {
@@ -176,5 +239,54 @@ describe("advisory policy live proof", () => {
     ).rejects.toThrow(
       "Canonical policy review queue returned item outside portfolio scope PB_SG_GLOBAL_BAL_001"
     );
+  });
+
+  it("keeps advisory policy mutation keys stable for an exact resource and payload replay", async () => {
+    const first = await captureMutationKeys();
+    const replay = await captureMutationKeys();
+
+    expect(replay).toEqual(first);
+  });
+
+  it("isolates advisory policy mutation keys by their route resource identity", async () => {
+    const baseline = await captureMutationKeys();
+    const otherPolicyPack = await captureMutationKeys({
+      scenario: {
+        ...canonicalScenario(),
+        policyPackId: "SG_PRIVATE_BANKING_ALTERNATE",
+        policyVersion: "2026.06",
+      },
+    });
+    const otherProposal = await captureMutationKeys({
+      proposalId: "proposal_002",
+      evaluationId: "pev_002",
+    });
+    const otherProposalVersion = await captureMutationKeys({
+      proposalVersionId: "version_002",
+      evaluationId: "pev_003",
+    });
+
+    expect(otherPolicyPack.validate).not.toBe(baseline.validate);
+    expect(otherPolicyPack.activate).not.toBe(baseline.activate);
+    expect(otherProposal.create).not.toBe(baseline.create);
+    expect(otherProposal.signOff).not.toBe(baseline.signOff);
+    expect(otherProposalVersion.create).not.toBe(baseline.create);
+    expect(otherProposalVersion.signOff).not.toBe(baseline.signOff);
+  });
+
+  it("isolates advisory policy mutation keys when the request payload changes", async () => {
+    const baseline = await captureMutationKeys();
+    const changedCreatePayload = await captureMutationKeys({
+      scenario: {
+        ...canonicalScenario(),
+        createdBy: "workbench-canonical-validator-2",
+      },
+    });
+    const changedSignOffPayload = await captureMutationKeys({
+      evaluationHash: "evaluation-hash-2",
+    });
+
+    expect(changedCreatePayload.create).not.toBe(baseline.create);
+    expect(changedSignOffPayload.signOff).not.toBe(baseline.signOff);
   });
 });
