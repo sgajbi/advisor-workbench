@@ -1,5 +1,5 @@
 import ProposalDetailView from "@/features/proposals/components/proposal-detail-view";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import { normalizeAdvisoryJourneyMode } from "@/features/proposals/advisory-journey-navigation";
 import { normalizeProposalLifecycleMode } from "@/features/proposals/proposal-lifecycle-workspace-view-model";
 import {
@@ -24,7 +24,10 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
   const reviewContextResult = parseReviewContext(resolvedSearchParams);
   if (reviewContextResult.status === "invalid") {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Review"
+        pageSubtitle="Review proposal evidence, decisions, and lifecycle posture."
         body="The proposal address contains repeated or unsupported review context. No proposal record was requested."
         href="/book"
         actionLabel="Select a portfolio from My book"

@@ -5,7 +5,7 @@ import {
 import { loadManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import { normalizeManageMode } from "@/features/workbench/manage-workspace-navigation";
 import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import { parseReviewContext } from "@/shell/review-context";
 
 export default async function WorkbenchPage({
@@ -30,7 +30,10 @@ export default async function WorkbenchPage({
     reviewContextResult.context.portfolioId !== portfolioId
   ) {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="manage"
+        pageTitle="Manage Workspace"
+        pageSubtitle="Confirm the portfolio before using mandate and implementation controls."
         body="The mandate-workspace address contains conflicting, repeated, or unsupported review context. No mandate evidence was requested."
         href="/book"
         actionLabel="Select a portfolio from My book"
@@ -56,8 +59,6 @@ export default async function WorkbenchPage({
   } catch (error) {
     return (
       <ManageWorkspaceUnavailable
-        portfolioId={portfolioId}
-        reviewContext={reviewContext}
         detail={error instanceof Error ? error.message : "Unknown error"}
       />
     );
@@ -66,8 +67,6 @@ export default async function WorkbenchPage({
   if (portfolio.portfolio.portfolio_id !== portfolioId) {
     return (
       <ManageWorkspaceUnavailable
-        portfolioId={portfolioId}
-        reviewContext={reviewContext}
         detail="The source response did not confirm the selected portfolio. No mandate workspace was opened."
       />
     );

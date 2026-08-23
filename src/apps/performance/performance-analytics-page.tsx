@@ -4,14 +4,13 @@ import {
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
 import {
-  AppPageShell,
   buildWorkbenchSourceContextNotice,
 } from "@/design-system";
 import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import {
   parseReviewContext,
 } from "@/shell/review-context";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import {
   normalizePerformanceWorkspaceMode,
 } from "./performance-workspace-modes";
@@ -33,26 +32,30 @@ export default async function PerformanceAnalyticsPage({
   const reviewContextResult = parseReviewContext(resolvedSearch);
   if (reviewContextResult.status === "invalid") {
     return (
-      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
-        <ReviewContextRecovery
-          body="The performance review address contains repeated or unsupported context. No portfolio analytics were requested."
-          href="/performance"
-          actionLabel="Reset review context"
-        />
-      </AppPageShell>
+      <ReviewContextPageRecovery
+        pageKey="performance"
+        pageTitle="Performance"
+        pageSubtitle="Review portfolio outcomes, drivers, and supporting evidence."
+        className="performance-page portfolio-page"
+        body="The performance review address contains repeated or unsupported context. No portfolio analytics were requested."
+        href="/performance"
+        actionLabel="Reset review context"
+      />
     );
   }
 
   const requestedPortfolioId = reviewContextResult.context.portfolioId;
   if (!requestedPortfolioId) {
     return (
-      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
-        <ReviewContextRecovery
-          body="Select a source-confirmed portfolio from My book before opening Performance. No default portfolio was substituted."
-          href="/book"
-          actionLabel="Open My book"
-        />
-      </AppPageShell>
+      <ReviewContextPageRecovery
+        pageKey="performance"
+        pageTitle="Performance"
+        pageSubtitle="Review portfolio outcomes, drivers, and supporting evidence."
+        className="performance-page portfolio-page"
+        body="Select a source-confirmed portfolio from My book before opening Performance. No default portfolio was substituted."
+        href="/book"
+        actionLabel="Open My book"
+      />
     );
   }
 
@@ -139,20 +142,19 @@ export default async function PerformanceAnalyticsPage({
     })
   ) {
     return (
-      <AppPageShell
+      <ReviewContextPageRecovery
         pageKey="performance"
+        pageTitle="Performance"
+        pageSubtitle="Review portfolio outcomes, drivers, and supporting evidence."
         className="performance-page portfolio-page"
         reviewContext={buildPerformanceReviewContextStrip({
           workspace: workspaceSummary,
           portfolioContext,
         })}
-      >
-        <ReviewContextRecovery
-          body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."
-          href="/book"
-          actionLabel="Choose a portfolio from My book"
-        />
-      </AppPageShell>
+        body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."
+        href="/book"
+        actionLabel="Choose a portfolio from My book"
+      />
     );
   }
 

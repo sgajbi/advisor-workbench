@@ -5,7 +5,7 @@ import {
   normalizeProposalLifecycleMode,
 } from "@/features/proposals/proposal-lifecycle-workspace-view-model";
 import ProposalWorkspaceShell from "@/features/proposals/components/proposal-workspace-shell";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import {
   parseReviewContext,
   type ReviewContextSearchParams,
@@ -24,7 +24,10 @@ export default async function ProposalsPage({
   const reviewContextResult = parseReviewContext(resolvedSearchParams);
   if (reviewContextResult.status === "invalid") {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Lifecycle"
+        pageSubtitle="Review proposal readiness, decisions, and governed handoffs."
         body="The proposal-worklist address contains repeated or unsupported review context. No proposal queue was requested."
         href="/book"
         actionLabel="Select a portfolio from My book"
@@ -35,7 +38,10 @@ export default async function ProposalsPage({
   const portfolioId = reviewContextResult.context.portfolioId;
   if (!portfolioId) {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Lifecycle"
+        pageSubtitle="Review proposal readiness, decisions, and governed handoffs."
         body="Select a source-confirmed portfolio from My book before opening its proposal worklist. No demo portfolio was substituted."
         href="/book"
         actionLabel="Select a portfolio from My book"

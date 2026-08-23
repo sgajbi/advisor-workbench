@@ -1,7 +1,7 @@
 import ProposalSimulateForm from "@/features/proposals/components/proposal-simulate-form";
 import ProposalWorkspaceShell from "@/features/proposals/components/proposal-workspace-shell";
 import { buildSimulationProposalWorkflowContext } from "@/features/proposals/proposal-workflow-context-view-model";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import {
   parseReviewContext,
   type ReviewContextSearchParams,
@@ -16,7 +16,10 @@ export default async function ProposalSimulatePage({
   const reviewContextResult = parseReviewContext(resolvedSearchParams);
   if (reviewContextResult.status === "invalid") {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Workspace"
+        pageSubtitle="Build and test an advisor-use proposal before routing it for review."
         body="The proposal address contains repeated or unsupported review context. No portfolio was substituted and no proposal draft was opened."
         href="/book"
         actionLabel="Select a portfolio from My book"
@@ -27,7 +30,10 @@ export default async function ProposalSimulatePage({
   const portfolioId = reviewContextResult.context.portfolioId;
   if (!portfolioId) {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Workspace"
+        pageSubtitle="Build and test an advisor-use proposal before routing it for review."
         body="Select a source-confirmed portfolio from My book before starting a proposal. No demo portfolio was substituted."
         href="/book"
         actionLabel="Select a portfolio from My book"

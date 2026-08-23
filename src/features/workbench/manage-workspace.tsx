@@ -2,13 +2,12 @@ import type { ReactNode } from "react";
 
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
-import { buildReviewContextHref } from "@/shell/review-context";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import {
   AppPageShell,
   buildWorkbenchSourceContextNotice,
   buildWorkbenchUnsupportedReviewContextNotice,
   combineWorkbenchContextNotices,
-  DegradedStatePanel,
   MainWithSideRailLayout,
   SemanticBadge,
   WorkbenchPageContainer,
@@ -145,40 +144,19 @@ export function ManageWorkspace({
 }
 
 export function ManageWorkspaceUnavailable({
-  portfolioId,
-  reviewContext = { portfolioId },
   detail,
 }: {
-  portfolioId: string;
-  reviewContext?: PortfolioReviewContext;
   detail: string;
 }) {
   return (
-    <main className="page-container">
-      <WorkbenchPageFrame
-        title="Manage Workspace"
-        subtitle={`Manage context is temporarily unavailable for ${portfolioId}.`}
-      >
-        <DegradedStatePanel
-          label="Operational status"
-          title={`Unable to load portfolio context for ${portfolioId}.`}
-          tone="danger"
-          status="Unavailable"
-          actions={[
-            {
-              href: buildReviewContextHref("/performance", reviewContext),
-              label: "Open Performance Workspace",
-            },
-            {
-              href: buildReviewContextHref("/portfolio", reviewContext),
-              label: "Return To Portfolio",
-            },
-          ]}
-        >
-          {detail}
-        </DegradedStatePanel>
-      </WorkbenchPageFrame>
-    </main>
+    <ReviewContextPageRecovery
+      pageKey="manage"
+      pageTitle="Manage Workspace"
+      pageSubtitle="Confirm the portfolio before using mandate and implementation controls."
+      body={detail}
+      href="/book"
+      actionLabel="Select a portfolio from My book"
+    />
   );
 }
 

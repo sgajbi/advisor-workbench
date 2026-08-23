@@ -123,14 +123,13 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Manage Workspace" })).toBeInTheDocument();
-    expect(screen.getByText(/Unable to load portfolio context for PF_404/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Performance Workspace" })).toHaveAttribute(
-      "href",
-      "/performance?portfolioId=PF_404"
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "Portfolio not confirmed",
     );
-    expect(screen.getByRole("link", { name: "Return To Portfolio" })).toHaveAttribute(
+    expect(screen.queryByText("PF_404")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Select a portfolio from My book" })).toHaveAttribute(
       "href",
-      "/portfolio?portfolioId=PF_404"
+      "/book"
     );
   });
 
