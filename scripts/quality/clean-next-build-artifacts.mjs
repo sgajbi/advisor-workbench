@@ -2,8 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  NEXT_PRODUCTION_DIRECTORY,
+  resolveGovernedNextDirectory,
+} from "../config/next-artifact-layout.mjs";
+
 const EXPECTED_PACKAGE_NAME = "lotus-workbench";
-const NEXT_BUILD_DIRECTORY = ".next";
 
 export function cleanNextBuildArtifacts({
   cwd = process.cwd(),
@@ -22,11 +26,10 @@ export function cleanNextBuildArtifacts({
     );
   }
 
-  const buildDirectory = path.resolve(cwd, NEXT_BUILD_DIRECTORY);
-  const relativeBuildDirectory = path.relative(cwd, buildDirectory);
-  if (relativeBuildDirectory !== NEXT_BUILD_DIRECTORY) {
-    throw new Error(`Refusing to clean unexpected Next.js build directory: ${buildDirectory}.`);
-  }
+  const buildDirectory = resolveGovernedNextDirectory({
+    cwd,
+    directory: NEXT_PRODUCTION_DIRECTORY,
+  });
 
   removeBuildDirectory(fileSystem, buildDirectory);
   return buildDirectory;

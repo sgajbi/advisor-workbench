@@ -16,14 +16,19 @@ describe("TypeScript build boundary", () => {
     const config = readTypeScriptConfig();
 
     expect(config.include).toEqual(
-      expect.arrayContaining(["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]),
+      expect.arrayContaining([
+        "**/*.ts",
+        "**/*.tsx",
+        ".next-build/types/**/*.ts",
+        ".next-dev/types/**/*.ts",
+      ]),
     );
     expect(config.exclude).toEqual(
       expect.arrayContaining(["node_modules", "coverage", "output", "playwright-report", "test-results"]),
     );
     expect(config.compilerOptions).toMatchObject({
       incremental: true,
-      tsBuildInfoFile: ".next/cache/tsconfig.tsbuildinfo",
+      tsBuildInfoFile: ".next-build/cache/tsconfig.tsbuildinfo",
     });
   });
 });

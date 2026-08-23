@@ -47,4 +47,4 @@ docker-down:
 	docker compose down
 
 clean:
-	rm -rf .next node_modules
+	rm -rf .next .next-build .next-dev node_modules

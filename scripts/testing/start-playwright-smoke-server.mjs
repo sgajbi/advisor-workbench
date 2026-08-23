@@ -2,6 +2,7 @@ import { cpSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 
+import { NEXT_PRODUCTION_DIRECTORY } from "../config/next-artifact-layout.mjs";
 import { cleanNextBuildArtifacts } from "../quality/clean-next-build-artifacts.mjs";
 import { startPlaywrightSourceFixtureGateway } from "./playwright-source-fixture-gateway.mjs";
 
@@ -14,11 +15,15 @@ const nextCli = resolve(
   "bin",
   "next",
 );
-const validatedBuildMarker = resolve(projectRoot, ".next", "BUILD_ID");
-const standaloneRoot = resolve(projectRoot, ".next", "standalone");
+const validatedBuildMarker = resolve(projectRoot, NEXT_PRODUCTION_DIRECTORY, "BUILD_ID");
+const standaloneRoot = resolve(projectRoot, NEXT_PRODUCTION_DIRECTORY, "standalone");
 const standaloneServerPath = resolve(standaloneRoot, "server.js");
-const generatedStaticAssets = resolve(projectRoot, ".next", "static");
-const standaloneStaticAssets = resolve(standaloneRoot, ".next", "static");
+const generatedStaticAssets = resolve(projectRoot, NEXT_PRODUCTION_DIRECTORY, "static");
+const standaloneStaticAssets = resolve(
+  standaloneRoot,
+  NEXT_PRODUCTION_DIRECTORY,
+  "static",
+);
 const reuseValidatedBuild =
   process.env.PLAYWRIGHT_REUSE_VALIDATED_BUILD === "1";
 const playwrightPortValue = process.env.PLAYWRIGHT_PORT?.trim() || "3000";
@@ -73,12 +78,12 @@ function runNext(args, environment) {
 function startServer(environment) {
   if (!existsSync(standaloneServerPath)) {
     throw new Error(
-      "Playwright smoke requires .next/standalone/server.js from a successful production build.",
+      `Playwright smoke requires ${NEXT_PRODUCTION_DIRECTORY}/standalone/server.js from a successful production build.`,
     );
   }
   if (!existsSync(generatedStaticAssets)) {
     throw new Error(
-      "Playwright smoke requires generated .next/static assets from a successful production build.",
+      `Playwright smoke requires generated ${NEXT_PRODUCTION_DIRECTORY}/static assets from a successful production build.`,
     );
   }
 
@@ -141,7 +146,7 @@ async function main() {
     if (reuseValidatedBuild) {
       if (!existsSync(validatedBuildMarker)) {
         throw new Error(
-          "PLAYWRIGHT_REUSE_VALIDATED_BUILD=1 requires an existing .next/BUILD_ID from a successful production build.",
+          `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1 requires an existing ${NEXT_PRODUCTION_DIRECTORY}/BUILD_ID from a successful production build.`,
         );
       }
       console.log(
