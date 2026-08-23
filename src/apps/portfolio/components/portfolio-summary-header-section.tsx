@@ -41,7 +41,7 @@ export default function PortfolioSummaryHeaderSection({
             },
             {
               key: "invested_assets",
-              label: "Invested Assets",
+              label: "Invested assets",
               value: formatCurrency(
                 workspace.summary.invested_market_value_base,
                 workspace.portfolio.base_currency,
@@ -63,21 +63,21 @@ export default function PortfolioSummaryHeaderSection({
             },
             {
               key: "mtd_return",
-              label: "MTD Return",
+              label: "MTD return",
               value: renderPerformanceReturn(performanceReturns, "MTD"),
               definition: "Month-to-date net return for the selected book.",
               support: "Net return",
             },
             {
               key: "qtd_return",
-              label: "QTD Return",
+              label: "QTD return",
               value: renderPerformanceReturn(performanceReturns, "QTD"),
               definition: "Quarter-to-date net return for the selected book.",
               support: "Net return",
             },
             {
               key: "ytd_return",
-              label: "YTD Return",
+              label: "YTD return",
               value: renderPerformanceReturn(performanceReturns, "YTD"),
               definition: "Year-to-date net return for the selected book.",
               support: "Net return",

@@ -333,9 +333,9 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openPortfolioReview(page, request);
     test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
 
-    await expect(page.getByText('MTD Return')).toBeVisible();
-    await expect(page.getByText('QTD Return')).toBeVisible();
-    await expect(page.getByText('YTD Return')).toBeVisible();
+    await expect(page.getByText('MTD return')).toBeVisible();
+    await expect(page.getByText('QTD return')).toBeVisible();
+    await expect(page.getByText('YTD return')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
     await expect(page.getByLabel('As of')).toBeVisible();
     const allWorkspaces = page.getByRole('button', { name: /All workspaces/i });
