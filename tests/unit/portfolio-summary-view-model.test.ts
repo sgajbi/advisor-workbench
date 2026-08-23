@@ -27,6 +27,33 @@ describe("portfolio summary view model", () => {
     });
   });
 
+  it("keeps same-day reporting freshness concise when the shell owns business date", () => {
+    expect(buildPortfolioDecisionBrief(buildWorkspace()).rows).toContainEqual({
+      label: "Reporting coverage",
+      value: "Ready",
+      support: "11 report rows published",
+    });
+  });
+
+  it("surfaces a reporting date when it differs from the review business date", () => {
+    const workspace = buildWorkspace({
+      readiness: {
+        has_positions: true,
+        reporting: {
+          status: "READY",
+          generated_at_utc: "2026-05-11T20:15:00Z",
+          row_count: 11,
+        },
+      },
+    });
+
+    expect(buildPortfolioDecisionBrief(workspace).rows).toContainEqual({
+      label: "Reporting coverage",
+      value: "Ready",
+      support: "Generated 11 May 2026, 20:15 UTC • 11 report rows",
+    });
+  });
+
   it("prefers source allocation buckets and preserves portfolio weights", () => {
     const workspace = buildWorkspace({
       allocations: [
