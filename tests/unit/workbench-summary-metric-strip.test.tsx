@@ -50,9 +50,16 @@ describe("WorkbenchSummaryMetricStrip", () => {
     );
 
     expect(screen.getByLabelText("Return strip")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Return")).toHaveClass("workbench-summary-metric-label");
-    expect(screen.getByText("5.40%")).toHaveClass("workbench-summary-metric-value");
+    expect(screen.getByText("Portfolio Return")).toHaveClass(
+      "ui-text-data-label",
+      "workbench-summary-metric-label"
+    );
+    expect(screen.getByText("5.40%")).toHaveClass(
+      "ui-text-metric-value-m",
+      "workbench-summary-metric-value"
+    );
     expect(screen.getByText("Relative returns incomplete")).toHaveClass(
+      "ui-text-body-small",
       "workbench-summary-metric-support"
     );
     expect(document.querySelector(".workbench-summary-metric-card-unavailable")).toBeTruthy();
