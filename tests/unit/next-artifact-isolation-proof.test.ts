@@ -39,6 +39,12 @@ describe("Next artifact isolation proof", () => {
       [
         "      - name: Next Development And Production Artifact Isolation",
         "        run: npm run test:next-artifact-isolation",
+        "      - name: Upload Next Artifact Isolation Evidence",
+        "        uses: actions/upload-artifact@v7",
+        "        with:",
+        "          name: next-artifact-isolation",
+        "          path: output/next-artifact-isolation.json",
+        "          if-no-files-found: error",
         "      - name: Run Playwright Smoke",
         "        env:",
         '          PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1"',
