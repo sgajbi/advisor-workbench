@@ -25,6 +25,23 @@
   min-width: 0;
 }
 
+.reviewBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+  align-items: start;
+  padding: 0.52rem 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+}
+
+.panelBody {
+  display: grid;
+  gap: 0.56rem;
+  min-width: 0;
+}
+
 .singleObservationNotice {
   display: grid;
   gap: var(--space-1);
@@ -53,5 +70,9 @@
 
   .refresh {
     min-width: 44px;
+  }
+
+  .reviewBar {
+    padding: 0.56rem;
   }
 }

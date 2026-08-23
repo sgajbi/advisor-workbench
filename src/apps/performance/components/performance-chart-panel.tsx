@@ -62,6 +62,8 @@ type PerformanceChartPanelProps = {
   onRequestChange: (patch: PerformanceControlPatch) => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;
+  returnView?: PerformanceChartViewMode;
+  onReturnViewChange?: (value: PerformanceChartViewMode) => void;
   id?: string;
 };
 
@@ -100,17 +102,20 @@ function PerformanceChartPanelBody({
   onRequestChange,
   isUpdating = false,
   isDetailsPending = false,
+  returnView,
+  onReturnViewChange,
   id,
   resolvedReportDates,
 }: PerformanceChartPanelProps & { resolvedReportDates: ResolvedReportDates }) {
   const hasBenchmarkSeries = hasBenchmarkReturnSeries(points);
   const hasActiveSeries = hasActiveReturnSeries(points);
-  const [preferredChartViewMode, setPreferredChartViewMode] = useState<PerformanceChartViewMode>(
+  const [localReturnView, setLocalReturnView] = useState<PerformanceChartViewMode>(
     resolveChartViewMode({
       hasBenchmarkSeries,
       hasActiveSeries,
     })
   );
+  const preferredChartViewMode = returnView ?? localReturnView;
   const chartViewMode = resolveChartViewMode({
     preferredMode: preferredChartViewMode,
     hasBenchmarkSeries,
@@ -216,7 +221,13 @@ function PerformanceChartPanelBody({
             value: chartViewMode,
             hasBenchmarkSeries,
             hasActiveSeries,
-            onChange: setPreferredChartViewMode,
+            onChange: (value) => {
+              if (onReturnViewChange) {
+                onReturnViewChange(value);
+                return;
+              }
+              setLocalReturnView(value);
+            },
           }}
         />
       }

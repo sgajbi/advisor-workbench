@@ -9,15 +9,18 @@ import { formatLabel } from "../formatters";
 import {
   buildPerformanceHorizonVisualModel,
   buildPerformanceHorizonTableModel,
-  type PerformanceHorizonBasisView,
   type PerformanceHorizonTableView,
   type PerformanceHorizonVisualMode,
 } from "./performance-analytics-table-models";
+import type { PerformanceChartViewMode } from "./performance-chart-panel-helpers";
 import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-types";
 import PerformanceHorizonComparisonDisclosure from "./performance-horizon-comparison-disclosure";
 import { usePerformanceHorizonComparison } from "./performance-horizon-comparison-state";
 import PerformanceHorizonComparisonMatrix from "./performance-horizon-comparison-matrix";
-import PerformanceHorizonComparisonToolbar from "./performance-horizon-comparison-toolbar";
+import PerformanceHorizonComparisonToolbar, {
+  type PerformanceHorizonBasisSelection,
+  type PerformanceHorizonVisualSelection,
+} from "./performance-horizon-comparison-toolbar";
 import styles from "./performance-multi-horizon-panel.module.css";
 import PerformanceSummaryDriverModule from "./performance-summary-driver-module";
 import { getPerformanceHorizonPresentation } from "./performance-summary-driver-helpers";
@@ -31,6 +34,7 @@ export default function PerformanceMultiHorizonPanel({
   reportStartDate,
   reportEndDate,
   benchmarkOptions = [],
+  returnView = "combined",
   onRequestChange,
 }: {
   portfolioId: string;
@@ -41,11 +45,19 @@ export default function PerformanceMultiHorizonPanel({
   reportStartDate?: string;
   reportEndDate?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
+  returnView?: PerformanceChartViewMode;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 }) {
   const [tableView, setTableView] = useState<PerformanceHorizonTableView>("combined");
-  const [basisView, setBasisView] = useState<PerformanceHorizonBasisView>("both");
-  const [visualMode, setVisualMode] = useState<PerformanceHorizonVisualMode>("absolute");
+  const [basisSelection, setBasisSelection] =
+    useState<PerformanceHorizonBasisSelection>("inherit");
+  const [visualSelection, setVisualSelection] =
+    useState<PerformanceHorizonVisualSelection>("inherit");
+  const inheritedBasis = detailBasis === "GROSS" ? "gross" : "net";
+  const inheritedVisualMode: PerformanceHorizonVisualMode =
+    returnView === "relative" ? "relative" : "absolute";
+  const basisView = basisSelection === "inherit" ? inheritedBasis : basisSelection;
+  const visualMode = visualSelection === "inherit" ? inheritedVisualMode : visualSelection;
   const request = useMemo(
     () => ({
       portfolioId,
@@ -87,6 +99,14 @@ export default function PerformanceMultiHorizonPanel({
   const resolvedBenchmarkOptions = comparison?.benchmark_options?.length
     ? comparison.benchmark_options
     : benchmarkOptions;
+
+  useEffect(() => {
+    setBasisSelection("inherit");
+  }, [detailBasis]);
+
+  useEffect(() => {
+    setVisualSelection("inherit");
+  }, [returnView]);
 
   useEffect(() => {
     if (
@@ -244,19 +264,22 @@ export default function PerformanceMultiHorizonPanel({
                 </span>
               </div>
             ) : null}
-            <div className="performance-horizon-review-bar">
+            <div className={styles.reviewBar} data-performance-horizon-review-bar="true">
               <PerformanceHorizonComparisonToolbar
                 tableView={tableView}
-                basisView={basisView}
-                visualMode={resolvedVisualMode}
+                basisSelection={basisSelection}
+                visualSelection={visualSelection}
+                inheritedBasis={inheritedBasis}
+                inheritedReturnView={returnView}
+                resolvedVisualMode={resolvedVisualMode}
                 hasRelativeVisual={hasRelativeVisual}
                 showVisualMode={isMultiObservation}
                 onTableViewChange={setTableView}
-                onBasisViewChange={setBasisView}
-                onVisualModeChange={setVisualMode}
+                onBasisSelectionChange={setBasisSelection}
+                onVisualSelectionChange={setVisualSelection}
               />
             </div>
-            <div className="performance-horizon-panel-body">
+            <div className={styles.panelBody} data-performance-horizon-panel-body="true">
               {isMultiObservation ? (
                 <PerformanceHorizonComparisonMatrix
                   cards={visualCards}

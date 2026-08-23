@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
+
 import {
   WorkspaceGrid,
 } from "@/design-system";
 
 import PerformanceChartPanel from "./performance-chart-panel";
+import type { PerformanceChartViewMode } from "./performance-chart-panel-helpers";
 import PerformanceMultiHorizonPanel from "./performance-multi-horizon-panel";
 import PerformanceSummaryContributorsSection from "./performance-summary-contributors-section";
 import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
@@ -26,6 +31,8 @@ export default function PerformanceSummaryMode({
   topContributors,
   bottomContributors,
 }: PerformanceSummaryModeProps) {
+  const [returnView, setReturnView] = useState<PerformanceChartViewMode>("combined");
+
   return (
     <PerformanceWorkspaceStageSurface
       intro={null}
@@ -53,6 +60,8 @@ export default function PerformanceSummaryMode({
           onRequestChange={onRequestChange ?? (() => undefined)}
           isUpdating={isUpdating}
           isDetailsPending={isDetailsPending}
+          returnView={returnView}
+          onReturnViewChange={setReturnView}
           id="performance-trend"
         />
       </WorkspaceGrid>
@@ -70,6 +79,7 @@ export default function PerformanceSummaryMode({
             reportStartDate={workspace.report_start_date}
             reportEndDate={workspace.report_end_date}
             benchmarkOptions={workspace.benchmark_options ?? []}
+            returnView={returnView}
             onRequestChange={onRequestChange}
           />
         </section>

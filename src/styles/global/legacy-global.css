@@ -8920,36 +8920,6 @@
   gap: 0.7rem;
 }
 
-.performance-multi-horizon-panel {
-  display: grid;
-  gap: var(--workbench-summary-body-gap);
-}
-
-.performance-horizon-review-bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.4rem;
-  align-items: start;
-  padding: 0.52rem 0.6rem;
-  border: 1px solid rgba(32, 44, 61, 0.07);
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.62);
-}
-
-.performance-horizon-panel-body {
-  display: grid;
-  gap: 0.56rem;
-  min-width: 0;
-}
-
-.performance-horizon-toolbar {
-  min-width: 0;
-  justify-content: flex-start;
-  margin-top: 0;
-  align-self: stretch;
-  gap: 0.5rem;
-}
-
 .performance-horizon-bars {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--workbench-metric-strip-gap);
@@ -9660,10 +9630,6 @@
     grid-template-columns: 1fr;
   }
 
-  .performance-horizon-toolbar {
-    justify-content: flex-start;
-  }
-
   .performance-horizon-bars {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9849,10 +9815,6 @@
 
   .performance-attribution-summary-strip {
     grid-template-columns: 1fr;
-  }
-
-  .performance-horizon-review-bar {
-    padding: 0.56rem;
   }
 
   .performance-horizon-bars {
