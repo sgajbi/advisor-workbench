@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
+import type { PortfolioWorkspace } from "@/apps/portfolio/types";
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import {
@@ -47,7 +48,9 @@ export default async function ProposalWorkspaceShell({
   subtitle: string;
   workflowContext?: ProposalWorkflowContextModel;
   workflowContextPresentation?: "rail" | "inline-boundary";
-  children: ReactNode;
+  children:
+    | ReactNode
+    | ((portfolioContext: PortfolioWorkspace | null) => ReactNode);
 }) {
   const { portfolioId } = reviewContext;
   const portfolioContext = await getPortfolioWorkspaceShell(portfolioId);
@@ -95,6 +98,8 @@ export default async function ProposalWorkspaceShell({
       portfolioId,
       surfaceLabel: activeScreen === "advisory" ? "Advisory next actions" : "Proposal lifecycle",
     });
+  const workspaceContent =
+    typeof children === "function" ? children(portfolioContext) : children;
 
   return (
     <AppPageShell
@@ -132,7 +137,7 @@ export default async function ProposalWorkspaceShell({
                   {workflowContextPresentation === "inline-boundary" ? (
                     <ProposalWorkflowContextBoundary presentation="inline" />
                   ) : null}
-                  {children}
+                  {workspaceContent}
                 </WorkbenchSectionStack>
               </WorkbenchPageFrame>
             }

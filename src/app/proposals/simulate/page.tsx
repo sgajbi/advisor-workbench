@@ -41,9 +41,6 @@ export default async function ProposalSimulatePage({
     );
   }
 
-  const initialAsOfDate = reviewContextResult.context.asOfDate ?? "";
-  const initialReportingCurrency =
-    reviewContextResult.context.reportingCurrency ?? "";
   return (
     <ProposalWorkspaceShell
       reviewContext={{ ...reviewContextResult.context, portfolioId }}
@@ -54,11 +51,21 @@ export default async function ProposalSimulatePage({
       workflowContext={buildSimulationProposalWorkflowContext({ portfolioId })}
       workflowContextPresentation="inline-boundary"
     >
-      <ProposalSimulateForm
-        initialPortfolioId={portfolioId}
-        initialAsOfDate={initialAsOfDate}
-        initialReportingCurrency={initialReportingCurrency}
-      />
+      {(portfolioContext) => (
+        <ProposalSimulateForm
+          initialPortfolioId={portfolioId}
+          initialAsOfDate={
+            reviewContextResult.context.asOfDate ??
+            portfolioContext?.as_of_date ??
+            ""
+          }
+          initialReportingCurrency={
+            reviewContextResult.context.reportingCurrency ??
+            portfolioContext?.portfolio.base_currency ??
+            ""
+          }
+        />
+      )}
     </ProposalWorkspaceShell>
   );
 }
