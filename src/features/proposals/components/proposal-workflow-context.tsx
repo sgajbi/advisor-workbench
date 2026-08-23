@@ -82,6 +82,18 @@ function useProposalWorkflowContext(): ProposalWorkflowContextValue {
 export function ProposalWorkflowContextRail() {
   const { model } = useProposalWorkflowContext();
   const isSupplementary = model.responsivePriority === "supplementary";
+
+  if (isSupplementary) {
+    return (
+      <div
+        className={`${styles.proposalSide} ${styles.supplementaryContext}`}
+        data-responsive-priority={model.responsivePriority}
+      >
+        <ProposalWorkflowBoundary model={model} />
+      </div>
+    );
+  }
+
   const decisionFacts = model.facts.filter((fact) => fact.label !== "Portfolio");
 
   return (
