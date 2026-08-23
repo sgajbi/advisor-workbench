@@ -80,7 +80,9 @@ export default async function RecommendationsAppPage({
           : undefined
       }
       workflowContextPresentation={
-        activeMode === "cockpit" ? "inline-boundary" : "rail"
+        activeMode === "cockpit" || activeMode === "overview"
+          ? "inline-boundary"
+          : "rail"
       }
     >
       {activeMode === "cockpit" ? (

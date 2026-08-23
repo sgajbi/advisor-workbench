@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
+  ActionLink,
   ActionButton,
   ScreenStatePanel,
   SectionBlock,
@@ -13,7 +14,7 @@ import {
   SourceWindowNavigation,
   Text,
   useSourceWindow,
-  WorkbenchSummaryMetricStrip,
+  WorkbenchWorklist,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
@@ -43,7 +44,8 @@ export default function AdvisoryOverviewWorkspace({
 }) {
   const { portfolioId } = reviewContext;
   const sourceWindow = useSourceWindow(portfolioId);
-  const [sourceRefreshOutcome, setSourceRefreshOutcome] = useState<SourceRefreshOutcome | null>(null);
+  const [sourceRefreshOutcome, setSourceRefreshOutcome] =
+    useState<SourceRefreshOutcome | null>(null);
   const proposalQuery = useQuery({
     queryKey: ["advisory-overview", portfolioId, sourceWindow.cursor],
     queryFn: async () =>
@@ -54,7 +56,10 @@ export default function AdvisoryOverviewWorkspace({
       }),
     ...workbenchStrictQueryDefaults,
   });
-  const proposals = useMemo(() => proposalQuery.data?.items ?? [], [proposalQuery.data?.items]);
+  const proposals = useMemo(
+    () => proposalQuery.data?.items ?? [],
+    [proposalQuery.data?.items],
+  );
   const model = useMemo(
     () =>
       buildAdvisoryOverviewModel({
@@ -70,8 +75,15 @@ export default function AdvisoryOverviewWorkspace({
       proposals,
       sourceWindow.hasPrevious,
       sourceWindow.windowNumber,
-    ]
+    ],
   );
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
+    reviewContext.selectedRecordId ?? null,
+  );
+  const selectedProposal =
+    model.proposalRows.find(
+      (proposal) => proposal.proposalId === selectedProposalId,
+    ) ?? model.proposalRows[0];
   const sourcePosture = projectQuerySourcePosture({
     hasData: Boolean(proposalQuery.data),
     isLoading: proposalQuery.isLoading,
@@ -81,12 +93,14 @@ export default function AdvisoryOverviewWorkspace({
   });
   const queryIdentity = `${portfolioId}:${sourceWindow.cursor ?? "first"}`;
   const recordedRefreshState =
-    sourceRefreshOutcome?.queryIdentity === queryIdentity ? sourceRefreshOutcome.state : null;
+    sourceRefreshOutcome?.queryIdentity === queryIdentity
+      ? sourceRefreshOutcome.state
+      : null;
   const refreshState =
-    recordedRefreshState === "failed"
-    && proposalQuery.isSuccess
-    && !sourcePosture.isRefreshing
-    && !sourcePosture.hasRefreshFailure
+    recordedRefreshState === "failed" &&
+    proposalQuery.isSuccess &&
+    !sourcePosture.isRefreshing &&
+    !sourcePosture.hasRefreshFailure
       ? "confirmed"
       : recordedRefreshState;
   const workflowContext = useMemo(
@@ -122,13 +136,16 @@ export default function AdvisoryOverviewWorkspace({
       sourcePosture.isUnavailable,
       sourceWindow.hasPrevious,
       sourceWindow.windowNumber,
-    ]
+    ],
   );
   usePublishProposalWorkflowContext(workflowContext);
 
   async function refreshAdvisoryPriorities() {
     const requestedIdentity = queryIdentity;
-    setSourceRefreshOutcome({ queryIdentity: requestedIdentity, state: "pending" });
+    setSourceRefreshOutcome({
+      queryIdentity: requestedIdentity,
+      state: "pending",
+    });
     const result = await proposalQuery.refetch({ cancelRefetch: true });
     setSourceRefreshOutcome((currentOutcome) =>
       currentOutcome && currentOutcome.queryIdentity !== requestedIdentity
@@ -136,15 +153,17 @@ export default function AdvisoryOverviewWorkspace({
         : {
             queryIdentity: requestedIdentity,
             state: result.error ? "failed" : "confirmed",
-          }
+          },
     );
   }
 
   const showRefreshAction =
-    !sourcePosture.isPermissionBlocked
-    && (!sourcePosture.isInitialLoading || refreshState === "pending");
+    !sourcePosture.isPermissionBlocked &&
+    (!sourcePosture.isInitialLoading || refreshState === "pending");
   const refreshLabel =
-    sourcePosture.isUnavailable || sourcePosture.hasRefreshFailure || refreshState === "failed"
+    sourcePosture.isUnavailable ||
+    sourcePosture.hasRefreshFailure ||
+    refreshState === "failed"
       ? sourceWindow.hasPrevious
         ? "Retry proposal window"
         : "Retry advisory priorities"
@@ -160,14 +179,6 @@ export default function AdvisoryOverviewWorkspace({
           onRefresh={refreshAdvisoryPriorities}
         />
       ) : null}
-      {proposalQuery.data && !sourcePosture.isPermissionBlocked ? (
-        <Link
-          className="nav-link"
-          href={buildAdvisoryJourneyHref(reviewContext, "proposal-builder")}
-        >
-          Build Proposal
-        </Link>
-      ) : null}
     </>
   );
 
@@ -180,7 +191,11 @@ export default function AdvisoryOverviewWorkspace({
       >
         <ScreenStatePanel
           kind="loading"
-          title={refreshState === "pending" ? "Checking advisory priorities" : "Loading advisory priorities"}
+          title={
+            refreshState === "pending"
+              ? "Checking advisory priorities"
+              : "Loading advisory priorities"
+          }
           body={
             refreshState === "pending"
               ? "Recontacting the approved advisory workflow for this portfolio."
@@ -239,7 +254,10 @@ export default function AdvisoryOverviewWorkspace({
             }
             action={
               sourceWindow.hasPrevious ? (
-                <ActionButton priority="secondary" onClick={sourceWindow.showPrevious}>
+                <ActionButton
+                  priority="secondary"
+                  onClick={sourceWindow.showPrevious}
+                >
                   Return to previous proposals
                 </ActionButton>
               ) : undefined
@@ -257,16 +275,25 @@ export default function AdvisoryOverviewWorkspace({
       subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
       actions={sectionActions}
     >
-      <div className={styles.workspace} data-testid="advisory-overview-workspace">
+      <div
+        className={styles.workspace}
+        data-testid="advisory-overview-workspace"
+      >
         {sourcePosture.isRefreshing ? (
           <div className={styles.sourceNotice} role="status" aria-live="polite">
             <SemanticBadge>Refreshing</SemanticBadge>
             <Text variant="secondary">
-              The current worklist remains visible while source-owned proposal posture refreshes.
+              The current worklist remains visible while source-owned proposal
+              posture refreshes.
             </Text>
           </div>
         ) : refreshState === "confirmed" && !sourcePosture.hasRefreshFailure ? (
-          <div className={styles.sourceNotice} role="status" aria-live="polite" aria-atomic="true">
+          <div
+            className={styles.sourceNotice}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <SemanticBadge tone="success">Source confirmed</SemanticBadge>
             <Text variant="secondary">
               Latest advisory priorities confirmed through Gateway.
@@ -290,12 +317,19 @@ export default function AdvisoryOverviewWorkspace({
         >
           <div>
             <Text variant="microLabel">Advisor Decision</Text>
-            <Text variant="subsectionTitle" as="h2" id="advisory-decision-title">
+            <Text
+              variant="subsectionTitle"
+              as="h2"
+              id="advisory-decision-title"
+            >
               {model.primaryDecision}
             </Text>
             <Text variant="secondary">{model.recommendedAction}</Text>
           </div>
-          <SemanticBadge tone={model.attentionCount > 0 ? "warn" : "success"} emphasis="strong">
+          <SemanticBadge
+            tone={model.attentionCount > 0 ? "warn" : "success"}
+            emphasis="strong"
+          >
             {model.attentionCount > 0
               ? `${model.attentionCount} ${model.attentionCount === 1 ? "item needs" : "items need"} action`
               : "No action in view"}
@@ -304,21 +338,9 @@ export default function AdvisoryOverviewWorkspace({
 
         <section
           className={styles.priorityPanel}
-          aria-labelledby="priority-advisory-actions-title"
+          aria-label="Advisory proposal priorities"
           data-testid="advisory-priority-worklist"
         >
-          <div className={styles.panelHeader}>
-            <div>
-              <Text variant="microLabel">Advisor Worklist</Text>
-              <Text variant="subsectionTitle" as="h2" id="priority-advisory-actions-title">
-                Priority Advisory Actions
-              </Text>
-            </div>
-            <Link href={buildAdvisoryJourneyHref(reviewContext, "approval-queue")}>
-              Open Approval Queue
-            </Link>
-          </div>
-
           <div
             className={`${styles.sourceWindowPosture} ${
               model.hasPartialWindow ? styles.partialWindow : ""
@@ -349,7 +371,10 @@ export default function AdvisoryOverviewWorkspace({
                 !model.hasPartialWindow ? (
                   <Link
                     className="nav-link"
-                    href={buildAdvisoryJourneyHref(reviewContext, "proposal-builder")}
+                    href={buildAdvisoryJourneyHref(
+                      reviewContext,
+                      "proposal-builder",
+                    )}
                   >
                     Build advisor-use draft
                   </Link>
@@ -358,38 +383,30 @@ export default function AdvisoryOverviewWorkspace({
               surface="default"
             />
           ) : (
-            <div className={styles.priorityTableWrap}>
-              <table className={styles.priorityTable}>
-                <caption className="sr-only">
-                  Proposals ranked by the next advisor action within the current source window
-                </caption>
-                <thead>
-                  <tr>
-                    <th>Proposal</th>
-                    <th>Stage</th>
-                    <th>Readiness</th>
-                    <th>Next Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {model.proposalRows.map((row) => (
-                    <tr key={row.proposalId}>
-                      <td>
-                        <Link href={row.href}>{row.title}</Link>
-                        <span>ID: {row.proposalId}</span>
-                      </td>
-                      <td>
-                        <SemanticBadge tone={row.stageTone}>{row.stage}</SemanticBadge>
-                      </td>
-                      <td>
-                        <SemanticBadge tone={row.readinessTone}>{row.readiness}</SemanticBadge>
-                      </td>
-                      <td>{row.nextAction}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <WorkbenchWorklist
+              ariaLabel="Advisory proposal decision worklist"
+              eyebrow="Advisor worklist"
+              title="Proposal decisions"
+              description="Select a proposal to review its current business status and next permitted action."
+              items={model.proposalRows.map((row) => ({
+                key: row.proposalId,
+                title: row.title,
+                status: (
+                  <SemanticBadge tone={row.statusTone}>
+                    {row.status}
+                  </SemanticBadge>
+                ),
+              }))}
+              selectedKey={selectedProposal?.proposalId ?? null}
+              onSelectionChange={setSelectedProposalId}
+              decisionLabel="Selected advisory proposal"
+              decision={
+                selectedProposal ? (
+                  <SelectedProposalDecision proposal={selectedProposal} />
+                ) : null
+              }
+              className={styles.decisionWorkspace}
+            />
           )}
 
           <SourceWindowNavigation
@@ -401,57 +418,60 @@ export default function AdvisoryOverviewWorkspace({
             itemLabel="proposals"
             viewLabel="Proposal view"
             onPrevious={sourceWindow.showPrevious}
-            onNext={() => sourceWindow.showNext(proposalQuery.data?.next_cursor)}
+            onNext={() =>
+              sourceWindow.showNext(proposalQuery.data?.next_cursor)
+            }
           />
-        </section>
-
-        <WorkbenchSummaryMetricStrip
-          ariaLabel="Advisory overview summary"
-          className={styles.summaryGrid}
-          itemClassName={styles.summaryMetric}
-          layout="custom"
-          items={model.metrics.map((metric) => ({
-            key: metric.label,
-            label: metric.label,
-            value: metric.value,
-            support: metric.detail,
-            className: styles[metric.tone],
-          }))}
-        />
-
-        <section
-          className={styles.lifecyclePanel}
-          aria-labelledby="advisory-lifecycle-title"
-          data-testid="advisory-lifecycle-summary"
-        >
-          <div className={styles.panelHeader}>
-            <div>
-              <Text variant="microLabel">Proposal Lifecycle</Text>
-              <Text variant="subsectionTitle" as="h2" id="advisory-lifecycle-title">
-                Move recommendations from insight to implementation
-              </Text>
-            </div>
-            <Text variant="metadata">{portfolioId}</Text>
-          </div>
-          <ol className={styles.lifecycleGrid}>
-            {model.lifecycleStages.map((stage) => (
-              <li key={stage.key}>
-                <Link href={stage.href} className={styles.lifecycleStage}>
-                  <span className={styles.stageSequence}>{stage.sequence}</span>
-                  <span className={styles.stageContent}>
-                    <strong>{stage.label}</strong>
-                    <span>{stage.detail}</span>
-                  </span>
-                  <span className={styles.stagePosture}>
-                    <SemanticBadge tone={stage.tone}>{stage.value}</SemanticBadge>
-                    <span>{stage.valueLabel}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ol>
         </section>
       </div>
     </SectionBlock>
+  );
+}
+
+function SelectedProposalDecision({
+  proposal,
+}: {
+  proposal: ReturnType<
+    typeof buildAdvisoryOverviewModel
+  >["proposalRows"][number];
+}) {
+  return (
+    <article
+      className={styles.selectedDecision}
+      data-testid="advisory-selected-decision"
+    >
+      <header className={styles.selectedDecisionHeader}>
+        <Text variant="microLabel">Next business action</Text>
+        <Text variant="subsectionTitle" as="h3">
+          {proposal.nextAction}
+        </Text>
+      </header>
+      <dl
+        className={styles.decisionEvidence}
+        aria-label="Selected proposal evidence"
+      >
+        <div>
+          <dt>Proposal reference</dt>
+          <dd>{proposal.proposalId}</dd>
+        </div>
+        <div>
+          <dt>Recorded by</dt>
+          <dd>{proposal.sourceOwner}</dd>
+        </div>
+        <div>
+          <dt>Recorded on</dt>
+          <dd>{proposal.recordedAt}</dd>
+        </div>
+      </dl>
+      <footer className={styles.selectedDecisionFooter}>
+        <Text variant="bodySmall">
+          Open the source-owned proposal record for evidence, approvals, and the
+          complete audit trail.
+        </Text>
+        <ActionLink href={proposal.href} className={styles.actionLink}>
+          Open proposal review
+        </ActionLink>
+      </footer>
+    </article>
   );
 }
