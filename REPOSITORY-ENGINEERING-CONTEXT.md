@@ -1214,6 +1214,19 @@ Important validation expectations:
     not send unsupported selectors or reject valid source evidence for failing to echo them. Show a
     concise capability notice when source valuation date, base currency, or another returned fact
     cannot be controlled by the current screen.
+42. Proposal Builder may recover an omitted advisory date or reporting currency only from its
+    source-owned portfolio-book response. Treat a carried review-context value as the explicit
+    override, never replace a non-empty user value with a source default, and repeat the portfolio
+    read with the resolved date and currency before enabling evaluation or draft handoff. Proposal
+    entry actions must use the shared review-context URL authority rather than portfolio-only string
+    interpolation.
+43. Portfolio record-screen recovery retains the left portfolio-navigation rail only while a real
+    source-confirmed portfolio identity remains available, so the advisor can see the current task
+    and reach portfolio selection. If no source identity is confirmed, omit the rail and use the
+    main recovery action; never turn display fallback such as **No portfolio** into switcher or link
+    data. When retained, the rail must suppress normal workspace destinations if its parsed context
+    is invalid or mismatched, while the main surface owns the persistent recovery explanation and
+    action.
 
 ### Visual Review Gate
 
@@ -1273,6 +1286,7 @@ Most relevant current governance:
    identity before composition. Use browser-history `push` for confirmed user decisions and
    `replace` only for source normalization. Back and Forward must synchronize source-backed props,
    caches, and request fencing without query-key remounts or focus loss.
+
 8. Advisor-facing readiness and shell-workspace availability must use typed, category-specific
    exact mappings from supported source values to business posture. Open strings, nulls, unknown
    values, and values supplied under the wrong category fail closed as neutral `Not reported` or

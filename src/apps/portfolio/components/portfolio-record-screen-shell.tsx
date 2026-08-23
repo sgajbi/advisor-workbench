@@ -38,10 +38,9 @@ export default function PortfolioRecordScreenShell({
   cashflowProjection?: PortfolioRecordCashflowProjection;
 }) {
   const copy = getPortfolioRecordScreenCopy(screen);
-  const resolvedPortfolioId = portfolioId ?? "No portfolio";
   const bookDisplayName = workspace
     ? buildPortfolioRecordDisplayName(workspace)
-    : resolvedPortfolioId;
+    : "";
   const headerKpis = workspace
     ? buildPortfolioRecordHeaderKpis(workspace, timeWindow ?? "30D", screen)
     : [];
@@ -51,12 +50,14 @@ export default function PortfolioRecordScreenShell({
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
         mainClassName="portfolio-main portfolio-record-screen-main"
-        rail={reviewContextError ? undefined : (
-          <PortfolioScreenRail
-            portfolioId={resolvedPortfolioId}
-            activeScreen={screen}
-          />
-        )}
+        rail={
+          portfolioId ? (
+            <PortfolioScreenRail
+              portfolioId={portfolioId}
+              activeScreen={screen}
+            />
+          ) : undefined
+        }
         side={
           workspace ? (
             <PortfolioRecordEvidenceRail

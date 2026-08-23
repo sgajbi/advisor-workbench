@@ -232,6 +232,20 @@ describe("proposal portfolio evidence", () => {
     });
   });
 
+  it("reports source bootstrap failure before omitted controls are confirmed", () => {
+    const evidence = buildEvidence({
+      asOfDate: "",
+      reportingCurrency: "",
+      bookQuery: failedQuery(),
+    });
+
+    expect(evidence).toMatchObject({
+      status: "unavailable",
+      canEvaluateAndHandoff: false,
+      positions: { status: "unavailable", items: [] },
+    });
+  });
+
   it("does not publish a zero manual assumption when the entered value is invalid", () => {
     const evidence = buildEvidence({
       bookQuery: failedQuery(),

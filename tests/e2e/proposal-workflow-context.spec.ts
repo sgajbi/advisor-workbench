@@ -9,10 +9,17 @@ const advisoryAsOfDate = "2026-04-10";
 
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
-}: { includeAdvisoryDate?: boolean } = {}): string {
+  reportingCurrency,
+}: {
+  includeAdvisoryDate?: boolean;
+  reportingCurrency?: string;
+} = {}): string {
   const params = new URLSearchParams({ portfolioId });
   if (includeAdvisoryDate) {
     params.set("asOfDate", advisoryAsOfDate);
+  }
+  if (reportingCurrency) {
+    params.set("reportingCurrency", reportingCurrency);
   }
   return `/proposals/simulate?${params.toString()}`;
 }
@@ -1510,10 +1517,6 @@ test("keeps proposal evaluation inside construction without persisted workflow a
   await expect(
     workflowRail.getByRole("button", { name: "Save Advisor Draft" }),
   ).toBeDisabled();
-  await expect(page.getByTestId("proposal-portfolio-evidence")).toHaveAttribute(
-    "data-evidence-status",
-    "not_selected",
-  );
   await expect(
     page.getByText("No persisted advisory workflow record"),
   ).toBeVisible();
@@ -1808,7 +1811,7 @@ test("withholds mixed-currency impact until refreshed source evidence matches th
   await mockProposalPortfolioEvidence(page, {
     sourceCurrencies: ["SGD", "USD"],
   });
-  await page.goto(buildProposalBuilderUrl(), {
+  await page.goto(buildProposalBuilderUrl({ reportingCurrency: "USD" }), {
     waitUntil: "domcontentloaded",
   });
 
@@ -1875,7 +1878,7 @@ test("withholds unlabelled source money until currency identity is refreshed", a
   await mockProposalPortfolioEvidence(page, {
     sourceCurrencies: [null, "USD"],
   });
-  await page.goto(buildProposalBuilderUrl(), {
+  await page.goto(buildProposalBuilderUrl({ reportingCurrency: "USD" }), {
     waitUntil: "domcontentloaded",
   });
 

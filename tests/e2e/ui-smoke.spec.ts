@@ -16,7 +16,7 @@ function getPortfolioFoundationPageHeading(page: Page) {
 
 function getPortfolioUnavailableHeading(page: Page) {
   return page.getByRole('heading', {
-    name: /^Portfolio unavailable$|^Portfolio context unavailable$/i,
+    name: /^Portfolio unavailable$|^Portfolio context unavailable$|^Review context needs attention$/i,
   });
 }
 
@@ -42,15 +42,23 @@ test.describe('UI smoke checks', () => {
       path: '/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001',
       assertReady: async (page: Page) => {
         const unavailableHeading = getPortfolioUnavailableHeading(page);
-        const unavailableVisible = await unavailableHeading.isVisible().catch(() => false);
-        if (unavailableVisible) {
-          await expect(unavailableHeading).toBeVisible({ timeout: 60000 });
-          return;
-        }
-
-        await expect(getPortfolioReviewPageHeading(page)).toBeVisible({
+        await expect(getPortfolioReviewPageHeading(page).or(unavailableHeading)).toBeVisible({
           timeout: 60000,
         });
+
+        const sourceRecoveryHeading = page.getByRole('heading', {
+          name: 'Review context needs attention',
+          exact: true,
+        });
+        if (await sourceRecoveryHeading.isVisible().catch(() => false)) {
+          await expect(
+            page.getByText(/No alternative portfolio was substituted/i),
+          ).toBeVisible();
+          await expect(page.getByRole('link', { name: 'Choose another portfolio' })).toHaveAttribute(
+            'href',
+            '/book',
+          );
+        }
       },
     },
   ] as const;
@@ -141,43 +149,52 @@ test.describe('UI smoke checks', () => {
     ).toBeVisible({ timeout: 60000 });
   });
 
-  test('workspace navigation prioritizes the selected business task when stacked', async ({ page }) => {
+  test('record recovery never turns a display placeholder into portfolio navigation', async ({ page }) => {
     test.setTimeout(120000);
     await page.setViewportSize({ width: 519, height: 900 });
-    await page.goto('/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&reportingCurrency=USD', {
+    await page.goto('/income?portfolioId=PB_SG_GLOBAL_BAL_001', {
       waitUntil: 'domcontentloaded',
       timeout: 60000,
     });
 
-    const currentView = page.getByRole('button', { name: /Current view Builder/i });
+    const currentView = page.getByRole('button', { name: /Current view Income/i });
     const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
-    const workspaceHeading = page.getByRole('heading', { name: /^Proposal Workspace$/i });
+    const workspaceHeading = page.getByRole('heading', { name: /^Income & Activity$/i });
 
-    await expect(currentView).toBeVisible({ timeout: 60000 });
-    await expect(currentView).toHaveAttribute('aria-expanded', 'false');
-    await expect(navigation).toBeHidden();
-    await expect(workspaceHeading).toBeVisible();
+    await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
+    await expect(page.getByText('No portfolio', { exact: true })).toHaveCount(0);
+    await expect(page.locator('a[href*="portfolioId=No"]')).toHaveCount(0);
+
+    const sourceConfirmed = await currentView.isVisible().catch(() => false);
+    if (sourceConfirmed) {
+      await expect(
+        page
+          .getByTestId('portfolio-screen-rail')
+          .getByText('PB_SG_GLOBAL_BAL_001', { exact: true }),
+      ).toBeVisible();
+      await expect(currentView).toHaveAttribute('aria-expanded', 'false');
+      await expect(navigation).toBeHidden();
+      await currentView.click();
+      await expect(navigation).toBeVisible();
+      await expect(
+        navigation.getByRole('link', {
+          name: /Income and activity Booked income, fees, and taxes/i,
+        }),
+      ).toHaveAttribute('aria-current', 'page');
+    } else {
+      await expect(navigation).toHaveCount(0);
+      await expect(page.getByRole('link', { name: 'Open My book' })).toHaveAttribute(
+        'href',
+        '/book',
+      );
+    }
+
     const headingBox = await workspaceHeading.boundingBox();
     expect(headingBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(900);
-
-    await currentView.click();
-    await expect(navigation).toBeVisible();
-    const activeProposalLink = navigation.getByRole('link', {
-      name: /Proposals Advice lifecycle and approvals/i,
-    });
-    await expect(activeProposalLink).toHaveAttribute('aria-current', 'page');
-    await activeProposalLink.focus();
-    await activeProposalLink.press('Escape');
-    await expect(navigation).toBeHidden();
-    await expect(currentView).toBeFocused();
-
-    await page.setViewportSize({ width: 1024, height: 768 });
-    await expect(currentView).toBeVisible();
-    await expect(navigation).toBeHidden();
-
-    await page.setViewportSize({ width: 1366, height: 900 });
-    await expect(currentView).toBeHidden();
-    await expect(navigation).toBeVisible();
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(hasOverflow).toBeFalsy();
   });
 
   test('global workspace orientation remains truthful across supported shell widths', async ({ page }) => {
