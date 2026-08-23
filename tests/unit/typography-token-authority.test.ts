@@ -34,4 +34,13 @@ describe("typography token authority", () => {
 
     expect(duplicateDeclarations).toEqual([]);
   });
+
+  it("keeps shared text primitives outside legacy page-level overrides", () => {
+    const legacyCss = fs.readFileSync(
+      path.resolve(__dirname, "../../src/styles/global/legacy-global.css"),
+      "utf8"
+    );
+
+    expect(legacyCss).not.toMatch(/\.app-page-shell\s+\.ui-text-/);
+  });
 });

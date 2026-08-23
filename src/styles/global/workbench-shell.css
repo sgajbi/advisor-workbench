@@ -150,7 +150,7 @@
   font-family: var(--font-ui);
   font-size: var(--type-body-size);
   line-height: var(--type-body-line-height);
-  font-weight: 400;
+  font-weight: var(--type-body-weight);
   color: var(--text);
 }
 
@@ -159,7 +159,7 @@
   font-family: var(--font-ui);
   font-size: var(--type-body-small-size);
   line-height: var(--type-body-small-line-height);
-  font-weight: 400;
+  font-weight: var(--type-body-small-weight);
   color: var(--text-muted);
 }
 
@@ -184,7 +184,7 @@
   font-weight: var(--type-label-weight);
   line-height: var(--type-label-line-height);
   letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--text-muted);
 }
 
@@ -207,17 +207,17 @@
 .ui-text-table-header {
   font-family: var(--font-ui);
   font-size: var(--type-table-header-size);
-  font-weight: 700;
+  font-weight: var(--type-table-header-weight);
   line-height: var(--type-table-header-line-height);
   letter-spacing: var(--tracking-table);
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--text-muted);
 }
 
 .ui-text-table-cell {
   font-family: var(--font-ui);
   font-size: var(--type-table-cell-size);
-  font-weight: 400;
+  font-weight: var(--type-table-cell-weight);
   line-height: var(--type-table-cell-line-height);
   color: var(--text);
 }
@@ -226,7 +226,7 @@
 .ui-text-button {
   font-family: var(--font-ui);
   font-size: var(--type-button-size);
-  font-weight: 600;
+  font-weight: var(--type-button-weight);
   line-height: var(--type-button-line-height);
   letter-spacing: 0;
   text-transform: none;
@@ -237,7 +237,7 @@
 .ui-text-badge {
   font-family: var(--font-ui);
   font-size: var(--type-badge-size);
-  font-weight: 700;
+  font-weight: var(--type-badge-weight);
   line-height: var(--type-badge-line-height);
   letter-spacing: var(--tracking-badge);
   text-transform: uppercase;
@@ -269,11 +269,14 @@
   font-variant-numeric: var(--type-financial-numeric);
   color: var(--brand-strong);
   font-feature-settings: "tnum" 1, "zero" 1;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 .ui-text-metric-value-xl {
   font-size: var(--type-metric-xl-size);
-  font-weight: 700;
+  font-weight: var(--type-metric-xl-weight);
   line-height: var(--type-metric-xl-line-height);
   letter-spacing: 0;
 }
@@ -281,7 +284,7 @@
 .ui-text-metric-value-l,
 .ui-text-metric-value {
   font-size: var(--type-metric-l-size);
-  font-weight: 700;
+  font-weight: var(--type-metric-l-weight);
   line-height: var(--type-metric-l-line-height);
   letter-spacing: 0;
 }
@@ -289,7 +292,7 @@
 .ui-text-metric-value-m,
 .ui-text-metric-value-compact {
   font-size: var(--type-metric-m-size);
-  font-weight: 700;
+  font-weight: var(--type-metric-m-weight);
   line-height: var(--type-metric-m-line-height);
   letter-spacing: 0;
 }
