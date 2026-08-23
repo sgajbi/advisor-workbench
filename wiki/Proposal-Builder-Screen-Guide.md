@@ -178,7 +178,7 @@ superiority.
   source-confirmed evaluation, portfolio-scoped queue link, and zero page overflow.
 - `tests/integration/proposal-simulate-page.test.tsx` proves the direct route composition and
   source-and-scope boundary.
-- `tests/unit/proposal-workspace-shell.test.tsx` and
+- `tests/integration/proposal-workspace-shell.test.tsx` and
   `tests/unit/proposal-workspace-shell-context.test.ts` prove that shell-unavailable recovery uses
   only an identity-matched portfolio book, keeps the strip and child workflow aligned, avoids a
   duplicate book read while the workspace shell is healthy, and rejects foreign recovery context.
