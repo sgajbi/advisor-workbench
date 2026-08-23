@@ -100,6 +100,12 @@ concurrency group.
   portfolio/benchmark/active comparison rather than a fabricated time series. It validates
   semantic evidence, keyboard-focus stability, component-capacity reflow, bounded height, browser
   runtime cleanliness, and page overflow at 1440, 1024, 720, and 519 pixels.
+- `npm run test:e2e:typography:compare`
+  isolated optimized-production comparison of pinned IBM Plex Sans and Inter candidate assets on
+  Portfolio Review at 1440, 1024, 768, and 519 pixels. It records computed family, semantic size
+  and weight, metric text width, card containment, single-line financial posture, and page overflow.
+  The harness verifies candidate checksums and injects each family independently; it is design
+  decision evidence, while `npm run quality:font-assets` remains the production supply-chain gate.
 - `make ci-local-docker`
   Docker parity built from the same immutable Node 22 Maintenance LTS Debian Bookworm slim base as
   the production image; Vitest is capped at two workers so the lane remains deterministic while the

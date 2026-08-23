@@ -20,7 +20,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | UI foundation | React `19.1.0` and TypeScript `5.9.3` | Exact manifest and policy reconciliation |
 | Production container | Official Debian Bookworm slim Node image | Immutable digest, standalone output, non-root runtime |
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
-| Typography delivery | Repo-governed Inter, Cormorant Garamond, and IBM Plex Mono WOFF2 assets through Next local fonts | Same-origin only; SIL OFL texts, upstream release/commit provenance, and SHA-256 checksums enforced |
+| Typography delivery | Repo-governed IBM Plex Sans, Cormorant Garamond, and IBM Plex Mono WOFF2 assets through Next local fonts | Same-origin only; SIL OFL texts, upstream release/commit provenance, and SHA-256 checksums enforced |
 | Product boundary | Workbench BFF to `lotus-gateway` | Browser owns no financial calculation or durable workflow authority |
 | Direct dependency admission | 16 exact stable production dependencies | Blocking regular/optional/required-peer manifest and matching lock-section reconciliation; no current exceptions |
 | Scale validation dependency | Official NGINX stable `1.30.3` Alpine `3.23` slim image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
@@ -51,6 +51,14 @@ overflow.
 This is controlled open-font distribution evidence, not an independent legal opinion or bank
 procurement approval. Font replacement remains an issue-backed design, accessibility, payload,
 license, fallback, and visual-regression decision.
+
+The operational Workbench face is IBM Plex Sans in static 400, 500, and 600 weights. Issue #829
+selected it through a reproducible optimized-browser comparison with pinned Inter 4.1 assets at
+1440, 1024, 768, and 519 pixels. Both candidates passed containment and responsive checks; IBM
+Plex Sans reduced the operational asset set from 352,240 bytes to 196,820 bytes and used about 5%
+less width for the longest tested Portfolio currency value. `npm run test:e2e:typography:compare`
+reproduces the comparison. `npm run quality:font-assets` independently protects the production
+asset manifest, provenance, license, checksums, loader coverage, and same-origin posture.
 
 ## Direct Dependency Architecture
 
@@ -182,9 +190,9 @@ durable execution record.
 2. [Node 22.23.1 and bundled npm](https://nodejs.org/en/download/archive/v22.23.1)
 3. [Next.js support policy](https://nextjs.org/support-policy)
 4. [Next.js local font documentation](https://nextjs.org/docs/app/api-reference/components/font)
-5. [Inter releases](https://github.com/rsms/inter/releases)
+5. [IBM Plex releases](https://github.com/IBM/plex/releases)
 6. [Cormorant releases](https://github.com/CatharsisFonts/Cormorant/releases)
-7. [IBM Plex releases](https://github.com/IBM/plex/releases)
+7. [Inter 4.1 comparison release](https://github.com/rsms/inter/releases/tag/v4.1)
 8. [npm package metadata controls](https://docs.npmjs.com/files/package.json/)
 9. [Next.js browser floors](https://nextjs.org/docs/pages/getting-started/installation#supported-browsers)
 10. [MDN Baseline scope](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
