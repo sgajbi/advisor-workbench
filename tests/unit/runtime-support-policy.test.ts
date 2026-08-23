@@ -555,8 +555,8 @@ describe("runtime support policy", () => {
     );
     const detachedRunner = loadEvidence();
     detachedRunner.dockerfile = detachedRunner.dockerfile.replace(
-      "COPY --chown=node:node --from=builder /app/.next/standalone ./",
-      "COPY --chown=node:node --from=ci-base /app/.next/standalone ./"
+      "COPY --chown=node:node --from=builder /app/.next-build/standalone ./",
+      "COPY --chown=node:node --from=ci-base /app/.next-build/standalone ./"
     );
     const overwrittenDependencies = loadEvidence();
     overwrittenDependencies.dockerfile = overwrittenDependencies.dockerfile.replace(
@@ -568,10 +568,10 @@ describe("runtime support policy", () => {
     );
     const overwrittenRunner = loadEvidence();
     overwrittenRunner.dockerfile = overwrittenRunner.dockerfile.replace(
-      "COPY --chown=node:node --from=builder /app/.next/standalone ./",
+      "COPY --chown=node:node --from=builder /app/.next-build/standalone ./",
       [
-        "COPY --chown=node:node --from=builder /app/.next/standalone ./",
-        "COPY --from=deps /app/.next/standalone ./",
+        "COPY --chown=node:node --from=builder /app/.next-build/standalone ./",
+        "COPY --from=deps /app/.next-build/standalone ./",
       ].join("\n")
     );
 

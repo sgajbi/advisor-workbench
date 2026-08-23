@@ -13,8 +13,9 @@ WORKDIR /app
 ARG WORKBENCH_DEPLOYMENT_ID
 ENV WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json next-env.d.ts next.config.mjs tsconfig.json ./
+COPY package.json package-lock.json next.config.mjs tsconfig.json ./
 COPY src ./src
+COPY scripts/config/next-artifact-layout.mjs ./scripts/config/next-artifact-layout.mjs
 COPY scripts/quality/clean-next-build-artifacts.mjs ./scripts/quality/clean-next-build-artifacts.mjs
 COPY scripts/quality/check-portfolio-record-bundles.mjs ./scripts/quality/check-portfolio-record-bundles.mjs
 RUN test -n "$WORKBENCH_DEPLOYMENT_ID" && npm run build
@@ -26,8 +27,8 @@ ENV NODE_ENV=production
 ENV WORKBENCH_DEPLOYMENT_ID=${WORKBENCH_DEPLOYMENT_ID}
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
-COPY --chown=node:node --from=builder /app/.next/standalone ./
-COPY --chown=node:node --from=builder /app/.next/static ./.next/static
+COPY --chown=node:node --from=builder /app/.next-build/standalone ./
+COPY --chown=node:node --from=builder /app/.next-build/static ./.next-build/static
 COPY --chown=node:node scripts/runtime/workbench-healthcheck.mjs ./healthcheck.mjs
 RUN rm -rf \
     /usr/local/lib/node_modules/npm \

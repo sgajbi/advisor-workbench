@@ -24,17 +24,23 @@ afterEach(() => {
 });
 
 describe("Next.js build artifact hygiene", () => {
-  it("removes only the repository-local .next directory before production builds", async () => {
+  it("removes only the repository-local production directory before builds", async () => {
     const { cleanNextBuildArtifacts } = await cleanModulePromise;
     const repository = createRepository("lotus-workbench");
-    const nextDirectory = path.join(repository, ".next");
+    const nextDirectory = path.join(repository, ".next-build");
+    const developmentDirectory = path.join(repository, ".next-dev");
     fs.mkdirSync(nextDirectory, { recursive: true });
+    fs.mkdirSync(developmentDirectory, { recursive: true });
     fs.writeFileSync(path.join(nextDirectory, "stale-manifest.json"), "{}");
+    fs.writeFileSync(path.join(developmentDirectory, "active-dev-chunk.js"), "active");
 
     const removedDirectory = cleanNextBuildArtifacts({ cwd: repository });
 
     expect(removedDirectory).toBe(nextDirectory);
     expect(fs.existsSync(nextDirectory)).toBe(false);
+    expect(fs.readFileSync(path.join(developmentDirectory, "active-dev-chunk.js"), "utf8")).toBe(
+      "active",
+    );
     expect(fs.existsSync(path.join(repository, "package.json"))).toBe(true);
   });
 
@@ -47,10 +53,10 @@ describe("Next.js build artifact hygiene", () => {
     );
   });
 
-  it("clears a verified mounted .next directory without removing its mount point", async () => {
+  it("clears a verified mounted production directory without removing its mount point", async () => {
     const { cleanNextBuildArtifacts } = await cleanModulePromise;
     const repository = createRepository("lotus-workbench");
-    const nextDirectory = path.join(repository, ".next");
+    const nextDirectory = path.join(repository, ".next-build");
     const nestedDirectory = path.join(nextDirectory, "cache");
     fs.mkdirSync(nestedDirectory, { recursive: true });
     fs.writeFileSync(path.join(nextDirectory, "BUILD_ID"), "stale");

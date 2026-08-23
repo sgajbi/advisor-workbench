@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { NEXT_PRODUCTION_DIRECTORY } from "../config/next-artifact-layout.mjs";
+
 export const PORTFOLIO_RECORD_ROUTE_POLICIES = Object.freeze([
   { route: "/allocation/page", task: "Allocation", maxInitialJsBytes: 4_500_000, agGrid: "required" },
   { route: "/positions/page", task: "Positions", maxInitialJsBytes: 4_500_000, agGrid: "required" },
@@ -13,7 +15,7 @@ export const PORTFOLIO_RECORD_ROUTE_POLICIES = Object.freeze([
 const AG_GRID_MARKER = "ag-grid-community";
 
 export function analyzePortfolioRecordBundles({
-  buildDirectory = ".next",
+  buildDirectory = NEXT_PRODUCTION_DIRECTORY,
   routePolicies = PORTFOLIO_RECORD_ROUTE_POLICIES,
 } = {}) {
   const manifestPath = path.join(buildDirectory, "app-build-manifest.json");

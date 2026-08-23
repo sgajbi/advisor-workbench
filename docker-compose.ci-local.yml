@@ -8,7 +8,7 @@ services:
       - ./:/app
       - ./scripts/testing/ci-empty.env:/app/.env.local:ro
       - ci-local-node-modules:/app/node_modules
-      - ci-local-next-cache:/app/.next
+      - ci-local-next-build-cache:/app/.next-build
     command:
       [
         "sh",
@@ -23,4 +23,4 @@ services:
 
 volumes:
   ci-local-node-modules:
-  ci-local-next-cache:
+  ci-local-next-build-cache:

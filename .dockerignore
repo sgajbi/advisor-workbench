@@ -10,6 +10,9 @@
 !src/**
 !scripts/
 scripts/*
+!scripts/config/
+scripts/config/*
+!scripts/config/next-artifact-layout.mjs
 !scripts/runtime/
 scripts/runtime/*
 !scripts/runtime/workbench-healthcheck.mjs

@@ -1,5 +1,8 @@
 node_modules/
+next-env.d.ts
 .next/
+.next-build/
+.next-dev/
 dist/
 coverage/
 .env*

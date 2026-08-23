@@ -17,7 +17,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": ".next-build/cache/tsconfig.tsbuildinfo",
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom"
@@ -39,7 +39,8 @@
     "**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next-build/types/**/*.ts",
+    ".next-dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

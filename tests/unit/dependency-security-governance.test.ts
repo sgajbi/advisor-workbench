@@ -236,7 +236,11 @@ describe("dependency security governance", () => {
     expect(dockerfile).not.toContain("COPY . .");
     expect(dockerfile).toContain("COPY src ./src");
     expect(nextConfig).toContain('output: "standalone"');
-    expect(dockerfile).toContain("/app/.next/standalone ./");
+    expect(dockerfile).toContain("/app/.next-build/standalone ./");
+    expect(dockerfile).toContain(
+      "scripts/config/next-artifact-layout.mjs ./scripts/config/next-artifact-layout.mjs",
+    );
+    expect(dockerignore).toContain("!scripts/config/next-artifact-layout.mjs");
     expect(dockerfile).not.toContain("npm prune --omit=dev");
     expect(dockerfile).toContain("/usr/local/lib/node_modules/npm");
     expect(dockerfile).toContain("/usr/local/lib/node_modules/corepack");

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { NEXT_PRODUCTION_DIRECTORY } from "../config/next-artifact-layout.mjs";
 import {
   collectWorkflowStepEntries,
   declaresGovernedChromiumProject,
@@ -270,7 +271,7 @@ export function validateRuntimeSupportPolicy({
       ({ keyword, argument }) =>
         keyword === "COPY" &&
         normalizeInstruction(argument) ===
-          "--chown=node:node --from=builder /app/.next/standalone ./"
+          `--chown=node:node --from=builder /app/${NEXT_PRODUCTION_DIRECTORY}/standalone ./`
     );
     const runnerCrossStageCopies = runnerStages[0].instructions.filter(
       ({ keyword, argument }) => keyword === "COPY" && dockerCopySource(argument)
@@ -279,7 +280,7 @@ export function validateRuntimeSupportPolicy({
       ({ keyword, argument }) =>
         keyword === "COPY" &&
         normalizeInstruction(argument) ===
-          "--chown=node:node --from=builder /app/.next/static ./.next/static"
+          `--chown=node:node --from=builder /app/${NEXT_PRODUCTION_DIRECTORY}/static ./${NEXT_PRODUCTION_DIRECTORY}/static`
     );
     if (
       standaloneCopies.length !== 1 ||

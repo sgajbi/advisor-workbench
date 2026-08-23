@@ -10,6 +10,7 @@ describe("Playwright smoke server launcher", () => {
     .replaceAll("\r", "\n");
 
   it("starts Next directly and forwards shutdown signals without a shell child", () => {
+    expect(source).toContain("import { NEXT_PRODUCTION_DIRECTORY }");
     expect(source).toContain("import { cleanNextBuildArtifacts }");
     expect(source).toContain("cleanNextBuildArtifacts();");
     expect(source).toContain("spawn(process.execPath, [nextCli, ...args]");
@@ -21,8 +22,10 @@ describe("Playwright smoke server launcher", () => {
 
   it("runs the generated standalone server and stages its generated static assets", () => {
     expect(source).toContain('resolve(standaloneRoot, "server.js")');
-    expect(source).toContain('resolve(projectRoot, ".next", "static")');
-    expect(source).toContain('resolve(standaloneRoot, ".next", "static")');
+    expect(source).toContain(
+      "resolve(projectRoot, NEXT_PRODUCTION_DIRECTORY, \"static\")",
+    );
+    expect(source).toContain("standaloneRoot,\n  NEXT_PRODUCTION_DIRECTORY,");
     expect(source).toContain(
       "cpSync(generatedStaticAssets, standaloneStaticAssets",
     );
@@ -36,18 +39,20 @@ describe("Playwright smoke server launcher", () => {
   it("fails closed when standalone server or static output is absent", () => {
     expect(source).toContain("if (!existsSync(standaloneServerPath))");
     expect(source).toContain(
-      "Playwright smoke requires .next/standalone/server.js from a successful production build.",
+      "Playwright smoke requires ${NEXT_PRODUCTION_DIRECTORY}/standalone/server.js from a successful production build.",
     );
     expect(source).toContain("if (!existsSync(generatedStaticAssets))");
     expect(source).toContain(
-      "Playwright smoke requires generated .next/static assets from a successful production build.",
+      "Playwright smoke requires generated ${NEXT_PRODUCTION_DIRECTORY}/static assets from a successful production build.",
     );
   });
 
   it("reuses a build only through the explicit validated-build contract", () => {
     expect(source).toContain('PLAYWRIGHT_REUSE_VALIDATED_BUILD === "1"');
     expect(source).toContain("existsSync(validatedBuildMarker)");
-    expect(source).toContain("requires an existing .next/BUILD_ID");
+    expect(source).toContain(
+      "requires an existing ${NEXT_PRODUCTION_DIRECTORY}/BUILD_ID",
+    );
   });
 
   it("starts on the validated explicit Playwright port", () => {
