@@ -37,13 +37,6 @@ export async function startPortfolioFixtureGateway({
       return;
     }
 
-    if (requestUrl.pathname === '/api/v1/foundation/portfolios') {
-      sendJson(response, {
-        items: [{ portfolio_id: PORTFOLIO_ID }],
-      });
-      return;
-    }
-
     if (requestUrl.pathname === '/api/v1/portfolio/portfolios') {
       sendJson(response, {
         items: [

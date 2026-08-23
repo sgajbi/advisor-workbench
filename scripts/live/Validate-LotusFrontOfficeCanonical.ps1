@@ -129,7 +129,7 @@ Test-Endpoint "http://render.dev.lotus/health/ready" "lotus-render readiness"
 Test-Endpoint "http://idea.dev.lotus/health/ready" "lotus-idea readiness"
 Test-Endpoint "http://manage.dev.lotus/api/v1/rebalance/supportability/summary" "lotus-manage supportability summary"
 Test-Endpoint "http://report.dev.lotus/integration/capabilities?consumerSystem=lotus-gateway&tenantId=default" "lotus-report integration capabilities"
-Test-Endpoint "$GatewayBaseUrl/api/v1/foundation/portfolios/$PortfolioId/workspace" "Gateway foundation workspace" -Headers $canonicalCallerContextHeaders
+Test-Endpoint "$GatewayBaseUrl/api/v1/portfolio/portfolios/$PortfolioId/workspace" "Gateway portfolio workspace" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/platform/capabilities" "Gateway platform capabilities" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway workbench overview" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway performance summary" -Headers $canonicalCallerContextHeaders

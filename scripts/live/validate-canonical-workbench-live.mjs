@@ -771,14 +771,14 @@ async function run() {
     .filter((item) => !item.ok)
     .forEach((item) => console.warn(item.warning));
 
-  const foundationWorkspace = await fetchJson(
+  const portfolioWorkspace = await fetchJson(
     summary,
-    `${gatewayBaseUrl}/api/v1/foundation/portfolios/${portfolioId}/workspace`,
-    "Foundation workspace",
+    `${gatewayBaseUrl}/api/v1/portfolio/portfolios/${portfolioId}/workspace`,
+    "Portfolio workspace",
     timeoutMs,
   );
-  if (foundationWorkspace?.portfolio?.portfolio_id !== portfolioId) {
-    throw new Error(`Foundation workspace did not resolve ${portfolioId}.`);
+  if (portfolioWorkspace?.portfolio?.portfolio_id !== portfolioId) {
+    throw new Error(`Portfolio workspace did not resolve ${portfolioId}.`);
   }
 
   const performanceSummaryUrl = `${gatewayBaseUrl}/api/v1/workbench/${portfolioId}/performance/summary?${canonicalPerformanceQuery()}`;
@@ -1881,7 +1881,7 @@ async function run() {
     },
   );
   summary.rfc3643FeatureCoverage = buildRfc3643FeatureCoverage(summary, {
-    foundationWorkspace,
+    portfolioWorkspace,
     manageSupportabilitySummary,
     gatewayOverview,
     commandCenterSummary: dpmCommandCenterPayload,
