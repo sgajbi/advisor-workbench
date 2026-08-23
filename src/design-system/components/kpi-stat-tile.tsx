@@ -1,7 +1,16 @@
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 
+import { cx } from "../utils/cx";
+import styles from "./kpi-stat-tile.module.css";
 import Text from "./text";
+
+const TONE_CLASS = {
+  neutral: styles.neutral,
+  success: styles.success,
+  warn: styles.warn,
+  danger: styles.danger,
+} as const;
 
 export default function KpiStatTile({
   label,
@@ -24,13 +33,14 @@ export default function KpiStatTile({
       component={onClick ? "button" : "div"}
       type={onClick ? "button" : undefined}
       onClick={onClick}
-      className={[
+      className={cx(
         "kpi-stat-tile",
-        onClick ? "kpi-stat-tile-interactive" : "",
-        `kpi-stat-tile-${valueTone}`,
-      ]
-        .filter(Boolean)
-        .join(" ")}
+        styles.tile,
+        onClick && "kpi-stat-tile-interactive",
+        onClick && styles.interactive,
+        valueTone && `kpi-stat-tile-${valueTone}`,
+        TONE_CLASS[valueTone ?? "neutral"]
+      )}
       aria-label={onClick ? accessibleLabel : undefined}
       title={typeof definition === "string" ? definition : undefined}
       sx={{
@@ -43,13 +53,13 @@ export default function KpiStatTile({
         appearance: "none",
       }}
     >
-      <Text variant="dataLabel" className="kpi-stat-label">
+      <Text variant="dataLabel" className={cx("kpi-stat-label", styles.label)}>
         {label}
       </Text>
-      <Text variant="metricValueL" className="kpi-stat-value">
+      <Text variant="metricValueL" className={cx("kpi-stat-value", styles.value)}>
         {value}
       </Text>
-      <Text variant="bodySmall" className="kpi-stat-support">
+      <Text variant="bodySmall" className={cx("kpi-stat-support", styles.support)}>
         {support ?? "\u00A0"}
       </Text>
     </Box>

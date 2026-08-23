@@ -2189,74 +2189,11 @@
   border-right: none;
 }
 
-.portfolio-book-hero .kpi-stat-value {
-  font-size: clamp(1.35rem, 1.8vw, 1.7rem);
-  line-height: 1.08;
-  overflow-wrap: normal;
-  word-break: normal;
-}
-
 .portfolio-hero-support {
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-xs);
   line-height: 1.5;
-}
-
-.kpi-stat-tile {
-  display: grid;
-  grid-template-rows: auto auto auto;
-  gap: var(--space-2);
-  min-width: 0;
-  min-height: var(--metric-tile-height-default);
-  width: 100%;
-}
-
-.kpi-stat-tile-interactive:hover {
-  background: transparent;
-}
-
-.kpi-stat-label {
-  display: block;
-  font-size: var(--text-xs);
-  font-weight: 650;
-  letter-spacing: 0;
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-
-.kpi-stat-value {
-  display: block;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.kpi-stat-support {
-  display: block;
-  min-height: 1.2rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.6;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.kpi-stat-tile-success .kpi-stat-value {
-  color: var(--success-text);
-}
-
-.kpi-stat-tile-warn .kpi-stat-value {
-  color: var(--warn-text);
-}
-
-.kpi-stat-tile-danger .kpi-stat-value {
-  color: var(--danger);
 }
 
 .portfolio-insight-strip {

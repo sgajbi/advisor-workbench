@@ -1,0 +1,46 @@
+.tile {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--metric-tile-height-default);
+  width: 100%;
+}
+
+.interactive:hover {
+  background: transparent;
+}
+
+.label {
+  display: block;
+}
+
+.value {
+  display: block;
+  min-width: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
+}
+
+.support {
+  display: block;
+  min-height: 1.2rem;
+  font-variant-numeric: var(--type-financial-numeric);
+}
+
+.neutral {
+  color: var(--text);
+}
+
+.success .value {
+  color: var(--success-text);
+}
+
+.warn .value {
+  color: var(--warn-text);
+}
+
+.danger .value {
+  color: var(--danger);
+}
