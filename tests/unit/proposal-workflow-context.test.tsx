@@ -143,7 +143,8 @@ describe("ProposalWorkflowContextRail", () => {
       "data-responsive-priority",
       "supplementary"
     );
-    expect(screen.getByText("Workflow context")).toBeInTheDocument();
+    expect(screen.getByText("Decision posture")).toBeInTheDocument();
+    expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(screen.getByText("Source and scope")).toBeInTheDocument();
   });
 

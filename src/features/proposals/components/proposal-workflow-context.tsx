@@ -82,6 +82,7 @@ function useProposalWorkflowContext(): ProposalWorkflowContextValue {
 export function ProposalWorkflowContextRail() {
   const { model } = useProposalWorkflowContext();
   const isSupplementary = model.responsivePriority === "supplementary";
+  const decisionFacts = model.facts.filter((fact) => fact.label !== "Portfolio");
 
   return (
     <div
@@ -91,7 +92,7 @@ export function ProposalWorkflowContextRail() {
       <Panel className={`${styles.contextPanel} ${styles.workflowContextPanel}`}>
         <div className={styles.drawerHeader}>
           <div>
-            <Text variant="microLabel">Workflow context</Text>
+            <Text variant="microLabel">Decision posture</Text>
             <Text variant="subsectionTitle" as="h2">
               {model.title}
             </Text>
@@ -103,8 +104,8 @@ export function ProposalWorkflowContextRail() {
           {model.summary}
         </p>
 
-        <dl className={styles.workflowFacts} aria-label="Advisory workflow summary">
-          {model.facts.map((fact) => (
+        <dl className={styles.workflowFacts} aria-label="Advisory decision summary">
+          {decisionFacts.map((fact) => (
             <div key={fact.label}>
               <dt>{fact.label}</dt>
               <dd>{fact.value}</dd>
