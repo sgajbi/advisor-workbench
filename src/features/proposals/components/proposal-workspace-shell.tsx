@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
-import type { PortfolioWorkspace } from "@/apps/portfolio/types";
+import type { PortfolioReviewContextSourceInput } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import {
@@ -20,6 +19,7 @@ import {
   WorkbenchSectionStack,
 } from "@/design-system";
 import { buildProposalReviewContextStrip } from "../proposal-review-context-strip-view-model";
+import { loadProposalPortfolioContext } from "../proposal-portfolio-context";
 import {
   buildNeutralProposalWorkflowContext,
   type ProposalWorkflowContextModel,
@@ -50,13 +50,13 @@ export default async function ProposalWorkspaceShell({
   workflowContextPresentation?: "rail" | "inline-boundary";
   children:
     | ReactNode
-    | ((portfolioContext: PortfolioWorkspace | null) => ReactNode);
+    | ((portfolioContext: PortfolioReviewContextSourceInput | null) => ReactNode);
 }) {
   const { portfolioId } = reviewContext;
-  const portfolioContext = resolveProposalPortfolioContext(
+  const portfolioContext = await loadProposalPortfolioContext({
     portfolioId,
-    await getPortfolioWorkspaceShell(portfolioId),
-  );
+    reviewContext,
+  });
   const sourceContextNotice =
     activeMode === "proposal-builder"
       ? buildWorkbenchSourceContextNotice({
@@ -154,13 +154,4 @@ export default async function ProposalWorkspaceShell({
       </WorkbenchPageContainer>
     </AppPageShell>
   );
-}
-
-export function resolveProposalPortfolioContext(
-  portfolioId: string,
-  portfolioContext: PortfolioWorkspace | null,
-): PortfolioWorkspace | null {
-  return portfolioContext?.portfolio.portfolio_id === portfolioId
-    ? portfolioContext
-    : null;
 }

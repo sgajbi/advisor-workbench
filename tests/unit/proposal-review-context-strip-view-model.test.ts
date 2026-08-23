@@ -39,4 +39,33 @@ describe("proposal review context strip view model", () => {
       },
     });
   });
+
+  it("shows identity-matched portfolio book facts as partial source context", () => {
+    const workspace = buildPortfolioWorkspace();
+
+    expect(
+      buildProposalReviewContextStrip({
+        portfolioId: workspace.portfolio.portfolio_id,
+        portfolioContext: {
+          as_of_date: workspace.as_of_date,
+          portfolio: workspace.portfolio,
+        },
+      }),
+    ).toEqual({
+      portfolioName: "Global Balanced Mandate",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      clientId: "CIF_SG_000184",
+      mandateType: null,
+      bookingCenter: "Singapore",
+      businessDate: "12 May 2026",
+      currency: { kind: "base", value: "USD" },
+      sourceState: "partial",
+      notice: {
+        label: "Mandate context limited",
+        message:
+          "Portfolio identity, business date, and base currency are confirmed from the portfolio book; mandate classification remains unavailable.",
+        tone: "attention",
+      },
+    });
+  });
 });

@@ -1,7 +1,12 @@
-import type { PortfolioWorkspace } from "@/apps/portfolio/types";
-import { buildPortfolioReviewContextStrip } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
+import {
+  buildPortfolioReviewContextSource,
+  type PortfolioReviewContextSourceInput,
+} from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import type { ReviewContextStripModel } from "@/design-system";
-import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
+import {
+  buildReviewContextStripModel,
+  buildUnavailableReviewContextStrip,
+} from "@/shell/review-context-strip-view-model";
 
 export function buildProposalReviewContextStrip({
   portfolioId,
@@ -9,11 +14,22 @@ export function buildProposalReviewContextStrip({
   notice,
 }: {
   portfolioId: string;
-  portfolioContext: PortfolioWorkspace | null;
+  portfolioContext: PortfolioReviewContextSourceInput | null;
   notice?: ReviewContextStripModel["notice"];
 }): ReviewContextStripModel {
   if (portfolioContext?.portfolio.portfolio_id === portfolioId) {
-    return buildPortfolioReviewContextStrip(portfolioContext, { notice });
+    return buildReviewContextStripModel(
+      buildPortfolioReviewContextSource(portfolioContext),
+      notice ??
+        (!portfolioContext.profile
+          ? {
+              label: "Mandate context limited",
+              message:
+                "Portfolio identity, business date, and base currency are confirmed from the portfolio book; mandate classification remains unavailable.",
+              tone: "attention",
+            }
+          : undefined),
+    );
   }
 
   return buildUnavailableReviewContextStrip(notice ?? {

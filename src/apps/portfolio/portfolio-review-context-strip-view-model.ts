@@ -8,6 +8,17 @@ import {
 import { formatBusinessDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 
+export type PortfolioReviewContextSourceInput = Pick<
+  PortfolioWorkspace,
+  "as_of_date" | "portfolio"
+> &
+  Partial<
+    Pick<
+      PortfolioWorkspace,
+      "profile" | "control_capabilities" | "income_summary" | "activity_summary"
+    >
+  >;
+
 export type PortfolioReviewContextStripOptions = {
   notice?: ReviewContextStripModel["notice"];
   acceptedReportingCurrency?: string | null;
@@ -27,10 +38,10 @@ export function buildPortfolioReviewContextStrip(
 }
 
 export function buildPortfolioReviewContextSource(
-  workspace: PortfolioWorkspace,
+  workspace: PortfolioReviewContextSourceInput,
   acceptedReportingCurrency?: string | null,
 ): ReviewContextSource {
-  const mandateType = workspace.profile.portfolio_type
+  const mandateType = workspace.profile?.portfolio_type
     ? formatStatus(workspace.profile.portfolio_type)
     : null;
   const bookingCenter = workspace.portfolio.booking_center_code
@@ -55,7 +66,7 @@ export function buildPortfolioReviewContextSource(
 }
 
 function resolveAcceptedReportingCurrency(
-  workspace: PortfolioWorkspace,
+  workspace: PortfolioReviewContextSourceInput,
   acceptedReportingCurrency?: string | null,
 ): string | null {
   if (acceptedReportingCurrency) {
