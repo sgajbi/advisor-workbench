@@ -210,7 +210,7 @@ describe("ProposalSimulateForm", () => {
     renderForm("PB_SG_GLOBAL_BAL_001", "SGD");
 
     await waitForPortfolioEvidence();
-    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("SGD");
+    expect(screen.queryByLabelText("Portfolio Currency")).not.toBeInTheDocument();
     expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
       "PB_SG_GLOBAL_BAL_001",
       { asOfDate: "2026-04-10", reportingCurrency: "SGD" },
@@ -246,8 +246,8 @@ describe("ProposalSimulateForm", () => {
       "PB_SG_GLOBAL_BAL_001",
       { asOfDate: "2026-04-10", reportingCurrency: "USD" },
     );
-    expect(screen.getByLabelText("Advisory As-of Date")).toHaveValue("2026-04-10");
-    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("USD");
+    expect(screen.queryByLabelText("Advisory As-of Date")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio Currency")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Currency")).toHaveValue("USD");
     expect(screen.getByLabelText("Price Currency")).toHaveValue("USD");
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
@@ -261,7 +261,7 @@ describe("ProposalSimulateForm", () => {
     renderForm("PB_SG_GLOBAL_BAL_001", "EUR");
 
     await waitForPortfolioEvidence("context_mismatch");
-    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("EUR");
+    expect(screen.queryByLabelText("Portfolio Currency")).not.toBeInTheDocument();
     expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
       "PB_SG_GLOBAL_BAL_001",
       { asOfDate: "2026-04-10", reportingCurrency: "EUR" },
@@ -385,15 +385,6 @@ describe("ProposalSimulateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
     expect(await screen.findByText("Evaluation confirmed")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
-      target: { value: "2026-04-11" },
-    });
-    await waitFor(() =>
-      expect(screen.getByTestId("proposal-portfolio-evidence")).toHaveAttribute(
-        "data-effective-as-of-date",
-        "2026-04-11"
-      )
-    );
     await act(async () => {
       await queryClient.invalidateQueries({
         queryKey: [
@@ -402,11 +393,8 @@ describe("ProposalSimulateForm", () => {
           "2026-04-10",
           "USD",
         ],
-        refetchType: "none",
+        refetchType: "active",
       });
-    });
-    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
-      target: { value: "2026-04-10" },
     });
 
     expect(await screen.findByText("Microsoft Corp.")).toBeInTheDocument();
@@ -497,7 +485,6 @@ describe("ProposalSimulateForm", () => {
     expect(advisoryApiMocks.createAdvisoryWorkspace.mock.calls[0][0].body.stateful_input).toEqual({
       portfolio_id: "PB_SG_GLOBAL_BAL_001",
       as_of: "2026-04-10",
-      mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
     });
   });
 
@@ -629,10 +616,19 @@ describe("ProposalSimulateForm", () => {
     });
   });
 
-  it("uses provided initial portfolio id", () => {
+  it("keeps governed portfolio context out of editable proposal controls", async () => {
     renderForm("PORT_UI_1001");
-    const portfolioInput = screen.getByLabelText("Portfolio ID") as HTMLInputElement;
-    expect(portfolioInput.value).toBe("PORT_UI_1001");
+    expect(screen.getByRole("heading", { name: "Scenario assumptions" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio ID")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio Currency")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Advisory As-of Date")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Mandate ID")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Additional Cash Assumption")).toBeInTheDocument();
+    await waitForPortfolioEvidence();
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PORT_UI_1001",
+      { asOfDate: "2026-04-10", reportingCurrency: "USD" },
+    );
   });
 
   it("moves the workflow rail from construction to the source-retained draft", async () => {
@@ -666,10 +662,7 @@ describe("ProposalSimulateForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
     await screen.findByText("Advisor draft retained");
 
-    fireEvent.change(screen.getByLabelText("Portfolio ID"), {
-      target: { value: "PB_SG_NEW_DRAFT_001" },
-    });
-
+    expect(screen.queryByLabelText("Portfolio ID")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View proposal queue" })).toHaveAttribute(
       "href",
       "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001"
@@ -1102,7 +1095,7 @@ describe("ProposalSimulateForm", () => {
     );
   });
 
-  it("requests and confirms a new combined book when the advisory date changes", async () => {
+  it("keeps source refreshes locked to the governed advisory date", async () => {
     renderForm("PB_SG_GLOBAL_BAL_001");
     await waitForPortfolioEvidence();
 
@@ -1111,16 +1104,14 @@ describe("ProposalSimulateForm", () => {
       { asOfDate: "2026-04-10", reportingCurrency: "USD" }
     );
 
-    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
-      target: { value: "2026-04-11" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
 
     const panel = await waitForPortfolioEvidence();
-    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-11");
-    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-11");
+    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-10");
+    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-10");
     expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenLastCalledWith(
       "PB_SG_GLOBAL_BAL_001",
-      { asOfDate: "2026-04-11", reportingCurrency: "USD" }
+      { asOfDate: "2026-04-10", reportingCurrency: "USD" }
     );
   });
 
@@ -1258,65 +1249,4 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeEnabled();
   });
 
-  it("does not let an older date request replace the currently selected evidence", async () => {
-    let resolveOlder: ((value: ReturnType<typeof portfolioBook>) => void) | undefined;
-    let resolveCurrent: ((value: ReturnType<typeof portfolioBook>) => void) | undefined;
-    portfolioApiMocks.getRequiredPortfolioBook.mockImplementation(
-      async (
-        portfolioId: string,
-        params: { asOfDate?: string; reportingCurrency?: string } = {}
-      ) => {
-        if (params.asOfDate === "2026-04-11") {
-          return await new Promise<ReturnType<typeof portfolioBook>>((resolve) => {
-            resolveOlder = resolve;
-          });
-        }
-        if (params.asOfDate === "2026-04-12") {
-          return await new Promise<ReturnType<typeof portfolioBook>>((resolve) => {
-            resolveCurrent = resolve;
-          });
-        }
-        return portfolioBook(undefined, {
-          portfolioId,
-          asOfDate: params.asOfDate,
-          currency: params.reportingCurrency,
-        });
-      }
-    );
-    renderForm("PB_SG_GLOBAL_BAL_001");
-    await waitForPortfolioEvidence();
-
-    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
-      target: { value: "2026-04-11" },
-    });
-    await waitFor(() => expect(resolveOlder).toBeDefined());
-    fireEvent.change(screen.getByLabelText("Advisory As-of Date"), {
-      target: { value: "2026-04-12" },
-    });
-    await waitFor(() => expect(resolveCurrent).toBeDefined());
-
-    await act(async () => {
-      resolveCurrent?.(
-        portfolioBook(undefined, {
-          portfolioId: "PB_SG_GLOBAL_BAL_001",
-          asOfDate: "2026-04-12",
-          currency: "USD",
-        })
-      );
-    });
-    const panel = await waitForPortfolioEvidence();
-    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-12");
-
-    await act(async () => {
-      resolveOlder?.(
-        portfolioBook(undefined, {
-          portfolioId: "PB_SG_GLOBAL_BAL_001",
-          asOfDate: "2026-04-11",
-          currency: "USD",
-        })
-      );
-    });
-    expect(panel).toHaveAttribute("data-requested-as-of-date", "2026-04-12");
-    expect(panel).toHaveAttribute("data-effective-as-of-date", "2026-04-12");
-  });
 });
