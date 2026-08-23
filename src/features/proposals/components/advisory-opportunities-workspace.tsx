@@ -7,6 +7,10 @@ import { Alert, CircularProgress, Stack } from "@mui/material";
 
 import { ScreenStatePanel, SectionBlock, Text } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import {
+  buildReviewContextHref,
+  type WorkspaceReviewContext,
+} from "@/shell/review-context";
 
 import {
   getAdvisorIdeaCandidateDetail,
@@ -24,9 +28,11 @@ const CANONICAL_IDEA_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
 
 export default function AdvisoryOpportunitiesWorkspace({
   portfolioId,
+  reviewContext,
   selectedCandidateId,
 }: {
   portfolioId: string;
+  reviewContext: WorkspaceReviewContext;
   selectedCandidateId?: string;
 }) {
   const queryClient = useQueryClient();
@@ -61,6 +67,10 @@ export default function AdvisoryOpportunitiesWorkspace({
     () => findQueueItemByCandidateId(data?.items, selectedCandidate),
     [data?.items, selectedCandidate],
   );
+  const proposalBuilderHref = buildReviewContextHref(
+    "/proposals/simulate",
+    { ...reviewContext, portfolioId },
+  );
 
   if (!isCanonicalIdeaPortfolio) {
     return (
@@ -91,7 +101,7 @@ export default function AdvisoryOpportunitiesWorkspace({
       actions={
         <Link
           className="nav-link"
-          href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+          href={proposalBuilderHref}
         >
           Open Proposal Builder
         </Link>
@@ -193,7 +203,7 @@ export default function AdvisoryOpportunitiesWorkspace({
           action={
             <Link
               className="nav-link"
-              href={`/proposals/simulate?portfolioId=${encodeURIComponent(portfolioId)}`}
+              href={proposalBuilderHref}
             >
               Open proposal builder
             </Link>

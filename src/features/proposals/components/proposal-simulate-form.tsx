@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -174,31 +174,6 @@ export default function ProposalSimulateForm({
   const cashAmount = useWatch({ control: form.control, name: "cashAmount" });
   const proposalTitle = useWatch({ control: form.control, name: "proposalTitle" });
   const mandateId = useWatch({ control: form.control, name: "mandateId" });
-  const draftFingerprint = useMemo(
-    () =>
-      buildProposalDraftFingerprint({
-        values: {
-          proposalTitle,
-          portfolioId,
-          asOfDate,
-          mandateId,
-          baseCurrency,
-          cashAmount,
-        },
-        cashFlows,
-        trades,
-      }),
-    [
-      asOfDate,
-      baseCurrency,
-      cashAmount,
-      cashFlows,
-      mandateId,
-      portfolioId,
-      proposalTitle,
-      trades,
-    ]
-  );
   const scenarioCashAdmission = useMemo(
     () => assessProposalScenarioCashInput(cashAmount),
     [cashAmount]
@@ -206,10 +181,9 @@ export default function ProposalSimulateForm({
   const evidencePortfolioId = portfolioId.trim();
   const evidenceAsOfDate = asOfDate.trim();
   const evidenceCurrency = baseCurrency.trim().toUpperCase();
-  const hasPortfolioEvidenceContext =
-    evidencePortfolioId.length > 0 &&
-    /^\d{4}-\d{2}-\d{2}$/.test(evidenceAsOfDate) &&
-    /^[A-Z]{3}$/.test(evidenceCurrency);
+  const hasPortfolioEvidenceContext = evidencePortfolioId.length > 0;
+  const hasValidEvidenceDate = /^\d{4}-\d{2}-\d{2}$/.test(evidenceAsOfDate);
+  const hasValidEvidenceCurrency = /^[A-Z]{3}$/.test(evidenceCurrency);
   const workflowContextModel = useMemo(
     () =>
       savedDraft
@@ -227,12 +201,87 @@ export default function ProposalSimulateForm({
     ],
     queryFn: async () =>
       await getRequiredPortfolioBook(evidencePortfolioId, {
-        asOfDate: evidenceAsOfDate,
-        reportingCurrency: evidenceCurrency,
+        ...(hasValidEvidenceDate ? { asOfDate: evidenceAsOfDate } : {}),
+        ...(hasValidEvidenceCurrency
+          ? { reportingCurrency: evidenceCurrency }
+          : {}),
       }),
     enabled: hasPortfolioEvidenceContext,
     ...workbenchStrictQueryDefaults,
   });
+  const sourceBookAsOfDate = portfolioBookQuery.data?.as_of_date?.trim() ?? "";
+  const sourceBookIdentityCurrency =
+    portfolioBookQuery.data?.portfolio.base_currency?.trim().toUpperCase() ?? "";
+
+  useEffect(() => {
+    if (
+      !evidenceAsOfDate &&
+      /^\d{4}-\d{2}-\d{2}$/.test(sourceBookAsOfDate)
+    ) {
+      form.setValue("asOfDate", sourceBookAsOfDate, {
+        shouldDirty: false,
+        shouldValidate: true,
+      });
+    }
+    if (!evidenceCurrency && /^[A-Z]{3}$/.test(sourceBookIdentityCurrency)) {
+      form.setValue("baseCurrency", sourceBookIdentityCurrency, {
+        shouldDirty: false,
+        shouldValidate: true,
+      });
+    }
+  }, [
+    evidenceAsOfDate,
+    evidenceCurrency,
+    form,
+    sourceBookAsOfDate,
+    sourceBookIdentityCurrency,
+  ]);
+  const resolvedCashFlows = useMemo(
+    () =>
+      cashFlows.map((item) =>
+        item.currency.trim() || !sourceBookIdentityCurrency
+          ? item
+          : { ...item, currency: sourceBookIdentityCurrency },
+      ),
+    [cashFlows, sourceBookIdentityCurrency],
+  );
+  const resolvedTrades = useMemo(
+    () =>
+      trades.map((item) =>
+        item.referencePriceCurrency?.trim() || !sourceBookIdentityCurrency
+          ? item
+          : {
+              ...item,
+              referencePriceCurrency: sourceBookIdentityCurrency,
+            },
+      ),
+    [sourceBookIdentityCurrency, trades],
+  );
+  const draftFingerprint = useMemo(
+    () =>
+      buildProposalDraftFingerprint({
+        values: {
+          proposalTitle,
+          portfolioId,
+          asOfDate,
+          mandateId,
+          baseCurrency,
+          cashAmount,
+        },
+        cashFlows: resolvedCashFlows,
+        trades: resolvedTrades,
+      }),
+    [
+      asOfDate,
+      baseCurrency,
+      cashAmount,
+      mandateId,
+      portfolioId,
+      proposalTitle,
+      resolvedCashFlows,
+      resolvedTrades,
+    ],
+  );
   const portfolioEvidence = useMemo(
     () =>
       buildProposalPortfolioEvidence({
@@ -275,20 +324,20 @@ export default function ProposalSimulateForm({
       buildProposalDraftImpactModel({
         positions: tradablePositions,
         cashAmount: currentCashAmount,
-        cashFlows,
-        trades,
+        cashFlows: resolvedCashFlows,
+        trades: resolvedTrades,
         requestedCurrency: evidenceCurrency,
         portfolioEvidence,
         additionalCashAdmission: scenarioCashAdmission,
       }),
     [
-      cashFlows,
+      resolvedCashFlows,
       currentCashAmount,
       evidenceCurrency,
       portfolioEvidence,
       scenarioCashAdmission,
       tradablePositions,
-      trades,
+      resolvedTrades,
     ]
   );
   const sourceBookCurrency = draftImpactModel.currencyAuthority.sourceCurrency;
@@ -297,13 +346,13 @@ export default function ProposalSimulateForm({
       ? sourceBookCurrency
       : draftImpactModel.currencyAuthority.requestedCurrency;
   const executableTradeRows = useMemo(
-    () => buildExecutableTradeRows(tradablePositions, trades),
-    [tradablePositions, trades]
+    () => buildExecutableTradeRows(tradablePositions, resolvedTrades),
+    [resolvedTrades, tradablePositions]
   );
   const cappedTradeCount = executableTradeRows.filter(
     (item) => item.cappedToAvailableQuantity
   ).length;
-  const cashMovementsPrecisionReady = cashFlows.every(
+  const cashMovementsPrecisionReady = resolvedCashFlows.every(
     (item) => proposalCashFlowToMinorUnits(item) !== null
   );
   const canRunProposalWorkflow =
@@ -370,7 +419,7 @@ export default function ProposalSimulateForm({
 
   function netCashImpact(): string {
     let totalMinorUnits = 0n;
-    for (const item of cashFlows) {
+    for (const item of resolvedCashFlows) {
       const minorUnits = proposalCashFlowToMinorUnits(item);
       if (minorUnits === null) {
         return "Needs correction";
@@ -385,7 +434,7 @@ export default function ProposalSimulateForm({
   }
 
   function validCashFlowRows(): ProposalDraftCashFlowIntent[] {
-    return cashFlows.filter((item) => {
+    return resolvedCashFlows.filter((item) => {
       const minorUnits = proposalCashFlowToMinorUnits(item);
       return item.currency.trim().length > 0 && minorUnits !== null && minorUnits > 0n;
     });
@@ -485,7 +534,11 @@ export default function ProposalSimulateForm({
     try {
       await createEvaluatedWorkspace(values);
       setEvaluatedDraftFingerprint(
-        buildProposalDraftFingerprint({ values, cashFlows, trades })
+        buildProposalDraftFingerprint({
+          values,
+          cashFlows: resolvedCashFlows,
+          trades: resolvedTrades,
+        })
       );
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
     } catch (err) {
@@ -516,7 +569,11 @@ export default function ProposalSimulateForm({
     try {
       const evaluatedWorkspace = await createEvaluatedWorkspace(values);
       setEvaluatedDraftFingerprint(
-        buildProposalDraftFingerprint({ values, cashFlows, trades })
+        buildProposalDraftFingerprint({
+          values,
+          cashFlows: resolvedCashFlows,
+          trades: resolvedTrades,
+        })
       );
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
       const workspaceId = extractAdvisoryWorkspaceId(evaluatedWorkspace);
@@ -738,7 +795,7 @@ export default function ProposalSimulateForm({
             />
 
             <CashMovementsPanel
-              cashFlows={cashFlows}
+              cashFlows={resolvedCashFlows}
               netCashImpact={netCashImpact()}
               onUpdateCashFlow={updateCashFlow}
               onRemoveCashFlow={(id) =>
@@ -748,7 +805,7 @@ export default function ProposalSimulateForm({
             />
 
             <DraftOrderBlotterPanel
-              trades={trades}
+              trades={resolvedTrades}
               readyTradeCount={validTradeCount()}
               onUpdateTrade={updateTrade}
               onRemoveTrade={(id) => setTrades((current) => current.filter((row) => row.id !== id))}
