@@ -30,6 +30,7 @@ import {
   PageToolbar,
   Panel,
   ReadinessIndicator,
+  ReviewContextStrip,
   SectionBlock,
   SectionLabel,
   SectionHeader,
@@ -441,6 +442,38 @@ describe("design-system components", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001"));
     expect(copyPortfolio).toHaveTextContent("Copied");
     expect(screen.queryByRole("button", { name: "Copy Client ID" })).not.toBeInTheDocument();
+  });
+
+  it("clears copied status when the source identity changes", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    const { rerender } = render(
+      <ReviewContextStrip
+        context={{
+          portfolioName: "Global Balanced Mandate",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Support details"));
+    const copyPortfolio = screen.getByRole("button", { name: "Copy Portfolio ID" });
+    fireEvent.click(copyPortfolio);
+    await waitFor(() => expect(copyPortfolio).toHaveTextContent("Copied"));
+    expect(screen.getByText("Portfolio ID copied.")).toBeInTheDocument();
+
+    rerender(
+      <ReviewContextStrip
+        context={{
+          portfolioName: "Income Mandate",
+          portfolioId: "PB_SG_INCOME_002",
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Copy Portfolio ID" })).toHaveTextContent("Copy");
+    expect(screen.queryByText("Portfolio ID copied.")).not.toBeInTheDocument();
   });
 
   it("renders the shared workbench page frame with shared header and section stack", () => {
