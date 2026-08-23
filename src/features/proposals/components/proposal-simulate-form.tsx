@@ -119,10 +119,12 @@ export default function ProposalSimulateForm({
   initialPortfolioId,
   initialAsOfDate = "",
   initialReportingCurrency = "",
+  sourceContextConfirmed,
 }: {
   initialPortfolioId: string;
   initialAsOfDate?: string;
   initialReportingCurrency?: string;
+  sourceContextConfirmed: boolean;
 }) {
   const isHydrated = useClientMounted();
   const [defaultIdempotencyKey] = useState(createUiIdempotencyKey);
@@ -203,7 +205,7 @@ export default function ProposalSimulateForm({
           ? { reportingCurrency: evidenceCurrency }
           : {}),
       }),
-    enabled: hasPortfolioEvidenceContext,
+    enabled: sourceContextConfirmed && hasPortfolioEvidenceContext,
     ...workbenchStrictQueryDefaults,
   });
   const sourceBookAsOfDate = portfolioBookQuery.data?.as_of_date?.trim() ?? "";
@@ -353,11 +355,14 @@ export default function ProposalSimulateForm({
     (item) => proposalCashFlowToMinorUnits(item) !== null
   );
   const canRunProposalWorkflow =
+    sourceContextConfirmed &&
     portfolioEvidence.canEvaluateAndHandoff &&
     scenarioCashAdmission.status === "ready" &&
     cashMovementsPrecisionReady &&
     !(draftImpactModel.status === "unavailable" && draftImpactModel.blockedBy === "monetary_precision");
-  const workflowActionReason = !portfolioEvidence.canEvaluateAndHandoff
+  const workflowActionReason = !sourceContextConfirmed
+    ? "Proposal actions remain unavailable until the review context confirms the selected portfolio."
+    : !portfolioEvidence.canEvaluateAndHandoff
     ? "Evaluation and draft handoff remain unavailable until the selected portfolio context is confirmed."
     : scenarioCashAdmission.status === "invalid"
       ? "Correct the additional cash assumption before evaluating or saving this draft."
@@ -405,7 +410,7 @@ export default function ProposalSimulateForm({
   }
 
   function confirmPortfolioEvidence(): boolean {
-    if (portfolioEvidence.canEvaluateAndHandoff) {
+    if (sourceContextConfirmed && portfolioEvidence.canEvaluateAndHandoff) {
       return true;
     }
     setError(
@@ -787,9 +792,15 @@ export default function ProposalSimulateForm({
           }
           side={
             <ProposalBuilderWorkflowRail
-              queuePortfolioId={savedDraft?.portfolioId ?? portfolioId}
+              queuePortfolioId={
+                sourceContextConfirmed
+                  ? (savedDraft?.portfolioId ?? portfolioId)
+                  : null
+              }
               canRunWorkflow={canRunProposalWorkflow}
-              isPortfolioEvidenceConfirmed={portfolioEvidence.canEvaluateAndHandoff}
+              isPortfolioEvidenceConfirmed={
+                sourceContextConfirmed && portfolioEvidence.canEvaluateAndHandoff
+              }
               actionReason={workflowActionReason}
               scenarioCashState={
                 scenarioCashAdmission.status === "ready"

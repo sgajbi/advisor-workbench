@@ -139,6 +139,7 @@ function deferred<T>() {
 function renderForm(
   initialPortfolioId = "PB_SG_GLOBAL_BAL_001",
   initialReportingCurrency = "USD",
+  sourceContextConfirmed = true,
 ) {
   const queryClient = new QueryClient();
   const view = render(
@@ -152,6 +153,7 @@ function renderForm(
           initialPortfolioId={initialPortfolioId}
           initialAsOfDate="2026-04-10"
           initialReportingCurrency={initialReportingCurrency}
+          sourceContextConfirmed={sourceContextConfirmed}
         />
         <ProposalWorkflowContextBoundary presentation="inline" />
         <ProposalWorkflowContextRail />
@@ -230,7 +232,10 @@ describe("ProposalSimulateForm", () => {
             portfolioId: "PB_SG_GLOBAL_BAL_001",
           })}
         >
-          <ProposalSimulateForm initialPortfolioId="PB_SG_GLOBAL_BAL_001" />
+          <ProposalSimulateForm
+            initialPortfolioId="PB_SG_GLOBAL_BAL_001"
+            sourceContextConfirmed
+          />
         </ProposalWorkflowContextProvider>
       </QueryClientProvider>,
     );
@@ -251,6 +256,28 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByLabelText("Currency")).toHaveValue("USD");
     expect(screen.getByLabelText("Price Currency")).toHaveValue("USD");
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  });
+
+  it("keeps proposal actions and portfolio links closed when the shell did not confirm context", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001", "USD", false);
+
+    expect(portfolioApiMocks.getRequiredPortfolioBook).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "View proposal queue" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Proposal actions remain unavailable until the review context confirms the selected portfolio.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+    await waitForPortfolioEvidence();
+
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "View proposal queue" })).not.toBeInTheDocument();
   });
 
   it("preserves a carried reporting-currency override when source identity differs", async () => {
