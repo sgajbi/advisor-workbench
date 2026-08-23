@@ -120,6 +120,12 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.change(screen.getByLabelText("Evidence columns"), {
       target: { value: "returns" },
     });
+    expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
+      "Comparison display overrideNet basis · Absolute return view · Returns only",
+    );
+    expect(
+      document.querySelector("[data-performance-comparison-display='override']"),
+    ).toBeTruthy();
     expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Opening Cash Flow")).not.toBeInTheDocument();
     expect(within(horizonTable).queryByText("Closing Cash Flow")).not.toBeInTheDocument();
@@ -216,7 +222,16 @@ describe("PerformanceMultiHorizonPanel", () => {
     );
 
     await screen.findByLabelText("Multi-horizon returns");
+    expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
+      "Horizon view adjusted to available evidenceNet basis · Absolute return view",
+    );
+    expect(
+      document.querySelector("[data-performance-comparison-display='adjusted']"),
+    ).toBeTruthy();
     fireEvent.click(screen.getByText("Adjust comparison display"));
+    fireEvent.change(screen.getByLabelText("Evidence columns"), {
+      target: { value: "returns" },
+    });
     fireEvent.change(screen.getByLabelText("Basis comparison"), {
       target: { value: "both" },
     });
@@ -240,6 +255,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Basis comparison")).toHaveValue("inherit");
       expect(screen.getByLabelText("Return comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Evidence columns")).toHaveValue("combined");
       expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
         "Uses analysis selectionGross basis · Relative return view",
       );
@@ -266,6 +282,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     await waitFor(() => {
       expect(screen.getByLabelText("Basis comparison")).toHaveValue("inherit");
       expect(screen.getByLabelText("Return comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Evidence columns")).toHaveValue("combined");
       expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
         "Uses analysis selectionNet basis · Absolute return view",
       );
