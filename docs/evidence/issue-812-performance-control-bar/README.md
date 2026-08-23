@@ -25,7 +25,8 @@ claiming that a live upstream service produced these screenshots.
 
 ## Reproduction
 
-Validated product head: `65f34ebb`
+The captures were regenerated after the exact-head review fixes. Git history preserves the rendered
+implementation checkpoint; CI and the linked PR checks validate the complete branch head.
 
 ```powershell
 node scripts/testing/run-performance-smoke-scenario.mjs populated --grep "one governed control bar"
@@ -51,3 +52,8 @@ type, date values are not clipped, cumulative column headings wrap inside their 
 scrolling is confined to the named comparison region. The first implementation pass did not meet
 that bar: its 1440-pixel table heading overflowed and its tablet measures formed an unbalanced 3+1
 layout. Those product defects were corrected before this pack was retained.
+
+The control-bar captures intentionally show **Custom window** expanded. This is the most demanding
+layout state and proves that both full date values and the Apply action remain available without page
+overflow. The same browser journey first asserts the production default is collapsed and that the
+default 1440-pixel control bar stays within its governed compact-height threshold.
