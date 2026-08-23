@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -14,6 +14,7 @@ const {
   classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
   hasRecordedAdvisorBriefAcceptProof,
+  navigateForBusinessProof,
   resolveHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
   validateAdvisoryJourneyScreens,
@@ -55,6 +56,16 @@ const {
     text: string,
     expectedReviewer: string,
   ) => boolean;
+  navigateForBusinessProof: (
+    page: {
+      goto: (
+        route: string,
+        options: { timeout: number; waitUntil: string },
+      ) => Promise<{ ok: () => boolean; status: () => number } | null>;
+    },
+    route: string,
+    options: { timeout: number },
+  ) => Promise<{ ok: () => boolean; status: () => number }>;
   resolveHighCashIdeaCandidateId: (
     candidateHref: string | null,
     workbenchBaseUrl: string,
@@ -64,6 +75,61 @@ const {
 };
 
 describe("live validation browser workflow helpers", () => {
+  it("navigates on document readiness and preserves the caller timeout", async () => {
+    const response = { ok: () => true, status: () => 200 };
+    const goto = vi.fn().mockResolvedValue(response);
+
+    await expect(
+      navigateForBusinessProof(
+        { goto },
+        "http://workbench.dev.lotus/book?asOfDate=2026-04-10",
+        { timeout: 60_000 },
+      ),
+    ).resolves.toBe(response);
+    expect(goto).toHaveBeenCalledWith(
+      "http://workbench.dev.lotus/book?asOfDate=2026-04-10",
+      { timeout: 60_000, waitUntil: "domcontentloaded" },
+    );
+  });
+
+  it.each([
+    ["missing document response", null, /returned no document response/],
+    [
+      "source HTTP failure",
+      { ok: () => false, status: () => 503 },
+      /failed.*HTTP 503/,
+    ],
+  ])("fails closed for %s", async (_case, response, expectedError) => {
+    const goto = vi.fn().mockResolvedValue(response);
+
+    await expect(
+      navigateForBusinessProof(
+        { goto },
+        "http://workbench.dev.lotus/book?asOfDate=2026-04-10",
+        { timeout: 60_000 },
+      ),
+    ).rejects.toThrow(expectedError);
+  });
+
+  it("routes canonical navigation through the governed readiness helper", () => {
+    const source = readFileSync(
+      join(process.cwd(), "scripts/live/validation/browser-workflows.mjs"),
+      "utf8",
+    );
+
+    expect(source.match(/page\.goto\(/g)).toHaveLength(1);
+    expect(source).not.toContain("networkidle");
+  });
+
+  it("waits for the source-backed Portfolio Review decision brief", () => {
+    const source = browserWorkflowModule.validatePortfolioPanels.toString();
+
+    expect(source).toContain('".workbench-decision-brief-primary h3"');
+    expect(source).toContain('"Portfolio readiness"');
+    expect(source).toContain("/^Status (Ready|Partial|Unavailable)$/");
+    expect(source).toContain('"Reporting coverage"');
+  });
+
   it.each([
     ["ready", "demo_ready"],
     ["attention", "truthfully_degraded"],
@@ -274,6 +340,7 @@ describe("live validation browser workflow helpers", () => {
   it("binds Advisor Book proof to portfolio context rather than its display label", () => {
     const source = browserWorkflowModule.validateAdvisorBookPanel.toString();
 
+    expect(source).toContain("navigateForBusinessProof");
     expect(source).toContain(
       'a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]',
     );
@@ -313,6 +380,8 @@ describe("live validation browser workflow helpers", () => {
   it("observes the rendered PDF readiness control before exercising Report Centre", () => {
     const source = browserWorkflowModule.validateReportCentrePanel.toString();
 
+    expect(source).toContain("structuredDataRadio).toBeVisible");
+    expect(source).toContain("governedPdfRadio).toBeVisible");
     expect(source).toContain("governedPdfRadio.isDisabled()");
     expect(source).toContain("governedPdfRadio.check");
     expect(source).toContain("Governed document creation is available.");

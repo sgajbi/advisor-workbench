@@ -3,6 +3,22 @@ import { expect } from "@playwright/test";
 
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
 
+export async function navigateForBusinessProof(page, route, options) {
+  const response = await page.goto(route, {
+    ...options,
+    waitUntil: "domcontentloaded",
+  });
+  if (!response) {
+    throw new Error(`Canonical browser navigation returned no document response for ${route}.`);
+  }
+  if (!response.ok()) {
+    throw new Error(
+      `Canonical browser navigation failed for ${route} with HTTP ${response.status()}.`,
+    );
+  }
+  return response;
+}
+
 export function resolveHighCashIdeaCandidateId(candidateHref, workbenchBaseUrl) {
   if (!candidateHref) {
     throw new Error("The canonical high-cash candidate link has no href.");
@@ -240,7 +256,7 @@ async function validateAdvisoryJourneyRoute(
     screenshotAdvisoryJourney,
   },
 ) {
-  await page.goto(route, { waitUntil: "networkidle", timeout: timeoutMs });
+  await navigateForBusinessProof(page, route, { timeout: timeoutMs });
   await expect(
     page.getByRole("heading", { name: title, exact: true }).first(),
   ).toBeVisible({
@@ -743,8 +759,7 @@ export async function validatePortfolioPanels(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/portfolio?portfolioId=${portfolioId}`, {
     timeout: timeoutMs,
   });
   await expect(
@@ -771,33 +786,21 @@ export async function validatePortfolioPanels(
   await expect(page.getByText("YTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
-  const priorityAttentionHeading = page.getByRole("heading", {
-    name: "Review priority attention",
+  const decisionReview = page.getByRole("region", {
+    name: "Portfolio decision review",
   });
-  if ((await priorityAttentionHeading.count()) > 0) {
-    await expect(priorityAttentionHeading).toBeVisible({
-      timeout: timeoutMs,
-    });
-  } else {
-    const decisionReview = page.getByRole("region", {
-      name: "Portfolio decision review",
-    });
-    const attentionItems = decisionReview.locator(
-      ".workbench-decision-brief-attention-item",
-    );
-    const emptyState = decisionReview.locator(
-      ".workbench-decision-brief-empty",
-    );
-    if ((await attentionItems.count()) > 0) {
-      await expect(attentionItems.first()).toBeVisible({
-        timeout: timeoutMs,
-      });
-    } else {
-      await expect(emptyState).toHaveText("No source-reported items need attention.", {
-        timeout: timeoutMs,
-      });
-    }
-  }
+  await expect(
+    decisionReview.locator(".workbench-decision-brief-primary h3"),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    decisionReview.getByText("Portfolio readiness", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    decisionReview.getByLabel(/^Status (Ready|Partial|Unavailable)$/),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    decisionReview.getByText("Reporting coverage", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
   await expect(
     page.getByRole("heading", { name: "Review Evidence" }),
   ).toBeVisible({
@@ -840,8 +843,7 @@ export async function validateReportCentrePanel(
     assertTableHasRows,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/reports?portfolioId=${portfolioId}`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/reports?portfolioId=${portfolioId}`, {
     timeout: timeoutMs,
   });
   await expect(page.getByRole("heading", { name: "Report Centre" })).toBeVisible({
@@ -856,6 +858,8 @@ export async function validateReportCentrePanel(
   const governedPdfRadio = page.getByRole("radio", {
     name: /Governed PDF document/,
   });
+  await expect(structuredDataRadio).toBeVisible({ timeout: timeoutMs });
+  await expect(governedPdfRadio).toBeVisible({ timeout: timeoutMs });
   const reportCentreProof = buildReportCentreProofPosture(
     !(await governedPdfRadio.isDisabled()),
   );
@@ -913,8 +917,7 @@ export async function validateAdvisorBookPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/book?asOfDate=${canonicalAsOfDate}`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/book?asOfDate=${canonicalAsOfDate}`, {
     timeout: timeoutMs,
   });
   await expect(page.getByRole("heading", { name: "My book", exact: true })).toBeVisible({
@@ -951,10 +954,9 @@ export async function validatePerformanceSummaryPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     {
-      waitUntil: "networkidle",
       timeout: timeoutMs,
     },
   );
@@ -1003,9 +1005,9 @@ export async function validatePerformanceAnalysisPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
-    { waitUntil: "networkidle", timeout: timeoutMs },
+    { timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
   const attributionTrendEvidence = page.getByTestId("attribution-trend-evidence");
@@ -1135,9 +1137,9 @@ export async function validateAdvisorBriefPanel(
   const buildAdvisorBriefRoute = ({ detailBasis, chartFrequency }) =>
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=advisor&period=EXPLICIT&detailBasis=${detailBasis}&chartFrequency=${chartFrequency}&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`;
   let proofQuery = { detailBasis: "NET", chartFrequency: "monthly" };
-  await page.goto(
+  await navigateForBusinessProof(page,
     buildAdvisorBriefRoute(proofQuery),
-    { waitUntil: "networkidle", timeout: timeoutMs },
+    { timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
   await expect(
@@ -1188,8 +1190,7 @@ export async function validateAdvisorBriefPanel(
       proofPosture === "review-action-unavailable"
     ) {
       proofQuery = { detailBasis: "GROSS", chartFrequency: "quarterly" };
-      await page.goto(buildAdvisorBriefRoute(proofQuery), {
-        waitUntil: "networkidle",
+      await navigateForBusinessProof(page, buildAdvisorBriefRoute(proofQuery), {
         timeout: timeoutMs,
       });
       await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
@@ -1276,10 +1277,9 @@ export async function validateProposalNarrativePosturePanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/proposals/${encodeURIComponent(proposalId)}`,
     {
-      waitUntil: "networkidle",
       timeout: timeoutMs,
     },
   );
@@ -1352,10 +1352,9 @@ export async function validateProposalMemoEvidencePackPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/proposals/${encodeURIComponent(proposalId)}`,
     {
-      waitUntil: "networkidle",
       timeout: timeoutMs,
     },
   );
@@ -1440,10 +1439,9 @@ export async function validateBankDemoProofPanel(
   page,
   { summary, workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/recommendations?portfolioId=${encodeURIComponent(portfolioId)}&mode=proof`,
     {
-      waitUntil: "networkidle",
       timeout: timeoutMs,
     },
   );
@@ -1507,9 +1505,9 @@ export async function validateRiskPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
-    { waitUntil: "networkidle", timeout: timeoutMs },
+    { timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Risk Review/, timeoutMs);
   await expect(
@@ -1619,9 +1617,9 @@ export async function validateEvidencePanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=evidence&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
-    { waitUntil: "networkidle", timeout: timeoutMs },
+    { timeout: timeoutMs },
   );
   await assertRailModeActive(page, /^Evidence/, timeoutMs);
   await expect(
@@ -1675,8 +1673,7 @@ export async function validateOutcomeReviewPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=reviews`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=reviews`, {
     timeout: timeoutMs,
   });
   const outcomeReviewPanel = workbenchPanelByClass(
@@ -1736,8 +1733,7 @@ export async function validateDpmCommandCenterPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=mandate`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=mandate`, {
     timeout: timeoutMs,
   });
   await expect(
@@ -1824,8 +1820,7 @@ export async function validateDpmWaveCommandCenterPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=waves`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=waves`, {
     timeout: timeoutMs,
   });
   const wavePanel = workbenchPanelByClass(
@@ -1975,8 +1970,7 @@ export async function validatePortfolioMemoryPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=memory`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=memory`, {
     timeout: timeoutMs,
   });
   const memoryPanel = workbenchPanelByClass(page, "portfolio-memory-panel");
@@ -2009,10 +2003,9 @@ export async function validateConstructionAlternativesPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
 ) {
-  await page.goto(
+  await navigateForBusinessProof(page,
     `${workbenchBaseUrl}/workbench/${portfolioId}?mode=construction`,
     {
-      waitUntil: "networkidle",
       timeout: timeoutMs,
     },
   );
@@ -2062,8 +2055,7 @@ export async function validatePmOperatingQualityPanel(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=quality`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=quality`, {
     timeout: timeoutMs,
   });
   const qualityPanel = workbenchPanelByClass(
@@ -2121,8 +2113,7 @@ export async function validateDpmCopilotWorkspace(
   page,
   { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=copilot`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=copilot`, {
     timeout: timeoutMs,
   });
   const copilotWorkspace = workbenchPanelByClass(page, "dpm-copilot-workspace");
@@ -2161,8 +2152,7 @@ export async function validateProofPackPanel(
     screenshotRegisteredPanel,
   },
 ) {
-  await page.goto(`${workbenchBaseUrl}/workbench/${portfolioId}?mode=proof`, {
-    waitUntil: "networkidle",
+  await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=proof`, {
     timeout: timeoutMs,
   });
   const proofPackPanel = workbenchPanelByClass(page, "proof-pack-panel");

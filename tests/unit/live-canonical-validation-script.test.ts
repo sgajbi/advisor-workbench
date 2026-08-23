@@ -1301,14 +1301,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain('"Portfolio Review"');
     expect(browserWorkflowModule).toContain('"Portfolio decision review"');
     expect(browserWorkflowModule).toContain(
-      ".workbench-decision-brief-attention-item",
+      '".workbench-decision-brief-primary h3"',
     );
-    expect(browserWorkflowModule).toContain(
-      ".workbench-decision-brief-empty",
-    );
-    expect(browserWorkflowModule).toContain(
-      '"No source-reported items need attention."',
-    );
+    expect(browserWorkflowModule).toContain('"Portfolio readiness"');
+    expect(browserWorkflowModule).toContain('"Reporting coverage"');
     expect(browserWorkflowModule).not.toContain(
       '"No priority attention items for the selected view."',
     );
