@@ -40,7 +40,11 @@ The builder normally receives this identity from the exact Gateway-backed portfo
 that lightweight shell response is unavailable while the identity-matched Gateway portfolio book
 remains healthy, the strip and form use the same recovered portfolio, client, booking-centre,
 business-date, and base-currency facts and label mandate context as limited. A foreign book response
-still fails closed; route or demonstration values never become display or action authority.
+still fails closed; route or demonstration values never become display or action authority. The
+form may refresh holdings and cash only beneath that shell-confirmed context. If shell recovery
+fails, a later browser-side book response cannot enable evaluation, handoff, portfolio navigation,
+or a portfolio-scoped queue link; the advisor must refresh the page or return to **My book** so the
+shell and construction workflow confirm one context together.
 
 Portfolio reference, currency, business date, and mandate are governed review context, not draft
 inputs. They are no longer editable inside the form. The advisor edits only supported proposal
@@ -132,6 +136,7 @@ Shared endpoint families and runtime ownership remain in [API Surface](API-Surfa
 | Preparing | Hydration-safe disabled actions and source-evidence loading | Wait; no first action can be lost before handlers are ready |
 | Advisory date not confirmed | Empty required date field and unavailable source-backed proposal actions | Select the intended advisory date; Workbench does not substitute a demonstration date |
 | Workspace context limited, book confirmed | Confirmed portfolio-book identity, date, and base currency; mandate context is visibly unavailable | Continue only after the form's required holdings and cash evidence also confirms the same context |
+| Workspace context unconfirmed | Unavailable portfolio actions and no portfolio-scoped navigation, even if a later evidence refresh succeeds | Refresh the page or return to **My book**; browser evidence cannot independently authorize the workflow |
 | Evidence confirmed | Holdings, cash, date, currency, and readiness are visible | Continue construction or deliberately refresh the source |
 | Evidence unavailable or mismatched | Exact requested/source context and an explicit block | Refresh the portfolio evidence or correct the context |
 | Draft input needs correction | Field-level guidance, blocked impact where necessary, and **Action required** | Correct the visible value; Workbench does not coerce it to zero |

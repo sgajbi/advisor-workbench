@@ -1223,7 +1223,11 @@ Important validation expectations:
     may use an identity-matched Gateway portfolio-book response as partial shell context; publish
     its confirmed portfolio, client, booking-centre, business-date, and base-currency facts to the
     Review Context strip and the form together, label missing mandate context explicitly, and reject
-    a foreign book response before either surface becomes actionable.
+    a foreign book response before either surface becomes actionable. The form's client-side book
+    query may refresh construction evidence only after the shell has confirmed that source context;
+    it must not independently promote a transiently recovered book into action authority. While the
+    shell remains unconfirmed, omit portfolio-scoped navigation and queue links and keep evaluation
+    and handoff closed even if a later client-side evidence refresh succeeds.
 43. Portfolio record-screen recovery retains the left portfolio-navigation rail only while a real
     source-confirmed portfolio identity remains available, so the advisor can see the current task
     and reach portfolio selection. If no source identity is confirmed, omit the rail and use the
