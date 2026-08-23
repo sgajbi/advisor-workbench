@@ -98,9 +98,32 @@ describe("design-system token contract", () => {
     expect(cssVariables["--radius-panel"]).toBe(`${lotusThemeTokens.radius.panel}px`);
     expect(cssVariables["--elevation-none"]).toBe(lotusThemeTokens.elevation.none);
     expect(cssVariables["--font-ui"]).toBe(lotusThemeTokens.typography.fontFamily.ui);
+    expect(cssVariables["--type-label-size"]).toBe(
+      lotusThemeTokens.typography.variant.label.size
+    );
+    expect(Number(cssVariables["--type-label-weight"])).toBe(
+      lotusThemeTokens.typography.variant.label.weight
+    );
+    expect(cssVariables["--type-body-size"]).toBe(
+      lotusThemeTokens.typography.variant.body.size
+    );
+    expect(cssVariables["--type-table-header-size"]).toBe(
+      lotusThemeTokens.typography.variant.tableHeader.size
+    );
+    expect(Number(cssVariables["--type-table-header-weight"])).toBe(
+      lotusThemeTokens.typography.variant.tableHeader.weight
+    );
+    expect(cssVariables["--type-table-cell-size"]).toBe(
+      lotusThemeTokens.typography.variant.tableCell.size
+    );
+    expect(Number(cssVariables["--type-metric-m-weight"])).toBe(
+      lotusThemeTokens.typography.variant.metricValueM.weight
+    );
     expect(cssVariables["--text-sm"]).toBe(lotusThemeTokens.typography.size.textSm);
     expect(cssVariables["--text-3xl"]).toBe(lotusThemeTokens.typography.size.text3xl);
     expect(cssVariables["--tracking-label"]).toBe(lotusThemeTokens.typography.tracking.label);
+    expect(cssVariables["--tracking-table"]).toBe(lotusThemeTokens.typography.tracking.table);
+    expect(cssVariables["--tracking-badge"]).toBe(lotusThemeTokens.typography.tracking.badge);
     expect(cssVariables["--workbench-rail-width"]).toBe(lotusThemeTokens.layout.workbenchRailWidth);
     expect(cssVariables["--workbench-card-padding"]).toBe(
       lotusThemeTokens.layout.workbenchCardPadding
