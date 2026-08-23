@@ -71,7 +71,11 @@ jobs:
         run: make install
       - name: Install Playwright Browsers
         run: node node_modules/playwright/cli.js install chromium
+      - name: Next Development And Production Artifact Isolation
+        run: npm run test:next-artifact-isolation
       - name: Run Playwright Smoke
+        env:
+          PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1"
         run: make test-e2e
       - name: Upload Playwright Artifacts
         if: failure()
