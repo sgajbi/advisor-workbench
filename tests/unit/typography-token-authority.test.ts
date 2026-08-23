@@ -7,6 +7,7 @@ const TYPOGRAPHY_TOKEN_DECLARATION =
   /^\s*(--(?:type-[a-z0-9-]+|text-(?:2xs|xs|sm|md|lg|xl|2xl|3xl)|leading-(?:tight|snug|body)|tracking-(?:label|micro|table|badge|tight))):/gim;
 
 const MIGRATED_PRODUCTIVE_SURFACES = [
+  "src/apps/portfolio/modules/portfolio-health/portfolio-health-strip.module.css",
   "src/design-system/components/workbench-record-selector.module.css",
   "src/features/proposals/components/proposal-builder-workflow-rail.module.css",
   "src/features/proposals/components/proposal-simulate-form.module.css",
@@ -89,6 +90,23 @@ describe("typography token authority", () => {
 
     expect(proposalCss).toMatch(
       /\.summaryStrip strong,[\s\S]*?\.impactSummaryGrid strong\s*\{[\s\S]*?white-space:\s*nowrap;/
+    );
+  });
+
+  it("keeps the Portfolio health strip dense without six-column currency collisions", () => {
+    const healthStripCss = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../../src/apps/portfolio/modules/portfolio-health/portfolio-health-strip.module.css"
+      ),
+      "utf8"
+    );
+
+    expect(healthStripCss).toContain(
+      "grid-template-columns: repeat(3, minmax(0, 1fr));"
+    );
+    expect(healthStripCss).not.toContain(
+      "grid-template-columns: repeat(6, minmax(0, 1fr));"
     );
   });
 });
