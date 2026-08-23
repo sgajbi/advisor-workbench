@@ -1235,6 +1235,12 @@ Important validation expectations:
     data. When retained, the rail must suppress normal workspace destinations if its parsed context
     is invalid or mismatched, while the main surface owns the persistent recovery explanation and
     action.
+44. Report Centre recovery follows the same identity admission boundary. A catalogue match or
+    carried route identifier does not authorize portfolio-scoped navigation when the Gateway
+    workspace is unavailable or returns another portfolio. Render the reporting rail only from an
+    identity-confirmed workspace; an unsupported-control recovery may retain it because the source
+    identity remains confirmed, while unavailable or foreign-shell recovery must direct the advisor
+    to **My book** without constructing portfolio links.
 
 ### Visual Review Gate
 

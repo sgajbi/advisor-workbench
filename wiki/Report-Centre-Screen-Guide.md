@@ -46,6 +46,12 @@ period that does not filter report ordering is disclosed in the strip. Report da
 inside a reviewed request remain visible because they are material request terms, not duplicate
 navigation context.
 
+The reporting rail is available only after the Gateway workspace confirms the selected portfolio.
+A catalogue or route match alone is not sufficient: when the workspace is unavailable or returns
+another portfolio, Report Centre withholds portfolio-scoped navigation and directs the advisor to
+**My book**. If the workspace identity is confirmed but a date, period, or currency control is not
+supported, the rail may remain because the source portfolio—not merely the address—is still known.
+
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** prepare a reviewed portfolio report request for a
