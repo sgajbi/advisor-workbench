@@ -194,7 +194,7 @@ export function buildPortfolioSummaryReadiness(
     statusLabel: qualifiedStatus,
     support: readinessStatus === "Ready" && hasSupportingLimitations
       ? "Book evidence is available; supporting review evidence needs attention."
-      : getBookReadinessSupport(workspace),
+      : getPortfolioSummaryReadinessSupport(workspace),
     tone: qualifiedStatus === "Ready" ? "success" : qualifiedStatus === "Partial" ? "warn" : "danger",
   };
 }
@@ -329,7 +329,7 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
     {
       label: "Reporting coverage",
       value: formatStatus(workspace.readiness.reporting.status),
-      support: getDecisionReportingCoverageSupport(workspace),
+      support: getPortfolioSummaryReportingSupport(workspace),
     },
   ];
   if (exceptionCount) {
@@ -359,7 +359,15 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
   };
 }
 
-function getDecisionReportingCoverageSupport(workspace: PortfolioWorkspace): string {
+function getPortfolioSummaryReadinessSupport(workspace: PortfolioWorkspace): string {
+  const readinessSupport = getBookReadinessSupport(workspace);
+
+  return readinessSupport === getReportingFreshnessSupport(workspace)
+    ? getPortfolioSummaryReportingSupport(workspace)
+    : readinessSupport;
+}
+
+function getPortfolioSummaryReportingSupport(workspace: PortfolioWorkspace): string {
   const generatedAt = workspace.readiness.reporting.generated_at_utc;
   const rowCount = workspace.readiness.reporting.row_count;
 

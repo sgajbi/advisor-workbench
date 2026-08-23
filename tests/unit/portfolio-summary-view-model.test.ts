@@ -52,6 +52,9 @@ describe("portfolio summary view model", () => {
       value: "Ready",
       support: "Generated 11 May 2026, 20:15 UTC • 11 report rows",
     });
+    expect(buildPortfolioSummaryReadiness(workspace).support).toBe(
+      "Generated 11 May 2026, 20:15 UTC • 11 report rows"
+    );
   });
 
   it("prefers source allocation buckets and preserves portfolio weights", () => {
@@ -175,7 +178,7 @@ describe("portfolio summary view model", () => {
 
     expect(buildPortfolioSummaryReadiness(workspace)).toEqual({
       statusLabel: "Partial",
-      support: "Generated 12 May 2026, 00:00 UTC • 11 report rows",
+      support: "11 report rows published",
       tone: "warn",
     });
   });
