@@ -1219,7 +1219,11 @@ Important validation expectations:
     override, never replace a non-empty user value with a source default, and repeat the portfolio
     read with the resolved date and currency before enabling evaluation or draft handoff. Proposal
     entry actions must use the shared review-context URL authority rather than portfolio-only string
-    interpolation.
+    interpolation. If the lightweight portfolio workspace shell is unavailable, Proposal Builder
+    may use an identity-matched Gateway portfolio-book response as partial shell context; publish
+    its confirmed portfolio, client, booking-centre, business-date, and base-currency facts to the
+    Review Context strip and the form together, label missing mandate context explicitly, and reject
+    a foreign book response before either surface becomes actionable.
 43. Portfolio record-screen recovery retains the left portfolio-navigation rail only while a real
     source-confirmed portfolio identity remains available, so the advisor can see the current task
     and reach portfolio selection. If no source identity is confirmed, omit the rail and use the

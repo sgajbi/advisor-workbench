@@ -36,8 +36,11 @@ in document order so evidence is reviewed before action.
 
 The shell-owned **Review portfolio** strip confirms the portfolio name, mandate, booking centre,
 business date, and currency once; portfolio and client references remain in **Support details**.
-The builder receives this identity from the exact Gateway-backed portfolio workspace and never
-substitutes route or demonstration values when that response is absent or mismatched.
+The builder normally receives this identity from the exact Gateway-backed portfolio workspace. If
+that lightweight shell response is unavailable while the identity-matched Gateway portfolio book
+remains healthy, the strip and form use the same recovered portfolio, client, booking-centre,
+business-date, and base-currency facts and label mandate context as limited. A foreign book response
+still fails closed; route or demonstration values never become display or action authority.
 
 Portfolio reference, currency, business date, and mandate are governed review context, not draft
 inputs. They are no longer editable inside the form. The advisor edits only supported proposal
@@ -128,6 +131,7 @@ Shared endpoint families and runtime ownership remain in [API Surface](API-Surfa
 | --- | --- | --- |
 | Preparing | Hydration-safe disabled actions and source-evidence loading | Wait; no first action can be lost before handlers are ready |
 | Advisory date not confirmed | Empty required date field and unavailable source-backed proposal actions | Select the intended advisory date; Workbench does not substitute a demonstration date |
+| Workspace context limited, book confirmed | Confirmed portfolio-book identity, date, and base currency; mandate context is visibly unavailable | Continue only after the form's required holdings and cash evidence also confirms the same context |
 | Evidence confirmed | Holdings, cash, date, currency, and readiness are visible | Continue construction or deliberately refresh the source |
 | Evidence unavailable or mismatched | Exact requested/source context and an explicit block | Refresh the portfolio evidence or correct the context |
 | Draft input needs correction | Field-level guidance, blocked impact where necessary, and **Action required** | Correct the visible value; Workbench does not coerce it to zero |
@@ -174,6 +178,10 @@ superiority.
   source-confirmed evaluation, portfolio-scoped queue link, and zero page overflow.
 - `tests/integration/proposal-simulate-page.test.tsx` proves the direct route composition and
   source-and-scope boundary.
+- `tests/unit/proposal-workspace-shell.test.tsx` and
+  `tests/unit/proposal-workspace-shell-context.test.ts` prove that shell-unavailable recovery uses
+  only an identity-matched portfolio book, keeps the strip and child workflow aligned, avoids a
+  duplicate book read while the workspace shell is healthy, and rejects foreign recovery context.
 - Canonical runtime validation uses `PB_SG_GLOBAL_BAL_001`; direct browser proof does not promote
   the capability-disabled global Proposal workspace.
 - Use [Validation and CI](Validation-and-CI) for protected and exact-main evidence.

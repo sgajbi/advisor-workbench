@@ -5965,12 +5965,17 @@ browser address.
 7. Test context ownership by removing the strip from the rendered DOM and proving portfolio,
    client, and booking-centre identity does not remain elsewhere. Permit a date or currency to recur
    only when it is a material term of a dated metric, analytical window, or reviewed report request.
+8. When Proposal Builder's lightweight workspace shell is unavailable, reuse an identity-matched
+   Gateway portfolio-book response as partial source context for both the strip and construction
+   form. Show confirmed facts, mark missing mandate classification, and keep a foreign book response
+   outside both display and action authority.
 
 ### Rejected decisions
 
 1. A large KPI-style object header that competes with the first business decision.
 2. A permanently tall or page-local identity card on every workspace.
-3. A second shell-owned source call, URL-derived display truth, or a canonical demo fallback.
+3. An unconditional duplicate portfolio-book call while the workspace shell is healthy,
+   URL-derived display truth, or a canonical demo fallback.
 4. Silent truncation, page-level horizontal scrolling, or removal of operational references.
 5. Duplicating governed context as editable Proposal Builder fields.
 
