@@ -110,13 +110,50 @@ describe("AdvisorBookWorkspace", () => {
       "href",
       "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10",
     );
-    expect(screen.getByText("Own book only")).toBeInTheDocument();
+    const supportDisclosure = screen
+      .getByText("Book scope and operating evidence")
+      .closest("details");
+    expect(supportDisclosure).not.toHaveAttribute("open");
+    expect(screen.getByText("Own book only")).not.toBeVisible();
+    expect(screen.getByText("advisor_book_ready")).not.toBeVisible();
+    fireEvent.click(screen.getByText("Book scope and operating evidence"));
+    expect(supportDisclosure).toHaveAttribute("open");
+    expect(screen.getByText("Own book only")).toBeVisible();
+    expect(screen.getByText("advisor_book_ready")).toBeVisible();
     expect(
       screen.getByText(/Find a confirmed assignment and continue into its portfolio review/i),
     ).toBeInTheDocument();
     expect(screen.queryByText(/source-backed|portfolio membership/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/membership contract/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/team book|household|AUM|attention rank/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps repeated source limitations and raw references in one collapsed disclosure", async () => {
+    getAdvisorBookMock.mockResolvedValue({
+      ...readyResponse,
+      supportability: {
+        ...readyResponse.supportability,
+        state: "degraded",
+        reason_code: "advisor_book_unmapped_limitations",
+        limitations: ["unmapped_one", "unmapped_two", "unmapped_one"],
+      },
+    });
+
+    render(<AdvisorBookWorkspace />);
+    await screen.findByText("Available with limitations");
+
+    const disclosure = screen
+      .getByText("Book scope and operating evidence")
+      .closest("details");
+    expect(disclosure).not.toHaveAttribute("open");
+    expect(screen.getAllByText("Additional operating limitation")).toHaveLength(1);
+    expect(screen.getByText("3 related limitations consolidated")).not.toBeVisible();
+    expect(screen.getByText("unmapped_one, unmapped_two")).not.toBeVisible();
+
+    fireEvent.click(screen.getByText("Book scope and operating evidence"));
+    expect(disclosure).toHaveAttribute("open");
+    expect(screen.getByText("3 related limitations consolidated")).toBeVisible();
+    expect(screen.getByText("unmapped_one, unmapped_two")).toBeVisible();
   });
 
   it("does not request source data until an invalid business date is corrected", () => {

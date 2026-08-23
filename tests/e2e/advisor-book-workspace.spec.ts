@@ -1,4 +1,9 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test, type Page } from "@playwright/test";
+
+const evidenceDirectory = path.resolve("output", "issue-811", "advisor-book");
 
 const advisorBookResponse = {
   correlation_id: "corr-advisor-book-e2e",
@@ -146,9 +151,35 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   ).toBe(4);
   expect((await summaryStrip.boundingBox())?.height).toBeLessThan(150);
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
+  const supportDisclosure = page.locator("details").filter({
+    hasText: "Book scope and operating evidence",
+  });
+  await expect(supportDisclosure).not.toHaveAttribute("open", "");
+  await expect(page.getByText("Own book only")).toBeHidden();
+  await expect(page.getByText("Legacy assignment evidence")).toBeHidden();
+  await expect(page.getByText("advisor_book_legacy_projection", { exact: true })).toBeHidden();
+  await supportDisclosure.getByText("Book scope and operating evidence").click();
+  await expect(supportDisclosure).toHaveAttribute("open", "");
   await expect(page.getByText("Own book only")).toBeVisible();
   await expect(page.getByText("Legacy assignment evidence")).toBeVisible();
+  await expect(page.getByText("advisor_book_legacy_projection", { exact: true })).toBeVisible();
+  await supportDisclosure.getByText("Book scope and operating evidence").click();
+  await expect(supportDisclosure).not.toHaveAttribute("open", "");
   await expect(page.getByText(/team book|household|AUM|attention rank/i)).toHaveCount(0);
+
+  const firstPortfolioRow = page
+    .getByRole("table", { name: "Portfolios in my book" })
+    .getByRole("row")
+    .nth(1);
+  expect((await firstPortfolioRow.boundingBox())?.y).toBeLessThan(900);
+  await mkdir(evidenceDirectory, { recursive: true });
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.mouse.move(0, 0);
+  await page.screenshot({
+    path: path.join(evidenceDirectory, "advisor-book-1440.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
 
   const workspaceSwitcher = page.getByRole("button", {
     name: "Switch workspace. Current workspace Portfolio",
@@ -189,6 +220,40 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
     "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10",
   );
 });
+
+for (const viewport of [
+  { name: "1024", width: 1024, height: 900 },
+  { name: "519", width: 519, height: 844 },
+]) {
+  test(`keeps My book dense and progressive at ${viewport.name}px`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await mockAdvisorBook(page);
+    await page.goto("/book?asOfDate=2026-04-10", { waitUntil: "domcontentloaded" });
+
+    const summaryStrip = page.getByLabel("Current book view");
+    const supportDisclosure = page.locator("details").filter({
+      hasText: "Book scope and operating evidence",
+    });
+    await expect(summaryStrip).toBeVisible();
+    await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
+    await expect(supportDisclosure).not.toHaveAttribute("open", "");
+    await expect(page.getByText("advisor_book_legacy_projection", { exact: true })).toBeHidden();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+
+    await mkdir(evidenceDirectory, { recursive: true });
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+    await page.screenshot({
+      path: path.join(evidenceDirectory, `advisor-book-${viewport.name}.png`),
+      fullPage: true,
+      animations: "disabled",
+    });
+  });
+}
 
 test("keeps the book usable at tablet and effective 200 percent zoom width", async ({ page }) => {
   await page.setViewportSize({ width: 720, height: 1000 });
