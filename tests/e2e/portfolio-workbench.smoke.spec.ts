@@ -510,6 +510,10 @@ test.describe('Portfolio workbench smoke', () => {
       });
 
       if (capturesIssue649Evidence && evidenceDirectory) {
+        // Keyboard traversal can leave the pointer over a metric after the page scrolls.
+        // Reset both pointer and focus so rendered evidence represents the neutral
+        // workstation state instead of capturing a transient native tooltip.
+        await page.mouse.move(0, 0);
         await page.evaluate(() => {
           (document.activeElement as HTMLElement | null)?.blur();
           window.scrollTo(0, 0);
@@ -521,6 +525,12 @@ test.describe('Portfolio workbench smoke', () => {
             `diagnostic-degraded-portfolio-review-${viewport.width}.png`
           ),
           fullPage: true,
+        });
+        await page.getByTestId("review-context-strip").screenshot({
+          path: resolve(
+            evidenceDirectory,
+            `diagnostic-degraded-review-context-${viewport.width}.png`
+          ),
         });
       }
     }
