@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildManageExceptionRows,
   buildManageExceptionRowsResult,
+  buildManageReviewContextStrip,
   filterManageExceptionRowsForMandate,
   formatBusinessBook,
   formatBusinessExceptionTitle,
@@ -13,6 +14,7 @@ import {
   getManageExceptionNextCursor,
   toneForState,
 } from "../../src/features/workbench/manage-workspace-view-model";
+import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
 
 describe("manage workspace business presentation", () => {
   it("translates known source codes without exposing technical vocabulary", () => {
@@ -34,6 +36,34 @@ describe("manage workspace business presentation", () => {
     expect(formatBusinessMandateType(undefined)).toBe("Not available");
     expect(formatBusinessBook(null)).toBe("Not available");
     expect(formatBusinessOwner("Not assigned")).toBe("Not assigned");
+  });
+
+  it("maps Gateway-backed mandate identity into the shared review context", () => {
+    expect(buildManageReviewContextStrip(buildManageWorkspaceData())).toEqual({
+      portfolioName: "Discretionary Balanced",
+      portfolioId: "PF_1001",
+      clientId: "CL_1001",
+      mandateType: "Discretionary Balanced",
+      bookingCenter: "Singapore",
+      businessDate: "13 May 2026",
+      reportingCurrency: "USD",
+      sourceState: "confirmed",
+    });
+  });
+
+  it("does not manufacture missing manage context", () => {
+    const data = buildManageWorkspaceData();
+    data.portfolio.portfolio.client_id = null;
+    data.portfolio.portfolio.booking_center_code = null;
+    data.mandate = null;
+
+    expect(buildManageReviewContextStrip(data)).toMatchObject({
+      portfolioName: "Managed portfolio",
+      clientId: null,
+      mandateType: null,
+      bookingCenter: null,
+      sourceState: "partial",
+    });
   });
 
   it("classifies negative and stale source posture before positive substrings", () => {

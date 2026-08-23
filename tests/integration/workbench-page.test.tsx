@@ -33,18 +33,21 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Manage Overview" })).toBeInTheDocument();
-    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+    const reviewContext = screen.getByTestId("review-context-strip");
+    expect(reviewContext).toHaveTextContent(
       "Mandate source context",
     );
-    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+    expect(reviewContext).toHaveTextContent(
       /source valuation date 13 May 2026.*advisor review date 30 Jun 2026/i,
     );
-    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+    expect(reviewContext).toHaveTextContent(
       /source base currency USD.*restatement to SGD is not supported/i,
     );
-    expect(screen.getByTestId("workbench-context-notice")).toHaveTextContent(
+    expect(reviewContext).toHaveTextContent(
       /review period 3Y.*does not filter this mandate management workspace/i,
     );
+    expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();

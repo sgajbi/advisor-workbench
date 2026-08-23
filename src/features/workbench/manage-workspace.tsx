@@ -11,14 +11,16 @@ import {
   DegradedStatePanel,
   MainWithSideRailLayout,
   SemanticBadge,
-  WorkbenchContextNotice,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
 import ConstructionAlternativesPanel from "@/features/workbench/components/construction-alternatives-panel";
 import ManageMandateHealth from "@/features/workbench/components/manage-mandate-health";
-import { readStringFromResponse } from "@/features/workbench/manage-workspace-view-model";
+import {
+  buildManageReviewContextStrip,
+  readStringFromResponse,
+} from "@/features/workbench/manage-workspace-view-model";
 import DpmWaveCommandCenterPanel from "@/features/workbench/components/dpm-wave-command-center-panel";
 import DpmCopilotWorkspace from "@/features/workbench/components/dpm-copilot-workspace";
 import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-panel";
@@ -79,7 +81,20 @@ export function ManageWorkspace({
   });
 
   return (
-    <AppPageShell pageKey="manage" className={`portfolio-page manage-page ${styles.manageScope}`}>
+    <AppPageShell
+      pageKey="manage"
+      className={`portfolio-page manage-page ${styles.manageScope}`}
+      reviewContext={buildManageReviewContextStrip(
+        data,
+        contextNotice
+          ? {
+              label: contextNotice.title,
+              message: contextNotice.body,
+              tone: "attention",
+            }
+          : null,
+      )}
+    >
       <WorkbenchPageContainer className="portfolio-page-container manage-page-container">
         <MainWithSideRailLayout
           className="manage-layout portfolio-page"
@@ -108,17 +123,10 @@ export function ManageWorkspace({
                   >
                     {hasMandateEvidenceGap ? "Needs attention" : "Evidence available"}
                   </SemanticBadge>
-                  <SemanticBadge>{portfolio.base_currency}</SemanticBadge>
                 </>
               }
             >
               <WorkbenchSectionStack className="manage-page-sections">
-                {contextNotice ? (
-                  <WorkbenchContextNotice
-                    title={contextNotice.title}
-                    body={contextNotice.body}
-                  />
-                ) : null}
                 {renderManageMode(mode, data, dpmMandateId, reviewContext)}
               </WorkbenchSectionStack>
             </WorkbenchPageFrame>
