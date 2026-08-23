@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioScreenNavigationKey } from "@/apps/portfolio/portfolio-screen-navigation";
 import {
@@ -9,12 +10,15 @@ import {
 } from "../advisory-journey-navigation";
 import {
   AppPageShell,
+  buildWorkbenchSourceContextNotice,
+  buildWorkbenchUnsupportedReviewContextNotice,
   MainWithSideRailLayout,
   SemanticBadge,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
+import { buildProposalReviewContextStrip } from "../proposal-review-context-strip-view-model";
 import {
   buildNeutralProposalWorkflowContext,
   type ProposalWorkflowContextModel,
@@ -26,7 +30,7 @@ import {
 } from "./proposal-workflow-context";
 import styles from "./proposal-workspace-shell.module.css";
 
-export default function ProposalWorkspaceShell({
+export default async function ProposalWorkspaceShell({
   reviewContext,
   activeScreen,
   activeMode = activeScreen === "advisory" ? "overview" : "approval-queue",
@@ -46,6 +50,45 @@ export default function ProposalWorkspaceShell({
   children: ReactNode;
 }) {
   const { portfolioId } = reviewContext;
+  const portfolioContext = await getPortfolioWorkspaceShell(portfolioId);
+  const sourceContextNotice =
+    activeMode === "proposal-builder"
+      ? buildWorkbenchSourceContextNotice({
+          title: "Proposal source context",
+          subject: "Proposal construction",
+          requestedAsOfDate: reviewContext.asOfDate,
+          requestedReportingCurrency: reviewContext.reportingCurrency,
+          sourceAsOfDate: portfolioContext?.as_of_date,
+          sourceCurrency: portfolioContext?.portfolio.base_currency,
+        })
+      : buildWorkbenchUnsupportedReviewContextNotice({
+          title:
+            activeScreen === "advisory"
+              ? "Advisory workspace scope"
+              : "Proposal workspace scope",
+          subject:
+            activeScreen === "advisory"
+              ? "Advisory evidence"
+              : "Proposal workflow evidence",
+          destination:
+            activeScreen === "advisory"
+              ? "advisory workspace"
+              : "proposal worklist",
+          requestedAsOfDate: reviewContext.asOfDate,
+          requestedPeriod: reviewContext.period,
+          requestedReportingCurrency: reviewContext.reportingCurrency,
+        });
+  const reviewContextStrip = buildProposalReviewContextStrip({
+    portfolioId,
+    portfolioContext,
+    notice: sourceContextNotice
+      ? {
+          label: sourceContextNotice.title,
+          message: sourceContextNotice.body,
+          tone: "attention",
+        }
+      : undefined,
+  });
   const initialWorkflowContext =
     workflowContext ??
     buildNeutralProposalWorkflowContext({
@@ -54,7 +97,11 @@ export default function ProposalWorkspaceShell({
     });
 
   return (
-    <AppPageShell pageKey={activeScreen} className={`portfolio-page proposal-page ${styles.proposalScope}`}>
+    <AppPageShell
+      pageKey={activeScreen}
+      className={`portfolio-page proposal-page ${styles.proposalScope}`}
+      reviewContext={reviewContextStrip}
+    >
       <WorkbenchPageContainer className="portfolio-page-container proposal-page-container">
         <ProposalWorkflowContextProvider initialModel={initialWorkflowContext}>
           <MainWithSideRailLayout
@@ -78,10 +125,7 @@ export default function ProposalWorkspaceShell({
                 title={title}
                 subtitle={subtitle}
                 actions={
-                  <>
-                    <SemanticBadge tone="warn">Advisor use only</SemanticBadge>
-                    <SemanticBadge>{portfolioId}</SemanticBadge>
-                  </>
+                  <SemanticBadge tone="warn">Advisor use only</SemanticBadge>
                 }
               >
                 <WorkbenchSectionStack className="proposal-page-sections">

@@ -281,10 +281,8 @@ describe("app route entrypoints", () => {
       "SGD",
     );
     expect(
-      screen.getByRole("complementary", { name: "Advisory workspace scope" }),
-    ).toHaveTextContent(
-      "The carried advisor review date 30 Jun 2026, review period 3Y, and reporting currency SGD remain available across the wider review, but they do not filter this advisory workspace.",
-    );
+      screen.queryByRole("complementary", { name: "Advisory workspace scope" }),
+    ).not.toBeInTheDocument();
   });
 
   it("requires a source-confirmed portfolio before mounting advisory evidence", async () => {
