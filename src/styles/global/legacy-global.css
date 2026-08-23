@@ -11115,8 +11115,6 @@
   line-height: 18px;
 }
 
-.app-page-shell .ui-text-data-label,
-.app-page-shell .ui-text-label,
 .app-page-shell .workbench-definition-term,
 .app-page-shell .portfolio-record-grid-kicker,
 .app-page-shell .performance-analytical-zone-kicker,
@@ -11133,8 +11131,6 @@
   text-transform: uppercase;
 }
 
-.app-page-shell .ui-text-body,
-.app-page-shell .ui-text-body-small,
 .app-page-shell .workbench-definition-description,
 .app-page-shell .metric-row-value,
 .app-page-shell .performance-workspace-context-grid .ui-text-card-title {
@@ -11144,9 +11140,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.app-page-shell .ui-text-metric-value-xl,
-.app-page-shell .ui-text-metric-value-l,
-.app-page-shell .ui-text-metric-value,
 .app-page-shell .kpi-stat-value {
   color: #191c1e;
   font-size: 24px;
