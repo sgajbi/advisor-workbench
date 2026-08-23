@@ -53,7 +53,10 @@ export default async function ProposalWorkspaceShell({
     | ((portfolioContext: PortfolioWorkspace | null) => ReactNode);
 }) {
   const { portfolioId } = reviewContext;
-  const portfolioContext = await getPortfolioWorkspaceShell(portfolioId);
+  const portfolioContext = resolveProposalPortfolioContext(
+    portfolioId,
+    await getPortfolioWorkspaceShell(portfolioId),
+  );
   const sourceContextNotice =
     activeMode === "proposal-builder"
       ? buildWorkbenchSourceContextNotice({
@@ -151,4 +154,13 @@ export default async function ProposalWorkspaceShell({
       </WorkbenchPageContainer>
     </AppPageShell>
   );
+}
+
+export function resolveProposalPortfolioContext(
+  portfolioId: string,
+  portfolioContext: PortfolioWorkspace | null,
+): PortfolioWorkspace | null {
+  return portfolioContext?.portfolio.portfolio_id === portfolioId
+    ? portfolioContext
+    : null;
 }
