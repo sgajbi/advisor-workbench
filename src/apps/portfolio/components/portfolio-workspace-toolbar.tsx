@@ -15,7 +15,6 @@ import {
   WorkbenchToolbarGroup,
 } from "@/design-system";
 
-import { formatDate } from "../formatters";
 import type {
   PortfolioWorkspaceContext,
   PortfolioWorkspaceControls,
@@ -42,19 +41,19 @@ export default function PortfolioWorkspaceToolbar({
 
   const historicalContextCopy = useMemo(() => {
     if (context.historicalSnapshotState === "unsupported") {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Historical review is not available for this book yet.`;
+      return "Historical review is not available for this book yet.";
     }
 
     if (context.historicalSnapshotState === "partial") {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Some adjacent workflows keep their own date controls.`;
+      return "Some adjacent workflows keep their own date controls.";
     }
 
     if (!context.hasHistoricalGap) {
-      return `As of ${formatDate(context.selectedAsOfDate)}. Portfolio records use the selected review date.`;
+      return "Portfolio records use the confirmed business date.";
     }
 
-    return `As of ${formatDate(context.selectedAsOfDate)}. Some work areas use the latest available book state.`;
-  }, [context.hasHistoricalGap, context.historicalSnapshotState, context.selectedAsOfDate]);
+    return "Some work areas use the latest available book state.";
+  }, [context.hasHistoricalGap, context.historicalSnapshotState]);
   const historicalControlTitle = !context.supportsHistoricalSnapshots
     ? "Historical review is not available for every adjacent workflow yet."
     : undefined;

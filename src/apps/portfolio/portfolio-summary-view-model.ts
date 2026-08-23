@@ -320,6 +320,13 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
 
   const rows: PortfolioDecisionBriefRow[] = [
     {
+      label: "Portfolio status",
+      value: workspace.profile.status
+        ? formatStatus(workspace.profile.status)
+        : "Not confirmed",
+      support: "Source-owned portfolio lifecycle",
+    },
+    {
       label: "Reporting coverage",
       value: formatStatus(workspace.readiness.reporting.status),
       support: getReportingFreshnessSupport(workspace),

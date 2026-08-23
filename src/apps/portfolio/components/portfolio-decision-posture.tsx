@@ -18,9 +18,8 @@ export function PortfolioEvidenceModule({
     { label: "Evidence", value: formatPortfolioEvidence(workspace) },
     { label: "Benchmark", value: formatPortfolioBenchmark(workspace) },
     ...(context.selectedAsOfDate !== workspace.as_of_date
-      ? [{ label: "Review date", value: formatDate(context.selectedAsOfDate) }]
+      ? [{ label: "Valuation as of", value: formatDate(workspace.as_of_date) }]
       : []),
-    { label: "Valuation date", value: formatDate(workspace.as_of_date) },
     { label: "Reporting coverage", value: formatCount(workspace.readiness.reporting.row_count, "row") },
   ];
 
