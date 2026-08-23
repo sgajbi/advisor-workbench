@@ -1,3 +1,6 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
@@ -9,6 +12,9 @@ import {
 test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
+const evidenceDirectory = process.env.ISSUE_811_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_811_EVIDENCE_DIR, "manage-overview")
+  : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
 test.beforeAll(async () => {
@@ -145,6 +151,13 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
     }
 
     await page.mouse.move(0, 0);
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: path.join(evidenceDirectory, `manage-overview-${viewport.width}.png`),
+        fullPage: true,
+      });
+    }
     await testInfo.attach(`manage-overview-${viewport.width}`, {
       body: await page.screenshot({ fullPage: true }),
       contentType: "image/png",
