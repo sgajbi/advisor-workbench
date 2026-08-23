@@ -10,6 +10,10 @@ import {
 } from "../../scripts/quality/check-runtime-state-inventory.mjs";
 
 const root = join(__dirname, "..", "..");
+// This repository-wide scanner runs in its own CI phase before parallel
+// application coverage. Keep a bounded timeout so performance regressions stay
+// visible without letting worker contention suppress all architecture checks.
+const BASELINE_SCAN_TIMEOUT_MS = 30_000;
 
 function loadBaselineEvidence() {
   const discoveredStateHolders = scanRuntimeStateHolders({ root });
@@ -43,7 +47,7 @@ let baselineEvidence: ReturnType<typeof loadBaselineEvidence>;
 
 beforeAll(() => {
   baselineEvidence = loadBaselineEvidence();
-}, 30_000);
+}, BASELINE_SCAN_TIMEOUT_MS);
 
 function loadEvidence() {
   return structuredClone(baselineEvidence);
