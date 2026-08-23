@@ -1,0 +1,621 @@
+{
+  "generatedAtUtc": "2026-08-23T14:26:49.283Z",
+  "portfolioId": "PB_SG_GLOBAL_BAL_001",
+  "candidateSources": {
+    "inter": {
+      "repository": "https://github.com/rsms/inter",
+      "tag": "v4.1",
+      "commit": "e3a3d4c57d5ecc01453a575621882a384c1995a3"
+    },
+    "ibmPlexSans": {
+      "repository": "https://github.com/IBM/plex",
+      "tag": "@ibm/plex-sans@1.1.0",
+      "commit": "1da12f02587b630c07e92692d21492d722f53614"
+    },
+    "delivery": "checksum-verified data URL for isolated comparison only"
+  },
+  "inter": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 213,
+          "textWidth": 177,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 198,
+          "textWidth": 177,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 198,
+          "textWidth": 143,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 210,
+          "textWidth": 39,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 210,
+          "textWidth": 70,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 226,
+          "textWidth": 70,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 1000
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 406,
+          "textWidth": 177,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 407,
+          "textWidth": 177,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 406,
+          "textWidth": 143,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 419,
+          "textWidth": 39,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 418,
+          "textWidth": 70,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 419,
+          "textWidth": 70,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 289,
+          "textWidth": 177,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 290,
+          "textWidth": 177,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 289,
+          "textWidth": 143,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 302,
+          "textWidth": 39,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 301,
+          "textWidth": 70,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 302,
+          "textWidth": 70,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 172,
+          "textWidth": 177,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 173,
+          "textWidth": 177,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 172,
+          "textWidth": 143,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 185,
+          "textWidth": 39,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 184,
+          "textWidth": 70,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"Inter Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 185,
+          "textWidth": 70,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    }
+  ],
+  "ibmPlexSans": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 213,
+          "textWidth": 168,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 198,
+          "textWidth": 168,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 198,
+          "textWidth": 135,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 210,
+          "textWidth": 39,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 210,
+          "textWidth": 67,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 226,
+          "textWidth": 67,
+          "cardWidth": 240,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 1000
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 406,
+          "textWidth": 168,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 407,
+          "textWidth": 168,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 406,
+          "textWidth": 135,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 419,
+          "textWidth": 39,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 418,
+          "textWidth": 67,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 419,
+          "textWidth": 67,
+          "cardWidth": 434,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 289,
+          "textWidth": 168,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 290,
+          "textWidth": 168,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 289,
+          "textWidth": 135,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 302,
+          "textWidth": 39,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 301,
+          "textWidth": 67,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 302,
+          "textWidth": 67,
+          "cardWidth": 316,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "documentOverflow": 0,
+      "metrics": [
+        {
+          "text": "12,500,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 172,
+          "textWidth": 168,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "11,750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 173,
+          "textWidth": 168,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "750,000 USD",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 172,
+          "textWidth": 135,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "N/A",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 185,
+          "textWidth": 39,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "1.80%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 184,
+          "textWidth": 67,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        },
+        {
+          "text": "4.60%",
+          "fontFamily": "\"IBM Plex Sans Candidate\", ui-sans-serif, system-ui, sans-serif",
+          "fontSize": "22px",
+          "fontWeight": "600",
+          "valueWidth": 185,
+          "textWidth": 67,
+          "cardWidth": 200,
+          "fitsCard": true,
+          "singleLine": true
+        }
+      ]
+    }
+  ]
+}
