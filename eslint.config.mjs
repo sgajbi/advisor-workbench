@@ -2,6 +2,11 @@ import nextPlugin from "@next/eslint-plugin-next";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
+import {
+  NEXT_DEVELOPMENT_DIRECTORY,
+  NEXT_PRODUCTION_DIRECTORY,
+} from "./scripts/config/next-artifact-layout.mjs";
+
 const stableReactHooksRules = {
   "react-hooks/rules-of-hooks":
     reactHooks.configs.recommended.rules["react-hooks/rules-of-hooks"],
@@ -39,6 +44,8 @@ export default [
   {
     ignores: [
       ".next/**",
+      `${NEXT_DEVELOPMENT_DIRECTORY}/**`,
+      `${NEXT_PRODUCTION_DIRECTORY}/**`,
       "coverage/**",
       "node_modules/**",
       "output/**",
