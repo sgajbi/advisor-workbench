@@ -75,14 +75,14 @@
     {
       "path": "src/styles/global/workbench-shell.css",
       "owner": "shared Workbench shell, typography, panel, and navigation primitives",
-      "maxLines": 885,
-      "maxBytes": 18617
+      "maxLines": 884,
+      "maxBytes": 18571
     },
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 11969,
-      "maxBytes": 261407
+      "maxLines": 11843,
+      "maxBytes": 258851
     }
   ]
 }

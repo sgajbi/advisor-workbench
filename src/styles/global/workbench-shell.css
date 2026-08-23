@@ -757,8 +757,7 @@
   min-width: 5.5rem;
 }
 
-.workbench-rail-card .portfolio-workflow-cta,
-.workbench-rail-card .portfolio-context-copy {
+.workbench-rail-card .portfolio-workflow-cta {
   justify-self: flex-end;
 }
 

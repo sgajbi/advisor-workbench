@@ -5,25 +5,21 @@ import { describe, expect, it, vi } from "vitest";
 import PortfolioSummaryHeaderSection from "../../src/apps/portfolio/components/portfolio-summary-header-section";
 import {
   buildPortfolioWorkspace,
-  buildPortfolioWorkspaceContext,
 } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("PortfolioSummaryHeaderSection", () => {
-  it("renders portfolio identity, governed context, and published KPI figures", () => {
+  it("renders published KPI figures without repeating shell-owned identity", () => {
     render(
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace()}
-        context={buildPortfolioWorkspaceContext()}
         onOpenMetricDrawer={vi.fn()}
       />
     );
 
-    expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
-    expect(screen.queryByText("Portfolio book PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Global Balanced Mandate" })).toBeInTheDocument();
-    expect(screen.getByText("CIF_SG_000184")).toBeInTheDocument();
-    expect(screen.getByText("Singapore")).toBeInTheDocument();
-    expect(screen.getByText("Review date 12 May 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
+    expect(screen.queryByText("Global Balanced Mandate")).not.toBeInTheDocument();
+    expect(screen.queryByText("CIF_SG_000184")).not.toBeInTheDocument();
+    expect(screen.queryByText("Singapore")).not.toBeInTheDocument();
     expect(screen.getByText("Valuation as of 12 May 2026")).toBeInTheDocument();
     expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
     expect(screen.getByText("920,000 USD")).toBeInTheDocument();
@@ -33,17 +29,14 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.getByText("1.20%")).toBeInTheDocument();
   });
 
-  it("qualifies current totals when the selected historical review is still loading", () => {
+  it("qualifies KPI totals with the source valuation date", () => {
     render(
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace({ as_of_date: "2026-05-12" })}
-        context={buildPortfolioWorkspaceContext({ selectedAsOfDate: "2026-04-30" })}
         onOpenMetricDrawer={vi.fn()}
       />
     );
 
-    expect(screen.getByText("Review date 30 Apr 2026")).toBeInTheDocument();
-    expect(screen.getByText("Valuation date 12 May 2026")).toBeInTheDocument();
     expect(screen.getByText("Valuation as of 12 May 2026")).toBeInTheDocument();
     expect(screen.queryByText("Valuation as of 30 Apr 2026")).not.toBeInTheDocument();
   });
@@ -53,7 +46,6 @@ describe("PortfolioSummaryHeaderSection", () => {
     render(
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace()}
-        context={buildPortfolioWorkspaceContext()}
         onOpenMetricDrawer={onOpenMetricDrawer}
       />
     );

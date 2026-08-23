@@ -77,7 +77,7 @@ describe("PortfolioScreenRail", () => {
     vi.unstubAllEnvs();
   });
 
-  it("keeps the selected portfolio and active business view in the compact disclosure", () => {
+  it("keeps the active business view without repeating shell-owned portfolio identity", () => {
     render(
       <PortfolioScreenRail
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -85,9 +85,8 @@ describe("PortfolioScreenRail", () => {
       />,
     );
 
-    expect(screen.getByTitle("PB_SG_GLOBAL_BAL_001")).toHaveTextContent(
-      "PB_SG_GLOBAL_BAL_001",
-    );
+    expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
+    expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     const disclosure = screen.getByRole("button", { name: /current view income/i });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(disclosure).toHaveAttribute("aria-controls");

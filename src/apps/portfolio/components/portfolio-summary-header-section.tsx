@@ -1,14 +1,13 @@
 "use client";
 
-import { Panel, SemanticBadge, Text } from "@/design-system";
+import { Panel } from "@/design-system";
 
-import { formatBookingCenter, formatCurrency, formatDate, formatPct, formatStatus } from "../formatters";
+import { formatCurrency, formatDate, formatPct } from "../formatters";
 import {
   getPortfolioSummaryValueToneClass,
   resolvePortfolioPerformancePeriodReturns,
 } from "../portfolio-summary-view-model";
 import type { PortfolioWorkspace } from "../types";
-import type { PortfolioWorkspaceContext } from "../view-model";
 import {
   getInvestedAssetWeight,
 } from "../view-model";
@@ -17,20 +16,13 @@ import type { PortfolioMetricDrawerKey } from "./portfolio-detail-drawer-builder
 
 export default function PortfolioSummaryHeaderSection({
   workspace,
-  context,
   onOpenMetricDrawer,
 }: {
   workspace: PortfolioWorkspace;
-  context: PortfolioWorkspaceContext;
   onOpenMetricDrawer: (metric: PortfolioMetricDrawerKey) => void;
 }) {
   const performanceReturns = resolvePortfolioPerformancePeriodReturns(workspace);
   const valuationDate = formatDate(workspace.as_of_date);
-  const reviewingHistoricalDate = context.selectedAsOfDate !== workspace.as_of_date;
-  const portfolioDisplayName =
-    workspace.portfolio.display_name && workspace.portfolio.display_name !== workspace.portfolio.portfolio_id
-      ? workspace.portfolio.display_name
-      : `${formatStatus(workspace.profile.risk_exposure)} Mandate`;
 
   return (
     <section
@@ -38,29 +30,6 @@ export default function PortfolioSummaryHeaderSection({
       className="portfolio-workspace-section portfolio-summary-cluster-section portfolio-summary-cluster-hero"
     >
       <Panel className="portfolio-hero portfolio-book-hero portfolio-operating-header">
-        <div className="portfolio-hero-header">
-          <div className="portfolio-hero-content">
-            <Text variant="label" className="portfolio-hero-label">
-              Selected portfolio
-            </Text>
-            <h2>{portfolioDisplayName}</h2>
-            <div className="portfolio-hero-meta">
-              <span>{workspace.portfolio.base_currency}</span>
-              {workspace.portfolio.client_id ? <span>{workspace.portfolio.client_id}</span> : null}
-              {workspace.portfolio.booking_center_code ? (
-                <span>{formatBookingCenter(workspace.portfolio.booking_center_code)}</span>
-              ) : null}
-              <span>Review date {formatDate(context.selectedAsOfDate)}</span>
-              {reviewingHistoricalDate ? <span>Valuation date {valuationDate}</span> : null}
-              {workspace.profile.status ? (
-                <SemanticBadge className="portfolio-hero-status">
-                  {formatStatus(workspace.profile.status)}
-                </SemanticBadge>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
         <PortfolioHealthStrip
           tiles={[
             {

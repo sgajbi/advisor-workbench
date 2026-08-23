@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
-import { Panel, ScreenStatePanel, Text } from "@/design-system";
+import { Panel, ScreenStatePanel } from "@/design-system";
 import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
 import { parseReviewContext } from "@/shell/review-context";
 import {
@@ -81,10 +81,6 @@ export default function PortfolioScreenRail({
           pathname={pathname}
           portfolioId={portfolioId}
         />
-        <div className={styles.context}>
-          <Text variant="label">Selected portfolio</Text>
-          <strong title={portfolioId}>{portfolioId}</strong>
-        </div>
         <button
           ref={disclosureButtonRef}
           type="button"

@@ -1,7 +1,6 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import PortfolioContextModule from "../../src/apps/portfolio/modules/portfolio-context/portfolio-context-module";
 import PortfolioReadinessModule from "../../src/apps/portfolio/modules/portfolio-readiness/portfolio-readiness-module";
 import PortfolioWorkspaceSideRail, {
   PortfolioWorkspaceStateSideRail,
@@ -99,28 +98,6 @@ describe("portfolio side rail modules", () => {
     expect(screen.getByText("Pricing coverage incomplete")).toBeInTheDocument();
   });
 
-  it("renders portfolio context as grouped definition-list detail content with copy actions", () => {
-    const onCopy = vi.fn();
-
-    render(
-      <PortfolioContextModule
-        workspace={workspace as PortfolioWorkspace}
-        copiedField={null}
-        onCopy={onCopy}
-      />
-    );
-
-    expect(screen.getByRole("heading", { name: "Book Context" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Identity" })).toBeInTheDocument();
-    expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
-      expect.arrayContaining(["Portfolio", "Client", "Relationship Manager", "Booking Centre"])
-    );
-    expect(screen.getByText("PB_SG_GLOBAL_BAL_001")).toHaveClass("workbench-definition-value");
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
-    expect(onCopy).toHaveBeenCalledWith("portfolio", "PB_SG_GLOBAL_BAL_001");
-  });
-
   it("renders readiness exceptions as an accessible list and operational dates as definitions", () => {
     const onOpenException = vi.fn();
 
@@ -154,11 +131,7 @@ describe("portfolio side rail modules", () => {
     expect(within(operationalDates).getByText("20 Feb 2026")).toHaveClass("workbench-definition-value");
   });
 
-  it("composes evidence, context, readiness, and actions in the portfolio workspace side rail", async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: { writeText },
-    });
+  it("composes evidence, readiness, and actions without repeating portfolio identity", () => {
     const onOpenException = vi.fn();
     const actions = [
       {
@@ -193,14 +166,9 @@ describe("portfolio side rail modules", () => {
 
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Reporting Readiness" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Book Context" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Book Context" })).not.toBeInTheDocument();
     expect(screen.getByText("Review Evidence")).toBeInTheDocument();
     expect(screen.getByText("Review proposal")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
-    await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001");
-    });
 
     fireEvent.click(screen.getByRole("button", { name: /Pricing coverage incomplete/i }));
     expect(onOpenException).toHaveBeenCalledWith(expect.objectContaining({ key: "pricing" }));
@@ -220,46 +188,4 @@ describe("portfolio side rail modules", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("replaces and cancels copy-status timers before unmount", async () => {
-    vi.useFakeTimers();
-    try {
-      const setTimeoutSpy = vi.spyOn(window, "setTimeout");
-      const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.assign(navigator, { clipboard: { writeText } });
-      const { unmount } = render(
-        <PortfolioWorkspaceSideRail
-          workspace={buildPortfolioWorkspace()}
-          context={buildPortfolioWorkspaceContext()}
-          exceptions={[]}
-          actions={[]}
-          showDetailFootnote={false}
-          onOpenException={vi.fn()}
-        />
-      );
-
-      fireEvent.click(screen.getByRole("button", { name: "Copy Portfolio" }));
-      await act(async () => Promise.resolve());
-      const firstResetTimerIndex = setTimeoutSpy.mock.calls.findIndex(
-        ([, delay]) => delay === 1600,
-      );
-      expect(firstResetTimerIndex).toBeGreaterThanOrEqual(0);
-      const firstResetTimerId = setTimeoutSpy.mock.results[firstResetTimerIndex].value;
-
-      fireEvent.click(screen.getByRole("button", { name: "Copy Client" }));
-      await act(async () => Promise.resolve());
-      const secondResetTimerIndex = setTimeoutSpy.mock.calls.findIndex(
-        ([, delay], index) => index > firstResetTimerIndex && delay === 1600,
-      );
-      expect(secondResetTimerIndex).toBeGreaterThan(firstResetTimerIndex);
-      const secondResetTimerId = setTimeoutSpy.mock.results[secondResetTimerIndex].value;
-      expect(clearTimeoutSpy).toHaveBeenCalledWith(firstResetTimerId);
-
-      unmount();
-      expect(clearTimeoutSpy).toHaveBeenCalledWith(secondResetTimerId);
-    } finally {
-      vi.restoreAllMocks();
-      vi.useRealTimers();
-    }
-  });
 });

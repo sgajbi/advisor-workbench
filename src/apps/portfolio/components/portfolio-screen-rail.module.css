@@ -18,27 +18,10 @@
   background: #131b2e;
 }
 
-.context {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.rail .context span,
-.context > strong,
 .disclosure span,
 .disclosure strong,
 .link span {
   color: #f6f7f9;
-}
-
-.context > strong {
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 720;
-  line-height: 18px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .disclosure {
@@ -248,11 +231,8 @@
 
 @media (max-width: 1200px) {
   .header {
-    grid-template-columns: minmax(180px, 0.8fr) minmax(130px, 0.45fr) minmax(
-        240px,
-        1fr
-      );
-    grid-template-areas: "portfolio-context workflow-context current-view";
+    grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1fr);
+    grid-template-areas: "portfolio-context current-view";
     gap: 8px;
     align-items: center;
     padding: 8px;
@@ -261,12 +241,6 @@
 
   .header > :first-child {
     grid-area: portfolio-context;
-  }
-
-  .context {
-    grid-area: workflow-context;
-    align-content: center;
-    padding-inline: 4px;
   }
 
   .disclosure {
@@ -359,23 +333,8 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "portfolio-context"
-      "workflow-context"
       "current-view";
     gap: 4px;
     padding: 6px;
-  }
-
-  .context {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 8px;
-    align-items: baseline;
-    justify-items: start;
-    padding-inline: 4px;
-    text-align: left;
-  }
-
-  .context > strong {
-    max-width: 100%;
-    font-size: 11px;
   }
 }

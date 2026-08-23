@@ -351,9 +351,12 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
       await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
       await expect(page.getByRole('button', { name: /Export portfolio data/i })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Book Context' })).toBeVisible();
+      const reviewContext = page.getByTestId('review-context-strip');
+      await expect(reviewContext).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Book Context' })).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Review Evidence' })).toBeVisible();
-      await expect(page.getByText(session.portfolioId!, { exact: true }).first()).toBeVisible();
+      await expect(reviewContext.getByText(session.portfolioId!, { exact: true })).toHaveCount(1);
+      await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
       await expect(page.getByText('Valuation date', { exact: true })).toBeVisible();
       await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
 
@@ -379,13 +382,11 @@ test.describe('Portfolio workbench smoke', () => {
 
       if (viewport.width <= 1200) {
         const visibleHeaderRegions = railHeaderRegions.filter((region) => region.display !== 'none');
-        expect(visibleHeaderRegions).toHaveLength(3);
+        expect(visibleHeaderRegions).toHaveLength(2);
         if (viewport.width <= 720) {
           expect(visibleHeaderRegions[0].top).toBeLessThan(visibleHeaderRegions[1].top);
-          expect(visibleHeaderRegions[1].top).toBeLessThan(visibleHeaderRegions[2].top);
         } else {
           expect(visibleHeaderRegions[0].left).toBeLessThan(visibleHeaderRegions[1].left);
-          expect(visibleHeaderRegions[1].left).toBeLessThan(visibleHeaderRegions[2].left);
         }
 
         const disclosure = page.getByRole('button', { name: /Current view Portfolio Review/ });
