@@ -101,11 +101,11 @@ describe("advisor-book workspace view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Own book only",
-          rawValue: "delegated_scope_not_supported",
+          occurrenceCount: 1,
         }),
         expect.objectContaining({
           label: "Operating scope confirmation pending",
-          rawValue: "tenant_scope_not_reported",
+          occurrenceCount: 1,
         }),
       ]),
     );
@@ -114,11 +114,36 @@ describe("advisor-book workspace view model", () => {
         { label: "Membership record", value: "Portfolio manager assignments" },
         { label: "Operating scope", value: "Workbench access context only" },
         { label: "Availability reference", value: "advisor_book_tenant_scope_not_reported" },
+        {
+          label: "Limitation references",
+          value: "delegated_scope_not_supported, tenant_scope_not_reported",
+        },
       ]),
     );
     expect(JSON.stringify(model)).not.toMatch(
       /tenant scope|status code|membership v1|source-backed|source-confirmed|source currency|source limitation/i,
     );
+  });
+
+  it("consolidates repeated unknown limitations while retaining their support references", () => {
+    const model = buildAdvisorBookWorkspaceModel({
+      ...response,
+      supportability: {
+        ...response.supportability,
+        limitations: ["unmapped_one", "unmapped_two", "unmapped_one"],
+      },
+    });
+
+    expect(model.limitations).toEqual([
+      expect.objectContaining({
+        label: "Additional operating limitation",
+        occurrenceCount: 3,
+      }),
+    ]);
+    expect(model.supportDetails).toContainEqual({
+      label: "Limitation references",
+      value: "unmapped_one, unmapped_two",
+    });
   });
 
   it("describes the source-returned order when it matches the requested view", () => {
