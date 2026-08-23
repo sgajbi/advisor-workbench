@@ -72,6 +72,11 @@ export async function ReportOrderingPage({
     <ReportOrderingWorkspace
       initialBatchId={reviewContextResult.context.batchId}
       reviewContext={buildPortfolioReviewContextStrip(workspace, {
+        acceptedReportingCurrency:
+          controlResolution.controls.reportingCurrency !==
+          workspace.portfolio.base_currency
+            ? controlResolution.controls.reportingCurrency
+            : undefined,
         notice: toReviewContextNotice(
           buildWorkbenchUnsupportedReviewContextNotice({
             title: "Report source context",
