@@ -171,6 +171,9 @@ function resolveEvidenceStatus({
   matchesSelectedContext: boolean;
   sourcePosture: QuerySourcePosture;
 }): ProposalPortfolioEvidenceStatus {
+  if (sourcePosture.isUnavailable) {
+    return "unavailable";
+  }
   if (!hasSelectedContext) {
     return "not_selected";
   }
@@ -208,6 +211,9 @@ function resolvePositionsStatus({
   positionCount: number;
   posture: QuerySourcePosture;
 }): ProposalPositionsEvidenceStatus {
+  if (posture.isUnavailable) {
+    return "unavailable";
+  }
   if (!hasSelectedContext || (!hasBookData && posture.isInitialLoading)) {
     return "loading";
   }
