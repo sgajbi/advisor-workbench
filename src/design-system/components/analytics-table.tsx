@@ -173,7 +173,7 @@ export default function AnalyticsTable({
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => (
+            rows.map((row, rowIndex) => (
               <TableRow
                 key={row.key}
                 hover
@@ -183,6 +183,14 @@ export default function AnalyticsTable({
                 onMouseLeave={row.onMouseLeave}
                 tabIndex={row.onClick ? 0 : undefined}
                 aria-label={row.ariaLabel}
+                style={
+                  {
+                    "--analytics-table-pinned-background": getPinnedRowBackground(
+                      variant,
+                      rowIndex,
+                    ),
+                  } as React.CSSProperties
+                }
                 onKeyDown={
                   row.onClick
                     ? (event) => {
@@ -193,8 +201,12 @@ export default function AnalyticsTable({
                       }
                     : undefined
                 }
-                sx={
-                  row.onClick
+                sx={{
+                  "&:hover": {
+                    "--analytics-table-pinned-background":
+                      lotusThemeTokens.color.surface.tertiary,
+                  },
+                  ...(row.onClick
                     ? {
                         cursor: "pointer",
                         "&:focus-visible": {
@@ -203,8 +215,8 @@ export default function AnalyticsTable({
                           outlineOffset: "-2px",
                         },
                       }
-                    : undefined
-                }
+                    : {}),
+                }}
               >
                 {row.cells.map((cell, index) => {
                   const column = columns[index];
@@ -282,10 +294,23 @@ function getColumnCellStyle(
           position: "sticky",
           left: column.stickyOffset,
           zIndex: section === "header" ? 3 : 2,
-          backgroundColor: "inherit",
+          backgroundColor:
+            section === "body"
+              ? `var(--analytics-table-pinned-background, ${lotusThemeTokens.color.surface.panel})`
+              : lotusThemeTokens.color.surface.panelAlt,
         }
       : {}),
   };
+}
+
+function getPinnedRowBackground(
+  variant: AnalyticsTableVariant,
+  rowIndex: number,
+) {
+  const usesAlternatingRows = variant === "analysis" || variant === "observation";
+  return usesAlternatingRows && rowIndex % 2 === 1
+    ? lotusThemeTokens.color.surface.panelAlt
+    : lotusThemeTokens.color.surface.panel;
 }
 
 function getHeaderCellSx(density: AnalyticsTableDensity) {
