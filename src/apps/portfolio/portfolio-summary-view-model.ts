@@ -329,7 +329,7 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
     {
       label: "Reporting coverage",
       value: formatStatus(workspace.readiness.reporting.status),
-      support: getReportingFreshnessSupport(workspace),
+      support: getDecisionReportingCoverageSupport(workspace),
     },
   ];
   if (exceptionCount) {
@@ -357,6 +357,21 @@ export function buildPortfolioDecisionBrief(workspace: PortfolioWorkspace): Port
     attentionItems,
     rows,
   };
+}
+
+function getDecisionReportingCoverageSupport(workspace: PortfolioWorkspace): string {
+  const generatedAt = workspace.readiness.reporting.generated_at_utc;
+  const rowCount = workspace.readiness.reporting.row_count;
+
+  if (
+    generatedAt?.slice(0, 10) === workspace.as_of_date &&
+    workspace.readiness.reporting.status === "READY" &&
+    rowCount > 0
+  ) {
+    return `${rowCount} report row${rowCount === 1 ? "" : "s"} published`;
+  }
+
+  return getReportingFreshnessSupport(workspace);
 }
 
 export function resolvePortfolioPerformancePeriodReturns(
