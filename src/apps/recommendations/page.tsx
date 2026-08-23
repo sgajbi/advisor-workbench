@@ -11,7 +11,7 @@ import ProposalWorkspaceShell from "@/features/proposals/components/proposal-wor
 import {
   buildAdvisorCockpitWorkflowContext,
 } from "@/features/proposals/proposal-workflow-context-view-model";
-import ReviewContextRecovery from "@/shell/review-context-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import {
   parseReviewContext,
   type ReviewContextSearchParams,
@@ -31,7 +31,10 @@ export default async function RecommendationsAppPage({
   const reviewContextResult = parseReviewContext(resolvedSearch);
   if (reviewContextResult.status === "invalid") {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="advisory"
+        pageTitle="Advisory Workspace"
+        pageSubtitle="Prioritise source-backed client and portfolio decisions."
         body="The advisory-workspace address contains repeated or unsupported review context. No advisory evidence was requested."
         href="/book"
         actionLabel="Select a portfolio from My book"
@@ -42,7 +45,10 @@ export default async function RecommendationsAppPage({
   const portfolioId = reviewContextResult.context.portfolioId;
   if (!portfolioId) {
     return (
-      <ReviewContextRecovery
+      <ReviewContextPageRecovery
+        pageKey="advisory"
+        pageTitle="Advisory Workspace"
+        pageSubtitle="Prioritise source-backed client and portfolio decisions."
         body="Select a source-confirmed portfolio from My book before opening advisory priorities. No demo portfolio was substituted."
         href="/book"
         actionLabel="Select a portfolio from My book"
