@@ -26,6 +26,15 @@ describe("Next artifact isolation proof", () => {
     expect(packageJson.scripts?.["test:next-artifact-isolation"]).toBe(
       "node scripts/testing/verify-next-artifact-isolation.mjs",
     );
+    const proofSource = readFileSync(
+      resolve(process.cwd(), "scripts", "testing", "verify-next-artifact-isolation.mjs"),
+      "utf8",
+    );
+    expect(proofSource).toContain('execFileSync("git", ["rev-parse", "HEAD"]');
+    expect(proofSource).toContain('execFileSync("git", ["status", "--porcelain"]');
+    expect(proofSource).toContain(
+      "Next.js artifact isolation evidence requires a clean committed worktree.",
+    );
     expect(workflow).toContain(
       [
         "      - name: Next Development And Production Artifact Isolation",
