@@ -127,7 +127,10 @@ export async function startManageFixtureGateway({
       return;
     }
     if (path === "/api/v1/dpm/command-center/exceptions") {
-      if (process.env.MANAGE_E2E_FIXTURE === "mandate-health") {
+      if (
+        process.env.MANAGE_E2E_FIXTURE === "mandate-health" ||
+        process.env.MANAGE_E2E_FIXTURE === "overview"
+      ) {
         const cursor = requestUrl.searchParams.get("cursor");
         const requestedPortfolioId = requestUrl.searchParams.get("portfolio_id");
         if (requestedPortfolioId === secondaryPortfolioId) {
@@ -441,6 +444,7 @@ function waveEnvelope() {
       items: [
         {
           wave_id: waveId,
+          portfolio_ids: [portfolioId],
           state: "SIMULATION_READY",
           trigger_type: "EXPLICIT_PORTFOLIO_LIST",
           as_of_date: "2026-05-03",

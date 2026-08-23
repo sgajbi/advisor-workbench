@@ -75,7 +75,7 @@
 }
 
 .decisionWorkspace :global([data-workbench-record-selector]) {
-  max-height: 31rem;
+  max-height: 25rem;
   padding: 2px;
   overflow-y: auto;
   overscroll-behavior: contain;

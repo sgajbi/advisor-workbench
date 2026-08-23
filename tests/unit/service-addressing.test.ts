@@ -243,10 +243,19 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18150");
   });
 
-  it("rejects a Manage fixture URL whose scenario is not governed", () => {
+  it("allows only the exact process-owned Manage overview fixture loopback", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
     process.env.MANAGE_E2E_FIXTURE = "overview";
+    process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18150");
+  });
+
+  it("rejects a Manage fixture URL whose scenario is not governed", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
+    process.env.MANAGE_E2E_FIXTURE = "ungoverned-overview";
     process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
 
     expect(() => resolveGatewayBaseUrl()).toThrow(

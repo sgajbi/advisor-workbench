@@ -63,6 +63,7 @@
     "test:e2e:portfolio:positions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs positions-status",
     "test:e2e:portfolio:transactions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs transactions-status",
     "test:e2e:portfolio:unavailable": "node scripts/testing/run-portfolio-smoke-scenario.mjs shell-unavailable",
+    "test:e2e:manage:overview": "node scripts/testing/run-manage-smoke-scenario.mjs overview",
     "test:e2e:manage:rebalance-waves": "node scripts/testing/run-manage-smoke-scenario.mjs rebalance-waves",
     "test:e2e:manage:mandate-health": "node scripts/testing/run-manage-smoke-scenario.mjs mandate-health",
     "test:e2e:intake:readiness": "playwright test tests/e2e/intake-first-action-readiness.spec.ts",
