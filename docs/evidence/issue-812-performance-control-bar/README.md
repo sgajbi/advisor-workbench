@@ -15,7 +15,8 @@ review evidence, not canonical live-service proof, a client demo pack, or bank c
 - Summary defaults to the six-column **Absolute** Return History review. **Relative** and
   **Combined** are optional display choices, not additional source selectors.
 - Horizon Comparison inherits the selected horizon and benchmark; its display overrides remain
-  behind **Adjust comparison display**.
+  behind **Adjust comparison display** and reflow within the comparison panel rather than the
+  outer viewport.
 - Return measures hold a 4-column desktop/tablet, 2-column compact, and 1-column very-narrow
   hierarchy.
 - The page has no horizontal overflow at 1440, 1024, 768, or 519 pixels. At 519 pixels only the
