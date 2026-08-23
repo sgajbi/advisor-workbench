@@ -1,6 +1,7 @@
 import type { ReviewContextStripModel } from "@/design-system";
+import { formatBusinessBookingCenter } from "@/features/workbench/business-label-formatters";
 
-import { formatBookingCenter, formatBusinessDate, formatStatus } from "./formatters";
+import { formatBusinessDate, formatStatus } from "./formatters";
 import type { PortfolioWorkspace } from "./types";
 
 export type PortfolioReviewContextStripOptions = {
@@ -17,7 +18,7 @@ export function buildPortfolioReviewContextStrip(
     ? formatStatus(workspace.profile.portfolio_type)
     : null;
   const bookingCenter = workspace.portfolio.booking_center_code
-    ? formatBookingCenter(workspace.portfolio.booking_center_code)
+    ? formatBusinessBookingCenter(workspace.portfolio.booking_center_code)
     : null;
   const businessDate = options.businessDate ?? workspace.as_of_date;
   const reportingCurrency =
