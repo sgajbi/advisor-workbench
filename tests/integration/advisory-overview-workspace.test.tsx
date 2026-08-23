@@ -23,7 +23,9 @@ const defaultProposalList = {
   next_cursor: null as string | null,
 };
 
-const listProposalsMock = vi.fn(async (_filters?: unknown) => defaultProposalList);
+const listProposalsMock = vi.fn(
+  async (_filters?: unknown) => defaultProposalList,
+);
 
 vi.mock("../../src/features/proposals/api", () => ({
   listProposals: (filters: unknown) => listProposalsMock(filters),
@@ -39,7 +41,9 @@ function renderWithQueryClient(ui: React.ReactElement) {
   });
   return {
     queryClient,
-    view: render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>),
+    view: render(
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+    ),
   };
 }
 
@@ -51,7 +55,9 @@ describe("AdvisoryOverviewWorkspace", () => {
 
   it("renders portfolio-scoped advisory posture and priority actions", async () => {
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
     await waitFor(() => {
@@ -63,30 +69,72 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
 
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Advisor Priorities" })
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Advisor Priorities",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Advisory overview summary")).toHaveTextContent(
-      /Visible Proposals\s*2/
+    expect(
+      screen.getByText(
+        "Resolve review blockers before preparing any client discussion material.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Advisory journey screens"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open proposal review" }),
+    ).toHaveAttribute("href", "/proposals/PRP-RISK");
+    expect(
+      screen.getByRole("listbox", {
+        name: "Advisory proposal decision worklist",
+      }),
+    ).toHaveAttribute("aria-orientation", "vertical");
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+    expect(
+      screen.getByText("Technology concentration trim"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Risk review required")).toBeInTheDocument();
+    expect(
+      screen.getByText("Risk officer approval needed"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("2 items need action")).toHaveLength(1);
+    expect(screen.queryByText("Build Proposal")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open Approval Queue")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Move recommendations from insight to implementation"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("advisory-source-window-posture"),
+    ).toHaveTextContent("Complete source window");
+  });
+
+  it("moves from the selected proposal row into its source-backed decision", async () => {
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
-    expect(screen.getByText("Resolve review blockers before preparing any client discussion material.")).toBeInTheDocument();
-    expect(screen.getByTestId("advisory-lifecycle-summary")).toHaveTextContent(
-      /Identify.*Construct.*Review & discuss.*Implement/
-    );
-    expect(screen.queryByLabelText("Advisory journey screens")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Build Proposal" })).toHaveAttribute(
-      "href",
-      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001"
-    );
-    expect(screen.getByRole("link", { name: "Open Approval Queue" })).toHaveAttribute(
-      "href",
-      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001"
-    );
-    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
-    expect(screen.getByText("Risk officer approval needed")).toBeInTheDocument();
-    expect(screen.getByText("2 items need action")).toBeInTheDocument();
-    expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
-      "Complete source window"
-    );
+
+    const worklist = await screen.findByRole("listbox", {
+      name: "Advisory proposal decision worklist",
+    });
+    const options = screen.getAllByRole("option");
+    const decision = screen.getByRole("region", {
+      name: "Selected advisory proposal",
+    });
+
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(options[0]).toHaveAttribute("aria-controls", decision.id);
+    options[0].focus();
+    fireEvent.keyDown(options[0], { key: "ArrowDown" });
+
+    expect(options[1]).toHaveFocus();
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(decision).toHaveTextContent("Ready for execution handoff");
+    fireEvent.keyDown(options[1], { key: "Enter" });
+    expect(decision).toHaveFocus();
+    expect(worklist).toContainElement(options[1]);
   });
 
   it("starts from the first source window when the selected portfolio changes", async () => {
@@ -99,11 +147,15 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
     const view = render(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-a" }} />
-      </QueryClientProvider>
+        <AdvisoryOverviewWorkspace
+          reviewContext={{ portfolioId: "portfolio-a" }}
+        />
+      </QueryClientProvider>,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
     await waitFor(() => {
       expect(listProposalsMock).toHaveBeenCalledWith({
         portfolioId: "portfolio-a",
@@ -115,8 +167,10 @@ describe("AdvisoryOverviewWorkspace", () => {
     listProposalsMock.mockClear();
     view.rerender(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-b" }} />
-      </QueryClientProvider>
+        <AdvisoryOverviewWorkspace
+          reviewContext={{ portfolioId: "portfolio-b" }}
+        />
+      </QueryClientProvider>,
     );
 
     await waitFor(() => {
@@ -132,27 +186,41 @@ describe("AdvisoryOverviewWorkspace", () => {
     listProposalsMock.mockRejectedValueOnce(new Error("gateway unavailable"));
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    expect(await screen.findByText("Advisory priorities are unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText(/No fallback proposal, review, or implementation posture is shown/)
+      await screen.findByText("Advisory priorities are unavailable"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toBeInTheDocument();
-    expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /No fallback proposal, review, or implementation posture is shown/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry advisory priorities" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Technology concentration trim"),
+    ).not.toBeInTheDocument();
   });
 
   it("allows the newly selected portfolio to recover while an obsolete retry is pending", async () => {
     let resolvePortfolioARetry!: (value: typeof defaultProposalList) => void;
-    const portfolioARetry = new Promise<typeof defaultProposalList>((resolve) => {
-      resolvePortfolioARetry = resolve;
-    });
+    const portfolioARetry = new Promise<typeof defaultProposalList>(
+      (resolve) => {
+        resolvePortfolioARetry = resolve;
+      },
+    );
     listProposalsMock.mockImplementation(async (filters?: unknown) => {
-      const portfolioId = (filters as { portfolioId?: string } | undefined)?.portfolioId;
+      const portfolioId = (filters as { portfolioId?: string } | undefined)
+        ?.portfolioId;
       const portfolioCalls = listProposalsMock.mock.calls.filter(
         ([callFilters]) =>
-          (callFilters as { portfolioId?: string } | undefined)?.portfolioId === portfolioId
+          (callFilters as { portfolioId?: string } | undefined)?.portfolioId ===
+          portfolioId,
       ).length;
       if (portfolioId === "portfolio-a") {
         if (portfolioCalls === 1) throw new Error("portfolio A unavailable");
@@ -179,31 +247,45 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
     const view = render(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-a" }} />
-      </QueryClientProvider>
+        <AdvisoryOverviewWorkspace
+          reviewContext={{ portfolioId: "portfolio-a" }}
+        />
+      </QueryClientProvider>,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Retry advisory priorities" }),
+    );
     expect(listProposalsMock).toHaveBeenCalledTimes(2);
 
     view.rerender(
       <QueryClientProvider client={queryClient}>
-        <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "portfolio-b" }} />
-      </QueryClientProvider>
+        <AdvisoryOverviewWorkspace
+          reviewContext={{ portfolioId: "portfolio-b" }}
+        />
+      </QueryClientProvider>,
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Retry advisory priorities" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Retry advisory priorities" }),
+    );
 
-    expect(await screen.findByText("Portfolio B liquidity review")).toBeInTheDocument();
     expect(
-      screen.getByText("Latest advisory priorities confirmed through Gateway.")
+      await screen.findByText("Portfolio B liquidity review"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Latest advisory priorities confirmed through Gateway."),
     ).toBeInTheDocument();
     expect(listProposalsMock).toHaveBeenCalledTimes(4);
 
     resolvePortfolioARetry(defaultProposalList);
     await waitFor(() => {
-      expect(screen.getByText("Portfolio B liquidity review")).toBeInTheDocument();
       expect(
-        screen.getByText("Latest advisory priorities confirmed through Gateway.")
+        screen.getByText("Portfolio B liquidity review"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Latest advisory priorities confirmed through Gateway.",
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -218,14 +300,20 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockImplementationOnce(async () => await pendingRetry);
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
+    const retry = await screen.findByRole("button", {
+      name: "Retry advisory priorities",
+    });
     retry.focus();
     fireEvent.click(retry);
 
-    const pending = await screen.findByRole("button", { name: "Checking advisory priorities" });
+    const pending = await screen.findByRole("button", {
+      name: "Checking advisory priorities",
+    });
     expect(pending).toHaveAttribute("aria-disabled", "true");
     expect(pending).not.toBeDisabled();
     expect(pending).toHaveFocus();
@@ -234,9 +322,17 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     resolveRetry(defaultProposalList);
 
-    expect(await screen.findByText("Latest advisory priorities confirmed through Gateway.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toHaveFocus();
-    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Latest advisory priorities confirmed through Gateway.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Refresh advisory priorities" }),
+    ).toHaveFocus();
+    expect(
+      screen.getByText("Technology concentration trim"),
+    ).toBeInTheDocument();
     expect(listProposalsMock).toHaveBeenCalledTimes(2);
   });
 
@@ -246,16 +342,26 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("gateway still unavailable"));
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    const retry = await screen.findByRole("button", { name: "Retry advisory priorities" });
+    const retry = await screen.findByRole("button", {
+      name: "Retry advisory priorities",
+    });
     retry.focus();
     fireEvent.click(retry);
 
-    expect(await screen.findByText("Advisory priorities remain unavailable")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toHaveFocus();
-    expect(screen.queryByText(/gateway still unavailable/i)).not.toBeInTheDocument();
+    expect(
+      await screen.findByText("Advisory priorities remain unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry advisory priorities" }),
+    ).toHaveFocus();
+    expect(
+      screen.queryByText(/gateway still unavailable/i),
+    ).not.toBeInTheDocument();
   });
 
   it("retains earlier proposals until a failed refresh is source-confirmed", async () => {
@@ -275,23 +381,41 @@ describe("AdvisoryOverviewWorkspace", () => {
       });
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    const refresh = await screen.findByRole("button", { name: "Refresh advisory priorities" });
+    const refresh = await screen.findByRole("button", {
+      name: "Refresh advisory priorities",
+    });
     refresh.focus();
     fireEvent.click(refresh);
 
-    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
-    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
-    const retry = screen.getByRole("button", { name: "Retry advisory priorities" });
+    expect(
+      await screen.findByText("Latest proposal posture is not confirmed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Technology concentration trim"),
+    ).toBeInTheDocument();
+    const retry = screen.getByRole("button", {
+      name: "Retry advisory priorities",
+    });
     expect(retry).toHaveFocus();
     fireEvent.click(retry);
 
-    expect(await screen.findByText("Recovered income mandate review")).toBeInTheDocument();
-    expect(screen.queryByText("Technology concentration trim")).not.toBeInTheDocument();
-    expect(screen.getByText("Latest advisory priorities confirmed through Gateway.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toHaveFocus();
+    expect(
+      await screen.findByText("Recovered income mandate review"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Technology concentration trim"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Latest advisory priorities confirmed through Gateway."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Refresh advisory priorities" }),
+    ).toHaveFocus();
   });
 
   it("removes an earlier confirmation when a newer background refresh fails", async () => {
@@ -301,12 +425,20 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("newer refresh unavailable"));
 
     const { queryClient } = renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Refresh advisory priorities",
+      }),
+    );
     expect(
-      await screen.findByText("Latest advisory priorities confirmed through Gateway."),
+      await screen.findByText(
+        "Latest advisory priorities confirmed through Gateway.",
+      ),
     ).toBeInTheDocument();
 
     await queryClient.refetchQueries({
@@ -314,11 +446,17 @@ describe("AdvisoryOverviewWorkspace", () => {
       exact: true,
     });
 
-    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
     expect(
-      screen.queryByText("Latest advisory priorities confirmed through Gateway."),
+      await screen.findByText("Latest proposal posture is not confirmed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Latest advisory priorities confirmed through Gateway.",
+      ),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Technology concentration trim")).toBeInTheDocument();
+    expect(
+      screen.getByText("Technology concentration trim"),
+    ).toBeInTheDocument();
   });
 
   it("reconciles a failed manual outcome when a newer background refresh succeeds", async () => {
@@ -338,24 +476,40 @@ describe("AdvisoryOverviewWorkspace", () => {
       });
 
     const { queryClient } = renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Refresh advisory priorities" }));
-    expect(await screen.findByText("Latest proposal posture is not confirmed")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry advisory priorities" })).toBeInTheDocument();
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Refresh advisory priorities",
+      }),
+    );
+    expect(
+      await screen.findByText("Latest proposal posture is not confirmed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry advisory priorities" }),
+    ).toBeInTheDocument();
 
     await queryClient.refetchQueries({
       queryKey: ["advisory-overview", "PB_SG_GLOBAL_BAL_001", undefined],
       exact: true,
     });
 
-    expect(await screen.findByText("Automatically recovered client review")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Automatically recovered client review"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Latest advisory priorities confirmed through Gateway."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refresh advisory priorities" })).toBeInTheDocument();
-    expect(screen.queryByText("Latest proposal posture is not confirmed")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Refresh advisory priorities" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Latest proposal posture is not confirmed"),
+    ).not.toBeInTheDocument();
   });
 
   it("discloses a partial proposal window instead of overstating portfolio totals", async () => {
@@ -372,48 +526,64 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    expect(await screen.findByText("Income allocation review")).toBeInTheDocument();
-    expect(screen.getByTestId("advisory-source-window-posture")).toHaveTextContent(
-      /Proposal window 1.*Counts and ranking apply only/
-    );
-    expect(screen.getByLabelText("Advisory overview summary")).toHaveTextContent(
-      /Visible Proposals\s*1.*additional proposals may sit outside this view/
-    );
-    expect(screen.getByRole("button", { name: "Next proposals" })).toBeEnabled();
+    expect(
+      await screen.findByText("Income allocation review"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("advisory-source-window-posture"),
+    ).toHaveTextContent(/Proposal window 1.*Counts and ranking apply only/);
+    expect(
+      screen.getByTestId("advisory-source-window-posture"),
+    ).toHaveTextContent(/Proposal window 1.*Review adjacent windows/);
+    expect(
+      screen.getByRole("button", { name: "Next proposals" }),
+    ).toBeEnabled();
   });
 
-  it("keeps active proposal work ahead of summary and lifecycle orientation in DOM order", async () => {
+  it("keeps the decision and proposal worklist as the only primary workflow path", async () => {
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
     const decision = await screen.findByTestId("advisory-decision-brief");
     const worklist = screen.getByTestId("advisory-priority-worklist");
-    const summary = screen.getByLabelText("Advisory overview summary");
-    const lifecycle = screen.getByTestId("advisory-lifecycle-summary");
-
     expect(decision.nextElementSibling).toBe(worklist);
-    expect(worklist.nextElementSibling).toBe(summary);
-    expect(summary.nextElementSibling).toBe(lifecycle);
+    expect(worklist.nextElementSibling).toBeNull();
+    expect(
+      screen.queryByLabelText("Advisory overview summary"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("advisory-lifecycle-summary"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps restricted proposal posture behind the source entitlement boundary", async () => {
     listProposalsMock.mockRejectedValueOnce(
-      new Error("Proposal list failed (403): forbidden")
+      new Error("Proposal list failed (403): forbidden"),
     );
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
     expect(
-      await screen.findByText("Advisory proposal access is not available")
+      await screen.findByText("Advisory proposal access is not available"),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId("advisory-priority-worklist")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /advisory priorities/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("advisory-priority-worklist"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /advisory priorities/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("lets the advisor return after a later proposal window fails", async () => {
@@ -425,16 +595,30 @@ describe("AdvisoryOverviewWorkspace", () => {
       .mockRejectedValueOnce(new Error("gateway unavailable"));
 
     renderWithQueryClient(
-      <AdvisoryOverviewWorkspace reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }} />,
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Next proposals" }));
-    expect(await screen.findByText("This proposal window is unavailable")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry proposal window" })).toBeInTheDocument();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
+    expect(
+      await screen.findByText("This proposal window is unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Retry proposal window" }),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Return to previous proposals" }));
-    expect(await screen.findByText("No proposals in this source window")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Return to previous proposals" }),
+    );
+    expect(
+      await screen.findByText("No proposals in this source window"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Proposal view 1")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next proposals" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Next proposals" }),
+    ).toBeEnabled();
   });
 });

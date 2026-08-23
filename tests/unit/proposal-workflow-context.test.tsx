@@ -111,7 +111,7 @@ describe("ProposalWorkflowContextRail", () => {
     expect(boundary).not.toHaveTextContent("No persisted advisory workflow record");
   });
 
-  it("marks supplementary workflow posture without removing source and scope evidence", () => {
+  it("reduces supplementary workflow posture to non-duplicated source and scope evidence", () => {
     const supplementaryModel = buildProposalQueueWorkflowContext({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       modeLabel: "Advisory overview",
@@ -143,7 +143,8 @@ describe("ProposalWorkflowContextRail", () => {
       "data-responsive-priority",
       "supplementary"
     );
-    expect(screen.getByText("Decision posture")).toBeInTheDocument();
+    expect(screen.queryByText("Decision posture")).not.toBeInTheDocument();
+    expect(screen.queryByText("2 need attention")).not.toBeInTheDocument();
     expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(screen.getByText("Source and scope")).toBeInTheDocument();
   });

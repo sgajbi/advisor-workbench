@@ -37,14 +37,6 @@ describe("buildAdvisoryOverviewModel", () => {
       proposals,
     });
 
-    expect(model.metrics).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: "Visible Proposals", value: "4" }),
-        expect.objectContaining({ label: "Review Blockers", value: "1", tone: "warn" }),
-        expect.objectContaining({ label: "Client Discussion", value: "1" }),
-        expect.objectContaining({ label: "Implementation", value: "1" }),
-      ])
-    );
     expect(model.recommendedAction).toMatch(/Resolve review blockers/);
     expect(model.attentionCount).toBe(4);
     expect(model.proposalRows.map((row) => row.proposalId)).toEqual([
@@ -53,12 +45,20 @@ describe("buildAdvisoryOverviewModel", () => {
       "PRP-DRAFT",
       "PRP-READY",
     ]);
-    expect(model.lifecycleStages).toEqual(
+    expect(model.proposalRows).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: "construct", value: "1", valueLabel: "visible draft" }),
-        expect.objectContaining({ key: "deliver", value: "2", tone: "warn" }),
-        expect.objectContaining({ key: "implement", value: "1" }),
-      ])
+        expect.objectContaining({
+          proposalId: "PRP-RISK",
+          status: "Risk review required",
+          statusTone: "warn",
+          nextAction: "Risk officer approval needed",
+        }),
+        expect.objectContaining({
+          proposalId: "PRP-READY",
+          status: "Implementation ready",
+          statusTone: "success",
+        }),
+      ]),
     );
     expect(model.hasPartialWindow).toBe(false);
     expect(model.sourceWindowLabel).toBe("Complete source window");
@@ -81,7 +81,7 @@ describe("buildAdvisoryOverviewModel", () => {
     expect(model.recommendedAction).toMatch(/implementation/);
   });
 
-  it("keeps lifecycle handoffs portfolio scoped", () => {
+  it("keeps the requested review context on proposal handoffs", () => {
     const model = buildAdvisoryOverviewModel({
       reviewContext: {
         portfolioId: "PB SG/001",
@@ -89,18 +89,20 @@ describe("buildAdvisoryOverviewModel", () => {
         period: "YTD",
         reportingCurrency: "SGD",
       },
-      proposals: [],
+      proposals: [
+        {
+          proposal_id: "PRP-DRAFT",
+          portfolio_id: "PB SG/001",
+          current_state: "DRAFT",
+          title: "Income allocation review",
+        },
+      ],
     });
 
-    expect(model.recommendedAction).toMatch(/build a proposal/);
-    expect(model.metrics.find((metric) => metric.label === "Review Blockers")).toMatchObject({
-      value: "0",
-      tone: "success",
-    });
-    expect(model.lifecycleStages.find((stage) => stage.key === "construct")).toMatchObject({
-      href:
-        "/proposals/simulate?portfolioId=PB+SG%2F001&asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
-      value: "0",
+    expect(model.recommendedAction).toMatch(/Submit ready advisor drafts/);
+    expect(model.proposalRows[0]).toMatchObject({
+      href: "/proposals/PRP-DRAFT?asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
+      status: "Advisor draft",
     });
   });
 
@@ -122,10 +124,7 @@ describe("buildAdvisoryOverviewModel", () => {
     expect(model.hasPartialWindow).toBe(true);
     expect(model.sourceWindowLabel).toBe("Proposal window 2");
     expect(model.sourceWindowDetail).toMatch(/only to proposals visible/);
-    expect(model.metrics[0]).toMatchObject({
-      label: "Visible Proposals",
-      value: "1",
-      detail: expect.stringContaining("Current source window 2"),
-    });
+    expect(model.visibleProposalCount).toBe(1);
+    expect(model.sourceWindowDetail).toContain("Review adjacent windows");
   });
 });
