@@ -81,8 +81,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 11769,
-      "maxBytes": 257204
+      "maxLines": 11725,
+      "maxBytes": 256326
     }
   ]
 }
