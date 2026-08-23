@@ -6167,3 +6167,75 @@ component tests, the seven-width Portfolio review matrix, independent A/B compar
 delivery proof, full repository gates, protected review/CI, exact-main validation, wiki
 publication/parity, issue closure, and clean branch/worktree restoration are required. No Gateway,
 API/OpenAPI, business calculation, authentication, entitlement, or new runtime dependency changes.
+
+## Decision-First Daily Worklists
+
+### Business job
+
+An advisor or portfolio manager entering a daily operating screen must identify what needs
+attention, understand the selected record's evidence and constraints, and reach the next permitted
+business action without decoding repeated counts, destinations, card headings, or raw source
+references. A dense workstation therefore needs one queue interaction model and a deliberate
+separation between business decision evidence and operational support detail.
+
+### Current-product research
+
+Research was reviewed on 2026-08-24 from primary product and standards sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   positions advisor work around Book Insights, next-best actions, risk and oversight alerts, and
+   exception-based portfolio review at scale. This supports attention-led worklists rather than
+   passive status-card stacks.
+2. [BlackRock holistic engagement](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/engage-clients-holistically)
+   follows a whole-portfolio understanding, constrained evaluation, proposal, and implementation
+   sequence. The selected pane should therefore order context, evidence, constraints, and the next
+   permitted action.
+3. [Temenos Wealth Front Office](https://www.temenos.com/products/wealth-management/wealth-front-office/)
+   emphasizes reusable workflows and interactive dashboards for advisor and portfolio-manager
+   efficiency. Lotus keeps source-backed content configurable while standardizing the interaction.
+4. [BlackRock on AI-enabled advisor workflows](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor)
+   describes AI content as governed advisor-reviewed work. Future AI-derived worklist evidence must
+   be identified, evidence-linked, and human-reviewed rather than presented as unexplained advice.
+5. [WAI-ARIA listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) and
+   [WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) support predictable
+   keyboard selection and preservation of content and function when available width narrows.
+
+These sources inform workflow order and interaction quality. They do not transfer another
+vendor's visual identity, calculations, data, entitlement model, or claims to Lotus.
+
+### Adopted decisions
+
+1. Compose the existing controlled record selector and decision workspace into one
+   `WorkbenchWorklist`; keep business row/detail content owned by each feature.
+2. Let the list answer **what needs attention and why now**. Let the selected pane answer **what
+   evidence and constraints matter, and what action is permitted next**.
+3. Preserve Arrow-key row movement, Enter transfer into an associated focusable detail region,
+   stable controlled selection, disabled-row posture, and capacity-based stacked reflow.
+4. State a count, status, destination, and title once in the primary scan path. Secondary rails may
+   carry different scope or support evidence, but not repeat the active queue or navigation.
+5. Lead Cockpit with source actions, Manage Overview with attention and rebalance decisions, and
+   Advisory Overview with proposal decisions. Combine Advisory stage/readiness into one status.
+6. Keep My Book as a comparison register, retain its horizontal metric strip, consolidate repeated
+   limitations by business meaning, and move raw source references into one collapsed support
+   disclosure.
+7. Treat the first decision row below 900 pixels at 1440 as a product defect and protect the
+   intended hierarchy with optimized-browser geometry assertions rather than screenshots alone.
+
+### Rejected decisions
+
+1. A new page-specific master/detail component for each surface.
+2. Repeating the same destinations in the navigation rail, centre-card grid, and next-actions rail.
+3. Keeping both proposal stage and readiness badges when their combination is the business status.
+4. Rendering correlation, snapshot, or unknown-source codes as primary advisor content.
+5. Calling diagnostic fixtures canonical evidence or weakening geometry assertions to preserve a
+   tall layout.
+
+### Validation and publication decision
+
+Workbench #811 owns the reusable pattern and four-screen adoption. Focused model, component,
+integration, accessibility, failure/recovery, responsive, exact-occurrence, height, and
+optimized-production browser proof is required. Diagnostic screenshots are stored separately from
+canonical populated evidence; canonical capture remains blocked by #846. Screen guides, the screen
+registry, repository context, and codebase review ledger must ship in the implementation PR. No
+Gateway/API/OpenAPI, source calculation, authentication, entitlement, dependency, or runtime
+topology change is required.

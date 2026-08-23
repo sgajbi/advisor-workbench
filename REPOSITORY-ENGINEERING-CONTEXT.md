@@ -1414,6 +1414,17 @@ Most relevant current governance:
     fields. A date or currency may recur only where it is a material term of a calculation,
     reporting request, or dated source record. Recovery must retain page identity, expose an
     unavailable strip, and avoid portfolio-scoped links until the source confirms the portfolio.
+18. Daily decision queues use the design-system `WorkbenchWorklist` when the user's primary job is
+    to choose one source-backed record and act from its evidence. The selector owns compact row
+    identity and posture; the associated decision pane owns complete evidence, constraints, and
+    the next permitted action. Preserve controlled selection, Arrow-key movement, Enter transfer
+    into a focusable addressable detail region, disabled-row semantics, and capacity-based stacked
+    reflow. State each count, status, destination, and title once in the primary scan path. A
+    secondary rail may carry different source, scope, or support evidence, but must not repeat the
+    worklist, navigation, metrics, or current decision. Book-wide posture may precede the worklist
+    only when it changes prioritisation, and raw source references belong in progressive support
+    detail. Cockpit, Manage Overview, and Advisory Overview use this pattern; Advisor Book retains
+    a comparison register but follows the same compact-measure and progressive-evidence hierarchy.
 
 ## Context Maintenance Rule
 
