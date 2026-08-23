@@ -196,7 +196,10 @@ describe("manage workspace split components", () => {
     rerender(
       <ManageOverview data={data} reviewContext={{ portfolioId: "PF_1001" }} />,
     );
-    expect(screen.getAllByText("Evidence unavailable").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("option", { name: /Mandate attention evidence is unavailable/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No zero-attention conclusion has been inferred")).toBeInTheDocument();
     expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
     expect(screen.queryByText("No active attention items.")).not.toBeInTheDocument();
 
@@ -237,8 +240,11 @@ describe("manage workspace split components", () => {
     rerender(
       <ManageOverview data={data} reviewContext={{ portfolioId: "PF_1001" }} />,
     );
-    expect(screen.getByText("2 shown; more available")).toBeInTheDocument();
     expect(screen.getByText("2 shown")).toBeInTheDocument();
+    expect(screen.getByText("First source view; more available")).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: /Continue the mandate attention review/i }),
+    ).toBeInTheDocument();
 
     rerender(
       <ManageContextRail
@@ -455,23 +461,28 @@ describe("manage workspace split components", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio Management Decisions" })).toBeInTheDocument();
     const posture = screen.getByLabelText("Operating posture");
-    expect(within(posture).getByText("Mandate Health")).toBeInTheDocument();
-    expect(within(posture).getByText("Active Attention Items")).toBeInTheDocument();
+    expect(within(posture).getByText("Mandate health")).toBeInTheDocument();
+    expect(within(posture).getByText("Active attention")).toBeInTheDocument();
     expect(within(posture).getAllByText("Needs attention")).toHaveLength(2);
-    expect(screen.getByRole("heading", { name: "Attention Required" })).toBeInTheDocument();
-    expect(screen.getByText("Benchmark mapping requires review")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
-    const taskDirectory = screen.getByRole("navigation", { name: "Manage work areas" });
-    expect(within(taskDirectory).getByRole("link", { name: /Mandate Health/i })).toHaveAttribute(
+    expect(screen.getByRole("heading", { name: "What needs review now" })).toBeInTheDocument();
+    expect(screen.getAllByText("Benchmark mapping requires review")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "Review benchmark mapping" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open mandate health" })).toHaveAttribute(
       "href",
       "/workbench/PF_1001?portfolioId=PF_1001&mode=mandate"
     );
-    expect(within(taskDirectory).getByText("Generated on request")).toBeInTheDocument();
-    expect(screen.queryByText("Alternatives available")).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Mandate attention worklist" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Recent Operating Activity" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: /Review the active rebalance/i }));
+    expect(
+      screen.getByRole("heading", { name: "Review proposed changes and source supportability" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open rebalance waves" })).toHaveAttribute(
+      "href",
+      "/workbench/PF_1001?portfolioId=PF_1001&mode=waves",
+    );
+    expect(screen.queryByRole("navigation", { name: "Manage work areas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Recent Operating Activity" })).not.toBeInTheDocument();
     expect(screen.queryByText("Execute Trade")).not.toBeInTheDocument();
   });
 

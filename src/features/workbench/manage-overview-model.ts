@@ -8,22 +8,42 @@ import {
 } from "@/features/workbench/manage-mandate-health-helpers";
 import { buildManageModeHref } from "@/features/workbench/manage-workspace-navigation";
 import {
-  businessLastReviewed,
   businessStateLabel,
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,
+  formatBusinessExceptionTitle,
+  formatBusinessOwner,
+  formatBusinessSource,
+  formatBusinessTrigger,
   getManageExceptionEvidencePosture,
   isBusinessValueAvailable,
   readStringFromResponse,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
-import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
-import { buildPortfolioMemoryPanelModel } from "@/features/workbench/portfolio-memory-view-model";
 
-type CommandModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
-type ReviewModel = ReturnType<typeof buildOutcomeReviewPanelModel>;
-type PortfolioWaveOverview = ReturnType<typeof buildPortfolioWaveOverview>;
+export type ManageOverviewPostureItem = {
+  key: string;
+  label: string;
+  value: string;
+  support?: string;
+  tone: SemanticBadgeTone;
+};
+
+export type ManageOverviewDecision = {
+  key: string;
+  kind: "attention" | "rebalance" | "evidence-gap";
+  title: string;
+  subtitle: string;
+  status: string;
+  tone: SemanticBadgeTone;
+  facts: Array<{ label: string; value: string }>;
+  nextAction: string;
+  evidence: Array<{ label: string; value: string }>;
+  actionHref: string;
+  actionLabel: string;
+};
+
 export type ManageOverviewModel = ReturnType<typeof buildManageOverviewModel>;
 
 export function buildManageOverviewModel(
@@ -40,8 +60,6 @@ export function buildManageOverviewModel(
     mandateHealth: data.mandateHealth,
   });
   const portfolioWave = buildPortfolioWaveOverview(data.waves, portfolioId);
-  const memoryModel = buildPortfolioMemoryPanelModel(data.portfolioMemory);
-  const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
   const exceptionRows = filterManageExceptionRowsForMandate(
     buildManageExceptionRows(data.commandCenterExceptions),
     commandModel.mandateId
@@ -53,21 +71,6 @@ export function buildManageOverviewModel(
   const hasAvailableExceptionEvidence = exceptionEvidencePosture !== "unavailable";
   const hasCompleteExceptionEvidence = exceptionEvidencePosture === "complete";
   const activeExceptionCount = hasCompleteExceptionEvidence ? exceptionRows.length : null;
-  const latestActivities = buildManageActivityRows(
-    commandModel,
-    portfolioWave,
-    reviewModel,
-    exceptionEvidencePosture,
-    exceptionRows.length
-  );
-  const latestProofPackId = firstNonEmpty(
-    reviewModel.items.find((item) => item.proofPackId !== "N/A")?.proofPackId,
-    "N/A"
-  );
-  const pmQualityPolicyCount = data.pmOperatingQualityPolicies?.supportability.count ?? 0;
-  const pmQualityScoreRunCount = data.pmOperatingQualityScoreRuns?.supportability.count ?? 0;
-  const pmQualityFairnessAnalysisCount =
-    data.pmOperatingQualityFairnessAnalyses?.supportability.count ?? 0;
   const riskProfile = readStringFromResponse(data.mandate, "risk_profile");
   const hasRiskProfile = isBusinessValueAvailable(riskProfile);
   const blockedSurfaces = [
@@ -79,11 +82,6 @@ export function buildManageOverviewModel(
     hasRiskProfile ? null : "Mandate risk profile",
     !hasAvailableExceptionEvidence ? "Mandate attention items" : null,
     data.wavesError ? "Rebalance waves" : null,
-    data.portfolioMemoryError ? "Portfolio memory" : null,
-    data.pmOperatingQualityPoliciesError || data.pmOperatingQualityScoreRunsError
-      ? "PM operating quality"
-      : null,
-    data.outcomeReviewError ? "Outcome reviews" : null,
   ].filter((surface): surface is string => Boolean(surface));
   const mandateHealthState = commandModel.mandateHealthState;
   const mandateTone = toneForState(mandateHealthState);
@@ -91,6 +89,15 @@ export function buildManageOverviewModel(
   const rebalanceTone = toneForState(portfolioWave.state);
   const mandateScore = mandateHealthScoreToPercent(commandModel.mandateHealthScore);
   const hasActiveAttention = hasAvailableExceptionEvidence && exceptionRows.length > 0;
+  const mandateHref = buildManageModeHref(navigationContext, "mandate");
+  const rebalanceHref = buildManageModeHref(navigationContext, "waves");
+  const decisionItems = buildManageOverviewDecisions({
+    exceptionRows,
+    exceptionEvidencePosture,
+    portfolioWave,
+    mandateHref,
+    rebalanceHref,
+  });
 
   return {
     portfolioSummary: {
@@ -101,131 +108,65 @@ export function buildManageOverviewModel(
       positionCount: portfolio.overview.position_count,
       riskProfile: hasRiskProfile ? businessStateLabel(riskProfile) : "Not reported",
     },
-    postureCards: [
+    postureItems: [
       {
         key: "mandate",
-        label: "Mandate Health",
+        label: "Mandate health",
         value: businessStateLabel(mandateHealthState),
-        icon: mandateTone === "success" ? "verified" : "pending",
         tone: mandateTone,
-        progress:
-          mandateScore === null ? null : clampMandateHealthPercent(mandateScore),
+        support:
+          mandateScore === null
+            ? "Source score not reported"
+            : `${clampMandateHealthPercent(mandateScore)}% source health score`,
       },
       {
         key: "data",
-        label: "Data Readiness",
+        label: "Data readiness",
         value: businessStateLabel(commandModel.dataCompletenessState),
-        icon: dataTone === "success" ? "check_circle" : "pending",
         tone: dataTone === "danger" ? "danger" : dataTone === "success" ? "success" : "warn",
-        progress: null,
+        support: "Mandate source completeness",
       },
       {
         key: "rebalance",
-        label: "Rebalance Status",
+        label: "Rebalance status",
         value: businessStateLabel(portfolioWave.state),
-        icon: rebalanceTone === "success" ? "check_circle" : "pending",
         tone:
           rebalanceTone === "danger" ? "danger" : rebalanceTone === "success" ? "success" : "warn",
-        progress: null,
+        support: portfolioWave.waveId
+          ? "Selected-portfolio wave"
+          : "Selected-portfolio wave not confirmed",
       },
       {
         key: "attention",
-        label: "Active Attention Items",
+        label: "Active attention",
         value:
           exceptionEvidencePosture === "unavailable"
             ? "Not available"
             : exceptionEvidencePosture === "partial"
               ? `${exceptionRows.length} shown`
               : String(exceptionRows.length),
-        icon: activeExceptionCount === 0 ? "check_circle" : "warning",
         tone: activeExceptionCount === 0 ? "success" : "warn",
-        progress: null,
+        support:
+          exceptionEvidencePosture === "partial"
+            ? "First source view; more available"
+            : exceptionEvidencePosture === "unavailable"
+              ? "No zero-attention conclusion inferred"
+              : "Selected mandate",
       },
-    ] satisfies Array<{
-      key: string;
-      label: string;
-      value: string;
-      icon: string;
-      tone: SemanticBadgeTone;
-      progress: number | null;
-    }>,
-    exceptionRows,
+    ] satisfies ManageOverviewPostureItem[],
+    decisionItems,
     exceptionEvidencePosture,
     hasAvailableExceptionEvidence,
     hasCompleteExceptionEvidence,
     activeRebalance: {
+      waveId: portfolioWave.waveId,
       triggerType: portfolioWave.triggerType,
       state: portfolioWave.state,
       supportabilityState: portfolioWave.supportabilityState,
+      itemCount: portfolioWave.itemCount,
       issueCount: portfolioWave.issueCount,
       supportabilityReason: portfolioWave.supportabilityReason,
     },
-    moduleItems: [
-      {
-        key: "mandate",
-        title: "Mandate Health",
-        description: "Review mandate evidence and resolve open attention items.",
-        metric:
-          exceptionEvidencePosture === "unavailable"
-            ? "Attention evidence unavailable"
-            : exceptionEvidencePosture === "partial"
-              ? `${exceptionRows.length} in the first source view; more available`
-              : `${exceptionRows.length} attention items`,
-        href: buildManageModeHref(navigationContext, "mandate"),
-        actionLabel: "Open mandate health",
-      },
-      {
-        key: "waves",
-        title: "Rebalance Waves",
-        description: "Review proposed changes, readiness, and source-reported issues.",
-        metric: businessStateLabel(portfolioWave.state),
-        href: buildManageModeHref(navigationContext, "waves"),
-        actionLabel: "Open rebalance waves",
-      },
-      {
-        key: "construction",
-        title: "Construction Alternatives",
-        description: "Generate and compare supported portfolio alternatives on demand.",
-        metric: "Generated on request",
-        href: buildManageModeHref(navigationContext, "construction"),
-        actionLabel: "Open construction",
-      },
-      {
-        key: "memory",
-        title: "Portfolio Memory",
-        description: "Review source-owned decisions and portfolio operating events.",
-        metric: `${memoryModel.eventCount} events`,
-        href: buildManageModeHref(navigationContext, "memory"),
-        actionLabel: "Open portfolio memory",
-      },
-      {
-        key: "quality",
-        title: "PM Operating Quality",
-        description: "Review governance, score-run, and fairness-analysis evidence.",
-        metric: formatEvidenceRecordCount(
-          pmQualityFairnessAnalysisCount || pmQualityScoreRunCount || pmQualityPolicyCount
-        ),
-        href: buildManageModeHref(navigationContext, "quality"),
-        actionLabel: "Open operating quality",
-      },
-      {
-        key: "reviews",
-        title: "Outcome Reviews",
-        description: "Assess post-decision outcomes and required follow-up.",
-        metric: formatRecordCount(reviewModel.items.length, "review", "reviews"),
-        href: buildManageModeHref(navigationContext, "reviews"),
-        actionLabel: "Open outcome reviews",
-      },
-      {
-        key: "proof",
-        title: "Evidence Pack",
-        description: "Inspect governed evidence and downstream handoff posture.",
-        metric: latestProofPackId !== "N/A" ? "Evidence available" : "Not requested",
-        href: buildManageModeHref(navigationContext, "proof"),
-        actionLabel: "Open evidence pack",
-      },
-    ],
-    latestActivities,
     blockedSurfaces,
     overviewPostureLabel: blockedSurfaces.length
       ? "Evidence incomplete"
@@ -238,51 +179,131 @@ export function buildManageOverviewModel(
   };
 }
 
-function buildManageActivityRows(
-  commandModel: CommandModel,
-  portfolioWave: PortfolioWaveOverview,
-  reviewModel: ReviewModel,
-  exceptionEvidencePosture: "complete" | "partial" | "unavailable",
-  visibleExceptionCount: number
-) {
-  const rows = [
-    commandModel.latestMonitoringRunId !== "N/A"
-      ? {
-          key: "monitoring",
-          time: businessLastReviewed(commandModel.latestMonitoringRunStatus),
-          event:
-            exceptionEvidencePosture === "unavailable"
-              ? "Daily mandate review completed; attention-item evidence is unavailable."
-              : exceptionEvidencePosture === "partial"
-                ? `Daily mandate review returned ${visibleExceptionCount} attention items in the first source view; more are available.`
-                : `Daily mandate review completed with ${visibleExceptionCount} attention items.`,
-        }
-      : null,
-    portfolioWave.waveId
-      ? {
-          key: "wave",
-          time: businessStateLabel(portfolioWave.state),
-          event: `${portfolioWave.itemCount} proposed rebalance changes prepared for review.`,
-        }
-      : null,
-    reviewModel.items[0]
-      ? {
-          key: "review",
-          time: businessStateLabel(reviewModel.items[0].state),
-          event: "Outcome review evidence available for portfolio-manager review.",
-        }
-      : null,
-  ].filter((row): row is NonNullable<typeof row> => Boolean(row));
+function buildManageOverviewDecisions({
+  exceptionRows,
+  exceptionEvidencePosture,
+  portfolioWave,
+  mandateHref,
+  rebalanceHref,
+}: {
+  exceptionRows: ReturnType<typeof buildManageExceptionRows>;
+  exceptionEvidencePosture: "complete" | "partial" | "unavailable";
+  portfolioWave: ReturnType<typeof buildPortfolioWaveOverview>;
+  mandateHref: string;
+  rebalanceHref: string;
+}): ManageOverviewDecision[] {
+  const attentionDecisions = exceptionRows.map((row) => ({
+    key: `attention:${row.key}`,
+    kind: "attention" as const,
+    title: formatBusinessExceptionTitle(row.title),
+    subtitle: "Mandate attention",
+    status: businessStateLabel(row.severity),
+    tone: toneForState(row.severity),
+    facts: [
+      { label: "Owner", value: formatBusinessOwner(row.owner) },
+      { label: "Age", value: row.age },
+    ],
+    nextAction:
+      row.nextAction === "N/A"
+        ? "Review mandate evidence and agree the owning next step"
+        : row.nextAction,
+    evidence: [
+      { label: "Workflow state", value: businessStateLabel(row.state) },
+      { label: "Evidence source", value: formatBusinessSource(row.source) },
+      { label: "Monitoring run", value: row.monitoringRunId },
+      { label: "Evidence authority", value: formatBusinessSource(row.authority) },
+    ],
+    actionHref: mandateHref,
+    actionLabel: "Open mandate health",
+  }));
 
-  return rows.length
-    ? rows
-    : [
-        {
-          key: "empty",
-          time: "N/A",
-          event: "No recent operating activity.",
-        },
-      ];
+  const sourceWindowDecision: ManageOverviewDecision[] =
+    exceptionEvidencePosture === "unavailable"
+      ? [
+          {
+            key: "attention:evidence-unavailable",
+            kind: "evidence-gap",
+            title: "Mandate attention evidence is unavailable",
+            subtitle: "Evidence boundary",
+            status: "Not available",
+            tone: "warn",
+            facts: [
+              { label: "Scope", value: "Selected mandate" },
+              { label: "Conclusion", value: "Not confirmed" },
+            ],
+            nextAction: "Open mandate health when source evidence is available",
+            evidence: [
+              { label: "Evidence state", value: "Unavailable" },
+              {
+                label: "Decision boundary",
+                value: "No zero-attention conclusion has been inferred",
+              },
+            ],
+            actionHref: mandateHref,
+            actionLabel: "Open mandate health",
+          },
+        ]
+      : exceptionEvidencePosture === "partial"
+        ? [
+            {
+              key: "attention:more-available",
+              kind: "evidence-gap",
+              title: "Continue the mandate attention review",
+              subtitle: "More source records are available",
+              status: "Partial",
+              tone: "warn",
+              facts: [
+                { label: "Visible now", value: String(exceptionRows.length) },
+                { label: "Coverage", value: "First source view" },
+              ],
+              nextAction: "Open mandate health to continue through the source worklist",
+              evidence: [
+                { label: "Evidence state", value: "Partial" },
+                {
+                  label: "Decision boundary",
+                  value: "The total active-attention count is not yet confirmed",
+                },
+              ],
+              actionHref: mandateHref,
+              actionLabel: "Continue mandate review",
+            },
+          ]
+        : [];
+
+  const rebalanceDecision: ManageOverviewDecision = {
+    key: `rebalance:${portfolioWave.waveId ?? "unconfirmed"}`,
+    kind: "rebalance",
+    title: portfolioWave.waveId
+      ? "Review the active rebalance"
+      : "Confirm selected-portfolio rebalance evidence",
+    subtitle: "Rebalance decision",
+    status: businessStateLabel(portfolioWave.supportabilityState),
+    tone: toneForState(portfolioWave.supportabilityState),
+    facts: [
+      {
+        label: "Trigger",
+        value: portfolioWave.triggerType
+          ? formatBusinessTrigger(portfolioWave.triggerType)
+          : "Not reported",
+      },
+      { label: "Proposed changes", value: portfolioWave.itemCount },
+    ],
+    nextAction: portfolioWave.waveId
+      ? "Review proposed changes and source supportability"
+      : "Open rebalance waves to confirm the current portfolio posture",
+    evidence: [
+      { label: "Rebalance wave", value: portfolioWave.waveId ?? "Not confirmed" },
+      { label: "Source-reported issues", value: portfolioWave.issueCount },
+      {
+        label: "Support note",
+        value: businessStateLabel(portfolioWave.supportabilityReason),
+      },
+    ],
+    actionHref: rebalanceHref,
+    actionLabel: "Open rebalance waves",
+  };
+
+  return [...attentionDecisions, ...sourceWindowDecision, rebalanceDecision];
 }
 
 function formatAmount(value: number | null | undefined): string {
@@ -300,10 +321,6 @@ function formatPct(value: number | null | undefined): string {
     return "N/A";
   }
   return `${value.toFixed(2)}%`;
-}
-
-function formatEvidenceRecordCount(count: number): string {
-  return `${count} evidence ${count === 1 ? "record" : "records"}`;
 }
 
 function buildPortfolioWaveOverview(response: unknown, portfolioId: string) {
@@ -409,12 +426,4 @@ function formatRecordValue(value: unknown): string {
   return typeof value === "number" || typeof value === "string"
     ? String(value)
     : "N/A";
-}
-
-function formatRecordCount(
-  count: number,
-  singular: string,
-  plural: string,
-): string {
-  return `${count} ${count === 1 ? singular : plural}`;
 }
