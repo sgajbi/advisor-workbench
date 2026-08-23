@@ -34,6 +34,18 @@ The workflow reduces repeated setup for periodic portfolio reviews while retaini
 eligibility, lifecycle, failure, and support evidence. It does not combine clients or hide partial
 completion behind one bundle-level success label.
 
+## Shared Review Context
+
+The shell-owned **Review portfolio** strip confirms the selected portfolio and reporting context
+once before report setup. It uses the same Gateway portfolio-workspace response already required
+by Report Centre: mandate type, booking centre, business date, and reporting currency stay visible,
+while portfolio and client references remain in **Support details**.
+
+Report Centre does not repeat portfolio identity in its header or setup banner. A carried review
+period that does not filter report ordering is disclosed in the strip. Report dates and currencies
+inside a reviewed request remain visible because they are material request terms, not duplicate
+navigation context.
+
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** prepare a reviewed portfolio report request for a
