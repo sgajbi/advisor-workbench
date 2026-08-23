@@ -6,8 +6,7 @@ import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixtur
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const evidenceDirectory = path.resolve(
-  "output",
-  "issue-811",
+  process.env.ISSUE_811_EVIDENCE_DIR ?? path.join("output", "issue-811"),
   "advisory-overview",
 );
 const recoveryEvidenceDirectory = path.resolve("output", "issue-729");

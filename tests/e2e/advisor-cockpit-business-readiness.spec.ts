@@ -1,6 +1,12 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
+const issue811EvidenceDirectory = process.env.ISSUE_811_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_811_EVIDENCE_DIR, "advisor-cockpit")
+  : null;
 
 async function mockAdvisorCockpit(
   page: Page,
@@ -370,8 +376,17 @@ test("keeps one advisor decision workflow usable at every supported viewport", a
     ).toBe(true);
 
     if (process.env.LOTUS_CAPTURE_DIAGNOSTIC_SCREENSHOTS === "1") {
+      const screenshotPath = issue811EvidenceDirectory
+        ? path.join(
+            issue811EvidenceDirectory,
+            `advisor-cockpit-${viewport.name}.png`,
+          )
+        : `output/issue-736/advisor-cockpit-${viewport.name}.png`;
+      if (issue811EvidenceDirectory) {
+        await mkdir(issue811EvidenceDirectory, { recursive: true });
+      }
       await page.screenshot({
-        path: `output/issue-736/advisor-cockpit-${viewport.name}.png`,
+        path: screenshotPath,
         fullPage: true,
       });
     }

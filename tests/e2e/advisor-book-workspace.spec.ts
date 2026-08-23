@@ -3,7 +3,10 @@ import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-const evidenceDirectory = path.resolve("output", "issue-811", "advisor-book");
+const evidenceDirectory = path.resolve(
+  process.env.ISSUE_811_EVIDENCE_DIR ?? path.join("output", "issue-811"),
+  "advisor-book",
+);
 
 const advisorBookResponse = {
   correlation_id: "corr-advisor-book-e2e",
