@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   ActionButton,
   ActionLink,
-  OperationalRecordList,
   SemanticBadge,
+  Text,
+  WorkbenchWorklist,
 } from "@/design-system";
 
 import type { AdvisorCockpitActionRow } from "../advisor-cockpit-view-model";
@@ -42,131 +45,115 @@ export default function AdvisorCockpitActionWorklist({
 }: Props) {
   const transactionPending =
     transaction.status === "recording" || transaction.status === "confirming";
+  const [selectedActionItemId, setSelectedActionItemId] = useState(
+    rows[0]?.actionItemId ?? null,
+  );
+  const selectedRow =
+    rows.find((row) => row.actionItemId === selectedActionItemId) ?? rows[0];
+
+  if (!selectedRow) {
+    return null;
+  }
 
   return (
     <div
       className={styles.worklist}
       data-testid="advisor-cockpit-action-worklist"
     >
-      <div
-        className={styles.tablePresentation}
-        data-testid="advisor-cockpit-action-table"
-      >
-        <div
-          className={styles.tableRegion}
-          role="region"
-          aria-label="Advisor action comparison table"
-          tabIndex={0}
-        >
-          <table className={styles.table}>
-            <caption className={styles.srOnly}>
-              Advisor action review worklist
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Action</th>
-                <th scope="col">Status</th>
-                <th scope="col">Owner</th>
-                <th scope="col">Review window</th>
-                <th scope="col">Evidence</th>
-                <th scope="col">Next action</th>
-                <th scope="col">Review</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.actionItemId}>
-                  <th scope="row">
-                    <span className={styles.actionTitle}>{row.title}</span>
-                    <span className={styles.meta}>{row.family}</span>
-                    <span className={styles.meta}>{row.reasonSummary}</span>
-                  </th>
-                  <td>
-                    <SemanticBadge tone={row.statusTone}>
-                      {row.status}
-                    </SemanticBadge>
-                    <span className={styles.meta}>{row.priority}</span>
-                  </td>
-                  <td>{row.owner}</td>
-                  <td>{row.sla}</td>
-                  <td className={styles.evidenceCell}>
-                    <p>{row.evidenceSummary}</p>
-                    <span className={styles.meta}>{row.sourceGapSummary}</span>
-                    <span className={styles.meta}>{row.dependencySummary}</span>
-                  </td>
-                  <td>
-                    <div className={styles.nextActionCell}>
-                      <span>{row.nextRequiredAction}</span>
-                      <SourceHandoff row={row} />
-                    </div>
-                  </td>
-                  <td>
-                    <AcknowledgementControl
-                      row={row}
-                      evidenceConfirmed={evidenceConfirmed}
-                      transaction={transaction}
-                      transactionPending={transactionPending}
-                      onAcknowledge={onAcknowledge}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div
-        className={styles.compactPresentation}
-        data-testid="advisor-cockpit-action-records"
-      >
-        <OperationalRecordList
-          ariaLabel="Advisor action review records"
+      <div data-testid="advisor-cockpit-action-records">
+        <WorkbenchWorklist
+          ariaLabel="Advisor action review worklist"
+          eyebrow="Advisor priorities"
+          title="Actions requiring a decision"
           items={rows.map((row) => ({
             key: row.actionItemId,
             title: row.title,
-            description: (
-              <span className={styles.recordDescription}>
-                <span>{row.family}</span>
-                <span>{row.reasonSummary}</span>
-              </span>
-            ),
+            subtitle: `${row.family} · ${row.reasonSummary}`,
             status: (
-              <span className={styles.recordStatus}>
-                <SemanticBadge tone={row.statusTone}>{row.status}</SemanticBadge>
-                <span>{row.priority}</span>
-              </span>
+              <SemanticBadge tone={row.statusTone}>{row.status}</SemanticBadge>
             ),
             facts: [
+              { label: "Priority", value: row.priority },
               { label: "Owner", value: row.owner },
               { label: "Review window", value: row.sla },
             ],
-            detail: (
-              <div className={styles.recordDetail}>
-                <section className={styles.recordEvidence}>
-                  <p className={styles.recordLabel}>Evidence</p>
-                  <strong>{row.evidenceSummary}</strong>
-                  <span>{row.sourceGapSummary}</span>
-                  <span>{row.dependencySummary}</span>
-                </section>
-                <section className={styles.recordNextAction}>
-                  <p className={styles.recordLabel}>Next business action</p>
-                  <strong>{row.nextRequiredAction}</strong>
-                  <SourceHandoff row={row} />
-                  <AcknowledgementControl
-                    row={row}
-                    evidenceConfirmed={evidenceConfirmed}
-                    transaction={transaction}
-                    transactionPending={transactionPending}
-                    onAcknowledge={onAcknowledge}
-                  />
-                </section>
-              </div>
-            ),
           }))}
+          selectedKey={selectedRow.actionItemId}
+          onSelectionChange={setSelectedActionItemId}
+          decisionLabel="Selected advisor action"
+          decision={
+            <SelectedAdvisorAction
+              row={selectedRow}
+              evidenceConfirmed={evidenceConfirmed}
+              transaction={transaction}
+              transactionPending={transactionPending}
+              onAcknowledge={onAcknowledge}
+            />
+          }
         />
       </div>
     </div>
+  );
+}
+
+function SelectedAdvisorAction({
+  row,
+  evidenceConfirmed,
+  transaction,
+  transactionPending,
+  onAcknowledge,
+}: {
+  row: AdvisorCockpitActionRow;
+  evidenceConfirmed: boolean;
+  transaction: AdvisorCockpitAcknowledgementTransaction;
+  transactionPending: boolean;
+  onAcknowledge: (row: AdvisorCockpitActionRow) => void;
+}) {
+  return (
+    <article
+      className={styles.decisionPanel}
+      data-testid="advisor-cockpit-selected-action"
+    >
+      <header className={styles.decisionHeader}>
+        <div>
+          <Text variant="microLabel">Next business action</Text>
+          <Text variant="subsectionTitle" as="h4">
+            {row.nextRequiredAction}
+          </Text>
+        </div>
+        <SemanticBadge tone={row.priorityTone}>{row.priority}</SemanticBadge>
+      </header>
+
+      <dl className={styles.evidenceGrid}>
+        <div>
+          <dt>Decision evidence</dt>
+          <dd>{row.evidenceSummary}</dd>
+        </div>
+        <div>
+          <dt>Source readiness</dt>
+          <dd>{row.sourceGapSummary}</dd>
+        </div>
+        <div>
+          <dt>Dependencies</dt>
+          <dd>{row.dependencySummary}</dd>
+        </div>
+        <div>
+          <dt>Client-use boundary</dt>
+          <dd>{row.unsupportedClaims}</dd>
+        </div>
+      </dl>
+
+      <div className={styles.decisionAction}>
+        <SourceHandoff row={row} />
+        <AcknowledgementControl
+          row={row}
+          evidenceConfirmed={evidenceConfirmed}
+          transaction={transaction}
+          transactionPending={transactionPending}
+          onAcknowledge={onAcknowledge}
+        />
+      </div>
+    </article>
   );
 }
 
@@ -183,7 +170,9 @@ function SourceHandoff({ row }: { row: AdvisorCockpitActionRow }) {
         className={styles.sourceHandoffLink}
       >
         <span aria-hidden="true">{row.sourceHandoff.label}</span>
-        <span className={styles.srOnly}>{row.sourceHandoff.accessibleLabel}</span>
+        <span className={styles.srOnly}>
+          {row.sourceHandoff.accessibleLabel}
+        </span>
       </ActionLink>
     </div>
   );
@@ -272,7 +261,8 @@ export function getAcknowledgementPresentation(
     case "confirmed-partial":
       return {
         label: row.acknowledgementLabel,
-        detail: "Review recorded; latest advisor evidence is not fully confirmed.",
+        detail:
+          "Review recorded; latest advisor evidence is not fully confirmed.",
         isSelected: true,
       };
     case "confirmed":

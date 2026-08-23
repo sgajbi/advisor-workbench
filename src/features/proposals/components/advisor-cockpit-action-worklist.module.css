@@ -1,239 +1,140 @@
 .worklist {
-  container-name: advisor-action-worklist;
-  container-type: inline-size;
+  min-width: 0;
 }
 
-.tablePresentation {
-  display: none;
-}
-
-.compactPresentation {
-  display: block;
-}
-
-.tableRegion {
+.decisionPanel {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-tile);
+  background: var(--surface-primary);
+  box-shadow: var(--elevation-subtle);
+}
+
+.decisionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.decisionHeader > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  padding: 1px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 8px);
+  background: var(--border);
   overflow: hidden;
 }
 
-.tableRegion:focus-visible {
-  outline: 3px solid rgba(54, 95, 139, 0.32);
-  outline-offset: 2px;
-}
-
-.table {
-  border-collapse: collapse;
-  font-size: 0.82rem;
-  table-layout: fixed;
-  width: 100%;
-}
-
-.table th,
-.table td {
-  overflow-wrap: break-word;
-}
-
-.table thead th {
-  background: var(--panel-alt);
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 9px 10px;
-  text-align: left;
-  text-transform: uppercase;
-}
-
-.table tbody th,
-.table td {
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  font-weight: 400;
-  padding: 10px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.table thead th:nth-child(1) {
-  width: 17%;
-}
-
-.table thead th:nth-child(2) {
-  width: 10%;
-}
-
-.table thead th:nth-child(3) {
-  width: 7%;
-}
-
-.table thead th:nth-child(4) {
-  width: 10%;
-}
-
-.table thead th:nth-child(5) {
-  width: 20%;
-}
-
-.table thead th:nth-child(6) {
-  width: 17%;
-}
-
-.table thead th:nth-child(7) {
-  width: 19%;
-}
-
-.actionTitle {
-  color: var(--text);
-  display: block;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.meta,
-.acknowledgementDetail {
-  color: var(--text-muted);
-  display: block;
-  font-size: 0.76rem;
-  line-height: 1.45;
-  margin-top: 4px;
-}
-
-.evidenceCell p {
-  margin: 0 0 6px;
-}
-
-.nextActionCell,
-.sourceHandoff {
+.evidenceGrid > div {
   display: grid;
-  gap: var(--space-2);
-}
-
-.sourceHandoff {
-  align-items: start;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: var(--type-body-small-size);
-  margin-top: var(--space-1);
-  padding-top: var(--space-2);
-}
-
-.sourceHandoffLink {
-  min-height: 44px;
-  width: fit-content;
-}
-
-.recordDescription {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.recordDescription span:last-child {
-  color: var(--text);
-}
-
-.recordStatus {
-  align-items: flex-end;
-  display: grid;
-  gap: var(--space-1);
-  justify-items: end;
-}
-
-.recordStatus > span:last-child {
-  color: var(--text-muted);
-  font-size: var(--type-micro-label-size);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.recordDetail {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-}
-
-.recordEvidence,
-.recordNextAction {
-  display: grid;
-  gap: var(--space-2);
   min-width: 0;
+  gap: var(--space-1);
   padding: var(--space-3);
-}
-
-.recordEvidence {
   background: var(--surface-secondary);
-  border-left: 3px solid var(--border-strong);
 }
 
-.recordNextAction {
-  background: var(--brand-soft);
-  border-left: 3px solid var(--brand);
-}
-
-.recordEvidence p,
-.recordEvidence strong,
-.recordEvidence span,
-.recordNextAction p,
-.recordNextAction strong {
-  margin: 0;
-}
-
-.recordEvidence span {
-  color: var(--text-muted);
-  font-size: var(--type-body-small-size);
-  line-height: var(--type-body-small-line-height);
-}
-
-.recordLabel {
+.evidenceGrid dt {
   color: var(--text-muted);
   font-size: var(--type-micro-label-size);
   font-weight: var(--type-micro-label-weight);
   letter-spacing: var(--tracking-micro);
+  line-height: var(--type-micro-label-line-height);
   text-transform: uppercase;
 }
 
-.acknowledgement {
-  align-items: flex-start;
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
+.evidenceGrid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: var(--type-body-small-size);
+  line-height: var(--type-body-small-line-height);
 }
 
+.decisionAction,
+.sourceHandoff,
+.acknowledgement {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.decisionAction {
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.sourceHandoff {
+  align-items: start;
+  color: var(--text-muted);
+  font-size: var(--type-body-small-size);
+}
+
+.sourceHandoffLink,
 .acknowledgement button {
   min-height: 44px;
   width: fit-content;
 }
 
+.acknowledgement {
+  align-items: end;
+  justify-items: end;
+}
+
+.acknowledgementDetail {
+  max-width: 32rem;
+  color: var(--text-muted);
+  font-size: var(--type-body-small-size);
+  line-height: var(--type-body-small-line-height);
+  text-align: right;
+}
+
 .srOnly {
-  border: 0;
-  clip: rect(0, 0, 0, 0);
+  position: absolute;
+  width: 1px;
   height: 1px;
+  padding: 0;
   margin: -1px;
   overflow: hidden;
-  padding: 0;
-  position: absolute;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  width: 1px;
+  border: 0;
 }
 
-/* Seven decision columns need this capacity before comparison beats complete records. */
-@container advisor-action-worklist (min-width: 64rem) {
-  .tablePresentation {
-    display: block;
-  }
-
-  .compactPresentation {
-    display: none;
-  }
-}
-
-@container advisor-action-worklist (max-width: 38rem) {
-  .recordDetail {
+@media (max-width: 519px) {
+  .decisionAction {
+    align-items: stretch;
     grid-template-columns: 1fr;
   }
 
-  .recordStatus {
-    align-items: flex-start;
+  .decisionHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .evidenceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .acknowledgement {
+    align-items: start;
     justify-items: start;
+  }
+
+  .acknowledgementDetail {
+    text-align: left;
   }
 }

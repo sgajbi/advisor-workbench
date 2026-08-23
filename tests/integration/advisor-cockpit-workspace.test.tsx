@@ -181,23 +181,24 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(screen.getByLabelText("Advisor cockpit counts")).toHaveTextContent(
       /Actions in scope\s*1/,
     );
-    const actionTable = within(
-      screen.getByTestId("advisor-cockpit-action-table"),
-    );
     const actionRecords = within(
       screen.getByTestId("advisor-cockpit-action-records"),
     );
     expect(
-      actionTable.getByText("Review policy evidence before client discussion."),
-    ).toBeInTheDocument();
-    expect(
       actionRecords.getByText("Review policy evidence before client discussion."),
     ).toBeInTheDocument();
     expect(
-      actionTable.getByText("Policy evaluation requires compliance review."),
+      actionRecords.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();
     expect(
-      actionRecords.getByText("Policy evaluation requires compliance review."),
+      actionRecords.getByRole("listbox", {
+        name: "Advisor action review worklist",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      actionRecords.getByRole("region", {
+        name: "Selected advisor action",
+      }),
     ).toBeInTheDocument();
     const readiness = screen
       .getByRole("heading", { name: "Preparation Readiness" })
@@ -245,11 +246,10 @@ describe("AdvisorCockpitWorkspace", () => {
       await screen.findByTestId("advisor-cockpit-action-records"),
     );
     expect(
-      actionRecords.getByRole("heading", {
-        level: 3,
-        name: "Policy review required",
+      actionRecords.getByRole("option", {
+        name: /Policy review required/,
       }),
-    ).toBeInTheDocument();
+    ).toHaveAttribute("aria-selected", "true");
     expect(
       actionRecords.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();

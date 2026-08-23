@@ -33,60 +33,48 @@ const rows: AdvisorCockpitActionRow[] = [
 ];
 
 describe("AdvisorCockpitActionWorklist", () => {
-  it("keeps every source-backed action field in workstation and compact presentations", () => {
+  it("states each priority once and progressively reveals the selected decision", () => {
     renderWorklist();
 
-    const table = screen.getByRole("table", {
+    const worklist = screen.getByRole("listbox", {
       name: "Advisor action review worklist",
     });
-    const compact = screen.getByRole("list", {
-      name: "Advisor action review records",
+    expect(within(worklist).getAllByRole("option")).toHaveLength(2);
+    expect(screen.getAllByText("Policy review required")).toHaveLength(1);
+    expect(screen.getAllByText("Liquidity evidence review")).toHaveLength(1);
+
+    const decision = screen.getByRole("region", {
+      name: "Selected advisor action",
     });
+    expect(decision).toHaveTextContent(
+      "Review policy evidence before client discussion.",
+    );
+    expect(decision).toHaveTextContent(
+      "Policy evaluation requires compliance review.",
+    );
+    expect(decision).toHaveTextContent("No source gaps reported");
+    expect(decision).toHaveTextContent("No dependency degradation reported");
+    expect(
+      within(decision).getByRole("link", {
+        name: "Open proposal proposal_sg_001",
+      }),
+    ).toHaveAttribute("href", "/proposals/proposal_sg_001");
 
-    const policySurfaces = [
-      within(table).getByRole("row", { name: /Policy review required/ }),
-      within(compact).getByRole("article", { name: "Policy review required" }),
-    ];
-
-    for (const surface of policySurfaces) {
-      expect(within(surface).getByText("Policy review required")).toBeInTheDocument();
-      expect(within(surface).getByText("Policy Review Required")).toBeInTheDocument();
-      expect(within(surface).getByText("Policy Pending Review")).toBeInTheDocument();
-      expect(within(surface).getByText("Pending Review")).toBeInTheDocument();
-      expect(within(surface).getByText("High")).toBeInTheDocument();
-      expect(within(surface).getByText("Advisor")).toBeInTheDocument();
-      expect(within(surface).getByText("Due Soon")).toBeInTheDocument();
-      expect(
-        within(surface).getByText("Policy evaluation requires compliance review."),
-      ).toBeInTheDocument();
-      expect(within(surface).getByText("No source gaps reported")).toBeInTheDocument();
-      expect(
-        within(surface).getByText("No dependency degradation reported"),
-      ).toBeInTheDocument();
-      expect(
-        within(surface).getByText("Review policy evidence before client discussion."),
-      ).toBeInTheDocument();
-      expect(
-        within(surface).getByRole("button", { name: "Acknowledge review" }),
-      ).toBeEnabled();
-      expect(
-        within(surface).getByRole("link", {
-          name: "Open proposal proposal_sg_001",
-        }),
-      ).toHaveAttribute("href", "/proposals/proposal_sg_001");
-      expect(within(surface).getByText("Proposal proposal_sg_001")).toBeVisible();
-    }
-
-    const liquiditySurfaces = [
-      within(table).getByRole("row", { name: /Liquidity evidence review/ }),
-      within(compact).getByRole("article", { name: "Liquidity evidence review" }),
-    ];
-    for (const surface of liquiditySurfaces) {
-      expect(within(surface).queryByRole("link")).not.toBeInTheDocument();
-    }
+    fireEvent.click(
+      within(worklist).getByRole("option", {
+        name: /Liquidity evidence review/,
+      }),
+    );
+    expect(decision).toHaveTextContent(
+      "Confirm liquidity evidence with the portfolio team.",
+    );
+    expect(decision).toHaveTextContent(
+      "Liquidity evidence requires advisor review.",
+    );
+    expect(within(decision).queryByRole("link")).not.toBeInTheDocument();
   });
 
-  it("applies an active transaction only to the submitted row", () => {
+  it("keeps a pending source transaction focused and non-repeatable", () => {
     const onAcknowledge = vi.fn();
     renderWorklist({
       transaction: {
@@ -96,33 +84,21 @@ describe("AdvisorCockpitActionWorklist", () => {
       onAcknowledge,
     });
 
-    const compact = screen.getByRole("list", {
-      name: "Advisor action review records",
+    const decision = screen.getByRole("region", {
+      name: "Selected advisor action",
     });
-    const policy = within(compact).getByRole("article", {
-      name: "Policy review required",
-    });
-    const liquidity = within(compact).getByRole("article", {
-      name: "Liquidity evidence review",
-    });
-
-    const selectedButton = within(policy).getByRole("button", {
+    const selectedButton = within(decision).getByRole("button", {
       name: "Recording...",
     });
     expect(selectedButton).toHaveAttribute("aria-disabled", "true");
     expect(selectedButton).not.toHaveAttribute("disabled");
     selectedButton.focus();
-    expect(selectedButton).toHaveFocus();
     fireEvent.click(selectedButton);
+    expect(selectedButton).toHaveFocus();
     expect(onAcknowledge).not.toHaveBeenCalled();
-    expect(within(policy).getByRole("status")).toHaveTextContent(
+    expect(within(decision).getByRole("status")).toHaveTextContent(
       "Recording this review in the source workflow.",
     );
-    expect(
-      within(liquidity).getByRole("button", { name: "Acknowledge review" }),
-    ).toBeDisabled();
-    expect(within(liquidity).queryByRole("status")).not.toBeInTheDocument();
-    expect(within(liquidity).getByText("Review is available.")).toBeInTheDocument();
   });
 
   it.each([
@@ -136,40 +112,44 @@ describe("AdvisorCockpitActionWorklist", () => {
     },
     {
       status: "confirmed-partial" as const,
-      expected: "Review recorded; latest advisor evidence is not fully confirmed.",
+      expected:
+        "Review recorded; latest advisor evidence is not fully confirmed.",
     },
     {
       status: "failed" as const,
       expected: "Acknowledgement could not be recorded.",
     },
-  ])("keeps $status feedback scoped to the submitted row", ({ status, expected }) => {
-    expect(
-      getAcknowledgementPresentation(rows[0], {
-        actionItemId: rows[0].actionItemId,
-        status,
-      }),
-    ).toMatchObject({ detail: expected, isSelected: true });
-    expect(
-      getAcknowledgementPresentation(rows[1], {
-        actionItemId: rows[0].actionItemId,
-        status,
-      }),
-    ).toMatchObject({ detail: "Review is available.", isSelected: false });
-  });
+  ])(
+    "keeps $status feedback scoped to the submitted row",
+    ({ status, expected }) => {
+      expect(
+        getAcknowledgementPresentation(rows[0], {
+          actionItemId: rows[0].actionItemId,
+          status,
+        }),
+      ).toMatchObject({ detail: expected, isSelected: true });
+      expect(
+        getAcknowledgementPresentation(rows[1], {
+          actionItemId: rows[0].actionItemId,
+          status,
+        }),
+      ).toMatchObject({ detail: "Review is available.", isSelected: false });
+    },
+  );
 
-  it("delegates the exact compact action record and fails closed when evidence is unsettled", () => {
+  it("delegates only the selected decision and fails closed when evidence is unsettled", () => {
     const onAcknowledge = vi.fn();
     const { rerender } = renderWorklist({ onAcknowledge });
-    const compact = screen.getByRole("list", {
-      name: "Advisor action review records",
-    });
-    const liquidity = within(compact).getByRole("article", {
-      name: "Liquidity evidence review",
+    const worklist = screen.getByRole("listbox", {
+      name: "Advisor action review worklist",
     });
 
     fireEvent.click(
-      within(liquidity).getByRole("button", { name: "Acknowledge review" }),
+      within(worklist).getByRole("option", {
+        name: /Liquidity evidence review/,
+      }),
     );
+    fireEvent.click(screen.getByRole("button", { name: "Acknowledge review" }));
     expect(onAcknowledge).toHaveBeenCalledOnce();
     expect(onAcknowledge).toHaveBeenCalledWith(rows[1]);
 
@@ -181,11 +161,9 @@ describe("AdvisorCockpitActionWorklist", () => {
         onAcknowledge={onAcknowledge}
       />,
     );
-    for (const button of within(
-      screen.getByRole("list", { name: "Advisor action review records" }),
-    ).getAllByRole("button", { name: "Acknowledge review" })) {
-      expect(button).toBeDisabled();
-    }
+    expect(
+      screen.getByRole("button", { name: "Acknowledge review" }),
+    ).toBeDisabled();
   });
 });
 
@@ -222,7 +200,8 @@ function buildRow(
     | "reasonSummary"
     | "evidenceSummary"
     | "nextRequiredAction"
-  > & Partial<Pick<AdvisorCockpitActionRow, "sourceHandoff">>,
+  > &
+    Partial<Pick<AdvisorCockpitActionRow, "sourceHandoff">>,
 ): AdvisorCockpitActionRow {
   return {
     actionItemVersion: 1,
