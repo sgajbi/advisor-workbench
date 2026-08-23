@@ -192,6 +192,7 @@ test.describe('UI smoke checks', () => {
     const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
 
     await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
+    await expect(page.getByRole('button', { name: 'Evaluate Workspace' })).toBeVisible();
     await expect(currentView).toBeVisible();
     await expect(currentView).toHaveAttribute('aria-expanded', 'false');
     await expect(navigation).toBeHidden();
