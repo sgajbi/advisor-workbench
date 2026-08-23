@@ -11,6 +11,14 @@
   min-width: 0;
 }
 
+.controls[data-performance-frequency-control="hidden"] {
+  grid-template-columns:
+    minmax(14.25rem, 1.35fr)
+    minmax(5.5rem, 0.5fr)
+    minmax(12rem, 1.15fr)
+    minmax(7.5rem, 0.7fr);
+}
+
 .slot,
 .windowSummaryStatic {
   display: grid;
@@ -170,10 +178,21 @@
   .benchmarkSlot {
     grid-column: auto;
   }
+
+  .controls[data-performance-frequency-control="hidden"] {
+    grid-template-columns:
+      minmax(14.25rem, 1fr)
+      minmax(5.5rem, 0.42fr)
+      minmax(10.5rem, 0.75fr);
+  }
 }
 
 @container performance-control-bar (max-width: 34rem) {
   .controls {
+    grid-template-columns: minmax(0, 1fr) minmax(5.5rem, 0.42fr);
+  }
+
+  .controls[data-performance-frequency-control="hidden"] {
     grid-template-columns: minmax(0, 1fr) minmax(5.5rem, 0.42fr);
   }
 

@@ -134,6 +134,7 @@ export default function PerformanceRiskMode({
           capabilities={capabilities}
           isUpdating={isUpdating}
           ariaLabel="Risk analysis source selection"
+          showFrequency={false}
           onRequestChange={onRequestChange ?? (() => undefined)}
         />
       }

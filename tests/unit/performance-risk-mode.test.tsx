@@ -104,6 +104,10 @@ describe("PerformanceRiskMode", () => {
     expect(
       screen.getByRole("group", { name: "Risk analysis source selection controls" }),
     ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Frequency")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Risk analysis source selection" }),
+    ).toHaveAttribute("data-performance-frequency-control", "hidden");
     expect(screen.queryByLabelText("Risk context")).not.toBeInTheDocument();
     expect(screen.getByText("Loading risk")).toBeInTheDocument();
     await waitFor(() => {

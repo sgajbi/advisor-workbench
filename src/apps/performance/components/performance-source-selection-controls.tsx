@@ -36,6 +36,7 @@ export type PerformanceSourceSelectionControlsProps = {
   capabilities: PerformanceWorkspaceCapabilities;
   isUpdating: boolean;
   ariaLabel: string;
+  showFrequency?: boolean;
   presentationControl?: ReactNode;
   onRequestChange: (
     patch: PerformanceControlPatch,
@@ -64,6 +65,7 @@ export default function PerformanceSourceSelectionControls({
   capabilities,
   isUpdating,
   ariaLabel,
+  showFrequency = true,
   presentationControl,
   onRequestChange,
 }: PerformanceSourceSelectionControlsProps) {
@@ -174,6 +176,7 @@ export default function PerformanceSourceSelectionControls({
         role="group"
         aria-label={ariaLabel}
         aria-busy="true"
+        data-performance-frequency-control={showFrequency ? "visible" : "hidden"}
       >
         <ControlSlot label="Horizon" className={styles.horizonSlot}>
           <StaticControlValue>{period}</StaticControlValue>
@@ -181,9 +184,11 @@ export default function PerformanceSourceSelectionControls({
         <ControlSlot label="Basis" className={styles.basisSlot}>
           <StaticControlValue>{detailBasis}</StaticControlValue>
         </ControlSlot>
-        <ControlSlot label="Frequency" className={styles.frequencySlot}>
-          <StaticControlValue>{chartFrequency}</StaticControlValue>
-        </ControlSlot>
+        {showFrequency ? (
+          <ControlSlot label="Frequency" className={styles.frequencySlot}>
+            <StaticControlValue>{chartFrequency}</StaticControlValue>
+          </ControlSlot>
+        ) : null}
         <ControlSlot label="Benchmark" className={styles.benchmarkSlot}>
           <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
         </ControlSlot>
@@ -202,6 +207,7 @@ export default function PerformanceSourceSelectionControls({
       role="group"
       aria-label={ariaLabel}
       data-performance-source-control-region="true"
+      data-performance-frequency-control={showFrequency ? "visible" : "hidden"}
     >
       <ControlSlot label="Horizon" className={styles.horizonSlot}>
         <WorkbenchChoiceGroup
@@ -247,39 +253,41 @@ export default function PerformanceSourceSelectionControls({
         />
       </ControlSlot>
 
-      <ControlSlot label="Frequency" className={styles.frequencySlot}>
-        <TextField
-          select
-          size="small"
-          value={chartFrequency}
-          onChange={(event) =>
-            updateSelection(
-              { chartFrequency: event.target.value },
-              { kind: "field", fieldLabel: "Frequency" },
-              event.currentTarget
-            )
-          }
-          disabled={isUpdating}
-          sx={selectControlSx}
-          SelectProps={{ native: true }}
-          slotProps={{
-            htmlInput: {
-              "aria-label": "Frequency",
-              suppressHydrationWarning: true,
-            },
-          }}
-        >
-          {CHART_FREQUENCY_OPTIONS.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
-            >
-              {option.label}
-            </option>
-          ))}
-        </TextField>
-      </ControlSlot>
+      {showFrequency ? (
+        <ControlSlot label="Frequency" className={styles.frequencySlot}>
+          <TextField
+            select
+            size="small"
+            value={chartFrequency}
+            onChange={(event) =>
+              updateSelection(
+                { chartFrequency: event.target.value },
+                { kind: "field", fieldLabel: "Frequency" },
+                event.currentTarget
+              )
+            }
+            disabled={isUpdating}
+            sx={selectControlSx}
+            SelectProps={{ native: true }}
+            slotProps={{
+              htmlInput: {
+                "aria-label": "Frequency",
+                suppressHydrationWarning: true,
+              },
+            }}
+          >
+            {CHART_FREQUENCY_OPTIONS.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}
+                disabled={!isCapabilityOptionSupported(capabilities.returnPath, "frequency", option.value)}
+              >
+                {option.label}
+              </option>
+            ))}
+          </TextField>
+        </ControlSlot>
+      ) : null}
 
       <ControlSlot label="Benchmark" className={styles.benchmarkSlot}>
         <TextField

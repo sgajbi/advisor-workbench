@@ -1212,6 +1212,12 @@ test.describe('Performance workbench smoke', () => {
       const riskStep = await openPerformanceWorkflowStep(page, /^Risk Review/i);
       await riskStep.click();
       await expect(page).toHaveURL(/(?:\?|&)mode=risk(?:&|$)/);
+      await expect(
+        page.getByRole('combobox', { name: 'Frequency' }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('group', { name: 'Risk analysis source selection' }),
+      ).toHaveAttribute('data-performance-frequency-control', 'hidden');
 
       const executiveEvidence = page.getByRole('region', {
         name: 'Risk executive overview',
