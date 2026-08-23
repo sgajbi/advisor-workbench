@@ -670,6 +670,13 @@ test.describe('Performance workbench smoke', () => {
       await expect(controlBars).toHaveCount(1);
       const controlBar = controlBars.first();
       await expect(controlBar).toBeVisible();
+      if (viewport.width === 1440) {
+        const defaultControlBarBounds = await controlBar.boundingBox();
+        expect(
+          defaultControlBarBounds?.height ?? Number.POSITIVE_INFINITY,
+          'desktop default control-bar height',
+        ).toBeLessThanOrEqual(190);
+      }
       await expect(page.getByRole('radio', { name: 'Absolute' })).toHaveAttribute(
         'aria-checked',
         'true',
@@ -743,6 +750,9 @@ test.describe('Performance workbench smoke', () => {
         ).toBeLessThanOrEqual(1);
       } else {
         expect(historyGeometry.scrollWidth).toBeGreaterThan(historyGeometry.clientWidth);
+        await historyRegion.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth;
+        });
         const pinnedHeadings = await historyTable
           .getByRole('columnheader')
           .evaluateAll((headings) =>
@@ -754,6 +764,18 @@ test.describe('Performance workbench smoke', () => {
         expect(pinnedHeadings).toEqual([
           { position: 'sticky', left: '0px' },
           { position: 'sticky', left: '76px' },
+        ]);
+        const pinnedBodyCells = await historyTable
+          .locator('tbody tr:first-child td')
+          .evaluateAll((cells) =>
+            cells.slice(0, 2).map((cell) => ({
+              position: getComputedStyle(cell).position,
+              backgroundColor: getComputedStyle(cell).backgroundColor,
+            })),
+          );
+        expect(pinnedBodyCells).toEqual([
+          { position: 'sticky', backgroundColor: 'rgb(255, 255, 255)' },
+          { position: 'sticky', backgroundColor: 'rgb(255, 255, 255)' },
         ]);
       }
 

@@ -168,7 +168,7 @@
   }
 
   .benchmarkSlot {
-    grid-column: span 2;
+    grid-column: auto;
   }
 }
 
@@ -181,6 +181,10 @@
   .benchmarkSlot,
   .windowDisclosure,
   .windowSummaryStatic {
+    grid-column: 1 / -1;
+  }
+
+  .controls > [data-performance-presentation-control-slot="true"] {
     grid-column: 1 / -1;
   }
 
