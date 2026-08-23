@@ -3,7 +3,7 @@ import {
   parseReviewContext,
 } from "@/shell/review-context";
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "./api";
-import PortfolioReviewRecovery from "./components/portfolio-review-recovery";
+import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
 import { resolveSelectedPortfolioId } from "./portfolio-selection";
 import { resolvePortfolioReviewControls } from "./portfolio-workspace-controls";
@@ -19,7 +19,13 @@ export default async function PortfolioExperiencePage({
   const reviewContextResult = parseReviewContext(resolvedSearch);
   if (reviewContextResult.status === "invalid") {
     return (
-      <PortfolioReviewRecovery
+      <ReviewContextPageRecovery
+        pageKey="portfolio"
+        pageTitle="Portfolio Review"
+        pageSubtitle="Confirm the review portfolio before using decision evidence."
+        frameClassName="portfolio-page-frame"
+        bodyClassName="portfolio-page-frame-body"
+        sectionClassName="portfolio-page-sections"
         body="The portfolio review address contains repeated or unsupported context. No portfolio information was requested."
         href="/portfolio"
         actionLabel="Reset review context"
@@ -29,7 +35,13 @@ export default async function PortfolioExperiencePage({
 
   if (!reviewContextResult.context.portfolioId) {
     return (
-      <PortfolioReviewRecovery
+      <ReviewContextPageRecovery
+        pageKey="portfolio"
+        pageTitle="Portfolio Review"
+        pageSubtitle="Confirm the review portfolio before using decision evidence."
+        frameClassName="portfolio-page-frame"
+        bodyClassName="portfolio-page-frame-body"
+        sectionClassName="portfolio-page-sections"
         body="Select a source-confirmed portfolio from My book before opening Portfolio Review. No default portfolio was substituted."
         href="/book"
         actionLabel="Open My book"
@@ -47,7 +59,13 @@ export default async function PortfolioExperiencePage({
     : null;
   if (!selectedPortfolioId) {
     return (
-      <PortfolioReviewRecovery
+      <ReviewContextPageRecovery
+        pageKey="portfolio"
+        pageTitle="Portfolio Review"
+        pageSubtitle="Confirm the review portfolio before using decision evidence."
+        frameClassName="portfolio-page-frame"
+        bodyClassName="portfolio-page-frame-body"
+        sectionClassName="portfolio-page-sections"
         body="The selected portfolio is not available in the source-confirmed portfolio catalogue. No alternative portfolio was substituted."
         href="/book"
         actionLabel="Choose another portfolio"
@@ -70,7 +88,13 @@ export default async function PortfolioExperiencePage({
           }
         : { portfolioId: workspace.portfolio.portfolio_id };
     return (
-      <PortfolioReviewRecovery
+      <ReviewContextPageRecovery
+        pageKey="portfolio"
+        pageTitle="Portfolio Review"
+        pageSubtitle="Confirm the review portfolio before using decision evidence."
+        frameClassName="portfolio-page-frame"
+        bodyClassName="portfolio-page-frame-body"
+        sectionClassName="portfolio-page-sections"
         body="The selected date, period, or reporting currency is not supported by this portfolio's source capabilities. No analytical detail was requested."
         href={buildReviewContextHref("/portfolio", resetContext)}
         actionLabel="Use available portfolio context"

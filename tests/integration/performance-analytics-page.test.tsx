@@ -336,11 +336,10 @@ describe("PerformanceAnalyticsPage", () => {
       .toBeFalsy();
     expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
     expect(screen.getByTestId("review-context-strip")).toBeInTheDocument();
-    expectReviewContextOwns([
-      "DEMO_ADV_USD_001",
-      "CIF_1001",
-      "Singapore",
-    ]);
+    expectReviewContextOwns({
+      exclusiveFacts: ["DEMO_ADV_USD_001", "CIF_1001", "Singapore"],
+      contextualFacts: [{ label: "Business date", value: "24 Feb 2026" }],
+    });
     const workbenchScreenNav = screen.getByRole("navigation", {
       name: "Workbench screen navigation",
     });

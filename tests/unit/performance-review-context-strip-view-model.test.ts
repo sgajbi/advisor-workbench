@@ -23,7 +23,7 @@ describe("performance review context strip view model", () => {
       mandateType: "Discretionary",
       bookingCenter: "Singapore",
       businessDate: expect.stringMatching(/2026/),
-      reportingCurrency: workspace.portfolio.base_currency,
+      currency: { kind: "base", value: workspace.portfolio.base_currency },
       sourceState: "confirmed",
     });
   });
@@ -37,7 +37,7 @@ describe("performance review context strip view model", () => {
         portfolioContext: buildPortfolioWorkspace(),
       }),
     ).toMatchObject({
-      portfolioName: "Performance portfolio",
+      portfolioName: workspace.portfolio_id,
       portfolioId: workspace.portfolio_id,
       sourceState: "partial",
       notice: {

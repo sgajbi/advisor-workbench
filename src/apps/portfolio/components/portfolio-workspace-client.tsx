@@ -38,8 +38,8 @@ import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
 import PortfolioPageLayout from "./portfolio-page-layout";
 import {
   buildPortfolioReviewContextStrip,
-  buildUnavailablePortfolioReviewContextStrip,
 } from "../portfolio-review-context-strip-view-model";
+import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
@@ -467,18 +467,8 @@ export default function PortfolioWorkspaceClient({
     <PortfolioPageLayout
       reviewContext={
         workspace
-          ? buildPortfolioReviewContextStrip(workspace, {
-              businessDate: context.selectedAsOfDate,
-              reportingCurrency: context.selectedReportingCurrency,
-              notice: context.hasHistoricalGap
-                ? {
-                    label: "Source valuation date",
-                    message: `Portfolio figures remain valued at ${workspace.as_of_date} while the requested review date is confirmed.`,
-                    tone: "attention",
-                  }
-                : null,
-            })
-          : buildUnavailablePortfolioReviewContextStrip()
+          ? buildPortfolioReviewContextStrip(workspace)
+          : buildUnavailableReviewContextStrip()
       }
     >
       {!portfolios.length ? (

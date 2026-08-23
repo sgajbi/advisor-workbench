@@ -49,12 +49,14 @@ describe("ProposalWorkspaceShell", () => {
     const decisionSummary = screen.getByLabelText("Advisory decision summary");
     expect(within(decisionSummary).queryByText("Portfolio")).not.toBeInTheDocument();
     expect(screen.getByText("Advisor use only")).toBeInTheDocument();
-    expectReviewContextOwns([
-      portfolioContext.portfolio.portfolio_id,
-      portfolioContext.portfolio.client_id,
-      "Singapore",
-      "12 May 2026",
-    ]);
+    expectReviewContextOwns({
+      exclusiveFacts: [
+        portfolioContext.portfolio.portfolio_id,
+        portfolioContext.portfolio.client_id,
+        "Singapore",
+      ],
+      contextualFacts: [{ label: "Business date", value: "12 May 2026" }],
+    });
   });
 
   it("keeps advisory content usable without inventing identity when supporting context fails", async () => {
@@ -71,7 +73,7 @@ describe("ProposalWorkspaceShell", () => {
     );
 
     expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
-      "Portfolio context unavailable",
+      "Portfolio not confirmed",
     );
     expect(screen.getByText("Source-owned advisory evidence")).toBeInTheDocument();
     expect(screen.queryByText("PB_REQUESTED_001")).not.toBeInTheDocument();

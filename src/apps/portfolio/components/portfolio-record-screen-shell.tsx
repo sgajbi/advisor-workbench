@@ -23,8 +23,8 @@ import {
 import PortfolioPageLayout from "./portfolio-page-layout";
 import {
   buildPortfolioReviewContextStrip,
-  buildUnavailablePortfolioReviewContextStrip,
 } from "../portfolio-review-context-strip-view-model";
+import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 
@@ -54,7 +54,7 @@ export default function PortfolioRecordScreenShell({
       reviewContext={
         workspace
           ? buildPortfolioReviewContextStrip(workspace)
-          : buildUnavailablePortfolioReviewContextStrip()
+          : buildUnavailableReviewContextStrip()
       }
     >
       <MainWithSideRailLayout

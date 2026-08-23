@@ -389,7 +389,7 @@ describe("design-system components", () => {
           mandateType: "Discretionary",
           bookingCenter: "Singapore",
           businessDate: "10 Apr 2026",
-          reportingCurrency: "USD",
+          currency: { kind: "base", value: "USD" },
         }}
       >
         <Panel>Portfolio decisions</Panel>

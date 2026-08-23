@@ -3,8 +3,8 @@ import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "@/apps/portfoli
 import { resolveSelectedPortfolioId } from "@/apps/portfolio/portfolio-selection";
 import {
   buildPortfolioReviewContextStrip,
-  buildUnavailablePortfolioReviewContextStrip,
 } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
+import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
 import {
   AppPageShell,
@@ -72,8 +72,6 @@ export async function ReportOrderingPage({
     <ReportOrderingWorkspace
       initialBatchId={reviewContextResult.context.batchId}
       reviewContext={buildPortfolioReviewContextStrip(workspace, {
-        businessDate: controlResolution.controls.asOfDate,
-        reportingCurrency: controlResolution.controls.reportingCurrency,
         notice: toReviewContextNotice(
           buildWorkbenchUnsupportedReviewContextNotice({
             title: "Report source context",
@@ -105,7 +103,7 @@ function ReportOrderingUnavailable({
     <AppPageShell
       pageKey="reports"
       className="portfolio-page"
-      reviewContext={buildUnavailablePortfolioReviewContextStrip()}
+      reviewContext={buildUnavailableReviewContextStrip()}
     >
       <WorkbenchPageContainer className="portfolio-page-container">
         <MainWithSideRailLayout
