@@ -1,6 +1,10 @@
 import PortfolioScreenRail from "@/apps/portfolio/components/portfolio-screen-rail";
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import { resolveSelectedPortfolioId } from "@/apps/portfolio/portfolio-selection";
+import {
+  buildPortfolioReviewContextStrip,
+  buildUnavailablePortfolioReviewContextStrip,
+} from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
 import {
   AppPageShell,
@@ -67,15 +71,20 @@ export async function ReportOrderingPage({
   return (
     <ReportOrderingWorkspace
       initialBatchId={reviewContextResult.context.batchId}
-      contextNotice={buildWorkbenchUnsupportedReviewContextNotice({
-        title: "Report source context",
-        subject: "Report preparation",
-        destination: "report ordering workflow",
-        requestedPeriod: reviewContextResult.context.period,
+      reviewContext={buildPortfolioReviewContextStrip(workspace, {
+        businessDate: controlResolution.controls.asOfDate,
+        reportingCurrency: controlResolution.controls.reportingCurrency,
+        notice: toReviewContextNotice(
+          buildWorkbenchUnsupportedReviewContextNotice({
+            title: "Report source context",
+            subject: "Report preparation",
+            destination: "report ordering workflow",
+            requestedPeriod: reviewContextResult.context.period,
+          }),
+        ),
       })}
       portfolio={{
         portfolioId,
-        displayName: workspace.portfolio.display_name,
         asOfDate: controlResolution.controls.asOfDate,
         sourceBaseCurrency: workspace.portfolio.base_currency,
         reportingCurrency: controlResolution.controls.reportingCurrency,
@@ -93,7 +102,11 @@ function ReportOrderingUnavailable({
   reason?: string;
 }) {
   return (
-    <AppPageShell pageKey="reports" className="portfolio-page">
+    <AppPageShell
+      pageKey="reports"
+      className="portfolio-page"
+      reviewContext={buildUnavailablePortfolioReviewContextStrip()}
+    >
       <WorkbenchPageContainer className="portfolio-page-container">
         <MainWithSideRailLayout
           rail={
@@ -123,4 +136,16 @@ function ReportOrderingUnavailable({
       </WorkbenchPageContainer>
     </AppPageShell>
   );
+}
+
+function toReviewContextNotice(
+  notice: { title: string; body: string } | null,
+) {
+  return notice
+    ? {
+        label: notice.title,
+        message: notice.body,
+        tone: "attention" as const,
+      }
+    : undefined;
 }

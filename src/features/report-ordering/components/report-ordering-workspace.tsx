@@ -10,9 +10,7 @@ import {
   AppPageShell,
   MainWithSideRailLayout,
   ScreenStatePanel,
-  SemanticBadge,
-  type WorkbenchSourceContextNotice,
-  WorkbenchContextNotice,
+  type ReviewContextStripModel,
   WorkbenchPageContainer,
   WorkbenchPageFrame,
   WorkbenchSectionStack,
@@ -34,7 +32,6 @@ import { ReportPortfolioScopePanel } from "./report-portfolio-scope-panel";
 
 type ReportOrderingPortfolio = {
   portfolioId: string;
-  displayName: string;
   asOfDate: string;
   sourceBaseCurrency: string;
   reportingCurrency: string;
@@ -43,18 +40,23 @@ type ReportOrderingPortfolio = {
 export function ReportOrderingWorkspace({
   portfolio,
   initialBatchId,
-  contextNotice,
+  reviewContext,
 }: {
   portfolio: ReportOrderingPortfolio;
   initialBatchId?: string;
-  contextNotice?: WorkbenchSourceContextNotice | null;
+  reviewContext?: ReviewContextStripModel;
 }) {
   return (
     <ReportOrderingWorkspaceSession
       key={`${portfolio.portfolioId}:${portfolio.asOfDate}:${portfolio.sourceBaseCurrency}:${portfolio.reportingCurrency}:${initialBatchId ?? "new"}`}
       portfolio={portfolio}
       initialBatchId={initialBatchId}
-      contextNotice={contextNotice}
+      reviewContext={
+        reviewContext ?? {
+          portfolioName: "Portfolio context unavailable",
+          sourceState: "unavailable",
+        }
+      }
     />
   );
 }
@@ -62,11 +64,11 @@ export function ReportOrderingWorkspace({
 function ReportOrderingWorkspaceSession({
   portfolio,
   initialBatchId,
-  contextNotice,
+  reviewContext,
 }: {
   portfolio: ReportOrderingPortfolio;
   initialBatchId?: string;
-  contextNotice?: WorkbenchSourceContextNotice | null;
+  reviewContext: ReviewContextStripModel;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -171,7 +173,11 @@ function ReportOrderingWorkspaceSession({
   );
 
   return (
-    <AppPageShell pageKey="reports" className={styles.page}>
+    <AppPageShell
+      pageKey="reports"
+      className={styles.page}
+      reviewContext={reviewContext}
+    >
       <WorkbenchPageContainer className={styles.container}>
         <MainWithSideRailLayout
           className={styles.layout}
@@ -189,15 +195,8 @@ function ReportOrderingWorkspaceSession({
               className={styles.frame}
               title="Report Centre"
               subtitle="Prepare approved portfolio reports, confirm readiness, and monitor each request."
-              actions={
-                <>
-                  <SemanticBadge>{portfolio.displayName}</SemanticBadge>
-                  <SemanticBadge>{portfolio.reportingCurrency}</SemanticBadge>
-                </>
-              }
             >
               <WorkbenchSectionStack className={styles.contentStack}>
-                {contextNotice ? <WorkbenchContextNotice {...contextNotice} /> : null}
                 {initialBatchId ? (
                   <ReportBatchStatusPanel
                     status={workflow.batchStatus}
