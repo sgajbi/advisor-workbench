@@ -96,6 +96,12 @@ describe("PerformanceChartPanel", () => {
   it("switches between combined, relative, and absolute return-path views", () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
+    expect(
+      document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("group", { name: "Performance source selection controls" }),
+    ).toBeInTheDocument();
     let series: ChartSeriesProbe[] = Array.isArray(lastChartOption?.series)
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];

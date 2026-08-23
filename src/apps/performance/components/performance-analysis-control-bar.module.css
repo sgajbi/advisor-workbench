@@ -1,0 +1,5 @@
+.bar {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+}

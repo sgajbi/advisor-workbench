@@ -98,6 +98,13 @@ describe("PerformanceRiskMode", () => {
 
     const { container } = renderRiskMode(scenario);
 
+    expect(
+      document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("group", { name: "Risk analysis source selection controls" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Risk context")).not.toBeInTheDocument();
     expect(screen.getByText("Loading risk")).toBeInTheDocument();
     await waitFor(() => {
       expect(

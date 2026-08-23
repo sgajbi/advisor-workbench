@@ -21,7 +21,7 @@ import choiceStyles from "./performance-choice-groups.module.css";
 import styles from "./performance-source-selection-controls.module.css";
 import type { PerformanceSourceControlFocusTarget } from "./performance-workspace-types";
 
-type PerformanceSourceSelectionControlsProps = {
+export type PerformanceSourceSelectionControlsProps = {
   portfolioId: string;
   period: string;
   detailBasis: string;
