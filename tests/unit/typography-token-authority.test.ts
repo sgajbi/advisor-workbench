@@ -43,4 +43,18 @@ describe("typography token authority", () => {
 
     expect(legacyCss).not.toMatch(/\.app-page-shell\s+\.ui-text-/);
   });
+
+  it("keeps the migrated record selector on semantic typography roles", () => {
+    const selectorCss = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../../src/design-system/components/workbench-record-selector.module.css"
+      ),
+      "utf8"
+    );
+
+    expect(selectorCss).not.toMatch(/font-size:\s*(?:11px|0\.6875rem)/);
+    expect(selectorCss).not.toMatch(/font-weight:\s*(?:650|700|800)/);
+    expect(selectorCss).not.toContain("text-transform: uppercase");
+  });
 });

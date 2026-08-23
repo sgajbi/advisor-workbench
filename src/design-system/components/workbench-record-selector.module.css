@@ -68,19 +68,20 @@
 
 .identity strong {
   overflow-wrap: anywhere;
-  font-size: 0.875rem;
-  line-height: 1.2rem;
+  font-size: var(--type-table-cell-size);
+  font-weight: 600;
+  line-height: var(--type-table-cell-line-height);
 }
 
 .identity span,
 .nextAction span,
 .fact > span {
   color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.035em;
-  line-height: 1rem;
-  text-transform: uppercase;
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--tracking-label);
+  line-height: var(--type-label-line-height);
+  text-transform: none;
 }
 
 .posture {
@@ -93,10 +94,11 @@
 
 .selectionLabel {
   color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--tracking-label);
+  line-height: var(--type-label-line-height);
+  text-transform: none;
 }
 
 .selected .selectionLabel {
@@ -140,9 +142,9 @@
 .fact strong,
 .nextAction strong {
   overflow-wrap: anywhere;
-  font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1.05rem;
+  font-size: var(--type-table-cell-size);
+  font-weight: 600;
+  line-height: var(--type-table-cell-line-height);
 }
 
 .nextAction {
