@@ -350,7 +350,7 @@ Validation layers:
      `GET /api/v1/rebalance/supportability/summary`
 3. Gateway and Workbench route readiness
 4. live Gateway contracts for:
-   - foundation workspace
+   - portfolio workspace
    - platform capabilities
    - workbench overview
    - performance summary

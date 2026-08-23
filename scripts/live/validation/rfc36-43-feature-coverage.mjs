@@ -6,7 +6,7 @@ const RFC_FEATURE_COVERAGE_ROWS = [
     featureName: "Stateful core sourcing and canonical manage API boundary",
     owner: "lotus-manage",
     requiredEvidence: [
-      "foundationWorkspace",
+      "portfolioWorkspace",
       "manageSupportabilitySummary",
       "gatewayOverview",
       "dpmCommandCenterPanel",

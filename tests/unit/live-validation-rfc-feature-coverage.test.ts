@@ -25,7 +25,7 @@ function createReadySummary() {
 
 function createReadyEvidence() {
   return {
-    foundationWorkspace: {},
+    portfolioWorkspace: {},
     manageSupportabilitySummary: {},
     gatewayOverview: {},
     commandCenterSummary: {},

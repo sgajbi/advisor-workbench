@@ -53,7 +53,7 @@ test.afterAll(async () => {
 });
 
 async function resolveSmokePortfolioId(request: import('@playwright/test').APIRequestContext) {
-  const response = await request.get('/api/bff/api/v1/foundation/portfolios', {
+  const response = await request.get('/api/bff/api/v1/portfolio/portfolios', {
     timeout: 30000,
   });
   if (!response.ok()) {
@@ -331,7 +331,7 @@ test.describe('Portfolio workbench smoke', () => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPortfolioReview(page, request);
-    test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
+    test.skip(!session.available, 'Portfolio workspace upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByText('MTD return')).toBeVisible();
     await expect(page.getByText('QTD return')).toBeVisible();
@@ -563,7 +563,7 @@ test.describe('Portfolio workbench smoke', () => {
     );
     await page.setViewportSize({ width: 1280, height: 1000 });
     const session = await openPortfolioReview(page, request);
-    test.skip(!session.available, 'Portfolio foundation upstream unavailable in standalone smoke environment.');
+    test.skip(!session.available, 'Portfolio workspace upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
     await page.getByLabel('As of').fill('2026-04-01');
