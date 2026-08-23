@@ -1151,14 +1151,19 @@ Important validation expectations:
     outer viewport. Use `npm run test:e2e:performance:return-path-density` for the owned
     optimized-production semantic, focus, height, responsive, and overflow proof.
 34. Source-selection controls belong beside every Performance decision view that they govern.
-    Summary and Analysis must reuse one component and one complete request-shaping path for horizon,
-    basis, explicit review window, frequency, and benchmark. Keep return-view presentation local to
-    the Summary return-path module and analytical segment selection local to Analysis. Preserve the
+    Summary, Analysis, and Risk must reuse one component and one complete request-shaping path for
+    horizon, basis, explicit review window, frequency, and benchmark. Render that control bar once
+    per mode; downstream comparison and risk panels inherit the confirmed source context instead of
+    adding page-local selectors. Keep exact dates behind the Custom dates disclosure, comparison
+    display overrides behind their own disclosure, return-view presentation local to the Summary
+    Return History module, and analytical segment selection local to Analysis. Preserve the
     last confirmed evidence and labels while a new selection is pending or failed; restore the
     initiating control after settlement only when the user has not moved elsewhere. At narrow
     widths, source-changing controls must retain a measured 44px touch target without reducing
-    desktop workstation density. Use `npm run test:e2e:performance:analysis-controls` for the owned
-    direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
+    desktop workstation density. Wide financial comparisons may scroll only inside a named,
+    keyboard-focusable region; set governed widths and pinned offsets through `AnalyticsTable`
+    instead of a new global selector. Use `npm run test:e2e:performance:analysis-controls` for the
+    owned direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
 35. Persisted Advisor Brief review is a source-confirmed internal decision transaction. Offer only
     known actions admitted by the returned workflow, state each business consequence, require the
     staff reference, rationale, and replacement lineage that the action needs, and provide a

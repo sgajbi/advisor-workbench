@@ -5,6 +5,65 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Performance review controls: one context, inherited comparison, progressive detail
+
+### Business job
+
+A client advisor or portfolio manager needs to set the analytical question once, then read the
+portfolio result, return history, horizon context, attribution, and risk under that same
+source-confirmed scope. Repeated selectors, always-open exact dates, and eight default return
+columns made the workstation look configurable while increasing the chance of comparing unlike
+contexts.
+
+### Research inputs
+
+1. [SAP Fiori Analytical List Page](https://experience.sap.com/fiori-design-web/analytical-list-page/)
+   for one filter context governing the analytical content below it.
+2. [SAP Fiori Filter Bar](https://experience.sap.com/fiori-design-web/filter-bar/)
+   for visible primary filters and progressively disclosed secondary conditions.
+3. [IBM Carbon spacing](https://carbondesignsystem.com/elements/spacing/overview/)
+   for productive density through a consistent spacing scale rather than smaller type.
+4. [Fluent 2 layout](https://fluent2.microsoft.design/layout)
+   for responsive hierarchy and content-priority preservation.
+5. [W3C WCAG Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html)
+   and [WAI-ARIA radio-group guidance](https://www.w3.org/WAI/ARIA/apg/patterns/radio/)
+   for narrow-width reading and honest control semantics.
+6. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/products/aladdin-wealth)
+   for advisor decision support that connects portfolio analytics to a client conversation.
+
+### Adopted
+
+1. One compact source-selection bar across Summary, Analysis, and Risk.
+2. Exact dates and comparison-display overrides as progressive detail.
+3. A six-column absolute portfolio-versus-benchmark review as the default, with relative and
+   combined views available only when the advisor needs them.
+4. Downstream comparison panels inherit the selected horizon and benchmark rather than repeating
+   local controls.
+5. Four measures across desktop and tablet, two across compact widths, with productive typography
+   retained.
+6. A named, keyboard-focusable compact comparison region with Period and Window pinned.
+
+### Rejected
+
+1. A false ARIA toolbar: the controls are semantically separate labelled groups and do not
+   implement composite-toolbar keyboard behaviour.
+2. Always-visible start/end dates: they add noise to standard reporting-period review.
+3. Smaller 10–11px type as a density mechanism.
+4. A default combined table with cumulative active-return columns: it makes the routine comparison
+   wider before the user asks the relative-return question.
+5. A screen-local reporting-currency selector: the current Performance contracts do not support a
+   caller-controlled currency restatement.
+
+### Implementation and validation
+
+Issue #812 removes the dead duplicate control strip, reuses one typed analysis control model and
+request path, applies source selections as one transaction, makes Horizon Comparison inherit the
+confirmed context, and extends the shared `AnalyticsTable` contract for governed widths and pinned
+columns. Optimized-production browser proof covers 1440, 1024, 768, and 519 pixels with full date
+visibility, one control bar, default column truth, keyboard focus, intentional compact table scroll,
+and zero page overflow. The reviewed evidence is under
+`docs/evidence/issue-812-performance-control-bar/`.
+
 ## Advisor workstation build continuity: complete client assets during validation
 
 ### Business job
