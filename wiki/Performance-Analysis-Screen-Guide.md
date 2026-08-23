@@ -17,10 +17,11 @@ turn incomplete evidence into an investment conclusion.
 | Primary reading order | Analysis snapshot, attribution history evidence, attribution detail, then contribution drivers |
 | Primary next action | Explain a confirmed driver, qualify a limitation, change an available segment, or continue to evidence review |
 
-The current mode exposes horizon, return basis, explicit review window, observation frequency, and
-benchmark beside the analysis they govern. Overview and Analysis reuse the same source-selection
-component and request-shaping path. **Absolute**, **Relative**, and **Combined** remain return-chart
-presentation choices in Overview and deliberately do not appear as attribution source selectors.
+The current mode exposes one compact governed analysis bar beside the evidence it controls.
+Summary, Analysis, and Risk reuse the same horizon, return-basis, observation-frequency, benchmark,
+and custom-window selection path; no mode renders a second local context. Exact dates appear only
+when **Custom dates** is selected. **Absolute**, **Relative**, and **Combined** remain Return History
+display choices in Summary and deliberately do not appear as attribution source selectors.
 
 ## Business Purpose
 
@@ -70,8 +71,10 @@ advice approval, or client-publication authority.
 
 - Presents Gateway-backed contribution and attribution detail without calculating effects in the
   browser.
-- Exposes source-backed horizon, basis, explicit review window, frequency, and benchmark directly
-  in Analysis through the same reusable selection component and request-shaping path as Overview.
+- Exposes source-backed horizon, basis, frequency, benchmark, and progressively disclosed explicit
+  dates through the same reusable selection component and request-shaping path as Summary and Risk.
+- Applies the selection as one source transaction; downstream analysis inherits the confirmed
+  context and does not repeat horizon or benchmark controls.
 - Keeps the prior confirmed view under its original labels while a new selection is pending or
   failed; commits controls, Review Context, analytics, and canonical URL only after source success.
 - Locks conflicting source changes while pending, announces pending and confirmation without moving

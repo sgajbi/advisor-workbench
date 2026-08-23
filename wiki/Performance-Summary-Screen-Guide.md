@@ -13,7 +13,7 @@ strategy, approve a recommendation, or publish a client report.
 | Canonical route | `/performance?portfolioId={portfolio_id}`; Summary is the default mode, while source-confirmed `asOfDate`, `period`, and `reportingCurrency` remain in the address when supplied by the entering workflow |
 | Navigation | **Performance** in the global workspace navigation, then **Performance Overview** in the selected-portfolio rail |
 | Supported scope | One Gateway-backed portfolio, one source-confirmed Performance reporting window, return basis, frequency, and benchmark selection; source valuation date and base currency remain read-only evidence |
-| Primary reading order | Reporting scope, portfolio and benchmark return, active return, return path, horizon comparison, then contributor leadership |
+| Primary reading order | Shell review context, one analysis control bar, portfolio and benchmark outcome, Return History, inherited horizon comparison, then contributor leadership |
 | Primary next action | Explain the confirmed outcome, investigate a source limitation, continue to Performance Analysis, or prepare an internal Advisor Brief |
 
 The current screen is portfolio-scoped. It does not aggregate a relationship, household, advisor
@@ -67,8 +67,9 @@ investment suitability, or supervisory authority.
 
 1. Enter from [Advisor Book](Advisor-Book-Workflow),
    [Portfolio Review](Portfolio-Review-Screen-Guide), or another selected-portfolio record screen.
-2. Confirm portfolio, reporting window, net or gross basis, observation frequency, reporting
-   currency, and assigned or selected benchmark.
+2. Confirm the reporting horizon, net or gross basis, observation frequency, and benchmark once in
+   the governed analysis bar. Open **Custom dates** only when the review requires an explicit
+   window; reporting currency remains source evidence rather than an unsupported selector.
 3. Read portfolio return, benchmark return, active return, annualised or money-weighted measures
    only when the source contract supports them.
 4. Review the exact portfolio, benchmark, and active-return evidence for the published periods. A
@@ -86,6 +87,19 @@ or moving focus away from the active rail or source control.
 
 ## Implemented Capabilities
 
+- Uses one compact governed analysis bar for Horizon, Basis, Frequency, Benchmark, Custom window,
+  and Summary-only Return view. Analysis and Risk reuse the same source selection rather than
+  rendering another page-local context.
+- Keeps exact start and end dates behind the Custom dates disclosure and preserves their complete
+  values and Apply action across desktop, tablet, and compact layouts.
+- Defaults Return History to the six-column Absolute portfolio-versus-benchmark review. Relative
+  and Combined views are available when that analytical question is required; they do not change
+  the source selection.
+- Makes Horizon Comparison inherit the selected horizon and benchmark. Secondary comparison
+  display choices remain under **Adjust comparison display**.
+- Keeps four headline return measures across desktop and tablet, two across compact layouts, and
+  one only at very narrow widths. Compact Return History scrolls inside its named region while
+  Period and Window remain pinned; the page itself does not scroll horizontally.
 - Presents source-returned portfolio, benchmark, active, annualised, and money-weighted performance
   only when the selected contract publishes usable evidence.
 - Requires an explicit source-catalogue portfolio. A missing, repeated, malformed, or unavailable

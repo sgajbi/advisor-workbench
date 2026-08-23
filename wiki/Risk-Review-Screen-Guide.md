@@ -55,7 +55,8 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
    [Portfolio Review](Portfolio-Review-Screen-Guide), or Performance Summary with one selected
    portfolio.
 2. Confirm the portfolio, reporting window, return basis, benchmark, currency, and as-of date in
-   the shared Performance context.
+   the one shared Performance analysis bar. Exact dates appear only for a Custom dates review;
+   Risk does not render a second **Risk context** control group.
 3. Read the exact executive measures and the visible **Mandate comparison — Not supplied by
    source** boundary before drawing a policy conclusion.
 4. Review snapshot and drawdown evidence, then position and issuer concentration with coverage and
@@ -68,6 +69,9 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
 
 ## Implemented Capabilities
 
+- Reuses the same source-confirmed Horizon, Basis, Frequency, Benchmark, and Custom window control
+  bar as Performance Summary and Analysis. Risk modules inherit that selection once; they do not
+  duplicate context or introduce a screen-local selector.
 - Presents source-returned realized volatility, max drawdown, largest-position weight and driver,
   and source coverage in a compact executive evidence strip.
 - States whether the principal drawdown was recovered before period end or remained below its prior
