@@ -362,15 +362,27 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByRole('heading', { name: 'Book Context' })).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Review Evidence' })).toBeVisible();
       await expect(reviewContext.getByText(session.portfolioId!, { exact: true })).toHaveCount(1);
+      const businessDateValue = (
+        await reviewContext
+          .locator('dt')
+          .filter({ hasText: 'Business date' })
+          .locator('xpath=following-sibling::dd[1]')
+          .textContent()
+      )?.trim();
+      expect(businessDateValue).toBeTruthy();
       const identityOwnership = await collectReviewContextOwnershipEvidence(page, [
         session.portfolioId!,
         'CLIENT_SG_001',
         'Singapore',
+        businessDateValue!,
       ]);
       expect(identityOwnership.every((fact) => fact.presentInReviewContext)).toBe(true);
       expect(identityOwnership.every((fact) => !fact.presentOutsideReviewContext)).toBe(true);
       await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
-      await expect(page.getByText('Valuation date', { exact: true })).toBeVisible();
+      await expect(reviewContext.getByText('Base currency', { exact: true })).toBeVisible();
+      await expect(reviewContext.getByText('Reporting currency', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('Valuation as of', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
 
       const measurements = await measureViewportEvidence(page);
@@ -448,6 +460,7 @@ test.describe('Portfolio workbench smoke', () => {
         portfolioId: session.portfolioId,
         measurements,
         railHeaderRegions,
+        reviewContextOwnership: identityOwnership,
         focusableDomOrder,
         keyboardEvidence,
       });
