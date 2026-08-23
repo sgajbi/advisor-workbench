@@ -1036,6 +1036,7 @@ describe("design-system components", () => {
         value="Ready"
         support="0 active exceptions"
         valueTone="success"
+        density="compact"
       />
     );
 
@@ -1043,6 +1044,11 @@ describe("design-system components", () => {
     expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
     expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
     expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
+    expect(
+      Array.from(
+        screen.getByText("Ready").closest(".kpi-stat-tile")?.classList ?? []
+      ).some((className) => className.includes("compact"))
+    ).toBe(true);
   });
 
   it("renders analytics modules with the shared workbench summary-card contract", () => {

@@ -11,6 +11,11 @@
   background: transparent;
 }
 
+.compact {
+  min-height: var(--metric-tile-height-compact);
+  gap: var(--space-1);
+}
+
 .label {
   display: block;
 }
@@ -21,6 +26,12 @@
   overflow-wrap: normal;
   word-break: normal;
   white-space: nowrap;
+}
+
+.compact .value {
+  font-size: var(--type-metric-m-size);
+  font-weight: var(--type-metric-m-weight);
+  line-height: var(--type-metric-m-line-height);
 }
 
 .support {

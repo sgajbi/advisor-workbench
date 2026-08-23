@@ -19,6 +19,7 @@ export default function KpiStatTile({
   definition,
   valueTone,
   onClick,
+  density = "default",
 }: {
   label: string;
   value: React.ReactNode;
@@ -26,6 +27,7 @@ export default function KpiStatTile({
   definition?: string;
   valueTone?: "neutral" | "success" | "warn" | "danger";
   onClick?: () => void;
+  density?: "default" | "compact";
 }) {
   const accessibleLabel = `${label}: ${typeof value === "string" || typeof value === "number" ? value : "Expand"}`;
   const tile = (
@@ -36,6 +38,7 @@ export default function KpiStatTile({
       className={cx(
         "kpi-stat-tile",
         styles.tile,
+        density === "compact" && styles.compact,
         onClick && "kpi-stat-tile-interactive",
         onClick && styles.interactive,
         valueTone && `kpi-stat-tile-${valueTone}`,
