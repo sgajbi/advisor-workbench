@@ -131,6 +131,11 @@ describe("live validation browser workflow helpers", () => {
   it("waits for the source-backed Portfolio Review decision brief", () => {
     const source = browserWorkflowModule.validatePortfolioPanels.toString();
 
+    expect(source).toContain('name: "Review context"');
+    expect(source).toContain("reviewContext.getByText(portfolioId");
+    expect(source).toContain('reviewContext.getByText("Mandate"');
+    expect(source).toContain('reviewContext.getByText("Business date"');
+    expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain('".workbench-decision-brief-primary h3"');
     expect(source).toContain('"Portfolio readiness"');
     expect(source).toContain("/^Status (Ready|Partial|Unavailable)$/");

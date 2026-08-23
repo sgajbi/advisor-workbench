@@ -775,11 +775,18 @@ export async function validatePortfolioPanels(
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  const reviewContext = page.getByRole("region", { name: "Review context" });
   await expect(
-    page.getByRole("heading", { name: "Balanced Mandate", exact: true }),
+    reviewContext.getByText(portfolioId, { exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(
+    reviewContext.getByText("Mandate", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    reviewContext.getByText("Business date", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
   await expect(page.getByText("MTD Return")).toBeVisible({
     timeout: timeoutMs,
   });
