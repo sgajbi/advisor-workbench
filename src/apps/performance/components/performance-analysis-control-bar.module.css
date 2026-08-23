@@ -8,3 +8,20 @@
   border-radius: 8px;
   background: var(--surface-secondary);
 }
+
+.presentationSlot {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+@container performance-control-bar (max-width: 46rem) and (min-width: 34.01rem) {
+  .presentationSlot {
+    grid-column: auto;
+    align-self: end;
+  }
+
+  .presentationSlot > div {
+    padding-top: 0;
+    border-top: 0;
+  }
+}

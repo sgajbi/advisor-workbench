@@ -36,6 +36,7 @@ export type PerformanceSourceSelectionControlsProps = {
   capabilities: PerformanceWorkspaceCapabilities;
   isUpdating: boolean;
   ariaLabel: string;
+  presentationControl?: ReactNode;
   onRequestChange: (
     patch: PerformanceControlPatch,
     focusTarget?: PerformanceSourceControlFocusTarget
@@ -63,6 +64,7 @@ export default function PerformanceSourceSelectionControls({
   capabilities,
   isUpdating,
   ariaLabel,
+  presentationControl,
   onRequestChange,
 }: PerformanceSourceSelectionControlsProps) {
   const isHydrated = useClientMounted();
@@ -189,6 +191,7 @@ export default function PerformanceSourceSelectionControls({
           <FieldLabel>Custom window</FieldLabel>
           <StaticControlValue>{windowLabel}</StaticControlValue>
         </div>
+        {presentationControl}
       </div>
     );
   }
@@ -365,6 +368,7 @@ export default function PerformanceSourceSelectionControls({
           </ActionButton>
         </form>
       </details>
+      {presentationControl}
     </div>
   );
 }

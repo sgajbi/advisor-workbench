@@ -30,8 +30,19 @@ export default function PerformanceAnalysisControlBar({
       aria-label={`${sourceSelection.ariaLabel} controls`}
       data-performance-analysis-control-bar="true"
     >
-      <PerformanceSourceSelectionControls {...sourceSelection} />
-      {returnView ? <PerformanceReturnViewControl {...returnView} /> : null}
+      <PerformanceSourceSelectionControls
+        {...sourceSelection}
+        presentationControl={
+          returnView ? (
+            <div
+              className={styles.presentationSlot}
+              data-performance-presentation-control-slot="true"
+            >
+              <PerformanceReturnViewControl {...returnView} />
+            </div>
+          ) : null
+        }
+      />
     </section>
   );
 }
