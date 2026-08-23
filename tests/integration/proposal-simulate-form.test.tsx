@@ -221,6 +221,53 @@ describe("ProposalSimulateForm", () => {
     );
   });
 
+  it("derives missing proposal date and currency from the source-confirmed book", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalWorkflowContextProvider
+          initialModel={buildSimulationProposalWorkflowContext({
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+          })}
+        >
+          <ProposalSimulateForm initialPortfolioId="PB_SG_GLOBAL_BAL_001" />
+        </ProposalWorkflowContextProvider>
+      </QueryClientProvider>,
+    );
+
+    await waitForPortfolioEvidence();
+
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenNthCalledWith(
+      1,
+      "PB_SG_GLOBAL_BAL_001",
+      {},
+    );
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenLastCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2026-04-10", reportingCurrency: "USD" },
+    );
+    expect(screen.getByLabelText("Advisory As-of Date")).toHaveValue("2026-04-10");
+    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("USD");
+    expect(screen.getByLabelText("Currency")).toHaveValue("USD");
+    expect(screen.getByLabelText("Price Currency")).toHaveValue("USD");
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  });
+
+  it("preserves a carried reporting-currency override when source identity differs", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValue(
+      portfolioBook(undefined, { currency: "SGD" }),
+    );
+
+    renderForm("PB_SG_GLOBAL_BAL_001", "EUR");
+
+    await waitForPortfolioEvidence("context_mismatch");
+    expect(screen.getByLabelText("Portfolio Currency")).toHaveValue("EUR");
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2026-04-10", reportingCurrency: "EUR" },
+    );
+  });
+
   it("keeps construction before the final control rail in DOM order and preserves portfolio scope", async () => {
     renderForm("PB_SG_GLOBAL_BAL_001");
     await waitForPortfolioEvidence();

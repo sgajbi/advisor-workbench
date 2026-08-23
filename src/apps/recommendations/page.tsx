@@ -102,6 +102,7 @@ export default async function RecommendationsAppPage({
       ) : activeMode === "opportunities" ? (
         <AdvisoryOpportunitiesWorkspace
           portfolioId={portfolioId}
+          reviewContext={{ ...reviewContextResult.context, portfolioId }}
           selectedCandidateId={
             typeof resolvedSearch.candidateId === "string"
               ? resolvedSearch.candidateId

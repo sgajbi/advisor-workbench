@@ -4,6 +4,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisoryOpportunitiesWorkspace from "../../src/features/proposals/components/advisory-opportunities-workspace";
+import type { WorkspaceReviewContext } from "../../src/shell/review-context";
+
+function reviewContext(portfolioId: string): WorkspaceReviewContext {
+  return {
+    portfolioId,
+    asOfDate: "2026-04-10",
+    period: "YTD",
+    reportingCurrency: "SGD",
+  };
+}
 
 const getAdvisorIdeaReviewQueueMock = vi.fn(async (_filters?: unknown) => ({
   policyVersion: "idea-deterministic-ranking-v1",
@@ -97,7 +107,10 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
 
   it("loads Gateway-backed Lotus Idea candidates", async () => {
     renderWithQueryClient(
-      <AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
+      />,
     );
 
     await waitFor(() => {
@@ -136,13 +149,16 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       screen.getByRole("link", { name: "Open Proposal Builder" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
     );
   });
 
   it("limits Lotus Idea triage to the certified canonical portfolio", () => {
     renderWithQueryClient(
-      <AdvisoryOpportunitiesWorkspace portfolioId="PB_UNCERTIFIED_001" />,
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_UNCERTIFIED_001"
+        reviewContext={reviewContext("PB_UNCERTIFIED_001")}
+      />,
     );
 
     expect(
@@ -155,6 +171,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
         selectedCandidateId="idea_high_cash_001"
       />,
     );
@@ -199,7 +216,10 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     );
 
     renderWithQueryClient(
-      <AdvisoryOpportunitiesWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
+      <AdvisoryOpportunitiesWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
+      />,
     );
 
     expect(
@@ -217,6 +237,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
         selectedCandidateId="idea_high_cash_001"
       />,
     );
@@ -251,6 +272,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
         selectedCandidateId="idea_high_cash_001"
       />,
     );
@@ -280,6 +302,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
         selectedCandidateId="idea_high_cash_001"
       />,
     );
@@ -301,6 +324,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={reviewContext("PB_SG_GLOBAL_BAL_001")}
         selectedCandidateId="idea_high_cash_001"
       />,
     );
