@@ -43,20 +43,34 @@ vi.mock("../../src/features/proposals/components/proposal-workspace-shell", () =
     title: string;
     reviewContext: { portfolioId: string };
     workflowContext?: { title: string; sourceLabel: string };
-    children: React.ReactNode;
-  }) => (
-    <section>
-      <h1>{title}</h1>
-      <p>{reviewContext.portfolioId}</p>
-      {workflowContext ? (
-        <aside>
-          <h2>{workflowContext.title}</h2>
-          <p>{workflowContext.sourceLabel}</p>
-        </aside>
-      ) : null}
-      {children}
-    </section>
-  ),
+    children:
+      | React.ReactNode
+      | ((portfolioContext: {
+          as_of_date: string;
+          portfolio: { base_currency: string };
+        }) => React.ReactNode);
+  }) => {
+    const content =
+      typeof children === "function"
+        ? children({
+            as_of_date: "2026-04-09",
+            portfolio: { base_currency: "USD" },
+          })
+        : children;
+    return (
+      <section>
+        <h1>{title}</h1>
+        <p>{reviewContext.portfolioId}</p>
+        {workflowContext ? (
+          <aside>
+            <h2>{workflowContext.title}</h2>
+            <p>{workflowContext.sourceLabel}</p>
+          </aside>
+        ) : null}
+        {content}
+      </section>
+    );
+  },
 }));
 
 describe("ProposalSimulatePage", () => {
@@ -103,6 +117,17 @@ describe("ProposalSimulatePage", () => {
       "/book",
     );
     expect(proposalFormRenderMock).not.toHaveBeenCalled();
+  });
+
+  it("initializes read-only proposal context from the source portfolio when the URL omits it", async () => {
+    render(
+      await ProposalSimulatePage({
+        searchParams: Promise.resolve({ portfolioId: "PORT_UI_1001" }),
+      }),
+    );
+
+    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("2026-04-09");
+    expect(screen.getByTestId("initial-reporting-currency")).toHaveTextContent("USD");
   });
 
   it("fails closed when proposal context query parameters are repeated", async () => {
