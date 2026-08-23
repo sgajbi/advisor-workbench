@@ -77,16 +77,24 @@ concurrency group.
   runs `next build` after the repository-owned lint and typecheck gates in `make check`. Workbench
   does not rely on Next's duplicate build-time ESLint integration as the lint authority.
 - `make test-e2e`
-  Playwright smoke validation. The launcher retains the Next incremental cache, performs a fresh
-  production build, stages generated `.next/static` assets beside the generated standalone output,
-  and runs `.next/standalone/server.js` directly, matching the production-image entrypoint. It
+  Playwright smoke validation. The launcher retains the Next production cache, performs a fresh
+  production build, stages generated `.next-build/static` assets beside the generated standalone
+  output, and runs `.next-build/standalone/server.js` directly, matching the production-image
+  entrypoint. It
   allows up to four minutes for build and server readiness and owns the direct server child so
   cancellation cannot leave a shell-owned listener behind. Set
   `PLAYWRIGHT_REUSE_VALIDATED_BUILD=1` only immediately after a successful production build in the
-  same worktree; the launcher fails closed when `.next/BUILD_ID` is absent. When port `3000`
+  same worktree; the launcher fails closed when `.next-build/BUILD_ID` is absent. When port `3000`
   belongs to a shared stack or another worktree, set `PLAYWRIGHT_PORT=<free-port>`. An explicit port
   binds the production server, readiness probe, and browser base URL to that listener and disables
   existing-server reuse, so the proof cannot silently exercise a stale Workbench build.
+- `npm run test:next-artifact-isolation`
+  starts a branch-owned development host and proves its page plus every rendered client asset stay
+  available while a clean production build regenerates `.next-build`. Development owns
+  `.next-dev`; production validation owns `.next-build`. The protected PR browser lane runs this
+  proof and reuses only its validated build for Playwright. Local machine-readable evidence is
+  written to `output/next-artifact-isolation.json`. See
+  [Next.js Artifact Isolation](../docs/architecture/next-artifact-isolation.md).
 - `npm run test:e2e:performance:populated`
   deterministic production-browser proof for complete Performance economics, supported modules,
   evidence navigation, contribution detail, and desktop layout. The isolated fixture Gateway uses

@@ -23,7 +23,7 @@ on a `screen` prop after static imports does not isolate the client module graph
 ## Production budget
 
 `npm run build` runs `next build` and then `npm run quality:portfolio-record-bundles`. The quality
-script reads `.next/app-build-manifest.json`, sums uncompressed initial JavaScript asset bytes, and
+script reads `.next-build/app-build-manifest.json`, sums uncompressed initial JavaScript asset bytes, and
 inspects those assets for the AG Grid module marker.
 
 | Business task | Raw initial JS budget | AG Grid posture |
