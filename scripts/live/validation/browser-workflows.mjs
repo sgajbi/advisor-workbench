@@ -41,8 +41,8 @@ export function hasAcceptedAdvisorBriefReviewPosture(text) {
     text.includes("Human Review") &&
     text.includes("Accepted for internal use") &&
     text.includes("Supportability READY") &&
-    text.includes("Recorded by") &&
-    /Recorded\s+(?!by\b)\S+/i.test(text)
+    text.includes("Review recorded by") &&
+    /Review\s+recorded\s+(?!by\b)\S+/i.test(text)
   );
 }
 
@@ -53,7 +53,10 @@ export function hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer) {
   return (
     hasAcceptedAdvisorBriefReviewPosture(text) &&
     reviewer.length > 0 &&
-    new RegExp(`Recorded\\s+by\\s+${escapedReviewer}(?=\\s|•|$)`).test(text)
+    new RegExp(
+      `Review\\s+recorded\\s+by\\s+${escapedReviewer}(?=\\s|•|$)`,
+      "i",
+    ).test(text)
   );
 }
 
@@ -87,7 +90,7 @@ export function createBrowserValidationHelpers({
 }) {
   async function assertListHasItems(locator, description) {
     await expect(locator).toBeVisible({ timeout: timeoutMs });
-    const count = await locator.locator('[role="listitem"]').count();
+    const count = await locator.getByRole("listitem").count();
     if (count < 1) {
       throw new Error(`${description} is visible but empty.`);
     }
@@ -840,6 +843,7 @@ export async function validateReportCentrePanel(
     workbenchBaseUrl,
     portfolioId,
     timeoutMs,
+    assertListHasItems,
     assertTableHasRows,
   },
 ) {
@@ -889,20 +893,37 @@ export async function validateReportCentrePanel(
   });
   await expect(submitButton).toBeEnabled({ timeout: timeoutMs });
   await submitButton.click({ timeout: timeoutMs });
-  await expect(page.getByText("Report request recorded")).toBeVisible({
-    timeout: timeoutMs,
+  const requestReadiness = page.getByRole("region", {
+    name: "Report request readiness",
   });
   await expect(
-    page.getByRole("heading", { name: "Report request accepted" }),
+    requestReadiness.getByRole("heading", { name: "Report request accepted" }),
   ).toBeVisible({ timeout: timeoutMs });
+  await expect(requestReadiness.getByRole("status")).toContainText(
+    "Reporting recorded the request.",
+    { timeout: timeoutMs },
+  );
   await expect(
     page.getByRole("button", { name: "Submit Report Request" }),
   ).toHaveCount(0);
-  await assertTableHasRows(
-    tableByExactLabel(page, "Recent portfolio report requests"),
-    1,
+  const requestHistoryTable = tableByExactLabel(
+    page,
     "Recent portfolio report requests",
   );
+  if (await requestHistoryTable.isVisible()) {
+    await assertTableHasRows(
+      requestHistoryTable,
+      1,
+      "Recent portfolio report requests",
+    );
+  } else {
+    await assertListHasItems(
+      page.getByRole("list", {
+        name: "Recent portfolio report request details",
+      }),
+      "Recent portfolio report request details",
+    );
+  }
   return reportCentreProof;
 }
 
@@ -1012,8 +1033,34 @@ export async function validatePerformanceAnalysisPanel(
   await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
   const attributionTrendEvidence = page.getByTestId("attribution-trend-evidence");
   await expect(attributionTrendEvidence).toBeVisible({ timeout: timeoutMs });
-  await expect(attributionTrendEvidence).not.toHaveAttribute("data-state", "loading");
-  const attributionTrendPosture = await attributionTrendEvidence.getAttribute("data-state");
+  await expect(attributionTrendEvidence).not.toHaveAttribute(
+    "data-state",
+    "loading",
+    { timeout: timeoutMs },
+  );
+  let attributionTrendPosture = await attributionTrendEvidence.getAttribute("data-state");
+  if (attributionTrendPosture === "error") {
+    await expect(
+      attributionTrendEvidence.getByText(
+        "Attribution history could not be refreshed",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: timeoutMs });
+    await page.getByRole("button", { name: "Refresh history" }).click({
+      timeout: timeoutMs,
+    });
+    await expect(attributionTrendEvidence).not.toHaveAttribute(
+      "data-state",
+      "loading",
+      { timeout: timeoutMs },
+    );
+    attributionTrendPosture = await attributionTrendEvidence.getAttribute("data-state");
+    recordUiCheck({
+      description: "Attribution history exact-selection recovery",
+      kind: "source-retry",
+      posture: attributionTrendPosture,
+    });
+  }
   if (attributionTrendPosture === "multi-observation") {
     await expect(
       page.getByRole("heading", { name: "Attribution Over Time", exact: true }),
@@ -1182,7 +1229,7 @@ export async function validateAdvisorBriefPanel(
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
     const expectedReviewer = "live.validator.ui";
     let proofPosture = classifyAdvisorBriefAcceptProofPosture(
-      await supportabilityRegion.innerText(),
+      (await supportabilityRegion.textContent()) ?? "",
       expectedReviewer,
     );
     if (
@@ -1199,7 +1246,7 @@ export async function validateAdvisorBriefPanel(
       await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
       await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
       proofPosture = classifyAdvisorBriefAcceptProofPosture(
-        await supportabilityRegion.innerText(),
+        (await supportabilityRegion.textContent()) ?? "",
         expectedReviewer,
       );
       if (
@@ -1234,12 +1281,16 @@ export async function validateAdvisorBriefPanel(
       });
       await expect(confirmAcceptance).toBeVisible({ timeout: timeoutMs });
       await confirmAcceptance.click();
+      await expect(reviewRegion.getByRole("status")).toContainText(
+        "The brief was accepted for its permitted internal workflow use.",
+        { timeout: timeoutMs },
+      );
     }
     await expect
       .poll(
         async () =>
           hasRecordedAdvisorBriefAcceptProof(
-            await supportabilityRegion.innerText(),
+            (await supportabilityRegion.textContent()) ?? "",
             expectedReviewer,
           ),
         {

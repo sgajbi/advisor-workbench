@@ -76,12 +76,15 @@ Canonical local development uses:
 LOTUS_ENVIRONMENT=dev
 WORKBENCH_REPORTING_AUTH_MODE=development_configured
 WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+WORKBENCH_REPORTING_CALLER_ROLE=client_advisor
 WORKBENCH_ADVISOR_BOOK_ACTOR_ID=PM_SG_001
 WORKBENCH_ADVISOR_BOOK_ROLE=ADVISOR
 ```
 
-The complete Report Centre flow uses the same bounded Advisor Book development principal for
-catalogue discovery, single-report requests, portfolio-bundle requests, history, and status reads.
+The complete Report Centre flow uses the same bounded Advisor Book development identity and book
+scope, but applies the reporting-specific source role (`client_advisor` by default) for catalogue
+discovery, single-report requests, portfolio-bundle requests, history, and status reads. Advisor
+Book role vocabulary does not grant report-family eligibility.
 Local multi-portfolio proof requires every fixture portfolio to be present in the configured
 development entitlement, but that precheck is not final authority. Browser headers never grant
 reporting authority, and Gateway re-verifies the source-backed book at submission.

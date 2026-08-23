@@ -15,6 +15,7 @@ describe("Report Centre smoke scenario runner", () => {
     expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "report-centre"');
     expect(source).toContain('REPORT_CENTRE_E2E_FIXTURE: "state-matrix"');
     expect(source).toContain('WORKBENCH_REPORTING_AUTH_MODE: "development_configured"');
+    expect(source).toContain('WORKBENCH_REPORTING_CALLER_ROLE: "client_advisor"');
     expect(source).toContain("WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS");
   });
 

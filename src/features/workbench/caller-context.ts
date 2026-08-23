@@ -103,10 +103,12 @@ export function stripBrowserSuppliedAuthorityHeaders(headers: Headers) {
 
 const REPORTING_CALLER_CONTEXT_ENV_OVERRIDES = {
   portfolioIds: "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
+  role: "WORKBENCH_REPORTING_CALLER_ROLE",
 } as const;
 
 const DEFAULT_REPORTING_CALLER_CONTEXT = {
   portfolioIds: "PB_SG_GLOBAL_BAL_001",
+  role: "client_advisor",
 } as const;
 
 const IDEA_AUTH_MODE_ENV = "WORKBENCH_IDEA_AUTH_MODE";
@@ -117,6 +119,7 @@ const SUPPORTED_ADVISOR_BOOK_ROLES = new Set([
   "RELATIONSHIP_MANAGER",
   "PORTFOLIO_MANAGER",
 ]);
+const SUPPORTED_REPORTING_ROLES = new Set(["client_advisor", "portfolio_manager"]);
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
@@ -163,23 +166,35 @@ export function resolveDefaultCallerContext() {
 
 export function resolveAdvisorBookDevelopmentContext() {
   const defaults = resolveDefaultCallerContext();
-  const context = {
+  const identity = resolveDevelopmentCallerIdentity(defaults);
+  const role = process.env.WORKBENCH_ADVISOR_BOOK_ROLE?.trim() || "ADVISOR";
+
+  if (!identity || !SUPPORTED_ADVISOR_BOOK_ROLES.has(role)) {
+    return null;
+  }
+  return { ...identity, role };
+}
+
+function resolveDevelopmentCallerIdentity(defaults = resolveDefaultCallerContext()) {
+  const identity = {
     actorId: process.env.WORKBENCH_ADVISOR_BOOK_ACTOR_ID?.trim() || "PM_SG_001",
     callerApplication: defaults.callerApplication,
     tenantId: process.env.WORKBENCH_ADVISOR_BOOK_TENANT_ID?.trim() || defaults.tenantId,
     region: process.env.WORKBENCH_ADVISOR_BOOK_REGION?.trim() || defaults.region,
     bookingCenterCode:
       process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE?.trim() || "Singapore",
-    role: process.env.WORKBENCH_ADVISOR_BOOK_ROLE?.trim() || "ADVISOR",
   };
+  return Object.values(identity).some((value) => !value) ? null : identity;
+}
 
-  if (
-    Object.values(context).some((value) => !value) ||
-    !SUPPORTED_ADVISOR_BOOK_ROLES.has(context.role)
-  ) {
-    return null;
-  }
-  return context;
+function resolveReportingDevelopmentContext() {
+  const identity = resolveDevelopmentCallerIdentity();
+  const role =
+    process.env[REPORTING_CALLER_CONTEXT_ENV_OVERRIDES.role]?.trim() ||
+    DEFAULT_REPORTING_CALLER_CONTEXT.role;
+  return identity && SUPPORTED_REPORTING_ROLES.has(role)
+    ? { ...identity, role }
+    : null;
 }
 
 export function resolveDefaultDpmContext() {
@@ -305,7 +320,7 @@ export function applyReportOrderingRouteCallerContextHeaders(
     return { status: "rejected", reason: requestPosture };
   }
 
-  const context = resolveAdvisorBookDevelopmentContext();
+  const context = resolveReportingDevelopmentContext();
   if (!context) {
     return { status: "rejected", reason: "invalid_reporting_configuration" };
   }

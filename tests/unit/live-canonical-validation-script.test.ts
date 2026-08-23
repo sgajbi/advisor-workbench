@@ -1294,7 +1294,7 @@ describe("canonical live validation script", () => {
     );
     expect(browserWorkflowModule).toContain("Accepted for internal use");
     expect(browserWorkflowModule).toContain("Supportability READY");
-    expect(browserWorkflowModule).toContain("Recorded by");
+    expect(browserWorkflowModule).toContain("Review recorded by");
     expect(browserWorkflowModule).not.toContain(
       'text.includes("Supportability ACTION REQUIRED")',
     );

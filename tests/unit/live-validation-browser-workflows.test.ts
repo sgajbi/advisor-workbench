@@ -121,6 +121,13 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain("networkidle");
   });
 
+  it("counts semantic list items whether their role is implicit or explicit", () => {
+    const source = createBrowserValidationHelpers.toString();
+
+    expect(source).toContain('locator.getByRole("listitem").count()');
+    expect(source).not.toContain("locator.locator('[role=\"listitem\"]')");
+  });
+
   it("waits for the source-backed Portfolio Review decision brief", () => {
     const source = browserWorkflowModule.validatePortfolioPanels.toString();
 
@@ -128,6 +135,18 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('"Portfolio readiness"');
     expect(source).toContain("/^Status (Ready|Partial|Unavailable)$/");
     expect(source).toContain('"Reporting coverage"');
+  });
+
+  it("uses the governed live timeout while attribution history settles", () => {
+    const source = browserWorkflowModule.validatePerformanceAnalysisPanel.toString();
+
+    expect(source).toMatch(
+      /not\.toHaveAttribute\(\s*"data-state",\s*"loading",\s*\{ timeout: timeoutMs \}/,
+    );
+    expect(source).toContain('attributionTrendPosture === "error"');
+    expect(source).toContain("Attribution history could not be refreshed");
+    expect(source).toContain('name: "Refresh history"');
+    expect(source).toContain("Attribution history exact-selection recovery");
   });
 
   it.each([
@@ -175,7 +194,7 @@ describe("live validation browser workflow helpers", () => {
   it("accepts only business-labelled advisor-brief review posture with source audit evidence", () => {
     expect(
       hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Accepted for internal use Supportability READY Recorded by advisor_1 Recorded 2026-04-21T03:22:00Z"
+        "Human Review Accepted for internal use Supportability READY Review recorded by advisor_1 Review recorded 2026-04-21T03:22:00Z"
       )
     ).toBe(true);
     expect(
@@ -190,7 +209,7 @@ describe("live validation browser workflow helpers", () => {
     ).toBe(false);
     expect(
       hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Accepted for internal use Supportability READY Recorded by advisor_1"
+        "Human Review Accepted for internal use Supportability READY Review recorded by advisor_1"
       )
     ).toBe(false);
     expect(
@@ -200,7 +219,7 @@ describe("live validation browser workflow helpers", () => {
 
   it("reuses only the exact source-recorded browser acceptance on canonical reruns", () => {
     const recordedPosture =
-      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui • Recorded 2026-04-21T03:22:00Z";
+      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui • Review recorded 2026-04-21T03:22:00Z";
 
     expect(
       hasRecordedAdvisorBriefAcceptProof(recordedPosture, "live.validator.ui"),
@@ -210,7 +229,7 @@ describe("live validation browser workflow helpers", () => {
     ).toBe(false);
     expect(
       hasRecordedAdvisorBriefAcceptProof(
-        "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui2 • Recorded 2026-04-21T03:22:00Z",
+        "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui2 • Review recorded 2026-04-21T03:22:00Z",
         "live.validator.ui",
       ),
     ).toBe(false);
@@ -224,9 +243,9 @@ describe("live validation browser workflow helpers", () => {
 
   it("classifies accepted runs owned by another reviewer for fallback reservation", () => {
     const exactPosture =
-      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.ui • Recorded 2026-04-21T03:22:00Z";
+      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui • Review recorded 2026-04-21T03:22:00Z";
     const otherReviewerPosture =
-      "Human Review Accepted for internal use Supportability READY Recorded by live.validator.accept • Recorded 2026-04-21T03:22:00Z";
+      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.accept • Review recorded 2026-04-21T03:22:00Z";
 
     expect(
       classifyAdvisorBriefAcceptProofPosture(exactPosture, "live.validator.ui"),
@@ -274,6 +293,10 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('getByLabel("Reviewer reference")');
     expect(source).toContain('getByLabel("Review rationale")');
     expect(source).toContain('name: "Confirm acceptance"');
+    expect(source).toContain("supportabilityRegion.textContent()");
+    expect(source).toContain(
+      "The brief was accepted for its permitted internal workflow use.",
+    );
     expect(source).not.toContain("Advisor brief review actions");
     expect(source).not.toContain("not-currently-allowed");
   });
@@ -387,6 +410,13 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain("Governed document creation is available.");
     expect(source).toContain("PDF creation is temporarily unavailable");
     expect(source).toContain("return reportCentreProof");
+    expect(source).toContain('name: "Report request readiness"');
+    expect(source).toContain('"Reporting recorded the request."');
+    expect(source).toContain("requestHistoryTable.isVisible()");
+    expect(source).toContain('name: "Recent portfolio report request details"');
+    expect(source).toContain("assertListHasItems");
+    expect(source).toContain("assertTableHasRows");
+    expect(source).not.toContain('"Report request recorded"');
     expect(source).not.toContain("screenshotRegisteredPanel");
   });
 
