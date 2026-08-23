@@ -70,7 +70,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.queryByText("NET")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Horizon comparison context" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
-      "Uses analysis selectionNet basis · Combined return view",
+      "Uses analysis selectionNet basis · Absolute return view",
     );
     expect(
       document.querySelector("[data-performance-comparison-display='inherited']"),
@@ -91,7 +91,7 @@ describe("PerformanceMultiHorizonPanel", () => {
     const horizonTable = screen.getByLabelText("Multi-horizon return table");
     expect(screen.getByRole("region", { name: "Scrollable horizon comparison table" })).toBeInTheDocument();
     expect(
-      horizonTable.closest(".performance-horizon-table.performance-chart-observation-table")
+      horizonTable.closest(".performance-horizon-table.analytics-table-variant-observation")
     ).toBeTruthy();
     expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
     expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();

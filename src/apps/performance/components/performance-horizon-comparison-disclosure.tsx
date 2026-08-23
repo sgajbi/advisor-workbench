@@ -38,7 +38,7 @@ export default function PerformanceHorizonComparisonDisclosure({
           rows={tableModel.rows}
           density="compact"
           variant="observation"
-          className="performance-horizon-table performance-chart-observation-table"
+          className="performance-horizon-table"
         />
       </div>
     </PerformanceModuleDisclosure>

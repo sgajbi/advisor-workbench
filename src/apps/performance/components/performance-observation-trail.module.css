@@ -1,0 +1,18 @@
+.table {
+  width: 100%;
+}
+
+.scrollHint {
+  display: none;
+  margin: 0;
+  padding: 0 0.75rem 0.42rem;
+  color: var(--text-muted);
+  font-size: var(--type-helper-text-size);
+  line-height: var(--type-helper-text-line-height);
+}
+
+@media (max-width: 640px) {
+  .scrollHint {
+    display: block;
+  }
+}

@@ -834,6 +834,47 @@ describe("design-system components", () => {
     ).toBeInTheDocument();
   });
 
+  it("supports governed widths and pinned context columns without page-specific selectors", () => {
+    render(
+      <AnalyticsTable
+        ariaLabel="Return history"
+        scrollRegionLabel="Return history columns"
+        tableMinWidth="36rem"
+        columns={[
+          { key: "period", label: "Period", width: "4.75rem", stickyOffset: 0 },
+          {
+            key: "window",
+            label: "Window",
+            width: "8.75rem",
+            stickyOffset: "4.75rem",
+          },
+          { key: "portfolio", label: "Portfolio", align: "right" },
+        ]}
+        rows={[{ key: "row-1", cells: ["Jan", "1-31 Jan 2026", "1.20%"] }]}
+      />
+    );
+
+    const table = screen.getByRole("table", { name: "Return history" });
+    expect(table).toHaveStyle({ minWidth: "36rem", tableLayout: "fixed" });
+    expect(screen.getByRole("columnheader", { name: "Period" })).toHaveStyle({
+      width: "4.75rem",
+      position: "sticky",
+      left: "0px",
+      zIndex: "3",
+    });
+    expect(screen.getByRole("columnheader", { name: "Window" })).toHaveStyle({
+      width: "8.75rem",
+      position: "sticky",
+      left: "4.75rem",
+      zIndex: "3",
+    });
+    expect(screen.getByText("Jan")).toHaveStyle({
+      position: "sticky",
+      left: "0px",
+      zIndex: "2",
+    });
+  });
+
   it("renders dense analytics tables through the shared frame contract", () => {
     render(
       <AnalyticsTable

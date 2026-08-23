@@ -117,7 +117,7 @@ describe("PerformanceSummaryContributorsSection", () => {
     const contributorsTable = screen.getByLabelText("Contributor instrument detail table");
     expect(contributorsTable).toBeInTheDocument();
     expect(
-      contributorsTable.closest(".performance-contributors-table.performance-chart-observation-table")
+      contributorsTable.closest(".performance-contributors-table.analytics-table-variant-observation")
     ).toBeTruthy();
     expect(within(contributorsTable).getByText("Direction")).toBeInTheDocument();
     expect(within(contributorsTable).getByText("Instrument")).toBeInTheDocument();

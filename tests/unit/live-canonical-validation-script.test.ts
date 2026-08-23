@@ -1265,7 +1265,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("outcome-review-panel");
     expect(browserWorkflowModule).toContain("proof-pack-panel");
     expect(browserWorkflowModule).toContain("requireVisible");
-    expect(browserWorkflowModule).toContain("Observation trail");
+    expect(browserWorkflowModule).toContain("Return history");
     expect(browserWorkflowModule).toContain(
       'outcomeReviewPanel.getByText("Selected Review Detail")',
     );
