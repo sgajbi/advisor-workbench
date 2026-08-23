@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getPortfolioCatalog, getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
@@ -221,6 +221,10 @@ describe("reports page", () => {
     );
 
     expect(screen.getByText(/not supported for report ordering/i)).toBeInTheDocument();
+    const reviewContext = screen.getByTestId("review-context-strip");
+    expect(within(reviewContext).getByText("Global Balanced Mandate")).toBeInTheDocument();
+    expect(within(reviewContext).getByText("CLIENT_001")).toBeInTheDocument();
+    expect(within(reviewContext).queryByText("Portfolio not confirmed")).not.toBeInTheDocument();
     expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
   });
 });
