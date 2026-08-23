@@ -5990,3 +5990,78 @@ failure, recovery, responsive, and canonical browser proof must cover Portfolio,
 Manage, Advisory/Proposal, and Report Centre. The six screen guides, repository context, and
 codebase review ledger carry the reusable rule. No Gateway/API/OpenAPI, calculation, dependency,
 authentication, entitlement, or new UI framework change is required.
+
+## Productive Workbench Typography And Financial Scan Geometry
+
+### Business job
+
+An advisor scanning a portfolio must distinguish the task, evidence grouping, routine labels, and
+financial values without decoding decorative type treatments. Long reporting-currency values must
+remain comparable at a glance instead of wrapping, breaking inside a number, or colliding with the
+next metric. Density must come from hierarchy and reflow, not 11px text, forced uppercase, or
+near-black weight on every label.
+
+### Current-product research
+
+Research was reviewed on 2026-08-23 from official design-system, accessibility, and publisher
+sources:
+
+1. [IBM Carbon productive type sets](https://carbondesignsystem.com/elements/typography/type-sets/)
+   distinguish productive, task-focused interfaces from expressive editorial moments and provide
+   a compact hierarchy for data-rich software.
+2. [IBM Carbon typography overview](https://carbondesignsystem.com/elements/typography/overview/)
+   uses IBM Plex as the product system's open-source type family and treats typography as a
+   deliberate hierarchy rather than independent per-component styling.
+3. [WCAG 2.2 Text Spacing](https://www.w3.org/WAI/WCAG22/Understanding/text-spacing) requires
+   content and function to survive increased line, paragraph, word, and letter spacing without
+   loss or overlap.
+4. [IBM Plex publisher repository](https://github.com/IBM/plex) provides the released WOFF2 assets
+   and SIL Open Font License used by the governed local delivery path.
+
+These sources guide role hierarchy, legibility, and reflow. They do not make Carbon a Workbench
+dependency or transfer IBM's product styling to Lotus.
+
+### Adopted decisions
+
+1. Use a restrained productive scale: 24px workspace/page titles, 18px section/panel titles, 14px
+   business reading and table cells, 12px routine labels and headers, and 13px supporting copy.
+2. Limit operational weights to 400, 500, and 600. Remove local 650–800 weights that attempted to
+   create hierarchy through darkness rather than structure.
+3. Keep routine labels and table headers in sentence or title case with restrained tracking.
+   Reserve uppercase for genuine eyebrows, badges, and source/technical codes.
+4. Keep financial values single-line with tabular numerals and normal word breaking; reflow the
+   container before allowing a currency value to collide. Portfolio Review uses three columns by
+   two rows on wide screens, then two and one columns as capacity narrows.
+5. Make the canonical token layer the only semantic type authority. Migrate KPI, Portfolio health,
+   Proposal, and record-selector presentation to owned modules rather than adding more late global
+   exceptions.
+6. Adopt pinned IBM Plex Sans 1.1.0 static 400/500/600 files for the operational UI through the
+   existing same-origin Next local-font boundary. Retain Cormorant only for the Lotus wordmark and
+   IBM Plex Mono only for technical evidence.
+7. Keep the choice reproducible: `npm run test:e2e:typography:compare` renders pinned IBM Plex Sans
+   and Inter candidates independently in the same optimized Portfolio Review at 1440, 1024, 768,
+   and 519 pixels and fails on family substitution, metric overflow, wrapping, or page overflow.
+
+Both candidates passed the final geometry assertions. IBM Plex Sans reduced operational WOFF2
+bytes from 352,240 to 196,820 and rendered the longest tested AUM/Invested value at 168 pixels
+rather than Inter's 177 pixels, approximately 5% narrower. The decision is evidence-backed but
+does not claim universal typeface superiority.
+
+### Rejected decisions
+
+1. Blaming the Inter family alone while leaving the late 11px/13px token override, forced
+   uppercase, inflated weights, and six-column metric collision intact.
+2. Importing another UI framework, runtime font package, public font service, unpinned candidate,
+   or browser telemetry to improve typography.
+3. Shrinking financial text, enabling arbitrary word breaks, or clipping values to preserve an
+   overloaded grid.
+4. Treating one screenshot as proof without computed family, weight, size, containment, wrapping,
+   responsive-width, and same-origin delivery assertions.
+
+### Validation and publication decision
+
+Workbench #829 owns the slice. Production asset governance, semantic token authority, focused
+component tests, the seven-width Portfolio review matrix, independent A/B comparison, same-origin
+delivery proof, full repository gates, protected review/CI, exact-main validation, wiki
+publication/parity, issue closure, and clean branch/worktree restoration are required. No Gateway,
+API/OpenAPI, business calculation, authentication, entitlement, or new runtime dependency changes.
