@@ -10,7 +10,10 @@ const advisoryAsOfDate = "2026-04-10";
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
 }: { includeAdvisoryDate?: boolean } = {}): string {
-  const params = new URLSearchParams({ portfolioId });
+  const params = new URLSearchParams({
+    portfolioId,
+    reportingCurrency: "USD",
+  });
   if (includeAdvisoryDate) {
     params.set("asOfDate", advisoryAsOfDate);
   }
