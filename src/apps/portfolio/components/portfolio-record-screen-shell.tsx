@@ -13,9 +13,7 @@ import ReviewContextRecovery from "@/shell/review-context-recovery";
 import type { PortfolioRecordScreenData } from "../portfolio-record-screen-data";
 import type { PortfolioRecordCashflowProjection } from "../portfolio-record-evidence-view-model";
 import {
-  buildPortfolioRecordDisplayName,
   buildPortfolioRecordHeaderKpis,
-  buildPortfolioRecordHeaderMeta,
   buildPortfolioRecordScreenSubtitle,
   getPortfolioRecordScreenCopy,
   type PortfolioRecordScreenKind,
@@ -42,9 +40,6 @@ export default function PortfolioRecordScreenShell({
   cashflowProjection?: PortfolioRecordCashflowProjection;
 }) {
   const copy = getPortfolioRecordScreenCopy(screen);
-  const bookDisplayName = workspace
-    ? buildPortfolioRecordDisplayName(workspace)
-    : "";
   const headerKpis = workspace
     ? buildPortfolioRecordHeaderKpis(workspace, timeWindow ?? "30D", screen)
     : [];
@@ -99,20 +94,18 @@ export default function PortfolioRecordScreenShell({
                 </DegradedStatePanel>
               ) : (
                 <>
-                  <section className="portfolio-record-standalone-header">
-                    <div>
-                      <span>{copy.kicker}</span>
-                      <h1>{bookDisplayName}</h1>
-                      <p>{buildPortfolioRecordHeaderMeta(workspace)}</p>
-                    </div>
-                    <div className="portfolio-record-standalone-kpis">
+                  <section
+                    aria-label={`${copy.title} key figures`}
+                    className="portfolio-record-key-figures"
+                  >
+                    <dl>
                       {headerKpis.map((kpi) => (
                         <div key={kpi.label}>
-                          <span>{kpi.label}</span>
-                          <strong>{kpi.value}</strong>
+                          <dt>{kpi.label}</dt>
+                          <dd>{kpi.value}</dd>
                         </div>
                       ))}
-                    </div>
+                    </dl>
                   </section>
                   {children}
                 </>
