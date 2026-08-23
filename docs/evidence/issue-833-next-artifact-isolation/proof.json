@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "outcome": "passed",
+  "source_commit": "9afd8680a1b502759091fed682c30f0fee53689c",
+  "node_version": "v22.15.0",
+  "next_version": "15.5.22",
+  "started_at": "2026-08-23T17:08:29.344Z",
+  "completed_at": "2026-08-23T17:11:35.807Z",
+  "development_directory": ".next-dev",
+  "production_directory": ".next-build",
+  "route": "/intake",
+  "page_probe_count": 130,
+  "asset_probe_count": 1170,
+  "total_http_probe_count": 1300,
+  "maximum_assets_per_page": 9,
+  "production_build_id": "o7kbKrIPUID3Qdjrhmzxk"
+}
