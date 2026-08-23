@@ -272,6 +272,10 @@ describe("app route entrypoints", () => {
       "data-as-of",
       "2026-06-30",
     );
+    expect(screen.getByTestId("proposal-workspace-shell")).toHaveAttribute(
+      "data-context-presentation",
+      "inline-boundary",
+    );
     expect(screen.getByTestId("advisory-overview-workspace")).toHaveAttribute(
       "data-period",
       "3Y",
