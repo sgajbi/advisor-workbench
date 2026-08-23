@@ -605,21 +605,24 @@ test.describe('Performance workbench smoke', () => {
     expect(chartMetrics.height).toBeLessThanOrEqual(1300);
     expect(chartMetrics.width).toBeGreaterThan(900);
 
-    const horizonChoices = page.getByRole('radiogroup', { name: 'Horizon table view' });
-    await expect(horizonChoices).toBeVisible();
-    const selectedHorizon = horizonChoices.getByRole('radio', { checked: true });
-    const originalHorizon = (await selectedHorizon.textContent())?.trim();
-    await selectedHorizon.focus();
-    await page.keyboard.press('ArrowRight');
-    const nextHorizon = horizonChoices.getByRole('radio', { checked: true });
-    await expect(nextHorizon).toBeFocused();
-    expect((await nextHorizon.textContent())?.trim()).not.toBe(originalHorizon);
-    expect(await nextHorizon.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
+    const comparisonContext = page.getByLabel('Horizon comparison display context');
+    await expect(comparisonContext).toContainText('Uses analysis selection');
+    await expect(comparisonContext).toContainText('Net basis · Combined return view');
+    const comparisonDisplay = page.getByText('Adjust comparison display');
+    await comparisonDisplay.focus();
+    await page.keyboard.press('Enter');
+    const evidenceColumns = page.getByLabel('Evidence columns');
+    await expect(evidenceColumns).toBeVisible();
+    await evidenceColumns.focus();
+    await expect(evidenceColumns).toBeFocused();
+    await evidenceColumns.selectOption('returns');
+    await expect(evidenceColumns).toHaveValue('returns');
+    expect(await evidenceColumns.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
 
     for (const width of [1440, 1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });
-      await horizonChoices.scrollIntoViewIfNeeded();
-      await expect(horizonChoices).toBeVisible();
+      await comparisonContext.scrollIntoViewIfNeeded();
+      await expect(comparisonContext).toBeVisible();
       await driversModule.scrollIntoViewIfNeeded();
       await expectContributorGroupsToRemainSeparate(page);
       await expect(calculationEvidenceSummary).toBeVisible();
@@ -1509,7 +1512,10 @@ test.describe('Performance workbench smoke', () => {
     await expect(evidence).toHaveAttribute('data-observation-count', '4');
     await expect(page.getByRole('button', { name: 'Refresh comparison' })).toBeFocused();
     await expect(page.getByLabel('Multi-horizon returns')).toBeVisible();
-    await expect(page.getByRole('radiogroup', { name: 'Horizon visual mode' })).toBeVisible();
+    await expect(page.getByLabel('Horizon comparison display context')).toContainText(
+      'Uses analysis selection',
+    );
+    await expect(page.getByText('Adjust comparison display')).toBeVisible();
 
     for (const width of [1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });

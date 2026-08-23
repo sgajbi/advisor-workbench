@@ -643,11 +643,17 @@ describe("PerformanceAnalyticsPage", () => {
       );
       expect(screen.getByLabelText("Return path legend")).toHaveTextContent("Portfolio");
       expect(screen.getByText("Observation trail")).toBeInTheDocument();
-      expect(mainShell?.querySelector(".performance-horizon-review-bar")).toBeTruthy();
-      expect(mainShell?.querySelector(".performance-horizon-toolbar.workbench-summary-toolbar")).toBeTruthy();
-      expect(screen.getByRole("radiogroup", { name: "Horizon table view" })).toBeInTheDocument();
-      expect(screen.getByRole("radiogroup", { name: "Horizon basis view" })).toBeInTheDocument();
+      expect(
+        mainShell?.querySelector("[data-performance-horizon-review-bar='true']"),
+      ).toBeTruthy();
+      expect(
+        mainShell?.querySelector("[data-performance-comparison-display='inherited']"),
+      ).toBeTruthy();
+      expect(screen.getByText("Adjust comparison display")).toBeInTheDocument();
+      expect(screen.queryByRole("radiogroup", { name: "Horizon table view" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("radiogroup", { name: "Horizon basis view" })).not.toBeInTheDocument();
       expect(screen.getByRole("radiogroup", { name: "Return view" })).toBeInTheDocument();
+      expect(mainShell?.querySelectorAll("[data-workbench-choice-group]").length).toBeLessThanOrEqual(3);
       expect(screen.getByText("Detailed table")).toBeInTheDocument();
       expect(screen.queryByLabelText("Horizon comparison context")).not.toBeInTheDocument();
       expect(

@@ -1,0 +1,92 @@
+.frame {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem 0.72rem;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.inheritance {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.inheritance span {
+  color: var(--text-muted);
+  font-size: var(--type-micro-label-size);
+  font-weight: var(--type-micro-label-weight);
+  line-height: var(--type-micro-label-line-height);
+}
+
+.inheritance strong {
+  color: var(--text);
+  font-size: var(--type-metadata-size);
+  font-weight: 500;
+  line-height: var(--type-metadata-line-height);
+}
+
+.disclosure {
+  min-width: 12rem;
+}
+
+.disclosure > summary {
+  padding: 0.4rem 0.56rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: var(--type-metadata-size);
+  font-weight: 500;
+  line-height: var(--type-metadata-line-height);
+  cursor: pointer;
+}
+
+.disclosure > summary:focus-visible {
+  outline: 2px solid rgba(54, 95, 139, 0.78);
+  outline-offset: 2px;
+}
+
+.disclosure[open] {
+  flex-basis: 100%;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(10rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.option {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.option :global(.MuiFormControl-root) {
+  width: 100%;
+}
+
+.option :global(.MuiInputBase-root) {
+  min-height: 36px;
+  background: var(--panel);
+}
+
+@media (max-width: 640px) {
+  .disclosure {
+    width: 100%;
+  }
+
+  .disclosure > summary,
+  .option :global(.MuiInputBase-root) {
+    min-height: 44px;
+  }
+
+  .options {
+    grid-template-columns: 1fr;
+  }
+}
