@@ -54,6 +54,7 @@ describe("portfolio record screen data", () => {
       })
     );
     expect(apiMocks.getPortfolioWorkspaceDetailedDetails).toHaveBeenCalledTimes(1);
+    expect(result.portfolioContext).toBe(shell);
     expect(result.workspace?.workflow_actions?.[0]?.title).toBe("Review source evidence");
   });
 
@@ -67,6 +68,7 @@ describe("portfolio record screen data", () => {
     });
 
     expect(result.workspace).toBeNull();
+    expect(result.portfolioContext).toBeNull();
     expect(result.reviewContextError).toBeTruthy();
     expect(apiMocks.getPortfolioCatalog).not.toHaveBeenCalled();
     expect(apiMocks.getPortfolioWorkspaceShell).not.toHaveBeenCalled();
@@ -80,6 +82,7 @@ describe("portfolio record screen data", () => {
     });
 
     expect(result.workspace).toBeNull();
+    expect(result.portfolioContext).toBeNull();
     expect(result.reviewContextError).toMatch(/No alternative portfolio/i);
     expect(apiMocks.getPortfolioCatalog).toHaveBeenCalledOnce();
     expect(apiMocks.getPortfolioWorkspaceShell).not.toHaveBeenCalled();
@@ -131,6 +134,7 @@ describe("portfolio record screen data", () => {
     });
 
     expect(result.workspace).toBeNull();
+    expect(result.portfolioContext).toBe(shell);
     expect(result.reviewContextError).toMatch(/not supported/i);
     expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
     expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
@@ -156,6 +160,7 @@ describe("portfolio record screen data", () => {
       });
 
       expect(result.workspace).toBeNull();
+      expect(result.portfolioContext).toBe(shell);
       expect(result.reviewContextError).toMatch(/did not confirm/i);
       expect(apiMocks.mergePortfolioWorkspace).not.toHaveBeenCalled();
     },

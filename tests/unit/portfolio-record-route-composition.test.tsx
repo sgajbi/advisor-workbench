@@ -10,6 +10,7 @@ import TransactionsPage from "@/app/transactions/page";
 const { loadPortfolioRecordScreenData } = vi.hoisted(() => ({
   loadPortfolioRecordScreenData: vi.fn(async () => ({
     portfolioId: "PB_SG_GLOBAL_BAL_001",
+    portfolioContext: null,
     workspace: null,
   })),
 }));

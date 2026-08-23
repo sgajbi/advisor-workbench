@@ -226,6 +226,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     render(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
       />,
     );
@@ -259,6 +260,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     render(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
       />,
     );
@@ -279,6 +281,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     const { rerender } = render(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
       />,
     );
@@ -292,6 +295,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     rerender(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_INCOME_002"
+        portfolioContext={null}
         workspace={nextWorkspace}
       />,
     );
@@ -306,6 +310,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     render(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
       />,
     );
@@ -364,6 +369,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
       />,
     );
@@ -411,6 +417,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
         selectedRecordId="FI_SG_1"
       />,
@@ -425,6 +432,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={buildWorkspace()}
         selectedRecordId="NOT_IN_BOOK"
       />,
@@ -443,6 +451,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     const { rerender } = render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
         selectedRecordId="EQ_US_1"
       />,
@@ -455,6 +464,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     rerender(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
       />,
     );
@@ -465,6 +475,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     rerender(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
         selectedRecordId="FI_SG_1"
       />,
@@ -487,6 +498,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
       />,
     );
@@ -536,6 +548,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     const { rerender } = render(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={firstWorkspace}
       />,
     );
@@ -555,6 +568,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     rerender(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_INCOME_002"
+        portfolioContext={null}
         workspace={secondWorkspace}
       />,
     );
@@ -578,6 +592,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     rerender(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_PRESERVATION_003"
+        portfolioContext={null}
         workspace={thirdWorkspace}
       />,
     );
@@ -597,6 +612,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     const { rerender } = render(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
         selectedRecordId="TX_DIRECT"
       />,
@@ -607,6 +623,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     rerender(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
+        portfolioContext={null}
         workspace={workspace}
         selectedRecordId="TX_NOT_IN_WINDOW"
       />,

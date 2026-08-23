@@ -69,7 +69,7 @@ const child = spawn(
           ? 'positions keep source status truthful across screen, export, and evidence'
         : scenario === 'transactions-status'
           ? 'transactions keep settlement applicability truthful across screen, detail, export, and evidence'
-        : 'cashflow route keeps projection identity and movement semantics explicit|portfolio record routes hydrate without browser runtime errors',
+        : 'cashflow route keeps projection identity and movement semantics explicit|portfolio record routes hydrate without browser runtime errors|record recovery preserves confirmed portfolio context while withholding unsupported controls',
     ...forwardedArguments,
   ],
   {
