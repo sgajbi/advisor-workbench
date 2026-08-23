@@ -5969,6 +5969,10 @@ browser address.
    Gateway portfolio-book response as partial source context for both the strip and construction
    form. Show confirmed facts, mark missing mandate classification, and keep a foreign book response
    outside both display and action authority.
+9. Treat that server-owned shell decision as the admission boundary for the client-side portfolio
+   evidence query. A later browser refresh may update construction evidence, but cannot enable
+   evaluation, handoff, portfolio navigation, or a portfolio-scoped queue link while the strip is
+   still unconfirmed.
 
 ### Rejected decisions
 
