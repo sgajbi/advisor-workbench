@@ -89,6 +89,30 @@ describe("portfolio record screen data", () => {
     expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
   });
 
+  it("rejects a portfolio shell that does not confirm the selected portfolio identity", async () => {
+    const selectedShell = buildPortfolioWorkspace();
+    const foreignShell = buildPortfolioWorkspace({
+      portfolio: {
+        ...selectedShell.portfolio,
+        portfolio_id: "PB_FOREIGN_001",
+        client_id: "CLIENT_FOREIGN_001",
+      },
+    });
+    apiMocks.getPortfolioWorkspaceShell.mockResolvedValueOnce(foreignShell);
+
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve({
+        portfolioId: selectedShell.portfolio.portfolio_id,
+      }),
+    });
+
+    expect(result.workspace).toBeNull();
+    expect(result.portfolioContext).toBeNull();
+    expect(result.reviewContextError).toMatch(/could not be confirmed/i);
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
+  });
+
   it("uses the carried period for every source-backed record request", async () => {
     const shell = await apiMocks.getPortfolioWorkspaceShell();
     const result = await loadPortfolioRecordScreenData({
