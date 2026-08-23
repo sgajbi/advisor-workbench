@@ -778,11 +778,10 @@ export async function validatePortfolioPanels(
   const reviewContext = page.getByRole("region", { name: "Review context" });
   const reviewContextStrip = page.getByTestId("review-context-strip");
   await expect(reviewContext).toBeVisible({ timeout: timeoutMs });
-  await expect(
-    reviewContextStrip.getByText(portfolioId, { exact: true }),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await expect(reviewContextStrip.locator("strong").first()).toHaveText(
+    portfolioId,
+    { timeout: timeoutMs },
+  );
   await expect(
     reviewContext.getByText("Mandate", { exact: true }),
   ).toBeVisible({ timeout: timeoutMs });
