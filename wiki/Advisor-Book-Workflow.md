@@ -46,8 +46,9 @@ team, delegated, tenant, or booking-centre permissions in the browser.
 1. Open **My book** from the portfolio context switcher or navigate to `/book`.
 2. If the business date is not confirmed, select the calendar date to review. Workbench does not
    request portfolio assignments until that date is valid.
-3. Confirm own-book scope, source-confirmed business date, booking centre, availability, and
-   operating limitations.
+3. Confirm own-book scope, source-confirmed business date, booking centre, and the compact book
+   measures. Open **Book scope and operating evidence** only when limitations or support follow-up
+   require deeper evidence.
 4. Narrow the register using an exact client reference, supported mandate, and requested sort.
 5. Confirm the returned range and displayed order before moving between source pages.
 6. Open a portfolio to continue in [Portfolio Review](Portfolio-Review-Screen-Guide).
@@ -60,12 +61,13 @@ approval, order handling, execution, settlement, reporting, or client communicat
 
 ## Implemented Capabilities
 
-- Shows the own-book scope, governed as-of date, booking centre, availability reason, assignment
-  basis, source service, snapshot, correlation reference, and current-evidence posture returned by
-  the supported contract.
+- Shows own-book scope, governed as-of date, booking centre, availability reason, and compact book
+  measures in the primary path. Assignment provenance and source references remain available in
+  one collapsed **Book scope and operating evidence** disclosure.
 - Separates filtered-book measures from current-page measures: **matching portfolios** covers the
   filtered result; **portfolios shown**, **clients shown**, and assignment evidence cover the current
-  page only. Client references are not presented as households.
+  page only. The measures form one horizontal workstation strip at desktop width and reflow without
+  page overflow. Client references are not presented as households.
 - Applies an exact client-reference filter, a supported mandate filter, sort field, and sort
   direction as one view.
 - Shows both requested and displayed order when the source page does not match the requested sort.
@@ -76,7 +78,9 @@ approval, order handling, execution, settlement, reporting, or client communicat
   requested source scope is rejected rather than rendered.
 - Opens a source-returned portfolio in Portfolio Review using task-preserving navigation.
 - Keeps legacy assignment, stale evidence, trusted-context-only tenant scope, and other returned
-  limitations visible instead of manufacturing confidence in the browser.
+  limitations available instead of manufacturing confidence in the browser. Repeated unknown
+  limitations are consolidated into one business limitation with an occurrence count; exact raw
+  reason, snapshot, and correlation references remain in the collapsed support detail only.
 
 ## Decisions And Actions
 
@@ -152,8 +156,12 @@ guide does not turn a supported screen into a claim of bank approval or producti
 - Focused unit and integration coverage validates the strict Advisor Book contract, business-date
   admission and source-scope agreement, state model, filters, paging, task-preserving navigation,
   permission handling, and absence of a global fallback.
-- `tests/e2e/advisor-book-workspace.spec.ts` proves an invalid URL date makes no Advisor Book request,
-  then recovers through explicit selection before rendering returned membership.
+- `tests/e2e/advisor-book-workspace.spec.ts` proves compact desktop measures, one collapsed support
+  disclosure, raw-reference exclusion from the primary path, explicit open/close behavior, the
+  first portfolio decision row above 900 pixels at 1440, 1024/720/519 reflow, and failure/date
+  recovery without a fabricated request.
+- `output/issue-811/advisor-book/` contains reviewed diagnostic desktop, tablet, and compact
+  decision-first screenshots. They are not canonical runtime proof.
 - `scripts/live/validation/browser-workflows.mjs` validates the browser workflow through Gateway.
 - Canonical proof uses `PB_SG_GLOBAL_BAL_001` and requires exactly one canonical portfolio,
   `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current accepted snapshot

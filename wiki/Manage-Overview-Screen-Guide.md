@@ -12,7 +12,7 @@ readiness, risk profile, priority, alternatives, or workflow completion in the b
 | Canonical route | `/workbench/{portfolioId}`; Overview is the default mode, while explicit `mode=overview` is accepted as an equivalent entry |
 | Navigation | **Manage** in the selected-portfolio Workbench rail, then **Overview** in Manage workspace navigation |
 | Supported scope | One Gateway-backed portfolio and its current Core and Manage evidence |
-| Primary reading order | Operating posture, portfolio context, attention worklist, active rebalance posture, then source-owned work areas |
+| Primary reading order | Operating posture, compact portfolio measures, decision worklist, selected evidence and next action |
 | Primary next action | Resolve an attention item in Mandate Health or continue to the Manage work area required for the next decision |
 
 The screen is portfolio-scoped. It does not aggregate a portfolio-manager book, household, team,
@@ -67,11 +67,11 @@ investment approval, client-delivery authority, or execution authority.
    mandate risk profile.
 3. Read **Evidence incomplete**, **Action required**, or **Ready for review** before using the
    remaining posture.
-4. Review up to four first-source-view mandate attention items. When more source views exist, the
-   visible count is labelled as shown rather than complete; open
-   [Mandate Health](Mandate-Health-Screen-Guide) to continue the source-backed investigation.
-5. Review the active rebalance stage and its source readiness without inferring execution.
-6. Open the task directory entry that matches the next portfolio-management decision.
+4. Move through the combined decision worklist: returned mandate-attention items lead, followed by
+   the selected portfolio's rebalance posture and the supported Manage workflow handoffs.
+5. Review the selected item's evidence and one source-supported next action in the adjacent pane.
+6. When more attention-source views exist, open
+   [Mandate Health](Mandate-Health-Screen-Guide) to continue the bounded investigation.
 
 The overview does not complete a business action. It preserves selected-portfolio context while
 handing the user to a focused Manage mode.
@@ -89,18 +89,23 @@ handing the user to a focused Manage mode.
 - Keeps valid first-source-view attention items visible when more source views exist, labels that
   posture explicitly, and claims zero only when the source evidence is complete, non-degraded, and
   exhaustive.
-- Provides a compact attention worklist with business severity, observation, owner, age, and the
-  source-supported next step.
+- Uses the shared decision-first worklist for mandate attention, selected-portfolio rebalance, and
+  supported Manage handoffs. Each destination appears once in the primary path rather than in a
+  second task directory or recent-activity catalogue.
+- Keeps compact row identity and posture in the selector while the associated pane shows the
+  selected evidence and next permitted action. Arrow-key movement, Enter detail transfer, and
+  responsive stacking use the same design-system contract as Advisor Cockpit.
 - Keeps active rebalance stage, source readiness, issue count, and support note distinct from order,
   execution, and settlement posture, and presents them only when the wave contract explicitly
   includes the selected portfolio. Response-level wave supportability supplements a selected row
   only when both carry the same source wave identity; row evidence remains authoritative.
-- Provides one reusable, keyboard-accessible business-task directory for Mandate Health, Rebalance
-  Waves, Construction Alternatives, Portfolio Memory, PM Operating Quality, Outcome Reviews, and
-  Evidence Pack.
+- Provides one keyboard-accessible entry in the worklist for each supported handoff: Mandate
+  Health, Rebalance Waves, Construction Alternatives, Portfolio Memory, PM Operating Quality,
+  Outcome Reviews, and Evidence Pack.
 - Labels Construction Alternatives **Generated on request** because Overview does not load or prove
   an existing alternative set.
-- Separates recent source-backed operating activity from current exception and readiness posture.
+- Presents portfolio value, positions, cash weight, and risk profile as one compact horizontal
+  measure strip ahead of the decision worklist.
 
 ## Decisions And Actions
 
@@ -109,7 +114,7 @@ handing the user to a focused Manage mode.
 | Decide whether the overview is usable | Core portfolio context plus available Manage mandate, health, exception, and wave evidence | None; read-only review |
 | Treat the attention count as zero | Complete, non-degraded, untruncated active-exception response | None |
 | Investigate an attention item | Source-returned item and its next-step link | None from Overview; opens Mandate Health |
-| Continue portfolio management | An implemented Manage mode in the task directory | None from Overview; preserves portfolio context |
+| Continue portfolio management | An implemented Manage mode in the decision worklist | None from Overview; preserves portfolio context |
 | Generate construction alternatives | Not available on Overview | Performed only from Construction Alternatives through its governed Gateway action |
 
 Opening a work area does not create a recommendation, proposal, client communication, report,
@@ -189,15 +194,18 @@ unsupported capability, and this guide is not a claim of competitor superiority.
   posture, active-attention hierarchy, source-unavailable posture, explicit portfolio-to-wave
   membership, rejection of an unscoped first wave, generated-on-request copy, business record
   grammar, and portfolio-preserving task routes.
-- `tests/unit/manage-workspace-components.test.tsx` proves the attention worklist, named scroll
-  region, business-formatted date context, business task directory, recent activity,
+- `tests/unit/manage-workspace-components.test.tsx` proves the combined decision worklist,
+  selected-detail evidence, business-formatted date context, single-stated destinations,
   incomplete-evidence state, and absence of a fabricated alternatives-available claim.
-- `tests/unit/design-system-components.test.tsx` proves the reusable task directory's semantic
-  navigation, status evidence, full-card links, and action labels.
+- `tests/unit/workbench-worklist.test.tsx` proves the shared worklist's row/detail relationship,
+  Arrow-key selection, Enter detail transfer, disabled-row posture, and controlled selection.
 - `tests/unit/manage-overview-responsive-css.test.ts` proves that posture, value, evidence, and task
   layouts reflow from available content width instead of assuming a full-page viewport.
-- `tests/e2e/ui-smoke.spec.ts` proves the production-built Manage route resolves to its governed
-  screen or unavailable state.
+- `tests/e2e/manage-overview-workspace.spec.ts` proves the optimized production route at 1440,
+  1024, 768, and 519 pixels, including the source-backed decision model, one occurrence per
+  destination, list/detail keyboard flow, responsive stacking, first decision row above 900
+  pixels, zero page overflow, and a desktop height no greater than 1,200 pixels—at least 40%
+  shorter than the approximately 2,000-pixel baseline.
 - Optimized-production diagnostic browser proof on `PB_SG_GLOBAL_BAL_001` verified 1440, 1024,
   720, and 390 pixel viewports without page overflow; centre-rail evidence remained within its
   parent boundary, and a task-directory link retained a visible two-pixel focus outline. The source
