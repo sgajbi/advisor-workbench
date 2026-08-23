@@ -399,15 +399,19 @@ describe("runtime support policy", () => {
   it("binds the browser install to the smoke job and execution order", () => {
     const lateInstall = loadEvidence();
     lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"] =
-      lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
-        /      - name: Install Playwright Browsers\r?\n        run: node node_modules\/playwright\/cli\.js install chromium\r?\n      - name: Run Playwright Smoke\r?\n        run: make test-e2e/,
-        [
-          "      - name: Run Playwright Smoke",
+      lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"]
+        .replace(
+          /      - name: Install Playwright Browsers\r?\n        run: node node_modules\/playwright\/cli\.js install chromium\r?\n/,
+          "",
+        )
+        .replace(
           "        run: make test-e2e",
-          "      - name: Install Playwright Browsers",
-          "        run: node node_modules/playwright/cli.js install chromium",
-        ].join("\n")
-      );
+          [
+            "        run: make test-e2e",
+            "      - name: Install Playwright Browsers",
+            "        run: node node_modules/playwright/cli.js install chromium",
+          ].join("\n"),
+        );
     const wrongJob = loadEvidence();
     wrongJob.workflowSources[".github/workflows/pr-merge-gate.yml"] = wrongJob.workflowSources[
       ".github/workflows/pr-merge-gate.yml"

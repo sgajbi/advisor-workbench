@@ -42,6 +42,7 @@
     "test:coverage": "npm run test:runtime-state-inventory && vitest run --coverage --exclude tests/unit/runtime-state-inventory.test.ts",
     "test:runtime-state-inventory": "vitest run tests/unit/runtime-state-inventory.test.ts",
     "test:runtime-ownership": "node scripts/quality/run-canonical-port-ownership-contract.mjs",
+    "test:next-artifact-isolation": "node scripts/testing/verify-next-artifact-isolation.mjs",
     "test:e2e": "playwright test",
     "test:e2e:typography:compare": "node scripts/testing/run-typography-comparison.mjs",
     "test:e2e:performance:populated": "node scripts/testing/run-performance-smoke-scenario.mjs populated",
