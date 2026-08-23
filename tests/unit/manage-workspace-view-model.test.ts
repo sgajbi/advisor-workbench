@@ -40,13 +40,13 @@ describe("manage workspace business presentation", () => {
 
   it("maps Gateway-backed mandate identity into the shared review context", () => {
     expect(buildManageReviewContextStrip(buildManageWorkspaceData())).toEqual({
-      portfolioName: "Discretionary Balanced",
+      portfolioName: "PF_1001",
       portfolioId: "PF_1001",
       clientId: "CL_1001",
       mandateType: "Discretionary Balanced",
       bookingCenter: "Singapore",
       businessDate: "13 May 2026",
-      reportingCurrency: "USD",
+      currency: { kind: "base", value: "USD" },
       sourceState: "confirmed",
     });
   });
@@ -59,7 +59,7 @@ describe("manage workspace business presentation", () => {
     data.mandate = null;
 
     expect(buildManageReviewContextStrip(data)).toMatchObject({
-      portfolioName: "Managed portfolio",
+      portfolioName: "PF_1001",
       clientId: null,
       mandateType: null,
       bookingCenter: null,

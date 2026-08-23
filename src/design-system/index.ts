@@ -62,6 +62,7 @@ export { default as KpiStatTile } from "./components/kpi-stat-tile";
 export { default as ReadinessIndicator } from "./components/readiness-indicator";
 export { default as ReviewContextStrip } from "./components/review-context-strip";
 export type {
+  ReviewContextCurrency,
   ReviewContextNotice,
   ReviewContextSourceState,
   ReviewContextStripModel,

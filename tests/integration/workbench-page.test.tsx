@@ -47,12 +47,10 @@ describe("WorkbenchPage", () => {
     expect(reviewContext).toHaveTextContent(
       /review period 3Y.*does not filter this mandate management workspace/i,
     );
-    expectReviewContextOwns([
-      "PF_1001",
-      "CL_1001",
-      "Singapore",
-      "13 May 2026",
-    ]);
+    expectReviewContextOwns({
+      exclusiveFacts: ["PF_1001", "CL_1001", "Singapore"],
+      contextualFacts: [{ label: "Business date", value: "13 May 2026" }],
+    });
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Mandate Operating Posture" })).toBeInTheDocument();

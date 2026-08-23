@@ -2,26 +2,75 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPortfolioReviewContextStrip,
-  buildUnavailablePortfolioReviewContextStrip,
 } from "../../src/apps/portfolio/portfolio-review-context-strip-view-model";
+import { buildUnavailableReviewContextStrip } from "../../src/shell/review-context-strip-view-model";
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("portfolio review context strip view model", () => {
   it("maps source-confirmed portfolio identity into business display values", () => {
     expect(
-      buildPortfolioReviewContextStrip(buildPortfolioWorkspace(), {
-        businessDate: "2026-04-10",
-        reportingCurrency: "SGD",
-      }),
+      buildPortfolioReviewContextStrip(buildPortfolioWorkspace()),
     ).toEqual({
       portfolioName: "Global Balanced Mandate",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       clientId: "CIF_SG_000184",
       mandateType: "Discretionary",
       bookingCenter: "Singapore",
-      businessDate: "10 Apr 2026",
-      reportingCurrency: "SGD",
+      businessDate: "12 May 2026",
+      currency: { kind: "base", value: "USD" },
       sourceState: "confirmed",
+    });
+  });
+
+  it("labels currency as reporting only when the source confirms a non-base restatement", () => {
+    const workspace = buildPortfolioWorkspace();
+    workspace.control_capabilities = {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        requested_as_of_date: workspace.as_of_date,
+        effective_as_of_date: workspace.as_of_date,
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "accepted",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "SGD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+
+    expect(buildPortfolioReviewContextStrip(workspace).currency).toEqual({
+      kind: "reporting",
+      value: "SGD",
+    });
+  });
+
+  it("keeps requested but unaccepted currency labelled as source base currency", () => {
+    const workspace = buildPortfolioWorkspace();
+    workspace.control_capabilities = {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        requested_as_of_date: workspace.as_of_date,
+        effective_as_of_date: workspace.as_of_date,
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "partial",
+        reason: "not accepted",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+
+    expect(buildPortfolioReviewContextStrip(workspace).currency).toEqual({
+      kind: "base",
+      value: "USD",
     });
   });
 
@@ -47,7 +96,7 @@ describe("portfolio review context strip view model", () => {
   });
 
   it("uses an explicit empty recovery model when no portfolio is source-confirmed", () => {
-    expect(buildUnavailablePortfolioReviewContextStrip()).toEqual({
+    expect(buildUnavailableReviewContextStrip()).toEqual({
       portfolioName: "Portfolio not confirmed",
       sourceState: "unavailable",
     });

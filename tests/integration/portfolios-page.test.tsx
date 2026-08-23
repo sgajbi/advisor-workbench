@@ -228,11 +228,10 @@ describe("PortfolioFoundationPage", () => {
     expect(within(strip).getByText("USD")).toBeInTheDocument();
     expect(within(strip).getByText("CIF_1001")).not.toBeVisible();
     expect(within(strip).getByText("Singapore")).toBeInTheDocument();
-    expectReviewContextOwns([
-      "PORT_UI_1001",
-      "CIF_1001",
-      "Singapore",
-    ]);
+    expectReviewContextOwns({
+      exclusiveFacts: ["PORT_UI_1001", "CIF_1001", "Singapore"],
+      contextualFacts: [{ label: "Business date", value: "24 Feb 2026" }],
+    });
     expect(hero?.querySelector(".portfolio-hero-toolbar")).toBeNull();
     expect(within(hero as HTMLElement).queryByText("2 portfolios")).not.toBeInTheDocument();
     expect(

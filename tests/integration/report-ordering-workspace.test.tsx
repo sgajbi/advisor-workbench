@@ -192,7 +192,7 @@ describe("ReportOrderingWorkspace", () => {
           mandateType: "Discretionary",
           bookingCenter: "Singapore",
           businessDate: "22 Apr 2026",
-          reportingCurrency: "SGD",
+          currency: { kind: "base", value: "SGD" },
           sourceState: "confirmed",
           notice: {
             label: "Report source context",
@@ -206,12 +206,10 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
       /review period YTD.*does not filter this report ordering workflow/i,
     );
-    expectReviewContextOwns([
-      "PB_SG_GLOBAL_BAL_001",
-      "CIF_SG_000184",
-      "Singapore",
-      "22 Apr 2026",
-    ]);
+    expectReviewContextOwns({
+      exclusiveFacts: ["PB_SG_GLOBAL_BAL_001", "CIF_SG_000184", "Singapore"],
+      contextualFacts: [{ label: "Business date", value: "22 Apr 2026" }],
+    });
   });
 
   it("renders a source-backed advisor flow and keeps unavailable PDF disabled", async () => {

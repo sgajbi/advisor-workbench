@@ -1,5 +1,5 @@
 import React, { StrictMode } from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
@@ -448,6 +448,8 @@ describe("PortfolioWorkspaceClient", () => {
     expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
     expect(screen.getByRole("alert")).toHaveTextContent("Review context was not changed");
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent("28 Mar 2026");
+    expect(screen.getByTestId("review-context-strip")).not.toHaveTextContent("20 Mar 2026");
     expect(routerReplaceMock).toHaveBeenCalledWith(
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
@@ -485,6 +487,49 @@ describe("PortfolioWorkspaceClient", () => {
       { scroll: false },
     );
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps requested date and currency out of the confirmed strip while source proof is pending", async () => {
+    const initialWorkspace = buildWorkspace();
+    initialWorkspace.control_capabilities = {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        requested_as_of_date: initialWorkspace.as_of_date,
+        effective_as_of_date: initialWorkspace.as_of_date,
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "available",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+    getSummaryDetailsMock.mockReturnValue(new Promise(() => undefined));
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+        initialControls={{
+          ...buildInitialPortfolioControls(initialWorkspace),
+          asOfDate: "2026-03-20",
+          reportingCurrency: "SGD",
+        }}
+      />,
+    );
+
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    const strip = screen.getByTestId("review-context-strip");
+    expect(strip).toHaveTextContent("28 Mar 2026");
+    expect(strip).not.toHaveTextContent("20 Mar 2026");
+    const baseCurrencyFact = within(strip).getByText("Base currency").parentElement;
+    expect(baseCurrencyFact).toHaveTextContent("USD");
+    expect(within(strip).queryByText("Reporting currency")).not.toBeInTheDocument();
   });
 
   it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {

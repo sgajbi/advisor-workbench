@@ -7,11 +7,7 @@ import {
 } from "@/design-system";
 
 import ReviewContextRecovery from "./review-context-recovery";
-
-const UNAVAILABLE_REVIEW_CONTEXT: ReviewContextStripModel = {
-  portfolioName: "Portfolio not confirmed",
-  sourceState: "unavailable",
-};
+import { buildUnavailableReviewContextStrip } from "./review-context-strip-view-model";
 
 export default function ReviewContextPageRecovery({
   pageKey,
@@ -20,8 +16,12 @@ export default function ReviewContextPageRecovery({
   body,
   href,
   actionLabel,
-  reviewContext = UNAVAILABLE_REVIEW_CONTEXT,
+  reviewContext = buildUnavailableReviewContextStrip(),
   className = "portfolio-page",
+  containerClassName = "portfolio-page-container",
+  frameClassName,
+  bodyClassName,
+  sectionClassName,
 }: {
   pageKey: string;
   pageTitle: string;
@@ -31,6 +31,10 @@ export default function ReviewContextPageRecovery({
   actionLabel: string;
   reviewContext?: ReviewContextStripModel;
   className?: string;
+  containerClassName?: string;
+  frameClassName?: string;
+  bodyClassName?: string;
+  sectionClassName?: string;
 }) {
   return (
     <AppPageShell
@@ -38,9 +42,14 @@ export default function ReviewContextPageRecovery({
       className={className}
       reviewContext={reviewContext}
     >
-      <WorkbenchPageContainer className="portfolio-page-container">
-        <WorkbenchPageFrame title={pageTitle} subtitle={pageSubtitle}>
-          <WorkbenchSectionStack>
+      <WorkbenchPageContainer className={containerClassName}>
+        <WorkbenchPageFrame
+          className={frameClassName}
+          bodyClassName={bodyClassName}
+          title={pageTitle}
+          subtitle={pageSubtitle}
+        >
+          <WorkbenchSectionStack className={sectionClassName}>
             <ReviewContextRecovery
               body={body}
               href={href}

@@ -5,6 +5,7 @@ import {
   formatBusinessBookingCenter,
   preserveBusinessAcronyms,
 } from "@/features/workbench/business-label-formatters";
+import { buildReviewContextStripModel } from "@/shell/review-context-strip-view-model";
 
 import type { ManageWorkspaceData } from "./manage-workspace-data";
 
@@ -63,18 +64,9 @@ export function buildManageReviewContextStrip(
   const bookingCenter = formatBusinessBookingCenter(
     portfolio.booking_center_code,
   );
-  const sourceState = [
-    portfolio.client_id,
-    mandateType,
-    bookingCenter,
-    data.portfolio.as_of_date,
-    portfolio.base_currency,
-  ].every(Boolean)
-    ? "confirmed"
-    : "partial";
-
-  return {
-    portfolioName: mandateType ?? "Managed portfolio",
+  return buildReviewContextStripModel({
+    portfolioName:
+      readString(asRecord(portfolio), "display_name") ?? portfolio.portfolio_id,
     portfolioId: portfolio.portfolio_id,
     clientId: portfolio.client_id,
     mandateType,
@@ -82,10 +74,8 @@ export function buildManageReviewContextStrip(
     businessDate:
       formatBusinessDateValue(data.portfolio.as_of_date, { nullDisplay: "" }) ||
       null,
-    reportingCurrency: portfolio.base_currency,
-    sourceState,
-    notice,
-  };
+    baseCurrency: portfolio.base_currency,
+  }, notice);
 }
 
 export function buildManageExceptionRows(

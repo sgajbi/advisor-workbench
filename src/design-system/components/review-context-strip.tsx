@@ -13,6 +13,11 @@ export type ReviewContextNotice = {
   tone?: "information" | "attention";
 };
 
+export type ReviewContextCurrency = {
+  kind: "base" | "reporting";
+  value: string;
+};
+
 export type ReviewContextStripModel = {
   portfolioName: string;
   portfolioId?: string | null;
@@ -20,7 +25,7 @@ export type ReviewContextStripModel = {
   mandateType?: string | null;
   bookingCenter?: string | null;
   businessDate?: string | null;
-  reportingCurrency?: string | null;
+  currency?: ReviewContextCurrency | null;
   sourceState?: ReviewContextSourceState;
   notice?: ReviewContextNotice | null;
 };
@@ -52,7 +57,10 @@ export default function ReviewContextStrip({
     { label: "Mandate", value: context.mandateType },
     { label: "Booking centre", value: context.bookingCenter },
     { label: "Business date", value: context.businessDate },
-    { label: "Reporting currency", value: context.reportingCurrency },
+    {
+      label: context.currency?.kind === "reporting" ? "Reporting currency" : "Base currency",
+      value: context.currency?.value,
+    },
   ];
   const identifiers: ContextFact[] = [
     { label: "Portfolio ID", value: context.portfolioId },

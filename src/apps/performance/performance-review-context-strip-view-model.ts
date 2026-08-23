@@ -1,12 +1,16 @@
 import type { ReviewContextStripModel } from "@/design-system";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import { formatBusinessBookingCenter } from "@/features/workbench/business-label-formatters";
+import {
+  buildReviewContextStripModel,
+  buildUnavailableReviewContextStrip,
+} from "@/shell/review-context-strip-view-model";
 import type {
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceSummary,
 } from "@/features/workbench/types";
 import type { PortfolioWorkspace } from "@/apps/portfolio/types";
-import { buildPortfolioReviewContextStrip } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
+import { buildPortfolioReviewContextSource } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 
 type PerformanceContextSource =
   | WorkbenchPerformanceWorkspace
@@ -27,18 +31,24 @@ export function buildPerformanceReviewContextStrip({
     portfolioContext?.portfolio.portfolio_id === performancePortfolioId;
 
   if (portfolioContext && contextMatchesPerformance) {
-    return buildPortfolioReviewContextStrip(portfolioContext, {
-      businessDate: workspace?.as_of_date ?? portfolioContext.as_of_date,
-      reportingCurrency:
-        workspace?.portfolio.base_currency ??
-        portfolioContext.portfolio.base_currency,
+    const portfolioSource = buildPortfolioReviewContextSource(portfolioContext);
+    return buildReviewContextStripModel(
+      {
+        ...portfolioSource,
+        businessDate: workspace?.as_of_date
+          ? formatBusinessDateValue(workspace.as_of_date, { nullDisplay: "" }) || null
+          : portfolioSource.businessDate,
+        baseCurrency:
+          workspace?.portfolio.base_currency ?? portfolioSource.baseCurrency,
+        acceptedReportingCurrency: null,
+      },
       notice,
-    });
+    );
   }
 
   if (workspace) {
-    return {
-      portfolioName: "Performance portfolio",
+    return buildReviewContextStripModel({
+      portfolioName: workspace.portfolio_id,
       portfolioId: workspace.portfolio_id,
       clientId: workspace.portfolio.client_id,
       bookingCenter: formatBusinessBookingCenter(
@@ -47,20 +57,14 @@ export function buildPerformanceReviewContextStrip({
       businessDate:
         formatBusinessDateValue(workspace.as_of_date, { nullDisplay: "" }) ||
         null,
-      reportingCurrency: workspace.portfolio.base_currency,
-      sourceState: "partial",
-      notice: notice ?? {
+      baseCurrency: workspace.portfolio.base_currency,
+    }, notice ?? {
         label: "Portfolio context limited",
         message:
           "Performance evidence is available, but supporting mandate context could not be confirmed.",
         tone: "attention",
-      },
-    };
+      });
   }
 
-  return {
-    portfolioName: "Portfolio not confirmed",
-    sourceState: "unavailable",
-    notice,
-  };
+  return buildUnavailableReviewContextStrip(notice);
 }
