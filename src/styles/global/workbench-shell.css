@@ -127,8 +127,7 @@
   color: var(--brand-strong);
 }
 
-.ui-text-panel-title,
-.ui-text-card-title {
+.ui-text-panel-title {
   font-family: var(--font-ui);
   font-size: var(--type-panel-title-size);
   font-weight: var(--type-panel-title-weight);
@@ -154,8 +153,7 @@
   color: var(--text);
 }
 
-.ui-text-body-small,
-.ui-text-secondary {
+.ui-text-body-small {
   font-family: var(--font-ui);
   font-size: var(--type-body-small-size);
   line-height: var(--type-body-small-line-height);
@@ -177,8 +175,7 @@
   line-height: var(--type-metadata-line-height);
 }
 
-.ui-text-data-label,
-.ui-text-label {
+.ui-text-data-label {
   font-family: var(--font-ui);
   font-size: var(--type-label-size);
   font-weight: var(--type-label-weight);
@@ -188,8 +185,7 @@
   color: var(--text-muted);
 }
 
-.ui-text-micro-label,
-.ui-text-eyebrow {
+.ui-text-micro-label {
   font-family: var(--font-ui);
   font-size: var(--type-micro-label-size);
   font-weight: var(--type-micro-label-weight);
@@ -222,8 +218,7 @@
   color: var(--text);
 }
 
-.ui-text-button-label,
-.ui-text-button {
+.ui-text-button-label {
   font-family: var(--font-ui);
   font-size: var(--type-button-size);
   font-weight: var(--type-button-weight);
@@ -233,8 +228,7 @@
   color: var(--brand-strong);
 }
 
-.ui-text-badge-label,
-.ui-text-badge {
+.ui-text-badge-label {
   font-family: var(--font-ui);
   font-size: var(--type-badge-size);
   font-weight: var(--type-badge-weight);
@@ -262,13 +256,11 @@
 
 .ui-text-metric-value-xl,
 .ui-text-metric-value-l,
-.ui-text-metric-value-m,
-.ui-text-metric-value,
-.ui-text-metric-value-compact {
+.ui-text-metric-value-m {
   font-family: var(--font-ui);
   font-variant-numeric: var(--type-financial-numeric);
+  letter-spacing: 0;
   color: var(--brand-strong);
-  font-feature-settings: "tnum" 1, "zero" 1;
   overflow-wrap: normal;
   word-break: normal;
   white-space: nowrap;
@@ -278,23 +270,18 @@
   font-size: var(--type-metric-xl-size);
   font-weight: var(--type-metric-xl-weight);
   line-height: var(--type-metric-xl-line-height);
-  letter-spacing: 0;
 }
 
-.ui-text-metric-value-l,
-.ui-text-metric-value {
+.ui-text-metric-value-l {
   font-size: var(--type-metric-l-size);
   font-weight: var(--type-metric-l-weight);
   line-height: var(--type-metric-l-line-height);
-  letter-spacing: 0;
 }
 
-.ui-text-metric-value-m,
-.ui-text-metric-value-compact {
+.ui-text-metric-value-m {
   font-size: var(--type-metric-m-size);
   font-weight: var(--type-metric-m-weight);
   line-height: var(--type-metric-m-line-height);
-  letter-spacing: 0;
 }
 
 .workbench-page-header {

@@ -10980,15 +10980,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.app-page-shell .kpi-stat-value {
-  color: #191c1e;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 32px;
-  letter-spacing: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 .app-page-shell .MuiButton-root,
 .app-page-shell .action-link,
 .app-page-shell .nav-link,
