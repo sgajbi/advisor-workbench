@@ -532,6 +532,53 @@ describe("PortfolioWorkspaceClient", () => {
     expect(within(strip).queryByText("Reporting currency")).not.toBeInTheDocument();
   });
 
+  it("promotes an alternate currency only after source detail confirms it", async () => {
+    const initialWorkspace = buildWorkspace();
+    initialWorkspace.control_capabilities = {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        requested_as_of_date: initialWorkspace.as_of_date,
+        effective_as_of_date: initialWorkspace.as_of_date,
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "available",
+        requested_reporting_currency: null,
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+    getSummaryDetailsMock.mockResolvedValue({
+      as_of_date: initialWorkspace.as_of_date,
+      income_summary: { reporting_currency: "SGD" },
+      activity_summary: { reporting_currency: "SGD" },
+      positions: [],
+    });
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+        initialControls={{
+          ...buildInitialPortfolioControls(initialWorkspace),
+          reportingCurrency: "SGD",
+        }}
+      />,
+    );
+
+    const strip = screen.getByTestId("review-context-strip");
+    await waitFor(() => {
+      expect(within(strip).getByText("Reporting currency").parentElement).toHaveTextContent(
+        "SGD",
+      );
+    });
+    expect(within(strip).queryByText("Base currency")).not.toBeInTheDocument();
+  });
+
   it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {
     const initialWorkspace = buildWorkspace();
     getSummaryDetailsMock.mockResolvedValue({
