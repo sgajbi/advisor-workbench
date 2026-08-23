@@ -114,8 +114,12 @@ for (const viewport of viewports) {
     const decisionPosture = page.getByText("Decision posture", { exact: true });
     const sourceBoundary = page.getByText("Source and scope", { exact: true });
     await expect(reviewContext).toBeVisible();
-    await expect(decisionPosture).toBeVisible();
     await expect(sourceBoundary).toBeVisible();
+    if (viewport.width <= 1200) {
+      await expect(decisionPosture).toBeHidden();
+    } else {
+      await expect(decisionPosture).toBeVisible();
+    }
     await expect(page.getByText("Workflow context", { exact: true })).toHaveCount(0);
 
     const priorityLink = worklist.getByRole("link", { name: "Technology concentration trim" });

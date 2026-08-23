@@ -158,30 +158,18 @@ test.describe('UI smoke checks', () => {
     await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
     await expect(page.getByText('No portfolio', { exact: true })).toHaveCount(0);
     await expect(page.locator('a[href*="portfolioId=No"]')).toHaveCount(0);
-
-    const sourceConfirmed = await currentView.isVisible().catch(() => false);
-    if (sourceConfirmed) {
-      await expect(
-        page
-          .getByTestId('portfolio-screen-rail')
-          .getByText('PB_SG_GLOBAL_BAL_001', { exact: true }),
-      ).toBeVisible();
-      await expect(currentView).toHaveAttribute('aria-expanded', 'false');
-      await expect(navigation).toBeHidden();
-      await currentView.click();
-      await expect(navigation).toBeVisible();
-      await expect(
-        navigation.getByRole('link', {
-          name: /Income and activity Booked income, fees, and taxes/i,
-        }),
-      ).toHaveAttribute('aria-current', 'page');
-    } else {
-      await expect(navigation).toHaveCount(0);
-      await expect(page.getByRole('link', { name: 'Open My book' })).toHaveAttribute(
-        'href',
-        '/book',
-      );
-    }
+    await expect(page.getByRole('region', { name: 'Review context' })).toContainText(
+      /PB_SG_GLOBAL_BAL_001|Portfolio not confirmed/,
+    );
+    await expect(currentView).toHaveAttribute('aria-expanded', 'false');
+    await expect(navigation).toBeHidden();
+    await currentView.click();
+    await expect(navigation).toBeVisible();
+    await expect(
+      navigation.getByRole('link', {
+        name: /Income and activity Booked income, fees, and taxes/i,
+      }),
+    ).toHaveAttribute('aria-current', 'page');
 
     const headingBox = await workspaceHeading.boundingBox();
     expect(headingBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(900);
