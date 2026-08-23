@@ -52,7 +52,10 @@ describe("PortfolioWorkspaceToolbar", () => {
       />
     );
 
-    expect(screen.getByText(/As of 29 Mar 2026\./i)).toBeInTheDocument();
+    expect(
+      screen.getByText("Portfolio records use the confirmed business date."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/As of 29 Mar 2026\./i)).not.toBeInTheDocument();
     expect(
       screen.getByText(
         /Some workflow views keep book currency until full restatement is available\./i

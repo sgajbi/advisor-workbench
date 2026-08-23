@@ -9,14 +9,16 @@ const advisoryAsOfDate = "2026-04-10";
 
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
+  advisoryDate = advisoryAsOfDate,
   reportingCurrency,
 }: {
   includeAdvisoryDate?: boolean;
+  advisoryDate?: string;
   reportingCurrency?: string;
 } = {}): string {
   const params = new URLSearchParams({ portfolioId });
   if (includeAdvisoryDate) {
-    params.set("asOfDate", advisoryAsOfDate);
+    params.set("asOfDate", advisoryDate);
   }
   if (reportingCurrency) {
     params.set("reportingCurrency", reportingCurrency);
@@ -1727,25 +1729,18 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
   });
 });
 
-test("refetches and confirms the combined portfolio book for a changed advisory date", async ({
+test("loads and confirms the combined portfolio book for the governed advisory date", async ({
   page,
 }) => {
   const requestedDates: string[] = [];
   await page.setViewportSize({ width: 1440, height: 1000 });
   await mockProposalPortfolioEvidence(page, { requestedDates });
-  await page.goto(buildProposalBuilderUrl(), {
+  await page.goto(buildProposalBuilderUrl({ advisoryDate: "2026-04-11" }), {
     waitUntil: "domcontentloaded",
   });
 
   const evidence = page.getByTestId("proposal-portfolio-evidence");
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  await expect(evidence).toHaveAttribute(
-    "data-effective-as-of-date",
-    "2026-04-10",
-  );
-
-  await page.getByLabel("Advisory As-of Date").fill("2026-04-11");
-
   await expect(evidence).toHaveAttribute(
     "data-requested-as-of-date",
     "2026-04-11",
@@ -1755,9 +1750,8 @@ test("refetches and confirms the combined portfolio book for a changed advisory 
     "2026-04-11",
   );
   await expect(evidence).toHaveAttribute("data-evidence-status", "ready");
-  expect(requestedDates).toEqual(
-    expect.arrayContaining(["2026-04-10", "2026-04-11"]),
-  );
+  expect(requestedDates).toContain("2026-04-11");
+  await expect(page.getByLabel("Advisory As-of Date")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Evaluate Workspace" }),
   ).toBeEnabled();
