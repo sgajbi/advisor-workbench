@@ -20,7 +20,7 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.queryByText("Global Balanced Mandate")).not.toBeInTheDocument();
     expect(screen.queryByText("CIF_SG_000184")).not.toBeInTheDocument();
     expect(screen.queryByText("Singapore")).not.toBeInTheDocument();
-    expect(screen.getByText("Valuation as of 12 May 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Valuation as of 12 May 2026")).not.toBeInTheDocument();
     expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
     expect(screen.getByText("920,000 USD")).toBeInTheDocument();
     expect(screen.getByText("80,000 USD")).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.getByText("1.20%")).toBeInTheDocument();
   });
 
-  it("qualifies KPI totals with the source valuation date", () => {
+  it("keeps source valuation dates out of the shell-owned KPI context", () => {
     render(
       <PortfolioSummaryHeaderSection
         workspace={buildPortfolioWorkspace({ as_of_date: "2026-05-12" })}
@@ -37,7 +37,7 @@ describe("PortfolioSummaryHeaderSection", () => {
       />
     );
 
-    expect(screen.getByText("Valuation as of 12 May 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Valuation as of 12 May 2026")).not.toBeInTheDocument();
     expect(screen.queryByText("Valuation as of 30 Apr 2026")).not.toBeInTheDocument();
   });
 
