@@ -119,7 +119,7 @@ const SUPPORTED_ADVISOR_BOOK_ROLES = new Set([
   "RELATIONSHIP_MANAGER",
   "PORTFOLIO_MANAGER",
 ]);
-const SUPPORTED_REPORTING_ROLES = new Set(["client_advisor", "portfolio_manager"]);
+const SUPPORTED_REPORTING_ROLES = ["client_advisor", "portfolio_manager"] as const;
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
   | { status: "applied"; mode: "development_configured" }
@@ -192,9 +192,15 @@ function resolveReportingDevelopmentContext() {
   const role =
     process.env[REPORTING_CALLER_CONTEXT_ENV_OVERRIDES.role]?.trim() ||
     DEFAULT_REPORTING_CALLER_CONTEXT.role;
-  return identity && SUPPORTED_REPORTING_ROLES.has(role)
+  return identity && isSupportedReportingRole(role)
     ? { ...identity, role }
     : null;
+}
+
+function isSupportedReportingRole(
+  role: string,
+): role is (typeof SUPPORTED_REPORTING_ROLES)[number] {
+  return (SUPPORTED_REPORTING_ROLES as readonly string[]).includes(role);
 }
 
 export function resolveDefaultDpmContext() {
