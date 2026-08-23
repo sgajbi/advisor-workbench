@@ -57,8 +57,19 @@ test("compares productive Inter and IBM Plex Sans typography on Portfolio Review
   await expect(page.getByRole("button", { name: "AUM: 12,500,000 USD" })).toBeVisible();
   await page.evaluate(async () => document.fonts.ready);
 
+  await installCandidate(page, {
+    family: "Inter Candidate",
+    faces: [{ file: "InterVariable.woff2", weight: "100 900" }],
+  });
   const inter = await captureCandidate(page, "inter");
-  await installIbmPlexCandidate(page);
+  await installCandidate(page, {
+    family: "IBM Plex Sans Candidate",
+    faces: [
+      { file: "IBMPlexSans-Regular.woff2", weight: "400" },
+      { file: "IBMPlexSans-Medium.woff2", weight: "500" },
+      { file: "IBMPlexSans-SemiBold.woff2", weight: "600" },
+    ],
+  });
   const ibmPlexSans = await captureCandidate(page, "ibm-plex-sans");
 
   await writeFile(
@@ -67,9 +78,17 @@ test("compares productive Inter and IBM Plex Sans typography on Portfolio Review
       {
         generatedAtUtc: new Date().toISOString(),
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        candidateSource: {
-          repository: "https://github.com/IBM/plex",
-          commit: sourceCommit,
+        candidateSources: {
+          inter: {
+            repository: "https://github.com/rsms/inter",
+            tag: "v4.1",
+            commit: "e3a3d4c57d5ecc01453a575621882a384c1995a3",
+          },
+          ibmPlexSans: {
+            repository: "https://github.com/IBM/plex",
+            tag: "@ibm/plex-sans@1.1.0",
+            commit: sourceCommit,
+          },
           delivery: "checksum-verified data URL for isolated comparison only",
         },
         inter,
@@ -130,14 +149,13 @@ async function captureCandidate(page: Page, candidate: string) {
   return captures;
 }
 
-async function installIbmPlexCandidate(page: Page) {
+async function installCandidate(
+  page: Page,
+  candidate: { family: string; faces: Array<{ file: string; weight: string }> }
+) {
   const fonts = await Promise.all(
-    [
-      ["IBMPlexSans-Regular.woff2", 400],
-      ["IBMPlexSans-Medium.woff2", 500],
-      ["IBMPlexSans-SemiBold.woff2", 600],
-    ].map(async ([file, weight]) => ({
-      data: (await readFile(resolve(candidateDirectory!, String(file)))).toString("base64"),
+    candidate.faces.map(async ({ file, weight }) => ({
+      data: (await readFile(resolve(candidateDirectory!, file))).toString("base64"),
       weight,
     }))
   );
@@ -147,7 +165,7 @@ async function installIbmPlexCandidate(page: Page) {
       .map(
         ({ data, weight }) => `
           @font-face {
-            font-family: "IBM Plex Sans Candidate";
+            font-family: "${candidate.family}";
             src: url("data:font/woff2;base64,${data}") format("woff2");
             font-style: normal;
             font-weight: ${weight};
@@ -160,13 +178,13 @@ async function installIbmPlexCandidate(page: Page) {
   await page.evaluate(async () => {
     document.documentElement.style.setProperty(
       "--font-ui",
-      '"IBM Plex Sans Candidate", ui-sans-serif, system-ui, sans-serif'
+      `"${candidate.family}", ui-sans-serif, system-ui, sans-serif`
     );
-    await Promise.all([
-      document.fonts.load('400 14px "IBM Plex Sans Candidate"'),
-      document.fonts.load('500 14px "IBM Plex Sans Candidate"'),
-      document.fonts.load('600 14px "IBM Plex Sans Candidate"'),
-    ]);
+    await Promise.all(
+      [400, 500, 600].map((weight) =>
+        document.fonts.load(`${weight} 14px "${candidate.family}"`)
+      )
+    );
     await document.fonts.ready;
-  });
+  }, candidate);
 }

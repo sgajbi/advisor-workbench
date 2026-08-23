@@ -4,23 +4,36 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const IBM_PLEX_COMMIT = "1da12f02587b630c07e92692d21492d722f53614";
-const IBM_PLEX_BASE_URL = `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2`;
 const CANDIDATE_ASSETS = [
   {
     file: "IBMPlexSans-Regular.woff2",
     sha256: "ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a",
+    url: `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2/IBMPlexSans-Regular.woff2`,
   },
   {
     file: "IBMPlexSans-Medium.woff2",
     sha256: "5660f8a658f8bb50dbc005232f885eadffd2bc1c235c4f6fbb63469d1f9cde6d",
+    url: `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2/IBMPlexSans-Medium.woff2`,
   },
   {
     file: "IBMPlexSans-SemiBold.woff2",
     sha256: "f78048030eab62e860efa39a0df79e2e5581bf122eb95b9bc42c0b8a4988d205",
+    url: `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2/IBMPlexSans-SemiBold.woff2`,
   },
   {
-    file: "LICENSE.txt",
+    file: "IBM-Plex-Sans-LICENSE.txt",
     sha256: "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+    url: `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2/license.txt`,
+  },
+  {
+    file: "InterVariable.woff2",
+    sha256: "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+    url: "https://raw.githubusercontent.com/rsms/inter/e3a3d4c57d5ecc01453a575621882a384c1995a3/docs/font-files/InterVariable.woff2",
+  },
+  {
+    file: "Inter-LICENSE.txt",
+    sha256: "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+    url: "https://raw.githubusercontent.com/rsms/inter/e3a3d4c57d5ecc01453a575621882a384c1995a3/LICENSE.txt",
   },
 ];
 
@@ -82,12 +95,12 @@ child.once("exit", (code, signal) => {
   process.exitCode = code ?? 1;
 });
 
-async function ensureVerifiedAsset({ file, sha256 }) {
+async function ensureVerifiedAsset({ file, sha256, url }) {
   const assetPath = resolve(candidateDirectory, file);
   let bytes = await readFile(assetPath).catch(() => null);
 
   if (!bytes || digest(bytes) !== sha256) {
-    const response = await fetch(`${IBM_PLEX_BASE_URL}/${file === "LICENSE.txt" ? "license.txt" : file}`);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`IBM Plex candidate download failed for ${file}: HTTP ${response.status}.`);
     }
