@@ -79,9 +79,9 @@ export function buildManageReviewContextStrip(
     clientId: portfolio.client_id,
     mandateType,
     bookingCenter,
-    businessDate: formatBusinessDateValue(data.portfolio.as_of_date, {
-      nullDisplay: "Not confirmed",
-    }),
+    businessDate:
+      formatBusinessDateValue(data.portfolio.as_of_date, { nullDisplay: "" }) ||
+      null,
     reportingCurrency: portfolio.base_currency,
     sourceState,
     notice,

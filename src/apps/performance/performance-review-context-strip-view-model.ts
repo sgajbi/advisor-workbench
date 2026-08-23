@@ -44,9 +44,9 @@ export function buildPerformanceReviewContextStrip({
       bookingCenter: formatBusinessBookingCenter(
         workspace.portfolio.booking_center_code,
       ),
-      businessDate: formatBusinessDateValue(workspace.as_of_date, {
-        nullDisplay: "Not confirmed",
-      }),
+      businessDate:
+        formatBusinessDateValue(workspace.as_of_date, { nullDisplay: "" }) ||
+        null,
       reportingCurrency: workspace.portfolio.base_currency,
       sourceState: "partial",
       notice: notice ?? {

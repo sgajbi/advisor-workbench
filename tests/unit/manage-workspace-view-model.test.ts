@@ -55,6 +55,7 @@ describe("manage workspace business presentation", () => {
     const data = buildManageWorkspaceData();
     data.portfolio.portfolio.client_id = null;
     data.portfolio.portfolio.booking_center_code = null;
+    data.portfolio.as_of_date = "";
     data.mandate = null;
 
     expect(buildManageReviewContextStrip(data)).toMatchObject({
@@ -62,6 +63,7 @@ describe("manage workspace business presentation", () => {
       clientId: null,
       mandateType: null,
       bookingCenter: null,
+      businessDate: null,
       sourceState: "partial",
     });
   });
