@@ -21,6 +21,10 @@ import {
   type PortfolioRecordScreenKind,
 } from "../portfolio-record-screen-view-model";
 import PortfolioPageLayout from "./portfolio-page-layout";
+import {
+  buildPortfolioReviewContextStrip,
+  buildUnavailablePortfolioReviewContextStrip,
+} from "../portfolio-review-context-strip-view-model";
 import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
 
@@ -46,7 +50,13 @@ export default function PortfolioRecordScreenShell({
     : [];
 
   return (
-    <PortfolioPageLayout>
+    <PortfolioPageLayout
+      reviewContext={
+        workspace
+          ? buildPortfolioReviewContextStrip(workspace)
+          : buildUnavailablePortfolioReviewContextStrip()
+      }
+    >
       <MainWithSideRailLayout
         className="portfolio-layout portfolio-record-screen-layout"
         mainClassName="portfolio-main portfolio-record-screen-main"
