@@ -22,6 +22,12 @@ vi.mock(
   }),
 );
 
+vi.mock("@/apps/portfolio/components/portfolio-screen-rail", () => ({
+  default: ({ portfolioId }: { portfolioId: string }) => (
+    <nav aria-label="Report portfolio navigation">{portfolioId}</nav>
+  ),
+}));
+
 describe("ReportOrderingPage", () => {
   beforeEach(() => {
     getPortfolioCatalogMock.mockReset();
@@ -57,6 +63,11 @@ describe("ReportOrderingPage", () => {
       screen.queryByTestId("report-ordering-workspace"),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("PB_FOREIGN_001")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", {
+        name: "Report portfolio navigation",
+      }),
+    ).not.toBeInTheDocument();
     expect(getPortfolioWorkspaceShellMock).toHaveBeenCalledWith(
       selectedPortfolioId,
     );

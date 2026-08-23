@@ -36,7 +36,7 @@ export async function ReportOrderingPage({
   if (reviewContextResult.status === "invalid") {
     return (
       <ReportOrderingUnavailable
-        portfolioId={null}
+        confirmedPortfolioId={null}
         reason="The report address contains repeated or unsupported review context. No report catalogue was requested."
       />
     );
@@ -44,7 +44,7 @@ export async function ReportOrderingPage({
   if (!reviewContextResult.context.portfolioId) {
     return (
       <ReportOrderingUnavailable
-        portfolioId={null}
+        confirmedPortfolioId={null}
         reason="Select a source-confirmed portfolio from My book before preparing a report. No demo portfolio was substituted."
       />
     );
@@ -60,12 +60,12 @@ export async function ReportOrderingPage({
     : null;
 
   if (!portfolioId || !workspace) {
-    return <ReportOrderingUnavailable portfolioId={portfolioId} />;
+    return <ReportOrderingUnavailable confirmedPortfolioId={null} />;
   }
   if (!isPortfolioWorkspaceIdentityConfirmed(workspace, portfolioId)) {
     return (
       <ReportOrderingUnavailable
-        portfolioId={portfolioId}
+        confirmedPortfolioId={null}
         reason="The portfolio source did not confirm the selected portfolio identity. No report catalogue was requested."
       />
     );
@@ -77,7 +77,7 @@ export async function ReportOrderingPage({
   if (controlResolution.status === "invalid") {
     return (
       <ReportOrderingUnavailable
-        portfolioId={portfolioId}
+        confirmedPortfolioId={workspace.portfolio.portfolio_id}
         reviewContext={buildPortfolioReviewContextStrip(workspace)}
         reason="The selected date, period, or reporting currency is not supported for report ordering. No report catalogue was requested."
       />
@@ -113,11 +113,11 @@ export async function ReportOrderingPage({
 }
 
 function ReportOrderingUnavailable({
-  portfolioId,
+  confirmedPortfolioId,
   reviewContext = buildUnavailableReviewContextStrip(),
   reason = "Select an available portfolio before preparing a report request. No report choices or submission controls are shown without confirmed portfolio context.",
 }: {
-  portfolioId: string | null;
+  confirmedPortfolioId: string | null;
   reviewContext?: ReviewContextStripModel;
   reason?: string;
 }) {
@@ -130,9 +130,9 @@ function ReportOrderingUnavailable({
       <WorkbenchPageContainer className="portfolio-page-container">
         <MainWithSideRailLayout
           rail={
-            portfolioId ? (
+            confirmedPortfolioId ? (
               <PortfolioScreenRail
-                portfolioId={portfolioId}
+                portfolioId={confirmedPortfolioId}
                 activeScreen="reports"
               />
             ) : undefined
