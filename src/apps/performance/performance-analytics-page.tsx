@@ -16,7 +16,10 @@ import {
 } from "./performance-workspace-modes";
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 import type { PerformanceWorkspaceLoadIssue } from "./components/performance-workspace-types";
-import { isPerformanceSummarySourceCurrent } from "./performance-source-identity";
+import {
+  isPerformanceSummaryPortfolioIdentityCurrent,
+  isPerformanceSummarySourceCurrent,
+} from "./performance-source-identity";
 import { buildPerformanceReviewContextStrip } from "./performance-review-context-strip-view-model";
 
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
@@ -148,7 +151,12 @@ export default async function PerformanceAnalyticsPage({
         pageSubtitle="Review portfolio outcomes, drivers, and supporting evidence."
         className="performance-page portfolio-page"
         reviewContext={buildPerformanceReviewContextStrip({
-          workspace: workspaceSummary,
+          workspace: isPerformanceSummaryPortfolioIdentityCurrent(
+            workspaceSummary,
+            selectedPortfolioId,
+          )
+            ? workspaceSummary
+            : null,
           portfolioContext,
         })}
         body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."

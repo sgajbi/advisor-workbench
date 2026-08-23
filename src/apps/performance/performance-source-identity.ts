@@ -34,10 +34,19 @@ export function isPerformanceSummarySourceCurrent(
   identity: PerformanceSourceIdentity,
 ): boolean {
   return (
-    summary.portfolio_id === identity.portfolioId &&
-    summary.portfolio.portfolio_id === identity.portfolioId &&
+    isPerformanceSummaryPortfolioIdentityCurrent(summary, identity.portfolioId) &&
     (!identity.period || summary.period === identity.period) &&
     confirmsRequestedWindow(summary, identity)
+  );
+}
+
+export function isPerformanceSummaryPortfolioIdentityCurrent(
+  summary: WorkbenchPerformanceWorkspaceSummary,
+  portfolioId: string,
+): boolean {
+  return (
+    summary.portfolio_id === portfolioId &&
+    summary.portfolio.portfolio_id === portfolioId
   );
 }
 
