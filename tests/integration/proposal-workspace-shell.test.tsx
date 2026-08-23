@@ -84,6 +84,11 @@ describe("ProposalWorkspaceShell", () => {
     );
     expect(screen.getByText("Source-owned advisory evidence")).toBeInTheDocument();
     expect(screen.queryByText("PB_REQUESTED_001")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", {
+        name: "Portfolio workspace navigation",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("aligns partial shell context and proposal content to an identity-matched book", async () => {

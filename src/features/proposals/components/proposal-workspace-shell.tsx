@@ -118,14 +118,14 @@ export default async function ProposalWorkspaceShell({
             mainClassName="proposal-main"
             sideClassName={styles.proposalSide}
             sideDensity="comfortable"
-            rail={
+            rail={portfolioContext ? (
               <PortfolioScreenRail
-                portfolioId={portfolioId}
+                portfolioId={portfolioContext.portfolio.portfolio_id}
                 activeScreen={activeScreen}
                 modeItems={buildAdvisoryJourneyModeItems(reviewContext, activeMode)}
                 modeNavigationLabel="Advisory lifecycle navigation"
               />
-            }
+            ) : undefined}
             main={
               <WorkbenchPageFrame
                 className={`proposal-page-frame proposal-page-frame-${activeScreen}`}

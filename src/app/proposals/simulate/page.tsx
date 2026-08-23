@@ -56,6 +56,7 @@ export default async function ProposalSimulatePage({
           initialPortfolioId={portfolioId}
           initialAsOfDate={portfolioContext?.as_of_date ?? ""}
           initialReportingCurrency={portfolioContext?.portfolio.base_currency ?? ""}
+          sourceContextConfirmed={portfolioContext !== null}
         />
       )}
     </ProposalWorkspaceShell>
