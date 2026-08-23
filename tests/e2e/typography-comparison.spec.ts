@@ -108,7 +108,7 @@ async function captureCandidate(page: Page, candidate: string) {
     await expect(page.getByRole("heading", { name: "Portfolio Review", exact: true })).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    const metrics = await page.locator(".kpi-stat-value").evaluateAll((elements) =>
+    const metrics = await page.locator('[data-slot="value"]').evaluateAll((elements) =>
       elements.map((element) => {
         const value = element as HTMLElement;
         const card = value.closest<HTMLElement>(".portfolio-summary-band-item");

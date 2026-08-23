@@ -1029,7 +1029,7 @@ describe("design-system components", () => {
     expect(screen.getByLabelText("Pricing readiness: Partial. Open related section.")).toBeInTheDocument();
   });
 
-  it("renders KPI tiles with explicit label, value, and support classes", () => {
+  it("renders KPI tiles with explicit semantic slots, tone, and density", () => {
     render(
       <KpiStatTile
         label="Book Readiness"
@@ -1040,15 +1040,13 @@ describe("design-system components", () => {
       />
     );
 
-    expect(screen.getByText("Book Readiness")).toHaveClass("kpi-stat-label");
-    expect(screen.getByText("Ready")).toHaveClass("kpi-stat-value");
-    expect(screen.getByText("0 active exceptions")).toHaveClass("kpi-stat-support");
-    expect(screen.getByText("Ready").closest(".kpi-stat-tile-success")).toBeTruthy();
-    expect(
-      Array.from(
-        screen.getByText("Ready").closest(".kpi-stat-tile")?.classList ?? []
-      ).some((className) => className.includes("compact"))
-    ).toBe(true);
+    expect(screen.getByText("Book Readiness")).toHaveAttribute("data-slot", "label");
+    expect(screen.getByText("Ready")).toHaveAttribute("data-slot", "value");
+    expect(screen.getByText("0 active exceptions")).toHaveAttribute("data-slot", "support");
+    expect(screen.getByText("Ready").closest('[data-tone="success"]')).toHaveAttribute(
+      "data-density",
+      "compact"
+    );
   });
 
   it("renders analytics modules with the shared workbench summary-card contract", () => {

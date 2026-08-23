@@ -35,13 +35,12 @@ export default function KpiStatTile({
       component={onClick ? "button" : "div"}
       type={onClick ? "button" : undefined}
       onClick={onClick}
+      data-density={density}
+      data-tone={valueTone ?? "neutral"}
       className={cx(
-        "kpi-stat-tile",
         styles.tile,
         density === "compact" && styles.compact,
-        onClick && "kpi-stat-tile-interactive",
         onClick && styles.interactive,
-        valueTone && `kpi-stat-tile-${valueTone}`,
         TONE_CLASS[valueTone ?? "neutral"]
       )}
       aria-label={onClick ? accessibleLabel : undefined}
@@ -56,13 +55,13 @@ export default function KpiStatTile({
         appearance: "none",
       }}
     >
-      <Text variant="dataLabel" className={cx("kpi-stat-label", styles.label)}>
+      <Text variant="dataLabel" className={styles.label} data-slot="label">
         {label}
       </Text>
-      <Text variant="metricValueL" className={cx("kpi-stat-value", styles.value)}>
+      <Text variant="metricValueL" className={styles.value} data-slot="value">
         {value}
       </Text>
-      <Text variant="bodySmall" className={cx("kpi-stat-support", styles.support)}>
+      <Text variant="bodySmall" className={styles.support} data-slot="support">
         {support ?? "\u00A0"}
       </Text>
     </Box>
