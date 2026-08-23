@@ -287,6 +287,41 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBe(false);
   });
 
+  it("keeps mismatched performance identity out of recovery context", async () => {
+    const foreignSummary = buildSupportedPerformanceScenario().workspace;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/performance/summary")) {
+          return {
+            ok: true,
+            json: async () => ({
+              ...foreignSummary,
+              portfolio_id: "PF_FOREIGN",
+              portfolio: {
+                ...foreignSummary.portfolio,
+                portfolio_id: "PF_FOREIGN",
+                client_id: "CLIENT_FOREIGN",
+              },
+            }),
+          } as Response;
+        }
+        return { ok: false, status: 404, text: async () => "not found" } as Response;
+      }),
+    );
+
+    await renderPerformancePage({ portfolioId: "PF_REQUESTED" });
+
+    expect(
+      screen.getByText(/selected portfolio or performance period is not confirmed/i),
+    ).toBeInTheDocument();
+    const reviewContext = screen.getByTestId("review-context-strip");
+    expect(within(reviewContext).getByText("Portfolio not confirmed")).toBeInTheDocument();
+    expect(within(reviewContext).queryByText("PF_FOREIGN")).not.toBeInTheDocument();
+    expect(within(reviewContext).queryByText("CLIENT_FOREIGN")).not.toBeInTheDocument();
+  });
+
   it("preserves source-confirmed valuation context through a user-selected workspace mode", async () => {
     installPerformancePageFetchMock();
 
