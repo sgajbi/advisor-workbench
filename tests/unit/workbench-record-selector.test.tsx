@@ -94,4 +94,30 @@ describe("WorkbenchRecordSelector", () => {
     expect(onSelectionChange).toHaveBeenLastCalledWith("review-1");
     expect(options[0]).toHaveFocus();
   });
+
+  it("associates records with their decision and opens it from Enter", () => {
+    const onSelectionChange = vi.fn();
+    const onOpenDetail = vi.fn();
+
+    render(
+      <WorkbenchRecordSelector
+        ariaLabel="Suitability reviews"
+        items={[...items]}
+        selectedKey="review-1"
+        onSelectionChange={onSelectionChange}
+        detailId="selected-suitability-review"
+        onOpenDetail={onOpenDetail}
+      />,
+    );
+
+    const options = screen.getAllByRole("option");
+    expect(options[1]).toHaveAttribute(
+      "aria-controls",
+      "selected-suitability-review",
+    );
+
+    fireEvent.keyDown(options[1], { key: "Enter" });
+    expect(onSelectionChange).toHaveBeenCalledWith("review-2");
+    expect(onOpenDetail).toHaveBeenCalledWith("review-2");
+  });
 });
