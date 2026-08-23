@@ -820,7 +820,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
-    expect(document.querySelector(".performance-analysis-control-bar")).toBeTruthy();
+    expect(document.querySelector("[data-performance-analysis-control-bar='true']")).toBeTruthy();
     expect(document.querySelector(".performance-outcome-strip")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toBeInTheDocument();
     const returnDecisionReadout = screen.getByLabelText("Return decision readout");
@@ -851,6 +851,13 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Horizon" })).toBeVisible();
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Basis" })).toBeVisible();
+    const customWindowSummary = within(sourceSelection).getByText("Custom window").closest("summary");
+    expect(customWindowSummary).toBeVisible();
+    expect(customWindowSummary).toHaveTextContent("Jan 2026");
+    expect(customWindowSummary).toHaveTextContent("Feb 2026");
+    expect(within(sourceSelection).getByLabelText("From")).not.toBeVisible();
+    expect(within(sourceSelection).getByLabelText("To")).not.toBeVisible();
+    fireEvent.click(customWindowSummary!);
     expect(within(sourceSelection).getByLabelText("From")).toBeVisible();
     expect(within(sourceSelection).getByLabelText("To")).toBeVisible();
     expect(within(sourceSelection).getByLabelText("Frequency")).toBeVisible();
