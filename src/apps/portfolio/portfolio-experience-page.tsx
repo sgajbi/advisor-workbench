@@ -7,6 +7,7 @@ import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
 import PortfolioWorkspaceClient from "./components/portfolio-workspace-client";
 import { resolveSelectedPortfolioId } from "./portfolio-selection";
 import { resolvePortfolioReviewControls } from "./portfolio-workspace-controls";
+import { buildPortfolioReviewContextStrip } from "./portfolio-review-context-strip-view-model";
 
 export default async function PortfolioExperiencePage({
   searchParams,
@@ -98,6 +99,7 @@ export default async function PortfolioExperiencePage({
         body="The selected date, period, or reporting currency is not supported by this portfolio's source capabilities. No analytical detail was requested."
         href={buildReviewContextHref("/portfolio", resetContext)}
         actionLabel="Use available portfolio context"
+        reviewContext={buildPortfolioReviewContextStrip(workspace)}
       />
     );
   }
