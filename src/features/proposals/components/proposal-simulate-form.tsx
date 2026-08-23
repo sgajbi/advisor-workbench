@@ -138,10 +138,7 @@ export default function ProposalSimulateForm({
       proposalTitle: "Tactical rebalance proposal",
       portfolioId: initialPortfolioId,
       asOfDate: initialAsOfDate,
-      mandateId:
-        initialPortfolioId === "PB_SG_GLOBAL_BAL_001"
-          ? "MANDATE_PB_SG_GLOBAL_BAL_001"
-          : "",
+      mandateId: "",
       baseCurrency: initialReportingCurrency,
       cashAmount: "10000",
     },
@@ -625,14 +622,6 @@ export default function ProposalSimulateForm({
 
         <div className={styles.summaryStrip} aria-label="Proposal setup summary">
           <div>
-            <span>Portfolio</span>
-            <strong>{portfolioId || "Not selected"}</strong>
-          </div>
-          <div>
-            <span>Base Currency</span>
-            <strong>{baseCurrency || "N/A"}</strong>
-          </div>
-          <div>
             <span>Cash Context</span>
             <strong>
               {sourceCashAmount === null
@@ -645,10 +634,6 @@ export default function ProposalSimulateForm({
           <div>
             <span>Trade Lines Ready</span>
             <strong>{validTradeCount()}</strong>
-          </div>
-          <div>
-            <span>As-of Date</span>
-            <strong>{asOfDate || "Not selected"}</strong>
           </div>
           <div>
             <span>Indicative Cash After Draft</span>
@@ -681,70 +666,17 @@ export default function ProposalSimulateForm({
               refreshBlocked={loading || savingDraft}
             />
 
-            <section className={styles.panel} aria-labelledby="portfolio-context-heading">
+            <section className={styles.panel} aria-labelledby="scenario-assumptions-heading">
               <div className={styles.panelHeader}>
                 <div>
-                  <h3 id="portfolio-context-heading">Portfolio Context</h3>
-                  <p>Confirm the account, currency, and available liquidity before building the draft.</p>
+                  <h3 id="scenario-assumptions-heading">Scenario assumptions</h3>
+                  <p>
+                    Set only assumptions that change the indicative proposal. Portfolio identity,
+                    business date, currency, and mandate are governed by the review context above.
+                  </p>
                 </div>
               </div>
               <div className={styles.inputGrid}>
-                <Controller
-                  control={form.control}
-                  name="portfolioId"
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      label="Portfolio ID"
-                      size="small"
-                      fullWidth
-                      {...field}
-                      error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Private banking portfolio under review"}
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="baseCurrency"
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      label="Portfolio Currency"
-                      size="small"
-                      fullWidth
-                      {...field}
-                      error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Must match the source portfolio book"}
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="asOfDate"
-                  render={({ field, fieldState }) => (
-                    <TextField
-                      label="Advisory As-of Date"
-                      size="small"
-                      type="date"
-                      fullWidth
-                      {...field}
-                      error={!!fieldState.error}
-                      helperText={fieldState.error?.message ?? "Portfolio snapshot used for this proposal"}
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="mandateId"
-                  render={({ field }) => (
-                    <TextField
-                      label="Mandate ID"
-                      size="small"
-                      fullWidth
-                      {...field}
-                      helperText="Optional advisory mandate context"
-                    />
-                  )}
-                />
                 <Controller
                   control={form.control}
                   name="cashAmount"
