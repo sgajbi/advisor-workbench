@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const IBM_PLEX_COMMIT = "bf260093582f04622aacc1e9f9ca604d7ccd0c42";
+const IBM_PLEX_COMMIT = "1da12f02587b630c07e92692d21492d722f53614";
 const IBM_PLEX_BASE_URL = `https://raw.githubusercontent.com/IBM/plex/${IBM_PLEX_COMMIT}/packages/plex-sans/fonts/complete/woff2`;
 const CANDIDATE_ASSETS = [
   {
