@@ -34,6 +34,18 @@ portfolio:
 Incomplete evidence and active exceptions lead the screen. Navigation follows the decision
 posture, so the page operates as a work checkpoint rather than a feature catalogue.
 
+## Shared Review Context
+
+The shell-owned **Review portfolio** strip is the only portfolio-identity summary on Manage. It
+combines the exact Gateway-backed portfolio and mandate evidence into portfolio and client
+references, mandate type, booking centre, source business date, and source currency. References
+remain in **Support details** so the first scan stays business-focused.
+
+Manage does not repeat those facts in the decision rail. Carried advisor review dates, periods, or
+currencies that the current Manage contracts cannot apply remain explicit as a compact source-scope
+notice. If the route portfolio is not confirmed by the response, Manage exposes no portfolio-scoped
+recovery link and directs the user back to **My book**.
+
 ## Who Uses This Screen
 
 - **Portfolio managers and discretionary mandate specialists** review operating posture and move

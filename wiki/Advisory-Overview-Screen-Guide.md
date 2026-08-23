@@ -35,6 +35,18 @@ the worklist so its boundary is visible before any row is used. On tablets and c
 repeated queue posture is removed while the source-and-scope boundary remains available. This keeps
 routine triage fast without presenting a partial list as a complete portfolio or book.
 
+## Shared Review Context
+
+The shell-owned **Review portfolio** strip confirms the selected mandate once before the advisory
+queue. Portfolio and client references remain under **Support details**; mandate type, booking
+centre, business date, and currency stay visible in the compact band. Advisory obtains these facts
+through the Workbench BFF and Gateway portfolio-shell response and never turns the URL portfolio
+reference into visible source truth.
+
+The right rail therefore describes decision posture only; it does not repeat portfolio identity.
+If supporting portfolio context is unavailable, the source-owned advisory evidence may remain
+usable, but the strip is explicitly unavailable and does not show the unconfirmed route value.
+
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** prioritise visible proposal work before a client

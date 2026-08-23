@@ -5919,3 +5919,65 @@ journey uses `PB_SG_INCOME_001`, historical date `2026-02-24`, period `1Y`, and 
 prove Portfolio to Performance and browser Back without context or focus loss. Full repository
 gates, protected review/CI, exact-main validation, wiki publication/parity, issue closure, and
 branch hygiene remain required.
+
+## Shell-Owned Review Context And Identity Economy
+
+### Business job
+
+An advisor moving through portfolio review, performance, mandate management, advice, proposal
+construction, and reporting must be able to confirm the selected mandate immediately without
+re-reading the same identity card in the header, navigation rail, and evidence rail. The shared
+context must orient the decision while leaving the first viewport to the work that needs attention.
+
+### Current-product research
+
+Research was reviewed on 2026-08-23 from official design-system and accessibility guidance:
+
+1. [SAP Fiori Object Page](https://experience.sap.com/fiori-design-web/object-page/) and
+   [Dynamic Page](https://experience.sap.com/fiori-design-web/dynamic-page-layout/) keep durable
+   business-object context in the page header while the content hierarchy remains task-led.
+2. [IBM Carbon global header](https://carbondesignsystem.com/patterns/global-header/) separates
+   persistent product navigation from page-specific business content.
+3. [Fluent 2 toolbar guidance](https://fluent2.microsoft.design/components/web/react/core/toolbar/usage)
+   groups related controls and uses bounded overflow rather than an ambiguous wrapped action row.
+4. [WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow) requires content and
+   functionality to remain available without page-level two-dimensional scrolling.
+
+These sources inform hierarchy, density, and responsive behavior only. Lotus does not copy another
+product's visual identity, introduce a new component library, or infer portfolio evidence from the
+browser address.
+
+### Adopted decisions
+
+1. Render one compact semantic `ReviewContextStrip` beneath the persistent product shell and above
+   each selected-portfolio task.
+2. Show portfolio display name, mandate type, booking centre, business date, and reporting currency
+   in the scan path; keep portfolio and client references in a native support disclosure with copy
+   actions.
+3. Let each route assemble the typed strip model from the Gateway-backed response it already owns;
+   Performance may load its supporting portfolio shell in parallel with its primary response.
+4. Delete page-header identity pills, selected-portfolio rail blocks, and identity-only right-rail
+   cards. Keep right rails for different decision, evidence, and action content.
+5. Treat governed Proposal Builder portfolio, date, currency, and mandate context as read-only;
+   keep only supported proposal intent editable.
+6. Degrade the strip explicitly when supporting context is partial or unavailable. Do not display
+   an unconfirmed route identifier or construct portfolio-scoped recovery links from it.
+7. Test context ownership by removing the strip from the rendered DOM and proving portfolio,
+   client, and booking-centre identity does not remain elsewhere. Permit a date or currency to recur
+   only when it is a material term of a dated metric, analytical window, or reviewed report request.
+
+### Rejected decisions
+
+1. A large KPI-style object header that competes with the first business decision.
+2. A permanently tall or page-local identity card on every workspace.
+3. A second shell-owned source call, URL-derived display truth, or a canonical demo fallback.
+4. Silent truncation, page-level horizontal scrolling, or removal of operational references.
+5. Duplicating governed context as editable Proposal Builder fields.
+
+### Validation and publication decision
+
+Workbench #814 owns this slice. Shared component, source-model, integration, identity-census,
+failure, recovery, responsive, and canonical browser proof must cover Portfolio, Performance,
+Manage, Advisory/Proposal, and Report Centre. The six screen guides, repository context, and
+codebase review ledger carry the reusable rule. No Gateway/API/OpenAPI, calculation, dependency,
+authentication, entitlement, or new UI framework change is required.

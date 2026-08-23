@@ -32,6 +32,18 @@ The persistent **Review and retain** rail keeps readiness and actions available 
 works through a long construction record. At tablet, zoom, and narrow widths it follows the inputs
 in document order so evidence is reviewed before action.
 
+## Shared Review Context
+
+The shell-owned **Review portfolio** strip confirms the portfolio name, mandate, booking centre,
+business date, and currency once; portfolio and client references remain in **Support details**.
+The builder receives this identity from the exact Gateway-backed portfolio workspace and never
+substitutes route or demonstration values when that response is absent or mismatched.
+
+Portfolio reference, currency, business date, and mandate are governed review context, not draft
+inputs. They are no longer editable inside the form. The advisor edits only supported proposal
+intent such as position changes, security orders, cash movements, draft name, and the clearly
+labelled additional-cash assumption before requesting source evaluation.
+
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** construct and evaluate an internal proposal before

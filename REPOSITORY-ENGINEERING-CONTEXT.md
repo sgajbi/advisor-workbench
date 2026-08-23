@@ -1366,6 +1366,15 @@ Most relevant current governance:
     Compact layouts should prioritize exact market value, weight, and position evidence over a
     chart that cannot remain legible; component-specific responsive behavior belongs beside the
     Allocation component, not in the legacy global stylesheet.
+17. Selected-portfolio identity is rendered once through the shell-owned
+    `ReviewContextStrip`. Route owners assemble its typed model only from exact Gateway-backed
+    source responses; URL values are requests, not display truth. Keep portfolio and client
+    references in the strip's support disclosure and keep mandate type, booking centre, business
+    date, and reporting currency in its compact scan path. Do not restore page-header identity
+    pills, selected-portfolio rail blocks, right-rail context cards, or editable governed identity
+    fields. A date or currency may recur only where it is a material term of a calculation,
+    reporting request, or dated source record. Recovery must retain page identity, expose an
+    unavailable strip, and avoid portfolio-scoped links until the source confirms the portfolio.
 
 ## Context Maintenance Rule
 

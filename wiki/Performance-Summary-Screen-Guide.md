@@ -35,6 +35,20 @@ The screen is designed for rapid preparation before a portfolio review or client
 Exact source facts, capability posture, warnings, and limitations take precedence over decorative
 scores or browser-authored conclusions.
 
+## Shared Review Context
+
+The shell-owned **Review portfolio** strip confirms portfolio and mandate identity once before the
+performance decision flow. Portfolio and client references are available under **Support
+details**; mandate type, booking centre, source valuation date, and source reporting currency stay
+visible in the compact band. Performance supplies this model from the Gateway-backed Performance
+and portfolio-shell responses in parallel and withholds analytical detail when their portfolio or
+window identity conflicts.
+
+When Performance cannot apply a carried review date or reporting-currency restatement, the strip
+states that limitation without changing the source evidence. Dated return windows and observations
+may repeat their own dates because those dates define the calculation evidence, not portfolio
+identity.
+
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** establish a source-backed performance narrative

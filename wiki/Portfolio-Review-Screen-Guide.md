@@ -30,6 +30,18 @@ or mandate operations.
 The screen is deliberately a decision checkpoint rather than a dashboard of every available
 metric. Detailed records and analytical methods stay in their owning screens.
 
+## Shared Review Context
+
+The compact **Review portfolio** strip is the single orientation surface for the selected
+portfolio name, mandate type, booking centre, business date, and reporting currency. Portfolio
+and client references remain available under **Support details**, with copy actions for operational
+use. The strip is assembled only from the Gateway-backed portfolio workspace; the route address is
+a request and never display evidence on its own.
+
+Portfolio Review does not repeat this identity in its page header, navigation rail, or evidence
+rail. A business date may still appear beside a dated value, reporting record, or calculation
+because that is evidence lineage rather than another identity summary.
+
 ## Who Uses This Screen
 
 - **Relationship managers and client advisors** use it after selecting an assigned portfolio to
