@@ -54,8 +54,9 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
 1. Enter from [Advisor Book](Advisor-Book-Workflow),
    [Portfolio Review](Portfolio-Review-Screen-Guide), or Performance Summary with one selected
    portfolio.
-2. Confirm the portfolio, reporting window, return basis, benchmark, currency, and as-of date in
-   the one shared Performance analysis bar. Exact dates appear only for a Custom dates review;
+2. Confirm the portfolio, reporting currency, and business-date posture in the shell-owned
+   **Review context** strip. Confirm the reporting window, return basis, frequency, and benchmark
+   in the one shared Performance analysis bar. Exact dates appear only for a Custom dates review;
    Risk does not render a second **Risk context** control group.
 3. Read the exact executive measures and the visible **Mandate comparison — Not supplied by
    source** boundary before drawing a policy conclusion.
