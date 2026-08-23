@@ -245,7 +245,7 @@ describe("PortfolioFoundationPage", () => {
     });
     expect(keyMetrics).toHaveClass("portfolio-summary-band");
     expect(keyMetrics.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(6);
-    for (const label of ["AUM", "Invested Assets", "Cash", "MTD Return", "QTD Return", "YTD Return"]) {
+    for (const label of ["AUM", "Invested assets", "Cash", "MTD return", "QTD return", "YTD return"]) {
       expect(within(keyMetrics).getByText(label)).toHaveAttribute("data-slot", "label");
     }
     expect(within(keyMetrics).queryByText("Cash Accounts")).not.toBeInTheDocument();

@@ -51,7 +51,7 @@ describe("PortfolioSummaryHeaderSection", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /AUM:/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Invested Assets:/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Invested assets:/ }));
     fireEvent.click(screen.getByRole("button", { name: /Cash:/ }));
 
     expect(onOpenMetricDrawer).toHaveBeenNthCalledWith(1, "aum");
