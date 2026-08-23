@@ -36,7 +36,7 @@ describe("Manage Overview responsive composition", () => {
       /\.actionLink\s*\{[\s\S]*?min-height: 44px;/,
     );
     expect(overviewCss).toMatch(
-      /\.decisionWorkspace :global\(\[data-workbench-record-selector\]\)\s*\{[\s\S]*?max-height: 31rem;[\s\S]*?overflow-y: auto;/,
+      /\.decisionWorkspace :global\(\[data-workbench-record-selector\]\)\s*\{[\s\S]*?max-height: 25rem;[\s\S]*?overflow-y: auto;/,
     );
   });
 
