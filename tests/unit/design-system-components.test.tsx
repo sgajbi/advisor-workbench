@@ -378,6 +378,71 @@ describe("design-system components", () => {
     expect(document.querySelector(".workstation-shell-side")).toBeTruthy();
   });
 
+  it("renders source-confirmed review context through the shared page shell", () => {
+    render(
+      <AppPageShell
+        pageKey="portfolio"
+        reviewContext={{
+          portfolioName: "Global Balanced Mandate",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          clientId: "CIF_SG_000184",
+          mandateType: "Discretionary",
+          bookingCenter: "Singapore",
+          businessDate: "10 Apr 2026",
+          reportingCurrency: "USD",
+        }}
+      >
+        <Panel>Portfolio decisions</Panel>
+      </AppPageShell>
+    );
+
+    const strip = screen.getByTestId("review-context-strip");
+    expect(strip).toHaveAttribute("data-source-state", "confirmed");
+    expect(strip).toHaveAccessibleName("Review context");
+    expect(screen.getByText("Global Balanced Mandate")).toBeVisible();
+    expect(screen.getByText("Discretionary")).toBeVisible();
+    expect(screen.getByText("Singapore")).toBeVisible();
+    expect(screen.getByText("10 Apr 2026")).toBeVisible();
+    expect(screen.getByText("USD")).toBeVisible();
+    expect(screen.getByText("Support details").closest("details")).not.toHaveAttribute("open");
+  });
+
+  it("keeps missing context explicit and copies only confirmed identifiers", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    render(
+      <AppPageShell
+        reviewContext={{
+          portfolioName: "Global Balanced Mandate",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          sourceState: "partial",
+          notice: {
+            label: "Source valuation date",
+            message: "Performance is shown at the latest source-supported date.",
+            tone: "attention",
+          },
+        }}
+      >
+        <Panel>Portfolio decisions</Panel>
+      </AppPageShell>
+    );
+
+    expect(screen.getByTestId("review-context-strip")).toHaveAttribute(
+      "data-source-state",
+      "partial"
+    );
+    expect(screen.getAllByText("Not confirmed")).toHaveLength(5);
+    expect(screen.getByText("Performance is shown at the latest source-supported date.")).toBeVisible();
+
+    fireEvent.click(screen.getByText("Support details"));
+    const copyPortfolio = screen.getByRole("button", { name: "Copy Portfolio ID" });
+    fireEvent.click(copyPortfolio);
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001"));
+    expect(copyPortfolio).toHaveTextContent("Copied");
+    expect(screen.queryByRole("button", { name: "Copy Client ID" })).not.toBeInTheDocument();
+  });
+
   it("renders the shared workbench page frame with shared header and section stack", () => {
     render(
       <WorkstationPage>

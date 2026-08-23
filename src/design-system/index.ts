@@ -60,6 +60,12 @@ export { default as PageToolbar } from "./components/page-toolbar";
 export { default as ContextCard } from "./components/context-card";
 export { default as KpiStatTile } from "./components/kpi-stat-tile";
 export { default as ReadinessIndicator } from "./components/readiness-indicator";
+export { default as ReviewContextStrip } from "./components/review-context-strip";
+export type {
+  ReviewContextNotice,
+  ReviewContextSourceState,
+  ReviewContextStripModel,
+} from "./components/review-context-strip";
 export { default as InsightCallout } from "./components/insight-callout";
 export { default as ActionListCard } from "./components/action-list-card";
 export { default as ChartCard } from "./components/chart-card";
