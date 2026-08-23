@@ -245,7 +245,32 @@ describe("PerformanceMultiHorizonPanel", () => {
     view.rerender(
       <PerformanceMultiHorizonPanel
         portfolioId="PF_1001"
-        period="YTD"
+        period="1Y"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        returnView="combined"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Basis comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Return comparison")).toHaveValue("inherit");
+      expect(screen.getByLabelText("Evidence columns")).toHaveValue("combined");
+    });
+    fireEvent.change(screen.getByLabelText("Evidence columns"), {
+      target: { value: "returns" },
+    });
+    fireEvent.change(screen.getByLabelText("Basis comparison"), {
+      target: { value: "both" },
+    });
+    fireEvent.change(screen.getByLabelText("Return comparison"), {
+      target: { value: "basis" },
+    });
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="1Y"
         detailBasis="GROSS"
         chartFrequency="monthly"
         returnView="relative"

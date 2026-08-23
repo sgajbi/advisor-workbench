@@ -232,7 +232,7 @@ export default function PerformanceMultiHorizonPanel({
               </div>
             ) : null}
             <PerformanceHorizonComparisonContent
-              key={`${detailBasis}:${returnView}`}
+              key={`${requestKey}:${returnView}`}
               rows={rows}
               reportingCurrency={reportingCurrency}
               inheritedBasis={inheritedBasis}
