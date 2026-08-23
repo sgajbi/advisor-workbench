@@ -95,6 +95,8 @@ async function captureCandidate(page: Page, candidate: string) {
         const card = value.closest<HTMLElement>(".portfolio-summary-band-item");
         const valueBounds = value.getBoundingClientRect();
         const cardBounds = card?.getBoundingClientRect();
+        const textRange = document.createRange();
+        textRange.selectNodeContents(value);
         const style = getComputedStyle(value);
         return {
           text: value.textContent?.trim() ?? "",
@@ -102,6 +104,7 @@ async function captureCandidate(page: Page, candidate: string) {
           fontSize: style.fontSize,
           fontWeight: style.fontWeight,
           valueWidth: Math.round(valueBounds.width),
+          textWidth: Math.round(textRange.getBoundingClientRect().width),
           cardWidth: Math.round(cardBounds?.width ?? 0),
           fitsCard: Boolean(
             cardBounds &&
