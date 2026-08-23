@@ -26,6 +26,7 @@ import {
   installPerformancePageFetchMock,
   installPerformancePageFetchScenario,
 } from "../fixtures/performance-workspace-server-fixtures";
+import { expectReviewContextOwns } from "../review-context-census";
 
 const replaceMock = vi.fn();
 const pushMock = vi.fn();
@@ -335,6 +336,11 @@ describe("PerformanceAnalyticsPage", () => {
       .toBeFalsy();
     expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
     expect(screen.getByTestId("review-context-strip")).toBeInTheDocument();
+    expectReviewContextOwns([
+      "DEMO_ADV_USD_001",
+      "CIF_1001",
+      "Singapore",
+    ]);
     const workbenchScreenNav = screen.getByRole("navigation", {
       name: "Workbench screen navigation",
     });
