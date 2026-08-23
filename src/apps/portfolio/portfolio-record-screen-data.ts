@@ -18,6 +18,7 @@ import type { PortfolioTimeWindow } from "./view-model";
 
 export type PortfolioRecordScreenData = {
   portfolioId: string | null;
+  portfolioContext: PortfolioWorkspace | null;
   workspace: PortfolioWorkspace | null;
   startDate?: string;
   endDate?: string;
@@ -41,6 +42,7 @@ export async function loadPortfolioRecordScreenData({
   if (reviewContextResult.status === "invalid") {
     return {
       portfolioId: null,
+      portfolioContext: null,
       workspace: null,
       reviewContextError:
         "The record-view address contains repeated or unsupported review context. No portfolio records were requested.",
@@ -49,6 +51,7 @@ export async function loadPortfolioRecordScreenData({
   if (!reviewContextResult.context.portfolioId) {
     return {
       portfolioId: null,
+      portfolioContext: null,
       workspace: null,
       reviewContextError:
         "Select a source-confirmed portfolio from My book before opening portfolio records. No default portfolio was substituted.",
@@ -65,6 +68,7 @@ export async function loadPortfolioRecordScreenData({
   if (!selectedPortfolioId || !shell) {
     return {
       portfolioId: selectedPortfolioId,
+      portfolioContext: null,
       workspace: null,
       reviewContextError:
         "The selected portfolio could not be confirmed for this record view. No alternative portfolio was substituted.",
@@ -78,6 +82,7 @@ export async function loadPortfolioRecordScreenData({
   if (controlResolution.status === "invalid") {
     return {
       portfolioId: selectedPortfolioId,
+      portfolioContext: shell,
       workspace: null,
       reviewContextError:
         "The selected date, period, or reporting currency is not supported for these portfolio records.",
@@ -120,6 +125,7 @@ export async function loadPortfolioRecordScreenData({
   ) {
     return {
       portfolioId: selectedPortfolioId,
+      portfolioContext: shell,
       workspace: null,
       timeWindow: controls.timeWindow,
       reviewContextError:
@@ -139,6 +145,7 @@ export async function loadPortfolioRecordScreenData({
 
   return {
     portfolioId: selectedPortfolioId,
+    portfolioContext: shell,
     workspace,
     startDate: window.startDate,
     endDate: window.endDate,

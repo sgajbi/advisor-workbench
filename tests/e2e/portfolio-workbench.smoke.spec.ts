@@ -286,6 +286,47 @@ test.describe('Portfolio workbench smoke', () => {
     }
   });
 
+  test('record recovery preserves confirmed portfolio context while withholding unsupported controls', async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow',
+      'Confirmed record-recovery proof requires the owned populated portfolio fixture.',
+    );
+    await page.setViewportSize({ width: 1440, height: 1000 });
+
+    const destinations = [
+      { route: '/allocation', heading: /^Allocation$/i },
+      { route: '/positions', heading: /^Positions$/i },
+      { route: '/transactions', heading: /^Transactions$/i },
+      { route: '/income', heading: /^Income & Activity$/i },
+      { route: '/cashflow', heading: /^Cashflow$/i },
+    ];
+
+    for (const destination of destinations) {
+      await page.goto(
+        `${destination.route}?portfolioId=PB_SG_GLOBAL_BAL_001&period=5Y`,
+        { waitUntil: 'domcontentloaded' },
+      );
+
+      await expect(
+        page.getByRole('heading', { name: destination.heading }).first(),
+      ).toBeVisible();
+      const reviewContext = page.getByRole('region', { name: 'Review context' });
+      await expect(reviewContext).toHaveAttribute('data-source-state', 'confirmed');
+      await expect(reviewContext).toContainText('Global Balanced Mandate');
+      await expect(reviewContext).toContainText('CLIENT_SG_001');
+      await expect(reviewContext).not.toContainText('Portfolio not confirmed');
+      await expect(
+        page.getByText(
+          'The selected date, period, or reporting currency is not supported for these portfolio records.',
+        ),
+      ).toBeVisible();
+      await expect(page.getByTestId('portfolio-screen-rail')).toBeVisible();
+      await expect(page.locator('.portfolio-record-key-figures')).toHaveCount(0);
+    }
+  });
+
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1800, height: 1400 });
@@ -1201,9 +1242,9 @@ test.describe('Portfolio workbench smoke', () => {
     );
 
     await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
-    const compactNavigation = page.getByRole('button', {
-      name: /Current view Positions/i,
-    });
+    const compactNavigation = page
+      .getByTestId('portfolio-screen-rail')
+      .getByRole('button', { name: /Current view Holdings/i });
     await compactNavigation.focus();
     await expect(compactNavigation).toBeFocused();
 
@@ -1218,7 +1259,7 @@ test.describe('Portfolio workbench smoke', () => {
             portfolioId: session.portfolioId,
             routes: ['/positions'],
             viewport: { width: 390, height: 844 },
-            keyboardTarget: 'Current view Positions',
+            keyboardTarget: 'Current view Holdings',
             browserRuntimeFailures,
           },
           null,

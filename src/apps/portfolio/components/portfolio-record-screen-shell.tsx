@@ -12,6 +12,7 @@ import ReviewContextRecovery from "@/shell/review-context-recovery";
 
 import type { PortfolioRecordScreenData } from "../portfolio-record-screen-data";
 import type { PortfolioRecordCashflowProjection } from "../portfolio-record-evidence-view-model";
+import { buildPortfolioReviewContextStrip } from "../portfolio-review-context-strip-view-model";
 import {
   buildPortfolioRecordHeaderKpis,
   buildPortfolioRecordScreenSubtitle,
@@ -19,9 +20,6 @@ import {
   type PortfolioRecordScreenKind,
 } from "../portfolio-record-screen-view-model";
 import PortfolioPageLayout from "./portfolio-page-layout";
-import {
-  buildPortfolioReviewContextStrip,
-} from "../portfolio-review-context-strip-view-model";
 import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import PortfolioRecordEvidenceRail from "./portfolio-record-evidence-rail";
 import PortfolioScreenRail from "./portfolio-screen-rail";
@@ -29,6 +27,7 @@ import PortfolioScreenRail from "./portfolio-screen-rail";
 export default function PortfolioRecordScreenShell({
   screen,
   portfolioId,
+  portfolioContext,
   workspace,
   timeWindow,
   reviewContextError,
@@ -40,6 +39,7 @@ export default function PortfolioRecordScreenShell({
   cashflowProjection?: PortfolioRecordCashflowProjection;
 }) {
   const copy = getPortfolioRecordScreenCopy(screen);
+  const confirmedReviewContext = workspace ?? portfolioContext;
   const headerKpis = workspace
     ? buildPortfolioRecordHeaderKpis(workspace, timeWindow ?? "30D", screen)
     : [];
@@ -47,8 +47,8 @@ export default function PortfolioRecordScreenShell({
   return (
     <PortfolioPageLayout
       reviewContext={
-        workspace
-          ? buildPortfolioReviewContextStrip(workspace)
+        confirmedReviewContext
+          ? buildPortfolioReviewContextStrip(confirmedReviewContext)
           : buildUnavailableReviewContextStrip()
       }
     >

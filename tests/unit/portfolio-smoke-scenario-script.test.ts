@@ -55,7 +55,7 @@ describe("Portfolio smoke scenario runner", () => {
   it("runs only the seven governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
-      "'cashflow route keeps projection identity and movement semantics explicit|portfolio record routes hydrate without browser runtime errors'",
+      "'cashflow route keeps projection identity and movement semantics explicit|portfolio record routes hydrate without browser runtime errors|record recovery preserves confirmed portfolio context while withholding unsupported controls'",
     );
     expect(source).toContain(
       "'income and activity keeps booked cash evidence truthful across governed viewports'",
