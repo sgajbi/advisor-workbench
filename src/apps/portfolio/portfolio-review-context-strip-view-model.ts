@@ -50,12 +50,17 @@ function resolveAcceptedReportingCurrency(
   workspace: PortfolioWorkspace,
 ): string | null {
   const capability = workspace.control_capabilities?.reporting_currency_restatement;
+  const requestedReportingCurrency = capability?.requested_reporting_currency;
   if (
     capability?.state === "supported" &&
-    capability.requested_reporting_currency &&
-    capability.effective_reporting_currency === capability.requested_reporting_currency
+    requestedReportingCurrency &&
+    capability.effective_reporting_currency === requestedReportingCurrency
   ) {
     return capability.effective_reporting_currency;
+  }
+
+  if (!requestedReportingCurrency) {
+    return null;
   }
 
   const sourceCurrencies = [
@@ -63,8 +68,8 @@ function resolveAcceptedReportingCurrency(
     workspace.activity_summary?.reporting_currency,
   ].filter((currency): currency is string => Boolean(currency));
   return sourceCurrencies.length > 0 && sourceCurrencies.every(
-    (currency) => currency === sourceCurrencies[0],
+    (currency) => currency === requestedReportingCurrency,
   )
-    ? sourceCurrencies[0]
+    ? requestedReportingCurrency
     : null;
 }
