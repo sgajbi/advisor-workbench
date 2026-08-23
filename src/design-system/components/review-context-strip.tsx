@@ -42,8 +42,8 @@ type ContextFact = {
 
 type CopyState =
   | { kind: "idle" }
-  | { kind: "copied"; label: string }
-  | { kind: "failed"; label: string };
+  | { kind: "copied"; label: string; value: string }
+  | { kind: "failed"; label: string; value: string };
 
 const NOT_CONFIRMED = "Not confirmed";
 
@@ -69,15 +69,15 @@ export default function ReviewContextStrip({
 
   async function copyIdentifier(label: string, value: string) {
     if (!navigator.clipboard?.writeText) {
-      setCopyState({ kind: "failed", label });
+      setCopyState({ kind: "failed", label, value });
       return;
     }
 
     try {
       await navigator.clipboard.writeText(value);
-      setCopyState({ kind: "copied", label });
+      setCopyState({ kind: "copied", label, value });
     } catch {
-      setCopyState({ kind: "failed", label });
+      setCopyState({ kind: "failed", label, value });
     }
   }
 
@@ -121,7 +121,11 @@ export default function ReviewContextStrip({
           {identifiers.map((identifier) => {
             const value = identifier.value || NOT_CONFIRMED;
             const canCopy = Boolean(identifier.value);
-            const copied = copyState.kind === "copied" && copyState.label === identifier.label;
+            const isCurrentCopyState =
+              copyState.kind !== "idle" &&
+              copyState.label === identifier.label &&
+              copyState.value === value;
+            const copied = copyState.kind === "copied" && isCurrentCopyState;
 
             return (
               <div className={styles.identifier} key={identifier.label}>
@@ -143,9 +147,15 @@ export default function ReviewContextStrip({
           })}
         </dl>
         <p className={styles.copyStatus} aria-live="polite" aria-atomic="true">
-          {copyState.kind === "copied"
+          {copyState.kind === "copied" &&
+          identifiers.some(
+            ({ label, value }) => label === copyState.label && value === copyState.value,
+          )
             ? `${copyState.label} copied.`
-            : copyState.kind === "failed"
+            : copyState.kind === "failed" &&
+                identifiers.some(
+                  ({ label, value }) => label === copyState.label && value === copyState.value,
+                )
               ? `${copyState.label} could not be copied.`
               : ""}
         </p>
