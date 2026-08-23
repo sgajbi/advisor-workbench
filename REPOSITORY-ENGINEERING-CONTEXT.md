@@ -1158,7 +1158,12 @@ Important validation expectations:
     display overrides behind their own disclosure, return-view presentation local to the Summary
     Return History module, and analytical segment selection local to Analysis. Preserve the
     last confirmed evidence and labels while a new selection is pending or failed; restore the
-    initiating control after settlement only when the user has not moved elsewhere. At narrow
+    initiating control after settlement only when the user has not moved elsewhere. Key every
+    comparison-local display override to the complete source request identity (portfolio, period,
+    basis, explicit window, frequency, benchmark, and presentation view) so cached ready-to-ready
+    transitions cannot carry stale choices into another evidence set. Visible labels and stable
+    evidence attributes must describe the resolved presentation that is actually rendered, not a
+    remembered preference that the returned evidence cannot support. At narrow
     widths, source-changing controls must retain a measured 44px touch target without reducing
     desktop workstation density. Wide financial comparisons may scroll only inside a named,
     keyboard-focusable region; set governed widths and pinned offsets through `AnalyticsTable`
