@@ -36,6 +36,12 @@ describe("PerformanceAnalysisMode", () => {
       />
     );
 
+    expect(
+      document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole("group", { name: "Performance Analysis source selection controls" }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("attribution-trend")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();

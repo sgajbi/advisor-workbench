@@ -28,9 +28,7 @@ import {
 } from "./performance-return-path-chart-model";
 import { getPerformanceReturnPathPresentation } from "./performance-summary-context-helpers";
 import PerformanceOutcomeStrip from "./performance-outcome-strip";
-import PerformanceReturnViewControl from "./performance-return-view-control";
-import returnViewStyles from "./performance-return-view-control.module.css";
-import PerformanceSourceSelectionControls from "./performance-source-selection-controls";
+import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import {
   buildChartLegendItems,
   buildResolvedBenchmarkOptions,
@@ -199,30 +197,28 @@ function PerformanceChartPanelBody({
       bodyClassName="performance-return-path-body"
       contextRow={topContext}
       toolbar={
-        <div className={returnViewStyles.toolbar}>
-          <PerformanceSourceSelectionControls
-            portfolioId={portfolioId}
-            period={period}
-            detailBasis={detailBasis}
-            contributionDimension={contributionDimension}
-            attributionDimension={attributionDimension}
-            chartFrequency={chartFrequency}
-            benchmark={benchmark}
-            benchmarkOptions={benchmarkOptions}
-            reportStartDate={resolvedReportDates.startDate}
-            reportEndDate={resolvedReportDates.endDate}
-            capabilities={capabilities}
-            isUpdating={isUpdating}
-            ariaLabel="Performance source selection"
-            onRequestChange={onRequestChange}
-          />
-          <PerformanceReturnViewControl
-            value={chartViewMode}
-            hasBenchmarkSeries={hasBenchmarkSeries}
-            hasActiveSeries={hasActiveSeries}
-            onChange={setPreferredChartViewMode}
-          />
-        </div>
+        <PerformanceAnalysisControlBar
+          portfolioId={portfolioId}
+          period={period}
+          detailBasis={detailBasis}
+          contributionDimension={contributionDimension}
+          attributionDimension={attributionDimension}
+          chartFrequency={chartFrequency}
+          benchmark={benchmark}
+          benchmarkOptions={benchmarkOptions}
+          reportStartDate={resolvedReportDates.startDate}
+          reportEndDate={resolvedReportDates.endDate}
+          capabilities={capabilities}
+          isUpdating={isUpdating}
+          ariaLabel="Performance source selection"
+          onRequestChange={onRequestChange}
+          returnView={{
+            value: chartViewMode,
+            hasBenchmarkSeries,
+            hasActiveSeries,
+            onChange: setPreferredChartViewMode,
+          }}
+        />
       }
       loadingState={
         isDetailsPending ? (

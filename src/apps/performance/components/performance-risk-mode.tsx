@@ -8,9 +8,8 @@ import {
 import { getPerformanceWorkspaceModeDefinition } from "../performance-workspace-modes";
 import { buildPerformanceRiskViewModel } from "../risk-workspace-view-model";
 import { usePerformanceRiskContract } from "../use-performance-risk-contract";
-import PerformanceWorkspaceStageSurface, {
-  buildPerformanceWorkspaceContextItems,
-} from "./performance-workspace-stage-surface";
+import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
+import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
 import type { PerformanceRiskModeProps } from "./performance-workspace-types";
 import RiskConcentrationPanel from "./risk/risk-concentration-panel";
 import RiskDrawdownPanel from "./risk/risk-drawdown-panel";
@@ -44,15 +43,16 @@ export default function PerformanceRiskMode({
   workspace,
   period,
   detailBasis,
+  contributionDimension,
+  attributionDimension,
+  chartFrequency,
+  benchmark,
+  onRequestChange,
+  isUpdating,
   isDetailsPending,
+  capabilities,
 }: PerformanceRiskModeProps) {
   const modeIntro = getPerformanceWorkspaceModeDefinition("risk").intro!;
-  const contextItems = buildPerformanceWorkspaceContextItems({
-    workspace,
-    period,
-    detailBasis,
-    benchmark: workspace.benchmark_code ?? undefined,
-  });
   const riskContextKey = [
     workspace.portfolio.portfolio_id,
     workspace.as_of_date,
@@ -118,8 +118,25 @@ export default function PerformanceRiskMode({
   return (
     <PerformanceRiskInteractionState
       key={riskContextKey}
-      contextItems={contextItems}
       modeIntro={modeIntro}
+      controlBar={
+        <PerformanceAnalysisControlBar
+          portfolioId={workspace.portfolio.portfolio_id}
+          period={period}
+          detailBasis={detailBasis}
+          contributionDimension={contributionDimension}
+          attributionDimension={attributionDimension}
+          chartFrequency={chartFrequency}
+          benchmark={workspace.benchmark_code ?? benchmark}
+          benchmarkOptions={workspace.benchmark_options ?? []}
+          reportStartDate={workspace.report_start_date}
+          reportEndDate={workspace.report_end_date}
+          capabilities={capabilities}
+          isUpdating={isUpdating}
+          ariaLabel="Risk analysis source selection"
+          onRequestChange={onRequestChange ?? (() => undefined)}
+        />
+      }
       requestAttribution={requestAttribution}
       requestDrawdownDetail={requestDrawdownDetail}
       requestRollingDetail={requestRollingDetail}
@@ -130,7 +147,7 @@ export default function PerformanceRiskMode({
 }
 
 function PerformanceRiskInteractionState({
-  contextItems,
+  controlBar,
   modeIntro,
   requestAttribution,
   requestDrawdownDetail,
@@ -138,7 +155,7 @@ function PerformanceRiskInteractionState({
   statePanel,
   viewModel,
 }: {
-  contextItems: ReturnType<typeof buildPerformanceWorkspaceContextItems>;
+  controlBar: ReactNode;
   modeIntro: NonNullable<ReturnType<typeof getPerformanceWorkspaceModeDefinition>["intro"]>;
   requestAttribution: (attributionType: string, groupingDimension: string) => void;
   requestDrawdownDetail: () => void;
@@ -161,13 +178,12 @@ function PerformanceRiskInteractionState({
   return (
     <PerformanceWorkspaceStageSurface
       intro={modeIntro}
-      contextAriaLabel="Risk context"
-      contextItems={contextItems}
       shellClassName="performance-risk-shell performance-lotus-stage"
       shellHeader={<RiskStatusBar state={viewModel.state} />}
       shellAriaLabel="Risk"
       shellRole="region"
     >
+      {controlBar}
       {viewModel.partialFailures.length ? (
         <WorkbenchStatusRow
           label="Risk partial failures"

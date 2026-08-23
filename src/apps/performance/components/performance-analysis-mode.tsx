@@ -2,7 +2,7 @@ import PerformanceAnalysisDecisionSummary from "./performance-analysis-decision-
 import PerformanceAnalysisAttributionSection from "./performance-analysis-attribution-section";
 import PerformanceAnalysisContributionSection from "./performance-analysis-contribution-section";
 import PerformanceAttributionTrendPanel from "./performance-attribution-trend-panel";
-import PerformanceSourceSelectionControls from "./performance-source-selection-controls";
+import PerformanceAnalysisControlBar from "./performance-analysis-control-bar";
 import PerformanceWorkspaceStageSurface from "./performance-workspace-stage-surface";
 import type { PerformanceAnalysisModeProps } from "./performance-workspace-types";
 
@@ -24,7 +24,7 @@ export default function PerformanceAnalysisMode({
       intro={null}
       shellClassName="performance-analysis-shell"
     >
-      <PerformanceSourceSelectionControls
+      <PerformanceAnalysisControlBar
         portfolioId={workspace.portfolio.portfolio_id}
         period={period}
         detailBasis={detailBasis}
