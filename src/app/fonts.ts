@@ -1,10 +1,24 @@
 import localFont from "next/font/local";
 
-const inter = localFont({
-  src: "../assets/fonts/inter-variable-v4.1.woff2",
+const ibmPlexSans = localFont({
+  src: [
+    {
+      path: "../assets/fonts/ibm-plex-sans-regular-v1.1.0.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../assets/fonts/ibm-plex-sans-medium-v1.1.0.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../assets/fonts/ibm-plex-sans-semibold-v1.1.0.woff2",
+      weight: "600",
+      style: "normal",
+    },
+  ],
   variable: "--font-lotus-ui-face",
-  weight: "100 900",
-  style: "normal",
   display: "swap",
   fallback: ["Arial", "sans-serif"],
   adjustFontFallback: "Arial",
@@ -43,7 +57,7 @@ const ibmPlexMono = localFont({
 });
 
 export const lotusFontVariableClassNames = [
-  inter.variable,
+  ibmPlexSans.variable,
   cormorantGaramond.variable,
   ibmPlexMono.variable,
 ].join(" ");

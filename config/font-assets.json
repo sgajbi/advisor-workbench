@@ -8,25 +8,37 @@
   ],
   "families": [
     {
-      "family": "Inter",
+      "family": "IBM Plex Sans",
       "role": "operational-ui",
-      "version": "4.1",
+      "version": "1.1.0",
       "license": "OFL-1.1",
       "upstream": {
-        "repository": "https://github.com/rsms/inter",
-        "tag": "v4.1",
-        "commit": "e3a3d4c57d5ecc01453a575621882a384c1995a3"
+        "repository": "https://github.com/IBM/plex",
+        "tag": "@ibm/plex-sans@1.1.0",
+        "commit": "1da12f02587b630c07e92692d21492d722f53614"
       },
       "licenseFile": {
-        "path": "docs/licenses/fonts/Inter-OFL-1.1.txt",
-        "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+        "path": "docs/licenses/fonts/IBM-Plex-Sans-OFL-1.1.txt",
+        "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360"
       },
       "assets": [
         {
-          "path": "src/assets/fonts/inter-variable-v4.1.woff2",
-          "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+          "path": "src/assets/fonts/ibm-plex-sans-regular-v1.1.0.woff2",
+          "sha256": "ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a",
           "style": "normal",
-          "weight": "100 900"
+          "weight": "400"
+        },
+        {
+          "path": "src/assets/fonts/ibm-plex-sans-medium-v1.1.0.woff2",
+          "sha256": "5660f8a658f8bb50dbc005232f885eadffd2bc1c235c4f6fbb63469d1f9cde6d",
+          "style": "normal",
+          "weight": "500"
+        },
+        {
+          "path": "src/assets/fonts/ibm-plex-sans-semibold-v1.1.0.woff2",
+          "sha256": "f78048030eab62e860efa39a0df79e2e5581bf122eb95b9bc42c0b8a4988d205",
+          "style": "normal",
+          "weight": "600"
         }
       ]
     },
