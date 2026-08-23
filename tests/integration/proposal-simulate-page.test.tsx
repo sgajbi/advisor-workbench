@@ -79,7 +79,7 @@ describe("ProposalSimulatePage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders proposal simulation with the selected portfolio", async () => {
+  it("seeds governed builder controls from the source-confirmed portfolio", async () => {
     render(
       await ProposalSimulatePage({
         searchParams: Promise.resolve({
@@ -92,12 +92,12 @@ describe("ProposalSimulatePage", () => {
 
     expect(screen.getByRole("heading", { name: "Create Advisory Proposal" })).toBeInTheDocument();
     expect(screen.getAllByText("PORT_UI_1001").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("2026-04-10");
-    expect(screen.getByTestId("initial-reporting-currency")).toHaveTextContent("SGD");
+    expect(screen.getByTestId("initial-advisory-date")).toHaveTextContent("2026-04-09");
+    expect(screen.getByTestId("initial-reporting-currency")).toHaveTextContent("USD");
     expect(proposalFormRenderMock).toHaveBeenCalledWith({
       initialPortfolioId: "PORT_UI_1001",
-      initialAsOfDate: "2026-04-10",
-      initialReportingCurrency: "SGD",
+      initialAsOfDate: "2026-04-09",
+      initialReportingCurrency: "USD",
     });
     expect(screen.getByRole("heading", { name: "Draft not yet persisted" })).toBeInTheDocument();
     expect(screen.getByText("No persisted advisory workflow record")).toBeInTheDocument();
