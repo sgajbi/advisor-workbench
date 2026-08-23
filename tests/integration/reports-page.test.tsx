@@ -25,7 +25,7 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
     reviewContext: {
       portfolioName: string;
       businessDate?: string | null;
-      reportingCurrency?: string | null;
+      currency?: { kind: "base" | "reporting"; value: string } | null;
       notice?: { label: string; message: string };
     };
   }) => (
@@ -34,6 +34,8 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       <span>{portfolio.portfolioId}</span>
       <span>{reviewContext.portfolioName}</span>
       <span>{reviewContext.businessDate}</span>
+      <span data-testid="review-currency-kind">{reviewContext.currency?.kind}</span>
+      <span data-testid="review-currency-value">{reviewContext.currency?.value}</span>
       <span data-testid="source-base-currency">{portfolio.sourceBaseCurrency}</span>
       <span data-testid="reporting-currency">{portfolio.reportingCurrency}</span>
       <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
@@ -141,6 +143,8 @@ describe("reports page", () => {
 
     expect(screen.getByTestId("source-base-currency")).toHaveTextContent("SGD");
     expect(screen.getByTestId("reporting-currency")).toHaveTextContent("USD");
+    expect(screen.getByTestId("review-currency-kind")).toHaveTextContent("reporting");
+    expect(screen.getByTestId("review-currency-value")).toHaveTextContent("USD");
   });
 
   it("discloses that a carried review period does not filter report ordering", async () => {
