@@ -16,6 +16,7 @@ export type AnalyticsTableColumn = {
   align?: "left" | "right" | "center";
   width?: number | string;
   stickyOffset?: number | string;
+  headerWrap?: boolean;
 };
 
 export type AnalyticsTableRow = {
@@ -262,12 +263,20 @@ function getColumnCellStyle(
   column: AnalyticsTableColumn | undefined,
   section: "header" | "body" | "footer",
 ): React.CSSProperties | undefined {
-  if (!column || (column.width === undefined && column.stickyOffset === undefined)) {
+  if (
+    !column ||
+    (column.width === undefined &&
+      column.stickyOffset === undefined &&
+      !column.headerWrap)
+  ) {
     return undefined;
   }
 
   return {
     ...(column.width !== undefined ? { width: column.width } : {}),
+    ...(section === "header" && column.headerWrap
+      ? { whiteSpace: "normal", lineHeight: 1.2 }
+      : {}),
     ...(column.stickyOffset !== undefined
       ? {
           position: "sticky",

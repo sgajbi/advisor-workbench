@@ -617,7 +617,12 @@ test.describe('Performance workbench smoke', () => {
     await expect(evidenceColumns).toBeFocused();
     await evidenceColumns.selectOption('returns');
     await expect(evidenceColumns).toHaveValue('returns');
-    expect(await evidenceColumns.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
+    expect(
+      await evidenceColumns.evaluate(
+        (element) =>
+          getComputedStyle(element.closest('.MuiInputBase-root') ?? element).outlineStyle,
+      ),
+    ).not.toBe('none');
 
     for (const width of [1440, 1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });
@@ -638,6 +643,145 @@ test.describe('Performance workbench smoke', () => {
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
+  });
+
+  test('performance review uses one governed control bar and a decision-first return table', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic control-bar proof requires the populated performance fixture.',
+    );
+    test.setTimeout(120_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+
+    for (const viewport of [
+      { name: 'desktop', width: 1440, height: 1000 },
+      { name: 'compact-desktop', width: 1024, height: 1000 },
+      { name: 'tablet', width: 768, height: 1100 },
+      { name: 'compact', width: 519, height: 1000 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const session = await openPerformanceWorkbench(page, request);
+      expect(session.available).toBe(true);
+
+      const controlBars = page.locator('[data-performance-analysis-control-bar="true"]');
+      await expect(controlBars).toHaveCount(1);
+      const controlBar = controlBars.first();
+      await expect(controlBar).toBeVisible();
+      await expect(page.getByRole('radio', { name: 'Absolute' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      expect(await controlBar.locator('[data-workbench-choice-group]').count()).toBeLessThanOrEqual(
+        3,
+      );
+      const metricRows = await page
+        .locator('[data-return-metric]')
+        .evaluateAll((metrics) => [
+          ...new Set(metrics.map((metric) => Math.round(metric.getBoundingClientRect().y))),
+        ]);
+      expect(metricRows).toHaveLength(viewport.width > 640 ? 1 : 2);
+
+      const customWindow = controlBar.locator('details[data-performance-window-control="true"]');
+      await expect(customWindow).not.toHaveAttribute('open');
+      await expect(customWindow.locator('summary')).toContainText('Custom window');
+      await expect(customWindow.locator('summary')).toContainText(/\d{1,2} \w{3} \d{4}/);
+      await customWindow.locator('summary').click();
+      await expect(customWindow).toHaveAttribute('open');
+
+      for (const label of ['From', 'To']) {
+        const dateInput = controlBar.getByLabel(label, { exact: true });
+        await expect(dateInput).toBeVisible();
+        const bounds = await dateInput.boundingBox();
+        expect(bounds?.width ?? 0, `${viewport.name} ${label} width`).toBeGreaterThanOrEqual(140);
+        expect(bounds?.x ?? -1, `${viewport.name} ${label} left edge`).toBeGreaterThanOrEqual(0);
+        expect(
+          (bounds?.x ?? 0) + (bounds?.width ?? 0),
+          `${viewport.name} ${label} right edge`,
+        ).toBeLessThanOrEqual(viewport.width + 1);
+      }
+      await controlBar.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `output/playwright/issue-812-performance-control-bar-${viewport.name}.png`,
+        fullPage: false,
+        animations: 'disabled',
+      });
+
+      const historySummary = page.getByText('Return history', { exact: true });
+      await historySummary.scrollIntoViewIfNeeded();
+      await historySummary.click();
+      const historyRegion = page.getByRole('region', { name: 'Return history columns' });
+      await expect(historyRegion).toBeVisible();
+      await expect(historyRegion).toHaveAttribute('tabindex', '0');
+
+      const historyTable = page.getByRole('table', { name: 'Return path observation table' });
+      for (const heading of [
+        'Period',
+        'Window',
+        'Portfolio',
+        'Benchmark',
+        'Cum. Portfolio',
+        'Cum. Benchmark',
+      ]) {
+        await expect(
+          historyTable.getByRole('columnheader', { name: heading, exact: true }),
+        ).toBeAttached();
+      }
+      await expect(historyTable.getByRole('columnheader', { name: 'Active' })).toHaveCount(0);
+      await expect(historyTable.getByRole('columnheader', { name: 'Cum. Active' })).toHaveCount(0);
+
+      const historyGeometry = await historyRegion.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      if (viewport.width > 519) {
+        expect(
+          historyGeometry.scrollWidth - historyGeometry.clientWidth,
+          `${viewport.name} return-history overflow`,
+        ).toBeLessThanOrEqual(1);
+      } else {
+        expect(historyGeometry.scrollWidth).toBeGreaterThan(historyGeometry.clientWidth);
+        const pinnedHeadings = await historyTable
+          .getByRole('columnheader')
+          .evaluateAll((headings) =>
+            headings.slice(0, 2).map((heading) => ({
+              position: getComputedStyle(heading).position,
+              left: getComputedStyle(heading).left,
+            })),
+          );
+        expect(pinnedHeadings).toEqual([
+          { position: 'sticky', left: '0px' },
+          { position: 'sticky', left: '76px' },
+        ]);
+      }
+
+      const pageGeometry = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(pageGeometry.scrollWidth - pageGeometry.clientWidth).toBeLessThanOrEqual(2);
+      await page.screenshot({
+        path: `output/playwright/issue-812-return-history-${viewport.name}.png`,
+        fullPage: false,
+        animations: 'disabled',
+      });
+    }
+
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await openPerformanceWorkbench(page, request);
+    const analysisStep = await openPerformanceWorkflowStep(page, /^Performance Analysis/i);
+    await analysisStep.click();
+    await expect(page.locator('[data-performance-analysis-control-bar="true"]')).toHaveCount(1);
+
+    const riskStep = await openPerformanceWorkflowStep(page, /^Risk Review/i);
+    await riskStep.click();
+    await expect(page.locator('[data-performance-analysis-control-bar="true"]')).toHaveCount(1);
+    await expect(page.getByText('Risk context', { exact: true })).toHaveCount(0);
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
   });
 
   test('single-observation Return Path stays compact, semantic, and responsive', async ({
@@ -910,6 +1054,7 @@ test.describe('Performance workbench smoke', () => {
     await threeYearHorizon.click();
     await expect(threeYearHorizon).toHaveAttribute('aria-checked', 'true');
     await expect(threeYearHorizon).toBeFocused();
+    await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,
@@ -924,6 +1069,7 @@ test.describe('Performance workbench smoke', () => {
       'true',
     );
     await expect(threeYearHorizon).toBeFocused();
+    await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('YTD');
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,
@@ -935,6 +1081,7 @@ test.describe('Performance workbench smoke', () => {
     await page.goForward({ waitUntil: 'domcontentloaded' });
     await expect(threeYearHorizon).toHaveAttribute('aria-checked', 'true');
     await expect(threeYearHorizon).toBeFocused();
+    await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('3Y');
     expectGovernedPerformanceContext(page.url(), {
       portfolioId: portfolioId!,
       asOfDate: summary.as_of_date,

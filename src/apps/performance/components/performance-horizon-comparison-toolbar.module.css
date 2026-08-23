@@ -67,22 +67,12 @@
   min-width: 0;
 }
 
-.option :global(.MuiFormControl-root) {
-  width: 100%;
-}
-
-.option :global(.MuiInputBase-root) {
-  min-height: 36px;
-  background: var(--panel);
-}
-
 @media (max-width: 640px) {
   .disclosure {
     width: 100%;
   }
 
-  .disclosure > summary,
-  .option :global(.MuiInputBase-root) {
+  .disclosure > summary {
     min-height: 44px;
   }
 
