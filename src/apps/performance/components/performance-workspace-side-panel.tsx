@@ -1,6 +1,5 @@
 import {
   ActionLink,
-  DefinitionList,
   SemanticBadge,
   Text,
   WorkbenchRailCard,
@@ -11,34 +10,21 @@ import type { PerformanceWorkspaceCapabilities } from "../capabilities";
 import {
   getPerformanceTrustStripPresentation,
 } from "./performance-workspace-view-helpers";
-import {
-  getPerformanceWorkspaceModeDefinition,
-  type PerformanceWorkspaceMode,
-} from "../performance-workspace-modes";
-import { formatDate, formatLabel } from "../formatters";
+import { type PerformanceWorkspaceMode } from "../performance-workspace-modes";
 
 type PerformanceWorkspaceSidePanelProps = {
   workspace: WorkbenchPerformanceWorkspace | null;
   mode: PerformanceWorkspaceMode;
-  period: string;
-  detailBasis: string;
-  chartFrequency: string;
   capabilities?: PerformanceWorkspaceCapabilities | null;
-  selectedBenchmarkLabel?: string | null;
   onModeChange: (mode: PerformanceWorkspaceMode) => void;
 };
 
 export default function PerformanceWorkspaceSidePanel({
   workspace,
   mode,
-  period,
-  detailBasis,
-  chartFrequency,
   capabilities,
-  selectedBenchmarkLabel,
   onModeChange,
 }: PerformanceWorkspaceSidePanelProps) {
-  const modeDefinition = getPerformanceWorkspaceModeDefinition(mode);
   const trustItems = capabilities
     ? getPerformanceTrustStripPresentation({ capabilities }).items
     : [];
@@ -47,59 +33,8 @@ export default function PerformanceWorkspaceSidePanel({
   const portfolioHref = workspace
     ? `/portfolio?portfolioId=${encodeURIComponent(workspace.portfolio_id)}`
     : "/portfolio";
-  const reviewContextItems = buildReviewContextItems({
-    workspace,
-    modeLabel: modeDefinition.label,
-    period,
-    detailBasis,
-    chartFrequency,
-    selectedBenchmarkLabel,
-  });
-  const [activeSurfaceItem, ...remainingReviewContextItems] = reviewContextItems;
-  const benchmarkItem =
-    remainingReviewContextItems.find((item) => item.label === "Benchmark") ?? null;
-  const reviewFactItems = remainingReviewContextItems.filter(
-    (item) => item.label !== "Benchmark"
-  );
-
   return (
     <div className="performance-side-panel" aria-label="Performance workspace context">
-      <WorkbenchRailCard className="performance-side-card">
-        <div className="performance-card-header">
-          <Text variant="cardTitle" className="performance-side-card-title">
-            Review Context
-          </Text>
-        </div>
-        <div className="performance-side-context-summary">
-          <Text variant="label" className="performance-side-context-summary-label">
-            {activeSurfaceItem.label}
-          </Text>
-          <Text variant="metricValueM" className="performance-side-context-summary-value">
-            {activeSurfaceItem.value}
-          </Text>
-        </div>
-        <DefinitionList
-          ariaLabel="Review context facts"
-          className="performance-side-facts"
-          rowClassName="performance-side-fact-row"
-          items={reviewFactItems}
-        />
-        {benchmarkItem ? (
-          <div className="performance-side-context-benchmark">
-            <Text variant="label" className="performance-side-context-benchmark-label">
-              {benchmarkItem.label}
-            </Text>
-            <Text
-              as="div"
-              variant="bodySmall"
-              className="performance-side-context-benchmark-value"
-            >
-              {benchmarkItem.value}
-            </Text>
-          </div>
-        ) : null}
-      </WorkbenchRailCard>
-
       {showSupportability ? (
         <WorkbenchRailCard className="performance-side-card">
           <div className="performance-card-header">
@@ -150,41 +85,6 @@ export default function PerformanceWorkspaceSidePanel({
       </WorkbenchRailCard>
     </div>
   );
-}
-
-type ReviewContextItem = {
-  label: string;
-  value: string;
-};
-
-function buildReviewContextItems({
-  workspace,
-  modeLabel,
-  period,
-  detailBasis,
-  chartFrequency,
-  selectedBenchmarkLabel,
-}: {
-  workspace: WorkbenchPerformanceWorkspace | null;
-  modeLabel: string;
-  period: string;
-  detailBasis: string;
-  chartFrequency: string;
-  selectedBenchmarkLabel?: string | null;
-}): ReviewContextItem[] {
-  return [
-    { label: "Active Surface", value: modeLabel },
-    {
-      label: "Review Window",
-      value: workspace
-        ? `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`
-        : "Unavailable",
-    },
-    { label: "Horizon", value: formatLabel(period) },
-    { label: "Basis", value: formatLabel(detailBasis) },
-    { label: "Frequency", value: formatLabel(chartFrequency) },
-    { label: "Benchmark", value: selectedBenchmarkLabel ?? "Benchmark pending" },
-  ];
 }
 
 function mapItemTone(tone?: "default" | "success" | "warn" | "danger") {

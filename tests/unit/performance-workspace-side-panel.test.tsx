@@ -13,11 +13,7 @@ describe("PerformanceWorkspaceSidePanel", () => {
       <PerformanceWorkspaceSidePanel
         workspace={workspace}
         mode="advisor"
-        period="YTD"
-        detailBasis="NET"
-        chartFrequency="monthly"
         capabilities={getPerformanceWorkspaceCapabilities(workspace)}
-        selectedBenchmarkLabel="Private Banking Global Balanced 60/40"
         onModeChange={vi.fn()}
       />
     );
@@ -35,11 +31,7 @@ describe("PerformanceWorkspaceSidePanel", () => {
       <PerformanceWorkspaceSidePanel
         workspace={workspace}
         mode="analysis"
-        period="YTD"
-        detailBasis="NET"
-        chartFrequency="monthly"
         capabilities={getPerformanceWorkspaceCapabilities(workspace)}
-        selectedBenchmarkLabel="Private Banking Global Balanced 60/40"
         onModeChange={onModeChange}
       />
     );
@@ -65,11 +57,7 @@ describe("PerformanceWorkspaceSidePanel", () => {
       <PerformanceWorkspaceSidePanel
         workspace={workspace}
         mode="summary"
-        period="YTD"
-        detailBasis="NET"
-        chartFrequency="monthly"
         capabilities={getPerformanceWorkspaceCapabilities(workspace)}
-        selectedBenchmarkLabel="Private Banking Global Balanced 60/40"
         onModeChange={vi.fn()}
       />
     );

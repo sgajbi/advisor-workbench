@@ -7,6 +7,7 @@ import {
   AppPageShell,
   buildWorkbenchSourceContextNotice,
 } from "@/design-system";
+import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import {
   parseReviewContext,
 } from "@/shell/review-context";
@@ -17,6 +18,7 @@ import {
 import PerformanceWorkspaceEntry from "./components/performance-workspace-entry";
 import type { PerformanceWorkspaceLoadIssue } from "./components/performance-workspace-types";
 import { isPerformanceSummarySourceCurrent } from "./performance-source-identity";
+import { buildPerformanceReviewContextStrip } from "./performance-review-context-strip-view-model";
 
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
@@ -93,16 +95,17 @@ export default async function PerformanceAnalyticsPage({
     reportEndDate,
   };
 
+  const [workspaceSummaryResult, portfolioContextResult] = await Promise.allSettled([
+    getWorkbenchPerformanceWorkspaceSummary(selectedPortfolioId, workspaceRequest),
+    getPortfolioWorkspaceShell(selectedPortfolioId),
+  ]);
   let workspaceSummary = null;
   let workspaceDetails = null;
   let workspaceLoadIssue: PerformanceWorkspaceLoadIssue | null = null;
-  try {
-    workspaceSummary = await getWorkbenchPerformanceWorkspaceSummary(
-      selectedPortfolioId,
-      workspaceRequest
-    );
-    workspaceDetails = null;
-  } catch (error) {
+  if (workspaceSummaryResult.status === "fulfilled") {
+    workspaceSummary = workspaceSummaryResult.value;
+  } else {
+    const error = workspaceSummaryResult.reason;
     workspaceSummary = null;
     workspaceDetails = null;
     workspaceLoadIssue = {
@@ -112,6 +115,19 @@ export default async function PerformanceAnalyticsPage({
       status: getWorkbenchApiErrorStatus(error) ?? undefined,
     };
   }
+  const portfolioContext =
+    portfolioContextResult.status === "fulfilled" &&
+    portfolioContextResult.value?.portfolio.portfolio_id === selectedPortfolioId
+      ? portfolioContextResult.value
+      : null;
+  const sourceContextNotice = buildWorkbenchSourceContextNotice({
+    title: "Performance source context",
+    subject: "Performance",
+    requestedAsOfDate: reviewContextResult.context.asOfDate,
+    requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
+    sourceAsOfDate: workspaceSummary?.as_of_date,
+    sourceCurrency: workspaceSummary?.portfolio.base_currency,
+  });
 
   if (
     workspaceSummary &&
@@ -123,7 +139,14 @@ export default async function PerformanceAnalyticsPage({
     })
   ) {
     return (
-      <AppPageShell pageKey="performance" className="performance-page portfolio-page">
+      <AppPageShell
+        pageKey="performance"
+        className="performance-page portfolio-page"
+        reviewContext={buildPerformanceReviewContextStrip({
+          workspace: workspaceSummary,
+          portfolioContext,
+        })}
+      >
         <ReviewContextRecovery
           body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."
           href="/book"
@@ -134,8 +157,7 @@ export default async function PerformanceAnalyticsPage({
   }
 
   return (
-    <AppPageShell pageKey="performance" className="performance-page portfolio-page">
-      <PerformanceWorkspaceEntry
+    <PerformanceWorkspaceEntry
         initialSummary={workspaceSummary}
         initialDetails={workspaceDetails}
         initialLoadIssue={workspaceLoadIssue}
@@ -149,16 +171,9 @@ export default async function PerformanceAnalyticsPage({
         initialBenchmark={benchmark}
         initialAsOfDate={reviewContextResult.context.asOfDate}
         initialReportingCurrency={reviewContextResult.context.reportingCurrency}
-        initialContextNotice={buildWorkbenchSourceContextNotice({
-          title: "Performance source context",
-          subject: "Performance",
-          requestedAsOfDate: reviewContextResult.context.asOfDate,
-          requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
-          sourceAsOfDate: workspaceSummary?.as_of_date,
-          sourceCurrency: workspaceSummary?.portfolio.base_currency,
-        })}
+        initialContextNotice={sourceContextNotice}
+        initialPortfolioContext={portfolioContext}
       />
-    </AppPageShell>
   );
 }
 

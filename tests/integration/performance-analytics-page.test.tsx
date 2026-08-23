@@ -183,13 +183,46 @@ describe("PerformanceAnalyticsPage", () => {
       screen.getByRole("region", { name: "Performance workspace unavailable" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Performance data unavailable")).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0]?.[0].toString()).toContain(
-      "/api/v1/workbench/PF_NOT_IN_CATALOGUE/performance/summary",
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const requestedUrls = fetchMock.mock.calls.map(([input]) => input.toString());
+    expect(requestedUrls).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "/api/v1/workbench/PF_NOT_IN_CATALOGUE/performance/summary",
+        ),
+        expect.stringContaining(
+          "/api/v1/portfolio/portfolios/PF_NOT_IN_CATALOGUE/workspace",
+        ),
+      ]),
     );
-    expect(fetchMock.mock.calls[0]?.[0].toString()).not.toContain(
-      "/api/v1/lookups/portfolios",
-    );
+    expect(requestedUrls.every((url) => !url.includes("/api/v1/lookups/portfolios"))).toBe(true);
+  });
+
+  it("loads performance and supporting portfolio context without a sequential waterfall", async () => {
+    let releaseRequests: (() => void) | undefined;
+    const requestGate = new Promise<void>((resolve) => {
+      releaseRequests = resolve;
+    });
+    const fetchMock = vi.fn(async (_input: string | URL) => {
+      await requestGate;
+      return { ok: false, status: 404, text: async () => "not found" } as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pagePromise = PerformanceAnalyticsPage({
+      searchParams: Promise.resolve({ portfolioId: "PF_PARALLEL_PROOF" }),
+    });
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const requestedUrls = fetchMock.mock.calls.map(([input]) => input.toString());
+    expect(requestedUrls.some((url) => url.includes("/performance/summary"))).toBe(true);
+    expect(requestedUrls.some((url) => url.includes("/portfolio/portfolios/"))).toBe(true);
+
+    releaseRequests?.();
+    render(await pagePromise);
+    expect(
+      screen.getByRole("region", { name: "Performance workspace unavailable" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps analytics usable while explaining unsupported review date and currency controls", async () => {
@@ -201,7 +234,8 @@ describe("PerformanceAnalyticsPage", () => {
       reportingCurrency: "EUR",
     });
 
-    expect(screen.getByTestId("workbench-context-notice")).toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toBeInTheDocument();
+    expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.getByText(/source valuation date 24 Feb 2026/i)).toBeInTheDocument();
     expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
     expect(await findWorkflowControl(/^Performance Overview/i)).toBeInTheDocument();
@@ -299,7 +333,8 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(document.querySelector(".workbench-page-header-actions [role='radiogroup']"))
       .toBeFalsy();
-    expect(screen.getByText("Selected portfolio")).toBeInTheDocument();
+    expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toBeInTheDocument();
     const workbenchScreenNav = screen.getByRole("navigation", {
       name: "Workbench screen navigation",
     });
@@ -333,7 +368,7 @@ describe("PerformanceAnalyticsPage", () => {
         "Move between summary, diagnostics, advisory narrative, and risk review without losing context."
       )
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Review Context")).toBeInTheDocument();
+    expect(screen.queryByText("Review Context")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
   });
