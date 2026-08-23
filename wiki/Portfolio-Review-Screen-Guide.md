@@ -79,6 +79,9 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
 - Shows the selected portfolio name or mandate label, portfolio and client references, booking
   centre, lifecycle status, base currency, and governed as-of date.
 - Presents source-backed AUM, invested assets, cash, cash weight, and MTD/QTD/YTD net returns.
+- Keeps those six scan metrics in a deliberate three-by-two desktop composition, reflowing to two
+  and then one column before any reporting-currency value can collide or wrap. Productive 12px
+  labels, 14px reading text, and 18px compact metrics preserve density without reducing legibility.
 - Opens supporting drawers for AUM, invested-assets, and cash evidence without turning those
   drawers into recommendations.
 - Presents one primary review focus with reporting coverage and only the open-exception evidence
@@ -222,6 +225,13 @@ Compatibility routes and aliases reuse this guide and must not fork the business
   complete 24-of-24 sequential keyboard traversal at the narrowest supported viewport. It writes
   machine-readable accessibility evidence beside diagnostic screenshots; neither artifact replaces
   populated canonical source proof.
+- `npm run test:e2e:typography:compare` renders pinned IBM Plex Sans and Inter candidates against
+  the same optimized Portfolio Review at 1440, 1024, 768, and 519 pixels. It records computed
+  family, size, weight, metric width, containment, single-line posture, and page overflow; #829
+  selected IBM Plex Sans only after both candidates passed the business-screen geometry gate.
+- `tests/unit/typography-token-authority.test.ts` prevents the legacy global layer from reclaiming
+  semantic type authority, blocks inflated weights and routine uppercase labels on migrated
+  surfaces, and protects the responsive Portfolio health-strip composition.
 - Canonical validation selects `PB_SG_GLOBAL_BAL_001`, verifies the exact Portfolio Review heading
   and **Review Evidence** landmark, and captures `portfolio-summary-live.png` only after API and
   panel checks pass.

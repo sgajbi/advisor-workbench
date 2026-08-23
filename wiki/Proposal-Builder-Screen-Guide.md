@@ -97,6 +97,9 @@ before handoff; a prior visual result never substitutes for current source confi
 - Uses one minor-unit precision boundary for field admission, preview, and submitted cash intent.
 - Shows a dense setup strip and ordered construction panels before the final action rail in the
   document and keyboard sequence.
+- Uses the shared productive type roles for form labels, holdings, draft orders, summary values,
+  and decision actions. Routine business labels remain sentence case; financial values stay
+  indivisible while the owned Proposal grids reflow around them.
 - Keeps both final actions fenced while either source transaction is pending.
 - Shows progress, failure, evaluation confirmation, and retained-draft confirmation beside the
   actions without moving focus or fabricating completion.
@@ -187,6 +190,9 @@ superiority.
   `tests/unit/proposal-workspace-shell-context.test.ts` prove that shell-unavailable recovery uses
   only an identity-matched portfolio book, keeps the strip and child workflow aligned, avoids a
   duplicate book read while the workspace shell is healthy, and rejects foreign recovery context.
+- `tests/unit/typography-token-authority.test.ts` rejects page-local size, inflated weight, and
+  routine uppercase regressions in Proposal-owned styles, and protects no-wrap treatment for the
+  financial summary values.
 - Canonical runtime validation uses `PB_SG_GLOBAL_BAL_001`; direct browser proof does not promote
   the capability-disabled global Proposal workspace.
 - Use [Validation and CI](Validation-and-CI) for protected and exact-main evidence.
