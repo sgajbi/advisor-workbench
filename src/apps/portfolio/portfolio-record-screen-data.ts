@@ -65,7 +65,11 @@ export async function loadPortfolioRecordScreenData({
   );
   const shell = selectedPortfolioId ? await getPortfolioWorkspaceShell(selectedPortfolioId) : null;
 
-  if (!selectedPortfolioId || !shell) {
+  if (
+    !selectedPortfolioId ||
+    !shell ||
+    shell.portfolio.portfolio_id !== selectedPortfolioId
+  ) {
     return {
       portfolioId: selectedPortfolioId,
       portfolioContext: null,
