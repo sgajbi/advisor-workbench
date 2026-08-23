@@ -147,7 +147,6 @@ const advisorBookMock = vi.mocked(useAdvisorBook);
 
 const portfolio = {
   portfolioId: "PB_SG_GLOBAL_BAL_001",
-  displayName: "Global Balanced Mandate",
   asOfDate: "2026-04-22",
   sourceBaseCurrency: "SGD",
   reportingCurrency: "SGD",
@@ -185,16 +184,29 @@ describe("ReportOrderingWorkspace", () => {
     render(
       <ReportOrderingWorkspace
         portfolio={portfolio}
-        contextNotice={{
-          title: "Report source context",
-          body: "The carried review period YTD does not filter this report ordering workflow.",
+        reviewContext={{
+          portfolioName: "Global Balanced Mandate",
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          clientId: "CIF_SG_000184",
+          mandateType: "Discretionary",
+          bookingCenter: "Singapore",
+          businessDate: "22 Apr 2026",
+          reportingCurrency: "SGD",
+          sourceState: "confirmed",
+          notice: {
+            label: "Report source context",
+            message: "The carried review period YTD does not filter this report ordering workflow.",
+            tone: "attention",
+          },
         }}
       />,
     );
 
-    expect(screen.getByLabelText("Report source context")).toHaveTextContent(
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
       /review period YTD.*does not filter this report ordering workflow/i,
     );
+    expect(screen.getAllByText("Global Balanced Mandate")).toHaveLength(1);
+    expect(screen.getAllByText("PB_SG_GLOBAL_BAL_001")).toHaveLength(1);
   });
 
   it("renders a source-backed advisor flow and keeps unavailable PDF disabled", async () => {
@@ -975,7 +987,7 @@ describe("ReportOrderingWorkspace", () => {
 
     view.rerender(
       <ReportOrderingWorkspace
-        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002" }}
       />,
     );
     await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
@@ -1031,7 +1043,7 @@ describe("ReportOrderingWorkspace", () => {
 
     view.rerender(
       <ReportOrderingWorkspace
-        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002" }}
       />,
     );
     await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
@@ -1070,7 +1082,7 @@ describe("ReportOrderingWorkspace", () => {
 
     view.rerender(
       <ReportOrderingWorkspace
-        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002" }}
       />,
     );
     await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
@@ -1109,7 +1121,7 @@ describe("ReportOrderingWorkspace", () => {
 
     view.rerender(
       <ReportOrderingWorkspace
-        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002", displayName: "Other Mandate" }}
+        portfolio={{ ...portfolio, portfolioId: "PB_SG_OTHER_002" }}
       />,
     );
     await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));

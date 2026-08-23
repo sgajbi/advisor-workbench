@@ -13,28 +13,32 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
   ReportOrderingWorkspace: ({
     portfolio,
     initialBatchId,
-    contextNotice,
+    reviewContext,
   }: {
     portfolio: {
       portfolioId: string;
-      displayName: string;
       asOfDate: string;
       sourceBaseCurrency: string;
       reportingCurrency: string;
     };
     initialBatchId?: string;
-    contextNotice?: { title: string; body: string } | null;
+    reviewContext: {
+      portfolioName: string;
+      businessDate?: string | null;
+      reportingCurrency?: string | null;
+      notice?: { label: string; message: string };
+    };
   }) => (
     <div>
       <h1>Report Centre Workspace</h1>
       <span>{portfolio.portfolioId}</span>
-      <span>{portfolio.displayName}</span>
-      <span>{portfolio.asOfDate}</span>
+      <span>{reviewContext.portfolioName}</span>
+      <span>{reviewContext.businessDate}</span>
       <span data-testid="source-base-currency">{portfolio.sourceBaseCurrency}</span>
       <span data-testid="reporting-currency">{portfolio.reportingCurrency}</span>
       <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
-      {contextNotice ? (
-        <aside aria-label={contextNotice.title}>{contextNotice.body}</aside>
+      {reviewContext.notice ? (
+        <aside aria-label={reviewContext.notice.label}>{reviewContext.notice.message}</aside>
       ) : null}
     </div>
   ),
@@ -64,6 +68,14 @@ describe("reports page", () => {
         base_currency: "SGD",
         booking_center_code: "SG",
       },
+      profile: {
+        status: "ACTIVE",
+        portfolio_type: "DISCRETIONARY",
+        risk_exposure: null,
+        investment_time_horizon: null,
+        objective: null,
+        is_leverage_allowed: null,
+      },
     } as Awaited<ReturnType<typeof getPortfolioWorkspaceShell>>);
   });
 
@@ -77,7 +89,7 @@ describe("reports page", () => {
     expect(shellMock).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001");
     expect(screen.getByRole("heading", { name: "Report Centre Workspace" })).toBeInTheDocument();
     expect(screen.getByText("Global Balanced Mandate")).toBeInTheDocument();
-    expect(screen.getByText("2026-04-22")).toBeInTheDocument();
+    expect(screen.getByText("22 Apr 2026")).toBeInTheDocument();
     expect(screen.getByTestId("source-base-currency")).toHaveTextContent("SGD");
     expect(screen.getByTestId("reporting-currency")).toHaveTextContent("SGD");
   });
@@ -91,6 +103,14 @@ describe("reports page", () => {
         client_id: "CLIENT_001",
         base_currency: "SGD",
         booking_center_code: "SG",
+      },
+      profile: {
+        status: "ACTIVE",
+        portfolio_type: "DISCRETIONARY",
+        risk_exposure: null,
+        investment_time_horizon: null,
+        objective: null,
+        is_leverage_allowed: null,
       },
       control_capabilities: {
         historical_snapshots: {
@@ -148,6 +168,9 @@ describe("reports page", () => {
     );
 
     expect(screen.getByText("Portfolio reporting context is unavailable")).toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "Portfolio not confirmed",
+    );
     expect(screen.getByText(/No report choices or submission controls/)).toBeInTheDocument();
     expect(screen.getByText(/confirmed portfolio context/)).toBeInTheDocument();
     expect(screen.queryByText(/source-backed portfolio context/i)).not.toBeInTheDocument();
