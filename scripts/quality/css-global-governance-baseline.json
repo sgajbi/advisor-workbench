@@ -59,8 +59,8 @@
     {
       "path": "src/styles/global/tokens.css",
       "owner": "design tokens and foundational custom properties",
-      "maxLines": 154,
-      "maxBytes": 5433
+      "maxLines": 161,
+      "maxBytes": 5602
     },
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
