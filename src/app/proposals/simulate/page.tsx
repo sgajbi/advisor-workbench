@@ -54,16 +54,8 @@ export default async function ProposalSimulatePage({
       {(portfolioContext) => (
         <ProposalSimulateForm
           initialPortfolioId={portfolioId}
-          initialAsOfDate={
-            reviewContextResult.context.asOfDate ??
-            portfolioContext?.as_of_date ??
-            ""
-          }
-          initialReportingCurrency={
-            reviewContextResult.context.reportingCurrency ??
-            portfolioContext?.portfolio.base_currency ??
-            ""
-          }
+          initialAsOfDate={portfolioContext?.as_of_date ?? ""}
+          initialReportingCurrency={portfolioContext?.portfolio.base_currency ?? ""}
         />
       )}
     </ProposalWorkspaceShell>
