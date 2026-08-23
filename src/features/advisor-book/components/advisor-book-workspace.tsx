@@ -473,34 +473,50 @@ function AdvisorBookSourceWorkspace({
       </SectionBlock>
 
       {model ? (
-        <div className={styles.supportGrid}>
-          <SectionBlock
-            title="Operating boundaries"
-            subtitle="What this book view does and does not confirm."
-          >
-            {model.limitations.length ? (
-              <ul className={styles.limitations}>
-                {model.limitations.map((limitation) => (
-                  <li key={limitation.rawValue}>
-                    <strong>{limitation.label}</strong>
-                    <p>{limitation.detail}</p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No operating limitations were reported for this own-book view.</p>
-            )}
-          </SectionBlock>
-          <SectionBlock
-            title="Operational details"
-            subtitle="Evidence for operational follow-up."
-          >
-            <DefinitionList
-              ariaLabel="Advisor book operational details"
-              items={model.supportDetails}
-            />
-          </SectionBlock>
-        </div>
+        <details className={styles.supportDisclosure}>
+          <summary>
+            <span>
+              <strong>Book scope and operating evidence</strong>
+              <small>
+                Review limitations and source references when operational follow-up is needed.
+              </small>
+            </span>
+            <SemanticBadge tone={model.limitations.length ? "warn" : "success"}>
+              {model.limitations.length
+                ? `${model.limitations.length} ${model.limitations.length === 1 ? "boundary" : "boundaries"}`
+                : "No limitations reported"}
+            </SemanticBadge>
+          </summary>
+          <div className={styles.supportDisclosureBody}>
+            <section aria-labelledby="advisor-book-operating-boundaries">
+              <h3 id="advisor-book-operating-boundaries">Operating boundaries</h3>
+              {model.limitations.length ? (
+                <ul className={styles.limitations}>
+                  {model.limitations.map((limitation) => (
+                    <li key={limitation.key}>
+                      <strong>{limitation.label}</strong>
+                      <p>{limitation.detail}</p>
+                      {limitation.occurrenceCount > 1 ? (
+                        <small>
+                          {limitation.occurrenceCount} related limitations consolidated
+                        </small>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No operating limitations were reported for this own-book view.</p>
+              )}
+            </section>
+            <section aria-labelledby="advisor-book-support-references">
+              <h3 id="advisor-book-support-references">Support references</h3>
+              <DefinitionList
+                ariaLabel="Advisor book support references"
+                items={model.supportDetails}
+              />
+            </section>
+          </div>
+        </details>
       ) : null}
     </div>
   );

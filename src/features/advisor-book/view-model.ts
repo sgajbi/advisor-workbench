@@ -12,7 +12,12 @@ export type AdvisorBookWorkspaceModel = {
   stateDetail: string;
   metrics: Array<{ label: string; value: string; detail: string }>;
   rows: AdvisorBookPortfolioRow[];
-  limitations: Array<{ label: string; detail: string; rawValue: string }>;
+  limitations: Array<{
+    key: string;
+    label: string;
+    detail: string;
+    occurrenceCount: number;
+  }>;
   supportDetails: Array<{ label: string; value: string }>;
 };
 
@@ -86,11 +91,17 @@ export function buildAdvisorBookWorkspaceModel(
       },
     ],
     rows: response.items.map(toPortfolioRow),
-    limitations: response.supportability.limitations.map(toLimitation),
+    limitations: consolidateLimitations(response.supportability.limitations),
     supportDetails: [
       { label: "Membership record", value: "Portfolio manager assignments" },
       { label: "Operating scope", value: tenantScopeLabel(response.supportability.tenant_scope) },
       { label: "Availability reference", value: response.supportability.reason_code },
+      {
+        label: "Limitation references",
+        value:
+          [...new Set(response.supportability.limitations)].sort().join(", ") ||
+          "None reported",
+      },
       { label: "Request reference", value: response.correlation_id },
       { label: "Data snapshot reference", value: response.provenance?.snapshot_id ?? "Not reported" },
       {
@@ -188,7 +199,7 @@ function advisorBookStateDetail(response: AdvisorBookResponse): string {
   return "Portfolio assignments are confirmed for the current own-book scope.";
 }
 
-function toLimitation(rawValue: string) {
+function limitationCopy(rawValue: string) {
   const copy: Record<string, { label: string; detail: string }> = {
     delegated_scope_not_supported: {
       label: "Own book only",
@@ -207,13 +218,30 @@ function toLimitation(rawValue: string) {
       detail: "The portfolio assignment record was not confirmed current for this request.",
     },
   };
-  return {
-    ...(copy[rawValue] ?? {
-      label: "Additional operating limitation",
-      detail: "Operational details contain an unrecognised source limitation for review.",
-    }),
-    rawValue,
+  return copy[rawValue] ?? {
+    label: "Additional operating limitation",
+    detail: "Operational details contain an unrecognised source limitation for review.",
   };
+}
+
+function consolidateLimitations(rawValues: string[]) {
+  const limitations = new Map<
+    string,
+    AdvisorBookWorkspaceModel["limitations"][number]
+  >();
+
+  for (const rawValue of rawValues) {
+    const copy = limitationCopy(rawValue);
+    const key = `${copy.label}:${copy.detail}`;
+    const existing = limitations.get(key);
+    limitations.set(key, {
+      key,
+      ...copy,
+      occurrenceCount: (existing?.occurrenceCount ?? 0) + 1,
+    });
+  }
+
+  return [...limitations.values()];
 }
 
 function mandateLabel(value: string): string {
