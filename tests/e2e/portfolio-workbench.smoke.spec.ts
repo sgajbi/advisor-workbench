@@ -296,8 +296,11 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('QTD Return')).toBeVisible();
     await expect(page.getByText('YTD Return')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Portfolio decision review' })).toBeVisible();
+    await expect(page.getByLabel('As of')).toBeVisible();
     const allWorkspaces = page.getByRole('button', { name: /All workspaces/i });
+    await expect(allWorkspaces).toHaveAttribute('aria-expanded', 'false');
     await allWorkspaces.click();
+    await expect(allWorkspaces).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByRole('link', { name: /Income and activity/i })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(allWorkspaces).toBeFocused();
