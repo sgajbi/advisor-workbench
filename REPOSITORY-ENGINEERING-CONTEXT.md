@@ -41,8 +41,9 @@ idempotency, conditional/range, and validated correlation/trace headers. It disc
 authorization, cookies, session material, forwarding aliases, caller identity, roles,
 capabilities, service identity, principal status, and entitlement scope before overwriting the
 default caller context from server configuration. Route-family adapters may narrow or replace that
-server context; no adapter may recover browser authority. `npm run quality:bff-header-boundary`
-blocks raw `request.headers` access and a missing builder in every checked-in BFF route. This rule
+server context; no adapter may recover browser authority. `npm run quality:bff-header-boundary` is
+a syntax-aware CI backstop that blocks equivalent raw browser-header access, a missing builder, or
+an empty scan in every checked-in BFF route; the closed allowlist is the runtime control. This rule
 does not certify production identity; Workbench #436 remains the authenticated-principal owner.
 
 ### Risk Review source-authority rule

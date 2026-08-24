@@ -61,6 +61,12 @@ describe("BFF request-header boundary governance", () => {
     "const copied = Object.fromEntries(request.headers.entries());",
     "const actor = request.headers.get('X-Actor-Id');",
     "const options = { headers: request.headers };",
+    "const copied = new Headers(request['headers']);",
+    "const req = request; const copied = new Headers(req.headers);",
+    "let req; req = request; const copied = new Headers(req.headers);",
+    "const { headers } = request; const copied = new Headers(headers);",
+    "const { headers: browserHeaders } = request; const copied = new Headers(browserHeaders);",
+    "const copied = new Headers((request as Request).headers);",
   ])("rejects raw browser-header access: %s", async (rawAccess) => {
     const { findBffHeaderBoundaryViolations, REQUIRED_BFF_HEADER_BOUNDARY_CALL } =
       await boundaryModulePromise;
@@ -79,6 +85,25 @@ describe("BFF request-header boundary governance", () => {
       ]);
     } finally {
       fs.rmSync(fixture.fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed when no BFF route files are scanned", async () => {
+    const { findBffHeaderBoundaryViolations } = await boundaryModulePromise;
+    const fixtureRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "lotus-bff-header-boundary-empty-"),
+    );
+    const routeRoot = path.join(fixtureRoot, "src", "app", "api", "bff");
+    fs.mkdirSync(routeRoot, { recursive: true });
+
+    try {
+      expect(
+        findBffHeaderBoundaryViolations({ repoRoot: fixtureRoot, routeRoot }),
+      ).toEqual([
+        expect.objectContaining({ control: "no-bff-routes-found" }),
+      ]);
+    } finally {
+      fs.rmSync(fixtureRoot, { recursive: true, force: true });
     }
   });
 
