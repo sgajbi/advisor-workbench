@@ -14,6 +14,11 @@ import {
   formatPerformancePositionLabel,
 } from "../formatters";
 import {
+  PERFORMANCE_ECONOMICS_LABELS,
+  PERFORMANCE_RETURN_LABELS,
+  PERFORMANCE_RETURN_TABLE_LABELS,
+} from "../performance-terminology";
+import {
   resolveActiveCumulativeReturn,
   resolveActivePeriodReturn,
 } from "./performance-return-path-chart-model";
@@ -36,6 +41,13 @@ export type PerformanceAnalyticsTableModel = {
   rows: PerformanceAnalyticsTableRow[];
   footer?: string[];
 };
+
+function rightAlignedColumn(
+  key: string,
+  label: string
+): PerformanceAnalyticsTableColumn {
+  return { key, label, align: "right" };
+}
 
 export type PerformanceReturnPathTableView = "combined" | "absolute" | "relative";
 export type PerformanceHorizonTableView = "combined" | "returns" | "economics";
@@ -90,8 +102,8 @@ export function buildPerformanceContributionTableModel({
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Average Weight", align: "right" },
-    { key: "return", label: "Return", align: "right" },
+    { key: "weight", label: "Average weight", align: "right" },
+    { key: "return", label: PERFORMANCE_RETURN_TABLE_LABELS.segmentTwr, align: "right" },
     { key: "local", label: "Local", align: "right" },
     { key: "fx", label: "FX", align: "right" },
   ];
@@ -153,8 +165,8 @@ export function buildPerformanceContributionLevelTableModel({
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "bucket", label: "Segment" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Average Weight", align: "right" },
-    { key: "return", label: "Return", align: "right" },
+    { key: "weight", label: "Average weight", align: "right" },
+    { key: "return", label: PERFORMANCE_RETURN_TABLE_LABELS.segmentTwr, align: "right" },
     ...(includeLocalFxColumns
       ? [
           { key: "local", label: "Local", align: "right" as const },
@@ -213,8 +225,16 @@ export function buildPerformancePositionContributionTableModel({
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "position", label: "Position" },
     { key: "contribution", label: "Contribution", align: "right" },
-    { key: "weight", label: "Average Weight", align: "right" },
-    ...(includeReturnColumn ? [{ key: "return", label: "Return", align: "right" as const }] : []),
+    { key: "weight", label: "Average weight", align: "right" },
+    ...(includeReturnColumn
+      ? [
+          {
+            key: "return",
+            label: PERFORMANCE_RETURN_TABLE_LABELS.segmentTwr,
+            align: "right" as const,
+          },
+        ]
+      : []),
     ...(includeLocalFxColumns
       ? [
           { key: "local", label: "Local", align: "right" as const },
@@ -256,13 +276,13 @@ export function buildPerformanceAttributionTrendTableModel({
 }): PerformanceAnalyticsTableModel {
   const columns: PerformanceAnalyticsTableColumn[] = [
     { key: "period", label: "Period" },
-    { key: "window", label: "Period Range" },
+    { key: "window", label: "Period range" },
     { key: "allocation", label: "Allocation", align: "right" },
     { key: "selection", label: "Selection", align: "right" },
     { key: "interaction", label: "Interaction", align: "right" },
-    { key: "total", label: "Effect Total", align: "right" },
-    { key: "cumulativeTotal", label: "Cumulative Effect", align: "right" },
-    { key: "active", label: "Active Return", align: "right" },
+    { key: "total", label: "Effect total", align: "right" },
+    { key: "cumulativeTotal", label: "Cumulative effect", align: "right" },
+    { key: "active", label: PERFORMANCE_RETURN_LABELS.activeReturn, align: "right" },
     { key: "residual", label: "Residual", align: "right" },
   ];
 
@@ -310,19 +330,47 @@ export function buildPerformanceReturnPathTableModel({
   includeActiveSeries: boolean;
 }): PerformanceAnalyticsTableModel {
   const absoluteColumns: PerformanceAnalyticsTableColumn[] = [
-    { key: "portfolioPeriod", label: "Portfolio", align: "right" },
+    {
+      key: "portfolioPeriod",
+      label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
+      align: "right",
+    },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkPeriod", label: "Benchmark", align: "right" as const }]
+      ? [
+          {
+            key: "benchmarkPeriod",
+            label: PERFORMANCE_RETURN_LABELS.benchmarkTwr,
+            align: "right" as const,
+          },
+        ]
       : []),
-    { key: "portfolioCumulative", label: "Cum. Portfolio", align: "right" },
+    {
+      key: "portfolioCumulative",
+      label: PERFORMANCE_RETURN_TABLE_LABELS.cumulativePortfolioTwr,
+      align: "right",
+    },
     ...(includeBenchmarkSeries
-      ? [{ key: "benchmarkCumulative", label: "Cum. Benchmark", align: "right" as const }]
+      ? [
+          {
+            key: "benchmarkCumulative",
+            label: PERFORMANCE_RETURN_TABLE_LABELS.cumulativeBenchmarkTwr,
+            align: "right" as const,
+          },
+        ]
       : []),
   ];
   const relativeColumns: PerformanceAnalyticsTableColumn[] = includeActiveSeries
     ? [
-        { key: "activePeriod", label: "Active", align: "right" },
-        { key: "activeCumulative", label: "Cum. Active", align: "right" },
+        {
+          key: "activePeriod",
+          label: PERFORMANCE_RETURN_LABELS.activeReturn,
+          align: "right",
+        },
+        {
+          key: "activeCumulative",
+          label: PERFORMANCE_RETURN_TABLE_LABELS.cumulativeActiveReturn,
+          align: "right",
+        },
       ]
     : [];
   const columns =
@@ -371,39 +419,60 @@ export function buildPerformanceHorizonTableModel({
   const basisReturnColumns =
     basisView === "net"
       ? [
-          { key: "netReturn", label: "Net Return", align: "right" as const },
-          { key: "cumulativeNet", label: "Cumulative Net", align: "right" as const },
-          { key: "annualizedNet", label: "Annualized Net", align: "right" as const },
+          rightAlignedColumn("netReturn", PERFORMANCE_RETURN_TABLE_LABELS.netTwr),
+          rightAlignedColumn("cumulativeNet", PERFORMANCE_RETURN_TABLE_LABELS.cumulativeNetTwr),
+          rightAlignedColumn("annualizedNet", PERFORMANCE_RETURN_TABLE_LABELS.annualisedNetTwr),
         ]
       : basisView === "gross"
         ? [
-            { key: "grossReturn", label: "Gross Return", align: "right" as const },
-            { key: "cumulativeGross", label: "Cumulative Gross", align: "right" as const },
-            { key: "annualizedGross", label: "Annualized Gross", align: "right" as const },
+            rightAlignedColumn("grossReturn", PERFORMANCE_RETURN_TABLE_LABELS.grossTwr),
+            rightAlignedColumn(
+              "cumulativeGross",
+              PERFORMANCE_RETURN_TABLE_LABELS.cumulativeGrossTwr
+            ),
+            rightAlignedColumn(
+              "annualizedGross",
+              PERFORMANCE_RETURN_TABLE_LABELS.annualisedGrossTwr
+            ),
           ]
         : [
-            { key: "netReturn", label: "Net Return", align: "right" as const },
-            { key: "grossReturn", label: "Gross Return", align: "right" as const },
-            { key: "feeDrag", label: "Fee Drag", align: "right" as const },
-            { key: "cumulativeNet", label: "Cumulative Net", align: "right" as const },
-            { key: "cumulativeGross", label: "Cumulative Gross", align: "right" as const },
-            { key: "annualizedNet", label: "Annualized Net", align: "right" as const },
-            { key: "annualizedGross", label: "Annualized Gross", align: "right" as const },
+            rightAlignedColumn("netReturn", PERFORMANCE_RETURN_TABLE_LABELS.netTwr),
+            rightAlignedColumn("grossReturn", PERFORMANCE_RETURN_TABLE_LABELS.grossTwr),
+            rightAlignedColumn("feeDrag", "Fee drag"),
+            rightAlignedColumn("cumulativeNet", PERFORMANCE_RETURN_TABLE_LABELS.cumulativeNetTwr),
+            rightAlignedColumn(
+              "cumulativeGross",
+              PERFORMANCE_RETURN_TABLE_LABELS.cumulativeGrossTwr
+            ),
+            rightAlignedColumn("annualizedNet", PERFORMANCE_RETURN_TABLE_LABELS.annualisedNetTwr),
+            rightAlignedColumn(
+              "annualizedGross",
+              PERFORMANCE_RETURN_TABLE_LABELS.annualisedGrossTwr
+            ),
           ];
   const relativeColumns = [
-    { key: "benchmarkReturn", label: "Benchmark Return", align: "right" as const },
-    { key: "activeReturn", label: "Active Return", align: "right" as const },
-    { key: "cumulativeBenchmark", label: "Cumulative Benchmark", align: "right" as const },
-    { key: "cumulativeActive", label: "Cumulative Active", align: "right" as const },
+    rightAlignedColumn("benchmarkReturn", PERFORMANCE_RETURN_LABELS.benchmarkTwr),
+    rightAlignedColumn("activeReturn", PERFORMANCE_RETURN_LABELS.activeReturn),
+    rightAlignedColumn(
+      "cumulativeBenchmark",
+      PERFORMANCE_RETURN_TABLE_LABELS.cumulativeBenchmarkTwr
+    ),
+    rightAlignedColumn(
+      "cumulativeActive",
+      PERFORMANCE_RETURN_TABLE_LABELS.cumulativeActiveReturn
+    ),
   ];
   const economicsColumns = [
-    { key: "beginMv", label: "Opening MV", align: "right" as const },
-    { key: "beginningCashFlow", label: "Opening Cash Flow", align: "right" as const },
-    { key: "endMv", label: "Ending MV", align: "right" as const },
-    { key: "endingCashFlow", label: "Closing Cash Flow", align: "right" as const },
-    { key: "flowAdjustedEndMv", label: "Flow-Adjusted MV", align: "right" as const },
-    { key: "netCashFlow", label: "Net Flow", align: "right" as const },
-    { key: "fees", label: "Fees", align: "right" as const },
+    rightAlignedColumn("beginMv", PERFORMANCE_ECONOMICS_LABELS.openingMarketValue),
+    rightAlignedColumn("beginningCashFlow", PERFORMANCE_ECONOMICS_LABELS.openingCashFlow),
+    rightAlignedColumn("endMv", PERFORMANCE_ECONOMICS_LABELS.endingMarketValue),
+    rightAlignedColumn("endingCashFlow", PERFORMANCE_ECONOMICS_LABELS.closingCashFlow),
+    rightAlignedColumn(
+      "flowAdjustedEndMv",
+      PERFORMANCE_ECONOMICS_LABELS.flowAdjustedMarketValue
+    ),
+    rightAlignedColumn("netCashFlow", PERFORMANCE_ECONOMICS_LABELS.netCashFlow),
+    rightAlignedColumn("fees", "Fees"),
   ];
   const columns =
     tableView === "returns"

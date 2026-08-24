@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   getPerformanceFeeBasisLabel,
   getPerformanceReturnPathTitle,
+  PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_FEE_BASIS_LABELS,
   PERFORMANCE_RETURN_DEFINITIONS,
   PERFORMANCE_RETURN_LABELS,
+  PERFORMANCE_RETURN_TABLE_LABELS,
 } from "../../src/apps/performance/performance-terminology";
 
 describe("performance terminology", () => {
@@ -51,5 +53,23 @@ describe("performance terminology", () => {
     expect(PERFORMANCE_RETURN_DEFINITIONS.moneyWeightedReturn).toContain(
       "reflects the timing and size of external cash flows",
     );
+  });
+
+  it("provides compact table labels without losing method or economics meaning", () => {
+    expect(PERFORMANCE_RETURN_TABLE_LABELS).toMatchObject({
+      segmentTwr: "TWR",
+      netTwr: "Net TWR",
+      grossTwr: "Gross TWR",
+      annualisedNetTwr: "Annualised net TWR",
+      annualisedGrossTwr: "Annualised gross TWR",
+    });
+    expect(PERFORMANCE_ECONOMICS_LABELS).toEqual({
+      openingMarketValue: "Opening market value",
+      endingMarketValue: "Ending market value",
+      flowAdjustedMarketValue: "Flow-adjusted market value",
+      openingCashFlow: "Opening cash flow",
+      closingCashFlow: "Closing cash flow",
+      netCashFlow: "Net cash flow",
+    });
   });
 });

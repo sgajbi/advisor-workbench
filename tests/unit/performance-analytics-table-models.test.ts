@@ -28,8 +28,8 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
       "Window",
-      "Active",
-      "Cum. Active",
+      "Active return",
+      "Cumulative active return",
     ]);
     expect(model.rows[0]?.cells).toEqual([
       "2026-01",
@@ -52,24 +52,24 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
       "Window",
-      "Opening MV",
-      "Opening Cash Flow",
-      "Ending MV",
-      "Closing Cash Flow",
-      "Flow-Adjusted MV",
-      "Net Flow",
+      "Opening market value",
+      "Opening cash flow",
+      "Ending market value",
+      "Closing cash flow",
+      "Flow-adjusted market value",
+      "Net cash flow",
       "Fees",
-      "Net Return",
-      "Gross Return",
-      "Fee Drag",
-      "Cumulative Net",
-      "Cumulative Gross",
-      "Annualized Net",
-      "Annualized Gross",
-      "Benchmark Return",
-      "Active Return",
-      "Cumulative Benchmark",
-      "Cumulative Active",
+      "Net TWR",
+      "Gross TWR",
+      "Fee drag",
+      "Cumulative net TWR",
+      "Cumulative gross TWR",
+      "Annualised net TWR",
+      "Annualised gross TWR",
+      "Benchmark TWR",
+      "Active return",
+      "Cumulative benchmark TWR",
+      "Cumulative active return",
     ]);
     expect(model.rows.find((row) => row.key === "YTD")?.className).toBe(
       "performance-horizon-table-row-selected"
@@ -115,13 +115,13 @@ describe("performance analytics table models", () => {
 
     expect(model.columns.map((column) => column.label)).toEqual([
       "Period",
-      "Period Range",
+      "Period range",
       "Allocation",
       "Selection",
       "Interaction",
-      "Effect Total",
-      "Cumulative Effect",
-      "Active Return",
+      "Effect total",
+      "Cumulative effect",
+      "Active return",
       "Residual",
     ]);
     expect(model.rows[0]?.cells).toEqual([
@@ -146,8 +146,8 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Segment",
       "Contribution",
-      "Average Weight",
-      "Return",
+      "Average weight",
+      "TWR",
       "Local",
       "FX",
     ]);
@@ -187,8 +187,8 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Segment",
       "Contribution",
-      "Average Weight",
-      "Return",
+      "Average weight",
+      "TWR",
       "Local",
       "FX",
     ]);
@@ -218,8 +218,8 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Average Weight",
-      "Return",
+      "Average weight",
+      "TWR",
       "Local",
       "FX",
     ]);
@@ -258,7 +258,7 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Average Weight",
+      "Average weight",
       "Local",
       "FX",
     ]);
@@ -296,8 +296,8 @@ describe("performance analytics table models", () => {
     expect(model.columns.map((column) => column.label)).toEqual([
       "Position",
       "Contribution",
-      "Average Weight",
-      "Return",
+      "Average weight",
+      "TWR",
       "Local",
       "FX",
     ]);

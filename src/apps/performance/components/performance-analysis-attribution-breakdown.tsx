@@ -2,9 +2,8 @@ import { AnalyticsTable } from "@/design-system";
 import type { AttributionSummaryView } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
-import {
-  getAttributionSupportabilityLine,
-} from "./performance-attribution-presentations";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
+import { getAttributionSupportabilityLine } from "./performance-attribution-presentations";
 import PerformanceAttributionReconciliationNote from "./performance-attribution-reconciliation-note";
 import {
   getAttributionWeightTotals,
@@ -48,13 +47,13 @@ function PerformanceAttributionSummaryFallback({
           { key: "allocation", label: "Allocation", align: "right" },
           { key: "selection", label: "Selection", align: "right" },
           { key: "interaction", label: "Interaction", align: "right" },
-          { key: "total", label: "Total Effect", align: "right" },
+          { key: "total", label: "Total effect", align: "right" },
         ]}
         rows={[
           {
             key: `${level.dimension}-summary`,
             cells: [
-              "Summary Total",
+              "Summary total",
               formatAttributionTotal(level.allocation_total_pct),
               formatAttributionTotal(level.selection_total_pct),
               formatAttributionTotal(level.interaction_total_pct),
@@ -90,16 +89,28 @@ function PerformanceAttributionLevelTable({
         ariaLabel={`${formatLabel(level.dimension)} attribution table`}
         columns={[
           { key: "bucket", label: "Segment" },
-          { key: "portWt", label: "Portfolio Weight", align: "right" },
-          { key: "bmkWt", label: "Benchmark Weight", align: "right" },
-          { key: "activeWt", label: "Active Weight", align: "right" },
-          { key: "portRet", label: "Portfolio Return", align: "right" },
-          { key: "bmkRet", label: "Benchmark Return", align: "right" },
-          { key: "activeRet", label: "Active Return", align: "right" },
+          { key: "portWt", label: "Portfolio weight", align: "right" },
+          { key: "bmkWt", label: "Benchmark weight", align: "right" },
+          { key: "activeWt", label: "Active weight", align: "right" },
+          {
+            key: "portRet",
+            label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
+            align: "right",
+          },
+          {
+            key: "bmkRet",
+            label: PERFORMANCE_RETURN_LABELS.benchmarkTwr,
+            align: "right",
+          },
+          {
+            key: "activeRet",
+            label: PERFORMANCE_RETURN_LABELS.activeReturn,
+            align: "right",
+          },
           { key: "allocation", label: "Allocation", align: "right" },
           { key: "selection", label: "Selection", align: "right" },
           { key: "interaction", label: "Interaction", align: "right" },
-          { key: "total", label: "Total Effect", align: "right" },
+          { key: "total", label: "Total effect", align: "right" },
         ]}
         rows={level.rows.map((row) => ({
           key: `${level.dimension}-${row.key_label}`,
