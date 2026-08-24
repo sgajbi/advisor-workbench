@@ -1,6 +1,7 @@
 "use client";
 
 import { MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import {
   businessStateLabel,
   formatBusinessReason,
@@ -93,7 +94,9 @@ export default function RebalanceStatus(props: Props) {
                     Review {index + 1}
                   </Text>
                   <Text as="span" variant="bodySmall" className="muted">
-                    {run.created_at_utc ?? "Timestamp N/A"}
+                    {formatTimestampValue(run.created_at_utc, {
+                      nullDisplay: "Timestamp not reported",
+                    })}
                   </Text>
                 </div>
                 <div className="rebalance-operations-run-state">
@@ -117,7 +120,9 @@ export default function RebalanceStatus(props: Props) {
         )}
       </div>
       <Text variant="secondary" className="muted">
-        Latest assessment: {lastRunAt ?? "Not available"}
+        Latest assessment: {formatTimestampValue(lastRunAt, {
+          nullDisplay: "Not reported",
+        })}
       </Text>
       <Text variant="secondary" className="muted">
         {hasSourceContext

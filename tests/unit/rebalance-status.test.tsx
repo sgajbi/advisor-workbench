@@ -56,7 +56,7 @@ describe("RebalanceStatus", () => {
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Operations");
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("3");
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Decisions");
-    expect(scope.getByText("Latest assessment: 2026-03-27T12:00:00Z")).toBeInTheDocument();
+    expect(scope.getByText("Latest assessment: 27 Mar 2026, 12:00 UTC")).toBeInTheDocument();
     expect(scope.getByText("Action Register Current")).toBeInTheDocument();
     const dashboard = scope.getByLabelText("Rebalance review activity");
     expect(dashboard).toHaveTextContent("2");
@@ -64,9 +64,37 @@ describe("RebalanceStatus", () => {
     expect(dashboard).toHaveTextContent("1");
     expect(dashboard).toHaveTextContent("Run issues");
     expect(dashboard).toHaveTextContent("Review 1");
+    expect(dashboard).toHaveTextContent("27 Mar 2026, 12:00 UTC");
     expect(dashboard).toHaveTextContent("PM Review Required");
     expect(dashboard).toHaveTextContent("Review 2");
+    expect(dashboard).toHaveTextContent("26 Mar 2026, 12:00 UTC");
     expect(dashboard).toHaveTextContent("Source Readiness Blocked");
+  });
+
+  it("fails closed when rebalance audit instants do not carry source timezone evidence", () => {
+    const { container } = render(
+      <RebalanceStatus
+        snapshot={{
+          status: "READY",
+          last_run_at_utc: "2026-03-27T12:00:00",
+          recent_runs: [
+            {
+              rebalance_run_id: "rr_unzoned",
+              status: "READY",
+              created_at_utc: "not-a-timestamp",
+              error_code: null,
+              workflow_state: null,
+            },
+          ],
+        }}
+      />,
+    );
+
+    const scope = within(container);
+    expect(scope.getByText("Latest assessment: Not reported")).toBeInTheDocument();
+    expect(scope.getByText("Timestamp not reported")).toBeInTheDocument();
+    expect(container).not.toHaveTextContent("2026-03-27T12:00:00");
+    expect(container).not.toHaveTextContent("not-a-timestamp");
   });
 
   it("surfaces source-incomplete posture without inventing readiness", () => {
@@ -93,7 +121,7 @@ describe("RebalanceStatus", () => {
     expect(scope.getByText("Pending Review")).toBeInTheDocument();
     expect(scope.getByText("Action Required")).toBeInTheDocument();
     expect(scope.getByText("Stale")).toBeInTheDocument();
-    expect(scope.getByText("Latest assessment: Not available")).toBeInTheDocument();
+    expect(scope.getByText("Latest assessment: Not reported")).toBeInTheDocument();
     expect(scope.getByText("Source Readiness Incomplete")).toBeInTheDocument();
     expect(scope.getByLabelText("Rebalance review activity")).toHaveTextContent(
       "No recent rebalance review activity is available for this portfolio."
