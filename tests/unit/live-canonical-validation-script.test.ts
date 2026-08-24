@@ -1292,9 +1292,24 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "hasAcceptedAdvisorBriefReviewPosture",
     );
-    expect(browserWorkflowModule).toContain("Accepted for internal use");
-    expect(browserWorkflowModule).toContain("Supportability READY");
-    expect(browserWorkflowModule).toContain("Review recorded by");
+    expect(browserWorkflowModule).toContain(
+      '"advisor-brief-human-review-evidence"',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getAttribute("data-review-state")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getAttribute("data-review-supportability")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getAttribute("data-reviewer")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getAttribute("data-recorded-at")',
+    );
+    expect(browserWorkflowModule).not.toContain(
+      "supportabilityRegion.textContent()",
+    );
     expect(browserWorkflowModule).not.toContain(
       'text.includes("Supportability ACTION REQUIRED")',
     );
