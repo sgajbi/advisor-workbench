@@ -52,7 +52,7 @@ describe("portfolio-memory view model", () => {
     expect(model.supportabilityState).toBe("READY");
     expect(model.portfolioId).toBe("PB_SG_GLOBAL_BAL_001");
     expect(model.eventCount).toBe("2");
-    expect(model.latestEventTime).toBe("07 May 2026, 10:00");
+    expect(model.latestEventTime).toBe("07 May 2026, 10:00 UTC");
     expect(model.artifactRefCount).toBe("2");
     expect(model.contentHash).toBe("sha256:portfolio-memory");
     expect(model.eventTypeRows.map((row) => row.eventType)).toEqual([
@@ -76,6 +76,7 @@ describe("portfolio-memory view model", () => {
       artifactRefCount: 1,
       contentHash: "N/A",
       reasonCodes: "PROOF_READY",
+      eventTime: "07 May 2026, 10:00 UTC",
     });
     expect(model.selectedEvent?.eventId).toBe("memory:proof-pack:ppack_1");
     expect(model.latestMemoryEvent).toBe("Evidence Pack Generated");
@@ -89,6 +90,27 @@ describe("portfolio-memory view model", () => {
     ]);
     expect(JSON.stringify(model.recommendedActions)).not.toContain("Add advisor note");
     expect(JSON.stringify(model.recommendedActions)).not.toContain("client preference");
+  });
+
+  it("fails closed when source audit instants are malformed or omit timezone evidence", () => {
+    const model = buildPortfolioMemoryPanelModel({
+      ...memoryResponse,
+      data: {
+        ...memoryResponse.data,
+        summary: { latest_event_at: "not-a-timestamp" },
+        events: [
+          {
+            ...memoryResponse.data.events[0],
+            event_time: "2026-05-07T10:00:00",
+          },
+        ],
+      },
+    });
+
+    expect(model.latestEventTime).toBe("Not reported");
+    expect(model.events[0]?.eventTime).toBe("Not reported");
+    expect(JSON.stringify(model)).not.toContain("not-a-timestamp");
+    expect(JSON.stringify(model)).not.toContain("2026-05-07T10:00:00");
   });
 
   it("preserves bounded source-family search facets without changing timeline authority", () => {

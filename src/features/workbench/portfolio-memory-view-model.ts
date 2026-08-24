@@ -1,3 +1,4 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import type { DpmPortfolioMemoryGatewayResponse } from "./types";
 
 const CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT =
@@ -140,11 +141,12 @@ export function buildPortfolioMemoryPanelModel(
     correlationId: response.correlation_id,
     portfolioId: readString(data, "portfolio_id") || "N/A",
     eventCount: formatValue(supportability.event_count),
-    latestEventTime:
+    latestEventTime: formatTimestampValue(
       readString(readRecord(data.summary), "latest_event_at") ||
-      readString(data, "latest_event_at") ||
-      events[0]?.eventTime ||
-      "N/A",
+        readString(data, "latest_event_at") ||
+        readEventTimestamp(eventRecords[0]),
+      { nullDisplay: "Not reported" },
+    ),
     contentHash:
       supportability.content_hash ||
       readString(readRecord(data.summary), "content_hash") ||
@@ -237,13 +239,9 @@ function buildEventRow(
     eventType,
     eventLabel,
     category: eventCategory(eventType),
-    eventTime:
-      formatEventTime(
-        readString(record, "event_time") ||
-          readString(record, "occurred_at") ||
-          readString(record, "created_at"),
-      ) ||
-      "N/A",
+    eventTime: formatTimestampValue(readEventTimestamp(record), {
+      nullDisplay: "Not reported",
+    }),
     summary:
       eventType === "PM_QUALITY_REVIEW_ACTION" ||
       eventType === CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT
@@ -531,23 +529,15 @@ function extractStringArray(value: unknown): string[] {
   );
 }
 
-function formatEventTime(value: string): string {
-  if (!value) {
+function readEventTimestamp(record: Record<string, unknown> | undefined): string {
+  if (!record) {
     return "";
   }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  }).format(date);
+  return (
+    readString(record, "event_time") ||
+    readString(record, "occurred_at") ||
+    readString(record, "created_at")
+  );
 }
 
 function businessCase(value: string): string {
