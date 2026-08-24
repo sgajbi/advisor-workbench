@@ -4,7 +4,7 @@ import { buildManageOverviewModel } from "../../src/features/workbench/manage-ov
 import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
 
 describe("manage overview model", () => {
-  it("builds advisor decision posture from Gateway-backed manage data", () => {
+  it("builds adviser decision posture from Gateway-backed manage data", () => {
     const model = buildManageOverviewModel(buildManageWorkspaceData());
 
     expect(model.portfolioSummary).toMatchObject({
@@ -26,10 +26,15 @@ describe("manage overview model", () => {
         }),
         expect.objectContaining({
           key: "attention",
-          label: "Active attention",
+          label: "Open attention items",
           value: "2",
           tone: "warn",
           support: "Selected mandate",
+        }),
+        expect.objectContaining({
+          key: "data",
+          label: "Data availability",
+          support: "Mandate source availability",
         }),
       ])
     );

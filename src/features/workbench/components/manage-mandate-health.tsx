@@ -32,6 +32,7 @@ import {
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
 import { useManageExceptionSourceWindow } from "@/features/workbench/use-manage-exception-source-window";
+import { MANAGE_WORKFLOW_LABELS } from "@/features/workbench/manage-terminology";
 
 import type {
   MandateHealthRow,
@@ -103,7 +104,7 @@ export default function ManageMandateHealth({ data }: Props) {
 
   return (
     <SectionBlock
-      title="Mandate review workflow"
+      title={MANAGE_WORKFLOW_LABELS.mandateReview}
       subtitle="Review mandate posture, select an attention item, and inspect its source-owned next step and evidence."
       className="manage-mandate-panel"
       actions={
@@ -129,20 +130,21 @@ export default function ManageMandateHealth({ data }: Props) {
         <span>{riskProfile}</span>
         <span>{currency}</span>
         <span>
-          As of {asOfDate === "N/A" ? "Not available" : formatMandateHealthDisplayDate(asOfDate)}
+          {MANAGE_WORKFLOW_LABELS.asOfDate}{" "}
+          {asOfDate === "N/A" ? "Not available" : formatMandateHealthDisplayDate(asOfDate)}
         </span>
       </div>
 
       <div className="mandate-health-summary-grid" aria-label="Mandate health summary">
         <HealthSummaryCard
-          label="Mandate health"
+          label={MANAGE_WORKFLOW_LABELS.mandateHealth}
           value={businessStateLabel(commandModel.mandateHealthState)}
           detail={formatSourceScoreDetail(healthScore)}
           tone={toneForState(commandModel.mandateHealthState)}
           meter={healthScore}
         />
         <HealthSummaryCard
-          label="Data readiness"
+          label={MANAGE_WORKFLOW_LABELS.dataAvailability}
           value={businessStateLabel(commandModel.dataCompletenessState)}
           detail={formatSourceScoreDetail(dataReadinessScore)}
           tone={toneForState(commandModel.dataCompletenessState)}
@@ -262,11 +264,11 @@ function MandateStateNotice({
     );
   }
   return (
-    <ScreenStatePanel
-      kind="partial"
-      surface="portfolio"
-      title="Mandate monitoring requires attention"
-      body="Some mandate monitoring evidence is stale, degraded, or unavailable. Available source-owned results remain visible below."
+      <ScreenStatePanel
+        kind="partial"
+        surface="portfolio"
+        title="Mandate review evidence is incomplete"
+        body="Some mandate monitoring evidence is stale, degraded, or unavailable. Available source-owned results remain visible below."
     />
   );
 }
@@ -348,7 +350,9 @@ function AttentionReviewQueue({
       <div className="manage-overview-card-header">
         <div>
           <span>Mandate monitoring</span>
-          <h3 id="mandate-attention-heading">Attention Required</h3>
+          <h3 id="mandate-attention-heading">
+            {MANAGE_WORKFLOW_LABELS.attentionItems}
+          </h3>
         </div>
         <strong>
           {evidencePosture === "complete"
@@ -555,7 +559,9 @@ function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
       <div className="manage-overview-card-header">
         <div>
           <span>Source-owned mandate evidence</span>
-          <h3 id="mandate-dimensions-heading">Health Dimensions Breakdown</h3>
+          <h3 id="mandate-dimensions-heading">
+            {MANAGE_WORKFLOW_LABELS.mandateHealthDimensions}
+          </h3>
         </div>
       </div>
       <div
