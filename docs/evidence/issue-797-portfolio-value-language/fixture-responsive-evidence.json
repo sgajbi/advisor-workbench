@@ -1,0 +1,1746 @@
+{
+  "generatedAtUtc": "2026-08-24T16:00:51.454Z",
+  "proofType": "owned degraded-state fixture",
+  "decision": "Performance evidence remains qualified and the source-owned action precedes adjacent workflows.",
+  "viewports": [
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 76,
+          "top": 222
+        },
+        {
+          "display": "none",
+          "fits": true,
+          "left": 0,
+          "top": 0
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:ADVISOR My book",
+          "name": "ADVISOR My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "a:5:/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001:Portfolio review Mandate and decision context",
+          "name": "Portfolio review Mandate and decision context",
+          "tag": "a",
+          "href": "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:6:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Performance Returns and attribution",
+          "name": "Performance Returns and attribution",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:7:/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001:Advice Priorities and recommendations",
+          "name": "Advice Priorities and recommendations",
+          "tag": "a",
+          "href": "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:8:/reports?portfolioId=PB_SG_GLOBAL_BAL_001:Reporting Order and monitor reports",
+          "name": "Reporting Order and monitor reports",
+          "tag": "a",
+          "href": "/reports?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:9:/workbench/PB_SG_GLOBAL_BAL_001?portfolioId=PB_SG_GLOBAL_BAL_001:Mandate management Mandate and operating workflow",
+          "name": "Mandate management Mandate and operating workflow",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "button:10::All workspaces 7 specialist views Browse",
+          "name": "All workspaces 7 specialist views Browse",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:11::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:14::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:15::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:16::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:17::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:18::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:19:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:21:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:22:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:23:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:24:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:25:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 1024,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1024,
+          "scrollWidth": 1024
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 62,
+          "top": 236
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 250,
+          "top": 232
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:ADVISOR My book",
+          "name": "ADVISOR My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "document": {
+          "clientWidth": 768,
+          "scrollWidth": 768
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 58,
+          "top": 236
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 352,
+          "top": 232
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:ADVISOR My book",
+          "name": "ADVISOR My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 721,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 721,
+          "scrollWidth": 721
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 58,
+          "top": 310
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 331,
+          "top": 306
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:ADVISOR My book",
+          "name": "ADVISOR My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 720,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 720,
+          "scrollWidth": 720
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 56,
+          "top": 304
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 56,
+          "top": 364
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:ADVISOR My book",
+          "name": "ADVISOR My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 561,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 561,
+          "scrollWidth": 561
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 56,
+          "top": 301
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 56,
+          "top": 361
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:My book",
+          "name": "My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": null
+    },
+    {
+      "scenario": "cashflow",
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "measurements": {
+        "viewport": {
+          "width": 519,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 519,
+          "scrollWidth": 519
+        }
+      },
+      "railHeaderRegions": [
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 48,
+          "top": 293
+        },
+        {
+          "display": "grid",
+          "fits": true,
+          "left": 48,
+          "top": 339
+        }
+      ],
+      "reviewContextOwnership": [
+        {
+          "fact": "PB_SG_GLOBAL_BAL_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "CLIENT_SG_001",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "Singapore",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        },
+        {
+          "fact": "10 Apr 2026",
+          "presentInReviewContext": true,
+          "presentOutsideReviewContext": false
+        }
+      ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "focusableDomOrder": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/"
+        },
+        {
+          "key": "a:1:/book:My book",
+          "name": "My book",
+          "tag": "a",
+          "href": "/book"
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "summary:3::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "summary:4::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null
+        },
+        {
+          "key": "button:5::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:8::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "input:9::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null
+        },
+        {
+          "key": "select:10::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null
+        },
+        {
+          "key": "button:11::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:12::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "button:13::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null
+        },
+        {
+          "key": "a:14:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:15:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:16:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:17:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:18:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40"
+        },
+        {
+          "key": "a:19:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001"
+        },
+        {
+          "key": "a:20:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products"
+        }
+      ],
+      "keyboardEvidence": [
+        {
+          "key": "a:0:/:Lotus",
+          "name": "Lotus",
+          "tag": "a",
+          "href": "/",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:1:/book:My book",
+          "name": "My book",
+          "tag": "a",
+          "href": "/book",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:2::Switch workspace. Current workspace Portfolio",
+          "name": "Switch workspace. Current workspace Portfolio",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "summary:6::Support details",
+          "name": "Support details",
+          "tag": "summary",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "summary:9::Change portfolio",
+          "name": "Change portfolio",
+          "tag": "summary",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:10::CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "name": "CURRENT VIEW Portfolio review Mandate and decision context Change",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:24::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:25::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:26::Cash: 750,000 USD",
+          "name": "Cash: 750,000 USD",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "input:27::As of",
+          "name": "As of",
+          "tag": "input",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "select:28::Reporting Currency",
+          "name": "Reporting Currency",
+          "tag": "select",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:29::Export portfolio data",
+          "name": "Export portfolio data",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:30::More actions",
+          "name": "More actions",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "button:32::30D",
+          "name": "30D",
+          "tag": "button",
+          "href": null,
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:38:/performance?portfolioId=PB_SG_GLOBAL_BAL_001:Open Performance",
+          "name": "Open Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:39:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40:Performance",
+          "name": "Performance",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:40:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40:Risk",
+          "name": "Risk",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:41:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40:Advisor Brief",
+          "name": "Advisor Brief",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=advisor&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:42:/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40:Evidence",
+          "name": "Evidence",
+          "tag": "a",
+          "href": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=evidence&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:43:/workbench/PB_SG_GLOBAL_BAL_001:Mandate Operations",
+          "name": "Mandate Operations",
+          "tag": "a",
+          "href": "/workbench/PB_SG_GLOBAL_BAL_001",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        },
+        {
+          "key": "a:44:/data-products:Source Catalog",
+          "name": "Source Catalog",
+          "tag": "a",
+          "href": "/data-products",
+          "focusVisible": true,
+          "notObscured": true,
+          "withinViewport": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "capturedAtUtc": "2026-08-24T16:03:47.358Z",
+  "proofType": "read-only live shared runtime diagnostic",
+  "url": "http://workbench.dev.lotus/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&reportingCurrency=USD",
+  "title": "",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "pageOverflowPx": 0,
+  "portfolioIdVisible": true,
+  "portfolioValueLabelVisible": true,
+  "portfolioValueAccessibleName": "Portfolio value: 1,325,241 USD",
+  "visibleAumOccurrences": 0,
+  "reviewContextSourceState": "confirmed",
+  "businessDateVisible": true,
+  "baseCurrencyVisible": true
+}
