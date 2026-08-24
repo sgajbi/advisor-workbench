@@ -17,6 +17,7 @@ import {
   parseServerTimingMetrics,
 } from './workbench-smoke-helpers';
 import { observeBrowserRuntimeFailures } from './browser-runtime-reliability';
+import { expectWorkbenchRelationshipIntegrity } from './workbench-relationship-evidence';
 import {
   GOVERNED_REVIEW_AS_OF_DATE,
   GOVERNED_REVIEW_CURRENCY,
@@ -921,6 +922,7 @@ test.describe('Performance workbench smoke', () => {
       'This deterministic navigation proof requires the populated performance fixture.',
     );
     test.setTimeout(90_000);
+    const runtime = observeBrowserRuntimeFailures(page);
 
     for (const viewport of [
       { name: 'desktop', width: 1440, height: 1000 },
@@ -934,6 +936,11 @@ test.describe('Performance workbench smoke', () => {
       const navigation = page.getByRole('navigation', {
         name: 'Workbench screen navigation',
       });
+      await expectWorkbenchRelationshipIntegrity(page, [
+        'performance-workspace-rail-navigation',
+        'performance-workspace-rail-workspace-directory',
+        'performance-workspace-rail-workflow-directory',
+      ]);
       const compactNavigation = viewport.width <= 1200;
       const currentView = page.getByRole('button', {
         name: /Current view Performance/i,
@@ -1004,6 +1011,8 @@ test.describe('Performance workbench smoke', () => {
         await expect(navigation).not.toBeVisible();
       }
     }
+    await runtime.assertStylesAreHeadManaged();
+    runtime.assertClean();
   });
 
   test('review context and focus survive Performance mode Back and Forward navigation', async ({
