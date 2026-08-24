@@ -2,7 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import ManageContextRail from "../../src/features/workbench/components/manage-context-rail";
+import ManageEvidenceRail from "../../src/features/workbench/components/manage-evidence-rail";
 import DpmCopilotWorkspace from "../../src/features/workbench/components/dpm-copilot-workspace";
 import ManageMandateHealth from "../../src/features/workbench/components/manage-mandate-health";
 import ManageOverview from "../../src/features/workbench/components/manage-overview";
@@ -203,16 +203,6 @@ describe("manage workspace split components", () => {
     expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
     expect(screen.queryByText("No active attention items.")).not.toBeInTheDocument();
 
-    rerender(
-      <ManageContextRail
-        data={data}
-        activeMode="reviews"
-        reviewContext={{ portfolioId: "PF_1001" }}
-      />,
-    );
-    const posture = screen.getByLabelText("Manage review posture");
-    expect(within(posture).getByText("Not available")).toBeInTheDocument();
-    expect(within(posture).queryByText("0 open")).not.toBeInTheDocument();
   });
 
   it("keeps a valid partial exception window reviewable without claiming a whole queue", () => {
@@ -246,15 +236,6 @@ describe("manage workspace split components", () => {
       screen.getByRole("option", { name: /Continue the mandate attention review/i }),
     ).toBeInTheDocument();
 
-    rerender(
-      <ManageContextRail
-        data={data}
-        activeMode="mandate"
-        reviewContext={{ portfolioId: "PF_1001" }}
-      />,
-    );
-    const posture = screen.getByLabelText("Manage review posture");
-    expect(within(posture).getByText("2 shown; more available")).toBeInTheDocument();
   });
 
   it("loads the next exception window through the BFF and confirms its source identity", async () => {
@@ -509,38 +490,20 @@ describe("manage workspace split components", () => {
     expect(screen.queryByText("Ready for review")).not.toBeInTheDocument();
   });
 
-  it("renders decision posture and actions without repeating shell-owned identity", () => {
+  it("keeps the right rail to source evidence without repeating navigation or operating posture", () => {
     render(
-      <ManageContextRail
-        data={buildManageWorkspaceData()}
-        activeMode="reviews"
-        reviewContext={{
-          portfolioId: "PF_1001",
-          asOfDate: "2026-04-10",
-          period: "YTD",
-          reportingCurrency: "SGD",
-        }}
-      />,
+      <ManageEvidenceRail data={buildManageWorkspaceData()} />,
     );
 
-    expect(screen.queryByText("Decision Support")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
-
-    const posture = screen.getByLabelText("Manage review posture");
-    expect(within(posture).getByText("Attention Items")).toBeInTheDocument();
-    expect(within(posture).getByText("2 open")).toBeInTheDocument();
-    expect(within(posture).getByText("Evidence")).toBeInTheDocument();
-    expect(within(posture).getAllByText("Available").length).toBeGreaterThan(0);
-
-    expect(screen.getByRole("link", { name: "Open PM Quality" })).toHaveAttribute(
-      "href",
-      "/workbench/PF_1001?portfolioId=PF_1001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&mode=quality"
-    );
-    expect(screen.getByRole("link", { name: "Return to Portfolio" })).toHaveAttribute(
-      "href",
-      "/portfolio?portfolioId=PF_1001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD"
-    );
-    expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
+    const evidence = screen.getByLabelText("Manage source evidence");
+    expect(within(evidence).getByText("Evidence pack")).toBeInTheDocument();
+    expect(within(evidence).getByText("Monitoring record")).toBeInTheDocument();
+    expect(within(evidence).getByText("Traceability")).toBeInTheDocument();
+    expect(within(evidence).getAllByText("Available")).toHaveLength(2);
+    expect(screen.queryByText("Attention Items")).not.toBeInTheDocument();
+    expect(screen.queryByText("Data Readiness")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rebalance")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("renders the governed PM copilot workspace without execution or client-contact claims", () => {

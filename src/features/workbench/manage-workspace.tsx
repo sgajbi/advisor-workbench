@@ -26,7 +26,7 @@ import OutcomeReviewPanel from "@/features/workbench/components/outcome-review-p
 import PortfolioMemoryPanel from "@/features/workbench/components/portfolio-memory-panel";
 import PmOperatingQualityPanel from "@/features/workbench/components/pm-operating-quality-panel";
 import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
-import ManageContextRail from "@/features/workbench/components/manage-context-rail";
+import ManageEvidenceRail from "@/features/workbench/components/manage-evidence-rail";
 import ManageOverview from "@/features/workbench/components/manage-overview";
 import {
   buildManageModeItems,
@@ -131,11 +131,7 @@ export function ManageWorkspace({
             </WorkbenchPageFrame>
           }
           side={
-            <ManageContextRail
-              data={data}
-              activeMode={mode}
-              reviewContext={reviewContext}
-            />
+            <ManageEvidenceRail data={data} />
           }
         />
       </WorkbenchPageContainer>
