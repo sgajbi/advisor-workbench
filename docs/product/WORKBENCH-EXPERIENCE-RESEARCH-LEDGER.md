@@ -5,6 +5,59 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## BFF browser-header trust boundary: allowlist before authority
+
+### Business and control job
+
+An advisor action must reach Gateway with the exact business request and support reference, but
+never with a browser-selected identity, role, entitlement, session, or upstream credential. A
+route-family denylist leaves new Workbench screens exposed by default; a single allowlisted ingress
+boundary makes secure behavior reusable as the product surface expands.
+
+### Research inputs
+
+Research was reviewed on 2026-08-24 from current official sources:
+
+1. [Next.js — Building APIs with Next.js](https://nextjs.org/blog/building-apis-with-nextjs)
+   describes Route Handlers as a backend-for-frontend boundary that mediates browser access.
+2. [Next.js — Data Security](https://nextjs.org/docs/app/guides/data-security) requires security
+   checks close to data access and treats client inputs as untrusted.
+3. [Next.js — Authentication](https://nextjs.org/docs/app/guides/authentication) separates
+   optimistic routing checks from secure authorization at the data boundary.
+4. [Next.js — Self-hosting](https://nextjs.org/docs/app/guides/self-hosting) recommends a reverse
+   proxy in front of a self-hosted Next.js server for malformed-request and request-limit controls.
+5. [W3C Trace Context](https://www.w3.org/TR/trace-context/) defines the bounded `traceparent`
+   format carried across service boundaries.
+
+### Adopted
+
+1. Construct a new Gateway `Headers` object from a closed browser allowlist before every
+   route-family authority adapter.
+2. Carry only content negotiation/type, idempotency, HTTP conditional/range controls, and validated
+   correlation/trace context.
+3. Write configured caller context unconditionally, then let explicit family adapters replace it
+   with narrower server-derived authority.
+4. Combine table-driven behavioral proof across every active BFF family with a repository scanner
+   that rejects raw browser-header access or a missing builder.
+
+### Rejected
+
+1. Copy all browser headers and delete known dangerous names: every new authority alias would be
+   trusted until separately discovered.
+2. Preserve browser `Authorization` for generic routes: production principal resolution is a
+   separate server-owned contract under #436, not a passthrough credential.
+3. Depend only on the five specialized authority adapters: portfolio, analytics, DPM, document,
+   Intake, lookup, and platform routes require the same secure default.
+4. Treat this boundary as production authentication or entitlement certification.
+
+### Implementation and validation decision
+
+Workbench #825 owns the non-visual security prerequisite. No screen hierarchy, business workflow,
+Gateway/OpenAPI shape, runtime topology, or supported-feature claim changes, so rendered evidence
+is not applicable. Focused evidence is the exact allowlist unit contract, ten-family GET/POST BFF
+matrix, correlation validation, mutation-tested architecture gate, protected review/CI, exact-main
+validation, wiki publication/parity, and clean branch restoration.
+
 ## Performance review controls: one context, inherited comparison, progressive detail
 
 ### Business job
