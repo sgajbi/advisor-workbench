@@ -110,9 +110,11 @@ handing the user to a focused Manage mode.
   centre workspace owns operating posture and decisions, and the right rail owns only distinct
   source-evidence availability, monitoring-record, and traceability facts. The evidence rail does
   not restate destinations, attention, data-readiness, or rebalance posture.
-- Treats a historical evidence-pack reference separately from a currently retrieved pack. The rail
-  reports **Available** only when the pack response was fetched, **Referenced; not retrieved** when
-  lineage exists without a current response, and **Temporarily unavailable** when retrieval fails.
+- Treats a historical evidence-pack reference separately from a currently usable pack. The rail
+  normalizes the same Gateway envelope used by the centre panel: **Available** and **Partially
+  available** require a usable pack identity, while **Blocked**, **Not supported**, **Not linked**,
+  and **Temporarily unavailable** retain the source supportability boundary. It reports
+  **Referenced; not retrieved** only when lineage exists without a current response.
 - Shares the current fetched pack across the Manage workspace, so a successful **Load evidence** or
   **Prepare evidence** action updates the centre panel and adjacent evidence rail together without
   requiring a page reload. Stable portfolio identity preserves that confirmed pack across Manage
