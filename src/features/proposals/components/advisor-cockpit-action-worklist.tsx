@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   ActionButton,
   ActionLink,
   SemanticBadge,
   Text,
+  useAdmittedSourceSelection,
   WorkbenchWorklist,
 } from "@/design-system";
 
@@ -25,6 +24,7 @@ export type AdvisorCockpitAcknowledgementTransaction = {
 };
 
 type Props = {
+  selectionScopeKey: string;
   rows: AdvisorCockpitActionRow[];
   evidenceConfirmed: boolean;
   transaction: AdvisorCockpitAcknowledgementTransaction;
@@ -38,6 +38,7 @@ type AcknowledgementPresentation = {
 };
 
 export default function AdvisorCockpitActionWorklist({
+  selectionScopeKey,
   rows,
   evidenceConfirmed,
   transaction,
@@ -45,9 +46,12 @@ export default function AdvisorCockpitActionWorklist({
 }: Props) {
   const transactionPending =
     transaction.status === "recording" || transaction.status === "confirming";
-  const [selectedActionItemId, setSelectedActionItemId] = useState(
-    rows[0]?.actionItemId ?? null,
-  );
+  const [selectedActionItemId, setSelectedActionItemId] =
+    useAdmittedSourceSelection({
+      scopeKey: selectionScopeKey,
+      admittedKeys: rows.map((row) => row.actionItemId),
+      sourceResolved: true,
+    });
   const selectedRow =
     rows.find((row) => row.actionItemId === selectedActionItemId) ?? rows[0];
 
