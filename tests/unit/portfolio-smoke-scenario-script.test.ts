@@ -25,6 +25,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(packageJson.scripts["test:e2e:portfolio:review-matrix"]).toContain(
       "run-portfolio-smoke-scenario.mjs review-matrix",
     );
+    expect(
+      packageJson.scripts["test:e2e:portfolio:review-context-typography"],
+    ).toContain("run-portfolio-smoke-scenario.mjs review-context-states");
     expect(packageJson.scripts["test:e2e:portfolio:positions-status"]).toContain(
       "run-portfolio-smoke-scenario.mjs positions-status",
     );
@@ -52,7 +55,7 @@ describe("Portfolio smoke scenario runner", () => {
     expect(source).toContain("child.kill(signal)");
   });
 
-  it("runs only the seven governed Portfolio browser scenarios", () => {
+  it("runs only the eight governed Portfolio browser scenarios", () => {
     expect(source).toContain("'tests/e2e/portfolio-workbench.smoke.spec.ts'");
     expect(source).toContain(
       "'cashflow route keeps projection identity and movement semantics explicit|portfolio record routes hydrate without browser runtime errors|record recovery preserves confirmed portfolio context while withholding unsupported controls'",
@@ -62,6 +65,9 @@ describe("Portfolio smoke scenario runner", () => {
     );
     expect(source).toContain(
       "'selected shell failure reaches one truthful terminal recovery state'",
+    );
+    expect(source).toContain(
+      "'review context keeps productive typography across source states'",
     );
     expect(source).toContain(
       "'portfolio review stays decision-focused and keeps detail work on dedicated screens'",
@@ -77,6 +83,7 @@ describe("Portfolio smoke scenario runner", () => {
     );
     expect(source).toContain("scenario !== 'review-matrix'");
     expect(source).toContain("scenario !== 'income-activity'");
+    expect(source).toContain("scenario !== 'review-context-states'");
     expect(source).toContain("scenario !== 'shell-unavailable'");
     expect(source).toContain("scenario !== 'positions-status'");
     expect(source).toContain("scenario !== 'transactions-status'");

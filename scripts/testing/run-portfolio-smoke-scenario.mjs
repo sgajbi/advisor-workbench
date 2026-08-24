@@ -17,13 +17,14 @@ if (
   scenario !== 'cashflow' &&
   scenario !== 'allocation-recovery' &&
   scenario !== 'income-activity' &&
+  scenario !== 'review-context-states' &&
   scenario !== 'shell-unavailable' &&
   scenario !== 'review-matrix' &&
   scenario !== 'positions-status' &&
   scenario !== 'transactions-status'
 ) {
   throw new Error(
-    'Portfolio smoke scenario must be cashflow, allocation-recovery, income-activity, shell-unavailable, review-matrix, positions-status, or transactions-status.',
+    'Portfolio smoke scenario must be cashflow, allocation-recovery, income-activity, review-context-states, shell-unavailable, review-matrix, positions-status, or transactions-status.',
   );
 }
 if (fixturePort === workbenchPort) {
@@ -36,6 +37,8 @@ const evidenceDirectory = resolve(
   process.env.PORTFOLIO_E2E_EVIDENCE_DIR ??
     (scenario === 'shell-unavailable'
       ? 'output/playwright/issue-651-shell-recovery'
+      : scenario === 'review-context-states'
+        ? 'output/playwright/issue-829-review-context-typography'
       : scenario === 'allocation-recovery'
         ? 'output/playwright/issue-727-allocation-recovery'
       : scenario === 'income-activity'
@@ -59,6 +62,8 @@ const child = spawn(
     '--grep',
     scenario === 'shell-unavailable'
       ? 'selected shell failure reaches one truthful terminal recovery state'
+      : scenario === 'review-context-states'
+        ? 'review context keeps productive typography across source states'
       : scenario === 'allocation-recovery'
         ? 'allocation keeps direct evidence usable and recovers expanded exposure coverage'
       : scenario === 'income-activity'

@@ -9,6 +9,7 @@ export type PortfolioFixtureScenario =
   | 'cashflow'
   | 'allocation-recovery'
   | 'income-activity'
+  | 'review-context-states'
   | 'shell-unavailable'
   | 'positions-status'
   | 'transactions-status';
@@ -398,7 +399,7 @@ function buildWorkspaceResponse(scenario: PortfolioFixtureScenario = 'cashflow')
       display_name: 'Global Balanced Mandate',
       client_id: 'CLIENT_SG_001',
       base_currency: 'USD',
-      booking_center_code: 'SG',
+      booking_center_code: scenario === 'review-context-states' ? null : 'SG',
     },
     profile: {
       status: 'ACTIVE',
