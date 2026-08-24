@@ -50,6 +50,9 @@ reading path.
 | Advice artefact | **Proposal** | The governed advice record moving through evaluation, approval, discussion, and implementation. | **Lotus Ideas** may name the product queue; idea, opportunity, recommendation, and advice are not display aliases for proposal. |
 | Suitability workflow | **Suitability review** | The business review of client circumstances, recommendation fit, evidence, and the next permitted action. | A policy or policy evaluation is supporting evidence; **Policy review** must not rename the workflow. |
 | Portfolio-management hierarchy | **Rebalance instruction** → **rebalance wave** → **rebalance campaign** | An instruction is one proposed portfolio change; a wave is a controlled execution run; a campaign groups governed waves across a defined population and objective. | Retire unexplained **durable wave** and do not use wave and campaign interchangeably. |
+| Outcome comparison | **Expected outcome**, **Realised outcome**, **Within expected tolerance**, **Outside expected tolerance** | Manage-recorded comparison evidence for one outcome review. | Never translate a tolerance result into **Within mandate**, compliant, suitable, approved, or client-ready. |
+| Outcome review workflow | **Review posture** | The source-backed next review condition, distinct from comparison outcome and evidence availability. | Retire **Latest review** when the value is a posture rather than a date or review record. |
+| Generated outcome commentary | **AI-assisted review summary** | Internal PM, CIO, and control commentary returned through the governed AI workflow with human review required. | Do not call the technical action **AI narrative** in the productive path or present generated text as advice, approval, source evidence, or client-ready material. |
 | Benchmark identity | **Business benchmark label** | The source-provided business name is primary. | Put benchmark codes in support detail, not the primary rail or metric label. |
 | Technical identity | **Reference** or a precise business reference label | Show a source identifier only when support, reconciliation, or audit needs it, with copy affordance where useful. | Raw correlation IDs, reason codes, hashes, endpoint names, and service names never lead the business path. |
 | Mandate service model | **Discretionary**, **Advisory**, **Execution only** | Render only the exact service model supplied by the owning source. | Never infer execution-only from absent advice, data, or controls; current Workbench support remains limited to admitted source values. |
@@ -87,6 +90,13 @@ browser.
 Suitability review is the adviser workflow; policy evidence supports that workflow. Proposal is the
 advice artefact. Rebalance instruction, wave, and campaign express increasing operational scope.
 Display actions remain governed by source capabilities and permissions, never by vocabulary alone.
+
+### Outcome review truth
+
+Comparison outcome, review posture, evidence availability, report preparation, and AI-assisted
+review summary are separate facts. **Within expected tolerance** says only what the source
+comparison returned. It does not prove broader mandate compliance. AI-assisted commentary remains
+internal and human-review gated and cannot upgrade missing source evidence.
 
 ## Engineering application
 

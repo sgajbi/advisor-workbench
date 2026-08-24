@@ -791,26 +791,30 @@
     },
     {
       "id": "outcome-reviews",
-      "businessName": "Outcome Reviews",
+      "businessName": "Outcome reviews",
       "family": "manage",
       "routePattern": "/workbench/{portfolioId}",
       "mode": "reviews",
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-manage"],
+      "wikiSlug": "Outcome-Reviews-Screen-Guide",
+      "sourceOwners": [
+        "lotus-gateway",
+        "lotus-manage",
+        "lotus-report",
+        "lotus-ai"
+      ],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/outcome-review-view-model.ts",
+        "src/features/workbench/components/outcome-review-panel.tsx",
+        "src/features/workbench/use-outcome-review-handoffs.ts"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": ["tests/integration/workbench-page.test.tsx"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-evidence-and-governance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "evidence-pack",

@@ -20,6 +20,8 @@ definitions, allowed contexts, restricted alternatives, and engineering rules ar
 | Which return method is shown? | **Time-weighted return (TWR)**, **Money-weighted return (MWR)** | NET/GROSS is the fee basis, not the method. |
 | What advice workflow am I in? | **Proposal**, **Suitability review** | Policy is supporting evidence; Lotus Ideas is the product queue name. |
 | What is the rebalance operating scope? | **Instruction** → **Wave** → **Campaign** | One change, one controlled run, then a governed multi-wave programme. |
+| How did the outcome compare with expectation? | **Expected outcome**, **Realised outcome**, **Within expected tolerance**, **Outside expected tolerance** | A tolerance result is not a mandate-compliance, suitability, approval, or client-readiness statement. |
+| What happens next in an outcome review? | **Review posture**, **Report preparation**, **AI-assisted review summary** | Workflow posture, source evidence, reporting, and internal generated commentary remain separate facts. |
 
 ## Writing and evidence rules
 

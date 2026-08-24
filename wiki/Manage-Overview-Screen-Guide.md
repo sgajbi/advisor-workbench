@@ -204,7 +204,8 @@ unsupported capability, and this guide is not a claim of competitor superiority.
 - Construction Alternatives owns governed generation and comparison of supported alternatives.
 - Portfolio Memory owns source-recorded decisions and operating events.
 - PM Operating Quality owns Manage-governed policy, score-run, fairness, and review evidence.
-- Outcome Reviews and Evidence Pack own selected outcome and proof evidence.
+- [Outcome reviews](Outcome-Reviews-Screen-Guide) and Evidence Pack own selected outcome and proof
+  evidence.
 
 ## Evidence And Validation
 
