@@ -1,5 +1,6 @@
 import { SemanticBadge } from "@/design-system";
 import type { OutcomeReviewSourceBoundary } from "@/features/workbench/outcome-review-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   boundary: OutcomeReviewSourceBoundary;
@@ -19,10 +20,12 @@ export default function OutcomeReviewSourceLineageCard({ boundary }: Props) {
     <div className="outcome-review-actions-card">
       <div className="outcome-review-card-header">
         <div>
-          <span>Source Lineage</span>
-          <strong>Persisted Evidence Facets</strong>
+          <span>{MANAGE_OUTCOME_REVIEW_LABELS.evidenceSources}</span>
+          <strong>{MANAGE_OUTCOME_REVIEW_LABELS.recordedEvidenceProfile}</strong>
         </div>
-        <SemanticBadge tone="default">Manage-local</SemanticBadge>
+        <SemanticBadge tone="default">
+          {MANAGE_OUTCOME_REVIEW_LABELS.sourceRecorded}
+        </SemanticBadge>
       </div>
 
       <FacetGroup title="Source owners" values={boundary.sourceOwnerFacets} />

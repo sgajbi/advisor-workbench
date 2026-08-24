@@ -26,16 +26,16 @@ describe("OutcomeReviewDetailPanel", () => {
       />
     );
 
-    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getByText("13 May 2026 review")).toBeInTheDocument();
-    expect(screen.getByText("Mandate Impact")).toBeInTheDocument();
-    expect(screen.getByText("Internal Outcome Rationale")).toBeInTheDocument();
+    expect(screen.getByText("Mandate impact")).toBeInTheDocument();
+    expect(screen.getByText("Internal outcome rationale")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
       "Not projected"
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare AI-assisted review summary" }));
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
     expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
@@ -57,7 +57,7 @@ describe("OutcomeReviewDetailPanel", () => {
     );
 
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Prepare AI-assisted review summary" })).toBeDisabled();
     expect(screen.queryByText(/outcome_review_id|rebalance_run_id|wave_id|sha256/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
@@ -77,7 +77,7 @@ function reviewItem(): OutcomeReviewListItem {
     reviewPostureLabel: "Ready for adviser review",
     driftImprovementLabel: "72.4%",
     mandateImpact: "Drift reduction achieved within tolerance.",
-    clientRationale: "Outcome remains within mandate tolerance for advisor handoff.",
+    clientRationale: "Outcome remains within expected tolerance for adviser review.",
     portfolioId: "PB_SG_GLOBAL_BAL_001",
     rebalanceRunId: "rr_1",
     waveId: "wave_1",

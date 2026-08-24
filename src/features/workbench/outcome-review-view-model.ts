@@ -111,7 +111,7 @@ export function buildOutcomeReviewPanelModel(
       supportabilityState: "UNAVAILABLE",
       supportabilityReasons: ["GATEWAY_OUTCOME_REVIEW_UNAVAILABLE"],
       blockedActions: ["CREATE_REPORT_INPUT", "REQUEST_AI_NARRATIVE"],
-      remediationOwner: "Front Office Platform",
+      remediationOwner: "Front-office operations",
       sourceService: "lotus-gateway",
       authority: "lotus-manage:RFC-0042",
       correlationId: "N/A",

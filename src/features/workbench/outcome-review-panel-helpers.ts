@@ -2,7 +2,11 @@ import type {
   OutcomeReviewListItem,
   OutcomeReviewPanelState,
 } from "./outcome-review-view-model";
-import { businessStateLabel } from "./manage-workspace-view-model";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+} from "./manage-workspace-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "./manage-terminology";
 import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
 
 export type OutcomeReviewBadgeTone =
@@ -60,7 +64,7 @@ export function buildOutcomeReviewStatePanelCopy(
     return {
       kind: "permission_blocked",
       title: "Outcome review handoff is blocked",
-      body: "Resolve the open review items before preparing advisor handoffs.",
+      body: "Resolve the open review items before preparing adviser handoffs.",
     };
   }
   if (state === "unsupported") {
@@ -120,6 +124,16 @@ export function outcomeReviewSourceEvidenceStatus(
     : readyEvidenceCount > 0
       ? "Partial"
       : "Not available";
+}
+
+export function outcomeReviewSupportReasonLabel(reason: string): string {
+  const knownLabels: Record<string, string> = {
+    READY_FOR_REPORT_INPUT: `${MANAGE_OUTCOME_REVIEW_LABELS.reportPreparation} ready`,
+    CREATE_REPORT_INPUT: `${MANAGE_OUTCOME_REVIEW_LABELS.reportPreparation} blocked`,
+    REQUEST_AI_NARRATIVE: `${MANAGE_OUTCOME_REVIEW_LABELS.aiAssistedReviewSummary} blocked`,
+  };
+
+  return knownLabels[reason.toUpperCase()] ?? formatBusinessReason(reason);
 }
 
 export function buildOutcomeReviewHandoffMessages(

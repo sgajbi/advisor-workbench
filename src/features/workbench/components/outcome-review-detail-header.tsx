@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/design-system";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   reviewLabel: string;
@@ -24,7 +25,7 @@ export default function OutcomeReviewDetailHeader({
   return (
     <div className="outcome-review-detail-header">
       <div>
-        <h3>Selected Review Detail</h3>
+        <h3>{MANAGE_OUTCOME_REVIEW_LABELS.selectedReviewDetail}</h3>
         <span>{reviewLabel}</span>
       </div>
       <div className="outcome-review-detail-actions">
@@ -40,7 +41,9 @@ export default function OutcomeReviewDetailHeader({
           onClick={onRequestAiNarrative}
           disabled={!aiNarrativeAvailable || aiNarrativePending}
         >
-          {aiNarrativePending ? "Requesting memo" : "Request advisor memo"}
+          {aiNarrativePending
+            ? MANAGE_OUTCOME_REVIEW_LABELS.preparingAiAssistedReviewSummary
+            : MANAGE_OUTCOME_REVIEW_LABELS.prepareAiAssistedReviewSummary}
         </ActionButton>
       </div>
     </div>

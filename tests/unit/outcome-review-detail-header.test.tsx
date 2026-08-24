@@ -20,11 +20,11 @@ describe("OutcomeReviewDetailHeader", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Selected Review Detail" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selected review detail" })).toBeInTheDocument();
     expect(screen.getByText("13 May 2026 outcome review")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare AI-assisted review summary" }));
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
     expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
@@ -44,7 +44,7 @@ describe("OutcomeReviewDetailHeader", () => {
     );
 
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Prepare AI-assisted review summary" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: /client|communication|approval|delivery/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/order|OMS|execution|fill|settlement/i)).not.toBeInTheDocument();
   });
@@ -63,6 +63,6 @@ describe("OutcomeReviewDetailHeader", () => {
     );
 
     expect(screen.getByRole("button", { name: "Requesting report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Requesting memo" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Preparing AI-assisted review summary" })).toBeDisabled();
   });
 });

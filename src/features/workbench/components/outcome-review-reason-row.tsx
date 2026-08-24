@@ -1,7 +1,7 @@
 "use client";
 
 import { SemanticBadge } from "@/design-system";
-import { formatBusinessReason } from "@/features/workbench/manage-workspace-view-model";
+import { outcomeReviewSupportReasonLabel } from "@/features/workbench/outcome-review-panel-helpers";
 
 type Props = {
   supportabilityReasons: string[];
@@ -34,7 +34,7 @@ export default function OutcomeReviewReasonRow({
           key={reason}
           tone={reason.startsWith("CREATE") || reason.startsWith("REQUEST") ? "danger" : "warn"}
         >
-          {reason.startsWith("Owner: ") ? reason : formatBusinessReason(reason)}
+          {reason.startsWith("Owner: ") ? reason : outcomeReviewSupportReasonLabel(reason)}
         </SemanticBadge>
       ))}
     </div>

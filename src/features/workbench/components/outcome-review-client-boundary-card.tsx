@@ -7,6 +7,7 @@ import {
   businessStateLabel,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   boundary: OutcomeReviewClientCommunicationBoundaryView;
@@ -16,7 +17,7 @@ export default function OutcomeReviewClientBoundaryCard({ boundary }: Props) {
   return (
     <div className="outcome-review-client-boundary" aria-label="Client communication boundary">
       <div className="outcome-review-client-boundary-header">
-        <h4>Client Communication Boundary</h4>
+        <h4>{MANAGE_OUTCOME_REVIEW_LABELS.clientCommunicationControls}</h4>
         <SemanticBadge tone={outcomeReviewBadgeTone(boundary.state)}>
           {businessStateLabel(boundary.state)}
         </SemanticBadge>

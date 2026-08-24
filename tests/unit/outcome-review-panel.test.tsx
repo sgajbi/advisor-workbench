@@ -90,25 +90,30 @@ describe("OutcomeReviewPanel", () => {
   it("renders outcome review state and evidence posture", () => {
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
 
-    expect(screen.getByRole("heading", { name: "Outcome Reviews" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Outcome reviews" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Compare expected and realised outcomes, review mandate impact, and confirm evidence readiness.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Supported")).toBeInTheDocument();
-    expect(screen.getByText("Review Timeline")).toBeInTheDocument();
-    expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
-    expect(screen.getByText("Persisted Evidence Facets")).toBeInTheDocument();
+    expect(screen.getByText("Review timeline")).toBeInTheDocument();
+    expect(screen.getByText("Recommended actions")).toBeInTheDocument();
+    expect(screen.getByText("Recorded evidence profile")).toBeInTheDocument();
     expect(screen.getByText("PortfolioRealizedTaxSummary:v1")).toBeInTheDocument();
     expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
-    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getByText("Ready for adviser review")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Report InputReady"
+      "Report preparationReady"
     );
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "AI NarrativeReady"
+      "AI-assisted review summaryReady"
     );
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Source EvidenceAvailable"
+      "Source evidenceAvailable"
     );
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
@@ -133,7 +138,9 @@ describe("OutcomeReviewPanel", () => {
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+    ).toBeEnabled();
   });
 
   it("requests an outcome-review report job from available report input", async () => {
@@ -204,7 +211,9 @@ describe("OutcomeReviewPanel", () => {
     });
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
-    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+    );
 
     await waitFor(() => {
       expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({
@@ -251,7 +260,9 @@ describe("OutcomeReviewPanel", () => {
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Request advisor memo" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+    );
 
     expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
     expect(
@@ -279,7 +290,9 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Outcome review handoff is blocked")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Portfolio Operations/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Request advisor memo" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+    ).toBeDisabled();
   });
 
   it("renders unavailable state without claiming support", () => {

@@ -14,8 +14,8 @@ export default function OutcomeReviewDetailContext({
   return (
     <div className="outcome-review-detail-context" aria-label="Selected review source posture">
       <span>Updated {updatedAt}</span>
-      <span>Retention {retentionUntil}</span>
-      <span>{sourceReferenceCount} source refs</span>
+      <span>Retained until {retentionUntil}</span>
+      <span>{sourceReferenceCount} source references</span>
     </div>
   );
 }

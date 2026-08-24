@@ -31,11 +31,11 @@ describe("OutcomeReviewWorkspace", () => {
     );
 
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Source EvidenceAvailable"
+      "Source evidenceAvailable"
     );
-    expect(screen.getByText("Review Timeline")).toBeInTheDocument();
-    expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
-    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getByText("Review timeline")).toBeInTheDocument();
+    expect(screen.getByText("Recommended actions")).toBeInTheDocument();
+    expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open evidence pack/ })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
@@ -45,7 +45,9 @@ describe("OutcomeReviewWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getAllByRole("button", { name: "Request advisor memo" })[0]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Prepare AI-assisted review summary" })[0],
+    );
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
     expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
@@ -76,10 +78,12 @@ describe("OutcomeReviewWorkspace", () => {
     );
 
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Report InputBlocked"
+      "Report preparationBlocked"
     );
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
-    expect(screen.getAllByRole("button", { name: "Request advisor memo" })[0]).toBeDisabled();
+    expect(
+      screen.getAllByRole("button", { name: "Prepare AI-assisted review summary" })[0],
+    ).toBeDisabled();
     expect(screen.queryByText(/outcome_review_id|rebalance_run_id|wave_id|sha256/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
@@ -99,7 +103,7 @@ function reviewItem(): OutcomeReviewListItem {
     reviewPostureLabel: "Ready for adviser review",
     driftImprovementLabel: "72.4%",
     mandateImpact: "Drift reduction achieved within tolerance.",
-    clientRationale: "Outcome remains within mandate tolerance for advisor handoff.",
+    clientRationale: "Outcome remains within expected tolerance for adviser review.",
     portfolioId: "PB_SG_GLOBAL_BAL_001",
     rebalanceRunId: "rr_1",
     waveId: "wave_1",

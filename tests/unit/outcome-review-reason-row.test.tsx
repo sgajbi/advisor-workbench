@@ -14,9 +14,9 @@ describe("OutcomeReviewReasonRow", () => {
     );
 
     const reasonRow = screen.getByLabelText("Outcome review supportability reasons");
-    expect(reasonRow).toHaveTextContent(/Ready.*Report.*Input/i);
-    expect(reasonRow).toHaveTextContent(/Create.*Report.*Input/i);
-    expect(reasonRow).toHaveTextContent(/Request.*Ai.*Narrative/i);
+    expect(reasonRow).toHaveTextContent("Report preparation ready");
+    expect(reasonRow).toHaveTextContent("Report preparation blocked");
+    expect(reasonRow).toHaveTextContent("AI-assisted review summary blocked");
     expect(reasonRow).toHaveTextContent("Owner: Portfolio Operations");
   });
 
@@ -30,6 +30,18 @@ describe("OutcomeReviewReasonRow", () => {
     );
 
     expect(screen.queryByLabelText("Outcome review supportability reasons")).not.toBeInTheDocument();
+  });
+
+  it("preserves an unknown source reason as a readable fail-safe label", () => {
+    render(
+      <OutcomeReviewReasonRow
+        supportabilityReasons={["NEW_SOURCE_REASON"]}
+        blockedActions={[]}
+        remediationOwner="N/A"
+      />,
+    );
+
+    expect(screen.getByText("New Source Reason")).toBeInTheDocument();
   });
 
   it("does not introduce client communication or execution controls", () => {

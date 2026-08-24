@@ -33,7 +33,7 @@ export default function OutcomeReviewSummary({
       />
 
       <OutcomeReviewStatusStrip
-        latestReview={primaryReview?.reviewPostureLabel}
+        reviewPosture={primaryReview?.reviewPostureLabel}
         outcomeStatus={primaryReview?.outcomeStatusLabel}
         driftImprovement={primaryReview?.driftImprovementLabel}
         evidencePackStatus={evidencePackStatus}

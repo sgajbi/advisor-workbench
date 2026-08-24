@@ -4,6 +4,7 @@ import { AnalyticsTable, SemanticBadge } from "@/design-system";
 import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewDimensionRow } from "@/features/workbench/outcome-review-view-model";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   dimensions: OutcomeReviewDimensionRow[];
@@ -17,8 +18,8 @@ export default function OutcomeReviewDimensionTable({ dimensions }: Props) {
       density="compact"
       columns={[
         { key: "dimension", label: "Dimension" },
-        { key: "expected", label: "Expected", align: "right" },
-        { key: "realized", label: "Realized", align: "right" },
+        { key: "expected", label: MANAGE_OUTCOME_REVIEW_LABELS.expectedOutcome, align: "right" },
+        { key: "realized", label: MANAGE_OUTCOME_REVIEW_LABELS.realisedOutcome, align: "right" },
         { key: "variance", label: "Variance", align: "right" },
         { key: "state", label: "State" },
       ]}

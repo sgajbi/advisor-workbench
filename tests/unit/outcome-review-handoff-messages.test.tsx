@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import OutcomeReviewHandoffMessages from "../../src/features/workbench/components/outcome-review-handoff-messages";
 
 describe("OutcomeReviewHandoffMessages", () => {
-  it("renders bounded report and advisor memo handoff status", () => {
+  it("renders bounded report and AI-assisted review-summary handoff status", () => {
     render(
       <OutcomeReviewHandoffMessages
         messages={["Report request Accepted.", "Review request Completed."]}

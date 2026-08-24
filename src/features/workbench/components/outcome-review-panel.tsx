@@ -8,6 +8,7 @@ import {
   outcomeReviewSourceEvidenceStatus,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import { useOutcomeReviewHandoffs } from "@/features/workbench/use-outcome-review-handoffs";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 import DpmAiWorkflowResult from "./dpm-ai-workflow-result";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewSummary from "./outcome-review-summary";
@@ -42,8 +43,8 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 
   return (
     <SectionBlock
-      title="Outcome Reviews"
-      subtitle="Review mandate outcomes, advisor observations, and evidence readiness."
+      title={MANAGE_OUTCOME_REVIEW_LABELS.screenTitle}
+      subtitle={MANAGE_OUTCOME_REVIEW_LABELS.screenDescription}
       className="outcome-review-panel"
       actions={
         <OutcomeReviewSupportBadges supportabilityState={model.supportabilityState} />

@@ -19,15 +19,15 @@ describe("OutcomeReviewRationaleEvidenceSection", () => {
 
     const section = screen.getByLabelText("Outcome review rationale and evidence");
 
-    expect(section).toHaveTextContent("Internal Outcome Rationale");
+    expect(section).toHaveTextContent("Internal outcome rationale");
     expect(section).toHaveTextContent("Mandate drift was reduced");
-    expect(section).toHaveTextContent("Client Communication Boundary");
+    expect(section).toHaveTextContent("Client communication controls");
     expect(section).toHaveTextContent("CommunicationNot projected");
     expect(section).toHaveTextContent("ApprovalNot projected");
     expect(section).toHaveTextContent("ClientCommunicationRecord:v1");
-    expect(section).toHaveTextContent("Evidence Availability");
+    expect(section).toHaveTextContent("Evidence availability");
     expect(section).toHaveTextContent("Expected outcome Available");
-    expect(section).toHaveTextContent("Realized outcome Available");
+    expect(section).toHaveTextContent("Realised outcome Available");
     expect(section).toHaveTextContent("Evidence pack Available");
     expect(section).toHaveTextContent("Source evidence Available");
   });
