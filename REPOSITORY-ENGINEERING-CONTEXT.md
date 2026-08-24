@@ -1199,7 +1199,10 @@ Important validation expectations:
     only for a complete source audit record. After a terminal source response, restore focus to the
     source-confirmed status without scrolling the user's evidence context. The performance smoke
     launcher must own an explicit isolated Workbench port so proof cannot reuse a stale shared
-    listener. Use
+    listener. Canonical ACCEPT proof must read exactly one machine-readable evidence record from
+    the same visible **Human Review** row; it must fail closed for missing, duplicate, malformed,
+    non-ready, or wrong-reviewer evidence and must not parse aggregate region `textContent()`.
+    Use
     `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
     confirmation, source-persistence, responsive, focus, and browser-runtime proof.
 36. Performance supportability uses one business-and-evidence presentation boundary. Derive the

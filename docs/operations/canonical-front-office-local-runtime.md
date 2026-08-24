@@ -410,7 +410,11 @@ demo reviewers can quickly identify the captured product surfaces.
 The machine-readable summary also records `workflowPackChecks` for the advisor-brief live path and
 RFC-0023 proposal narrative proof. Advisor-brief checks prove initial workflow-pack run visibility
 plus bounded `ACCEPT`, `REVISE`, and `SUPERSEDE` review transitions with replacement lineage
-through the live `lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain. Proposal
+through the live `lotus-workbench` -> `lotus-gateway` -> `lotus-ai` contract chain. The browser
+reads ACCEPT state, supportability, reviewer, and recorded time from exactly one stable evidence
+record on the visible **Human Review** row. Missing, duplicate, malformed, non-ready, or
+wrong-reviewer records fail closed; the validator does not infer persistence from flattened panel
+text. Proposal
 narrative checks prove Gateway-backed proposal creation with an advisor-review narrative request,
 Workbench advisor-use narrative review, reviewed report-package request, source narrative hash
 visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal memo checks prove
