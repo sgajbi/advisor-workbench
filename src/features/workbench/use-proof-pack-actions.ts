@@ -28,6 +28,7 @@ type UseProofPackActionsInput = {
   contextRebalanceRunId: string | null;
   contextMandateId: string | null;
   mandateId?: string | null;
+  onProofPackChange?: (proofPack: DpmProofPackGatewayResponse) => void;
 };
 
 type UseProofPackActionsResult = {
@@ -57,6 +58,7 @@ export function useProofPackActions({
   contextRebalanceRunId,
   contextMandateId,
   mandateId,
+  onProofPackChange,
 }: UseProofPackActionsInput): UseProofPackActionsResult {
   const [proofPack, setProofPack] = useState<DpmProofPackGatewayResponse | null>(initialProofPack);
   const [markdown, setMarkdown] = useState<string | null>(null);
@@ -100,7 +102,9 @@ export function useProofPackActions({
       return;
     }
     void runAction("Load proof pack", async () => {
-      setProofPack(await getDpmProofPack(proofPackId));
+      const loaded = await getDpmProofPack(proofPackId);
+      setProofPack(loaded);
+      onProofPackChange?.(loaded);
       setHandoffStatus("Evidence pack loaded.");
     });
   }
@@ -115,6 +119,7 @@ export function useProofPackActions({
         mandateId: resolvedMandateId,
       });
       setProofPack(generated);
+      onProofPackChange?.(generated);
       setHandoffStatus("Evidence pack prepared.");
     });
   }

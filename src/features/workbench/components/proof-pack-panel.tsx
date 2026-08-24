@@ -15,6 +15,7 @@ import type {
 } from "@/features/workbench/types";
 import { deriveProofPackContext } from "@/features/workbench/proof-pack-view-model";
 import { useProofPackActions } from "@/features/workbench/use-proof-pack-actions";
+import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-state";
 
 type Props = {
   portfolioId: string;
@@ -33,6 +34,7 @@ export default function ProofPackPanel({
   initialProofPack,
   errorMessage,
 }: Props) {
+  const sharedProofPack = useManageProofPackState();
   const context = deriveProofPackContext(outcomeReviews, rebalanceSnapshot ?? null);
   const {
     model,
@@ -54,6 +56,7 @@ export default function ProofPackPanel({
     contextRebalanceRunId: context.rebalanceRunId,
     contextMandateId: context.mandateId,
     mandateId,
+    onProofPackChange: sharedProofPack?.publishProofPack,
   });
 
   return (

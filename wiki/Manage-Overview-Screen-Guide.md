@@ -113,6 +113,9 @@ handing the user to a focused Manage mode.
 - Treats a historical evidence-pack reference separately from a currently retrieved pack. The rail
   reports **Available** only when the pack response was fetched, **Referenced; not retrieved** when
   lineage exists without a current response, and **Temporarily unavailable** when retrieval fails.
+- Shares the current fetched pack across the Manage workspace, so a successful **Load evidence** or
+  **Prepare evidence** action updates the centre panel and adjacent evidence rail together without
+  requiring a page reload. Failed actions retain the last confirmed source posture.
 
 ## Decisions And Actions
 
