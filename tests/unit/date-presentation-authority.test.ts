@@ -9,6 +9,8 @@ const DATE_PRESENTATION_AUTHORITY = resolve(
   SOURCE_ROOT,
   "design-system/utils/financial-formatters.ts",
 );
+const DATE_PRESENTATION_CANDIDATE =
+  /\b(?:DateTimeFormat|toLocale(?:DateString|TimeString|String))\b/;
 
 function collectTypeScriptFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -26,9 +28,13 @@ describe("date presentation authority", () => {
     const competingFormatters = sourceFiles
       .filter((filePath) => filePath !== DATE_PRESENTATION_AUTHORITY)
       .flatMap((filePath) => {
+        const source = readFileSync(filePath, "utf8");
+        if (!DATE_PRESENTATION_CANDIDATE.test(source)) {
+          return [];
+        }
         const sourceFile = ts.createSourceFile(
           filePath,
-          readFileSync(filePath, "utf8"),
+          source,
           ts.ScriptTarget.Latest,
           true,
         );
