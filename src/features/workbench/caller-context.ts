@@ -236,9 +236,7 @@ export function applyDefaultCallerContextHeaders(headers: Headers) {
   for (const headerName of Object.keys(DEFAULT_CALLER_CONTEXT_HEADERS) as Array<
     keyof typeof DEFAULT_CALLER_CONTEXT_HEADERS
   >) {
-    if (!headers.get(headerName)?.trim()) {
-      headers.set(headerName, defaultCallerContextValue(headerName));
-    }
+    headers.set(headerName, defaultCallerContextValue(headerName));
   }
 }
 

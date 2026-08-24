@@ -1,0 +1,47 @@
+import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
+import {
+  applyDefaultCallerContextHeaders,
+  stripBrowserSuppliedAuthorityHeaders,
+} from "./caller-context";
+
+/**
+ * Browser request headers that the Workbench BFF deliberately carries to Gateway.
+ *
+ * Caller identity, entitlements, session material, forwarding aliases, hop-by-hop
+ * headers, and browser navigation metadata are intentionally absent. Additions
+ * require contract evidence and regression coverage at this trust boundary.
+ */
+export const FORWARDABLE_BROWSER_GATEWAY_REQUEST_HEADERS = [
+  "Accept",
+  "Accept-Language",
+  "Content-Type",
+  "Idempotency-Key",
+  "X-Idempotency-Key",
+  "If-Match",
+  "If-None-Match",
+  "If-Modified-Since",
+  "If-Unmodified-Since",
+  "Range",
+  "If-Range",
+  "X-Correlation-Id",
+  "X-Trace-Id",
+  "traceparent",
+] as const;
+
+export function buildGatewayBffRequestHeaders(browserHeaders: Headers): Headers {
+  const gatewayHeaders = new Headers();
+
+  for (const headerName of FORWARDABLE_BROWSER_GATEWAY_REQUEST_HEADERS) {
+    const value = browserHeaders.get(headerName);
+    if (value !== null) {
+      gatewayHeaders.set(headerName, value);
+    }
+  }
+
+  // Defence in depth: a future allowlist edit cannot silently promote an
+  // authority header into the browser-controlled request surface.
+  stripBrowserSuppliedAuthorityHeaders(gatewayHeaders);
+  applyDefaultCallerContextHeaders(gatewayHeaders);
+
+  return prepareAnalyticsUiProxyHeaders(gatewayHeaders);
+}

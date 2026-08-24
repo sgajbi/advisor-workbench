@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { applyAdvisoryCopilotCallerContextHeaders } from "@/features/advisory-copilot/caller-context";
-import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
 import { applyAdvisorBookCallerContextHeaders } from "@/features/advisor-book/caller-context";
 import { applyAdvisorCockpitCallerContextHeaders } from "@/features/advisor-cockpit/caller-context";
 import {
@@ -9,10 +8,10 @@ import {
 } from "@/features/platform-runtime/gateway-request-policy";
 import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addressing";
 import {
-  applyDefaultCallerContextHeaders,
   applyIdeaRouteCallerContextHeaders,
   applyReportOrderingRouteCallerContextHeaders,
 } from "@/features/workbench/caller-context";
+import { buildGatewayBffRequestHeaders } from "@/features/workbench/bff-request-headers";
 
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
@@ -20,11 +19,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const gatewayBaseUrl = resolveGatewayBaseUrl();
   const url = `${gatewayBaseUrl}/${upstreamPath}${search}`;
 
-  const headers = new Headers();
-  request.headers.forEach((value, key) => {
-    headers.set(key, value);
-  });
-  applyDefaultCallerContextHeaders(headers);
+  const headers = buildGatewayBffRequestHeaders(request.headers);
   const requestBody =
     request.method === "GET" || request.method === "HEAD"
       ? undefined
@@ -108,14 +103,12 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
-  const upstreamHeaders = prepareAnalyticsUiProxyHeaders(headers);
-
   let response: Response;
   let responseBody: ArrayBuffer;
   try {
     response = await fetch(url, {
       method: request.method,
-      headers: upstreamHeaders,
+      headers,
       body: requestBody,
       cache: "no-store",
       signal: createGatewayRequestSignal(),

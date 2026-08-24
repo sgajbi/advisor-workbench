@@ -142,7 +142,7 @@ describe("BFF proxy route", () => {
     );
     const upstreamHeaders = upstreamInit?.headers as Headers;
     expect(upstreamHeaders.get("host")).toBeNull();
-    expect(upstreamHeaders.get("authorization")).toBe("Bearer token");
+    expect(upstreamHeaders.get("authorization")).toBeNull();
     expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
     expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
@@ -157,6 +157,82 @@ describe("BFF proxy route", () => {
     expect(response.headers.get("transfer-encoding")).toBeNull();
     expect(await response.text()).toBe('{"ok":true}');
   });
+
+  it.each([
+    ["portfolio", "GET", "api/v1/portfolios/PF_1001/book"],
+    ["performance", "GET", "api/v1/workbench/PF_1001/performance/summary"],
+    ["risk", "GET", "api/v1/workbench/PF_1001/risk/summary"],
+    ["DPM", "GET", "api/v1/dpm/mandates"],
+    ["proposals", "GET", "api/v1/proposals"],
+    ["advisory workspaces", "GET", "api/v1/advisory-workspaces/PF_1001"],
+    ["documents", "GET", "api/v1/documents/doc_1/download"],
+    ["intake", "POST", "api/v1/intake/portfolio-bundle"],
+    ["lookups", "GET", "api/v1/lookups/portfolios"],
+    ["platform", "GET", "api/v1/platform/readiness"],
+  ])(
+    "rejects browser authority across the %s route family",
+    async (_family, method, upstreamPath) => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+      const browserHeaders = new Headers({
+        Accept: "application/json",
+        "Accept-Language": "en-SG",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "governed-request-1",
+        "If-Match": '"version-2"',
+        "X-Correlation-Id": "corr-workbench-bff-boundary-1",
+        traceparent:
+          "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
+      });
+      for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
+        browserHeaders.set(headerName, "browser-supplied-authority");
+      }
+      const body = method === "POST" ? JSON.stringify({ portfolio_id: "PF_1001" }) : undefined;
+      const request = new NextRequest(
+        `http://localhost:3000/api/bff/${upstreamPath}`,
+        { method, headers: browserHeaders, body },
+      );
+      const params = Promise.resolve({ path: upstreamPath.split("/") });
+
+      const response =
+        method === "POST"
+          ? await POST(request, { params })
+          : await GET(request, { params });
+
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+      expect(upstreamHeaders.get("Accept")).toBe("application/json");
+      expect(upstreamHeaders.get("Accept-Language")).toBe("en-SG");
+      expect(upstreamHeaders.get("Idempotency-Key")).toBe("governed-request-1");
+      expect(upstreamHeaders.get("If-Match")).toBe('"version-2"');
+      expect(upstreamHeaders.get("X-Correlation-Id")).toBe(
+        "corr-workbench-bff-boundary-1",
+      );
+      expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
+      expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
+      expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
+      expect(upstreamHeaders.get("X-Region")).toBe("APAC");
+      expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
+      expect(upstreamHeaders.get("X-Role")).toBe("advisor");
+
+      for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
+        if (
+          [
+            "X-Actor-Id",
+            "X-Caller-Application",
+            "X-Tenant-Id",
+            "X-Region",
+            "X-Booking-Center-Code",
+            "X-Role",
+          ].includes(headerName)
+        ) {
+          continue;
+        }
+        expect(upstreamHeaders.get(headerName), `${_family}: ${headerName}`).toBeNull();
+      }
+    },
+  );
 
   it("forwards mutating request bodies to the upstream", async () => {
     const fetchMock = vi.mocked(fetch);
@@ -508,7 +584,7 @@ describe("BFF proxy route", () => {
     const body = new Uint8Array(await response.arrayBuffer());
 
     expect(String(upstreamUrl)).toBe("http://gateway.dev.lotus/api/v1/documents/doc_1/download");
-    expect(upstreamHeaders.get("X-Actor-Id")).toBe("advisor_1");
+    expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
