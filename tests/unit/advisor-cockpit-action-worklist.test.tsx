@@ -11,6 +11,7 @@ const rows: AdvisorCockpitActionRow[] = [
   buildRow({
     actionItemId: "action-policy",
     title: "Policy review required",
+    family: "Policy Review Required",
     reasonSummary: "Policy Pending Review",
     evidenceSummary: "Policy evaluation requires compliance review.",
     nextRequiredAction: "Review policy evidence before client discussion.",
@@ -24,6 +25,7 @@ const rows: AdvisorCockpitActionRow[] = [
   buildRow({
     actionItemId: "action-liquidity",
     title: "Liquidity evidence review",
+    family: "Liquidity Review Required",
     reasonSummary: "Liquidity Evidence Pending",
     evidenceSummary: "Liquidity evidence requires advisor review.",
     nextRequiredAction: "Confirm liquidity evidence with the portfolio team.",
@@ -40,12 +42,8 @@ describe("AdvisorCockpitActionWorklist", () => {
     expect(within(worklist).getAllByRole("option")).toHaveLength(2);
     expect(screen.getAllByText("Policy review required")).toHaveLength(1);
     expect(screen.getAllByText("Liquidity evidence review")).toHaveLength(1);
-    expect(
-      within(worklist).queryByText("Policy Review Required", { exact: true }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(worklist).queryByText("Policy Pending Review", { exact: true }),
-    ).not.toBeInTheDocument();
+    expect(worklist).not.toHaveTextContent("Policy Review Required");
+    expect(worklist).not.toHaveTextContent("Policy Pending Review");
 
     const decision = screen.getByRole("region", {
       name: "Selected advisor action",
@@ -53,6 +51,7 @@ describe("AdvisorCockpitActionWorklist", () => {
     expect(decision).toHaveTextContent(
       "Review policy evidence before client discussion.",
     );
+    expect(within(decision).getByText("Policy Review Required")).toBeInTheDocument();
     expect(decision).toHaveTextContent("Policy Pending Review");
     expect(decision).toHaveTextContent(
       "Policy evaluation requires compliance review.",
@@ -226,6 +225,7 @@ function buildRow(
     AdvisorCockpitActionRow,
     | "actionItemId"
     | "title"
+    | "family"
     | "reasonSummary"
     | "evidenceSummary"
     | "nextRequiredAction"

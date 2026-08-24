@@ -6229,7 +6229,8 @@ vendor's visual identity, calculations, data, entitlement model, or claims to Lo
    intended hierarchy with optimized-browser geometry assertions rather than screenshots alone.
 8. On Manage, keep workflow destinations in the left rail, operating posture and decisions in the
    centre, and only distinct source-evidence availability in the right rail. On Cockpit, state the
-   action title once in the row and disclose its complete source reason in the selected pane.
+   action title once in the row and disclose its source category and complete reason in the selected
+   pane.
 
 ### Rejected decisions
 
