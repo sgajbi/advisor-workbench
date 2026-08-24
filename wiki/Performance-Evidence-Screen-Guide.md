@@ -69,7 +69,7 @@ investment suitability, client-publication authority, or supervisory approval.
 
 ## Implemented Capabilities
 
-- Presents one source-derived posture: **Ready for internal review**, **Attention required**,
+- Presents one source-derived posture: **Ready for internal review**, **Needs attention**,
   **Incomplete evidence**, or **Assurance unavailable**.
 - Requires explicit supported capability and evidence states, at least one calculation, confirmed
   calculation completion, confirmed lineage evidence, and no exception before showing the ready
@@ -81,7 +81,7 @@ investment suitability, client-publication authority, or supervisory approval.
   into business review items with an impact and next step.
 - Maps only known lifecycle states. Complete becomes **Confirmed**; accepted, queued, running, or
   pending states remain **In progress**; failed, rejected, cancelled, or unavailable states become
-  **Attention required**; absent or unfamiliar values remain **Not reported** or **Not confirmed**.
+  **Needs attention**; absent or unfamiliar values remain **Not reported** or **Not confirmed**.
 - Labels known calculation roles and evidence dimensions in business language without inventing a
   calculation purpose for unknown source values.
 - Opens source-published input, lineage, or archived evidence records through the returned
@@ -130,7 +130,7 @@ ownership flow remains in [Integrations](Integrations).
 | --- | --- | --- |
 | Initial loading | The parent Performance workspace loading state; no fabricated assurance result | Wait for the selected portfolio contracts |
 | Ready | **Ready for internal review**, zero review items, and confirmed calculation plus evidence posture | Continue internal review; this is not client-release approval |
-| Attention required | A failed, stale, rejected, cancelled, or unavailable source condition and the affected next step | Obtain refreshed source evidence before relying on the affected result |
+| Needs attention | A failed, stale, rejected, cancelled, or unavailable source condition and the affected next step | Obtain refreshed source evidence before relying on the affected result |
 | Incomplete evidence | Pending, partial, unknown, limited, fallback, unsupported-coverage, or unconfirmed evidence remains visible and qualified | Keep the result within internal review and investigate the named item |
 | No calculation evidence | Explicit zero-calculation state; the package is not treated as assured | Ask Performance support to publish calculation-level evidence |
 | No supporting record | The calculation remains visible with an explicit absence of published records | Do not infer that an artifact exists |
@@ -185,7 +185,7 @@ Performance Evidence deliberately does not:
   `tests/e2e/performance-workbench.smoke.spec.ts`.
 - Malformed-period browser proof:
   `npm run test:e2e:performance:evidence-period-assurance`, proving that matching unfamiliar source
-  and workspace periods remain **Attention required** and cannot become demo-ready.
+  and workspace periods remain **Needs attention** and cannot become demo-ready.
 - Canonical browser validation uses `PB_SG_GLOBAL_BAL_001` through
   `scripts/live/validation/browser-workflows.mjs` and records the machine-readable
   `data-assurance-state` plus governed panel screenshot.
