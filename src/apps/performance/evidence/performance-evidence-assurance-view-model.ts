@@ -1,4 +1,5 @@
 import { parseCanonicalPerformancePeriod } from "@/apps/performance/periods";
+import { PERFORMANCE_EVIDENCE_LABELS } from "@/apps/performance/performance-terminology";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import type {
   PerformanceCalculationEvidenceView,
@@ -133,7 +134,7 @@ export function buildPerformanceEvidenceAssuranceViewModel(
   const state = resolveAssuranceState(capability, evidence, calculations, exceptions);
   const posture = {
     ready: "Ready for internal review",
-    attention: "Attention required",
+    attention: PERFORMANCE_EVIDENCE_LABELS.needsAttention,
     incomplete: "Incomplete evidence",
     unavailable: "Assurance unavailable",
   }[state];
@@ -272,7 +273,7 @@ function resolveCalculationLifecyclePresentation(
   }
 
   const stagePresentation = stageStates.some((state) => FAILED_STATUSES.includes(state))
-    ? { label: "Attention required", tone: "danger" as const }
+    ? { label: PERFORMANCE_EVIDENCE_LABELS.needsAttention, tone: "danger" as const }
     : stageStates.some((state) => PENDING_STATUSES.includes(state))
       ? { label: "In progress", tone: "warn" as const }
       : { label: "Not confirmed", tone: "default" as const };
@@ -301,7 +302,7 @@ function resolveEvidenceLifecyclePresentation(
         !buildEvidenceRecordHref(artifact.archive_document_download_url ?? artifact.url)
     )
   ) {
-    return { label: "Attention required", tone: "danger" };
+    return { label: PERFORMANCE_EVIDENCE_LABELS.needsAttention, tone: "danger" };
   }
   const upstreamSnapshots = safeArray(calculation.upstream_snapshots);
   if (
@@ -318,7 +319,7 @@ function resolveEvidenceLifecyclePresentation(
     classifyUpstreamRetrievalState(snapshot.retrieval_status)
   );
   if (retrievalStates.includes("failed")) {
-    return { label: "Attention required", tone: "danger" };
+    return { label: PERFORMANCE_EVIDENCE_LABELS.needsAttention, tone: "danger" };
   }
   if (retrievalStates.includes("pending")) {
     return { label: "In progress", tone: "warn" };
@@ -336,7 +337,9 @@ function lifecyclePresentation(
   const state = normalise(value);
   if (state === COMPLETE_STATUS) return { label: "Confirmed", tone: "success" };
   if (PENDING_STATUSES.includes(state)) return { label: "In progress", tone: "warn" };
-  if (FAILED_STATUSES.includes(state)) return { label: "Attention required", tone: "danger" };
+  if (FAILED_STATUSES.includes(state)) {
+    return { label: PERFORMANCE_EVIDENCE_LABELS.needsAttention, tone: "danger" };
+  }
   return { label: subject === "calculation" ? "Not reported" : "Not confirmed", tone: "default" };
 }
 

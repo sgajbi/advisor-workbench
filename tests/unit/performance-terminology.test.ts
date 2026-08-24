@@ -7,6 +7,7 @@ import {
   normalizePerformanceMetricLabel,
   PERFORMANCE_ACTION_LABELS,
   PERFORMANCE_CONTEXT_LABELS,
+  PERFORMANCE_EVIDENCE_LABELS,
   PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_FEE_BASIS_LABELS,
   PERFORMANCE_RETURN_DEFINITIONS,
@@ -115,6 +116,9 @@ describe("performance terminology", () => {
   });
 
   it("owns consistent workflow and review-context language", () => {
+    expect(PERFORMANCE_EVIDENCE_LABELS).toEqual({
+      needsAttention: "Needs attention",
+    });
     expect(PERFORMANCE_WORKFLOW_LABELS).toEqual({
       overview: "Performance overview",
       analysis: "Performance analysis",

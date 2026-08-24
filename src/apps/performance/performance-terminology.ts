@@ -56,6 +56,10 @@ export const PERFORMANCE_CONTEXT_LABELS = {
   asOfDate: "As-of date",
 } as const;
 
+export const PERFORMANCE_EVIDENCE_LABELS = {
+  needsAttention: "Needs attention",
+} as const;
+
 export function getPerformanceFeeBasisLabel(basis: string | null | undefined): string {
   if (basis?.trim().toUpperCase() === "NET") {
     return PERFORMANCE_FEE_BASIS_LABELS.net;

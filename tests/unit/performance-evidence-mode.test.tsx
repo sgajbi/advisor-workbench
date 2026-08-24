@@ -144,7 +144,7 @@ describe("PerformanceEvidenceMode", () => {
     }
     renderEvidenceMode(scenario);
 
-    expect(screen.getByRole("heading", { name: "Attention required" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Needs attention" })).toBeInTheDocument();
     expect(
       screen.getByText("Portfolio performance summary supporting record 1 route unavailable")
     ).toBeInTheDocument();

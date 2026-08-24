@@ -181,7 +181,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
 
     expect(view.state).toBe("attention");
-    expect(view.posture).toBe("Attention required");
+    expect(view.posture).toBe("Needs attention");
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -298,7 +298,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
 
     expect(view.state).toBe("attention");
-    expect(view.posture).toBe("Attention required");
+    expect(view.posture).toBe("Needs attention");
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ title: "Calculation evidence not reported", tone: "warn" }),
@@ -353,7 +353,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
 
     expect(view.state).toBe("attention");
-    expect(view.posture).toBe("Attention required");
+    expect(view.posture).toBe("Needs attention");
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ title: "Portfolio performance summary did not complete", tone: "danger" }),
@@ -364,7 +364,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
   });
 
   it.each([
-    ["failed", "attention", "Portfolio performance summary stage did not complete", "danger", "Attention required", "danger"],
+    ["failed", "attention", "Portfolio performance summary stage did not complete", "danger", "Needs attention", "danger"],
     ["running", "incomplete", "Portfolio performance summary stage still in progress", "warn", "In progress", "warn"],
     ["unexpected", "incomplete", "Portfolio performance summary stage status not reported", "warn", "Not confirmed", "default"],
   ] as const)(
@@ -433,7 +433,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
   });
 
   it.each([
-    ["500", "attention", "Portfolio performance summary upstream evidence 1 unavailable", "danger", "Attention required", "danger"],
+    ["500", "attention", "Portfolio performance summary upstream evidence 1 unavailable", "danger", "Needs attention", "danger"],
     ["processing", "incomplete", "Portfolio performance summary upstream evidence 1 retrieval in progress", "warn", "In progress", "warn"],
     ["unexpected", "incomplete", "Portfolio performance summary upstream evidence 1 status not confirmed", "warn", "Not confirmed", "default"],
   ] as const)(
@@ -764,7 +764,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
 
     expect(view.state).toBe("attention");
-    expect(view.posture).toBe("Attention required");
+    expect(view.posture).toBe("Needs attention");
     expect(view.exceptions).toContainEqual(
       expect.objectContaining({
         title: "Calculation assurance scope not confirmed",
@@ -1055,7 +1055,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
       href: null,
     });
     expect(view.calculations[0]).toMatchObject({
-      evidenceStatus: "Attention required",
+      evidenceStatus: "Needs attention",
       evidenceTone: "danger",
     });
     expect(view.metrics).toContainEqual(
