@@ -12,7 +12,7 @@ readiness, risk profile, priority, alternatives, or workflow completion in the b
 | Canonical route | `/workbench/{portfolioId}`; Overview is the default mode, while explicit `mode=overview` is accepted as an equivalent entry |
 | Navigation | **Manage** in the selected-portfolio Workbench rail, then **Overview** in Manage workspace navigation |
 | Supported scope | One Gateway-backed portfolio and its current Core and Manage evidence |
-| Primary reading order | Operating posture, compact portfolio measures, decision worklist, selected evidence and next action |
+| Primary reading order | Left-rail workflow navigation, centre operating posture and measures, decision worklist, selected decision, then distinct source evidence in the right rail |
 | Primary next action | Resolve an attention item in Mandate Health or continue to the Manage work area required for the next decision |
 
 The screen is portfolio-scoped. It does not aggregate a portfolio-manager book, household, team,
@@ -106,6 +106,10 @@ handing the user to a focused Manage mode.
   navigation and are not presented as decision-worklist records.
 - Presents portfolio value, positions, cash weight, and risk profile as one compact horizontal
   measure strip ahead of the decision worklist.
+- Assigns one owner to each information job: the Workbench left rail owns Manage destinations, the
+  centre workspace owns operating posture and decisions, and the right rail owns only distinct
+  source-evidence availability, monitoring-record, and traceability facts. The evidence rail does
+  not restate destinations, attention, data-readiness, or rebalance posture.
 
 ## Decisions And Actions
 
@@ -128,7 +132,8 @@ portfolio instruction, order, execution, settlement record, or approval.
 | Mandate risk profile, health, data readiness, and monitoring posture | Maps source values into business labels and fails closed for missing evidence | Gateway over Manage mandate and command-centre contracts |
 | Active attention items, owner, severity, age, and next step | Limits presentation to the current returned window and never infers a whole-book queue | Gateway over Manage exception contracts |
 | Rebalance stage, source readiness, issue count, and support note | Presents source-owned wave posture without execution claims | Gateway over Manage rebalance-wave contracts |
-| Task-directory navigation | Builds portfolio-preserving Workbench routes to implemented modes | Workbench over the registered Manage navigation |
+| Manage workflow navigation | Builds portfolio-preserving Workbench routes to implemented modes once in the shell-owned left rail | Workbench over the registered Manage navigation |
+| Evidence-pack, monitoring-record, and traceability availability | Derives bounded presentation facts from the already returned source evidence; does not create another operating-status authority | Workbench over Gateway-returned Core and Manage evidence |
 
 Workbench uses the BFF and Gateway. It does not call Core or Manage directly. Shared contract detail
 remains in [API Surface](API-Surface), and ownership flow remains in
@@ -199,12 +204,14 @@ unsupported capability, and this guide is not a claim of competitor superiority.
 - `tests/unit/workbench-worklist.test.tsx` proves the shared worklist's row/detail relationship,
   Arrow-key selection, Enter detail transfer, disabled-row posture, and controlled selection.
 - `tests/unit/manage-overview-responsive-css.test.ts` proves that posture, value, evidence, and task
-  layouts reflow from available content width instead of assuming a full-page viewport.
+  layouts reflow from available content width instead of assuming a full-page viewport, and that
+  superseded context-rail and rail-action selectors cannot return.
 - `tests/e2e/manage-overview-workspace.spec.ts` proves the optimized production route at 1440,
   1024, 768, and 519 pixels, including the source-backed decision model, one occurrence per
-  destination, list/detail keyboard flow, responsive stacking, first decision row above 900
-  pixels, zero page overflow, and a desktop height no greater than 1,200 pixels—at least 40%
-  shorter than the approximately 2,000-pixel baseline.
+  destination, one occurrence per operating-posture fact, distinct right-rail evidence, list/detail
+  keyboard flow, responsive stacking, first decision row above 900 pixels, zero page overflow, and
+  a desktop height no greater than 1,200 pixels—at least 40% shorter than the approximately
+  2,000-pixel baseline.
 - Optimized-production diagnostic browser proof on `PB_SG_GLOBAL_BAL_001` verified 1440, 1024,
   720, and 390 pixel viewports without page overflow; centre-rail evidence remained within its
   parent boundary, and a task-directory link retained a visible two-pixel focus outline. The source
