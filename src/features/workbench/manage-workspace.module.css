@@ -787,55 +787,27 @@
   background: #f7f9fb;
 }
 
-.manageScope :global(.manage-context-rail) {
+.manageScope :global(.manage-evidence-rail) {
   display: grid;
   gap: 14px;
 }
 
-.manageScope :global(.manage-context-rail-header) {
+.manageScope :global(.manage-evidence-rail-header) {
   display: grid;
   gap: 2px;
   padding-bottom: 10px;
   border-bottom: 1px solid #c6c6cd;
 }
 
-.manageScope :global(.manage-context-rail-header strong) {
+.manageScope :global(.manage-evidence-rail-header strong) {
   color: #131b2e;
   font-size: 14px;
   font-weight: 700;
   line-height: 19px;
 }
 
-.manageScope :global(.manage-context-rail .workbench-definition-list) {
+.manageScope :global(.manage-evidence-rail .workbench-definition-list) {
   margin-top: 10px;
-}
-
-.manageScope :global(.manage-rail-actions) {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.manageScope :global(.manage-rail-actions a) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 32px;
-  padding: 7px 9px;
-  border: 1px solid #d1d6dc;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #ffffff, #fbfcfd);
-  color: #191c1e;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-  text-decoration: none;
-}
-
-.manageScope :global(.manage-rail-actions a:hover) {
-  border-color: #725b26;
-  background: #f7f9fb;
-  color: #725b26;
 }
 
 .manageScope :global(.dpm-command-center-panel),
