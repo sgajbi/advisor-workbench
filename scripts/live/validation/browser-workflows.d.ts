@@ -1,4 +1,35 @@
-export function hasAcceptedAdvisorBriefReviewPosture(text: string): boolean;
+export type AdvisorBriefReviewEvidence = {
+  rowCount: number;
+  reviewState: string | null;
+  supportability: string | null;
+  reviewer: string | null;
+  recordedAt: string | null;
+};
+
+export function readAdvisorBriefReviewEvidence(supportabilityRegion: {
+  getByTestId(testId: string): {
+    count(): Promise<number>;
+    first(): {
+      getAttribute(name: string): Promise<string | null>;
+    };
+  };
+}): Promise<AdvisorBriefReviewEvidence>;
+
+export function hasAcceptedAdvisorBriefReviewPosture(
+  evidence: AdvisorBriefReviewEvidence,
+): boolean;
+export function hasRecordedAdvisorBriefAcceptProof(
+  evidence: AdvisorBriefReviewEvidence,
+  expectedReviewer: string,
+): boolean;
+export function classifyAdvisorBriefAcceptProofPosture(
+  evidence: AdvisorBriefReviewEvidence,
+  expectedReviewer: string,
+):
+  | "source-confirmed-existing-action"
+  | "accepted-by-another-reviewer"
+  | "review-action-available"
+  | "review-action-unavailable";
 
 export function createBrowserValidationHelpers(args: {
   outputDir: string;

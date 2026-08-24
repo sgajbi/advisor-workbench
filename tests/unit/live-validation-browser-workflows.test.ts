@@ -14,6 +14,7 @@ const {
   classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
   hasRecordedAdvisorBriefAcceptProof,
+  readAdvisorBriefReviewEvidence,
   navigateForBusinessProof,
   resolveHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
@@ -44,18 +45,26 @@ const {
   ) => "demo_ready" | "truthfully_degraded";
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   classifyAdvisorBriefAcceptProofPosture: (
-    text: string,
+    evidence: AdvisorBriefReviewEvidence,
     expectedReviewer: string,
   ) =>
     | "source-confirmed-existing-action"
     | "accepted-by-another-reviewer"
     | "review-action-unavailable"
     | "review-action-available";
-  hasAcceptedAdvisorBriefReviewPosture: (text: string) => boolean;
+  hasAcceptedAdvisorBriefReviewPosture: (evidence: AdvisorBriefReviewEvidence) => boolean;
   hasRecordedAdvisorBriefAcceptProof: (
-    text: string,
+    evidence: AdvisorBriefReviewEvidence,
     expectedReviewer: string,
   ) => boolean;
+  readAdvisorBriefReviewEvidence: (supportabilityRegion: {
+    getByTestId: (testId: string) => {
+      count: () => Promise<number>;
+      first: () => {
+        getAttribute: (name: string) => Promise<string | null>;
+      };
+    };
+  }) => Promise<AdvisorBriefReviewEvidence>;
   navigateForBusinessProof: (
     page: {
       goto: (
@@ -72,6 +81,22 @@ const {
   ) => string;
   validateAdvisorBriefPanel: (...args: unknown[]) => Promise<void>;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
+};
+
+type AdvisorBriefReviewEvidence = {
+  rowCount: number;
+  reviewState: string | null;
+  supportability: string | null;
+  reviewer: string | null;
+  recordedAt: string | null;
+};
+
+const ACCEPTED_REVIEW_EVIDENCE: AdvisorBriefReviewEvidence = {
+  rowCount: 1,
+  reviewState: "ACCEPTED",
+  supportability: "READY",
+  reviewer: "live.validator.ui",
+  recordedAt: "2026-04-21T03:22:00Z",
 };
 
 describe("live validation browser workflow helpers", () => {
@@ -198,91 +223,121 @@ describe("live validation browser workflow helpers", () => {
     ).toThrow("neither source rows nor a governed fallback state");
   });
 
-  it("accepts only business-labelled advisor-brief review posture with source audit evidence", () => {
+  it("reads one atomic review record without depending on concatenated DOM text", async () => {
+    const attributes = new Map([
+      ["data-review-state", "ACCEPTED"],
+      ["data-review-supportability", "READY"],
+      ["data-reviewer", "live.validator.ui"],
+      ["data-recorded-at", "2026-04-21T03:22:00Z"],
+    ]);
+    const getAttribute = vi.fn((name: string) => Promise.resolve(attributes.get(name) ?? null));
+    const first = vi.fn(() => ({ getAttribute }));
+    const count = vi.fn().mockResolvedValue(1);
+    const getByTestId = vi.fn(() => ({ count, first }));
+
+    await expect(readAdvisorBriefReviewEvidence({ getByTestId })).resolves.toEqual(
+      ACCEPTED_REVIEW_EVIDENCE,
+    );
+    expect(getByTestId).toHaveBeenCalledWith("advisor-brief-human-review-evidence");
+    expect(getAttribute).toHaveBeenCalledTimes(4);
+  });
+
+  it.each([0, 2])("rejects %i atomic review evidence rows", async (rowCount) => {
+    const getAttribute = vi.fn();
+    const getByTestId = vi.fn(() => ({
+      count: vi.fn().mockResolvedValue(rowCount),
+      first: vi.fn(() => ({ getAttribute })),
+    }));
+
+    const evidence = await readAdvisorBriefReviewEvidence({ getByTestId });
+
+    expect(evidence).toEqual({
+      rowCount,
+      reviewState: null,
+      supportability: null,
+      reviewer: null,
+      recordedAt: null,
+    });
+    expect(getAttribute).not.toHaveBeenCalled();
+    expect(classifyAdvisorBriefAcceptProofPosture(evidence, "live.validator.ui")).toBe(
+      "review-action-unavailable",
+    );
+  });
+
+  it("accepts only a complete, source-recorded Advisor Brief review", () => {
+    expect(hasAcceptedAdvisorBriefReviewPosture(ACCEPTED_REVIEW_EVIDENCE)).toBe(true);
     expect(
-      hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Accepted for internal use Supportability READY Review recorded by advisor_1 Review recorded 2026-04-21T03:22:00Z"
-      )
+      hasRecordedAdvisorBriefAcceptProof(ACCEPTED_REVIEW_EVIDENCE, "live.validator.ui"),
     ).toBe(true);
     expect(
-      hasAcceptedAdvisorBriefReviewPosture(
-        "AI Review Supportability ACTION REQUIRED ACCEPTED partial evidence remains visible"
-      )
-    ).toBe(false);
-    expect(
-      hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Accepted for internal use Supportability READY Review audit details not published"
-      )
-    ).toBe(false);
-    expect(
-      hasAcceptedAdvisorBriefReviewPosture(
-        "Human Review Accepted for internal use Supportability READY Review recorded by advisor_1"
-      )
-    ).toBe(false);
-    expect(
-      hasAcceptedAdvisorBriefReviewPosture("AI Review AWAITING REVIEW Supportability ACTION REQUIRED")
+      hasRecordedAdvisorBriefAcceptProof(ACCEPTED_REVIEW_EVIDENCE, "another.reviewer"),
     ).toBe(false);
   });
 
-  it("reuses only the exact source-recorded browser acceptance on canonical reruns", () => {
-    const recordedPosture =
-      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui • Review recorded 2026-04-21T03:22:00Z";
+  it.each([
+    ["missing review state", { reviewState: null }],
+    ["unexpected review state", { reviewState: "REJECTED" }],
+    ["non-ready supportability", { supportability: "ACTION_REQUIRED" }],
+    ["missing reviewer", { reviewer: null }],
+    ["blank reviewer", { reviewer: "  " }],
+    ["missing timestamp", { recordedAt: null }],
+    ["unzoned timestamp", { recordedAt: "2026-04-21T03:22:00" }],
+    ["impossible timestamp", { recordedAt: "2026-04-31T03:22:00Z" }],
+    ["non-UTC timestamp", { recordedAt: "2026-04-21T11:22:00+08:00" }],
+  ] as const)("rejects %s", (_label, override) => {
+    const evidence = { ...ACCEPTED_REVIEW_EVIDENCE, ...override };
 
-    expect(
-      hasRecordedAdvisorBriefAcceptProof(recordedPosture, "live.validator.ui"),
-    ).toBe(true);
-    expect(
-      hasRecordedAdvisorBriefAcceptProof(recordedPosture, "another.reviewer"),
-    ).toBe(false);
-    expect(
-      hasRecordedAdvisorBriefAcceptProof(
-        "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui2 • Review recorded 2026-04-21T03:22:00Z",
-        "live.validator.ui",
-      ),
-    ).toBe(false);
-    expect(
-      hasRecordedAdvisorBriefAcceptProof(
-        "Human Review Accepted for internal use Supportability READY Review audit details not published",
-        "live.validator.ui",
-      ),
-    ).toBe(false);
+    expect(hasAcceptedAdvisorBriefReviewPosture(evidence)).toBe(false);
+    expect(classifyAdvisorBriefAcceptProofPosture(evidence, "live.validator.ui")).toBe(
+      "review-action-unavailable",
+    );
   });
 
-  it("classifies accepted runs owned by another reviewer for fallback reservation", () => {
-    const exactPosture =
-      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.ui • Review recorded 2026-04-21T03:22:00Z";
-    const otherReviewerPosture =
-      "Human Review Accepted for internal use Supportability READY Review recorded by live.validator.accept • Review recorded 2026-04-21T03:22:00Z";
-
-    expect(
-      classifyAdvisorBriefAcceptProofPosture(exactPosture, "live.validator.ui"),
-    ).toBe("source-confirmed-existing-action");
+  it("classifies another source reviewer and one actionable awaiting-review posture", () => {
     expect(
       classifyAdvisorBriefAcceptProofPosture(
-        otherReviewerPosture,
+        { ...ACCEPTED_REVIEW_EVIDENCE, reviewer: "live.validator.accept" },
         "live.validator.ui",
       ),
     ).toBe("accepted-by-another-reviewer");
     expect(
       classifyAdvisorBriefAcceptProofPosture(
-        "Human Review Awaiting review Supportability ACTION REQUIRED",
+        {
+          rowCount: 1,
+          reviewState: "AWAITING_REVIEW",
+          supportability: "ACTION_REQUIRED",
+          reviewer: null,
+          recordedAt: null,
+        },
         "live.validator.ui",
       ),
     ).toBe("review-action-available");
   });
 
   it.each([
-    "Human Review Rejected Supportability FAILED Recorded by live.validator.reject • Recorded 2026-04-21T03:22:00Z",
-    "Human Review Withdrawn Supportability FAILED Recorded by live.validator.withdraw • Recorded 2026-04-21T03:22:00Z",
-    "Human Review Revision requested Supportability ACTION REQUIRED Recorded by live.validator.revise • Recorded 2026-04-21T03:22:00Z",
-    "Human Review Superseded Supportability ACTION REQUIRED Recorded by live.validator.replace • Recorded 2026-04-21T03:22:00Z",
-    "Human Review No review required Supportability READY",
-    "Human Review Not reported Supportability ACTION REQUIRED",
-  ])("reserves a fresh run when the current posture is not actionable: %s", (posture) => {
-    expect(
-      classifyAdvisorBriefAcceptProofPosture(posture, "live.validator.ui"),
-    ).toBe("review-action-unavailable");
-  });
+    ["REJECTED", "FAILED"],
+    ["ABANDONED", "FAILED"],
+    ["REVISED", "ACTION_REQUIRED"],
+    ["SUPERSEDED", "ACTION_REQUIRED"],
+    ["NOT_REVIEW_REQUIRED", "READY"],
+    [null, "ACTION_REQUIRED"],
+  ] as const)(
+    "reserves a fresh run when state %s with supportability %s is not actionable",
+    (reviewState, supportability) => {
+      expect(
+        classifyAdvisorBriefAcceptProofPosture(
+          {
+            rowCount: 1,
+            reviewState,
+            supportability,
+            reviewer: null,
+            recordedAt: null,
+          },
+          "live.validator.ui",
+        ),
+      ).toBe("review-action-unavailable");
+    },
+  );
 
   it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
     const source = validateAdvisorBriefPanel.toString();
@@ -300,7 +355,8 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('getByLabel("Reviewer reference")');
     expect(source).toContain('getByLabel("Review rationale")');
     expect(source).toContain('name: "Confirm acceptance"');
-    expect(source).toContain("supportabilityRegion.textContent()");
+    expect(source).toContain("readAdvisorBriefReviewEvidence");
+    expect(source).not.toContain("supportabilityRegion.textContent()");
     expect(source).toContain(
       "The brief was accepted for its permitted internal workflow use.",
     );
