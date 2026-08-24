@@ -52,7 +52,7 @@ portfolio-entitlement work remains governed separately.
 1. Start from [Advisor Book](Advisor-Book-Workflow) or [Portfolio Review](Portfolio-Review-Screen-Guide)
    with a selected portfolio.
 2. Confirm the mandate, client reference, currency, and as-of date before interpreting figures.
-3. Use AUM, invested value, and cash to orient the inventory; these measures remain source-owned
+3. Use portfolio value, invested value, and cash to orient the inventory; these measures remain source-owned
    portfolio facts rather than totals recalculated from the visible grid.
 4. Search by instrument, choose the business columns needed for the review, and inspect explicit
    **Current**, **Review required**, **Not reported**, or **Not applicable** status.
@@ -99,7 +99,7 @@ complete, or communicate with a client.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio identity, as-of date, currency, AUM, invested value, and cash | Presented from the selected workspace; not reconstructed from filtered grid rows | Gateway over Core portfolio book and summary contracts |
+| Portfolio identity, as-of date, currency, portfolio value, invested value, and cash | Presented from the selected workspace; not reconstructed from filtered grid rows | Gateway over Core portfolio book and summary contracts |
 | Security positions, quantities, price, valuation, cost, weight, classification, dates, and identifiers | Formatted and arranged for review without recalculating source facts | Core booked position records composed by Gateway |
 | Cash balances in the inventory | Added only from the source-returned liquidity detail and deduplicated by security id | Core liquidity records composed by Gateway |
 | Position status | Mapped to stable business language; unknown non-empty states fail closed to **Review required** and raw codes remain out of primary UI/export | Core position source status and operations evidence composed by Gateway |

@@ -1472,6 +1472,12 @@ Most relevant current governance:
     on a fresh optimized-production document load. This rule remains valid after a framework
     upgrade because semantic ownership is clearer and collision-safe; Next.js 16 certification is
     tracked separately under #624.
+20. A selected portfolio's source-backed base-currency market value is presented as **Portfolio
+    value**. Reserve **AUM** for a source-backed adviser-book, relationship, or firm aggregate; do
+    not infer that aggregate from a selected portfolio or browser-side summation. Gateway contract
+    fields and reason codes may retain legacy AUM identifiers at the adapter boundary, but primary
+    Workbench copy, record headers, metric definitions, and screen guides consume the portfolio
+    terminology authority in `src/apps/portfolio/portfolio-terminology.ts`.
 
 ## Context Maintenance Rule
 
