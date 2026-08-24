@@ -70,7 +70,6 @@ export type ProofPackPanelModel = {
   selectedEvidenceSummary: string;
   advisorRationale: string;
   contentHash: string;
-  createdAt: string;
   sectionStateSummary: string;
   markdownAvailable: boolean;
   reportInputAvailable: boolean;
@@ -123,7 +122,6 @@ export function buildProofPackPanelModel(
       selectedEvidenceSummary: "Evidence details are not available yet.",
       advisorRationale: "Advisor rationale is not available until the evidence pack is returned.",
       contentHash: "N/A",
-      createdAt: "N/A",
       sectionStateSummary: "N/A",
       markdownAvailable: false,
       reportInputAvailable: false,
@@ -196,7 +194,6 @@ export function buildProofPackPanelModel(
       readString(decisionSummary, "expected_benefit") ||
       "Advisor rationale can be recorded after reviewing the evidence pack.",
     contentHash,
-    createdAt: readString(proofPack, "created_at") || readString(response.data, "created_at") || "N/A",
     sectionStateSummary: formatSectionStateCounts(response.supportability.section_state_counts),
     markdownAvailable: Boolean(response.supportability.markdown_available),
     reportInputAvailable: Boolean(response.supportability.report_input_available),

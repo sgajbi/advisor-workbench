@@ -64,7 +64,6 @@ export type ConstructionSourceReadinessRow = {
   key: string;
   source: string;
   state: string;
-  lastUpdated: string;
   reasonCode: string;
 };
 
@@ -398,11 +397,6 @@ function buildSourceReadinessRows(data: Record<string, unknown>): ConstructionSo
       key: `${source}-${index}`,
       source,
       state: normalizeState(readString(record, "state") || readString(record, "status")),
-      lastUpdated:
-        readString(record, "last_updated") ||
-        readString(record, "last_updated_at") ||
-        readString(record, "as_of_utc") ||
-        "N/A",
       reasonCode:
         readString(record, "reason_code") ||
         extractStringArray(record.reason_codes).join(", ") ||

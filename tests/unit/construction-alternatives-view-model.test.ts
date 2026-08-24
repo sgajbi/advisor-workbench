@@ -214,14 +214,12 @@ describe("construction alternatives view model", () => {
         key: "lotus-core-0",
         source: "lotus-core",
         state: "READY",
-        lastUpdated: "2026-05-13T08:30:00Z",
         reasonCode: "-",
       },
       {
         key: "lotus-pricing-1",
         source: "lotus-pricing",
         state: "PARTIAL",
-        lastUpdated: "N/A",
         reasonCode: "PRICE_STALE",
       },
     ]);

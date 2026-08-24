@@ -31,7 +31,6 @@ export type MandateSourceReadinessRow = {
   key: string;
   source: string;
   state: string;
-  lastUpdated: string;
   reasonCode: string;
 };
 
@@ -221,11 +220,6 @@ export function buildMandateSourceReadinessRows(
         key: `${source}-${index}`,
         source,
         state: readString(record, "state") || readString(record, "status") || "UNKNOWN",
-        lastUpdated:
-          readString(record, "last_updated") ||
-          readString(record, "last_updated_at") ||
-          readString(record, "as_of_utc") ||
-          "N/A",
         reasonCode:
           readString(record, "reason_code") ||
           readString(record, "reason") ||
@@ -239,7 +233,6 @@ export function buildMandateSourceReadinessRows(
     key: row.key,
     source: commandModel.sourceService,
     state: row.key.toUpperCase(),
-    lastUpdated: "N/A",
     reasonCode:
       row.value !== "N/A"
         ? `${row.label}: ${row.value}`
