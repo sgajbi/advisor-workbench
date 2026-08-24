@@ -7,8 +7,10 @@ They use the governed Portfolio Playwright fixture for `PB_SG_GLOBAL_BAL_001`; t
 live Gateway/source runtime, canonical readiness, demo readiness, production identity, or bank
 certification.
 
-The product implementation under test was `650d3935`. The evidence pack is committed separately so
-reviewers can inspect it in GitHub without treating generated `output/` as durable repository truth.
+The family-comparison implementation under test was `650d3935`. The shared Review Context state
+matrix was generated from the residual implementation through `915222cc`; later documentation-only
+commits do not alter its rendered result. The evidence pack is committed separately so reviewers
+can inspect it in GitHub without treating generated `output/` as durable repository truth.
 
 ## Reviewer Comparison
 
@@ -19,6 +21,21 @@ reviewers can inspect it in GitHub without treating generated `output/` as durab
 
 The complete four-width computed-style and containment record is
 [typography-comparison.json](typography-comparison.json). It covers 1440, 1024, 768, and 519 pixels.
+
+## Shared Review Context State Matrix
+
+| Source state | 1440px workstation | 519px compact |
+| --- | --- | --- |
+| Confirmed | [Open render](diagnostic-confirmed-review-context-1440.png) | [Open render](diagnostic-confirmed-review-context-519.png) |
+| Partial | [Open render](diagnostic-partial-review-context-1440.png) | [Open render](diagnostic-partial-review-context-519.png) |
+| Unavailable | [Open render](diagnostic-unavailable-review-context-1440.png) | [Open render](diagnostic-unavailable-review-context-519.png) |
+
+The source-state proof uses the actual shared component in an optimized Workbench build with an
+owned, exact-port fixture Gateway. It records IBM Plex Sans family, 12px/500 sentence-case fact
+labels, 14px/500 confirmed values, 14px/400 unconfirmed values, the 14px/600 support control, and
+zero page overflow in [review-context-typography-states.json](review-context-typography-states.json).
+The eyebrow remains the only uppercase role. This is deterministic source-state evidence, not live
+Gateway or canonical portfolio proof.
 
 ## Result
 
@@ -36,6 +53,7 @@ The complete four-width computed-style and containment record is
 
 ```bash
 npm run test:e2e:typography:compare
+npm run test:e2e:portfolio:review-context-typography
 ```
 
 The harness verifies the pinned upstream candidate checksums, injects each family independently in
