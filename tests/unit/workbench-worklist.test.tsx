@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 
 import { WorkbenchWorklist } from "../../src/design-system";
@@ -67,5 +67,65 @@ describe("WorkbenchWorklist", () => {
     expect(
       screen.getByRole("option", { name: /Confirm liquidity/ }),
     ).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("keeps multiple worklist title and decision relationships collision-free", () => {
+    const { container } = render(
+      <>
+        <WorkbenchWorklist
+          ariaLabel="Advisor actions"
+          relationshipIdBase="advisor-actions-primary"
+          title="Actions requiring review"
+          items={items}
+          selectedKey="action-1"
+          onSelectionChange={() => undefined}
+          decisionLabel="Selected advisor action"
+          decision={<p>Mandate evidence</p>}
+        />
+        <WorkbenchWorklist
+          ariaLabel="Portfolio actions"
+          relationshipIdBase="portfolio-actions-secondary"
+          title="Portfolio decisions"
+          items={items}
+          selectedKey="action-2"
+          onSelectionChange={() => undefined}
+          decisionLabel="Selected portfolio action"
+          decision={<p>Liquidity evidence</p>}
+        />
+      </>,
+    );
+
+    const advisorWorklist = screen.getByRole("listbox", { name: "Advisor actions" });
+    const advisorDecision = screen.getByRole("region", {
+      name: "Selected advisor action",
+    });
+    const portfolioWorklist = screen.getByRole("listbox", { name: "Portfolio actions" });
+    const portfolioDecision = screen.getByRole("region", {
+      name: "Selected portfolio action",
+    });
+
+    expect(advisorDecision).toHaveAttribute(
+      "id",
+      "advisor-actions-primary-decision",
+    );
+    expect(portfolioDecision).toHaveAttribute(
+      "id",
+      "portfolio-actions-secondary-decision",
+    );
+    for (const option of within(advisorWorklist).getAllByRole("option")) {
+      expect(option).toHaveAttribute(
+        "aria-controls",
+        "advisor-actions-primary-decision",
+      );
+    }
+    for (const option of within(portfolioWorklist).getAllByRole("option")) {
+      expect(option).toHaveAttribute(
+        "aria-controls",
+        "portfolio-actions-secondary-decision",
+      );
+    }
+
+    const ids = [...container.querySelectorAll("[id]")].map((element) => element.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
