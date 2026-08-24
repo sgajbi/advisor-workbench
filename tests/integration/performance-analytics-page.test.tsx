@@ -981,7 +981,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
-    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
+    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active return");
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByLabelText(RETURN_PATH_EVIDENCE_NAME)).not.toBeInTheDocument();
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
@@ -992,7 +992,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
-        name: /Open Return Path/,
+        name: /Open return path/,
       })
     );
 

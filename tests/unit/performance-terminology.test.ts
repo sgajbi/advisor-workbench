@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   getPerformanceFeeBasisLabel,
   getPerformanceReturnPathTitle,
+  normalizePerformanceActionLabel,
+  normalizePerformanceMetricLabel,
+  PERFORMANCE_ACTION_LABELS,
   PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_FEE_BASIS_LABELS,
   PERFORMANCE_RETURN_DEFINITIONS,
@@ -70,6 +73,33 @@ describe("performance terminology", () => {
       openingCashFlow: "Opening cash flow",
       closingCashFlow: "Closing cash flow",
       netCashFlow: "Net cash flow",
+    });
+  });
+
+  it.each([
+    ["Portfolio Return", "Portfolio TWR"],
+    [" benchmark return ", "Benchmark TWR"],
+    ["ACTIVE RETURN", "Active return"],
+    ["MWR", "Money-weighted return (MWR)"],
+    ["Ending MV", "Ending market value"],
+    ["Net Flow", "Net cash flow"],
+    ["HHI Current", "HHI Current"],
+  ])("normalizes known source label %s while preserving unknown evidence", (source, expected) => {
+    expect(normalizePerformanceMetricLabel(source)).toBe(expected);
+  });
+
+  it.each([
+    ["Open Return Path", "Open return path"],
+    [" review contribution ", "Review contribution"],
+    ["Open risk", "Open risk"],
+  ])("normalizes known action label %s while preserving unknown actions", (source, expected) => {
+    expect(normalizePerformanceActionLabel(source)).toBe(expected);
+  });
+
+  it("owns the canonical Performance workflow actions", () => {
+    expect(PERFORMANCE_ACTION_LABELS).toEqual({
+      openReturnPath: "Open return path",
+      reviewContribution: "Review contribution",
     });
   });
 });

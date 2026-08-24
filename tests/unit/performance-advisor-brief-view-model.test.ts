@@ -85,7 +85,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           headline: "Portfolio delivered 5.42% versus benchmark 4.91%.",
           evidenceRefs: expect.arrayContaining([
             expect.objectContaining({
-              metricLabel: "Active Return",
+              metricLabel: "Active return",
               sourceSurface: "performance.return_path",
               targetMode: "summary",
               route: expect.stringContaining("/performance?portfolioId=PF_1001"),
@@ -95,11 +95,11 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       ])
     );
     expect(brief.sourceMetrics.map((metric) => metric.label)).toEqual([
-      "Portfolio Return",
-      "Benchmark Return",
-      "Active Return",
-      "Net Flow",
-      "Ending MV",
+      "Portfolio TWR",
+      "Benchmark TWR",
+      "Active return",
+      "Net cash flow",
+      "Ending market value",
     ]);
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
@@ -410,6 +410,71 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
 
     expect(brief.aiDisclosure.evidence.sourceCount).toBe(expectedCount);
     expect(brief.aiDisclosure.evidence.state).toBe(expectedCount > 0 ? "supported" : "missing");
+  });
+
+  it("projects known Gateway metric aliases into canonical business labels", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const route = "/performance?portfolioId=PF_1001&period=YTD&detailBasis=NET";
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        talking_points: [
+          {
+            headline: "Portfolio remains ahead of benchmark.",
+            detail: "Review the benchmark-relative result.",
+            tone: "positive",
+            evidence_refs: [
+              {
+                metric_label: "Active Return",
+                metric_value: "0.52%",
+                source_surface: "performance.return_path",
+                target_mode: "summary",
+                route,
+              },
+            ],
+          },
+        ],
+        source_metrics: [
+          {
+            label: "Benchmark Return",
+            value: "4.91%",
+            support_label: "BMK_GLOBAL_BALANCED_60_40",
+            target_mode: "summary",
+            route,
+          },
+          {
+            label: "Ending MV",
+            value: "$1,250,000",
+            support_label: "24 Feb 2026",
+            target_mode: "summary",
+            route,
+          },
+          {
+            label: "HHI Current",
+            value: "1260",
+            support_label: "Source-authored risk evidence",
+            target_mode: "summary",
+            route,
+          },
+        ],
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.sourceMetrics.map((metric) => metric.label)).toEqual([
+      "Benchmark TWR",
+      "Ending market value",
+      "HHI Current",
+    ]);
+    expect(brief.sourceMetrics[0]?.supportingText).toBe("Global Balanced 60/40");
+    expect(brief.talkingPoints[0]?.evidenceRefs[0]?.metricLabel).toBe("Active return");
   });
 
   it.each([
