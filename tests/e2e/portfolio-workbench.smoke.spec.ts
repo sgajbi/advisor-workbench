@@ -7,6 +7,7 @@ import {
 } from './workbench-smoke-helpers';
 import {
   collectReviewContextOwnershipEvidence,
+  collectReviewContextTypographyEvidence,
   collectFocusableDomOrder,
   measureViewportEvidence,
   traverseSequentialKeyboardFocus,
@@ -422,6 +423,34 @@ test.describe('Portfolio workbench smoke', () => {
       ]);
       expect(identityOwnership.every((fact) => fact.presentInReviewContext)).toBe(true);
       expect(identityOwnership.every((fact) => !fact.presentOutsideReviewContext)).toBe(true);
+      const typography = await collectReviewContextTypographyEvidence(page);
+      expect(typography).toMatchObject({
+        eyebrow: {
+          fontSize: '12px',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+        },
+        factLabel: {
+          fontSize: '12px',
+          fontWeight: '500',
+          textTransform: 'none',
+        },
+        factValue: {
+          fontSize: '14px',
+          fontWeight: '500',
+          textTransform: 'none',
+        },
+        supportControl: {
+          fontSize: '14px',
+          fontWeight: '600',
+          textTransform: 'none',
+        },
+      });
+      expect(
+        Object.values(typography).every(({ fontFamily }) =>
+          fontFamily.includes('IBM Plex Sans')
+        )
+      ).toBe(true);
       await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Base currency', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Reporting currency', { exact: true })).toHaveCount(0);
@@ -505,6 +534,7 @@ test.describe('Portfolio workbench smoke', () => {
         measurements,
         railHeaderRegions,
         reviewContextOwnership: identityOwnership,
+        reviewContextTypography: typography,
         focusableDomOrder,
         keyboardEvidence,
       });
