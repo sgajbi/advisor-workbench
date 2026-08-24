@@ -121,13 +121,20 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
       const decisionRegion = document.querySelector<HTMLElement>(
         '[aria-label="Selected portfolio-management decision"]',
       );
-      if (!firstRow || !worklistRegion || !decisionRegion) {
+      const overviewPanel = document.querySelector<HTMLElement>(
+        ".manage-overview-panel",
+      );
+      if (!firstRow || !worklistRegion || !decisionRegion || !overviewPanel) {
         throw new Error("Manage decision-workspace geometry is unavailable.");
       }
       return {
         firstRowTop: firstRow.getBoundingClientRect().top,
         worklistBottom: worklistRegion.getBoundingClientRect().bottom,
         decisionTop: decisionRegion.getBoundingClientRect().top,
+        worklistRight: worklistRegion.getBoundingClientRect().right,
+        decisionRight: decisionRegion.getBoundingClientRect().right,
+        decisionLeft: decisionRegion.getBoundingClientRect().left,
+        overviewRight: overviewPanel.getBoundingClientRect().right,
         documentHeight: document.documentElement.scrollHeight,
         clientWidth: document.documentElement.clientWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -141,11 +148,13 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
     if (viewport.width === 1440) {
       expect(geometry.firstRowTop).toBeLessThan(900);
       expect(geometry.decisionTop).toBeLessThan(900);
+      expect(geometry.decisionLeft).toBeGreaterThanOrEqual(geometry.worklistRight);
       expect(
         geometry.documentHeight,
         "Manage Overview must remain at least 40% shorter than the 2,000px baseline capture.",
       ).toBeLessThanOrEqual(1200);
     }
+    expect(geometry.decisionRight).toBeLessThanOrEqual(geometry.overviewRight);
     if (viewport.width === 519) {
       expect(geometry.decisionTop).toBeGreaterThanOrEqual(geometry.worklistBottom);
     }
