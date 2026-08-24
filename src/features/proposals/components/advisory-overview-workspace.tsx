@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -84,6 +84,12 @@ export default function AdvisoryOverviewWorkspace({
     model.proposalRows.find(
       (proposal) => proposal.proposalId === selectedProposalId,
     ) ?? model.proposalRows[0];
+  const admittedSelectedProposalId = selectedProposal?.proposalId ?? null;
+  useEffect(() => {
+    if (admittedSelectedProposalId !== selectedProposalId) {
+      setSelectedProposalId(admittedSelectedProposalId);
+    }
+  }, [admittedSelectedProposalId, selectedProposalId]);
   const sourcePosture = projectQuerySourcePosture({
     hasData: Boolean(proposalQuery.data),
     isLoading: proposalQuery.isLoading,
