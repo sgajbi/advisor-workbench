@@ -20,7 +20,7 @@ evidence pack, handoff, order, execution, or settlement record exists.
 
 ## Business Purpose
 
-The screen helps a portfolio manager answer five practical questions:
+The screen helps a portfolio manager answer six practical questions:
 
 1. Which mandate, portfolio currency, and source date govern this rebalance review?
 2. Is the active wave sufficiently supported to continue, or do data and mandate issues block it?
@@ -96,6 +96,9 @@ client-delivery authority, or execution authority.
   pane refreshes only the selected campaign's lifecycle, launch, workflow, and readiness evidence.
 - Keeps every selected-campaign response, pending state, and error fenced to campaign id and version,
   so a late response for Campaign A cannot appear under Campaign B.
+- Presents the Manage service-posture value `ATTENTION` as **Needs attention** while preserving the
+  source enum in every submitted command. The business label does not rewrite the Gateway or Manage
+  contract.
 - Labels the operating, approval, assignment, and review queue summary as book-wide and keeps it
   outside the selected-campaign pane; only id/version-filtered evidence appears under that identity.
 - Separates review, governance, lifecycle, and launch tasks; uses progressive disclosure for technical
@@ -140,6 +143,7 @@ a read-only source-evidence reload instead of claiming that the mutation failed.
 | PM memo and operations brief | Shows AI-assistance disclosure and returned source references | Manage and Lotus AI through Gateway workflow-pack contracts |
 | Campaign definition and discovery worklist | Presents source records without inventing total-book priority, ownership, or SLA | Manage through Gateway campaign contracts |
 | Selected lifecycle, launch, approval, assignment, task, and maker-checker evidence | Fetches the selected id/version through `/api/bff/api/v1/...`; identity-fences pending, result, and error state | Manage through Gateway selected-campaign contracts |
+| Campaign service posture | Presents `ATTENTION` as **Needs attention** and submits the unchanged source enum | Manage through Gateway campaign workflow contracts |
 | Campaign lifecycle, governance, and launch commands | Sends the exact typed body through the BFF, waits for source persistence, then refreshes selected evidence | Manage through Gateway mutation contracts |
 
 The browser calls only `/api/bff/api/v1/...`. Shared endpoint detail is documented in
