@@ -18,9 +18,11 @@ export function ManageProofPackStateProvider({
   initialProofPack: DpmProofPackGatewayResponse | null;
   children: ReactNode;
 }) {
-  const [proofPack, setProofPack] = useState(initialProofPack);
+  const [publishedProofPack, setPublishedProofPack] =
+    useState<DpmProofPackGatewayResponse | null>(null);
+  const proofPack = publishedProofPack ?? initialProofPack;
   const value = useMemo(
-    () => ({ proofPack, publishProofPack: setProofPack }),
+    () => ({ proofPack, publishProofPack: setPublishedProofPack }),
     [proofPack],
   );
 

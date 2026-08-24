@@ -35,6 +35,7 @@ export default function ProofPackPanel({
   errorMessage,
 }: Props) {
   const sharedProofPack = useManageProofPackState();
+  const resolvedErrorMessage = sharedProofPack?.proofPack ? null : errorMessage;
   const context = deriveProofPackContext(outcomeReviews, rebalanceSnapshot ?? null);
   const {
     model,
@@ -79,7 +80,7 @@ export default function ProofPackPanel({
         pendingAction={pendingAction}
         actionError={actionError}
         handoffStatus={handoffStatus}
-        errorMessage={errorMessage}
+        errorMessage={resolvedErrorMessage}
         onGenerateProofPack={generateProofPack}
         onLoadProofPack={loadProofPack}
         onLoadMarkdown={loadMarkdown}
