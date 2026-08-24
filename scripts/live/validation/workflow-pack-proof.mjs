@@ -1,3 +1,5 @@
+import { resolveAdvisorBriefReviewerReference } from "../../../src/apps/performance/advisor-brief/advisor-brief-review-actor.mjs";
+
 function buildAdvisorBriefWorkspaceQuery(params) {
   const query = new URLSearchParams();
   query.set("period", params.period);
@@ -199,18 +201,24 @@ function assertRecordedReviewAudit(run, { description, expectedReviewer = null }
   if (run.review_pending !== false) {
     throw new Error(`${description} did not clear review_pending.`);
   }
-  if (
-    typeof run.latest_review_actor !== "string" ||
-    !run.latest_review_actor.trim()
-  ) {
+  const recordedReviewer = resolveAdvisorBriefReviewerReference(
+    run.latest_review_actor
+  );
+  if (!recordedReviewer) {
     throw new Error(`${description} returned no recorded reviewer.`);
   }
-  if (expectedReviewer !== null && run.latest_review_actor !== expectedReviewer) {
-    throw new Error(
-      `${description} returned reviewer '${String(
-        run.latest_review_actor
-      )}' instead of '${expectedReviewer}'.`
+  if (expectedReviewer !== null) {
+    const expectedReviewerReference = resolveAdvisorBriefReviewerReference(
+      expectedReviewer
     );
+    if (!expectedReviewerReference) {
+      throw new Error(`${description} was given no valid expected reviewer.`);
+    }
+    if (recordedReviewer !== expectedReviewerReference) {
+      throw new Error(
+        `${description} returned reviewer '${recordedReviewer}' instead of '${expectedReviewerReference}'.`
+      );
+    }
   }
   if (
     run.has_review_history !== true ||
