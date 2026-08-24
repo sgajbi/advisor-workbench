@@ -1202,6 +1202,13 @@ Important validation expectations:
     listener. Canonical ACCEPT proof must read exactly one machine-readable evidence record from
     the same visible **Human Review** row; it must fail closed for missing, duplicate, malformed,
     non-ready, or wrong-reviewer evidence and must not parse aggregate region `textContent()`.
+    Lotus AI records review actors as `review:<staff-reference>`; adapt that governed namespace
+    once at the Advisor Brief presentation boundary before displaying or comparing the business
+    reviewer reference. Preserve the raw actor in Gateway/source evidence, reject blank or
+    namespace-only actors, and do not teach components or validators separate string rules. Live
+    browser proof must stop immediately when the same review region renders an explicit failure
+    alert; waiting only for success text hides the actual source-confirmation failure and wastes the
+    fail-fast budget.
     Use
     `npm run test:e2e:performance:advisor-brief-review` for the owned optimized-production
     confirmation, source-persistence, responsive, focus, and browser-runtime proof.
