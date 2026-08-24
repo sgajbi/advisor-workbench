@@ -54,5 +54,8 @@ describe("Manage Overview responsive composition", () => {
     expect(workspaceCss).not.toContain("manage-overview-focus-grid");
     expect(workspaceCss).not.toContain("manage-overview-activity");
     expect(workspaceCss).not.toContain("manage-rebalance-evidence");
+    expect(workspaceCss).not.toContain("manage-context-rail");
+    expect(workspaceCss).not.toContain("manage-rail-actions");
+    expect(workspaceCss).toContain("manage-evidence-rail");
   });
 });
