@@ -33,6 +33,18 @@ It is responsible for:
 
 It should not invent unsupported backend behavior or bypass the governed gateway contract.
 
+### BFF request-header authority rule
+
+Every `/api/bff/**` request must enter Gateway through
+`buildGatewayBffRequestHeaders(request.headers)`. The builder selects only the governed content,
+idempotency, conditional/range, and validated correlation/trace headers. It discards browser
+authorization, cookies, session material, forwarding aliases, caller identity, roles,
+capabilities, service identity, principal status, and entitlement scope before overwriting the
+default caller context from server configuration. Route-family adapters may narrow or replace that
+server context; no adapter may recover browser authority. `npm run quality:bff-header-boundary`
+blocks raw `request.headers` access and a missing builder in every checked-in BFF route. This rule
+does not certify production identity; Workbench #436 remains the authenticated-principal owner.
+
 ### Risk Review source-authority rule
 
 Risk Review presents exact Gateway/Lotus Risk measures, factual lifecycle and recovery state,
@@ -907,8 +919,8 @@ Use these commands as the primary local contract:
    `make security`
 3. lint
    `make lint`
-   (`npm run lint`, which runs runtime and dependency-risk governance, CSS global governance, and
-   screen/architecture controls before `npm run lint:eslint` / the flat ESLint CLI configuration)
+   (`npm run lint`, which runs runtime, BFF header-boundary, dependency-risk, CSS global, and
+   screen/architecture governance before `npm run lint:eslint` / the flat ESLint CLI configuration)
 4. typecheck
    `make typecheck`
 5. coverage-backed test gate

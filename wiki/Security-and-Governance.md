@@ -29,6 +29,34 @@
 - remove high-risk client dependencies when a smaller browser-native implementation satisfies the
   same front-office workflow
 
+## Universal BFF request-header boundary
+
+Every browser request entering `/api/bff/**` is treated as untrusted. Workbench builds a new
+Gateway header set from one explicit allowlist before any route-family authority adapter runs.
+
+The allowlist is limited to:
+
+1. content negotiation and type: `Accept`, `Accept-Language`, and `Content-Type`,
+2. mutation replay protection: `Idempotency-Key` and `X-Idempotency-Key`,
+3. conditional and range requests: `If-Match`, `If-None-Match`, `If-Modified-Since`,
+   `If-Unmodified-Since`, `Range`, and `If-Range`,
+4. validated support context: `X-Correlation-Id`, `X-Trace-Id`, and `traceparent`.
+
+Browser `Authorization`, cookies, proxy authorization, session identifiers, forwarding aliases,
+caller identity, tenant, region, booking centre, role, capability, principal status, service
+identity, and portfolio/client/book entitlements are not forwarded. The BFF always writes its
+configured development caller context and specialized adapters may replace it with narrower
+server-derived route authority.
+
+`npm run quality:bff-header-boundary` fails when a BFF route omits the shared builder or accesses
+`request.headers` elsewhere. Behavioral regression coverage injects every forbidden authority
+header across portfolio, Performance, Risk, DPM, proposals, advisory workspaces, documents,
+Intake, lookups, and platform route families.
+
+This is a request-boundary control, not production authentication. It neither creates an IdP
+session nor certifies identity, token claims, logout, or revocation. Workbench #436 and platform
+#563 remain the owners of that separate production-principal contract.
+
 ## Advisor Cockpit authority boundary
 
 Advisor Cockpit browser requests carry business scope, not caller authority. The Workbench BFF:

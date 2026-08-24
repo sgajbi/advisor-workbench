@@ -208,11 +208,17 @@ Set:
 BFF_BASE_URL=http://gateway.dev.lotus
 ```
 
-The Workbench BFF adds governed caller-context headers before proxying to Gateway. Lotus Idea
-queue, detail, and action routes additionally replace browser-supplied subject, role, capability,
-and portfolio-entitlement headers with BFF-owned authority. Advisor-book reads likewise discard
-browser-supplied identity, scope, role, and capability headers and apply only BFF-owned authority.
-Advisor Cockpit reads and acknowledgements also discard browser identity and entitlement claims.
+The Workbench BFF constructs every Gateway request from an explicit browser-header allowlist before
+adding governed caller context. It carries only content negotiation and type, idempotency,
+conditional/range download controls, and validated correlation/trace context. Browser
+`Authorization`, cookies, session identifiers, proxy/forwarded identity, Lotus caller authority,
+capabilities, and entitlements are never inherited by Gateway. The configured BFF caller context
+overwrites rather than fills any browser value. `npm run quality:bff-header-boundary` prevents BFF
+routes from copying or reading raw browser headers outside this shared boundary.
+
+Lotus Idea queue, detail, and action routes then project route-specific subject, role, capability,
+and portfolio-entitlement authority. Advisor-book reads likewise apply only BFF-owned authority.
+Advisor Cockpit reads and acknowledgements derive their exact read or acknowledgement authority.
 The BFF derives the advisor from its configured actor, checks the selected portfolio against its
 server-side entitlement, and projects one route-specific read or acknowledgement capability.
 Until an authenticated-principal resolver is delivered, those authorities are enabled only when
@@ -275,9 +281,10 @@ and Workbench BFF resolution in [lotus-workbench#436](https://github.com/sgajbi/
 Workbench consumes the platform contract identifiers from
 `lotus-platform.bff-principal-session.v1` and currently records the contract posture as
 `not_certified`, `productionIdentityCertified=false`, and `supportedFeaturePromoted=false`.
-For governed authority routes, the BFF strips browser-supplied Lotus authority headers plus
-`Authorization`, `Cookie`, proxy authorization, and common upstream-auth identity aliases before
-projecting server-derived Gateway headers. General non-authority BFF proxy routes are unchanged.
+The universal BFF boundary applies before every route-family authority adapter, including
+portfolio, Performance, Risk, DPM, proposals, advisory workspaces, documents, Intake, lookups, and
+platform reads. Family adapters may narrow or replace authority further; they cannot recover a
+browser-supplied identity or session header removed at ingress.
 Only the explicit Idea queue, candidate-detail, review-action, feedback, and conversion-intent
 routes are allowlisted through the BFF; any other `/api/v1/ideas/*` route returns `404` before
 Gateway is contacted.
