@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { render, screen } from "@testing-library/react";
 
 import {
@@ -6,6 +9,21 @@ import {
 } from "../../src/design-system";
 
 describe("WorkbenchDecisionWorkspace", () => {
+  it("reflows from its owned module width before fixed columns can overflow", () => {
+    const styles = fs.readFileSync(
+      path.resolve(
+        "src/design-system/components/workbench-decision-workspace.module.css",
+      ),
+      "utf8",
+    );
+
+    expect(styles).toContain("container-type: inline-size;");
+    expect(styles).toContain("@container (max-width: 41rem)");
+    expect(styles).toMatch(
+      /@container \(max-width: 41rem\)[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
+    );
+  });
+
   it("groups one worklist with one labelled decision region", () => {
     render(
       <WorkbenchDecisionWorkspace
