@@ -45,9 +45,10 @@ describe("OutcomeReviewWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(
-      screen.getAllByRole("button", { name: "Prepare AI-assisted review summary" })[0],
-    );
+    const aiSummaryAction = screen.getByRole("button", {
+      name: /Prepare AI-assisted review summary/,
+    });
+    fireEvent.click(aiSummaryAction);
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
     expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
@@ -82,7 +83,9 @@ describe("OutcomeReviewWorkspace", () => {
     );
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
     expect(
-      screen.getAllByRole("button", { name: "Prepare AI-assisted review summary" })[0],
+      screen.getByRole("button", {
+        name: /Prepare AI-assisted review summary/,
+      }),
     ).toBeDisabled();
     expect(screen.queryByText(/outcome_review_id|rebalance_run_id|wave_id|sha256/i)).not.toBeInTheDocument();
     expect(

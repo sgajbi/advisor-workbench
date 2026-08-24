@@ -136,6 +136,44 @@ export function outcomeReviewSupportReasonLabel(reason: string): string {
   return knownLabels[reason.toUpperCase()] ?? formatBusinessReason(reason);
 }
 
+export function outcomeReviewDimensionStateLabel(state: string): string {
+  const knownLabels: Record<string, string> = {
+    READY: "Evidence ready",
+    WITHIN_TOLERANCE: MANAGE_OUTCOME_REVIEW_LABELS.withinExpectedTolerance,
+    BREACHED: MANAGE_OUTCOME_REVIEW_LABELS.outsideExpectedTolerance,
+    PENDING_REVIEW: MANAGE_OUTCOME_REVIEW_LABELS.reviewPending,
+  };
+  return knownLabels[state.toUpperCase()] ?? formatBusinessReason(state);
+}
+
+export function outcomeReviewRequiredRecordLabel(value: string): string {
+  if (/^ClientCommunicationRecord(?::v\d+)?$/i.test(value)) {
+    return "Client communication record";
+  }
+  return formatBusinessReason(value.replace(/:v\d+$/i, ""));
+}
+
+export function outcomeReviewBoundaryReasonLabel(reason: string): string {
+  const knownLabels: Record<string, string> = {
+    OUTCOME_CLIENT_COMMUNICATION_NOT_SUPPORTED:
+      "Client communication is not supported on this screen",
+    CLIENT_COMMUNICATION_NOT_PROJECTED:
+      "Client communication is not projected from this review",
+  };
+  return knownLabels[reason.toUpperCase()] ?? formatBusinessReason(reason);
+}
+
+export function outcomeReviewBlockedCapabilityLabel(capability: string): string {
+  const knownLabels: Record<string, string> = {
+    CLIENT_APPROVAL: "Client approval",
+    CLIENT_CONTACT: "Client contact",
+    CLIENT_MESSAGE_GENERATION: "Client message generation",
+    COMMUNICATION_AUDIT: "Communication audit",
+    DELIVERY_CONFIRMATION: "Delivery confirmation",
+  };
+  return knownLabels[capability.toUpperCase()] ?? formatBusinessReason(capability);
+}
+
 export function buildOutcomeReviewHandoffMessages(
   reportJobMessage: string | null,
   aiNarrativeMessage: string | null,

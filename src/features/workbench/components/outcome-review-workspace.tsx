@@ -76,10 +76,7 @@ export default function OutcomeReviewWorkspace({
         readyEvidenceCount={readyEvidenceCount}
         reportJobAvailable={reportJobAvailable}
         reportJobPending={reportJobPending}
-        aiNarrativeAvailable={aiNarrativeAvailable}
-        aiNarrativePending={aiNarrativePending}
         onRequestReportJob={onRequestReportJob}
-        onRequestAiNarrative={onRequestAiNarrative}
       />
     </>
   );

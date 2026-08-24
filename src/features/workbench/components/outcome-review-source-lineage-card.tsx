@@ -17,7 +17,7 @@ export default function OutcomeReviewSourceLineageCard({ boundary }: Props) {
   }
 
   return (
-    <div className="outcome-review-actions-card">
+    <div className="outcome-review-card outcome-review-source-card">
       <div className="outcome-review-card-header">
         <div>
           <span>{MANAGE_OUTCOME_REVIEW_LABELS.evidenceSources}</span>
@@ -28,10 +28,13 @@ export default function OutcomeReviewSourceLineageCard({ boundary }: Props) {
         </SemanticBadge>
       </div>
 
-      <FacetGroup title="Source owners" values={boundary.sourceOwnerFacets} />
-      <FacetGroup title="Source types" values={boundary.sourceTypeFacets} />
-      <TextGroup title="Applied filters" values={boundary.appliedFilters} />
-      <TextGroup title="Support boundary" values={boundary.supportBoundary} />
+      <details className="outcome-review-source-profile">
+        <summary>View source profile</summary>
+        <FacetGroup title="Source owners" values={boundary.sourceOwnerFacets} />
+        <FacetGroup title="Source types" values={boundary.sourceTypeFacets} />
+        <TextGroup title="Applied filters" values={boundary.appliedFilters} />
+        <TextGroup title="Support boundary" values={boundary.supportBoundary} />
+      </details>
     </div>
   );
 }

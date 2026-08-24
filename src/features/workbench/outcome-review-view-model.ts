@@ -327,7 +327,10 @@ function buildFacetRows(
     .slice(0, 6)
     .map(([label, count]) => ({
       key: `${family}-${label}`,
-      label,
+      label:
+        family === "owner"
+          ? outcomeReviewSourceOwnerLabel(label)
+          : outcomeReviewSourceTypeLabel(label),
       count: count.toLocaleString(),
       family,
     }));
@@ -341,20 +344,57 @@ function formatObjectEntries(value: Record<string, unknown> | undefined): string
 
 function formatFilterValue(value: unknown): string {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item)).join(", ");
+    return value.map((item) => formatFilterValue(item)).join(", ");
   }
   if (typeof value === "boolean") {
     return value ? "Yes" : "No";
   }
-  return String(value);
+  const text = String(value);
+  if (/^lotus[-_]/i.test(text)) {
+    return outcomeReviewSourceOwnerLabel(text);
+  }
+  if (/^[A-Za-z][A-Za-z0-9]*:v\d+$/i.test(text)) {
+    return outcomeReviewSourceTypeLabel(text);
+  }
+  const knownValues: Record<string, string> = {
+    selected_portfolio: "Selected portfolio",
+    source_ranked: "Source-ranked",
+  };
+  return knownValues[text.toLowerCase()] ?? text;
 }
 
 function labelFromKey(value: string): string {
-  return value
+  const words = value
     .split("_")
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.toLowerCase())
     .join(" ");
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : value;
+}
+
+function outcomeReviewSourceOwnerLabel(value: string): string {
+  const knownOwners: Record<string, string> = {
+    "lotus-ai": "AI workflow",
+    "lotus-manage": "Portfolio management",
+    "lotus-performance": "Performance analytics",
+    "lotus-report": "Reporting",
+  };
+  const normalized = value.trim().toLowerCase();
+  if (knownOwners[normalized]) {
+    return knownOwners[normalized];
+  }
+  return labelFromKey(normalized.replace(/^lotus[-_]/, "").replaceAll("-", "_"));
+}
+
+function outcomeReviewSourceTypeLabel(value: string): string {
+  const withoutVersion = value.trim().replace(/:v\d+$/i, "");
+  const spaced = withoutVersion
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replaceAll("_", " ")
+    .replaceAll("-", " ")
+    .replace(/\brealized\b/gi, "realised")
+    .toLowerCase();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : value;
 }
 
 function extractOutcomeReviewRecords(data: Record<string, unknown>): Record<string, unknown>[] {

@@ -2,11 +2,13 @@
 
 import { SemanticBadge } from "@/design-system";
 import type { OutcomeReviewClientCommunicationBoundaryView } from "@/features/workbench/outcome-review-view-model";
-import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
 import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
+  outcomeReviewBadgeTone,
+  outcomeReviewBlockedCapabilityLabel,
+  outcomeReviewBoundaryReasonLabel,
+  outcomeReviewRequiredRecordLabel,
+} from "@/features/workbench/outcome-review-panel-helpers";
+import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
@@ -33,22 +35,25 @@ export default function OutcomeReviewClientBoundaryCard({ boundary }: Props) {
           {boundary.clientApprovalProjected ? "Projected" : "Not projected"}
         </span>
         <span>
-          <strong>Required source</strong>
-          {boundary.requiredSourceProduct}
+          <strong>Required record</strong>
+          {outcomeReviewRequiredRecordLabel(boundary.requiredSourceProduct)}
         </span>
         <span>
           <strong>Reason</strong>
-          {formatBusinessReason(boundary.reasonCode)}
+          {outcomeReviewBoundaryReasonLabel(boundary.reasonCode)}
         </span>
       </div>
       {boundary.blockedCapabilities.length > 0 ? (
-        <div className="outcome-review-client-boundary-capabilities">
-          {boundary.blockedCapabilities.map((capability) => (
-            <SemanticBadge key={capability} tone="danger">
-              {formatBusinessReason(capability)}
-            </SemanticBadge>
-          ))}
-        </div>
+        <details className="outcome-review-client-boundary-details">
+          <summary>View blocked client actions</summary>
+          <div className="outcome-review-client-boundary-capabilities">
+            {boundary.blockedCapabilities.map((capability) => (
+              <SemanticBadge key={capability} tone="danger">
+                {outcomeReviewBlockedCapabilityLabel(capability)}
+              </SemanticBadge>
+            ))}
+          </div>
+        </details>
       ) : null}
     </div>
   );
