@@ -110,6 +110,9 @@ handing the user to a focused Manage mode.
   centre workspace owns operating posture and decisions, and the right rail owns only distinct
   source-evidence availability, monitoring-record, and traceability facts. The evidence rail does
   not restate destinations, attention, data-readiness, or rebalance posture.
+- Treats a historical evidence-pack reference separately from a currently retrieved pack. The rail
+  reports **Available** only when the pack response was fetched, **Referenced; not retrieved** when
+  lineage exists without a current response, and **Temporarily unavailable** when retrieval fails.
 
 ## Decisions And Actions
 
