@@ -1,4 +1,5 @@
 import type { SemanticBadgeTone } from "@/design-system";
+import { formatCalendarDateValue } from "@/design-system/utils/financial-formatters";
 
 import {
   proposalRiskImpactMissingEvidenceIdentity,
@@ -76,7 +77,9 @@ export function buildProposalRiskImpactModel(
       title: data.title ?? data.proposal_id,
       stage: businessLabel(data.current_state),
       version: `Version ${data.version_no}`,
-      recorded: formatDate(data.version_created_at),
+      recorded: formatCalendarDateValue(data.version_created_at, {
+        nullDisplay: "Not reported",
+      }),
     },
     supportability: {
       label: supportabilityLabel(effectiveOverallState),
@@ -352,17 +355,6 @@ function allocationSourceLabel(data: ProposalRiskImpactData): string {
   return data.allocation.source_service ?? "Source not reported";
 }
 
-function formatDate(value: string | null): string {
-  if (!value) return "Not reported";
-  const date = new Date(value);
-  if (Number.isNaN(date.valueOf())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
 
 function formatMoney(
   value: { amount: string; currency: string } | null | undefined,
