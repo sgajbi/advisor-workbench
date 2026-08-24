@@ -121,7 +121,7 @@ describe("PortfolioScreenRail", () => {
       "aria-controls",
       "portfolio-screen-rail-test-workspace-directory",
     );
-    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /positions valuation/i })).not.toBeInTheDocument();
   });
 
   it("keeps every disclosure relationship unique across multiple rail instances", () => {
@@ -195,7 +195,7 @@ describe("PortfolioScreenRail", () => {
     expect(navigation).toHaveAttribute("data-navigation-state", "expanded");
 
     fireEvent.click(screen.getByRole("button", { name: /all workspaces/i }));
-    fireEvent.click(within(navigation).getByRole("link", { name: /holdings/i }));
+    fireEvent.click(within(navigation).getByRole("link", { name: /positions/i }));
 
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
     expect(disclosure).toHaveFocus();
@@ -243,7 +243,7 @@ describe("PortfolioScreenRail", () => {
 
     expect(allWorkspaces).toHaveAttribute("aria-expanded", "true");
     expect(changeStep).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("link", { name: /holdings valuation/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /positions valuation/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Suitability" })).toBeInTheDocument();
 
     fireEvent.click(railDisclosure);
@@ -257,7 +257,7 @@ describe("PortfolioScreenRail", () => {
     expect(
       screen.getByRole("button", { name: /change workflow step/i }),
     ).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /positions valuation/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Suitability" })).not.toBeInTheDocument();
   });
 
@@ -297,18 +297,18 @@ describe("PortfolioScreenRail", () => {
     expect(
       screen.getAllByRole("link", { name: /income and activity booked income/i }),
     ).toHaveLength(1);
-    const holdingsLink = screen.getByRole("link", { name: /holdings valuation/i });
-    expect(holdingsLink).toHaveAttribute(
+    const positionsLink = screen.getByRole("link", { name: /positions valuation/i });
+    expect(positionsLink).toHaveAttribute(
       "href",
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD",
     );
 
-    holdingsLink.focus();
-    fireEvent.keyDown(holdingsLink, { key: "Escape" });
+    positionsLink.focus();
+    fireEvent.keyDown(positionsLink, { key: "Escape" });
 
     expect(allWorkspaces).toHaveAttribute("aria-expanded", "false");
     expect(allWorkspaces).toHaveFocus();
-    expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /positions valuation/i })).not.toBeInTheDocument();
   });
 
   it("carries the source-confirmed date, period, and currency across screen links", () => {
@@ -326,7 +326,7 @@ describe("PortfolioScreenRail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /all workspaces/i }));
-    expect(screen.getByRole("link", { name: /holdings valuation/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /positions valuation/i })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
     );

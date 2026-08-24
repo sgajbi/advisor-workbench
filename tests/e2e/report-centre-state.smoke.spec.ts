@@ -362,7 +362,7 @@ test("keeps report lifecycle and support discoverable across content-width chang
   await captureDiagnosticScreenshot(page, "request-history-compact-519");
 });
 
-test("keeps Reporting task-aware while every specialist workspace remains reachable", async ({
+test("keeps Report centre task-aware while every specialist workspace remains reachable", async ({
   page,
 }) => {
   for (const viewport of [
@@ -384,7 +384,7 @@ test("keeps Reporting task-aware while every specialist workspace remains reacha
     });
     const compactNavigation = viewport.width <= 1200;
     const currentView = page.getByRole("button", {
-      name: /Current view Reporting/i,
+      name: /Current view Report centre/i,
     });
     if (compactNavigation) {
       await expect(navigation).not.toBeVisible();
@@ -395,7 +395,7 @@ test("keeps Reporting task-aware while every specialist workspace remains reacha
     await expect(
       navigation
         .getByRole("group", { name: "Primary workspaces" })
-        .getByRole("link", { name: /Reporting Order and monitor reports/i }),
+        .getByRole("link", { name: /Report centre Order and monitor reports/i }),
     ).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByText("Current workflow", { exact: true })).toHaveCount(0);
 
@@ -403,20 +403,20 @@ test("keeps Reporting task-aware while every specialist workspace remains reacha
       name: /All workspaces/i,
     });
     await allWorkspaces.click();
-    const holdings = navigation.getByRole("link", {
-      name: /Holdings Valuation and profit or loss/i,
+    const positions = navigation.getByRole("link", {
+      name: /Positions Valuation and profit or loss/i,
     });
-    await expect(holdings).toBeVisible();
+    await expect(positions).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: /Risk Exposure and risk review/i }),
     ).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: /Proposals Advice lifecycle and approvals/i }),
     ).toBeVisible();
-    await holdings.focus();
+    await positions.focus();
     await page.keyboard.press("Escape");
     await expect(allWorkspaces).toBeFocused();
-    await expect(holdings).toHaveCount(0);
+    await expect(positions).toHaveCount(0);
 
     const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(pageWidth).toBeLessThanOrEqual(viewport.width + 2);
@@ -475,25 +475,23 @@ for (const { width, stacked } of [
         };
       }),
     );
-    expect(headerRegions).toHaveLength(3);
+    expect(headerRegions).toHaveLength(2);
     expect(headerRegions.every((region) => region.fits)).toBe(true);
     if (stacked) {
       expect(headerRegions[0].top).toBeLessThan(headerRegions[1].top);
-      expect(headerRegions[1].top).toBeLessThan(headerRegions[2].top);
     } else {
       expect(headerRegions[0].left).toBeLessThan(headerRegions[1].left);
-      expect(headerRegions[1].left).toBeLessThan(headerRegions[2].left);
     }
     const rail = page.getByTestId("portfolio-screen-rail");
     expect(
       await computedContrastRatio(
         page,
-        rail.getByText("Selected portfolio", { exact: true }),
+        rail.getByText("Current view", { exact: true }),
         rail,
       ),
     ).toBeGreaterThanOrEqual(4.5);
 
-    const disclosure = page.getByRole("button", { name: /Current view Reporting/ });
+    const disclosure = page.getByRole("button", { name: /Current view Report centre/ });
     await disclosure.focus();
     await page.keyboard.press("Enter");
     await expect(
@@ -512,14 +510,15 @@ test("keeps portfolio context and navigation compact and keyboard-complete on mo
   page,
 }) => {
   await page.setViewportSize({ width: 519, height: 900 });
-  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
-    waitUntil: "domcontentloaded",
-  });
+  await page.goto(
+    `/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}&asOfDate=2026-04-22`,
+    { waitUntil: "domcontentloaded" },
+  );
 
   await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
     timeout: 15_000,
   });
-  const disclosure = page.getByRole("button", { name: /Current view Reporting/ });
+  const disclosure = page.getByRole("button", { name: /Current view Report centre/ });
   await expect(disclosure).toBeVisible();
   await disclosure.focus();
   await page.keyboard.press("Enter");

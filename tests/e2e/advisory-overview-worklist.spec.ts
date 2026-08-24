@@ -200,10 +200,10 @@ for (const viewport of viewports) {
       name: /All workspaces/i,
     });
     await allWorkspaces.click();
-    const holdings = navigation.getByRole("link", {
-      name: /Holdings Valuation and profit or loss/i,
+    const positions = navigation.getByRole("link", {
+      name: /Positions Valuation and profit or loss/i,
     });
-    await expect(holdings).toBeVisible();
+    await expect(positions).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: /Risk Exposure and risk review/i }),
     ).toBeVisible();
@@ -212,10 +212,10 @@ for (const viewport of viewports) {
         name: /Proposals Advice lifecycle and approvals/i,
       }),
     ).toBeVisible();
-    await holdings.focus();
+    await positions.focus();
     await page.keyboard.press("Escape");
     await expect(allWorkspaces).toBeFocused();
-    await expect(holdings).toHaveCount(0);
+    await expect(positions).toHaveCount(0);
 
     const changeWorkflow = navigation.getByRole("button", {
       name: /Change workflow step/i,
