@@ -28,7 +28,6 @@ const readyModel: ProofPackPanelModel = {
   selectedEvidenceSummary: "Ready for advisor review.",
   advisorRationale: "Portfolio positioning remains within the mandate corridor.",
   contentHash: "sha256:proof-pack",
-  createdAt: "2026-05-20T08:00:00Z",
   sectionStateSummary: "READY: 2",
   markdownAvailable: true,
   reportInputAvailable: true,
