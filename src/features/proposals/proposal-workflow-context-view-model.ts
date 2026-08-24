@@ -1,5 +1,7 @@
 import type { SemanticBadgeTone } from "@/design-system";
 
+import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
+
 export type ProposalWorkflowContextState =
   | "loading"
   | "refreshing"
@@ -408,7 +410,7 @@ export function buildProposalQueueWorkflowContext({
         ...facts,
         { label: "Current view", value: String(windowNumber) },
         { label: "In view", value: String(totalCount) },
-        { label: "Need action", value: String(attentionCount) },
+        { label: "Needs action", value: String(attentionCount) },
       ],
       sourceLabel:
         onlySelectedEvidenceGap && visibleSelectedEvidence
@@ -454,13 +456,13 @@ export function buildProposalQueueWorkflowContext({
       visibleSelectedEvidence?.blockers ??
       (attentionCount > 0
         ? [
-            `${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} advisor action.`,
+            `${attentionCount} ${attentionCount === 1 ? "proposal needs" : "proposals need"} adviser action.`,
           ]
         : []),
     facts: [
       ...facts,
       { label: "In view", value: String(totalCount) },
-      { label: "Need action", value: String(attentionCount) },
+      { label: "Needs action", value: String(attentionCount) },
     ],
     sourceLabel:
       visibleSelectedEvidence?.sourceLabel ?? "Advisory proposal lifecycle",
@@ -499,9 +501,9 @@ export function buildSuitabilityReviewWorkflowContext({
     : selectedEvidence;
   const facts = [
     { label: "Portfolio", value: portfolioId },
-    { label: "Worklist", value: "Suitability Review" },
+    { label: "Worklist", value: SUITABILITY_WORKFLOW_LABELS.review },
     { label: "In review", value: String(totalCount) },
-    { label: "Need action", value: String(actionCount) },
+    { label: SUITABILITY_WORKFLOW_LABELS.needsAction, value: String(actionCount) },
     ...(visibleSelectedEvidence?.facts ?? []),
   ];
   const sourceLabel = "Gateway-backed suitability policy review";
@@ -513,10 +515,10 @@ export function buildSuitabilityReviewWorkflowContext({
       state: "loading",
       title: "Loading suitability reviews",
       summary:
-        "Retrieving the policy evaluations that require review for this portfolio.",
+        "Retrieving the suitability evaluations that require review for this portfolio.",
       currentPosture: "Source check in progress",
       nextAction:
-        "Wait for the policy worklist before taking an advisory action.",
+        "Wait for the suitability review worklist before taking an advisory action.",
       blockers: [],
       facts: facts.slice(0, 2),
       sourceLabel,
@@ -529,12 +531,12 @@ export function buildSuitabilityReviewWorkflowContext({
       state: "permission_blocked",
       title: "Suitability reviews are restricted",
       summary:
-        "Your current access does not permit this portfolio's policy-review evidence to be viewed.",
+        "Your current access does not permit this portfolio's suitability review evidence to be viewed.",
       currentPosture: "Access required",
       nextAction:
         "Use an entitled role or request access through the bank's support process.",
       blockers: [
-        "Policy evaluation details remain hidden by the source entitlement boundary.",
+        "Suitability evaluation details remain hidden by the source entitlement boundary.",
       ],
       facts: facts.slice(0, 2),
       sourceLabel,
@@ -545,13 +547,13 @@ export function buildSuitabilityReviewWorkflowContext({
   if (hasError) {
     return withStatePresentation({
       state: "error",
-      title: "Suitability worklist is unavailable",
+      title: "Suitability review worklist is unavailable",
       summary:
-        "The current policy-review worklist could not be confirmed through Gateway.",
+        "The current suitability review worklist could not be confirmed through Gateway.",
       currentPosture: "Source unavailable",
       nextAction:
         "Retry the suitability worklist before concluding that no review is required.",
-      blockers: ["Current policy-review evidence is unavailable."],
+      blockers: ["Current suitability evidence is unavailable."],
       facts: facts.slice(0, 2),
       sourceLabel,
       boundaryNote,
@@ -563,10 +565,10 @@ export function buildSuitabilityReviewWorkflowContext({
       state: "refreshing",
       title: "Refreshing suitability evidence",
       summary:
-        "Earlier policy evidence remains visible while the selected review is rechecked.",
+        "Earlier suitability evidence remains visible while the selected review is rechecked.",
       currentPosture: "Source refresh in progress",
       nextAction:
-        "Wait for source confirmation before relying on the selected policy posture.",
+        "Wait for source confirmation before relying on the selected suitability posture.",
       blockers: [],
       facts,
       sourceLabel,
@@ -598,7 +600,7 @@ export function buildSuitabilityReviewWorkflowContext({
           "Suitability evidence is incomplete"),
       summary:
         visibleSelectedEvidence?.summary ??
-        "The policy worklist remains visible, but the selected review is not confirmed current.",
+        "The suitability review worklist remains visible, but the selected review is not confirmed current.",
       currentPosture:
         visibleSelectedEvidence?.currentPosture ??
         `${totalCount} ${totalCount === 1 ? "evaluation" : "evaluations"} in review`,
@@ -615,10 +617,10 @@ export function buildSuitabilityReviewWorkflowContext({
   if (totalCount === 0) {
     return withStatePresentation({
       state: "empty",
-      title: "No suitability evaluations need review",
+      title: "No suitability reviews need attention",
       summary:
         "The Gateway policy-review queue returned no pending evaluations for this portfolio.",
-      currentPosture: "No policy evaluation selected",
+      currentPosture: "No suitability evaluation selected",
       nextAction:
         "Continue only when a new source evaluation enters the review queue.",
       blockers: [],
@@ -637,7 +639,7 @@ export function buildSuitabilityReviewWorkflowContext({
         : "Suitability worklist is current"),
     summary:
       visibleSelectedEvidence?.summary ??
-      "Select a policy evaluation to confirm its constraints and required next action.",
+        "Select a suitability evaluation to confirm its constraints and required next action.",
     currentPosture:
       visibleSelectedEvidence?.currentPosture ??
       `${totalCount} ${totalCount === 1 ? "evaluation" : "evaluations"} in review`,
@@ -648,7 +650,7 @@ export function buildSuitabilityReviewWorkflowContext({
       visibleSelectedEvidence?.blockers ??
       (actionCount > 0
         ? [
-            `${actionCount} ${actionCount === 1 ? "policy review requires" : "policy reviews require"} advisor action.`,
+            `${actionCount} ${actionCount === 1 ? "suitability review requires" : "suitability reviews require"} adviser action.`,
           ]
         : []),
     facts,

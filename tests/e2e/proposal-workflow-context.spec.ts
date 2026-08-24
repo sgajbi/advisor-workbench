@@ -1344,8 +1344,8 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
 
   const firstReview = page.getByRole("option", { name: /PRP-RISK-001/i });
   const secondReview = page.getByRole("option", { name: /PRP-INCOME-002/i });
-  await expect(page.getByLabel("Policy review counts")).toContainText(
-    /2\s*In review\s*2\s*Need action/,
+  await expect(page.getByLabel("Suitability review counts")).toContainText(
+    /2\s*In review\s*2\s*Needs action/,
   );
   await expect(page.getByRole("table")).toHaveCount(0);
   expect(proposalQueueRequests).toEqual([]);

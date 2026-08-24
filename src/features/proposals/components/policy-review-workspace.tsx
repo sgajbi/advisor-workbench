@@ -21,6 +21,7 @@ import {
   buildPolicyReviewQueueEmptyPresentation,
   buildPolicyReviewQueueModel,
 } from "../proposal-policy-review-view-model";
+import { SUITABILITY_WORKFLOW_LABELS } from "../suitability-terminology";
 import styles from "./policy-review-workspace.module.css";
 
 export default function PolicyReviewWorkspace({
@@ -94,7 +95,7 @@ export default function PolicyReviewWorkspace({
       <ScreenStatePanel
         kind="loading"
         title="Loading suitability reviews"
-        body="Retrieving the policy evaluations that require advisor review for this portfolio."
+        body="Retrieving the suitability evaluations that require adviser review for this portfolio."
         rows={5}
         surface="default"
       />
@@ -105,7 +106,7 @@ export default function PolicyReviewWorkspace({
     return (
       <ScreenStatePanel
         kind="permission_blocked"
-        title="Policy review access is not available"
+        title="Suitability review access is unavailable"
         body="Your current role does not permit this portfolio's suitability review queue to be viewed."
         surface="default"
       />
@@ -116,8 +117,8 @@ export default function PolicyReviewWorkspace({
     return (
       <ScreenStatePanel
         kind="error"
-        title="Suitability worklist unavailable"
-        body="Policy evaluations could not be confirmed through the approved advisory workflow. No fallback reviews are shown."
+        title="Suitability review worklist is unavailable"
+        body="Suitability evaluations could not be confirmed through the approved advisory workflow. No fallback reviews are shown."
         action={
           <SourceRefreshAction
             ref={refreshActionRef}
@@ -160,9 +161,9 @@ export default function PolicyReviewWorkspace({
     <div className={styles.policyReviewPanel}>
       <div className={styles.policyReviewHeader}>
         <div>
-          <Text variant="microLabel">Suitability Policy Queue</Text>
+          <Text variant="microLabel">{SUITABILITY_WORKFLOW_LABELS.review}</Text>
           <Text variant="subsectionTitle" as="h3">
-            Advisor decision worklist
+            {SUITABILITY_WORKFLOW_LABELS.adviserDecisionWorklist}
           </Text>
           <Text variant="secondary">
             One source-backed queue for suitability evidence, control gaps and
@@ -171,7 +172,7 @@ export default function PolicyReviewWorkspace({
         </div>
         <div
           className={styles.policyReviewCounts}
-          aria-label="Policy review counts"
+          aria-label={SUITABILITY_WORKFLOW_LABELS.reviewCounts}
         >
           <div>
             <span>{model.totalCount}</span>
@@ -179,7 +180,7 @@ export default function PolicyReviewWorkspace({
           </div>
           <div>
             <span>{model.actionCount}</span>
-            <strong>Need action</strong>
+            <strong>{SUITABILITY_WORKFLOW_LABELS.needsAction}</strong>
           </div>
         </div>
       </div>
@@ -213,7 +214,7 @@ export default function PolicyReviewWorkspace({
               <div>
                 <Text variant="microLabel">Priority worklist</Text>
                 <Text variant="body" as="h4" id="policy-review-worklist-title">
-                  Choose a policy evaluation
+                  {SUITABILITY_WORKFLOW_LABELS.chooseReview}
                 </Text>
               </div>
               <SourceRefreshAction
@@ -227,7 +228,7 @@ export default function PolicyReviewWorkspace({
               />
             </div>
             <WorkbenchRecordSelector
-              ariaLabel="Suitability policy reviews"
+              ariaLabel={SUITABILITY_WORKFLOW_LABELS.reviews}
               className={styles.policyWorklistSelector}
               selectedKey={selectedEvaluationId}
               onSelectionChange={(evaluationId) => {
@@ -308,7 +309,7 @@ function PolicyEvaluationEvidenceSection({
     return (
       <ScreenStatePanel
         kind="loading"
-        title="Checking selected policy evidence"
+        title="Checking selected suitability evidence"
         body="Confirming the evaluation, sign-off package and workflow identity through Gateway."
         rows={5}
         surface="default"
@@ -320,7 +321,7 @@ function PolicyEvaluationEvidenceSection({
     return (
       <ScreenStatePanel
         kind="permission_blocked"
-        title="Policy evidence access is not available"
+        title="Suitability evidence access is unavailable"
         body="Your current role does not permit the selected suitability evidence to be viewed."
         surface="default"
       />
@@ -331,8 +332,8 @@ function PolicyEvaluationEvidenceSection({
     return (
       <ScreenStatePanel
         kind="error"
-        title="Policy evidence unavailable"
-        body="Policy detail and sign-off package posture could not be loaded from the approved advisory workflow."
+        title="Suitability evidence is unavailable"
+        body="Suitability evaluation detail and sign-off package posture could not be loaded from the approved advisory workflow."
         action={
           <SourceRefreshAction
             ref={refreshActionRef}
@@ -354,14 +355,14 @@ function PolicyEvaluationEvidenceSection({
     return (
       <ScreenStatePanel
         kind="partial"
-        title="Selected policy evidence is unconfirmed"
+        title="Selected suitability evidence is unconfirmed"
         body="The selected proposal and its supporting policy evidence do not agree. No review request is available until the source package is refreshed."
         action={
           <SourceRefreshAction
             ref={refreshActionRef}
             refreshScope="suitability:identity-check"
-            idleLabel="Recheck policy identity"
-            busyLabel="Rechecking policy identity…"
+            idleLabel="Recheck suitability evidence"
+            busyLabel="Rechecking suitability evidence…"
             isRefreshing={isRefreshing}
             onRefresh={onRefresh}
           />
@@ -375,7 +376,7 @@ function PolicyEvaluationEvidenceSection({
     <div className={styles.policyEvidencePanel}>
       <div className={styles.policyEvidenceHeader}>
         <div>
-          <Text variant="microLabel">Selected suitability review</Text>
+          <Text variant="microLabel">{SUITABILITY_WORKFLOW_LABELS.selectedReview}</Text>
           <Text variant="subsectionTitle" as="h4">
             {model.proposalId}
           </Text>
@@ -426,7 +427,9 @@ function PolicyEvaluationEvidenceSection({
         <EvidenceMetric label="Sign-off package">
           {model.signOffPackagePosture}
         </EvidenceMetric>
-        <EvidenceMetric label="Review SLA">{model.slaPosture}</EvidenceMetric>
+        <EvidenceMetric label={SUITABILITY_WORKFLOW_LABELS.reviewDeadline}>
+          {model.slaPosture}
+        </EvidenceMetric>
       </div>
       <div className={styles.policyControlGrid}>
         <EvidenceMetric label="Workflow status">
@@ -535,7 +538,7 @@ function SuitabilityRefreshStatus({
         kind="pending"
         eyebrow="Source refresh"
         title="Refreshing suitability evidence"
-        message="The existing worklist remains visible while Gateway confirms the selected policy package."
+        message="The existing worklist remains visible while Gateway confirms the selected suitability evidence."
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
       />

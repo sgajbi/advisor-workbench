@@ -47,7 +47,7 @@ describe("proposal workflow context view model", () => {
     expect(model.facts).toEqual(
       expect.arrayContaining([
         { label: "In review", value: "3" },
-        { label: "Need action", value: "2" },
+        { label: "Needs action", value: "2" },
       ]),
     );
     expect(model.blockers).toContain(
@@ -69,7 +69,7 @@ describe("proposal workflow context view model", () => {
       actionCount: 1,
       selectedEvidence: {
         proposalId: "PRP-RISK",
-        title: "Selected policy evidence is unconfirmed",
+        title: "Selected suitability evidence is unconfirmed",
         summary: "The selected source identities do not agree.",
         currentPosture: "Source identity conflict",
         nextAction: "Recheck the selected policy identity.",
@@ -84,7 +84,7 @@ describe("proposal workflow context view model", () => {
     });
 
     expect(model.state).toBe("partial");
-    expect(model.title).toBe("Selected policy evidence is unconfirmed");
+    expect(model.title).toBe("Selected suitability evidence is unconfirmed");
     expect(model.currentPosture).toBe("Source identity conflict");
     expect(model.nextAction).toContain("Recheck");
   });
@@ -194,10 +194,10 @@ describe("proposal workflow context view model", () => {
     expect(model.facts).toEqual(
       expect.arrayContaining([
         { label: "In view", value: "2" },
-        { label: "Need action", value: "1" },
+        { label: "Needs action", value: "1" },
       ]),
     );
-    expect(model.blockers).toEqual(["1 proposal needs advisor action."]);
+    expect(model.blockers).toEqual(["1 proposal needs adviser action."]);
     expect(model.boundaryNote).toContain("queue-level posture");
     expect(model.responsivePriority).toBe("persistent");
   });

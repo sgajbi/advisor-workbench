@@ -848,7 +848,7 @@ export async function validateAdvisoryJourneyScreens(
           timeout: timeoutMs,
         });
         await expect(
-          page.getByText("Advisor Decision", { exact: true }),
+          page.getByText("Adviser decision", { exact: true }),
         ).toBeVisible({ timeout: timeoutMs });
       },
     });

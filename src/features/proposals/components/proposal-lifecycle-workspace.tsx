@@ -497,9 +497,9 @@ export default function ProposalLifecycleWorkspace({
     return {
       proposalId: policyEvidenceModel.proposalId,
       title: !policyEvidenceModel.sourceIdentityAligned
-        ? "Selected policy evidence is unconfirmed"
+        ? "Selected suitability evidence is unconfirmed"
         : policyEvidenceModel.policyStatus === "Ready"
-          ? "Policy evidence ready for review"
+          ? "Suitability evidence ready for review"
           : policyEvidenceModel.nextAction,
       summary: !policyEvidenceModel.sourceIdentityAligned
         ? "The selected evaluation, proposal and supporting policy package do not agree."
@@ -508,7 +508,7 @@ export default function ProposalLifecycleWorkspace({
         ? "Source identity conflict"
         : `${policyEvidenceModel.policyStatus} · ${policyEvidenceModel.workflowStatus}`,
       nextAction: !policyEvidenceModel.sourceIdentityAligned
-        ? "Recheck the selected policy identity before taking an advisory action."
+        ? "Recheck the selected suitability evidence before taking an advisory action."
         : policyEvidenceModel.nextAction,
       blockers,
       facts: [
@@ -522,7 +522,7 @@ export default function ProposalLifecycleWorkspace({
       ],
       sourceLabel: "Gateway-backed selected suitability evidence",
       boundaryNote:
-        "Selected policy evidence is shown only when evaluation, proposal, portfolio, version, package, and workflow identities agree.",
+        "Selected suitability evidence is shown only when evaluation, proposal, portfolio, version, package, and workflow identities agree.",
       hasEvidenceGap:
         !policyEvidenceModel.sourceIdentityAligned ||
         policyEvidenceModel.sourceGaps.length > 0,
@@ -1027,12 +1027,12 @@ export default function ProposalLifecycleWorkspace({
           kind="permission_blocked"
           title={
             mode === "suitability"
-              ? "Suitability review access is not available"
+              ? "Suitability review access is unavailable"
               : "Proposal access is not available"
           }
           body={
             mode === "suitability"
-              ? "Your current role does not permit this portfolio's policy-review worklist to be viewed."
+              ? "Your current role does not permit this portfolio's suitability review worklist to be viewed."
               : "Your current role does not permit this portfolio's proposal workflow to be viewed."
           }
           surface="default"
@@ -1093,15 +1093,15 @@ export default function ProposalLifecycleWorkspace({
       policyQueuePosture.isUnavailable &&
       !policyQueuePosture.isPermissionBlocked ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Policy review queue is unavailable. No fallback suitability policy
-          queue is shown.
+          Suitability review worklist is unavailable. No fallback suitability
+          worklist is shown.
         </Alert>
       ) : null}
 
       {mode !== "suitability" ? (
         <div className={styles.decisionPanel}>
           <div>
-            <Text variant="microLabel">Advisor Decision</Text>
+            <Text variant="microLabel">Adviser decision</Text>
             <Text variant="subsectionTitle" as="h2">
               {model.primaryDecision}
             </Text>
@@ -1121,7 +1121,7 @@ export default function ProposalLifecycleWorkspace({
                 <strong>
                   {mode === "approval-queue"
                     ? "Not execution-ready"
-                    : "Need action"}
+                    : "Needs action"}
                 </strong>
               </div>
             )}
