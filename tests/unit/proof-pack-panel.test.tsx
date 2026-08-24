@@ -209,6 +209,22 @@ describe("ProofPackPanel", () => {
     expect(within(rail).queryByText("Referenced; not retrieved")).not.toBeInTheDocument();
   });
 
+  it("uses the shared current pack when a Manage mode remount has stale server props", () => {
+    render(
+      <ManageProofPackStateProvider initialProofPack={readyProofPack}>
+        <ProofPackPanel
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          outcomeReviews={outcomeReviews}
+          rebalanceSnapshot={rebalanceSnapshot}
+          initialProofPack={null}
+        />
+      </ManageProofPackStateProvider>
+    );
+
+    expect(screen.getByText("Signature Pending")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Load summary" })).toBeEnabled();
+  });
+
   it("loads evidence detail and handoff payloads", async () => {
     vi.mocked(getDpmProofPack).mockResolvedValue(readyProofPack);
     vi.mocked(getDpmProofPackMarkdown).mockResolvedValue({
