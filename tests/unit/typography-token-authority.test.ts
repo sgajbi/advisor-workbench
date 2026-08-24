@@ -13,6 +13,10 @@ const MIGRATED_PRODUCTIVE_SURFACES = [
   "src/features/proposals/components/proposal-simulate-form.module.css",
 ] as const;
 
+const MICRO_LABEL_PRODUCTIVE_SURFACES = [
+  "src/design-system/components/review-context-strip.module.css",
+] as const;
+
 function collectCssFiles(directory: string): string[] {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = path.join(directory, entry.name);
@@ -76,6 +80,26 @@ describe("typography token authority", () => {
       expect(css).not.toMatch(/font-size:\s*\d+(?:\.\d+)?(?:px|rem)/);
       expect(css).not.toMatch(/font-weight:\s*(?:650|675|700|720|735|750|760|800)/);
       expect(css).not.toContain("text-transform: uppercase");
+    }
+  );
+
+  it.each(MICRO_LABEL_PRODUCTIVE_SURFACES)(
+    "allows uppercase only for one governed eyebrow in %s",
+    (relativePath) => {
+      const css = fs.readFileSync(
+        path.resolve(__dirname, `../../${relativePath}`),
+        "utf8"
+      );
+
+      expect(css).not.toMatch(/font-size:\s*\d+(?:\.\d+)?(?:px|rem)/);
+      expect(css).not.toMatch(/font-weight:\s*(?:550|650|675|700|720|735|750|760|800)/);
+      expect(css.match(/text-transform:\s*uppercase/g)).toHaveLength(1);
+      expect(css).toMatch(
+        /\.eyebrow\s*\{[\s\S]*?font-size:\s*var\(--type-micro-label-size\);[\s\S]*?font-weight:\s*var\(--type-micro-label-weight\);[\s\S]*?text-transform:\s*uppercase;/
+      );
+      expect(css).toMatch(
+        /\.fact dt,[\s\S]*?\.identifier dt\s*\{[\s\S]*?font-size:\s*var\(--type-label-size\);[\s\S]*?font-weight:\s*var\(--type-label-weight\);[\s\S]*?text-transform:\s*none;/
+      );
     }
   );
 
