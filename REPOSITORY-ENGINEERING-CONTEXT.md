@@ -1419,7 +1419,12 @@ Most relevant current governance:
     identity and posture; the associated decision pane owns complete evidence, constraints, and
     the next permitted action. Preserve controlled selection, Arrow-key movement, Enter transfer
     into a focusable addressable detail region, disabled-row semantics, and capacity-based stacked
-    reflow. State each count, status, destination, and title once in the primary scan path. A
+    reflow. Controlled selection must be source-admitted: keep a requested identity pending only
+    while its source is unresolved, admit the first source-ranked fallback once data resolves, retain
+    an admitted identity through reordering, and choose a new fallback only after the source removes
+    it. Reuse `useAdmittedSourceSelection`, scoped to the complete portfolio/worklist identity,
+    instead of synchronizing fallback state in an effect or displaying a fallback over stale state.
+    State each count, status, destination, and title once in the primary scan path. A
     secondary rail may carry different source, scope, or support evidence, but must not repeat the
     worklist, navigation, metrics, or current decision. Book-wide posture may precede the worklist
     only when it changes prioritisation, and raw source references belong in progressive support
