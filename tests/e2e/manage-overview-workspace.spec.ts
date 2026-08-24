@@ -8,6 +8,7 @@ import {
   startManageFixtureGateway,
   type ManageFixtureGateway,
 } from "./manage-fixture-gateway";
+import { expectWorkbenchRelationshipIntegrity } from "./workbench-relationship-evidence";
 
 test.describe.configure({ mode: "serial" });
 
@@ -76,6 +77,12 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
     await expect(
       page.getByRole("link", { name: "Open PM Quality", exact: true }),
     ).toHaveCount(0);
+    await expectWorkbenchRelationshipIntegrity(page, [
+      "manage-workspace-rail-navigation",
+      "manage-workspace-rail-workspace-directory",
+      "manage-workspace-rail-workflow-directory",
+      "manage-overview-decision-worklist-decision",
+    ]);
 
     const compactDisclosure = page
       .getByTestId("portfolio-screen-rail-header")

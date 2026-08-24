@@ -13,6 +13,7 @@ import {
   traverseSequentialKeyboardFocus,
 } from './workbench-accessibility-evidence';
 import { observeBrowserRuntimeFailures } from './browser-runtime-reliability';
+import { expectWorkbenchRelationshipIntegrity } from './workbench-relationship-evidence';
 import {
   startPortfolioFixtureGateway,
   type PortfolioFixtureScenario,
@@ -427,6 +428,7 @@ test.describe('Portfolio workbench smoke', () => {
 
   test('portfolio review stays decision-focused and keeps detail work on dedicated screens', async ({ page, request }) => {
     test.setTimeout(90_000);
+    const browserRuntime = observeBrowserRuntimeFailures(page);
     await page.setViewportSize({ width: 1800, height: 1400 });
     const session = await openPortfolioReview(page, request);
     test.skip(!session.available, 'Portfolio workspace upstream unavailable in standalone smoke environment.');
@@ -527,6 +529,10 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Valuation as of', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
+      await expectWorkbenchRelationshipIntegrity(page, [
+        'portfolio-review-workspace-rail-navigation',
+        'portfolio-review-workspace-rail-workspace-directory',
+      ]);
 
       const measurements = await measureViewportEvidence(page);
       expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
@@ -651,6 +657,8 @@ test.describe('Portfolio workbench smoke', () => {
         'utf8'
       );
     }
+    await browserRuntime.assertStylesAreHeadManaged();
+    browserRuntime.assertClean();
   });
 
   test('historical review preserves valuation scope and replaces complete dated evidence atomically', async ({
