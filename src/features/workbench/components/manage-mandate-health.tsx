@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
   SourceWindowNavigation,
+  useAdmittedSourceSelection,
 } from "@/design-system";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
@@ -65,11 +64,19 @@ export default function ManageMandateHealth({ data }: Props) {
   );
   const hasAvailableExceptionEvidence = exceptionSource.evidencePosture !== "unavailable";
   const healthRows = buildMandateHealthDimensionRows(commandModel);
-  const [selectedExceptionKey, setSelectedExceptionKey] = useState<string | null>(
-    exceptionRows[0]?.key ?? null,
-  );
+  const selectionScopeKey = [
+    data.portfolio.portfolio.portfolio_id,
+    commandModel.mandateId,
+    `source-window-${exceptionSource.currentWindow}`,
+  ].join("::");
+  const [selectedExceptionKey, setSelectedExceptionKey] =
+    useAdmittedSourceSelection({
+      scopeKey: selectionScopeKey,
+      admittedKeys: exceptionRows.map((row) => row.key),
+      sourceResolved: !exceptionSource.isLoading,
+    });
   const selectedException =
-    exceptionRows.find((row) => row.key === selectedExceptionKey) ?? exceptionRows[0] ?? null;
+    exceptionRows.find((row) => row.key === selectedExceptionKey) ?? null;
   const mandateType = formatBusinessMandateType(
     readStringFromResponse(data.mandate, "mandate_type") ??
       readStringFromResponse(data.mandate, "type"),
