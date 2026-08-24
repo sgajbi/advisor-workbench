@@ -1,6 +1,6 @@
 # RFC-0013: Workbench Exception Queue and Advisor Summary
 
-- Status: IMPLEMENTED
+- Status: SUPERSEDED BY SOURCE-BACKED MANDATE ATTENTION WORKLIST (#799)
 - Date: 2026-02-24
 - Owners: Advisor Workbench UI
 
@@ -18,6 +18,13 @@ Workbench now supports split-view analytics and sandbox iteration, but users sti
 1. Add an exception queue panel for warnings and partial failures.
 2. Add an advisor summary card with readiness state and recommended next step.
 3. Add direct transition links from summary to proposal simulation and proposal workspace.
+
+## Supersession Note
+
+The heuristic exception queue is no longer a productive Workbench surface. Mandate review now
+uses the Gateway-backed attention worklist, preserving source exception identifiers in supporting
+evidence while presenting adviser-owned attention items in the primary workflow. The unreachable
+legacy component and its global styles were removed under #799.
 
 ## Architectural Impact
 
