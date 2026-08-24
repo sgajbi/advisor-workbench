@@ -186,7 +186,7 @@ describe("Workbench screen documentation governance", () => {
     expect(validate(registry).errors).toEqual([]);
   });
 
-  it("maps Suitability Review to one policy-authoritative decision-desk guide", () => {
+  it("maps Suitability review to one policy-authoritative decision-desk guide", () => {
     const registry = loadRegistry();
     const suitabilityReview = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "suitability-review",

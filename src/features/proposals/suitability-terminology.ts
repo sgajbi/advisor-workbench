@@ -1,3 +1,7 @@
+export const ADVISORY_WORKFLOW_LABELS = {
+  needsAttention: "Needs attention",
+} as const;
+
 export const SUITABILITY_WORKFLOW_LABELS = {
   review: "Suitability review",
   reviews: "Suitability reviews",

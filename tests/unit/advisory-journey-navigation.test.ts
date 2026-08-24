@@ -120,5 +120,8 @@ describe("advisory journey navigation", () => {
       "Advisor priorities, preparation evidence, operating boundaries, and review posture.",
     );
     expect(cockpit.description).not.toMatch(/gateway|supportability|rfc|api/i);
+    expect(getAdvisoryJourneyDefinition("suitability").title).toBe(
+      "Suitability review",
+    );
   });
 });

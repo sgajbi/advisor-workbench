@@ -956,7 +956,7 @@ export default function ProposalLifecycleWorkspace({
     }).rows.find((row) => row.evaluationId === selectedPolicyEvaluationId);
     if (!selectedReview) {
       throw new Error(
-        "The selected policy evaluation is no longer present in the suitability worklist.",
+        "The selected suitability review is no longer present in the worklist.",
       );
     }
 
@@ -1058,7 +1058,7 @@ export default function ProposalLifecycleWorkspace({
         mode === "approval-queue"
           ? "Select a proposal, confirm its source posture, and continue to the full review record."
           : mode === "suitability"
-            ? "Select a policy evaluation, confirm its client and product constraints, and resolve the next evidence requirement."
+            ? "Select a suitability review, confirm its client and product constraints, and resolve the next evidence requirement."
             : mode === "discussion-pack"
               ? "Select a proposal, verify advisor-use material, and resolve every client-control boundary before the meeting."
               : mode === "implementation"

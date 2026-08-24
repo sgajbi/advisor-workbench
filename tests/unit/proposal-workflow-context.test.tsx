@@ -86,7 +86,7 @@ describe("ProposalWorkflowContextRail", () => {
     expect(await screen.findByRole("heading", { name: "2 need attention" })).toBeInTheDocument();
     expect(screen.getByText("Source current")).toBeInTheDocument();
     expect(screen.getByText("3 proposals in view")).toBeInTheDocument();
-    expect(screen.getByText("2 proposals need advisor action.")).toBeInTheDocument();
+    expect(screen.getByText("2 proposals need adviser action.")).toBeInTheDocument();
   });
 
   it("renders the current published source boundary instead of the initial model", async () => {
@@ -163,5 +163,7 @@ describe("ProposalWorkflowContextRail", () => {
     );
 
     expect(screen.getAllByText(repeatedBlocker)).toHaveLength(2);
+    expect(screen.getByText("Needs attention")).toBeInTheDocument();
+    expect(screen.queryByText("Attention required")).not.toBeInTheDocument();
   });
 });

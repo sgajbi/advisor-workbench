@@ -420,7 +420,7 @@ describe("app route entrypoints", () => {
     },
   );
 
-  it("gives Suitability Review the full-width decision desk presentation", async () => {
+  it("gives Suitability review the full-width decision desk presentation", async () => {
     render(
       await ProposalsPage({
         searchParams: Promise.resolve({
