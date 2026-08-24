@@ -40,7 +40,7 @@ const lifecycleRows: DpmCampaignLifecycleEventRow[] = [
     status: "RECORDED",
     reason: "campaign_definition_launched",
     waveId: "dwv_campaign_launch_001",
-    requestedAsOfDate: "2026-05-10",
+    requestedAsOfDate: "10 May 2026",
     correlationId: "corr-campaign-launch",
     idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
   },
@@ -55,14 +55,18 @@ describe("DpmCampaignLifecycleEvidenceCard", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Campaign Lifecycle Evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign lifecycle evidence" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review version 2026.05")).toBeInTheDocument();
-    expect(screen.getByRole("table", { name: "DPM campaign lifecycle evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "Rebalance campaign lifecycle evidence" })).toBeInTheDocument();
     expect(screen.getByText("LAUNCHED")).toBeInTheDocument();
     expect(screen.getByText("campaign_definition_launched")).toBeInTheDocument();
     expect(screen.getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
+    expect(screen.getByText("10 May 2026")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Manager")).toBeInTheDocument();
     expect(screen.getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Review Date" })).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "As-of date" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /trade/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /oms/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /order/i })).not.toBeInTheDocument();

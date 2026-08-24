@@ -410,7 +410,7 @@ describe("DPM wave command-center view model", () => {
         status: "RECORDED",
         reason: "source_backed_candidate_set",
         waveId: "N/A",
-        requestedAsOfDate: "N/A",
+        requestedAsOfDate: "Not reported",
         correlationId: "N/A",
         idempotencyKey: "N/A",
       },
@@ -657,7 +657,7 @@ describe("DPM wave command-center view model", () => {
     expect(model.campaignPreviewReadinessPosture).toEqual({
       state: "BLOCKED",
       reason: "campaign_definition_actor_not_entitled",
-      requestedAsOfDate: "2026-05-10",
+      requestedAsOfDate: "10 May 2026",
       actor: "pm_sg_1",
       blockedActions: ["preview_wave", "create_wave"],
       operatingBoundaries: ["NO_ORDER_GENERATION", "NO_OMS_EXECUTION_CLAIM"],
@@ -702,7 +702,7 @@ describe("DPM wave command-center view model", () => {
       state: "READY",
       canLaunch: true,
       reason: "Ready",
-      requestedAsOfDate: "2026-05-10",
+      requestedAsOfDate: "10 May 2026",
       actor: "pm_sg_1",
       launchedWaveId: "dwv_campaign_launch_001",
       idempotencyEvidence: "campaign-launch:campaign-holdings-202605:2026.05:abc",
@@ -891,7 +891,7 @@ describe("DPM wave command-center view model", () => {
     expect(model.campaignLifecycleRows[0]).toMatchObject({
       eventType: "Launched",
       waveId: "dwv_campaign_launch_001",
-      requestedAsOfDate: "2026-05-10",
+      requestedAsOfDate: "10 May 2026",
       correlationId: "corr-campaign-launch",
       idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
     });
@@ -900,7 +900,7 @@ describe("DPM wave command-center view model", () => {
       waveId: "dwv_campaign_launch_001",
       actor: "pm_sg_1",
       launchedAt: "10 May 2026, 00:00 UTC",
-      requestedAsOfDate: "2026-05-10",
+      requestedAsOfDate: "10 May 2026",
       correlationId: "corr-campaign-launch",
       idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
     });

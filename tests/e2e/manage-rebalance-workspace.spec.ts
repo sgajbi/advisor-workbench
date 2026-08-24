@@ -121,19 +121,19 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
 
     await page.getByRole("button", { name: "Launch decision" }).click();
     await expect(
-      page.getByRole("heading", { name: "Campaign Launch Posture" }),
+      page.getByRole("heading", { name: "Campaign launch decision" }),
     ).toBeVisible();
-    const launchButton = page.getByRole("button", { name: "Launch governed wave" });
+    const launchButton = page.getByRole("button", { name: "Launch rebalance wave" });
     await expect(launchButton).toBeDisabled();
     await page
       .getByRole("checkbox", {
-        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+        name: /I reviewed the source readiness.*one governed rebalance wave.*does not approve trades or send orders/i,
       })
       .check();
     await expect(launchButton).toBeEnabled();
     await launchButton.click();
     await expect(page.getByText("dwv_campaign_2026_05")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
 
     const overflowEvidence = await page.evaluate(() => {
       const clientWidth = document.documentElement.clientWidth;

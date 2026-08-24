@@ -57,7 +57,7 @@ const launchPosture: DpmCampaignLaunchPosture = {
   state: "READY",
   canLaunch: true,
   reason: "campaign_launch_ready",
-  requestedAsOfDate: "2026-05-10",
+  requestedAsOfDate: "10 May 2026",
   actor: "pm_sg_1",
   launchedWaveId: "N/A",
   idempotencyEvidence: "campaign-launch:campaign-holdings-202605:2026.05:abc",
@@ -133,9 +133,9 @@ describe("DpmCampaignDefinitionsSection", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
-    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
     fireEvent.click(screen.getByLabelText(/I reviewed the source readiness/));
-    fireEvent.click(screen.getByRole("button", { name: "Launch governed wave" }));
+    fireEvent.click(screen.getByRole("button", { name: "Launch rebalance wave" }));
     expect(callbacks.onLaunchCampaign).toHaveBeenCalledWith(campaign);
   });
 

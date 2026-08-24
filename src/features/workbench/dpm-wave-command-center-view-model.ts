@@ -1,4 +1,7 @@
-import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+import {
+  formatBusinessDateValue,
+  formatTimestampValue,
+} from "@/design-system/utils/financial-formatters";
 
 import type {
   DpmCampaignDefinitionGatewayResponse,
@@ -526,7 +529,10 @@ function buildCampaignPreviewReadinessPosture(
   return {
     state,
     reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : state === "READY" ? "Ready" : "Not checked",
-    requestedAsOfDate: readString(previewReadiness ?? {}, "requested_as_of_date") || "N/A",
+    requestedAsOfDate: formatBusinessDateValue(
+      readString(previewReadiness ?? {}, "requested_as_of_date"),
+      { nullDisplay: "Not reported" },
+    ),
     actor: readString(previewReadiness ?? {}, "actor_id") || "N/A",
     blockedActions: extractStringArray(previewReadiness?.blocked_actions),
     operatingBoundaries: extractStringArray(previewReadiness?.operating_boundaries),
@@ -557,10 +563,11 @@ function buildCampaignLaunchPosture(
     state,
     canLaunch: state === "READY",
     reason: reasonCodes.length > 0 ? reasonCodes.join(", ") : state === "READY" ? "Ready" : "Not checked",
-    requestedAsOfDate:
+    requestedAsOfDate: formatBusinessDateValue(
       readString(launchPackage ?? {}, "requested_as_of_date") ||
-      readString(createRequest, "as_of_date") ||
-      "N/A",
+        readString(createRequest, "as_of_date"),
+      { nullDisplay: "Not reported" },
+    ),
     actor:
       readString(launchPackage ?? {}, "actor_id") ||
       readString(createRequest, "actor_id") ||
@@ -995,10 +1002,11 @@ function buildCampaignLifecycleEventRows(
           readString(record, "wave_id") ||
           readString(metadata, "wave_id") ||
           "N/A",
-        requestedAsOfDate:
+        requestedAsOfDate: formatBusinessDateValue(
           readString(record, "requested_as_of_date") ||
-          readString(metadata, "requested_as_of_date") ||
-          "N/A",
+            readString(metadata, "requested_as_of_date"),
+          { nullDisplay: "Not reported" },
+        ),
         correlationId:
           readString(record, "correlation_id") ||
           readString(metadata, "correlation_id") ||
@@ -1028,7 +1036,10 @@ function buildCampaignLaunchHistoryRows(
       waveId,
       actor: readString(record, "launched_by") || "N/A",
       launchedAt: formatTimestampValue(launchedAt, { nullDisplay: "Not reported" }),
-      requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
+      requestedAsOfDate: formatBusinessDateValue(
+        readString(record, "requested_as_of_date"),
+        { nullDisplay: "Not reported" },
+      ),
       correlationId: readString(record, "correlation_id") || "N/A",
       idempotencyKey: readString(record, "idempotency_key") || "N/A",
     };

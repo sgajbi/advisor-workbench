@@ -469,6 +469,19 @@ export function formatBusinessReason(value: string | null | undefined): string {
   return preserveBusinessAcronyms(businessStateLabel(value));
 }
 
+export function formatBusinessBoundary(value: string): string {
+  const labels: Record<string, string> = {
+    NO_CAMPAIGN_MEMBERSHIP_CALCULATION: "Campaign membership remains source-owned",
+    NO_CLIENT_CONTACT_WORKFLOW: "No client-contact workflow",
+    NO_LOCAL_COHORT_CALCULATION: "Cohort membership remains source-owned",
+    NO_MAKER_CHECKER_WORKFLOW: "No maker-checker workflow",
+    NO_OMS_EXECUTION_CLAIM: "No execution claim",
+    NO_ORDER_GENERATION: "No order generation",
+    NO_TRADE_APPROVAL: "No trade approval",
+  };
+  return labels[value.trim().toUpperCase()] ?? formatBusinessReason(value);
+}
+
 export function businessLastReviewed(value: string | null | undefined): string {
   if (!value || value === "N/A") {
     return "Not available";

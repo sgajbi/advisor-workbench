@@ -12,8 +12,11 @@ import type {
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
   businessStateLabel,
+  formatBusinessBoundary,
+  formatBusinessOwner,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   previewReadinessPosture: DpmCampaignPreviewReadinessPosture;
@@ -44,7 +47,9 @@ export default function DpmCampaignLaunchPostureCard({
     <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-title">
       <div className="rebalance-table-heading">
         <div>
-          <h4 id="campaign-launch-title">Campaign Launch Posture</h4>
+          <h4 id="campaign-launch-title">
+            {MANAGE_REBALANCE_LABELS.campaignLaunchDecision}
+          </h4>
           <p>
             {selectedCampaign
               ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion}`
@@ -61,21 +66,33 @@ export default function DpmCampaignLaunchPostureCard({
           body={launchError}
         />
       ) : null}
-      <div className="rebalance-summary-strip" aria-label="Campaign launch posture">
+      <div className="rebalance-summary-strip" aria-label="Campaign launch decision">
         <DpmWaveSummaryCell
-          label="Preview Readiness"
+          label={MANAGE_REBALANCE_LABELS.previewReadiness}
           value={businessStateLabel(previewReadinessPosture.state)}
           tone={dpmWaveBadgeTone(previewReadinessPosture.state)}
         />
         <DpmWaveSummaryCell
-          label="Launch Readiness"
+          label={MANAGE_REBALANCE_LABELS.launchReadiness}
           value={businessStateLabel(launchPosture.state)}
           tone={dpmWaveBadgeTone(launchPosture.state)}
         />
-        <DpmWaveSummaryCell label="Review Date" value={launchPosture.requestedAsOfDate} />
-        <DpmWaveSummaryCell label="Reviewed By" value={launchPosture.actor} />
-        <DpmWaveSummaryCell label="Durable Wave" value={launchPosture.launchedWaveId} />
-        <DpmWaveSummaryCell label="Idempotency Evidence" value={launchPosture.idempotencyEvidence} />
+        <DpmWaveSummaryCell
+          label={MANAGE_REBALANCE_LABELS.asOfDate}
+          value={launchPosture.requestedAsOfDate}
+        />
+        <DpmWaveSummaryCell
+          label={MANAGE_REBALANCE_LABELS.reviewedBy}
+          value={formatBusinessOwner(launchPosture.actor)}
+        />
+        <DpmWaveSummaryCell
+          label={MANAGE_REBALANCE_LABELS.rebalanceWaveReference}
+          value={launchPosture.launchedWaveId}
+        />
+        <DpmWaveSummaryCell
+          label={MANAGE_REBALANCE_LABELS.replayKey}
+          value={launchPosture.idempotencyEvidence}
+        />
       </div>
       {previewReadinessError ? (
         <ScreenStatePanel
@@ -86,23 +103,29 @@ export default function DpmCampaignLaunchPostureCard({
         />
       ) : null}
       <div className="rebalance-summary-strip" aria-label="Campaign preview readiness boundaries">
-        <DpmWaveSummaryCell label="Preview Review Date" value={previewReadinessPosture.requestedAsOfDate} />
-        <DpmWaveSummaryCell label="Preview Reviewed By" value={previewReadinessPosture.actor} />
         <DpmWaveSummaryCell
-          label="Blocked Actions"
+          label={MANAGE_REBALANCE_LABELS.previewAsOfDate}
+          value={previewReadinessPosture.requestedAsOfDate}
+        />
+        <DpmWaveSummaryCell
+          label={MANAGE_REBALANCE_LABELS.previewReviewedBy}
+          value={formatBusinessOwner(previewReadinessPosture.actor)}
+        />
+        <DpmWaveSummaryCell
+          label="Blocked actions"
           value={
             previewReadinessPosture.blockedActions.length > 0
-              ? previewReadinessPosture.blockedActions.join(", ")
+              ? previewReadinessPosture.blockedActions.map(formatBusinessBoundary).join(", ")
               : "None"
           }
         />
-        <DpmWaveSummaryCell label="Readiness Reason" value={formatBusinessReason(previewReadinessPosture.reason)} />
-        <DpmWaveSummaryCell label="Readiness Sources" value={previewReadinessPosture.sourcePosture} />
+        <DpmWaveSummaryCell label="Readiness reason" value={formatBusinessReason(previewReadinessPosture.reason)} />
+        <DpmWaveSummaryCell label="Readiness sources" value={previewReadinessPosture.sourcePosture} />
         <DpmWaveSummaryCell
-          label="Operating Boundary"
+          label="Operating boundaries"
           value={
             previewReadinessPosture.operatingBoundaries.length > 0
-              ? previewReadinessPosture.operatingBoundaries.join(", ")
+              ? previewReadinessPosture.operatingBoundaries.map(formatBusinessBoundary).join(", ")
               : "N/A"
           }
         />
@@ -120,7 +143,8 @@ export default function DpmCampaignLaunchPostureCard({
                 disabled={Boolean(pendingLaunchKey)}
               />
               <span>
-                I reviewed the source readiness and understand this creates a durable campaign wave only.
+                I reviewed the source readiness and understand that this launches one governed
+                rebalance wave. It does not approve trades or send orders.
               </span>
             </label>
           ) : null}
@@ -135,7 +159,7 @@ export default function DpmCampaignLaunchPostureCard({
             Boolean(pendingLaunchKey)
           }
         >
-          {selectedLaunchPending ? "Launching durable wave" : "Launch governed wave"}
+          {selectedLaunchPending ? "Launching rebalance wave" : "Launch rebalance wave"}
         </ActionButton>
       </div>
     </div>

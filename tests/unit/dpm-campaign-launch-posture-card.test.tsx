@@ -35,7 +35,7 @@ const campaign: DpmCampaignDefinitionRow = {
 const previewReadinessPosture: DpmCampaignPreviewReadinessPosture = {
   state: "BLOCKED",
   reason: "source_candidate_membership_unavailable",
-  requestedAsOfDate: "2026-05-10",
+  requestedAsOfDate: "10 May 2026",
   actor: "pm_sg_1",
   blockedActions: ["NO_LOCAL_COHORT_CALCULATION", "NO_ORDER_GENERATION"],
   operatingBoundaries: ["NO_CAMPAIGN_MEMBERSHIP_CALCULATION", "NO_OMS_EXECUTION_CLAIM"],
@@ -46,14 +46,14 @@ const launchPosture: DpmCampaignLaunchPosture = {
   state: "READY",
   canLaunch: true,
   reason: "campaign_launch_ready",
-  requestedAsOfDate: "2026-05-10",
+  requestedAsOfDate: "10 May 2026",
   actor: "pm_sg_1",
   launchedWaveId: "N/A",
   idempotencyEvidence: "campaign-launch:campaign-holdings-202605:2026.05:abc",
 };
 
 describe("DpmCampaignLaunchPostureCard", () => {
-  it("renders Gateway-backed preview readiness and delegates durable launch", () => {
+  it("renders Gateway-backed preview readiness and delegates a governed rebalance-wave launch", () => {
     const onLaunchCampaign = vi.fn();
 
     render(
@@ -66,23 +66,31 @@ describe("DpmCampaignLaunchPostureCard", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Campaign Launch Posture" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign launch decision" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review version 2026.05")).toBeInTheDocument();
 
     const readinessBoundaries = screen.getByLabelText("Campaign preview readiness boundaries");
     expect(
-      within(readinessBoundaries).getByText("NO_LOCAL_COHORT_CALCULATION, NO_ORDER_GENERATION")
+      within(readinessBoundaries).getByText(
+        "Cohort membership remains source-owned, No order generation",
+      )
     ).toBeInTheDocument();
     expect(
-      within(readinessBoundaries).getByText("NO_CAMPAIGN_MEMBERSHIP_CALCULATION, NO_OMS_EXECUTION_CLAIM")
+      within(readinessBoundaries).getByText(
+        "Campaign membership remains source-owned, No execution claim",
+      )
     ).toBeInTheDocument();
     expect(within(readinessBoundaries).getByText("Manage preview-readiness required")).toBeInTheDocument();
 
-    const launchButton = screen.getByRole("button", { name: "Launch governed wave" });
+    expect(screen.getAllByText("10 May 2026")).toHaveLength(2);
+    expect(screen.getAllByText("Portfolio Manager")).toHaveLength(2);
+    expect(screen.queryByText("Durable Wave")).not.toBeInTheDocument();
+    expect(screen.queryByText("Review Date")).not.toBeInTheDocument();
+    const launchButton = screen.getByRole("button", { name: "Launch rebalance wave" });
     expect(launchButton).toBeDisabled();
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+        name: /I reviewed the source readiness.*one governed rebalance wave.*does not approve trades or send orders/i,
       }),
     );
     fireEvent.click(launchButton);
@@ -111,7 +119,7 @@ describe("DpmCampaignLaunchPostureCard", () => {
     expect(screen.getByText("Select a campaign definition to check launch readiness.")).toBeInTheDocument();
     expect(screen.getByText("Campaign preview readiness needs Manage source evidence")).toBeInTheDocument();
     expect(screen.getByText("Campaign launch needs source readiness")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
     expect(onLaunchCampaign).not.toHaveBeenCalled();
   });
 });
