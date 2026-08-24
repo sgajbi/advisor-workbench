@@ -129,6 +129,28 @@ describe("buildAdvisoryOverviewModel", () => {
     expect(buildRow(undefined).recordedAt).toBe("Not reported");
   });
 
+  it("fails closed when proposal owner evidence is blank", () => {
+    const buildRow = (createdBy: string | undefined) =>
+      buildAdvisoryOverviewModel({
+        reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
+        proposals: [
+          {
+            proposal_id: "PRP-DRAFT",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "DRAFT",
+            title: "Income allocation review",
+            created_by: createdBy,
+          },
+        ],
+      }).proposalRows[0];
+
+    expect(buildRow("  Relationship Manager  ").sourceOwner).toBe(
+      "Relationship Manager",
+    );
+    expect(buildRow("   ").sourceOwner).toBe("Not reported");
+    expect(buildRow(undefined).sourceOwner).toBe("Not reported");
+  });
+
   it("discloses that metrics and ranking cover a partial source window", () => {
     const model = buildAdvisoryOverviewModel({
       reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
