@@ -1,3 +1,4 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import { preserveBusinessAcronyms } from "./business-label-formatters";
 import type {
   DpmPmOperatingQualityGatewayResponse,
@@ -1104,7 +1105,9 @@ function buildFairnessDetail(
       readString(fairnessAnalysis, "maximum_average_score_spread") || "N/A",
     observedAverageScoreSpread:
       readString(fairnessAnalysis, "observed_average_score_spread") || "N/A",
-    generatedAt: readString(fairnessAnalysis, "generated_at") || "N/A",
+    generatedAt: formatTimestampValue(readString(fairnessAnalysis, "generated_at"), {
+      nullDisplay: "Not reported",
+    }),
     generatedBy: readString(fairnessAnalysis, "generated_by") || "N/A",
     sourceRefs: summarizeSourceRefs(extractRecords(fairnessAnalysis.source_refs)),
     forbiddenUses: formatForbiddenUses(fairnessAnalysis.forbidden_uses),

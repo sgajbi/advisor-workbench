@@ -923,6 +923,7 @@ describe("PM operating quality view model", () => {
         minimumSegmentScoreRunCount: "2",
         maximumAverageScoreSpread: "15.00",
         observedAverageScoreSpread: "31.00",
+        generatedAt: "13 May 2026, 09:40 UTC",
         generatedBy: "lotus-manage",
         sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001",
       })
@@ -953,6 +954,26 @@ describe("PM operating quality view model", () => {
     expect(model.fairnessSegmentRows[0].minimumScore).toBe("89.00");
     expect(model.fairnessSegmentRows[0].maximumScore).toBe("91.00");
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
+  });
+
+  it("fails closed when fairness generation time lacks source timezone evidence", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessPreview: {
+        ...fairnessPreview,
+        data: {
+          ...fairnessPreview.data,
+          fairness_analysis: {
+            ...fairnessPreview.data.fairness_analysis,
+            generated_at: "2026-05-13T09:40:00",
+          },
+        },
+      },
+    });
+
+    expect(model.fairnessDetail.generatedAt).toBe("Not reported");
+    expect(JSON.stringify(model.fairnessDetail)).not.toContain("2026-05-13T09:40:00");
   });
 
   it("blocks fairness preview readiness when Manage returns too few source-defined segments", () => {
