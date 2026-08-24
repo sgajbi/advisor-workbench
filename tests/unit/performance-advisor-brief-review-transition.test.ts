@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildAdvisorBriefHumanReview,
   getAdvisorBriefReviewStateLabel,
+  resolveAdvisorBriefReviewerReference,
 } from "../../src/apps/performance/advisor-brief/advisor-brief-review-evidence";
 import { isConfirmedAdvisorBriefReviewTransition } from "../../src/apps/performance/advisor-brief/advisor-brief-review-transition";
 import type {
@@ -103,6 +104,36 @@ describe("advisor brief review transition evidence", () => {
   it("accepts a matching source-recorded transition", () => {
     expect(isConfirmed()).toBe(true);
   });
+
+  it("maps the governed source review actor namespace to the submitted reviewer reference", () => {
+    const sourceRun = {
+      ...baseRun,
+      latest_review_actor: "review:advisor_1",
+    };
+
+    expect(resolveAdvisorBriefReviewerReference(sourceRun.latest_review_actor)).toBe(
+      "advisor_1",
+    );
+    expect(buildAdvisorBriefHumanReview(sourceRun)).toMatchObject({
+      state: "reviewed",
+      sourceRecorded: true,
+      actor: "advisor_1",
+    });
+    expect(isConfirmed({ run: sourceRun })).toBe(true);
+    expect(
+      isConfirmed({
+        run: sourceRun,
+        payload: { ...acceptPayload, reviewed_by: "advisor_other" },
+      }),
+    ).toBe(false);
+  });
+
+  it.each([undefined, null, "", "  ", "review:", " review:  "])(
+    "does not manufacture a reviewer reference from %s",
+    (sourceActor) => {
+      expect(resolveAdvisorBriefReviewerReference(sourceActor)).toBeUndefined();
+    },
+  );
 
   it.each([
     "ACCEPTED",

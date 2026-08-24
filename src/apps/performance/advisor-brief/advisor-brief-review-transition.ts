@@ -7,6 +7,7 @@ import type {
 import {
   hasRecordedAdvisorBriefReviewEvidence,
   parseAdvisorBriefReviewUtcTimestamp,
+  resolveAdvisorBriefReviewerReference,
 } from "./advisor-brief-review-evidence";
 
 const EXPECTED_REVIEW_STATE = {
@@ -57,7 +58,7 @@ export function isConfirmedAdvisorBriefReviewTransition({
     run.review_pending !== false ||
     !hasRecordedAdvisorBriefReviewEvidence(run) ||
     !hasAdvancedReviewEvidence(run, previousRun) ||
-    run.latest_review_actor?.trim() !== payload.reviewed_by.trim()
+    resolveAdvisorBriefReviewerReference(run.latest_review_actor) !== payload.reviewed_by.trim()
   ) {
     return false;
   }
