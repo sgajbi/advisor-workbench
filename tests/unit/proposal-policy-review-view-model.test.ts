@@ -8,7 +8,7 @@ import {
 } from "../../src/features/proposals/proposal-policy-review-view-model";
 
 describe("proposal policy review view model", () => {
-  it("turns policy evaluation records into advisor-facing suitability review rows", () => {
+  it("turns policy evaluation records into adviser-facing suitability review rows", () => {
     const model = buildPolicyReviewQueueModel({
       reviewContext: {
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -85,7 +85,7 @@ describe("proposal policy review view model", () => {
     expect(model.rows[0].signOffStatus).toBe("Sign-off recorded");
     expect(model.rows[1].policyStatus).toBe("Blocked");
     expect(model.rows[1].nextAction).toBe(
-      "Resolve blocking policy evidence before advisor sign-off.",
+      "Resolve blocking policy evidence before adviser sign-off.",
     );
   });
 
@@ -122,7 +122,7 @@ describe("proposal policy review view model", () => {
     ).toBeNull();
   });
 
-  it("does not confirm an empty policy queue while its source is refreshing", () => {
+  it("does not confirm an empty suitability worklist while its source is refreshing", () => {
     expect(
       buildPolicyReviewQueueEmptyPresentation({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -132,11 +132,11 @@ describe("proposal policy review view model", () => {
       }),
     ).toMatchObject({
       kind: "loading",
-      title: "Refreshing policy review queue",
+      title: "Refreshing suitability review worklist",
     });
   });
 
-  it("treats a failed refresh of an empty policy queue as unconfirmed", () => {
+  it("treats a failed refresh of an empty suitability worklist as unconfirmed", () => {
     const presentation = buildPolicyReviewQueueEmptyPresentation({
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       rowCount: 0,
@@ -146,14 +146,14 @@ describe("proposal policy review view model", () => {
 
     expect(presentation).toMatchObject({
       kind: "partial",
-      title: "Policy review queue is unconfirmed",
+      title: "Suitability review worklist is unconfirmed",
     });
     expect(presentation?.body).toContain(
       "before concluding that no evaluations need review",
     );
   });
 
-  it("keeps a settled empty policy queue definitive", () => {
+  it("keeps a settled empty suitability worklist definitive", () => {
     expect(
       buildPolicyReviewQueueEmptyPresentation({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -163,8 +163,8 @@ describe("proposal policy review view model", () => {
       }),
     ).toEqual({
       kind: "empty",
-      title: "No policy evaluations need review",
-      body: "No suitability policy evaluations are waiting for PB_SG_GLOBAL_BAL_001.",
+      title: "No suitability reviews need attention",
+      body: "No suitability evaluations are waiting for review for PB_SG_GLOBAL_BAL_001.",
     });
   });
 
@@ -234,7 +234,7 @@ describe("proposal policy review view model", () => {
       sourceGaps: ["SG Structured Note"],
       workflowStatus: "Review required",
       makerCheckerPosture: "Independent checker required",
-      slaPosture: "Within review SLA, 3 open",
+      slaPosture: "Within review deadline, 3 open",
       workflowBlockers: ["SG Structured Note"],
     });
     expect(JSON.stringify(model)).not.toContain("client_consent");
