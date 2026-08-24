@@ -115,7 +115,9 @@ handing the user to a focused Manage mode.
   lineage exists without a current response, and **Temporarily unavailable** when retrieval fails.
 - Shares the current fetched pack across the Manage workspace, so a successful **Load evidence** or
   **Prepare evidence** action updates the centre panel and adjacent evidence rail together without
-  requiring a page reload. Failed actions retain the last confirmed source posture.
+  requiring a page reload. Stable portfolio identity preserves that confirmed pack across Manage
+  mode changes; transport correlation IDs do not reset it. A successful response clears the prior
+  preload failure in both regions, while failed actions retain the last confirmed source posture.
 
 ## Decisions And Actions
 

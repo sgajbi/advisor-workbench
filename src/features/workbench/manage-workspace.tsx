@@ -82,10 +82,10 @@ export function ManageWorkspace({
 
   return (
     <ManageProofPackStateProvider
-      key={`${portfolio.portfolio_id}:${data.proofPack?.correlation_id ?? "no-pack"}`}
+      key={portfolio.portfolio_id}
       initialProofPack={data.proofPack}
     >
-    <AppPageShell
+      <AppPageShell
       pageKey="manage"
       className={`portfolio-page manage-page ${styles.manageScope}`}
       reviewContext={buildManageReviewContextStrip(
@@ -140,7 +140,7 @@ export function ManageWorkspace({
           }
         />
       </WorkbenchPageContainer>
-    </AppPageShell>
+      </AppPageShell>
     </ManageProofPackStateProvider>
   );
 }

@@ -195,6 +195,7 @@ describe("ProofPackPanel", () => {
           outcomeReviews={outcomeReviews}
           rebalanceSnapshot={rebalanceSnapshot}
           initialProofPack={null}
+          errorMessage="Evidence pack preload is temporarily unavailable."
         />
         <ManageEvidenceRail data={data} />
       </ManageProofPackStateProvider>
@@ -202,11 +203,13 @@ describe("ProofPackPanel", () => {
 
     const rail = screen.getByLabelText("Manage source evidence");
     expect(within(rail).getByText("Referenced; not retrieved")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack preload is temporarily unavailable.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Prepare evidence" }));
 
     await waitFor(() => expect(within(rail).getByText("Available")).toBeInTheDocument());
     expect(within(rail).queryByText("Referenced; not retrieved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Evidence pack preload is temporarily unavailable.")).not.toBeInTheDocument();
   });
 
   it("uses the shared current pack when a Manage mode remount has stale server props", () => {
@@ -223,6 +226,51 @@ describe("ProofPackPanel", () => {
 
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Load summary" })).toBeEnabled();
+  });
+
+  it("retains a published pack across a mode remount with a new transport correlation", async () => {
+    const currentProofPack: DpmProofPackGatewayResponse = {
+      ...readyProofPack,
+      correlation_id: "corr-current-runtime-pack",
+      data: {
+        ...readyProofPack.data,
+        proof_pack: {
+          ...(readyProofPack.data.proof_pack as Record<string, unknown>),
+          decision_summary: {
+            approval_state: "REVIEW_PENDING",
+            business_rationale: "Current runtime evidence remains under review.",
+          },
+        },
+      },
+    };
+    const staleServerPack = {
+      ...readyProofPack,
+      correlation_id: "corr-new-request-stale-pack",
+    };
+    vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(currentProofPack);
+
+    function Harness({ panelKey, serverPack }: { panelKey: string; serverPack: DpmProofPackGatewayResponse }) {
+      return (
+        <ManageProofPackStateProvider initialProofPack={serverPack}>
+          <ProofPackPanel
+            key={panelKey}
+            portfolioId="PB_SG_GLOBAL_BAL_001"
+            outcomeReviews={outcomeReviews}
+            rebalanceSnapshot={rebalanceSnapshot}
+            initialProofPack={serverPack}
+          />
+        </ManageProofPackStateProvider>
+      );
+    }
+
+    const { rerender } = render(<Harness panelKey="proof" serverPack={readyProofPack} />);
+    fireEvent.click(screen.getByRole("button", { name: "Prepare evidence" }));
+    expect(await screen.findByText("Review Pending")).toBeInTheDocument();
+
+    rerender(<Harness panelKey="waves" serverPack={staleServerPack} />);
+
+    expect(screen.getByText("Review Pending")).toBeInTheDocument();
+    expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
   });
 
   it("loads evidence detail and handoff payloads", async () => {
