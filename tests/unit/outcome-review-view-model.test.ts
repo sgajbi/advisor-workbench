@@ -72,6 +72,7 @@ describe("outcome review view model", () => {
         expectedSnapshotHash: "sha256:expected",
         realizedSnapshotHash: "sha256:realized",
         retentionUntil: "24 Feb 2033",
+        sourceUpdatedAt: "2026-02-24T10:00:00Z",
         updatedAt: "24 Feb 2026, 10:00 UTC",
         reportInputBlocked: false,
         aiEvidenceBlocked: false,
@@ -110,6 +111,7 @@ describe("outcome review view model", () => {
     );
 
     expect(model.items[0]?.updatedAt).toBe("Not reported");
+    expect(model.items[0]?.sourceUpdatedAt).toBeNull();
     expect(model.items[0]?.retentionUntil).toBe("Not reported");
     expect(JSON.stringify(model)).not.toContain("2026-02-24T10:00:00");
     expect(JSON.stringify(model)).not.toContain("2033-02-29");

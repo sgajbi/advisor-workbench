@@ -3,6 +3,7 @@ import {
   formatBusinessDateValue,
   formatCalendarDateValue,
   formatTimestampValue,
+  isTimestampValue,
 } from "@/design-system/utils/financial-formatters";
 
 export type OutcomeReviewPanelState =
@@ -78,6 +79,7 @@ export type OutcomeReviewListItem = {
   expectedSnapshotHash: string;
   realizedSnapshotHash: string;
   retentionUntil: string;
+  sourceUpdatedAt: string | null;
   updatedAt: string;
   reportInputBlocked: boolean;
   aiEvidenceBlocked: boolean;
@@ -213,6 +215,7 @@ function buildOutcomeReviewListItem(
     buildDimensionRow(dimension, index)
   );
   const varianceSummary = readRecord(record, "variance_summary");
+  const sourceUpdatedAt = readString(record, "updated_at") || readString(record, "created_at");
   return {
     outcomeReviewId,
     reviewLabel: buildReviewLabel(record, fallbackIndex),
@@ -234,10 +237,8 @@ function buildOutcomeReviewListItem(
       readString(record, "retain_until") || readString(record, "retention_until"),
       { nullDisplay: "Not reported" },
     ),
-    updatedAt: formatTimestampValue(
-      readString(record, "updated_at") || readString(record, "created_at"),
-      { nullDisplay: "Not reported" },
-    ),
+    sourceUpdatedAt: isTimestampValue(sourceUpdatedAt) ? sourceUpdatedAt.trim() : null,
+    updatedAt: formatTimestampValue(sourceUpdatedAt, { nullDisplay: "Not reported" }),
     reportInputBlocked: blockedActions.includes("CREATE_REPORT_INPUT"),
     aiEvidenceBlocked: blockedActions.includes("REQUEST_AI_NARRATIVE"),
     clientCommunicationBoundary: buildOutcomeClientCommunicationBoundaryView(record),

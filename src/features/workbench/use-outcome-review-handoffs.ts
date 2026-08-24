@@ -301,7 +301,7 @@ function outcomeReviewSourceContextKey(review: OutcomeReviewListItem): string {
     review.proofPackId,
     review.expectedSnapshotHash,
     review.realizedSnapshotHash,
-    review.updatedAt,
+    review.sourceUpdatedAt,
   ]);
 }
 
