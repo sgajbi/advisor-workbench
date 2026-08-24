@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Panel, ScreenStatePanel } from "@/design-system";
 import AdvisorBookContextSwitcher from "@/features/advisor-book/components/advisor-book-context-switcher";
@@ -19,11 +19,13 @@ export type { PortfolioScreenRailModeItem } from "../portfolio-screen-navigation
 export default function PortfolioScreenRail({
   portfolioId,
   activeScreen,
+  relationshipIdBase,
   modeItems,
   modeNavigationLabel = "Workspace surface navigation",
 }: {
   portfolioId: string;
   activeScreen: PortfolioScreenNavigationKey;
+  relationshipIdBase: string;
   modeItems?: PortfolioScreenRailModeItem[];
   modeNavigationLabel?: string;
 }) {
@@ -43,7 +45,9 @@ export default function PortfolioScreenRail({
     activeScreen,
   );
   const [navigationExpanded, setNavigationExpanded] = useState(false);
-  const navigationId = useId();
+  const navigationId = `${relationshipIdBase}-navigation`;
+  const directoryId = `${relationshipIdBase}-workspace-directory`;
+  const workflowId = `${relationshipIdBase}-workflow-directory`;
   const disclosureButtonRef = useRef<HTMLButtonElement>(null);
   const activeModeItem = modeItems?.find((item) => item.active);
   const activeItem =
@@ -112,6 +116,8 @@ export default function PortfolioScreenRail({
         <PortfolioScreenRailNavigation
           key={navigationExpanded ? "expanded" : "collapsed"}
           id={navigationId}
+          directoryId={directoryId}
+          workflowId={workflowId}
           expanded={navigationExpanded}
           model={navigationModel}
           activeScreen={activeScreen}

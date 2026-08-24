@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 
 import { cx } from "@/design-system/utils/cx";
 import type {
@@ -14,6 +14,8 @@ import styles from "./portfolio-screen-rail.module.css";
 
 type PortfolioScreenRailNavigationProps = {
   id: string;
+  directoryId: string;
+  workflowId: string;
   expanded: boolean;
   model: PortfolioScreenNavigationModel;
   activeScreen: PortfolioScreenNavigationKey;
@@ -30,6 +32,8 @@ function isModeItemActionable(item: PortfolioScreenRailModeItem) {
 
 export default function PortfolioScreenRailNavigation({
   id,
+  directoryId,
+  workflowId,
   expanded,
   model,
   activeScreen,
@@ -39,8 +43,6 @@ export default function PortfolioScreenRailNavigation({
 }: PortfolioScreenRailNavigationProps) {
   const [directoryExpanded, setDirectoryExpanded] = useState(false);
   const [workflowExpanded, setWorkflowExpanded] = useState(false);
-  const directoryId = useId();
-  const workflowId = useId();
   const directoryButtonRef = useRef<HTMLButtonElement>(null);
   const workflowButtonRef = useRef<HTMLButtonElement>(null);
   const activeModeItem = modeItems?.find((item) => item.active) ?? null;

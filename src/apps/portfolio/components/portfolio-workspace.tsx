@@ -95,7 +95,11 @@ export default function PortfolioWorkspaceView({
         sideClassName="portfolio-side portfolio-side-wide"
         rail={
           workspaceStatus === "ready" && workspace ? (
-            <PortfolioScreenRail portfolioId={workspace.portfolio.portfolio_id} activeScreen="portfolio" />
+            <PortfolioScreenRail
+              portfolioId={workspace.portfolio.portfolio_id}
+              activeScreen="portfolio"
+              relationshipIdBase="portfolio-review-workspace-rail"
+            />
           ) : null
         }
         main={

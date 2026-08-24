@@ -134,6 +134,7 @@ function ReportOrderingUnavailable({
               <PortfolioScreenRail
                 portfolioId={confirmedPortfolioId}
                 activeScreen="reports"
+                relationshipIdBase="report-ordering-page-rail"
               />
             ) : undefined
           }

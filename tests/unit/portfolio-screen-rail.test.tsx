@@ -1,11 +1,25 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import type { AnchorHTMLAttributes, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ComponentProps, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import PortfolioScreenRail from "../../src/apps/portfolio/components/portfolio-screen-rail";
+import PortfolioScreenRailComponent from "../../src/apps/portfolio/components/portfolio-screen-rail";
 
 const usePathnameMock = vi.fn();
 const useAdvisorBookMock = vi.fn();
+
+function PortfolioScreenRail({
+  relationshipIdBase = "portfolio-screen-rail-test",
+  ...props
+}: Omit<ComponentProps<typeof PortfolioScreenRailComponent>, "relationshipIdBase"> & {
+  relationshipIdBase?: string;
+}) {
+  return (
+    <PortfolioScreenRailComponent
+      {...props}
+      relationshipIdBase={relationshipIdBase}
+    />
+  );
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => usePathnameMock(),
