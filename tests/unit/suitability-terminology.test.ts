@@ -21,6 +21,8 @@ describe("suitability terminology", () => {
       selectedReview: "Selected suitability review",
       evidence: "Suitability evidence",
       reviewDeadline: "Review deadline",
+      sourceRecord: "Authoritative suitability policy record",
+      selectedEvidenceSource: "Selected suitability evidence",
     });
   });
 });

@@ -57,6 +57,7 @@ import {
   buildProposalQueueWorkflowContext,
   buildSuitabilityReviewWorkflowContext,
 } from "../proposal-workflow-context-view-model";
+import { SUITABILITY_WORKFLOW_LABELS } from "../suitability-terminology";
 import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
 import { useProposalDiscussionPack } from "../use-proposal-discussion-pack";
 import PolicyReviewWorkspace from "./policy-review-workspace";
@@ -492,7 +493,7 @@ export default function ProposalLifecycleWorkspace({
           ...policyEvidenceModel.sourceGaps,
           ...policyEvidenceModel.workflowBlockers,
         ].slice(0, 4)
-      : ["Selected policy identity does not agree across source evidence."];
+      : ["Selected suitability review identity does not agree across source evidence."];
 
     return {
       proposalId: policyEvidenceModel.proposalId,
@@ -502,7 +503,7 @@ export default function ProposalLifecycleWorkspace({
           ? "Suitability evidence ready for review"
           : policyEvidenceModel.nextAction,
       summary: !policyEvidenceModel.sourceIdentityAligned
-        ? "The selected evaluation, proposal and supporting policy package do not agree."
+        ? "The selected suitability review, proposal and supporting policy package do not agree."
         : `${policyEvidenceModel.policyStatus}. ${policyEvidenceModel.sourcePosture}.`,
       currentPosture: !policyEvidenceModel.sourceIdentityAligned
         ? "Source identity conflict"
@@ -520,7 +521,7 @@ export default function ProposalLifecycleWorkspace({
           value: policyEvidenceModel.signOffPackagePosture,
         },
       ],
-      sourceLabel: "Gateway-backed selected suitability evidence",
+      sourceLabel: SUITABILITY_WORKFLOW_LABELS.selectedEvidenceSource,
       boundaryNote:
         "Selected suitability evidence is shown only when evaluation, proposal, portfolio, version, package, and workflow identities agree.",
       hasEvidenceGap:

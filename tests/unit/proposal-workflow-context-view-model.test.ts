@@ -53,7 +53,8 @@ describe("proposal workflow context view model", () => {
     expect(model.blockers).toContain(
       "The latest suitability evidence refresh did not complete.",
     );
-    expect(model.sourceLabel).toBe("Gateway-backed suitability policy review");
+    expect(model.sourceLabel).toBe("Authoritative suitability policy record");
+    expect(model.boundaryNote).not.toMatch(/gateway|api|contract/i);
   });
 
   it("fails closed when selected suitability evidence has an identity conflict", () => {
@@ -72,12 +73,12 @@ describe("proposal workflow context view model", () => {
         title: "Selected suitability evidence is unconfirmed",
         summary: "The selected source identities do not agree.",
         currentPosture: "Source identity conflict",
-        nextAction: "Recheck the selected policy identity.",
+        nextAction: "Recheck the selected suitability review identity.",
         blockers: [
           "Selected policy identity does not agree across source evidence.",
         ],
         facts: [{ label: "Proposal", value: "PRP-RISK" }],
-        sourceLabel: "Gateway-backed selected suitability evidence",
+        sourceLabel: "Selected suitability evidence",
         boundaryNote: "Source identities must agree.",
         hasEvidenceGap: true,
       },
@@ -88,6 +89,64 @@ describe("proposal workflow context view model", () => {
     expect(model.currentPosture).toBe("Source identity conflict");
     expect(model.nextAction).toContain("Recheck");
   });
+
+  it.each([
+    {
+      expectedState: "loading",
+      expectedTitle: "Loading suitability reviews",
+      overrides: { isLoading: true },
+    },
+    {
+      expectedState: "permission_blocked",
+      expectedTitle: "Suitability reviews are restricted",
+      overrides: { permissionBlocked: true },
+    },
+    {
+      expectedState: "error",
+      expectedTitle: "Suitability review worklist is unavailable",
+      overrides: { hasError: true },
+    },
+    {
+      expectedState: "refreshing",
+      expectedTitle: "Refreshing suitability evidence",
+      overrides: { isRefreshing: true },
+    },
+    {
+      expectedState: "empty",
+      expectedTitle: "No suitability reviews need attention",
+      overrides: { totalCount: 0, actionCount: 0 },
+    },
+    {
+      expectedState: "ready",
+      expectedTitle: "1 review needs action",
+      overrides: {},
+    },
+  ])(
+    "keeps $expectedState suitability posture business-facing",
+    ({ expectedState, expectedTitle, overrides }) => {
+      const model = buildSuitabilityReviewWorkflowContext({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        isLoading: false,
+        isRefreshing: false,
+        permissionBlocked: false,
+        hasError: false,
+        hasRefreshFailure: false,
+        hasUnavailableEvidence: false,
+        totalCount: 2,
+        actionCount: 1,
+        ...overrides,
+      });
+
+      expect(model.state).toBe(expectedState);
+      expect(model.title).toBe(expectedTitle);
+      expect(model.sourceLabel).toBe(
+        "Authoritative suitability policy record",
+      );
+      expect(
+        `${model.title} ${model.summary} ${model.currentPosture} ${model.nextAction} ${model.sourceLabel}`,
+      ).not.toMatch(/gateway|api|endpoint|policy-review queue/i);
+    },
+  );
 
   it("keeps the shared shell neutral when no source record is supplied", () => {
     const model = buildNeutralProposalWorkflowContext({
