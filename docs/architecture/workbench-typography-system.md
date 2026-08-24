@@ -153,6 +153,13 @@ Interactive nav and controls should use the shared button typography:
   eyebrow or code
 - `metadata`: IDs, dates, timestamps, audit context
 
+The shared Review Context strip applies those roles as one cross-workspace contract: the eyebrow is
+the only uppercase micro-label; Mandate, Booking centre, Business date, Base currency, and Reporting
+currency are sentence-case 12px/500 labels; confirmed business values are 14px/500; unavailable
+values reduce to 14px/400; and **Support details** uses the 14px/600 control role. Portfolio and
+client identifiers use the governed technical-evidence family only inside the collapsed support
+disclosure. Do not recreate these properties in a consuming screen.
+
 ## Casing Rules
 
 - sentence case: body copy, helper text, controls, buttons
@@ -179,6 +186,7 @@ fails on page overflow, metric overflow, or wrapped financial values:
 
 ```bash
 npm run test:e2e:typography:compare
+npm run test:e2e:portfolio:review-context-typography
 ```
 
 Both candidates passed. IBM Plex Sans was selected because it preserved a professional productive

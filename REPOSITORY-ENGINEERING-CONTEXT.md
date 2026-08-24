@@ -1423,6 +1423,10 @@ Most relevant current governance:
     not the legacy global layer. Any typography replacement requires issue-backed brand,
     accessibility, payload, fallback, license, optimized-browser, and responsive-geometry evidence;
     `npm run test:e2e:typography:compare` is the reproducible candidate-comparison path.
+    The reusable Review Context strip must consume the canonical productive roles directly:
+    sentence-case 12px/500 routine labels, 14px/500 confirmed values, 14px/400 unavailable values,
+    and a 14px/600 support control; only its genuine eyebrow may remain uppercase. Protect confirmed,
+    partial, and unavailable states with `npm run test:e2e:portfolio:review-context-typography`.
 16. Optional Allocation look-through coverage must remain distinct from the direct allocation
     already confirmed by the selected portfolio book. Model checking, available, unsupported, and
     failed states explicitly; accept unsupported only from a valid allocation response; retain

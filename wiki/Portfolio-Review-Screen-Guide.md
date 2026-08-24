@@ -42,6 +42,10 @@ Portfolio Review does not repeat this identity in its page header, navigation ra
 rail. A business date may still appear beside a dated value, reporting record, or calculation
 because that is evidence lineage rather than another identity summary.
 
+The strip uses the shared productive hierarchy: sentence-case business labels, readable values,
+and a single uppercase eyebrow. Partial or unavailable facts keep the same geometry and become
+visually quieter, so an advisor can distinguish missing evidence without losing scan position.
+
 ## Who Uses This Screen
 
 - **Relationship managers and client advisors** use it after selecting an assigned portfolio to
@@ -232,6 +236,8 @@ Compatibility routes and aliases reuse this guide and must not fork the business
 - `tests/unit/typography-token-authority.test.ts` prevents the legacy global layer from reclaiming
   semantic type authority, blocks inflated weights and routine uppercase labels on migrated
   surfaces, and protects the responsive Portfolio health-strip composition.
+- `npm run test:e2e:portfolio:review-context-typography` proves confirmed, partial, and unavailable
+  Review Context typography at 1440 and 519 pixels with computed roles and zero page overflow.
 - Canonical validation selects `PB_SG_GLOBAL_BAL_001`, verifies the exact Portfolio Review heading
   and **Review Evidence** landmark, and captures `portfolio-summary-live.png` only after API and
   panel checks pass.

@@ -6291,6 +6291,10 @@ dependency or transfer IBM's product styling to Lotus.
 7. Keep the choice reproducible: `npm run test:e2e:typography:compare` renders pinned IBM Plex Sans
    and Inter candidates independently in the same optimized Portfolio Review at 1440, 1024, 768,
    and 519 pixels and fails on family substitution, metric overflow, wrapping, or page overflow.
+8. Apply the productive roles to the shared Review Context strip itself: a single uppercase eyebrow,
+   sentence-case 12px/500 business labels, 14px/500 confirmed values, 14px/400 unavailable values,
+   and a 14px/600 support control. Prove the real component at 1440 and 519 across confirmed,
+   partial, and unavailable source states rather than inferring completion from a font-family swap.
 
 Both candidates passed the final geometry assertions. IBM Plex Sans reduced operational WOFF2
 bytes from 352,240 to 196,820 and rendered the longest tested AUM/Invested value at 168 pixels
