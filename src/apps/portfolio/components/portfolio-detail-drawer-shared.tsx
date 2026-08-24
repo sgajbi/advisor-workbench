@@ -15,7 +15,7 @@ export function renderDrawerDefinitionList(entries: Array<[string, string]>): Re
   );
 }
 
-export function renderDrawerParagraphs(paragraphs: string[]): ReactNode {
+export function renderDrawerParagraphs(paragraphs: readonly string[]): ReactNode {
   return (
     <div className="portfolio-detail-drawer-copy">
       {paragraphs.map((paragraph) => (

@@ -448,7 +448,9 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('button', { name: /^Filters/i })).toHaveCount(0);
 
     if (process.env.PORTFOLIO_E2E_FIXTURE === 'cashflow') {
-      await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
+      ).toBeVisible();
       await expect(
         page.getByRole('heading', { name: 'Performance evidence is qualified' })
       ).toBeVisible();
@@ -673,19 +675,25 @@ test.describe('Portfolio workbench smoke', () => {
     const session = await openPortfolioReview(page, request);
     test.skip(!session.available, 'Portfolio workspace upstream unavailable in standalone smoke environment.');
 
-    await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
+    ).toBeVisible();
     await page.getByLabel('As of').fill('2026-04-01');
 
     await expect(page.getByText('Review date 01 Apr 2026')).toBeVisible();
     await expect(page.getByText('Valuation as of 10 Apr 2026')).toBeVisible();
     await expect(page.getByText('Valuation as of 01 Apr 2026')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'AUM: 12,500,000 USD' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
+    ).toBeVisible();
 
     await page.getByLabel('As of').fill('2026-03-31');
 
     await expect(page.getByText('Review date 31 Mar 2026')).toBeVisible();
     await expect(page.getByText('Valuation as of 31 Mar 2026')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'AUM: 0 USD' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Portfolio value: 0 USD' }),
+    ).toBeVisible();
     const decisionReview = page.getByRole('region', { name: 'Portfolio decision review' });
     await expect(decisionReview.getByLabel('Status Partial')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);

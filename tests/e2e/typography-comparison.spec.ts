@@ -54,7 +54,9 @@ test("compares productive Inter and IBM Plex Sans typography on Portfolio Review
     waitUntil: "domcontentloaded",
   });
   await expect(page.getByRole("heading", { name: "Portfolio Review", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "AUM: 12,500,000 USD" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Portfolio value: 12,500,000 USD" }),
+  ).toBeVisible();
   await page.evaluate(async () => document.fonts.ready);
 
   await installCandidate(page, {

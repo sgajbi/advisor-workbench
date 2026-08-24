@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCurrency, formatDate, formatPct } from "../formatters";
+import { PORTFOLIO_VALUE_DRAWER_COPY } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import { getInvestedAssetWeight } from "../view-model";
@@ -31,11 +32,11 @@ export function buildMetricDrawer(
   } as const;
 
   switch (metric) {
-    case "aum":
+    case "portfolio_value":
       return {
         kicker: "Metric Detail",
-        title: "AUM",
-        subtitle: "Total market value across invested holdings and operational cash.",
+        title: PORTFOLIO_VALUE_DRAWER_COPY.title,
+        subtitle: PORTFOLIO_VALUE_DRAWER_COPY.subtitle,
         summaryItems: [
           {
             label: "Value",
@@ -51,10 +52,9 @@ export function buildMetricDrawer(
           {
             key: "definition",
             label: "Definition",
-            content: renderDrawerParagraphs([
-              "Assets under management represents current portfolio market value in base currency.",
-              "It combines invested holdings and available cash at the selected page context.",
-            ]),
+            content: renderDrawerParagraphs(
+              PORTFOLIO_VALUE_DRAWER_COPY.definition
+            ),
           },
           {
             key: "detail",
@@ -106,7 +106,7 @@ export function buildMetricDrawer(
             key: "definition",
             label: "Definition",
             content: renderDrawerParagraphs([
-              "Invested assets indicates how much of the book is currently allocated to positions.",
+              "Invested assets indicates how much of the portfolio is currently allocated to positions.",
               "Use it with available cash and allocation views to assess deployment level.",
             ]),
           },

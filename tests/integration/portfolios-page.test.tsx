@@ -245,14 +245,16 @@ describe("PortfolioFoundationPage", () => {
     });
     expect(keyMetrics).toHaveClass("portfolio-summary-band");
     expect(keyMetrics.querySelectorAll(".portfolio-summary-band-item")).toHaveLength(6);
-    for (const label of ["AUM", "Invested assets", "Cash", "MTD return", "QTD return", "YTD return"]) {
+    for (const label of ["Portfolio value", "Invested assets", "Cash", "MTD return", "QTD return", "YTD return"]) {
       expect(within(keyMetrics).getByText(label)).toHaveAttribute("data-slot", "label");
     }
     expect(within(keyMetrics).queryByText("Cash Accounts")).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByText("Holdings")).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByText("30D Net Flow")).not.toBeInTheDocument();
     expect(within(keyMetrics).queryByText("Book Readiness")).not.toBeInTheDocument();
-    expect(within(keyMetrics).getByRole("button", { name: /AUM/i })).toBeInTheDocument();
+    expect(
+      within(keyMetrics).getByRole("button", { name: /Portfolio value/i })
+    ).toBeInTheDocument();
     expect(within(keyMetrics).getByRole("button", { name: /Invested Assets/i })).toBeInTheDocument();
     expect(within(keyMetrics).getByRole("button", { name: /^Cash:/i })).toBeInTheDocument();
     expect(within(keyMetrics).queryByRole("button", { name: /MTD Return/i })).not.toBeInTheDocument();
@@ -355,8 +357,8 @@ describe("PortfolioFoundationPage", () => {
     };
 
     await openKeyMetricDrawer(
-      /AUM/i,
-      "AUM",
+      /Portfolio value/i,
+      "Portfolio value",
       "Open operating workbench",
       "/workbench/PORT_UI_1001?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );

@@ -22,6 +22,10 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.queryByText("Singapore")).not.toBeInTheDocument();
     expect(screen.queryByText("Valuation as of 12 May 2026")).not.toBeInTheDocument();
     expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio value")).toBeInTheDocument();
+    expect(screen.getByText("92.00% of portfolio value")).toBeInTheDocument();
+    expect(screen.getByText("8.00% of portfolio value")).toBeInTheDocument();
+    expect(screen.queryByText("AUM")).not.toBeInTheDocument();
     expect(screen.getByText("920,000 USD")).toBeInTheDocument();
     expect(screen.getByText("80,000 USD")).toBeInTheDocument();
     expect(screen.getByText("0.40%")).toBeInTheDocument();
@@ -50,11 +54,11 @@ describe("PortfolioSummaryHeaderSection", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /AUM:/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Portfolio value:/ }));
     fireEvent.click(screen.getByRole("button", { name: /Invested assets:/ }));
     fireEvent.click(screen.getByRole("button", { name: /Cash:/ }));
 
-    expect(onOpenMetricDrawer).toHaveBeenNthCalledWith(1, "aum");
+    expect(onOpenMetricDrawer).toHaveBeenNthCalledWith(1, "portfolio_value");
     expect(onOpenMetricDrawer).toHaveBeenNthCalledWith(2, "invested_assets");
     expect(onOpenMetricDrawer).toHaveBeenNthCalledWith(3, "available_cash");
     expect(screen.queryByRole("button", { name: /Cash Accounts:/ })).not.toBeInTheDocument();

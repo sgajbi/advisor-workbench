@@ -1,3 +1,5 @@
+import { PORTFOLIO_VALUE_UNAVAILABLE_LABEL } from "./portfolio-terminology";
+
 export const FALLBACK_WORK_AREAS = [
   { href: "/performance", title: "Performance", value: "Available", note: "Review" },
   { href: "/workbench", title: "Operations", value: "Available", note: "Console" },
@@ -37,7 +39,7 @@ export function getWorkflowTaskLabel(key: string): string {
 export function getCoverageWarningLabel(warning: string): string {
   switch (warning) {
     case "PORTFOLIO_AUM_UNAVAILABLE":
-      return "Assets under management temporarily unavailable";
+      return PORTFOLIO_VALUE_UNAVAILABLE_LABEL;
     case "PORTFOLIO_CASH_BALANCES_UNAVAILABLE":
       return "Cash balances temporarily unavailable";
     case "PORTFOLIO_CASHFLOW_UNAVAILABLE":
