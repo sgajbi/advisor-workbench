@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-08-24T09:36:19.797Z",
+  "classification": "focused-development-runtime-proof",
+  "uiChecks": [
+    {
+      "description": "Advisor brief source metrics",
+      "kind": "buttons",
+      "buttonCount": 5
+    },
+    {
+      "description": "Advisor brief ACCEPT review action",
+      "kind": "workflow-pack-review-action",
+      "actionType": "ACCEPT",
+      "state": "accepted",
+      "proofSource": "workbench-review-action",
+      "detailBasis": "NET",
+      "chartFrequency": "monthly",
+      "reviewState": "ACCEPTED",
+      "supportability": "READY",
+      "reviewer": "live.validator.ui",
+      "recordedAt": "2026-08-24T09:36:31.789205Z"
+    }
+  ],
+  "networkEvidence": [
+    {
+      "method": "GET",
+      "httpStatus": 200,
+      "runId": "packrun_advisor_brief_air_ab5e0c1dfaa74d8b95a7fb1fdddcfa79",
+      "reviewState": "AWAITING_REVIEW",
+      "supportability": "ACTION_REQUIRED",
+      "latestReviewActor": null,
+      "latestReviewEventAt": null,
+      "reviewPending": true
+    },
+    {
+      "method": "POST",
+      "httpStatus": 200,
+      "runId": "packrun_advisor_brief_air_ab5e0c1dfaa74d8b95a7fb1fdddcfa79",
+      "reviewState": "ACCEPTED",
+      "supportability": "READY",
+      "latestReviewActor": "review:live.validator.ui",
+      "latestReviewEventAt": "2026-08-24T09:36:31.789205Z",
+      "reviewPending": false
+    }
+  ],
+  "result": {
+    "status": "passed",
+    "proofQuery": {
+      "detailBasis": "NET",
+      "chartFrequency": "monthly"
+    },
+    "domEvidence": {
+      "reviewState": "ACCEPTED",
+      "supportability": "READY",
+      "reviewer": "live.validator.ui",
+      "recordedAt": "2026-08-24T09:36:31.789205Z",
+      "text": "Human ReviewSupportability READY • Recorded by live.validator.ui • Recorded 2026-08-24T09:36:31.789205ZAccepted for internal use"
+    }
+  },
+  "completedAt": "2026-08-24T09:36:33.825Z"
+}
