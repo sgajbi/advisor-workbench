@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,10 +8,15 @@ import {
 } from "../../src/apps/portfolio/portfolio-terminology";
 
 const PORTFOLIO_SOURCE_ROOT = join(process.cwd(), "src", "apps", "portfolio");
-const ALLOWED_SOURCE_CONTRACT_TERMS = [
-  "PORTFOLIO_AUM_UNAVAILABLE",
-  "assets_under_management_base",
-] as const;
+const ALLOWED_BOUNDARY_REFERENCES = {
+  "api.ts": [
+    { snippet: "assets_under_management_base: number;", count: 2 },
+    { snippet: ".assets_under_management_base", count: 2 },
+  ],
+  "workspace-config.ts": [
+    { snippet: 'case "PORTFOLIO_AUM_UNAVAILABLE":', count: 1 },
+  ],
+} as const;
 
 function portfolioSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -33,8 +38,21 @@ describe("portfolio terminology", () => {
 
   it("reserves AUM language for source contract identifiers, not portfolio UI copy", () => {
     for (const filePath of portfolioSourceFiles(PORTFOLIO_SOURCE_ROOT)) {
-      const sourceWithoutContractIdentifiers = ALLOWED_SOURCE_CONTRACT_TERMS.reduce(
-        (source, identifier) => source.replaceAll(identifier, ""),
+      const relativePath = relative(PORTFOLIO_SOURCE_ROOT, filePath).replaceAll(
+        "\\",
+        "/",
+      );
+      const boundaryReferences =
+        ALLOWED_BOUNDARY_REFERENCES[
+          relativePath as keyof typeof ALLOWED_BOUNDARY_REFERENCES
+        ] ?? [];
+      const sourceWithoutContractIdentifiers = boundaryReferences.reduce(
+        (source, { snippet, count }) => {
+          expect(source.split(snippet).length - 1, `${relativePath}: ${snippet}`).toBe(
+            count,
+          );
+          return source.replaceAll(snippet, "");
+        },
         readFileSync(filePath, "utf8"),
       );
 
