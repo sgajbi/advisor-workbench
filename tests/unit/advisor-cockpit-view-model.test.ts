@@ -201,7 +201,6 @@ describe("advisor cockpit view model", () => {
       status: "Pending Review",
       priority: "High",
       owner: "Advisor",
-      family: "Policy Review Required",
       sla: "Due Soon",
       canAcknowledge: true,
       sourceHandoff: {
@@ -211,6 +210,7 @@ describe("advisor cockpit view model", () => {
         recordLabel: "Proposal proposal_sg_001",
       },
     });
+    expect(model.actionRows[0]).not.toHaveProperty("family");
     expect(model.actionRows[0].reasonSummary).toBe(
       "Policy Pending Review, Client-ready Blocked",
     );

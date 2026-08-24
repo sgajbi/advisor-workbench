@@ -72,7 +72,6 @@ export default function AdvisorCockpitActionWorklist({
           items={rows.map((row) => ({
             key: row.actionItemId,
             title: row.title,
-            subtitle: `${row.family} · ${row.reasonSummary}`,
             status: (
               <SemanticBadge tone={row.statusTone}>{row.status}</SemanticBadge>
             ),
@@ -129,6 +128,10 @@ function SelectedAdvisorAction({
       </header>
 
       <dl className={styles.evidenceGrid}>
+        <div>
+          <dt>Workflow reasons</dt>
+          <dd>{row.reasonSummary}</dd>
+        </div>
         <div>
           <dt>Decision evidence</dt>
           <dd>{row.evidenceSummary}</dd>
