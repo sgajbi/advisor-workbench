@@ -41,7 +41,7 @@ describe("DpmCampaignWorkflowAuditCard", () => {
             evidenceRef: "task_001",
             status: "WAITING_FOR_REVIEW",
             actor: "pm_sg_1",
-            recordedAt: "2026-05-21T08:00:00Z",
+            recordedAt: "21 May 2026, 08:00 UTC",
             reasonCodes: "TASK_RECORDED",
             sourceRefs: "1",
             contentHash: "sha256:task",
@@ -58,6 +58,7 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     expect(screen.getByText("Source evidence and operating audit")).toBeInTheDocument();
     expect(screen.getAllByText("Assignment Task").length).toBeGreaterThan(0);
     expect(screen.getByText("sha256:task")).toBeInTheDocument();
+    expect(screen.getByText("21 May 2026, 08:00 UTC")).toBeInTheDocument();
     expect(screen.getByText("ASSIGNED_FOR_REVIEW: OPEN to WAITING_FOR_REVIEW")).toBeInTheDocument();
     const rendered = document.body.textContent ?? "";
     expect(rendered).not.toContain("order generated");
