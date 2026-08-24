@@ -76,7 +76,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     });
 
     expect(brief.status).toBe("ready");
-    expect(brief.title).toBe("Advisor Brief • PF_1001");
+    expect(brief.title).toBe("Adviser brief • PF_1001");
     expect(brief.summary).toContain("YTD active return is 0.52%");
     expect(brief.summary).not.toContain("main drag came from AAPL");
     expect(brief.talkingPoints).toEqual(
@@ -104,7 +104,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         { label: "Portfolio", value: "Ready", tone: "success" },
-        { label: "Advisor Brief", value: "Preview Ready", tone: "success" },
+        { label: "Adviser brief", value: "Preview ready", tone: "success" },
       ])
     );
     expect(brief.reviewNotes).toEqual([]);
@@ -141,15 +141,15 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.talkingPoints).toEqual([]);
     expect(brief.risksAndExceptions).toEqual([
       expect.objectContaining({
-        headline: "Advisor brief access is restricted.",
+        headline: "Adviser brief access is restricted.",
         detail: expect.stringContaining("permission block"),
       }),
     ]);
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Advisor Brief",
-          value: "Access Restricted",
+          label: "Adviser brief",
+          value: "Access restricted",
           tone: "danger",
         }),
       ])
@@ -178,7 +178,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect.arrayContaining([
         { label: "Contribution", value: "Partial", tone: "warn" },
         { label: "Attribution", value: "Unavailable", tone: "danger" },
-        { label: "Advisor Brief", value: "Preview Partial", tone: "warn" },
+        { label: "Adviser brief", value: "Preview partial", tone: "warn" },
       ])
     );
     expect(brief.risksAndExceptions).toEqual(
@@ -269,7 +269,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.summary).toContain("the detailed advisor narrative is being prepared");
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
-        { label: "Advisor Brief", value: "Generating", tone: "warn" },
+        { label: "Adviser brief", value: "Generating", tone: "warn" },
       ])
     );
     expect(brief.reviewNotes).toEqual(
@@ -340,7 +340,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.summary).toContain("No material talking points are available");
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
-        { label: "Advisor Brief", value: "No Material Brief", tone: "danger" },
+        { label: "Adviser brief", value: "No material brief", tone: "danger" },
       ])
     );
     expect(brief.aiDisclosure.evidence).toEqual({ state: "missing", sourceCount: 0 });
@@ -624,7 +624,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Human Review",
+          label: "Human review",
           value: "Accepted for internal use",
           tone: "success",
           detail:
@@ -684,7 +684,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Human Review",
+          label: "Human review",
           value: "Accepted for internal use",
           tone: "warn",
           detail: "Supportability READY • Review audit details not published",
@@ -739,7 +739,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Human Review",
+          label: "Human review",
           value: "Accepted for internal use",
           tone: "warn",
           detail: "Supportability READY • Review audit details not published",
@@ -806,7 +806,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect(brief.supportability).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            label: "Brief Preparation",
+            label: "Brief preparation",
             detail:
               "Preparation record is not usable because source review posture is incomplete or contradictory",
           }),
@@ -871,7 +871,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
       expect(brief.supportability).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            label: "Human Review",
+            label: "Human review",
             value: expectedLabel,
           }),
         ])
@@ -1166,7 +1166,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
 
     expect(brief.status).toBe("partial");
     expect(brief.supportability).toContainEqual({
-      label: "Advisor Brief",
+      label: "Adviser brief",
       value: "Partial",
       tone: "warn",
     });
@@ -1215,7 +1215,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
 
     expect(brief.status).toBe("partial");
     expect(brief.supportability).toContainEqual({
-      label: "Advisor Brief",
+      label: "Adviser brief",
       value: "Partial",
       tone: "warn",
     });
@@ -1402,13 +1402,13 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         {
-          label: "Brief Preparation",
+          label: "Brief preparation",
           value: "COMPLETED",
           tone: "success",
           detail: "Preparation complete; human review remains required",
         },
         {
-          label: "Human Review",
+          label: "Human review",
           value: "Awaiting review",
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
@@ -1420,7 +1420,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           },
         },
         {
-          label: "Workflow Progress",
+          label: "Workflow progress",
           value: "WAITING FOR REVIEW",
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
@@ -1538,7 +1538,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     expect(brief.supportability).toEqual(
       expect.arrayContaining([
         {
-          label: "Human Review",
+          label: "Human review",
           value: "Accepted for internal use",
           tone: "warn",
           detail:
@@ -1551,7 +1551,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           },
         },
         {
-          label: "Workflow Progress",
+          label: "Workflow progress",
           value: "SUPERSEDED",
           tone: "warn",
           detail:

@@ -19,6 +19,7 @@ import {
   PERFORMANCE_ACTION_LABELS,
   PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_RETURN_LABELS,
+  PERFORMANCE_WORKFLOW_LABELS,
 } from "../performance-terminology";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
@@ -116,18 +117,18 @@ export function buildFallbackAdvisorBriefViewModel({
     toSupportabilityItem("Contribution", capabilities.contributionDetail),
     toSupportabilityItem("Attribution", capabilities.attributionDetail),
     {
-      label: "Advisor Brief",
+      label: PERFORMANCE_WORKFLOW_LABELS.adviserBrief,
       value:
         status === "ready"
-          ? "Preview Ready"
+          ? "Preview ready"
           : status === "loading"
             ? "Generating"
             : status === "partial"
-              ? "Preview Partial"
+              ? "Preview partial"
               : status === "empty"
-                ? "No Material Brief"
+                ? "No material brief"
                 : status === "permission_blocked"
-                  ? "Access Restricted"
+                  ? "Access restricted"
                 : "Unavailable",
       tone:
         status === "ready"
@@ -196,7 +197,7 @@ export function buildFallbackAdvisorBriefViewModel({
 
   return {
     status,
-    title: `Advisor Brief • ${workspace.portfolio.portfolio_id}`,
+    title: `${PERFORMANCE_WORKFLOW_LABELS.adviserBrief} • ${workspace.portfolio.portfolio_id}`,
     summary: buildAdvisorSummaryCopy({
       status,
       period,
@@ -219,7 +220,7 @@ export function buildFallbackAdvisorBriefViewModel({
         targetMode: "analysis",
       },
       {
-        label: "Inspect Attribution",
+        label: PERFORMANCE_ACTION_LABELS.inspectAttribution,
         route,
         targetMode: "analysis",
       },
@@ -391,10 +392,10 @@ function buildAdvisorSummaryCopy({
     return "No material talking points are available for the current selection. Review source metrics or switch benchmark and period controls.";
   }
   if (status === "unavailable") {
-    return "Advisor brief preview is unavailable because the portfolio summary contract is not available.";
+    return "Adviser brief preview is unavailable because the portfolio summary contract is not available.";
   }
   if (status === "permission_blocked") {
-    return "Advisor brief access is restricted for this caller context. Summary and analysis remain available when their source contracts are entitled.";
+    return "Adviser brief access is restricted for this caller context. Summary and analysis remain available when their source contracts are entitled.";
   }
 
   const driverCopy =
@@ -521,13 +522,13 @@ function buildRisksAndExceptions({
   if (advisorBriefPermissionBlocked) {
     return [
       {
-        headline: "Advisor brief access is restricted.",
+        headline: "Adviser brief access is restricted.",
         detail:
           "The Gateway advisor brief contract returned a permission block for this caller context. Use an entitled front-office role or contact platform support.",
         tone: "warning",
         evidenceRefs: [
           {
-            metricLabel: "Advisor Brief",
+            metricLabel: PERFORMANCE_WORKFLOW_LABELS.adviserBrief,
             metricValue: "Permission Blocked",
             sourceSurface: "performance.advisor_brief",
             route,
@@ -540,13 +541,13 @@ function buildRisksAndExceptions({
   if (advisorBriefUnavailable) {
     return [
       {
-        headline: "Advisor brief generation is unavailable.",
+        headline: "Adviser brief generation is unavailable.",
         detail:
           "Source metrics remain available in Summary and Analysis, but the Gateway advisor brief contract could not be loaded.",
         tone: "warning",
         evidenceRefs: [
           {
-            metricLabel: "Advisor Brief",
+            metricLabel: PERFORMANCE_WORKFLOW_LABELS.adviserBrief,
             metricValue: "Unavailable",
             sourceSurface: "performance.advisor_brief",
             route,

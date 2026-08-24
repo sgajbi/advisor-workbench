@@ -40,7 +40,7 @@ describe("PerformanceAnalysisMode", () => {
       document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
     ).toHaveLength(1);
     expect(
-      screen.getByRole("group", { name: "Performance Analysis source selection controls" }),
+      screen.getByRole("group", { name: "Performance analysis source selection controls" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("attribution-trend")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-section")).toBeInTheDocument();

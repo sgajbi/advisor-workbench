@@ -43,6 +43,19 @@ export const PERFORMANCE_FEE_BASIS_LABELS = {
   unavailable: "Fee basis not confirmed",
 } as const;
 
+export const PERFORMANCE_WORKFLOW_LABELS = {
+  overview: "Performance overview",
+  analysis: "Performance analysis",
+  adviserBrief: "Adviser brief",
+  riskReview: "Risk review",
+} as const;
+
+export const PERFORMANCE_CONTEXT_LABELS = {
+  reviewWindow: "Review window",
+  feeBasis: "Fee basis",
+  asOfDate: "As-of date",
+} as const;
+
 export function getPerformanceFeeBasisLabel(basis: string | null | undefined): string {
   if (basis?.trim().toUpperCase() === "NET") {
     return PERFORMANCE_FEE_BASIS_LABELS.net;
@@ -87,11 +100,27 @@ export function normalizePerformanceMetricLabel(label: string): string {
 export const PERFORMANCE_ACTION_LABELS = {
   openReturnPath: "Open return path",
   reviewContribution: "Review contribution",
+  inspectAttribution: "Inspect attribution",
+  openAnalysis: "Open analysis",
+  draftAdviserBrief: "Draft adviser brief",
+  openAdviserBrief: "Open adviser brief",
+  reviewRisk: "Review risk",
+  returnToOverview: "Return to performance overview",
 } as const;
 
 const PERFORMANCE_ACTION_LABEL_ALIASES: Readonly<Record<string, string>> = {
   "open return path": PERFORMANCE_ACTION_LABELS.openReturnPath,
   "review contribution": PERFORMANCE_ACTION_LABELS.reviewContribution,
+  "inspect attribution": PERFORMANCE_ACTION_LABELS.inspectAttribution,
+  "open analysis": PERFORMANCE_ACTION_LABELS.openAnalysis,
+  "draft advisor brief": PERFORMANCE_ACTION_LABELS.draftAdviserBrief,
+  "draft adviser brief": PERFORMANCE_ACTION_LABELS.draftAdviserBrief,
+  "open advisor brief": PERFORMANCE_ACTION_LABELS.openAdviserBrief,
+  "open adviser brief": PERFORMANCE_ACTION_LABELS.openAdviserBrief,
+  "review risk surface": PERFORMANCE_ACTION_LABELS.reviewRisk,
+  "review risk": PERFORMANCE_ACTION_LABELS.reviewRisk,
+  "return to summary": PERFORMANCE_ACTION_LABELS.returnToOverview,
+  "return to performance overview": PERFORMANCE_ACTION_LABELS.returnToOverview,
 };
 
 export function normalizePerformanceActionLabel(label: string): string {

@@ -7,6 +7,7 @@ import {
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
+import { PERFORMANCE_ACTION_LABELS } from "../performance-terminology";
 import {
   getPerformanceTrustStripPresentation,
 } from "./performance-workspace-view-helpers";
@@ -106,16 +107,16 @@ type WorkflowAction = {
 };
 
 const PRIMARY_WORKFLOW_ACTION: Record<PerformanceWorkspaceMode, WorkflowAction> = {
-  summary: { label: "Open Analysis", mode: "analysis" },
-  analysis: { label: "Draft Advisor Brief", mode: "advisor" },
-  advisor: { label: "Review Risk Surface", mode: "risk" },
-  risk: { label: "Return to Summary", mode: "summary" },
-  evidence: { label: "Return to Summary", mode: "summary" },
+  summary: { label: PERFORMANCE_ACTION_LABELS.openAnalysis, mode: "analysis" },
+  analysis: { label: PERFORMANCE_ACTION_LABELS.draftAdviserBrief, mode: "advisor" },
+  advisor: { label: PERFORMANCE_ACTION_LABELS.reviewRisk, mode: "risk" },
+  risk: { label: PERFORMANCE_ACTION_LABELS.returnToOverview, mode: "summary" },
+  evidence: { label: PERFORMANCE_ACTION_LABELS.returnToOverview, mode: "summary" },
 };
 
 const SECONDARY_WORKFLOW_ACTIONS: WorkflowAction[] = [
-  { label: "Open Advisor Brief", mode: "advisor" },
-  { label: "Review Risk Surface", mode: "risk" },
+  { label: PERFORMANCE_ACTION_LABELS.openAdviserBrief, mode: "advisor" },
+  { label: PERFORMANCE_ACTION_LABELS.reviewRisk, mode: "risk" },
 ];
 
 function buildWorkflowActions(mode: PerformanceWorkspaceMode): WorkflowAction[] {

@@ -1270,7 +1270,7 @@ describe("canonical live validation script", () => {
       'outcomeReviewPanel.getByText("Selected Review Detail")',
     );
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
-    expect(browserWorkflowModule).toContain("Advisor brief human review");
+    expect(browserWorkflowModule).toContain("Adviser brief human review");
     expect(browserWorkflowModule).toContain('selectOption("ACCEPT")');
     expect(browserWorkflowModule).toContain("Review decision");
     expect(browserWorkflowModule).toContain("Confirm acceptance");
@@ -1287,7 +1287,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain('preRecordedAcceptReviewer: "live.validator.ui"');
     expect(script).toContain("advisorBriefAcceptProofQuery?.detailBasis");
     expect(script).toContain("advisorBriefAcceptProofQuery?.chartFrequency");
-    expect(browserWorkflowModule).toContain("Advisor Talking Points");
+    expect(browserWorkflowModule).toContain("Adviser talking points");
     expect(browserWorkflowModule).not.toContain("Client Talking Points");
     expect(browserWorkflowModule).toContain(
       "hasAcceptedAdvisorBriefReviewPosture",
@@ -1327,8 +1327,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain('"Summary"');
     expect(browserWorkflowModule).toContain('"Detailed"');
     expect(browserWorkflowModule).toContain(".toHaveCount(0)");
-    expect(browserWorkflowModule).toContain("/^Performance Overview/");
-    expect(browserWorkflowModule).toContain("/^Performance Analysis/");
+    expect(browserWorkflowModule).toContain("/^Performance overview/");
+    expect(browserWorkflowModule).toContain("/^Performance analysis/");
     expect(browserWorkflowModule).toContain('"Asset Class attribution table"');
     const performanceAnalysisCall = script.slice(
       script.indexOf("await validatePerformanceAnalysisPanel"),

@@ -1,4 +1,5 @@
 import { Text } from "@/design-system";
+import { PERFORMANCE_WORKFLOW_LABELS } from "../../performance-terminology";
 
 import LotusStatusBar from "./lotus-status-bar";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
@@ -30,7 +31,7 @@ export default function LotusPageHeader({
               variant="dataLabel"
               className="lotus-page-header-eyebrow performance-advisor-brief-eyebrow"
             >
-              Advisor Brief
+              {PERFORMANCE_WORKFLOW_LABELS.adviserBrief}
             </Text>
             <div className="lotus-page-header-title-row">
               <Text
@@ -38,7 +39,7 @@ export default function LotusPageHeader({
                 variant="pageTitle"
                 className="lotus-page-header-title performance-advisor-brief-title"
               >
-                Performance Advisor Brief
+                Performance adviser brief
               </Text>
               <span className="lotus-page-header-anchor" aria-hidden="true" />
             </div>

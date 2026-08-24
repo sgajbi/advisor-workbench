@@ -37,7 +37,7 @@ export default function PerformanceAnalysisMode({
         reportEndDate={workspace.report_end_date}
         capabilities={capabilities}
         isUpdating={isUpdating}
-        ariaLabel="Performance Analysis source selection"
+        ariaLabel="Performance analysis source selection"
         onRequestChange={onRequestChange ?? (() => undefined)}
       />
       <PerformanceAnalysisDecisionSummary

@@ -143,7 +143,7 @@ export default function AdvisorBriefReviewWorkflow({
 
   return (
     <PerformanceWorkspaceSection
-      ariaLabel="Advisor brief human review"
+      ariaLabel="Adviser brief human review"
       className="performance-advisor-brief-section performance-advisor-brief-review-workflow"
       headingClassName="performance-advisor-brief-section-heading"
       kicker="Human review"

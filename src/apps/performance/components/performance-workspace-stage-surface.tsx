@@ -5,6 +5,10 @@ import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceModeIntro } from "../performance-workspace-modes";
 import { formatDate, formatLabel } from "../formatters";
+import {
+  getPerformanceFeeBasisLabel,
+  PERFORMANCE_CONTEXT_LABELS,
+} from "../performance-terminology";
 
 import { getPerformanceBenchmarkLabel } from "./performance-summary-context-helpers";
 import PerformanceModeIntro from "./performance-mode-intro";
@@ -38,15 +42,15 @@ export function buildPerformanceWorkspaceContextItems({
       ),
     },
     {
-      label: "Review Window",
+      label: PERFORMANCE_CONTEXT_LABELS.reviewWindow,
       value: formatLabel(period),
     },
     {
-      label: "Basis",
-      value: formatLabel(detailBasis),
+      label: PERFORMANCE_CONTEXT_LABELS.feeBasis,
+      value: getPerformanceFeeBasisLabel(detailBasis),
     },
     {
-      label: "As Of",
+      label: PERFORMANCE_CONTEXT_LABELS.asOfDate,
       value: formatDate(workspace.as_of_date),
     },
   ];

@@ -41,7 +41,7 @@ export default function LotusDrilldownList({
               {resolveActionLabel(action)}
             </span>
             <span className="performance-advisor-brief-action-meta">
-              {variant === "workflow" ? "Advisor workflow" : "Open analysis surface"}
+              {variant === "workflow" ? "Adviser workflow" : "Open analysis surface"}
             </span>
           </span>
           <span aria-hidden="true" className="performance-advisor-brief-action-chevron">

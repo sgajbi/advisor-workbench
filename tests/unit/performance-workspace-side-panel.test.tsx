@@ -18,9 +18,9 @@ describe("PerformanceWorkspaceSidePanel", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "Review Risk Surface" })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Review Risk Surface" })).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: "Open Advisor Brief" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review risk" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Review risk" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Open adviser brief" })).not.toBeInTheDocument();
   });
 
   it("routes workflow actions through the configured mode map without repeating the active destination", () => {
@@ -36,12 +36,12 @@ describe("PerformanceWorkspaceSidePanel", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "Draft Advisor Brief" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Review Risk Surface" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open Advisor Brief" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Draft adviser brief" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review risk" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open adviser brief" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Draft Advisor Brief" }));
-    fireEvent.click(screen.getByRole("button", { name: "Review Risk Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Draft adviser brief" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review risk" }));
 
     expect(onModeChange).toHaveBeenNthCalledWith(1, "advisor");
     expect(onModeChange).toHaveBeenNthCalledWith(2, "risk");

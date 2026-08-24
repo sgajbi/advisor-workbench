@@ -13,10 +13,10 @@ export default function LotusMetricPanel({
 }) {
   return (
     <PerformanceWorkspaceSection
-      ariaLabel="Source Metrics"
+      ariaLabel="Source metrics"
       className="lotus-metric-panel performance-advisor-brief-section"
       headingClassName="performance-advisor-brief-section-heading"
-      title="Key Source Metrics"
+      title="Key source metrics"
       description="Current performance measures supporting the brief and drill-down decisions."
     >
       <div className="performance-advisor-brief-metric-panel">
