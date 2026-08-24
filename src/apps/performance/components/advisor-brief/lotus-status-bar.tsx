@@ -16,10 +16,10 @@ function getStatusLabel(status: PerformanceAdvisorBriefStatus) {
     return "Review";
   }
   if (status === "empty") {
-    return "No Material Brief";
+    return "No material brief";
   }
   if (status === "permission_blocked") {
-    return "Access Restricted";
+    return "Access restricted";
   }
   return "Unavailable";
 }
@@ -82,7 +82,7 @@ export default function LotusStatusBar({
   }
 
   return (
-    <div className="lotus-status-bar performance-advisor-brief-toolbar" aria-label="Advisor brief toolbar">
+    <div className="lotus-status-bar performance-advisor-brief-toolbar" aria-label="Adviser brief toolbar">
       <div className="lotus-status-bar-status performance-advisor-brief-toolbar-status">
         <SemanticBadge
           tone={getStatusTone(status)}

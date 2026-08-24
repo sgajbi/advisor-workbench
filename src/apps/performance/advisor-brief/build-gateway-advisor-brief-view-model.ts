@@ -15,6 +15,7 @@ import {
   normalizePerformanceMetricLabel,
   PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_RETURN_LABELS,
+  PERFORMANCE_WORKFLOW_LABELS,
 } from "../performance-terminology";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
@@ -47,7 +48,7 @@ export function buildGatewayAdvisorBriefViewModel(
   const hasBackedRiskEvidence = hasReadyRiskEvidence(advisorBrief.source_metrics);
   return {
     status: advisorBrief.status,
-    title: `Advisor Brief • ${advisorBrief.portfolio_id}`,
+    title: `${PERFORMANCE_WORKFLOW_LABELS.adviserBrief} • ${advisorBrief.portfolio_id}`,
     summary: advisorBrief.summary,
     talkingPoints: normalizeGatewayNarrativeItems(advisorBrief.talking_points, hasBackedRiskEvidence),
     recommendedActions: normalizeGatewayActions(
@@ -182,7 +183,7 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
   ];
 
   return createAiAssistanceDisclosure({
-    scopeLabel: "Performance advisor brief",
+    scopeLabel: "Performance adviser brief",
     preparation: isSimulation ? "deterministic" : isLive ? "ai-assisted" : "unavailable",
     availability:
       advisorBrief.status === "unavailable"
@@ -221,7 +222,7 @@ function normalizeGatewaySupportability(
             : "Unavailable";
 
       return {
-        label: item.label,
+        label: PERFORMANCE_WORKFLOW_LABELS.adviserBrief,
         value: normalizedValue,
         tone: normalizeSupportabilityTone(item.tone, normalizedValue),
       };
@@ -241,13 +242,13 @@ function normalizeGatewaySupportability(
   return [
     ...normalizedItems,
     {
-      label: "Brief Preparation",
+      label: "Brief preparation",
       value: normalizeWorkflowPackRuntimeValue(advisorBrief.workflow_pack_run.runtime_state),
       tone: normalizeWorkflowPackRuntimeTone(advisorBrief.workflow_pack_run.runtime_state),
       detail: buildWorkflowPackRunDetail(advisorBrief.workflow_pack_run),
     },
     {
-      label: "Human Review",
+      label: "Human review",
       value: normalizeWorkflowPackReviewValue(advisorBrief.workflow_pack_run.review_state),
       tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
       detail: buildWorkflowPackReviewDetail(advisorBrief.workflow_pack_run),
@@ -256,7 +257,7 @@ function normalizeGatewaySupportability(
     ...(advisorBrief.workflow_pack_task_flow
       ? [
           {
-            label: "Workflow Progress",
+            label: "Workflow progress",
             value: normalizeTaskFlowStatusValue(advisorBrief.workflow_pack_task_flow.flow_status),
             tone: normalizeTaskFlowStatusTone(advisorBrief.workflow_pack_task_flow.flow_status),
             detail: buildTaskFlowDetail(advisorBrief.workflow_pack_task_flow),

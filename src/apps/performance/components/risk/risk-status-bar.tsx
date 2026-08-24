@@ -7,7 +7,7 @@ const STATUS_LABELS: Record<PerformanceRiskState, string> = {
   ready: "Ready",
   partial: "Partial",
   empty: "Empty",
-  permission_blocked: "Access Restricted",
+  permission_blocked: "Access restricted",
   unavailable: "Unavailable",
   error: "Error",
 };

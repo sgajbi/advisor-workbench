@@ -10,7 +10,7 @@ import {
 describe("performance workspace mode registry", () => {
   it("keeps supported workspace labels and frame copy in one governed source", () => {
     expect(getPerformanceWorkspaceModeLabel("summary")).toBe("Summary");
-    expect(getPerformanceWorkspaceModeLabel("advisor")).toBe("Advisor Brief");
+    expect(getPerformanceWorkspaceModeLabel("advisor")).toBe("Adviser brief");
     expect(getPerformanceWorkspaceModeDefinition("risk")).toMatchObject({
       workspaceTitle: "Risk",
       workspaceSubtitle:

@@ -61,11 +61,11 @@ describe("performance-advisor-brief helpers", () => {
   it("builds note copy with a default risks fallback when no exceptions are present", () => {
     const note = toAdvisorNoteCopy(buildBrief());
 
-    expect(note).toContain("Advisor Talking Points");
+    expect(note).toContain("Adviser talking points");
     expect(note).toContain("- Portfolio outperformed benchmark. Active return was 1.25%.");
-    expect(note).toContain("Recommended Actions");
+    expect(note).toContain("Recommended actions");
     expect(note).toContain("- Open Return Path");
-    expect(note).toContain("Risks / Exceptions");
+    expect(note).toContain("Risks and exceptions");
     expect(note).toContain("- No material supportability exceptions are flagged.");
   });
 

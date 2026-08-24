@@ -3,7 +3,7 @@ import PerformanceSupportabilitySummary from "../performance-supportability-summ
 import PerformanceWorkspaceSection from "../performance-workspace-section";
 
 function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem): boolean {
-  return item.label === "Brief Preparation" || item.label === "Human Review";
+  return item.label === "Brief preparation" || item.label === "Human review";
 }
 
 function LotusSupportabilityRow({
@@ -57,7 +57,7 @@ export default function LotusSupportabilityPanel({
 
   return (
     <PerformanceWorkspaceSection
-      ariaLabel="Advisor brief supportability"
+      ariaLabel="Adviser brief supportability"
       className="lotus-supportability-panel performance-advisor-brief-supportability-panel"
       headingClassName="performance-advisor-brief-section-heading"
       kicker="Supportability"
@@ -103,7 +103,7 @@ export default function LotusSupportabilityPanel({
       ) : null}
       {supportDetails.length ? (
         <details className="performance-advisor-brief-support-details">
-          <summary>Technical support details</summary>
+          <summary>Source support details</summary>
           <dl>
             {supportDetails.map((detail) => (
               <div key={`${detail.label}-${detail.value}`}>

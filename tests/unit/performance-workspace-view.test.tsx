@@ -97,7 +97,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Performance overview" })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -149,7 +149,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    fireEvent.click(getWorkflowControl("Performance Overview"));
+    fireEvent.click(getWorkflowControl("Performance overview"));
     expect(getWorkflowControl(/^Evidence/i)).toBeDisabled();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(evidenceModeMock).not.toHaveBeenCalled();
@@ -160,8 +160,8 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace });
 
-    expect(getWorkflowControl(/^Performance Analysis/i)).not.toBeDisabled();
-    fireEvent.click(getWorkflowControl(/^Performance Analysis/i));
+    expect(getWorkflowControl(/^Performance analysis/i)).not.toBeDisabled();
+    fireEvent.click(getWorkflowControl(/^Performance analysis/i));
     await waitFor(() => {
       expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     });
@@ -172,7 +172,7 @@ describe("PerformanceWorkspaceView", () => {
 
     renderWorkspaceView({ workspace: scenario.workspace, isDetailsPending: true });
 
-    const analysisButton = getWorkflowControl(/^Performance Analysis/i);
+    const analysisButton = getWorkflowControl(/^Performance analysis/i);
     expect(analysisButton).not.toBeDisabled();
     expect(analysisButton).toHaveAttribute("title", "Analysis availability is loading.");
     expect(screen.getByText("Loading")).toBeInTheDocument();
@@ -309,7 +309,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(document.querySelector(".workbench-page-header-actions [role='radiogroup']"))
       .toBeFalsy();
     expect(screen.queryByRole("group", { name: "Performance mode readiness" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Performance Overview" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Performance overview" })).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -325,7 +325,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Risk Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(getWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(getWorkflowControl(/^Performance analysis/i));
     expect(screen.getByText("Analysis Mode Panel")).toBeInTheDocument();
     expect(analysisModeMock).toHaveBeenCalled();
     expect(analysisModeMock.mock.calls.at(-1)?.[0]).toMatchObject({
@@ -336,7 +336,7 @@ describe("PerformanceWorkspaceView", () => {
     });
     expect(screen.queryByText("Summary Mode Panel")).not.toBeInTheDocument();
 
-    fireEvent.click(getWorkflowControl(/^Risk Review/i));
+    fireEvent.click(getWorkflowControl(/^Risk review/i));
     await waitFor(() => {
       expect(screen.getByText("Risk Mode Panel")).toBeInTheDocument();
     });

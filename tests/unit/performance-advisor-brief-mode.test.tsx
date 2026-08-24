@@ -237,24 +237,24 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Performance Advisor Brief" })
+      screen.getByRole("heading", { name: "Performance adviser brief" })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Advisor brief context")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief context")).toHaveTextContent(
       "BenchmarkGlobal Balanced 60/40"
     );
     await waitFor(() => {
-      const supportability = screen.getByLabelText("Advisor brief supportability");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
       expect(supportability).toHaveTextContent("Ready modules");
       expect(supportability).toHaveTextContent("Review items");
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
-      expect(supportability).toHaveTextContent("Brief Preparation");
-      expect(supportability).toHaveTextContent("Human Review");
+      expect(supportability).toHaveTextContent("Brief preparation");
+      expect(supportability).toHaveTextContent("Human review");
       expect(supportability).toHaveTextContent("Awaiting review");
       expect(supportability).toHaveTextContent("Supportability ACTION REQUIRED");
-      expect(supportability).toHaveTextContent("Workflow Progress");
+      expect(supportability).toHaveTextContent("Workflow progress");
       expect(supportability).toHaveTextContent("WAITING FOR REVIEW");
-      expect(supportability).toHaveTextContent("Technical support details");
+      expect(supportability).toHaveTextContent("Source support details");
       expect(supportability).toHaveTextContent("Brief run reference");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
       expect(supportability).toHaveTextContent("Workflow authority");
@@ -270,31 +270,31 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
       "Gateway advisor brief is ready with source-grounded talking points."
     );
-    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief toolbar")).toHaveTextContent(
       "Evidence available"
     );
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy internal note" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
-    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).not.toHaveTextContent(
       "Client-ready narrative"
     );
-    expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser talking points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
-    expect(screen.getByLabelText("Risks and Exceptions")).toHaveTextContent(
+    expect(screen.getByLabelText("Risks and exceptions")).toHaveTextContent(
       "No material supportability exceptions are flagged"
     );
-    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active return");
+    expect(screen.getByLabelText("Source metrics")).toHaveTextContent("Active return");
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
     expect(screen.getByText("Partial output")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByText("EXPLANATION_ONLY")).not.toBeInTheDocument();
-    const sourceMetricsSidecar = screen.getByLabelText("Advisor brief source metrics");
-    expect(within(sourceMetricsSidecar).getByLabelText("Source Metrics")).toBeInTheDocument();
-    expect(within(sourceMetricsSidecar).getByLabelText("Advisor brief supportability")).toBeInTheDocument();
+    const sourceMetricsSidecar = screen.getByLabelText("Adviser brief source metrics");
+    expect(within(sourceMetricsSidecar).getByLabelText("Source metrics")).toBeInTheDocument();
+    expect(within(sourceMetricsSidecar).getByLabelText("Adviser brief supportability")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
 
     expect(screen.getByText("Execution provider")).toBeInTheDocument();
@@ -303,7 +303,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
 
     fireEvent.click(
-      within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
+      within(screen.getByLabelText("Recommended actions")).getByRole("button", {
         name: /Review contribution/,
       })
     );
@@ -379,12 +379,12 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      const supportability = screen.getByLabelText("Advisor brief supportability");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
       expect(supportability).toHaveTextContent("Ready modules");
     });
 
     fireEvent.click(
-      within(screen.getByLabelText("Source Metrics")).getByRole("button", {
+      within(screen.getByLabelText("Source metrics")).getByRole("button", {
         name: /Active return/,
       })
     );
@@ -490,8 +490,8 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Risks and Exceptions")).toHaveTextContent(
-        "Advisor brief generation is unavailable."
+      expect(screen.getByLabelText("Risks and exceptions")).toHaveTextContent(
+        "Adviser brief generation is unavailable."
       );
     });
 
@@ -524,7 +524,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       />
     );
 
-    const supportability = screen.getByLabelText("Advisor brief supportability");
+    const supportability = screen.getByLabelText("Adviser brief supportability");
     expect(supportability).toHaveTextContent("Review items");
     expect(supportability).toHaveTextContent("Generating");
     await waitFor(() => {
@@ -577,7 +577,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+      expect(screen.getByLabelText("Adviser brief human review")).toBeInTheDocument();
     });
     fireEvent.change(screen.getByLabelText("Review decision"), {
       target: { value: "ACCEPT" },
@@ -849,7 +849,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+      expect(screen.getByLabelText("Adviser brief human review")).toBeInTheDocument();
     });
     expect(
       screen.getByText("Use the bank staff reference required for this internal review record.")
@@ -892,11 +892,11 @@ describe("PerformanceAdvisorBriefMode", () => {
           reason: "Advisor brief accepted for bounded downstream workflow use.",
         }
       );
-      const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("Brief Preparation");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
+      expect(supportability).toHaveTextContent("Brief preparation");
       expect(supportability).toHaveTextContent("COMPLETED");
       expect(supportability).toHaveTextContent("packrun_advisor_brief_req-1");
-      expect(supportability).toHaveTextContent("Human Review");
+      expect(supportability).toHaveTextContent("Human review");
       expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent("Recorded by advisor_1");
       expect(supportability).toHaveTextContent("Recorded 21 Apr 2026, 03:22 UTC");
@@ -909,7 +909,7 @@ describe("PerformanceAdvisorBriefMode", () => {
         "data-recorded-at",
         "2026-04-21T03:22:00Z"
       );
-      expect(reviewEvidence.textContent).toContain("Human ReviewSupportability READY");
+      expect(reviewEvidence.textContent).toContain("Human reviewSupportability READY");
       expect(supportability).toHaveTextContent("1 downstream workflow handoff record(s)");
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."
@@ -917,13 +917,13 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(screen.getByLabelText("Brief synopsis")).toHaveTextContent(
         "Gateway advisor brief is ready with source-grounded talking points."
       );
-      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+      expect(screen.getByLabelText("Adviser brief human review")).toHaveTextContent(
         "The brief was accepted for its permitted internal workflow use."
       );
-      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+      expect(screen.getByLabelText("Adviser brief human review")).toHaveTextContent(
         "No further review decision is currently available"
       );
-      expect(within(screen.getByLabelText("Advisor brief human review")).getByRole("status"))
+      expect(within(screen.getByLabelText("Adviser brief human review")).getByRole("status"))
         .toHaveFocus();
     });
   });
@@ -961,7 +961,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+      expect(screen.getByLabelText("Adviser brief human review")).toBeInTheDocument();
     });
     fireEvent.change(screen.getByLabelText("Review decision"), {
       target: { value: "ACCEPT" },
@@ -1050,7 +1050,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+      expect(screen.getByLabelText("Adviser brief human review")).toBeInTheDocument();
     });
 
     fireEvent.change(screen.getByLabelText("Review decision"), {
@@ -1097,7 +1097,7 @@ describe("PerformanceAdvisorBriefMode", () => {
           replacement_run_id: "packrun_advisor_brief_req-2",
         }
       );
-      const supportability = screen.getByLabelText("Advisor brief supportability");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
       expect(supportability).toHaveTextContent(
         "Run was revised in favor of a replacement advisor-brief run."
       );
@@ -1132,7 +1132,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Advisor brief human review")).toBeInTheDocument();
+      expect(screen.getByLabelText("Adviser brief human review")).toBeInTheDocument();
     });
     fireEvent.change(screen.getByLabelText("Review decision"), {
       target: { value: "REJECT" },
@@ -1201,8 +1201,8 @@ describe("PerformanceAdvisorBriefMode", () => {
     );
 
     await waitFor(() => {
-      const supportability = screen.getByLabelText("Advisor brief supportability");
-      expect(supportability).toHaveTextContent("Human Review");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
+      expect(supportability).toHaveTextContent("Human review");
       expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent(
         "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2"
@@ -1213,7 +1213,7 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent(
         "A replacement brief is linked to this historical review record."
       );
-      expect(screen.getByLabelText("Advisor brief human review")).toHaveTextContent(
+      expect(screen.getByLabelText("Adviser brief human review")).toHaveTextContent(
         "No further review decision is currently available"
       );
       expect(screen.getByRole("button", { name: "Copy internal note" })).toBeDisabled();

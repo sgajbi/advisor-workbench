@@ -114,13 +114,13 @@ async function openPerformanceWorkbench(
   await expect(workbenchHeading).toBeVisible({ timeout: 30000 });
   if ((page.viewportSize()?.width ?? 1440) <= 1200) {
     await expect(
-      page.getByRole('button', { name: /^Current view Performance Overview/i }),
+      page.getByRole('button', { name: /^Current view Performance overview/i }),
     ).toBeVisible({ timeout: 30000 });
   } else {
     await expect(
       page
         .getByLabel('Performance surface navigation')
-        .getByRole('button', { name: /^Performance Overview$/i }),
+        .getByRole('button', { name: /^Performance overview$/i }),
     ).toBeVisible({ timeout: 30000 });
   }
   return { portfolioId, available: true };
@@ -443,7 +443,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(page.getByTestId('performance-evidence-assurance')).toHaveCount(0);
     const workspaceRail = page.getByLabel('Performance surface navigation');
     await expect(
-      workspaceRail.getByRole('button', { name: /^Performance Overview$/i }),
+      workspaceRail.getByRole('button', { name: /^Performance overview$/i }),
     ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByLabel('Trust and completeness strip')).toHaveCount(0);
   });
@@ -809,11 +809,11 @@ test.describe('Performance workbench smoke', () => {
 
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openPerformanceWorkbench(page, request);
-    const analysisStep = await openPerformanceWorkflowStep(page, /^Performance Analysis/i);
+    const analysisStep = await openPerformanceWorkflowStep(page, /^Performance analysis/i);
     await analysisStep.click();
     await expect(page.locator('[data-performance-analysis-control-bar="true"]')).toHaveCount(1);
 
-    const riskStep = await openPerformanceWorkflowStep(page, /^Risk Review/i);
+    const riskStep = await openPerformanceWorkflowStep(page, /^Risk review/i);
     await riskStep.click();
     await expect(page.locator('[data-performance-analysis-control-bar="true"]')).toHaveCount(1);
     await expect(page.getByText('Risk context', { exact: true })).toHaveCount(0);
@@ -959,10 +959,10 @@ test.describe('Performance workbench smoke', () => {
       await expect(
         navigation
           .getByRole('group', { name: 'Performance surface navigation' })
-          .getByRole('button', { name: 'Performance Overview' }),
+          .getByRole('button', { name: 'Performance overview' }),
       ).toHaveAttribute('aria-current', 'page');
       await expect(
-        navigation.getByRole('button', { name: 'Performance Analysis' }),
+        navigation.getByRole('button', { name: 'Performance analysis' }),
       ).toHaveCount(0);
 
       const allWorkspaces = navigation.getByRole('button', {
@@ -986,7 +986,7 @@ test.describe('Performance workbench smoke', () => {
       });
       await changeWorkflow.click();
       const analysis = navigation.getByRole('button', {
-        name: 'Performance Analysis',
+        name: 'Performance analysis',
       });
       await expect(analysis).toBeVisible();
       await analysis.focus();
@@ -1050,14 +1050,14 @@ test.describe('Performance workbench smoke', () => {
     });
     await changeWorkflow.click();
     const analysis = navigation.getByRole('button', {
-      name: 'Performance Analysis',
+      name: 'Performance analysis',
     });
     await analysis.focus();
     await analysis.click();
 
     await expect(changeWorkflow).toBeFocused();
     await expect(
-      navigation.getByRole('button', { name: 'Performance Analysis' }),
+      navigation.getByRole('button', { name: 'Performance analysis' }),
     ).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('analysis');
     expectGovernedPerformanceContext(page.url(), {
@@ -1071,7 +1071,7 @@ test.describe('Performance workbench smoke', () => {
     await page.goBack({ waitUntil: 'domcontentloaded' });
     await expect(changeWorkflow).toBeFocused();
     await expect(
-      navigation.getByRole('button', { name: 'Performance Overview' }),
+      navigation.getByRole('button', { name: 'Performance overview' }),
     ).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBeNull();
     expectGovernedPerformanceContext(page.url(), {
@@ -1084,7 +1084,7 @@ test.describe('Performance workbench smoke', () => {
     await page.goForward({ waitUntil: 'domcontentloaded' });
     await expect(changeWorkflow).toBeFocused();
     await expect(
-      navigation.getByRole('button', { name: 'Performance Analysis' }),
+      navigation.getByRole('button', { name: 'Performance analysis' }),
     ).toHaveAttribute('aria-current', 'page');
     await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('analysis');
     expectGovernedPerformanceContext(page.url(), {
@@ -1096,7 +1096,7 @@ test.describe('Performance workbench smoke', () => {
     });
 
     const sourceSelection = page.getByRole('group', {
-      name: 'Performance Analysis source selection',
+      name: 'Performance analysis source selection',
     });
     const threeYearHorizon = sourceSelection.getByRole('radio', { name: '3Y' });
     await threeYearHorizon.focus();
@@ -1233,7 +1233,7 @@ test.describe('Performance workbench smoke', () => {
       const session = await openPerformanceWorkbench(page, request);
       expect(session.available).toBe(true);
 
-      const riskStep = await openPerformanceWorkflowStep(page, /^Risk Review/i);
+      const riskStep = await openPerformanceWorkflowStep(page, /^Risk review/i);
       await riskStep.click();
       await expect(page).toHaveURL(/(?:\?|&)mode=risk(?:&|$)/);
       await expect(
@@ -1343,7 +1343,7 @@ test.describe('Performance workbench smoke', () => {
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
-      /^Performance Analysis/i,
+      /^Performance analysis/i,
     );
     const analysisNavigation = page.waitForResponse(
       (response) =>
@@ -1446,7 +1446,7 @@ test.describe('Performance workbench smoke', () => {
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
-      /^Performance Analysis/i,
+      /^Performance analysis/i,
     );
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
@@ -1534,13 +1534,13 @@ test.describe('Performance workbench smoke', () => {
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
-      /^Performance Analysis/i,
+      /^Performance analysis/i,
     );
     await analysisTab.click();
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
     const sourceSelection = page.getByRole('group', {
-      name: 'Performance Analysis source selection',
+      name: 'Performance analysis source selection',
     });
     await expect(sourceSelection).toBeVisible();
     await expect(page.getByRole('group', { name: 'Return-path presentation' })).toHaveCount(0);
@@ -1622,7 +1622,7 @@ test.describe('Performance workbench smoke', () => {
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
-      /^Performance Analysis/i,
+      /^Performance analysis/i,
     );
     await analysisTab.click();
 
@@ -1756,14 +1756,14 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     test.skip(!session.available, 'Performance upstream unavailable in standalone smoke environment.');
 
-    const advisorTab = await openPerformanceWorkflowStep(page, /^Advisor Brief/i);
+    const advisorTab = await openPerformanceWorkflowStep(page, /^Adviser brief/i);
     await advisorTab.click();
     await expect(advisorTab).toHaveAttribute('aria-current', 'page');
 
     const disclosure = page.locator('details').filter({ hasText: 'How this was prepared' });
     const disclosureSummary = disclosure.locator('summary');
     await expect(disclosureSummary).toContainText('Live output • review required');
-    await expect(disclosureSummary).toContainText('Performance advisor brief');
+    await expect(disclosureSummary).toContainText('Performance adviser brief');
 
     await disclosureSummary.focus();
     await page.keyboard.press('Enter');
@@ -1775,7 +1775,7 @@ test.describe('Performance workbench smoke', () => {
     await expect(disclosure).toContainText('Human review required');
     await expect(disclosure).toContainText('Not approved for client use');
     await expect(disclosure).toContainText('Freshness not reported');
-    await expect(page.getByLabel('Advisor Talking Points')).toContainText(
+    await expect(page.getByLabel('Adviser talking points')).toContainText(
       'Portfolio outperformed its benchmark',
     );
     await expect(page.getByText('Client Talking Points')).toHaveCount(0);
@@ -1816,9 +1816,9 @@ test.describe('Performance workbench smoke', () => {
     const session = await openPerformanceWorkbench(page, request);
     expect(session.available).toBe(true);
 
-    await (await openPerformanceWorkflowStep(page, /^Advisor Brief/i)).click();
+    await (await openPerformanceWorkflowStep(page, /^Adviser brief/i)).click();
 
-    const review = page.getByLabel('Advisor brief human review');
+    const review = page.getByLabel('Adviser brief human review');
     await expect(review).toBeVisible();
     await review.getByLabel('Review decision').selectOption('ACCEPT');
     await review.getByLabel(/Reviewer reference/).fill('advisor_e2e');
@@ -1886,7 +1886,7 @@ test.describe('Performance workbench smoke', () => {
       const singaporePage = await singaporeContext.newPage();
       const singaporeSession = await openPerformanceWorkbench(singaporePage, request);
       expect(singaporeSession.available).toBe(true);
-      await (await openPerformanceWorkflowStep(singaporePage, /^Advisor Brief/i)).click();
+      await (await openPerformanceWorkflowStep(singaporePage, /^Adviser brief/i)).click();
 
       const singaporeEvidence = singaporePage.getByTestId(
         'advisor-brief-human-review-evidence',
@@ -1902,7 +1902,7 @@ test.describe('Performance workbench smoke', () => {
     }
 
     const supportDetails = page.locator('details').filter({
-      hasText: 'Technical support details',
+      hasText: 'Source support details',
     });
     await expect(supportDetails).not.toHaveAttribute('open', '');
 
@@ -1935,7 +1935,7 @@ test.describe('Performance workbench smoke', () => {
 
     const analysisTab = await openPerformanceWorkflowStep(
       page,
-      /^Performance Analysis/i,
+      /^Performance analysis/i,
     );
     await expect(analysisTab).toBeVisible();
     await analysisTab.click();

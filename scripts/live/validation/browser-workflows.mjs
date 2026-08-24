@@ -143,13 +143,13 @@ export async function waitForAdvisorBriefReviewConfirmation(
     const failureCount = await failureFeedback.count();
     if (failureCount > 1) {
       throw new Error(
-        `Advisor brief review action rendered ${failureCount} failure messages; expected at most one.`,
+        `Adviser brief review action rendered ${failureCount} failure messages; expected at most one.`,
       );
     }
     if (failureCount === 1 && await failureFeedback.isVisible()) {
       const failureMessage = (await failureFeedback.textContent())?.trim();
       throw new Error(
-        `Advisor brief review action failed in Workbench: ${failureMessage || "No failure detail was rendered."}`,
+        `Adviser brief review action failed in Workbench: ${failureMessage || "No failure detail was rendered."}`,
       );
     }
 
@@ -157,7 +157,7 @@ export async function waitForAdvisorBriefReviewConfirmation(
     const statusCount = await statusFeedback.count();
     if (statusCount > 1) {
       throw new Error(
-        `Advisor brief review action rendered ${statusCount} status messages; expected at most one.`,
+        `Adviser brief review action rendered ${statusCount} status messages; expected at most one.`,
       );
     }
     if (statusCount === 1 && await statusFeedback.isVisible()) {
@@ -171,7 +171,7 @@ export async function waitForAdvisorBriefReviewConfirmation(
   }
 
   throw new Error(
-    `Advisor brief review action did not reach source-confirmed success within ${timeoutMs}ms.`,
+    `Adviser brief review action did not reach source-confirmed success within ${timeoutMs}ms.`,
   );
 }
 
@@ -1096,7 +1096,7 @@ export async function validatePerformanceSummaryPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await assertRailModeActive(page, /^Performance Overview/, timeoutMs);
+  await assertRailModeActive(page, /^Performance overview/, timeoutMs);
   await expect(
     page.getByRole("heading", { name: "Net Return Path" }),
   ).toBeVisible({
@@ -1140,7 +1140,7 @@ export async function validatePerformanceAnalysisPanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=analysis&period=EXPLICIT&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { timeout: timeoutMs },
   );
-  await assertRailModeActive(page, /^Performance Analysis/, timeoutMs);
+  await assertRailModeActive(page, /^Performance analysis/, timeoutMs);
   const attributionTrendEvidence = page.getByTestId("attribution-trend-evidence");
   await expect(attributionTrendEvidence).toBeVisible({ timeout: timeoutMs });
   await expect(attributionTrendEvidence).not.toHaveAttribute(
@@ -1195,7 +1195,7 @@ export async function validatePerformanceAnalysisPanel(
     );
   } else {
     throw new Error(
-      `Performance Analysis attribution history must be source-confirmed evidence, received ${attributionTrendPosture ?? "missing"}.`,
+      `Performance analysis attribution history must be source-confirmed evidence, received ${attributionTrendPosture ?? "missing"}.`,
     );
   }
   recordUiCheck({
@@ -1298,42 +1298,42 @@ export async function validateAdvisorBriefPanel(
     buildAdvisorBriefRoute(proofQuery),
     { timeout: timeoutMs },
   );
-  await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
+  await assertRailModeActive(page, /^Adviser brief/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Performance Advisor Brief" }),
+    page.getByRole("heading", { name: "Performance adviser brief" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Advisor Talking Points" }),
+    page.getByRole("heading", { name: "Adviser talking points" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Source Metrics" }),
+    page.getByRole("heading", { name: "Source metrics" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   const sourceMetricButtons = await page
-    .getByRole("region", { name: "Source Metrics" })
+    .getByRole("region", { name: "Source metrics" })
     .getByRole("button")
     .count();
   if (sourceMetricButtons < 3) {
     throw new Error(
-      `Advisor brief source metrics expected at least 3 metric buttons but found ${sourceMetricButtons}.`,
+      `Adviser brief source metrics expected at least 3 metric buttons but found ${sourceMetricButtons}.`,
     );
   }
   summary.uiChecks.push({
-    description: "Advisor brief source metrics",
+    description: "Adviser brief source metrics",
     kind: "buttons",
     buttonCount: sourceMetricButtons,
   });
   await screenshotRegisteredPanel(page, "performance.advisor_brief");
 
   if (performAcceptReviewActionProof) {
-    let reviewRegion = page.getByLabel("Advisor brief human review");
+    let reviewRegion = page.getByLabel("Adviser brief human review");
     let supportabilityRegion = page.getByLabel(
-      "Advisor brief supportability",
+      "Adviser brief supportability",
     );
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
@@ -1353,9 +1353,9 @@ export async function validateAdvisorBriefPanel(
       await navigateForBusinessProof(page, buildAdvisorBriefRoute(proofQuery), {
         timeout: timeoutMs,
       });
-      await assertRailModeActive(page, /^Advisor Brief/, timeoutMs);
-      reviewRegion = page.getByLabel("Advisor brief human review");
-      supportabilityRegion = page.getByLabel("Advisor brief supportability");
+      await assertRailModeActive(page, /^Adviser brief/, timeoutMs);
+      reviewRegion = page.getByLabel("Adviser brief human review");
+      supportabilityRegion = page.getByLabel("Adviser brief supportability");
       await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
       await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
       reviewEvidence = await readAdvisorBriefReviewEvidence(
@@ -1370,7 +1370,7 @@ export async function validateAdvisorBriefPanel(
         proofPosture === "review-action-unavailable"
       ) {
         throw new Error(
-          `Advisor brief browser ACCEPT proof could not reserve an actionable GROSS fallback run (posture: ${proofPosture}).`,
+          `Adviser brief browser ACCEPT proof could not reserve an actionable GROSS fallback run (posture: ${proofPosture}).`,
         );
       }
     }
@@ -1423,7 +1423,7 @@ export async function validateAdvisorBriefPanel(
       { timeout: timeoutMs },
     );
     summary.uiChecks.push({
-      description: "Advisor brief ACCEPT review action",
+      description: "Adviser brief ACCEPT review action",
       kind: "workflow-pack-review-action",
       actionType: "ACCEPT",
       state: "accepted",
@@ -1685,7 +1685,7 @@ export async function validateRiskPanel(
     `${workbenchBaseUrl}/performance?portfolioId=${portfolioId}&mode=risk&period=EXPLICIT&detailBasis=NET&benchmark=${benchmarkCode}&reportStartDate=${canonicalStartDate}&reportEndDate=${canonicalAsOfDate}`,
     { timeout: timeoutMs },
   );
-  await assertRailModeActive(page, /^Risk Review/, timeoutMs);
+  await assertRailModeActive(page, /^Risk review/, timeoutMs);
   await expect(
     page.getByRole("heading", { name: "Risk snapshot", exact: true }),
   ).toBeVisible({
@@ -1769,7 +1769,7 @@ export async function validateRiskPanel(
         globalThis.document.documentElement.clientWidth + 1,
     );
     if (!pageReflows) {
-      throw new Error(`Risk Review creates page-level horizontal scrolling at ${width}px.`);
+      throw new Error(`Risk review creates page-level horizontal scrolling at ${width}px.`);
     }
   }
   await page.setViewportSize(originalViewport);

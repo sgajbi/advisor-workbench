@@ -239,7 +239,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.getByText(/source valuation date 24 Feb 2026/i)).toBeInTheDocument();
     expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
-    expect(await findWorkflowControl(/^Performance Overview/i)).toBeInTheDocument();
+    expect(await findWorkflowControl(/^Performance overview/i)).toBeInTheDocument();
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(await screen.findByText("Performance Drivers")).toBeInTheDocument();
 
@@ -334,7 +334,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith(
@@ -350,7 +350,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect(
       document.querySelector("main.workstation-page.app-page-shell.app-page-shell-performance.performance-page")
     ).toBeTruthy();
@@ -395,7 +395,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     expect(document.querySelectorAll(".performance-surface-switcher")).toHaveLength(0);
     expect(
-      within(workbenchScreenNav).getByRole("button", { name: /^Performance Analysis/i })
+      within(workbenchScreenNav).getByRole("button", { name: /^Performance analysis/i })
     ).toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -418,7 +418,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
 
     const summaryEvents = getAnalyticsUiMetricEvents().filter(
       (event) => event.labels.operation === "performance.workspace.summary"
@@ -589,14 +589,14 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     await renderPerformancePage({ portfolioId: "PB_SG_GLOBAL_BAL_001" });
-    fireEvent.click(await findWorkflowControl(/^Risk Review/i));
+    fireEvent.click(await findWorkflowControl(/^Risk review/i));
 
     const riskRegion = await screen.findByRole("region", { name: "Risk" });
     await waitFor(() => {
       expect(within(riskRegion).getByText("Risk access restricted")).toBeInTheDocument();
     });
     expect(within(riskRegion).getByLabelText("Risk mode status")).toHaveTextContent(
-      "Access Restricted"
+      "Access restricted"
     );
     expect(riskRegion).toHaveTextContent("permission-blocked");
     expect(riskRegion).not.toHaveTextContent("raw_entitlement_denied");
@@ -832,7 +832,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
@@ -859,11 +859,11 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     expect(await screen.findByLabelText("Analysis decision summary")).toBeInTheDocument();
     const sourceSelection = await screen.findByRole("group", {
-      name: "Performance Analysis source selection",
+      name: "Performance analysis source selection",
     });
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Horizon" })).toBeVisible();
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Basis" })).toBeVisible();
@@ -939,12 +939,12 @@ describe("PerformanceAnalyticsPage", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+      await screen.findByRole("heading", { name: "Performance adviser brief" })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
-    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).not.toHaveTextContent(
       "Internal working narrative"
     );
     expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
@@ -955,33 +955,33 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl("Advisor Brief"));
+    fireEvent.click(await findWorkflowControl("Adviser brief"));
 
-    expect(screen.getByLabelText("Advisor brief mode intro")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).toHaveTextContent(
       "Source-grounded brief, drilldowns, and supportability"
     );
-    expect(screen.getByLabelText("Advisor brief mode intro")).not.toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief mode intro")).not.toHaveTextContent(
       "Internal working narrative"
     );
     expect(
-      await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+      await screen.findByRole("heading", { name: "Performance adviser brief" })
     ).toBeInTheDocument();
     await waitFor(() => {
-      const supportability = screen.getByLabelText("Advisor brief supportability");
+      const supportability = screen.getByLabelText("Adviser brief supportability");
       expect(supportability).toHaveTextContent("Decision support coverage");
       expect(supportability).toHaveTextContent("Ready modules");
       expect(supportability).toHaveTextContent("Review items");
       expect(supportability).toHaveTextContent("Evidence");
       expect(supportability).toHaveTextContent("Partial");
     });
-    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent("Ready");
-    expect(screen.getByLabelText("Advisor brief toolbar")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser brief toolbar")).toHaveTextContent("Ready");
+    expect(screen.getByLabelText("Adviser brief toolbar")).toHaveTextContent(
       "Evidence available"
     );
-    expect(screen.getByLabelText("Advisor Talking Points")).toHaveTextContent(
+    expect(screen.getByLabelText("Adviser talking points")).toHaveTextContent(
       "Portfolio delivered 5.42% versus benchmark 4.91%."
     );
-    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active return");
+    expect(screen.getByLabelText("Source metrics")).toHaveTextContent("Active return");
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
     expect(screen.queryByLabelText(RETURN_PATH_EVIDENCE_NAME)).not.toBeInTheDocument();
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
@@ -991,16 +991,16 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
 
     fireEvent.click(
-      within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
+      within(screen.getByLabelText("Recommended actions")).getByRole("button", {
         name: /Open return path/,
       })
     );
 
     expect(await screen.findByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
 
-    fireEvent.click(await findWorkflowControl("Advisor Brief"));
+    fireEvent.click(await findWorkflowControl("Adviser brief"));
     fireEvent.click(
-      within(screen.getByLabelText("Advisor Talking Points")).getByRole("button", {
+      within(screen.getByLabelText("Adviser talking points")).getByRole("button", {
         name: /Top Contributor/,
       })
     );
@@ -1020,7 +1020,7 @@ describe("PerformanceAnalyticsPage", () => {
       })
     );
 
-    expect(await findWorkflowControl(/^Risk Review/i)).toHaveAttribute(
+    expect(await findWorkflowControl(/^Risk review/i)).toHaveAttribute(
       "aria-current",
       "page"
     );
@@ -1028,7 +1028,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(document.querySelector(".workbench-page-header-subtitle")).toBeFalsy();
     expect(screen.getByLabelText("Risk mode status")).toBeInTheDocument();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith(
@@ -1047,7 +1047,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Risk Review/i));
+    fireEvent.click(await findWorkflowControl(/^Risk review/i));
 
     expect(screen.getByLabelText("Risk mode intro")).toHaveTextContent(
       "Downside, concentration, and rolling stability posture"
@@ -1259,7 +1259,7 @@ describe("PerformanceAnalyticsPage", () => {
         })
       );
 
-      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+      fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
       await waitFor(() => {
         expect(replaceMock).toHaveBeenCalledWith(
@@ -1377,7 +1377,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     await screen.findByText("Performance Drivers");
     expect(document.querySelector(".performance-relative-segment-module")).toBeFalsy();
@@ -1389,7 +1389,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Attribution detail context" })).not.toBeInTheDocument();
@@ -1421,7 +1421,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Attribution Detail" })).toBeInTheDocument();
     expect(
@@ -1449,7 +1449,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+    fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
     expect(await screen.findByRole("heading", { name: "Performance Drivers" })).toBeInTheDocument();
     expect(
@@ -1495,7 +1495,7 @@ describe("PerformanceAnalyticsPage", () => {
       installPerformancePageFetchScenario(scenario);
 
     await renderPerformancePage();
-      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+      fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
       for (const text of expectations) {
         await expectTextPresent(text);
@@ -1573,7 +1573,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-      expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
       for (const text of summaryExpectations) {
         await expectTextPresent(text);
       }
@@ -1581,7 +1581,7 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(await findWorkflowControl(/^Performance Analysis/i));
+      fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
       for (const text of analysisExpectations) {
         await expectTextPresent(text);
       }
@@ -1589,11 +1589,11 @@ describe("PerformanceAnalyticsPage", () => {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
 
-      fireEvent.click(await findWorkflowControl("Advisor Brief"));
+      fireEvent.click(await findWorkflowControl("Adviser brief"));
       expect(
-        await screen.findByRole("heading", { name: "Performance Advisor Brief" })
+        await screen.findByRole("heading", { name: "Performance adviser brief" })
       ).toBeInTheDocument();
-      expect(screen.getByLabelText("Source Metrics")).toBeInTheDocument();
+      expect(screen.getByLabelText("Source metrics")).toBeInTheDocument();
 
       const evidenceTab = await findWorkflowControl(/^Evidence/i);
       expect(evidenceTab).toBeDisabled();
@@ -1610,7 +1610,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
       expect(screen.getByLabelText("Time-weighted return path · Net of fees unavailable")).toBeInTheDocument();
@@ -1640,7 +1640,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
     await waitFor(() => {
@@ -1654,7 +1654,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect((await screen.findAllByText("Performance Drivers")).length).toBe(1);
     expect(screen.getByLabelText("Top Contributors impact bars")).toHaveTextContent("Equity");
     expect(screen.getByLabelText("Top Detractors impact bars")).toBeInTheDocument();
@@ -1667,7 +1667,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       await renderPerformancePage();
 
-    expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Trust and completeness strip")).not.toBeInTheDocument();
 
     const horizonTitles = await screen.findAllByText("Horizon Comparison");
@@ -1739,7 +1739,7 @@ describe("PerformanceAnalyticsPage", () => {
 
       await renderPerformancePage();
 
-      expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Performance overview" })).toBeInTheDocument();
 
       const executiveStrip = screen.queryByLabelText("Executive return strip");
 

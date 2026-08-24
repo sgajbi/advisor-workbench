@@ -47,7 +47,7 @@ export default function PerformanceAnalyticalUnavailableState({
           {status === "partial"
             ? "Partial"
             : status === "permission_blocked"
-              ? "Access Restricted"
+              ? "Access restricted"
               : "Unavailable"}
         </span>
       </header>

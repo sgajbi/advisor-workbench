@@ -6,11 +6,13 @@ import {
   normalizePerformanceActionLabel,
   normalizePerformanceMetricLabel,
   PERFORMANCE_ACTION_LABELS,
+  PERFORMANCE_CONTEXT_LABELS,
   PERFORMANCE_ECONOMICS_LABELS,
   PERFORMANCE_FEE_BASIS_LABELS,
   PERFORMANCE_RETURN_DEFINITIONS,
   PERFORMANCE_RETURN_LABELS,
   PERFORMANCE_RETURN_TABLE_LABELS,
+  PERFORMANCE_WORKFLOW_LABELS,
 } from "../../src/apps/performance/performance-terminology";
 
 describe("performance terminology", () => {
@@ -91,6 +93,9 @@ describe("performance terminology", () => {
   it.each([
     ["Open Return Path", "Open return path"],
     [" review contribution ", "Review contribution"],
+    ["Draft Advisor Brief", "Draft adviser brief"],
+    ["Review Risk Surface", "Review risk"],
+    ["Return to Summary", "Return to performance overview"],
     ["Open risk", "Open risk"],
   ])("normalizes known action label %s while preserving unknown actions", (source, expected) => {
     expect(normalizePerformanceActionLabel(source)).toBe(expected);
@@ -100,6 +105,26 @@ describe("performance terminology", () => {
     expect(PERFORMANCE_ACTION_LABELS).toEqual({
       openReturnPath: "Open return path",
       reviewContribution: "Review contribution",
+      inspectAttribution: "Inspect attribution",
+      openAnalysis: "Open analysis",
+      draftAdviserBrief: "Draft adviser brief",
+      openAdviserBrief: "Open adviser brief",
+      reviewRisk: "Review risk",
+      returnToOverview: "Return to performance overview",
+    });
+  });
+
+  it("owns consistent workflow and review-context language", () => {
+    expect(PERFORMANCE_WORKFLOW_LABELS).toEqual({
+      overview: "Performance overview",
+      analysis: "Performance analysis",
+      adviserBrief: "Adviser brief",
+      riskReview: "Risk review",
+    });
+    expect(PERFORMANCE_CONTEXT_LABELS).toEqual({
+      reviewWindow: "Review window",
+      feeBasis: "Fee basis",
+      asOfDate: "As-of date",
     });
   });
 });

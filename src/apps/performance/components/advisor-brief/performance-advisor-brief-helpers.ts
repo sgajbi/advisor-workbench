@@ -45,13 +45,13 @@ export function toAdvisorNoteCopy(brief: PerformanceAdvisorBriefViewModel) {
     "",
     brief.summary,
     "",
-    "Advisor Talking Points",
+    "Adviser talking points",
     ...brief.talkingPoints.map((item) => `- ${item.headline} ${item.detail}`),
     "",
-    "Recommended Actions",
+    "Recommended actions",
     ...brief.recommendedActions.map((action) => `- ${action.label}`),
     "",
-    "Risks / Exceptions",
+    "Risks and exceptions",
     ...(brief.risksAndExceptions.length
       ? brief.risksAndExceptions.map((item) => `- ${item.headline} ${item.detail}`)
       : ["- No material supportability exceptions are flagged."]),

@@ -19,6 +19,7 @@ import {
   getPerformanceWorkspaceModeDefinition,
   type PerformanceWorkspaceMode,
 } from "../performance-workspace-modes";
+import { PERFORMANCE_WORKFLOW_LABELS } from "../performance-terminology";
 import {
   getPerformanceWorkspacePresentation,
 } from "../view-model";
@@ -305,17 +306,17 @@ const PERFORMANCE_SURFACE_ITEMS: Array<{
   detail: string;
   capabilityKey?: keyof PerformanceWorkspaceCapabilities;
 }> = [
-  { mode: "summary", label: "Performance Overview", detail: "Return path summary" },
+  { mode: "summary", label: PERFORMANCE_WORKFLOW_LABELS.overview, detail: "Return path summary" },
   {
     mode: "analysis",
-    label: "Performance Analysis",
+    label: PERFORMANCE_WORKFLOW_LABELS.analysis,
     detail: "Attribution and diagnostics",
     capabilityKey: "attributionDetail",
   },
-  { mode: "advisor", label: "Advisor Brief", detail: "Internal working narrative" },
+  { mode: "advisor", label: PERFORMANCE_WORKFLOW_LABELS.adviserBrief, detail: "Internal working narrative" },
   {
     mode: "risk",
-    label: "Risk Review",
+    label: PERFORMANCE_WORKFLOW_LABELS.riskReview,
     detail: "Drawdown and concentration",
     capabilityKey: "returnPath",
   },

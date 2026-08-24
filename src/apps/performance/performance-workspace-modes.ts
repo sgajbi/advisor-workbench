@@ -1,3 +1,5 @@
+import { PERFORMANCE_WORKFLOW_LABELS } from "./performance-terminology";
+
 export type PerformanceWorkspaceMode =
   | "summary"
   | "analysis"
@@ -37,7 +39,7 @@ export const PERFORMANCE_WORKSPACE_MODE_DEFINITIONS: PerformanceWorkspaceModeDef
   {
     key: "analysis",
     label: "Analysis",
-    workspaceTitle: "Performance Analysis",
+    workspaceTitle: PERFORMANCE_WORKFLOW_LABELS.analysis,
     workspaceSubtitle: "Benchmark-aware return, attribution, contribution, and evidence review.",
     intro: {
       ariaLabel: "Performance analysis mode intro",
@@ -49,11 +51,11 @@ export const PERFORMANCE_WORKSPACE_MODE_DEFINITIONS: PerformanceWorkspaceModeDef
   },
   {
     key: "advisor",
-    label: "Advisor Brief",
+    label: PERFORMANCE_WORKFLOW_LABELS.adviserBrief,
     workspaceTitle: "Performance",
     workspaceSubtitle: "Benchmark-aware return, attribution, contribution, and evidence review.",
     intro: {
-      ariaLabel: "Advisor brief mode intro",
+      ariaLabel: "Adviser brief mode intro",
       kicker: "Internal working narrative",
       title: "Source-grounded brief, drilldowns, and supportability",
       description:

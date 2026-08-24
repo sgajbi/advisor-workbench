@@ -55,7 +55,7 @@ describe("Risk Review interpretation authority", () => {
     expect(browserWorkflow).toContain('"Realised volatility"');
     expect(browserWorkflow).toContain('"Source coverage"');
     expect(browserWorkflow).toContain("for (const width of [1440, 1024, 519])");
-    expect(browserWorkflow).toContain("Risk Review creates page-level horizontal scrolling");
+    expect(browserWorkflow).toContain("Risk review creates page-level horizontal scrolling");
 
     const fixtureGateway = readSource(
       "tests/e2e/performance-fixture-gateway.ts",

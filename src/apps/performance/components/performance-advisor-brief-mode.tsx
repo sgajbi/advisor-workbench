@@ -113,9 +113,9 @@ function PerformanceAdvisorBriefModeSession({
   });
   const narrativeSections = [
     {
-      ariaLabel: "Advisor Talking Points",
+      ariaLabel: "Adviser talking points",
       className: "performance-advisor-brief-section performance-advisor-brief-section-narrative",
-      title: "Advisor Talking Points",
+      title: "Adviser talking points",
       description: "Internal working narrative for the selected period; review before client use.",
       content: brief.talkingPoints.length ? (
         <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-narrative">
@@ -134,9 +134,9 @@ function PerformanceAdvisorBriefModeSession({
       ),
     },
     {
-      ariaLabel: "Recommended Actions",
+      ariaLabel: "Recommended actions",
       className: "performance-advisor-brief-section performance-advisor-brief-section-workflow",
-      title: "Recommended Actions",
+      title: "Recommended actions",
       description: "Next advisor workflow steps from the current brief.",
       content: (
         <LotusDrilldownList
@@ -147,9 +147,9 @@ function PerformanceAdvisorBriefModeSession({
       ),
     },
     {
-      ariaLabel: "Risks and Exceptions",
+      ariaLabel: "Risks and exceptions",
       className: "performance-advisor-brief-section performance-advisor-brief-section-risk",
-      title: "Risks / Exceptions",
+      title: "Risks and exceptions",
       description: "Exceptions, evidence gaps, and supportability limits.",
       content: brief.risksAndExceptions.length ? (
         <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-risk">
@@ -174,7 +174,7 @@ function PerformanceAdvisorBriefModeSession({
   return (
     <PerformanceWorkspaceStageSurface
       intro={modeIntro}
-      contextAriaLabel="Advisor brief context"
+      contextAriaLabel="Adviser brief context"
       contextItems={contextItems}
       shellClassName={cx(styles.advisorBriefScope, "performance-advisor-brief-shell")}
     >
@@ -191,7 +191,7 @@ function PerformanceAdvisorBriefModeSession({
         <div className="performance-advisor-brief-body-grid">
           <section
             className="performance-advisor-brief-main-column"
-            aria-label="Advisor brief narrative"
+            aria-label="Adviser brief narrative"
           >
             {narrativeSections.map((section, index) => (
               <Fragment key={section.title}>
@@ -219,7 +219,7 @@ function PerformanceAdvisorBriefModeSession({
 
           <aside
             className="performance-advisor-brief-side-column performance-advisor-brief-sidecar"
-            aria-label="Advisor brief source metrics"
+            aria-label="Adviser brief source metrics"
           >
             <LotusMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />
             <LotusSupportabilityPanel

@@ -334,7 +334,7 @@ describe("live validation browser workflow helpers", () => {
         wait,
       }),
     ).rejects.toThrow(
-      "Advisor brief review action failed in Workbench: The review decision could not be confirmed.",
+      "Adviser brief review action failed in Workbench: The review decision could not be confirmed.",
     );
     expect(wait).not.toHaveBeenCalled();
   });
@@ -407,7 +407,7 @@ describe("live validation browser workflow helpers", () => {
   it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
     const source = validateAdvisorBriefPanel.toString();
 
-    expect(source).toContain('getByLabel("Advisor brief human review")');
+    expect(source).toContain('getByLabel("Adviser brief human review")');
     expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
     expect(source).toContain("source-confirmed-existing-action");
     expect(source).toContain("accepted-by-another-reviewer");
