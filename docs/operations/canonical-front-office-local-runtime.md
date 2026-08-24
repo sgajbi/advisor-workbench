@@ -706,6 +706,11 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - source evidence actions render
   - the Workbench `Accept Brief` action records a bounded review transition through the live
     gateway and lotus-ai path
+  - the returned Lotus AI actor `review:<staff-reference>` remains intact in source evidence while
+    Workbench presents and validates the corresponding business staff reference
+  - an explicit review failure alert stops the browser proof immediately; success still requires
+    the refreshed atomic Human Review evidence to report `ACCEPTED`, `READY`, the expected reviewer,
+    and a valid UTC event time
 - Risk:
   - `Risk Snapshot`
   - `Drawdown`

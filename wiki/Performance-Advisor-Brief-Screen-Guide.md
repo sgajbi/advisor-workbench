@@ -72,6 +72,9 @@ client communication, order a report, or authorize downstream use.
   source-recorded human review, freshness, and client-use permission.
 - Treats review as source-recorded only when the returned workflow evidence includes review
   history, a positive transition count, a reviewer reference, and a review timestamp.
+- Presents the bank staff reviewer reference without Lotus AI's technical `review:` actor namespace;
+  the raw source actor remains unchanged in the Gateway evidence and only the governed namespace is
+  adapted at the Workbench boundary.
 - Fails closed when generation provenance, evidence, review audit, allowed action, or output posture
   is missing, malformed, contradictory, stale, or superseded.
 - Offers only review decisions currently allowed by the source workflow: accept for internal use,
@@ -194,7 +197,9 @@ capability.
 - Canonical ACCEPT validation reads review state, supportability, reviewer, and recorded time from
   exactly one machine-readable record on the same visible **Human Review** row. It rejects missing,
   duplicate, malformed, non-ready, or wrong-reviewer evidence instead of parsing flattened panel
-  text or treating a success message alone as persistence proof.
+  text or treating a success message alone as persistence proof. It also fails immediately when the
+  review region exposes an explicit source-confirmation alert instead of waiting for success until
+  the general browser timeout expires.
 - Gateway #547 adds the source-audit mapping and focused success/malformed-evidence tests required
   for Workbench to distinguish recorded human review from a terminal state string.
 - Canonical `npm run live:validate` remains the release evidence for the governed front-office
