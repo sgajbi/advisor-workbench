@@ -25,6 +25,7 @@ import type {
   DpmCampaignWorkflowSummaryRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import type { DpmCampaignWorkflowCommandEvidence } from "@/features/workbench/use-dpm-wave-command-center-actions";
+import { MANAGE_WORKFLOW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   evidenceRows: DpmCampaignWorkflowEvidenceRow[];
@@ -367,7 +368,7 @@ function CommandSpecificFields({
               disabled={disabled}
             >
               <option value="ON_TRACK">On track</option>
-              <option value="ATTENTION">Attention required</option>
+              <option value="ATTENTION">{MANAGE_WORKFLOW_LABELS.needsAttention}</option>
               <option value="BREACHED_OR_BLOCKED">Breached or blocked</option>
             </select>
           </label>

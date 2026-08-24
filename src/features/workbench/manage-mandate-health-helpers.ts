@@ -4,6 +4,7 @@ import {
   formatBusinessExceptionTitle,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
+import { MANAGE_HEALTH_DIMENSION_LABELS } from "@/features/workbench/manage-terminology";
 
 import type {
   MandateHealthRow,
@@ -53,37 +54,37 @@ export function formatMandateHealthDisplayDate(value: string): string {
 export function formatMandateHealthDimensionLabel(value: string): string {
   const normalized = value.toLowerCase();
   if (normalized.includes("source") || normalized.includes("market")) {
-    return "Market Data Readiness";
+    return MANAGE_HEALTH_DIMENSION_LABELS.dataAvailability;
   }
   if (normalized.includes("allocation")) {
-    return "Allocation Drift";
+    return MANAGE_HEALTH_DIMENSION_LABELS.allocationDrift;
   }
   if (normalized.includes("risk")) {
-    return "Risk Drift";
+    return MANAGE_HEALTH_DIMENSION_LABELS.riskDrift;
   }
   if (normalized.includes("cash")) {
-    return "Cash Liquidity";
+    return MANAGE_HEALTH_DIMENSION_LABELS.cashLiquidity;
   }
   if (normalized.includes("tax")) {
-    return "Tax And Turnover";
+    return MANAGE_HEALTH_DIMENSION_LABELS.taxAndTurnover;
   }
   if (normalized.includes("eligibility")) {
-    return "Eligibility Restrictions";
+    return MANAGE_HEALTH_DIMENSION_LABELS.eligibilityRestrictions;
   }
   if (normalized.includes("performance")) {
-    return "Performance Review";
+    return MANAGE_HEALTH_DIMENSION_LABELS.performanceReview;
   }
   if (normalized.includes("workflow")) {
-    return "Review Readiness";
+    return MANAGE_HEALTH_DIMENSION_LABELS.reviewReadiness;
   }
   if (normalized.includes("cadence")) {
-    return "Review Cadence";
+    return MANAGE_HEALTH_DIMENSION_LABELS.reviewCadence;
   }
   if (normalized.includes("model")) {
-    return "Model Freshness";
+    return MANAGE_HEALTH_DIMENSION_LABELS.modelFreshness;
   }
   if (normalized.includes("constraint")) {
-    return "Mandate Constraints";
+    return MANAGE_HEALTH_DIMENSION_LABELS.mandateConstraints;
   }
   return businessStateLabel(value);
 }

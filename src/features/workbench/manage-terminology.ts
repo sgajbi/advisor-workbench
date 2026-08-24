@@ -5,9 +5,24 @@ export const MANAGE_WORKFLOW_LABELS = {
   attentionItems: "Attention items",
   openAttentionItems: "Open attention items",
   sourceExceptions: "Source exceptions",
+  needsAttention: "Needs attention",
   dataAvailability: "Data availability",
   mandateHealthDimensions: "Mandate health dimensions",
   asOfDate: "As-of date",
+} as const;
+
+export const MANAGE_HEALTH_DIMENSION_LABELS = {
+  dataAvailability: MANAGE_WORKFLOW_LABELS.dataAvailability,
+  allocationDrift: "Allocation drift",
+  riskDrift: "Risk drift",
+  cashLiquidity: "Cash liquidity",
+  taxAndTurnover: "Tax and turnover",
+  eligibilityRestrictions: "Eligibility restrictions",
+  performanceReview: "Performance review",
+  reviewReadiness: "Review readiness",
+  reviewCadence: "Review cadence",
+  modelFreshness: "Model freshness",
+  mandateConstraints: "Mandate constraints",
 } as const;
 
 export const MANAGE_REBALANCE_LABELS = {
