@@ -900,6 +900,15 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent("Recorded by advisor_1");
       expect(supportability).toHaveTextContent("Recorded 2026-04-21T03:22:00Z");
+      const reviewEvidence = screen.getByTestId("advisor-brief-human-review-evidence");
+      expect(reviewEvidence).toHaveAttribute("data-review-state", "ACCEPTED");
+      expect(reviewEvidence).toHaveAttribute("data-review-supportability", "READY");
+      expect(reviewEvidence).toHaveAttribute("data-reviewer", "advisor_1");
+      expect(reviewEvidence).toHaveAttribute(
+        "data-recorded-at",
+        "2026-04-21T03:22:00Z"
+      );
+      expect(reviewEvidence.textContent).toContain("Human ReviewSupportability READY");
       expect(supportability).toHaveTextContent("1 downstream workflow handoff record(s)");
       expect(supportability).toHaveTextContent(
         "Run accepted for bounded downstream workflow use."

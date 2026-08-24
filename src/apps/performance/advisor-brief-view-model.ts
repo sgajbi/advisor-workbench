@@ -13,6 +13,7 @@ export type {
   PerformanceAdvisorBriefEvidenceRef,
   PerformanceAdvisorBriefItem,
   PerformanceAdvisorBriefMetric,
+  PerformanceAdvisorBriefReviewEvidence,
   PerformanceAdvisorBriefStatus,
   PerformanceAdvisorBriefSupportabilityItem,
   PerformanceAdvisorBriefSupportDetail,
