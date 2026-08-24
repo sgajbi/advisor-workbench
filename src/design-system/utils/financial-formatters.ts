@@ -22,6 +22,10 @@ type DateOptions = {
   nullDisplay?: string;
 };
 
+type YearMonthOptions = DateOptions & {
+  compact?: boolean;
+};
+
 export type BusinessDateParts = {
   year: number;
   month: number;
@@ -136,6 +140,25 @@ export function formatBusinessDateValue(
   }
 
   return formatBusinessDateParts(parts);
+}
+
+/**
+ * Format a source-owned `YYYY-MM` reporting period without inventing a day or timezone.
+ * Use this for chart axes and period labels, never for business dates or exact instants.
+ */
+export function formatYearMonthValue(
+  value: string | null | undefined,
+  { compact = false, nullDisplay = "N/A" }: YearMonthOptions = {},
+): string {
+  const match = value?.trim().match(/^(\d{4})-(\d{2})$/);
+  const month = Number(match?.[2]);
+  if (!match || month < 1 || month > 12) {
+    return nullDisplay;
+  }
+
+  const monthLabel = SHORT_MONTHS[month - 1];
+  const shortYear = match[1].slice(-2);
+  return `${monthLabel}${compact ? "\n" : " "}'${shortYear}`;
 }
 
 /**

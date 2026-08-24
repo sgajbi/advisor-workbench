@@ -2,6 +2,7 @@ import type { EChartsOption } from "echarts";
 import type { CallbackDataParams } from "echarts/types/src/util/types.js";
 
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
+import { formatYearMonthValue } from "@/design-system/utils/financial-formatters";
 import type { PerformanceChartPoint } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
@@ -55,23 +56,7 @@ function remTokenToPx(token: string) {
 }
 
 function formatPeriodAxisLabel(value: string, compact = false) {
-  const monthMatch = /^(\d{4})-(\d{2})$/.exec(value);
-  if (!monthMatch) {
-    return value;
-  }
-
-  const [, year, month] = monthMatch;
-  const date = new Date(`${year}-${month}-01T00:00:00Z`);
-  const monthLabel = date.toLocaleString("en-US", {
-    month: "short",
-    timeZone: "UTC",
-  });
-  const yearLabel = date.toLocaleString("en-US", {
-    year: "2-digit",
-    timeZone: "UTC",
-  });
-
-  return compact ? `${monthLabel}\n'${yearLabel}` : `${monthLabel} '${yearLabel}`;
+  return formatYearMonthValue(value, { compact, nullDisplay: value });
 }
 
 function formatAxisPct(value: number) {
