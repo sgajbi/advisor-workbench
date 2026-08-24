@@ -191,6 +191,10 @@ capability.
   request occurs before confirmation, verifies confirmation focus and exactly one POST, renders the
   source actor/time/history only after success, rejects unexpected browser failures, and verifies no
   page overflow at 1440, 1024, 720, and 390 pixels.
+- Canonical ACCEPT validation reads review state, supportability, reviewer, and recorded time from
+  exactly one machine-readable record on the same visible **Human Review** row. It rejects missing,
+  duplicate, malformed, non-ready, or wrong-reviewer evidence instead of parsing flattened panel
+  text or treating a success message alone as persistence proof.
 - Gateway #547 adds the source-audit mapping and focused success/malformed-evidence tests required
   for Workbench to distinguish recorded human review from a terminal state string.
 - Canonical `npm run live:validate` remains the release evidence for the governed front-office
