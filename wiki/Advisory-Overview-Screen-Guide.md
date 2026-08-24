@@ -186,8 +186,9 @@ calculations, or unsupported capability.
   exact request count, focus continuity, worklist precedence, row/detail association, action
   containment, compact de-duplication, source-boundary visibility, the first decision row above 900
   pixels at 1440, and zero page overflow.
-- `output/issue-811/advisory-overview/` contains reviewed diagnostic desktop, intermediate, tablet,
-  and compact evidence for the decision-first slice. It is not canonical runtime proof.
+- `docs/evidence/issue-811-decision-worklists/advisory-overview/` contains reviewed diagnostic
+  desktop, intermediate, tablet, and compact evidence for the decision-first slice. It is not
+  canonical runtime proof.
 - `scripts/live/validation/browser-workflows.mjs` covers the canonical Advisory Overview panel in
   the governed front-office runtime.
 - `output/issue-731/` contains reviewed desktop, tablet, and compact hierarchy screenshots;

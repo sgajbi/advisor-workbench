@@ -89,9 +89,9 @@ handing the user to a focused Manage mode.
 - Keeps valid first-source-view attention items visible when more source views exist, labels that
   posture explicitly, and claims zero only when the source evidence is complete, non-degraded, and
   exhaustive.
-- Uses the shared decision-first worklist for mandate attention, selected-portfolio rebalance, and
-  supported Manage handoffs. Each destination appears once in the primary path rather than in a
-  second task directory or recent-activity catalogue.
+- Uses the shared decision-first worklist for source-returned mandate attention and the
+  selected-portfolio rebalance decision. Each worklist destination appears once in the primary path
+  rather than in a second task directory or recent-activity catalogue.
 - Keeps compact row identity and posture in the selector while the associated pane shows the
   selected evidence and next permitted action. Arrow-key movement, Enter detail transfer, and
   responsive stacking use the same design-system contract as Advisor Cockpit.
@@ -99,11 +99,11 @@ handing the user to a focused Manage mode.
   execution, and settlement posture, and presents them only when the wave contract explicitly
   includes the selected portfolio. Response-level wave supportability supplements a selected row
   only when both carry the same source wave identity; row evidence remains authoritative.
-- Provides one keyboard-accessible entry in the worklist for each supported handoff: Mandate
-  Health, Rebalance Waves, Construction Alternatives, Portfolio Memory, PM Operating Quality,
-  Outcome Reviews, and Evidence Pack.
-- Labels Construction Alternatives **Generated on request** because Overview does not load or prove
-  an existing alternative set.
+- Provides one keyboard-accessible entry for every source-returned mandate attention item, adds an
+  explicit evidence-boundary entry when that source window is partial or unavailable, and always
+  includes the selected portfolio's rebalance decision. These entries hand off only to Mandate
+  Health or Rebalance Waves; the other Manage work areas remain available through Manage
+  navigation and are not presented as decision-worklist records.
 - Presents portfolio value, positions, cash weight, and risk profile as one compact horizontal
   measure strip ahead of the decision worklist.
 
@@ -114,7 +114,7 @@ handing the user to a focused Manage mode.
 | Decide whether the overview is usable | Core portfolio context plus available Manage mandate, health, exception, and wave evidence | None; read-only review |
 | Treat the attention count as zero | Complete, non-degraded, untruncated active-exception response | None |
 | Investigate an attention item | Source-returned item and its next-step link | None from Overview; opens Mandate Health |
-| Continue portfolio management | An implemented Manage mode in the decision worklist | None from Overview; preserves portfolio context |
+| Continue portfolio management | A source-backed mandate-attention, evidence-boundary, or rebalance record in the decision worklist | None from Overview; opens Mandate Health or Rebalance Waves with portfolio context preserved |
 | Generate construction alternatives | Not available on Overview | Performed only from Construction Alternatives through its governed Gateway action |
 
 Opening a work area does not create a recommendation, proposal, client communication, report,
@@ -128,7 +128,6 @@ portfolio instruction, order, execution, settlement record, or approval.
 | Mandate risk profile, health, data readiness, and monitoring posture | Maps source values into business labels and fails closed for missing evidence | Gateway over Manage mandate and command-centre contracts |
 | Active attention items, owner, severity, age, and next step | Limits presentation to the current returned window and never infers a whole-book queue | Gateway over Manage exception contracts |
 | Rebalance stage, source readiness, issue count, and support note | Presents source-owned wave posture without execution claims | Gateway over Manage rebalance-wave contracts |
-| Memory, quality, outcome-review, and proof-pack counts or recent activity | Presents only returned selected-portfolio evidence | Gateway over Manage contracts |
 | Task-directory navigation | Builds portfolio-preserving Workbench routes to implemented modes | Workbench over the registered Manage navigation |
 
 Workbench uses the BFF and Gateway. It does not call Core or Manage directly. Shared contract detail
@@ -192,8 +191,8 @@ unsupported capability, and this guide is not a claim of competitor superiority.
 
 - `tests/unit/manage-overview-model.test.ts` proves missing risk profile, complete zero-attention
   posture, active-attention hierarchy, source-unavailable posture, explicit portfolio-to-wave
-  membership, rejection of an unscoped first wave, generated-on-request copy, business record
-  grammar, and portfolio-preserving task routes.
+  membership, rejection of an unscoped first wave, business record grammar, and
+  portfolio-preserving mandate and rebalance routes.
 - `tests/unit/manage-workspace-components.test.tsx` proves the combined decision worklist,
   selected-detail evidence, business-formatted date context, single-stated destinations,
   incomplete-evidence state, and absence of a fabricated alternatives-available claim.
