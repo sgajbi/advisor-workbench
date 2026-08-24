@@ -6458,3 +6458,55 @@ proof, evidence publication, repository context, architecture wiki source, prote
 exact-main validation, wiki parity, and clean branch/worktree restoration are required. No Gateway,
 API/OpenAPI, business calculation, authentication, entitlement, dependency, or runtime topology
 change is required.
+
+## Selected Portfolio Value Versus Adviser-Book AUM
+
+### Business job
+
+A client adviser or portfolio manager reviewing one selected portfolio must be able to identify its
+current base-currency market value without mistaking that account-level figure for the assets under
+management of their wider book, relationship, team, or firm.
+
+### Current-product research
+
+Research was reviewed on 2026-08-24 from primary regulatory, wealth-platform, and service-design
+sources:
+
+1. [SEC Form ADV instructions](https://www.sec.gov/files/formadv-instructions.pdf), Item 5.F,
+   calculates regulatory assets under management across the securities portfolios for which an
+   adviser provides continuous and regular management. It is an adviser aggregate, even though
+   current market values of the underlying portfolios contribute to it.
+2. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   separates **Book Insights** across an adviser's business from individual **Portfolio
+   Management**, while promoting one consistent language of portfolios across the organisation.
+3. [GOV.UK writing for user interfaces](https://www.gov.uk/service-manual/design/writing-for-user-interfaces)
+   recommends user language, short direct labels, important words first, and sentence case to
+   reduce cognitive effort in transactional interfaces.
+
+### Adopted decisions
+
+1. Use **Portfolio value** for the source-backed base-currency market value of one selected
+   portfolio across Portfolio Review, record headers, unavailable-state copy, and metric detail.
+2. Describe invested-assets and cash weights as a percentage **of portfolio value**.
+3. Keep the Gateway `assets_under_management_base` field and `PORTFOLIO_AUM_UNAVAILABLE` reason
+   code at the adapter boundary while translating them through one portfolio terminology module.
+4. Reserve **AUM** for a future source-backed adviser-book, relationship, or firm aggregate.
+5. Protect the boundary with direct component/view-model/drawer assertions and a recursive source
+   guard that permits only the two known contract identifiers.
+
+### Rejected decisions
+
+1. Renaming the Gateway field inside Workbench or changing its numeric mapping; the source value is
+   correct and this slice does not own the API contract.
+2. Summing visible portfolio rows in the browser to manufacture book AUM; paging, currency,
+   coverage, entitlement, and zero-versus-unavailable semantics belong to the source contract.
+3. Replacing labels independently on each screen without a reusable terminology authority.
+4. Treating the correction as evidence that a book-level AUM capability now exists.
+
+### Validation and publication decision
+
+Workbench #797 owns this bounded correction. Focused unit, integration, accessibility-name,
+responsive browser, screen-documentation, full repository, protected CI, exact-main, wiki
+publication/parity, and clean branch evidence are required. Gateway #573 and Workbench #470 remain
+the authority for a future adviser-book aggregate. The broader product glossary and copy-layer
+mechanism remain sequenced under #799 and #798.

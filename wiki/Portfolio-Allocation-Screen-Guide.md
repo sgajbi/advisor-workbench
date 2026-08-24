@@ -95,7 +95,7 @@ submit a rebalance, or place an order.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio identity, mandate, client reference, as-of date, currency, AUM, and position count | Presented from the selected portfolio book; not reconstructed from filtered rows | Gateway over Core portfolio book and summary records |
+| Portfolio identity, mandate, client reference, as-of date, currency, portfolio value, and position count | Presented from the selected portfolio book; not reconstructed from filtered rows | Gateway over Core portfolio book and summary records |
 | Direct allocation views and buckets | Formatted into dimensions and ranked values without browser recomputation | Core allocation records composed by Gateway |
 | Expanded-exposure capability and effective mode | Accepted only from a successful preferred-look-through allocation response | Gateway/Core allocation contract |
 | Direct contributing holdings | Matches source-booked positions and cash records against the selected direct classification | Workbench projection over Gateway/Core booked records |
@@ -124,7 +124,7 @@ Portfolio Allocation deliberately does not:
 - calculate or infer target weights, benchmark weights, drift, mandate compliance, concentration
   thresholds, suitability, tax consequences, risk severity, or recommendation posture,
 - equate a booked parent holding with decomposed expanded-exposure contributors,
-- recalculate AUM, portfolio totals, currency conversion, or source position counts,
+- recalculate portfolio value, currency conversion, or source position counts,
 - persist portfolio changes, create proposals, rebalance, trade, route orders, or claim execution,
 - treat a screenshot, chart, or successful browser render as bank approval or competitor
   superiority.

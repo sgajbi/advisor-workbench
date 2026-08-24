@@ -66,7 +66,7 @@ portfolio-entitlement work remains governed by
 1. Start from [Advisor Book](Advisor-Book-Workflow) or an already selected portfolio context.
 2. Confirm portfolio, client reference, booking centre, mandate status, base currency, and as-of
    date before comparing figures.
-3. Review AUM, invested assets, cash, and source-returned MTD, QTD, and YTD net returns.
+3. Review portfolio value, invested assets, cash, and source-returned MTD, QTD, and YTD net returns.
 4. Read **Review focus** before the secondary evidence. Workbench composes this focus from the
    loaded source facts and keeps source limitations visible when they affect the review.
 5. Review **Source Limitations** and the evidence rail when the decision depends on reporting,
@@ -82,12 +82,13 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
 
 - Shows the selected portfolio name or mandate label, portfolio and client references, booking
   centre, lifecycle status, base currency, and governed as-of date.
-- Presents source-backed AUM, invested assets, cash, cash weight, and MTD/QTD/YTD net returns.
+- Presents source-backed portfolio value, invested assets, cash, cash weight, and MTD/QTD/YTD net
+  returns.
 - Keeps those six scan metrics in a deliberate three-by-two desktop composition, reflowing to two
   and then one column before any reporting-currency value can collide or wrap. Productive 12px
   labels, 14px reading text, and 18px compact metrics preserve density without reducing legibility.
-- Opens supporting drawers for AUM, invested-assets, and cash evidence without turning those
-  drawers into recommendations.
+- Opens supporting drawers for Portfolio value, Invested assets, and Cash evidence without turning
+  those drawers into recommendations.
 - Presents one primary review focus with reporting coverage and only the open-exception evidence
   that exists. The current summary screen loads the workspace shell, dated book/summary details,
   performance snapshots, and the bounded Gateway `/workflow` projection for the selected portfolio
@@ -128,7 +129,7 @@ headline portfolio measures remain whole-portfolio source facts.
 | Judge whether the review is usable | Portfolio identity, as-of scope, readiness, reporting, and exception evidence | None |
 | Change period | Select a supported 7D, 30D, MTD, QTD, YTD, 1Y, or since-inception view | None; Workbench requests the relevant supporting performance evidence |
 | Change as-of date or reporting currency | The workspace capability must explicitly support that control | None; unsupported controls remain disabled |
-| Open a metric drawer | Select AUM, Invested Assets, or Cash | None; this reveals supporting evidence only |
+| Open a metric drawer | Select Portfolio value, Invested assets, or Cash | None; this reveals supporting evidence only |
 | Open a source-supplied next step | The dated Gateway workflow response must contain a supported action target | None on Portfolio Review; the user enters the owning workflow |
 | Export the review projection | A selected source-backed workspace must be present | A local JSON download only |
 | Continue to Performance, Risk, Advisor Brief, Evidence, Reports, or Mandate Operations | Select an implemented adjacent workflow for the same portfolio | None on Portfolio Review |
@@ -142,7 +143,7 @@ command unless an owning source workflow supplies a supported next action.
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
 | Portfolio catalogue and selected portfolio | Requested through the Workbench BFF; Workbench does not substitute an unrelated global book when selection is unavailable | Gateway portfolio APIs over Core portfolio identity |
-| Portfolio identity, profile, AUM, invested assets, cash, readiness inputs, and partial failures | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
+| Portfolio identity, profile, portfolio value, invested assets, cash, readiness inputs, and partial failures | Gateway workspace response is shaped for the review; Workbench formats but does not recalculate the underlying source facts | Core portfolio state composed by Gateway |
 | Overall review label | Workbench deterministically projects the review posture from source-returned position coverage, reporting status, publication permission, blocking controls, and visible source/supporting-evidence limitations. Reporting `READY` and `COMPLETE` use one canonical resolved-state mapping | Workbench presentation classification; not source-owned readiness, approval, or suitability authority |
 | Review focus and next step | Source partial failures remain evidenced when present; the summary fan-out requests the selected portfolio's dated Gateway `/workflow` contract and shows a next step only when that response supplies one | Gateway workflow action over source-owned portfolio context; Workbench orders and labels the handoff but does not persist approval or invent an action |
 | Positions, allocation, income, activity, and supporting book detail | Loaded through Gateway portfolio book and summary-detail contracts; record screens remain their owning presentation | Core portfolio book and transaction sources through Gateway |
@@ -258,9 +259,9 @@ Compatibility routes and aliases reuse this guide and must not fork the business
   workflow response is absent or fails.
 - Source-to-render historical proof first verifies that a missing dated summary keeps current totals
   labelled with their actual valuation date, then changes the same populated book to a dated
-  zero-position book and verifies that selected review date, source valuation date, zero AUM, and
-  qualified portfolio readiness change together without altering separately sourced reporting
-  posture.
+  zero-position portfolio and verifies that selected review date, source valuation date, zero
+  portfolio value, and qualified portfolio readiness change together without altering separately
+  sourced reporting posture.
 - The current #649 populated canonical rerun is blocked before Workbench/Gateway readiness by
   `lotus-core#943`, where a stale ZooKeeper `/brokers/ids/1` owner prevents the Core Kafka broker
   from restarting after an interrupted/recreated local runtime. This is an explicit infrastructure
