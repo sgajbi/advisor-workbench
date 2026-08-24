@@ -320,6 +320,12 @@ test("keeps one advisor decision workflow usable at every supported viewport", a
     await expect(
       records.getByText("Policy review required", { exact: true }),
     ).toHaveCount(1);
+    await expect(
+      actionWorklist.getByText("Policy Review Required", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      actionWorklist.getByText("Policy Pending Review", { exact: true }),
+    ).toHaveCount(0);
     const decisionId = await selectedDecision.getAttribute("id");
     expect(decisionId).not.toBeNull();
     await expect(options.first()).toHaveAttribute("aria-controls", decisionId!);

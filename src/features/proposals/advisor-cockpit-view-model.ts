@@ -34,7 +34,6 @@ export type AdvisorCockpitActionRow = {
   priority: string;
   priorityTone: SemanticBadgeTone;
   owner: string;
-  family: string;
   sla: string;
   nextRequiredAction: string;
   sourceHandoff: AdvisorCockpitSourceHandoff | null;
@@ -376,7 +375,6 @@ function toActionRow(
     priority: formatCode(action.priority),
     priorityTone: priorityTone(action.priority),
     owner: formatCode(action.owner_role),
-    family: formatCode(action.action_family),
     sla: formatCode(action.sla_age_band ?? "NOT_APPLICABLE"),
     nextRequiredAction:
       action.next_required_action ?? "Follow source-owned next action.",
