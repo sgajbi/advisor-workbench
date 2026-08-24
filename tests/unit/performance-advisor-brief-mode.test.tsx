@@ -899,7 +899,8 @@ describe("PerformanceAdvisorBriefMode", () => {
       expect(supportability).toHaveTextContent("Human Review");
       expect(supportability).toHaveTextContent("Accepted for internal use");
       expect(supportability).toHaveTextContent("Recorded by advisor_1");
-      expect(supportability).toHaveTextContent("Recorded 2026-04-21T03:22:00Z");
+      expect(supportability).toHaveTextContent("Recorded 21 Apr 2026, 03:22 UTC");
+      expect(supportability).not.toHaveTextContent("Recorded 2026-04-21T03:22:00Z");
       const reviewEvidence = screen.getByTestId("advisor-brief-human-review-evidence");
       expect(reviewEvidence).toHaveAttribute("data-review-state", "ACCEPTED");
       expect(reviewEvidence).toHaveAttribute("data-review-supportability", "READY");

@@ -6,6 +6,7 @@ import {
   classifyAiProviderPosture,
   createAiAssistanceDisclosure,
 } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 
 import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
@@ -122,7 +123,12 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
       : null,
     replacementRunId ? { label: "Replacement run", value: replacementRunId } : null,
     advisorBrief.ai_audit.generated_at
-      ? { label: "Prepared", value: advisorBrief.ai_audit.generated_at }
+      ? {
+          label: "Prepared",
+          value: formatTimestampValue(advisorBrief.ai_audit.generated_at, {
+            nullDisplay: "Not reported",
+          }),
+        }
       : null,
     advisorBrief.ai_audit.provider_id
       ? { label: "Execution provider", value: advisorBrief.ai_audit.provider_id }
@@ -135,7 +141,12 @@ function buildGatewayAiDisclosure(advisorBrief: WorkbenchPerformanceAdvisorBrief
       : null,
     humanReview.actor ? { label: "Review recorded by", value: humanReview.actor } : null,
     humanReview.occurredAt
-      ? { label: "Review recorded", value: humanReview.occurredAt }
+      ? {
+          label: "Review recorded",
+          value: formatTimestampValue(humanReview.occurredAt, {
+            nullDisplay: "Not reported",
+          }),
+        }
       : null,
   ].filter((item): item is { label: string; value: string } => item !== null);
   const limitations = [
@@ -487,7 +498,12 @@ function buildWorkflowPackReviewDetail(
   ];
   const reviewEvidence = buildAdvisorBriefHumanReview(workflowPackRun);
   if (reviewEvidence.sourceRecorded) {
-    detailParts.push(`Recorded by ${reviewEvidence.actor}`, `Recorded ${reviewEvidence.occurredAt}`);
+    detailParts.push(
+      `Recorded by ${reviewEvidence.actor}`,
+      `Recorded ${formatTimestampValue(reviewEvidence.occurredAt, {
+        nullDisplay: "Not reported",
+      })}`,
+    );
   } else if (isTerminalAdvisorBriefReviewState(workflowPackRun.review_state)) {
     detailParts.push("Review audit details not published");
   }
