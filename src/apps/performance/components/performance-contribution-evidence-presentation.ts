@@ -1,6 +1,7 @@
 import type { ContributionSummaryView } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
 import {
   getContributionEvidenceInconsistency,
   type ContributionEvidenceInconsistency,
@@ -364,7 +365,7 @@ function buildContributionEvidenceItems(
       value: formatExactEvidencePct(contribution.portfolio_contribution_pct),
     },
     {
-      label: "Portfolio return",
+      label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
       value: formatExactEvidencePct(contribution.total_portfolio_return_pct),
     },
     { label: "Smoothing status", value: formatEvidenceScalar(smoothingEvidence?.status) },

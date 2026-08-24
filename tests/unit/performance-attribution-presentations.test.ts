@@ -33,11 +33,11 @@ describe("performance attribution presentations", () => {
     const summaryItems = getAttributionTrendSummaryItems(trend);
 
     expect(summaryItems.map((item) => item.label)).toEqual([
-      "Total Effect",
-      "Cumulative Total",
+      "Total effect",
+      "Cumulative effect",
     ]);
-    expect(summaryItems.find((item) => item.label === "Total Effect")?.support).toBe(
-      "Active 0.22%"
+    expect(summaryItems.find((item) => item.label === "Total effect")?.support).toBe(
+      "Active return 0.22%"
     );
   });
 

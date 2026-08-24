@@ -1482,8 +1482,8 @@ test.describe('Performance workbench smoke', () => {
       await expect(page.getByLabel('Attribution trend table')).toBeVisible();
     }
     const attributionTrendStrip = page.getByLabel('Attribution trend summary strip');
-    await expect(attributionTrendStrip.getByText('Total Effect', { exact: true })).toBeVisible();
-    await expect(attributionTrendStrip.getByText('Cumulative Total', { exact: true })).toBeVisible();
+    await expect(attributionTrendStrip.getByText('Total effect', { exact: true })).toBeVisible();
+    await expect(attributionTrendStrip.getByText('Cumulative effect', { exact: true })).toBeVisible();
 
     await expect(page.getByLabel('Top Effects panel')).toHaveCount(0);
     await expect(page.getByLabel('Attribution Detail panel')).toHaveCount(0);

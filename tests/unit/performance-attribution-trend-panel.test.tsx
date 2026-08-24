@@ -105,9 +105,9 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(screen.queryByLabelText("Attribution trend context")).not.toBeInTheDocument();
     const trendSummaryStrip = screen.getByLabelText("Attribution trend summary strip");
     expect(trendSummaryStrip).toBeInTheDocument();
-    expect(screen.getByText("Total Effect")).toBeInTheDocument();
-    expect(screen.getByText("Cumulative Total")).toBeInTheDocument();
-    expect(within(trendSummaryStrip).queryByText("Active Return")).not.toBeInTheDocument();
+    expect(within(trendSummaryStrip).getByText("Total effect")).toBeInTheDocument();
+    expect(within(trendSummaryStrip).getByText("Cumulative effect")).toBeInTheDocument();
+    expect(within(trendSummaryStrip).queryByText("Active return")).not.toBeInTheDocument();
     expect(within(trendSummaryStrip).queryByText("Residual")).not.toBeInTheDocument();
     expect(screen.getByTestId("performance-attribution-trend-chart")).toBeInTheDocument();
     const chartOption = JSON.parse(
@@ -139,7 +139,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(within(trendTable).getByText("Allocation")).toBeInTheDocument();
     expect(within(trendTable).getByText("Selection")).toBeInTheDocument();
     expect(within(trendTable).getByText("Interaction")).toBeInTheDocument();
-    expect(within(trendTable).getByText("Cumulative Effect")).toBeInTheDocument();
+    expect(within(trendTable).getByText("Cumulative effect")).toBeInTheDocument();
     expect(within(trendTable).getByText("Residual")).toBeInTheDocument();
     expect(within(trendTable).getByText("2026-01")).toBeInTheDocument();
     expect(within(trendTable).getByText("2026-02")).toBeInTheDocument();
