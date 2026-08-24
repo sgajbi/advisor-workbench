@@ -37,7 +37,7 @@ const launchHistoryRows: DpmCampaignLaunchHistoryRow[] = [
     key: "history-1",
     waveId: "dwv_campaign_launch_001",
     actor: "pm_sg_1",
-    launchedAt: "2026-05-10T00:00:00Z",
+    launchedAt: "10 May 2026, 00:00 UTC",
     requestedAsOfDate: "2026-05-10",
     correlationId: "corr-campaign-launch",
     idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
@@ -78,6 +78,7 @@ describe("DpmCampaignLaunchHistoryCard", () => {
     expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review version 2026.05 | 1 of 21 launch records")).toBeInTheDocument();
     expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
+    expect(screen.getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
 
     const boundaries = screen.getByLabelText("Campaign launch history boundaries");

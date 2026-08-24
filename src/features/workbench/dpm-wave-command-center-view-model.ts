@@ -1017,6 +1017,7 @@ function buildCampaignLaunchHistoryRows(
 ): DpmCampaignLaunchHistoryRow[] {
   return extractRecordArray(data?.items).map((record, index) => {
     const waveId = readString(record, "wave_id") || `launch-${index + 1}`;
+    const launchedAt = readString(record, "launched_at");
     return {
       key: [
         waveId,
@@ -1026,7 +1027,7 @@ function buildCampaignLaunchHistoryRows(
       ].join(":"),
       waveId,
       actor: readString(record, "launched_by") || "N/A",
-      launchedAt: readString(record, "launched_at") || "N/A",
+      launchedAt: formatTimestampValue(launchedAt, { nullDisplay: "Not reported" }),
       requestedAsOfDate: readString(record, "requested_as_of_date") || "N/A",
       correlationId: readString(record, "correlation_id") || "N/A",
       idempotencyKey: readString(record, "idempotency_key") || "N/A",
