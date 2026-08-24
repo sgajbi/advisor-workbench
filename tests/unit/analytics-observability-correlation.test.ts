@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   buildAnalyticsUiCorrelationHeaders,
+  isValidAnalyticsUiCorrelationId,
   isValidAnalyticsUiTraceparent,
 } from "../../src/features/analytics-observability/correlation";
 
@@ -49,6 +50,26 @@ describe("analytics UI correlation headers", () => {
 
     expect(headers.get("traceparent")).not.toBe("not-a-valid-traceparent");
     expect(isValidAnalyticsUiTraceparent(headers.get("traceparent"))).toBe(true);
+  });
+
+  it.each([
+    "correlation id with spaces",
+    "correlation/id/with/path-separators",
+    "<script>alert(1)</script>",
+    `corr-${"a".repeat(128)}`,
+  ])("replaces malformed or unbounded correlation context %j", (correlationId) => {
+    const headers = buildAnalyticsUiCorrelationHeaders(
+      { "X-Correlation-Id": correlationId },
+      "risk-workspace",
+    );
+
+    expect(headers.get("X-Correlation-Id")).not.toBe(correlationId);
+    expect(headers.get("X-Correlation-Id")).toMatch(
+      /^corr-workbench-[0-9a-f]{16}$/,
+    );
+    expect(isValidAnalyticsUiCorrelationId(headers.get("X-Correlation-Id"))).toBe(
+      true,
+    );
   });
 
   it("uses a valid X-Trace-Id when replacing malformed traceparent headers", () => {

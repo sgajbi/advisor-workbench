@@ -1,5 +1,6 @@
 const TRACEPARENT_PATTERN = /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/;
 const TRACE_ID_PATTERN = /^[0-9a-f]{32}$/;
+const CORRELATION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const CORRELATION_STORAGE_PREFIX = "lotus.analytics-ui.correlation";
 const TRACEPARENT_STORAGE_PREFIX = "lotus.analytics-ui.traceparent";
 
@@ -13,6 +14,12 @@ export function isValidAnalyticsUiTraceparent(
   value: string | null | undefined
 ): value is string {
   return typeof value === "string" && TRACEPARENT_PATTERN.test(value);
+}
+
+export function isValidAnalyticsUiCorrelationId(
+  value: string | null | undefined,
+): value is string {
+  return typeof value === "string" && CORRELATION_ID_PATTERN.test(value);
 }
 
 export function buildAnalyticsUiCorrelationHeaders(
@@ -47,7 +54,7 @@ function resolveAnalyticsUiCorrelationContext(
   }
 ): AnalyticsUiCorrelationContext {
   const correlationId =
-    nonEmpty(incoming.correlationId) ??
+    validCorrelationId(incoming.correlationId) ??
     readOrCreateSessionValue(
       `${CORRELATION_STORAGE_PREFIX}.${routeKey}`,
       createAnalyticsUiCorrelationId
@@ -62,6 +69,11 @@ function resolveAnalyticsUiCorrelationContext(
     traceparent,
     traceId: traceIdFromTraceparent,
   };
+}
+
+function validCorrelationId(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && isValidAnalyticsUiCorrelationId(trimmed) ? trimmed : undefined;
 }
 
 function resolveTraceparent(
