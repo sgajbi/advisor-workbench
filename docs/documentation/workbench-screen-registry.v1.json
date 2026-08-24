@@ -330,7 +330,7 @@
     },
     {
       "id": "income-and-activity",
-      "businessName": "Income And Activity",
+      "businessName": "Income and activity",
       "family": "portfolio",
       "routePattern": "/income",
       "mode": null,
@@ -346,7 +346,7 @@
     },
     {
       "id": "projected-cash-movement",
-      "businessName": "Projected Cash Movement",
+      "businessName": "Projected cash flow",
       "family": "portfolio",
       "routePattern": "/cashflow",
       "mode": null,
@@ -412,7 +412,7 @@
     },
     {
       "id": "report-centre",
-      "businessName": "Report Centre",
+      "businessName": "Report centre",
       "family": "reporting",
       "routePattern": "/reports",
       "mode": null,

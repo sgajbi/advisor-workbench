@@ -4,6 +4,7 @@ import {
   type ReviewContext,
 } from "@/shell/review-context";
 import { resolveShellDestinationReviewContextPolicy } from "@/shell/app-registry";
+import { PORTFOLIO_SCREEN_LABELS } from "./portfolio-terminology";
 
 export type PortfolioScreenNavigationKey =
   | "portfolio"
@@ -89,7 +90,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "positions",
-    label: "Holdings",
+    label: PORTFOLIO_SCREEN_LABELS.positions,
     detail: "Valuation and profit or loss",
     href: "/positions",
     group: "portfolio-records",
@@ -113,8 +114,8 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "cashflow",
-    label: "Cash movements",
-    detail: "Expected portfolio cash movement",
+    label: PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
+    detail: "Expected portfolio inflows and outflows",
     href: "/cashflow",
     group: "portfolio-records",
     primary: false,
@@ -153,7 +154,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "reports",
-    label: "Reporting",
+    label: PORTFOLIO_SCREEN_LABELS.reportCentre,
     detail: "Order and monitor reports",
     href: "/reports",
     group: "operations",

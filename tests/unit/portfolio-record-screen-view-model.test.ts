@@ -7,11 +7,15 @@ import {
   resolvePortfolioRecordScreenWindow,
 } from "../../src/apps/portfolio/portfolio-record-screen-view-model";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
+import {
+  PORTFOLIO_CURRENCY_LABELS,
+  PORTFOLIO_SCREEN_LABELS,
+} from "../../src/apps/portfolio/portfolio-terminology";
 
 describe("portfolio record screen view model", () => {
   it("keeps screen copy centralized for the standalone record pages", () => {
     expect(getPortfolioRecordScreenCopy("positions")).toMatchObject({
-      title: "Positions",
+      title: PORTFOLIO_SCREEN_LABELS.positions,
     });
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
       title: "Allocation",
@@ -21,7 +25,7 @@ describe("portfolio record screen view model", () => {
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("booked income");
     expect(getPortfolioRecordScreenCopy("cashflow")).toMatchObject({
-      title: "Cashflow",
+      title: PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
     });
     expect(getPortfolioRecordScreenCopy("cashflow").subtitle).toContain(
       "not projected cash balances"
@@ -41,7 +45,7 @@ describe("portfolio record screen view model", () => {
     ]);
     expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "allocation")).toEqual([
       { label: "Portfolio value", value: "1,000,000 USD" },
-      { label: "Exposure Views", value: "1" },
+      { label: "Exposure views", value: "1" },
       { label: "Positions", value: "11" },
     ]);
     expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "positions")).toEqual([
@@ -60,9 +64,9 @@ describe("portfolio record screen view model", () => {
         "transactions",
       ),
     ).toEqual([
-      { label: "Portfolio Currency", value: "USD" },
-      { label: "Latest Booking", value: "10 May 2026" },
-      { label: "30D Entries", value: "412" },
+      { label: PORTFOLIO_CURRENCY_LABELS.base, value: "USD" },
+      { label: "Latest booking", value: "10 May 2026" },
+      { label: "30D entries", value: "412" },
     ]);
 
     expect(
@@ -111,9 +115,9 @@ describe("portfolio record screen view model", () => {
         "income"
       )
     ).toEqual([
-      { label: "Net Income", value: "42,901.4 USD" },
-      { label: "Net Cash Movement", value: "148,550 USD" },
-      { label: "Reporting Currency", value: "USD" },
+      { label: "Net income", value: "42,901.4 USD" },
+      { label: "Net cash movement", value: "148,550 USD" },
+      { label: PORTFOLIO_CURRENCY_LABELS.reporting, value: "USD" },
     ]);
 
     expect(
@@ -139,9 +143,9 @@ describe("portfolio record screen view model", () => {
         "cashflow"
       )
     ).toEqual([
-      { label: "Current Cash", value: "80,000 USD" },
-      { label: "Cash Weight", value: "8.00%" },
-      { label: "Base Currency", value: "USD" },
+      { label: "Current cash", value: "80,000 USD" },
+      { label: "Cash weight", value: "8.00%" },
+      { label: PORTFOLIO_CURRENCY_LABELS.base, value: "USD" },
     ]);
   });
 

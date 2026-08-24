@@ -7,6 +7,7 @@ import {
 } from "./formatters";
 import type { CashflowProjectionSnapshot } from "./portfolio-projected-cashflow-view-model";
 import type { PortfolioRecordScreenKind } from "./portfolio-record-screen-view-model";
+import { PORTFOLIO_SCREEN_LABELS } from "./portfolio-terminology";
 import { buildPortfolioPositionStateSummary } from "./portfolio-position-state-view-model";
 import { buildPortfolioTransactionSettlementSummary } from "./portfolio-transaction-settlement-view-model";
 import type { PortfolioWorkspace } from "./types";
@@ -153,7 +154,11 @@ function buildAdjacentWorkflows(
     { screen: "allocation", label: "Allocation", href: `/allocation?portfolioId=${encodedPortfolioId}` },
     { screen: "transactions", label: "Transactions", href: `/transactions?portfolioId=${encodedPortfolioId}` },
     { screen: "income", label: "Income & Activity", href: `/income?portfolioId=${encodedPortfolioId}` },
-    { screen: "cashflow", label: "Cashflow", href: `/cashflow?portfolioId=${encodedPortfolioId}` },
+    {
+      screen: "cashflow",
+      label: PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
+      href: `/cashflow?portfolioId=${encodedPortfolioId}`,
+    },
     { screen: "mandate", label: "Mandate Operations", href: `/workbench/${encodedPortfolioId}` },
   ];
 

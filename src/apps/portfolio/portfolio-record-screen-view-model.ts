@@ -1,6 +1,10 @@
 import { formatCurrency, formatDate, formatPct } from "./formatters";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
-import { PORTFOLIO_VALUE_LABEL } from "./portfolio-terminology";
+import {
+  PORTFOLIO_CURRENCY_LABELS,
+  PORTFOLIO_SCREEN_LABELS,
+  PORTFOLIO_VALUE_LABEL,
+} from "./portfolio-terminology";
 import type { PortfolioWorkspace } from "./types";
 import {
   resolveEffectivePeriod,
@@ -28,7 +32,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     subtitle: "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
   },
   positions: {
-    title: "Positions",
+    title: PORTFOLIO_SCREEN_LABELS.positions,
     subtitle:
       "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity.",
   },
@@ -37,11 +41,11 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     subtitle: "Review booked activity, settlement state, booking components, and source lineage.",
   },
   income: {
-    title: "Income & Activity",
+    title: "Income and activity",
     subtitle: "Review booked income, deductions, and portfolio cash movements in reporting currency.",
   },
   cashflow: {
-    title: "Cashflow",
+    title: PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
     subtitle:
       "Review expected dated net cash movements across the selected horizon. Figures show movement, not projected cash balances.",
   },
@@ -72,7 +76,7 @@ export function buildPortfolioRecordHeaderKpis(
         value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
       },
       {
-        label: "Exposure Views",
+        label: "Exposure views",
         value: String(workspace.allocation_views?.length ?? 0),
       },
       {
@@ -93,7 +97,7 @@ export function buildPortfolioRecordHeaderKpis(
 
     return [
       {
-        label: "Net Income",
+        label: "Net income",
         value: income
           ? formatCurrency(
               income.totals_requested_window.net.reporting_currency_amount,
@@ -102,13 +106,13 @@ export function buildPortfolioRecordHeaderKpis(
           : "N/A",
       },
       {
-        label: "Net Cash Movement",
+        label: "Net cash movement",
         value: activityMovement == null
           ? "N/A"
           : formatCurrency(activityMovement.netMovement, reportingCurrency),
       },
       {
-        label: "Reporting Currency",
+        label: PORTFOLIO_CURRENCY_LABELS.reporting,
         value: reportingCurrency,
       },
     ];
@@ -140,15 +144,15 @@ export function buildPortfolioRecordHeaderKpis(
   if (screen === "transactions") {
     return [
       {
-        label: "Portfolio Currency",
+        label: PORTFOLIO_CURRENCY_LABELS.base,
         value: workspace.portfolio.base_currency,
       },
       {
-        label: "Latest Booking",
+        label: "Latest booking",
         value: formatDate(workspace.operations?.latest_booked_transaction_date),
       },
       {
-        label: "30D Entries",
+        label: "30D entries",
         value: String(
           workspace.transaction_ledger_page?.total ??
             workspace.recent_transactions.length,
@@ -160,15 +164,15 @@ export function buildPortfolioRecordHeaderKpis(
   if (screen === "cashflow") {
     return [
       {
-        label: "Current Cash",
+        label: "Current cash",
         value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency),
       },
       {
-        label: "Cash Weight",
+        label: "Cash weight",
         value: formatPct(workspace.summary.cash_weight_pct),
       },
       {
-        label: "Base Currency",
+        label: PORTFOLIO_CURRENCY_LABELS.base,
         value: workspace.portfolio.base_currency,
       },
     ];

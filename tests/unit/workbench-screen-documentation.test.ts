@@ -657,7 +657,7 @@ describe("Workbench screen documentation governance", () => {
     expect(validate(registry).errors).toEqual([]);
   });
 
-  it("maps Projected Cash Movement to one horizon-safe business guide", () => {
+  it("maps Projected cash flow to one horizon-safe business guide", () => {
     const registry = loadRegistry();
     const projectedCashMovement = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "projected-cash-movement",
@@ -1062,7 +1062,7 @@ describe("Workbench screen documentation governance", () => {
     expect(validate(registry).errors).toEqual([]);
   });
 
-  it("maps Report Centre to one complete source-backed business guide", () => {
+  it("maps Report centre to one complete source-backed business guide", () => {
     const registry = loadRegistry();
     const reportCentre = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "report-centre",

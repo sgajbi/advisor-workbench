@@ -25,6 +25,7 @@ import {
 } from "@/shell/review-context";
 
 import { ReportOrderingWorkspace } from "./components/report-ordering-workspace";
+import { REPORT_CENTRE_TITLE } from "./report-ordering-terminology";
 
 export async function ReportOrderingPage({
   searchParams,
@@ -140,7 +141,7 @@ function ReportOrderingUnavailable({
           }
           main={
             <WorkbenchPageFrame
-              title="Report Centre"
+              title={REPORT_CENTRE_TITLE}
               subtitle="Approved portfolio report ordering and request monitoring."
             >
               <DegradedStatePanel

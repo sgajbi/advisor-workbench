@@ -1,6 +1,6 @@
-# Report Centre
+# Report centre
 
-Report Centre is the advisor's controlled workspace for preparing portfolio-review report data.
+Report centre is the adviser's controlled workspace for preparing portfolio-review report data.
 It supports one selected portfolio or the same approved setup across an explicit selection from
 **My book**. A portfolio bundle creates a separate report outcome for each portfolio; it is not a
 consolidated client, household, or book report.
@@ -10,7 +10,7 @@ consolidated client, household, or book report.
 | Screen posture | Current truth |
 | --- | --- |
 | Canonical route | `/reports?portfolioId={portfolio_id}`; an accepted portfolio bundle is addressable as `/reports?portfolioId={portfolio_id}&batchId={batch_id}` |
-| Navigation | **Reporting** in daily work within the shared portfolio context |
+| Navigation | **Report centre** in daily work within the shared portfolio context |
 | Supported scope | One selected portfolio, or at least two active portfolios explicitly selected from the current source-backed advisor book |
 | Evidence posture | Single-portfolio canonical runtime coverage plus production-browser bundle workflow and state-matrix proof; a multi-portfolio canonical seed remains required for certifying live bundle evidence |
 | Primary next action | Review the report setup, submit it through Gateway, then monitor source-owned portfolio outcomes |
@@ -22,7 +22,7 @@ advisor-book authority.
 
 ## Business Purpose
 
-Report Centre helps an advisor answer three operating questions without moving between technical
+Report centre helps an adviser answer three operating questions without moving between technical
 service consoles:
 
 1. Which firm-approved report setup is available for this portfolio context?
@@ -38,17 +38,17 @@ completion behind one bundle-level success label.
 
 The shell-owned **Review portfolio** strip confirms the selected portfolio and reporting context
 once before report setup. It uses the same Gateway portfolio-workspace response already required
-by Report Centre: mandate type, booking centre, business date, and reporting currency stay visible,
+by Report centre: mandate type, booking centre, business date, and reporting currency stay visible,
 while portfolio and client references remain in **Support details**.
 
-Report Centre does not repeat portfolio identity in its header or setup banner. A carried review
+Report centre does not repeat portfolio identity in its header or setup banner. A carried review
 period that does not filter report ordering is disclosed in the strip. Report dates and currencies
 inside a reviewed request remain visible because they are material request terms, not duplicate
 navigation context.
 
 The reporting rail is available only after the Gateway workspace confirms the selected portfolio.
 A catalogue or route match alone is not sufficient: when the workspace is unavailable or returns
-another portfolio, Report Centre withholds portfolio-scoped navigation and directs the advisor to
+another portfolio, Report centre withholds portfolio-scoped navigation and directs the adviser to
 **My book**. If the workspace identity is confirmed but a date, period, or currency control is not
 supported, the rail may remain because the source portfolio—not merely the address—is still known.
 
@@ -70,7 +70,7 @@ delegated, supervisory, household, or unrestricted book access.
 ## Workflow Position
 
 1. Start from [Advisor Book](Advisor-Book-Workflow) or an established portfolio context.
-2. Open **Reporting** and confirm the selected portfolio, business date, catalogue availability, and
+2. Open **Report centre** and confirm the selected portfolio, business date, catalogue availability, and
    output readiness.
 3. Choose **Selected portfolio** or **Portfolio bundle**. For a bundle, search and select at least
    two active portfolios returned by **My book**.
@@ -173,7 +173,7 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 
 ## Workbench Boundaries
 
-Report Centre deliberately does not:
+Report centre deliberately does not:
 
 - create a consolidated client, household, relationship, or advisor-book report,
 - infer book membership, eligibility, approval, suitability, or delivery authority,
@@ -195,7 +195,7 @@ implemented behavior; it is not a claim of bank approval or competitor superiori
 - [Portfolio Review](Portfolio-Review-Screen-Guide) provides the selected mandate and attention
   context before report preparation.
 - Performance, Risk, and Manage provide source analysis or workflow evidence that may inform a
-  review; Report Centre does not recalculate their figures.
+  review; Report centre does not recalculate their figures.
 - Archive, advisor approval, client delivery, and communication stop at an explicit boundary until
   separately supported service contracts and screens exist.
 

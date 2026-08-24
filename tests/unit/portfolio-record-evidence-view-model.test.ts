@@ -73,7 +73,7 @@ describe("portfolio record evidence view model", () => {
       "Allocation",
       "Transactions",
       "Income & Activity",
-      "Cashflow",
+      "Projected cash flow",
       "Mandate Operations",
     ]);
     expect(viewModel.adjacentWorkflows.map((workflow) => workflow.label)).not.toContain(

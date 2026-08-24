@@ -6,6 +6,19 @@ export const PORTFOLIO_VALUE_UNAVAILABLE_LABEL =
 export const PORTFOLIO_VALUATION_DATE_LABEL = "Valuation date";
 export const PORTFOLIO_REVIEW_DATE_LABEL = "Review date";
 
+export const PORTFOLIO_SCREEN_LABELS = {
+  positions: "Positions",
+  projectedCashFlow: "Projected cash flow",
+  reportCentre: "Report centre",
+} as const;
+
+export const PORTFOLIO_CURRENCY_LABELS = {
+  base: "Base currency",
+  reporting: "Reporting currency",
+  instrument: "Instrument currency",
+  transaction: "Transaction currency",
+} as const;
+
 export const PORTFOLIO_VALUE_COPY = {
   title: PORTFOLIO_VALUE_LABEL,
   description:

@@ -6,6 +6,8 @@ import {
   buildPortfolioDateFacts,
   formatShareOfPortfolioValue,
   PORTFOLIO_REVIEW_DATE_LABEL,
+  PORTFOLIO_CURRENCY_LABELS,
+  PORTFOLIO_SCREEN_LABELS,
   PORTFOLIO_VALUATION_DATE_LABEL,
   PORTFOLIO_VALUE_LABEL,
 } from "../../src/apps/portfolio/portfolio-terminology";
@@ -71,6 +73,20 @@ describe("portfolio terminology", () => {
       { label: PORTFOLIO_VALUATION_DATE_LABEL, date: "2026-04-10" },
       { label: PORTFOLIO_REVIEW_DATE_LABEL, date: "2026-04-01" },
     ]);
+  });
+
+  it("owns the canonical portfolio screen and currency labels", () => {
+    expect(PORTFOLIO_SCREEN_LABELS).toEqual({
+      positions: "Positions",
+      projectedCashFlow: "Projected cash flow",
+      reportCentre: "Report centre",
+    });
+    expect(PORTFOLIO_CURRENCY_LABELS).toEqual({
+      base: "Base currency",
+      reporting: "Reporting currency",
+      instrument: "Instrument currency",
+      transaction: "Transaction currency",
+    });
   });
 
   it.each([

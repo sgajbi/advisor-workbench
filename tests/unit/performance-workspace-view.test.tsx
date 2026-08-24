@@ -281,7 +281,7 @@ describe("PerformanceWorkspaceView", () => {
     expect(screen.queryByText("Selected portfolio")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Surface")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
-    expect(screen.getByRole("link", { name: /Holdings/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Positions\b/i })).toHaveAttribute(
       "href",
       "/positions?portfolioId=PF_1001"
     );
