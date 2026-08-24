@@ -8,6 +8,7 @@ import {
   formatNumber,
   formatPercent,
   formatTimestampValue,
+  formatYearMonthValue,
   isBusinessDateValue,
   isTimestampValue,
   parseBusinessDateValue,
@@ -59,6 +60,14 @@ describe("financial-formatters", () => {
     expect(formatCalendarDateValue("2026-03-28")).toBe("28 Mar 2026");
     expect(formatCalendarDateValue("2026-03-28T23:30:00-05:00")).toBe("29 Mar 2026");
     expect(formatCalendarDateValue("2026-03-28T08:00:00")).toBe("N/A");
+  });
+
+  it("formats year-month reporting periods without inventing a date or timezone", () => {
+    expect(formatYearMonthValue("2026-04")).toBe("Apr '26");
+    expect(formatYearMonthValue("2026-04", { compact: true })).toBe("Apr\n'26");
+    expect(formatYearMonthValue("2026-13", { nullDisplay: "Not reported" })).toBe(
+      "Not reported",
+    );
   });
 
   it("requires timestamp zone evidence and always discloses normalized UTC", () => {
