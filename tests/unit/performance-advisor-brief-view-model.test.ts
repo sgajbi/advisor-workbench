@@ -563,7 +563,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           value: "Accepted for internal use",
           tone: "success",
           detail:
-            "Supportability READY • Recorded by advisor_1 • Recorded 2026-04-21T03:22:00Z",
+            "Supportability READY • Recorded by advisor_1 • Recorded 21 Apr 2026, 03:22 UTC",
           reviewEvidence: {
             reviewState: "ACCEPTED",
             supportability: "READY",
@@ -572,6 +572,11 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           },
         }),
       ])
+    );
+    expect(brief.aiDisclosure.diagnostics).toEqual(
+      expect.arrayContaining([
+        { label: "Review recorded", value: "21 Apr 2026, 03:22 UTC" },
+      ]),
     );
   });
 

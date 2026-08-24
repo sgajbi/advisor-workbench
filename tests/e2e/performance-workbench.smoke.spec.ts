@@ -1851,8 +1851,16 @@ test.describe('Performance workbench smoke', () => {
     await disclosure.locator('summary').click();
     await expect(disclosure).toContainText('Human review recorded');
     await expect(disclosure).toContainText('advisor_e2e');
-    await expect(disclosure).toContainText('2026-04-21T03:22:00Z');
+    await expect(disclosure).toContainText('21 Apr 2026, 03:22 UTC');
+    await expect(disclosure).not.toContainText('2026-04-21T03:22:00Z');
     await expect(disclosure).toContainText('Not approved for client use');
+
+    const reviewEvidence = page.getByTestId('advisor-brief-human-review-evidence');
+    await expect(reviewEvidence).toContainText('Recorded 21 Apr 2026, 03:22 UTC');
+    await expect(reviewEvidence).toHaveAttribute(
+      'data-recorded-at',
+      '2026-04-21T03:22:00Z',
+    );
 
     const supportDetails = page.locator('details').filter({
       hasText: 'Technical support details',
