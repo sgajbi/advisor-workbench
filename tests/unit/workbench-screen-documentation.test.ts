@@ -926,7 +926,10 @@ describe("Workbench screen documentation governance", () => {
         "src/features/workbench/components/outcome-review-panel.tsx",
         "src/features/workbench/use-outcome-review-handoffs.ts",
       ]),
-      runtimeEvidence: ["tests/integration/workbench-page.test.tsx"],
+      runtimeEvidence: [
+        "tests/integration/workbench-page.test.tsx",
+        "tests/e2e/manage-outcome-reviews-workspace.spec.ts",
+      ],
       coverageException: null,
     });
     const guide = fs
@@ -941,6 +944,7 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("presents the first source-ranked review");
     expect(guide).toContain("AI-assisted result remains internal and review-gated");
+    expect(guide).toContain("docs/evidence/issue-799-product-vocabulary/outcome-reviews/");
     expect(guide).toContain("does not:\n\n- calculate expected or realised outcomes");
     expect(guide).toContain("not a claim of competitor\nsuperiority");
     expect(validate(registry).errors).toEqual([]);
