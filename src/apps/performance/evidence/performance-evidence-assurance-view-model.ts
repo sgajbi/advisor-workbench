@@ -1,4 +1,5 @@
 import { parseCanonicalPerformancePeriod } from "@/apps/performance/periods";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import type {
   PerformanceCalculationEvidenceView,
   PerformanceEvidenceArtifactView,
@@ -974,7 +975,10 @@ function buildSupportGroups(
     { label: "Evidence reason", value: displayValue(evidence.reason ?? capability.reason) },
     { label: "Calculation scope", value: displayValue(evidence.calculation_scope) },
     { label: "Benchmark code", value: displayValue(evidence.benchmark_code, "Not assigned") },
-    { label: "Generated at", value: displayValue(evidence.generated_at) },
+    {
+      label: "Generated at",
+      value: formatTimestampValue(evidence.generated_at, { nullDisplay: "Not reported" }),
+    },
     ...safeStrings(evidence.source_services).map((value, index) => ({
       label: `Source service ${index + 1}`,
       value,

@@ -72,6 +72,26 @@ function evidence(overrides: Partial<PerformanceEvidenceView> = {}): Performance
 }
 
 describe("buildPerformanceEvidenceAssuranceViewModel", () => {
+  it("presents evidence-generation instants in disclosed UTC and fails closed without a zone", () => {
+    const ready = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ generated_at: "2026-08-14T16:20:00+08:00" }),
+    );
+    const unzoned = buildPerformanceEvidenceAssuranceViewModel(
+      supportedCapability,
+      evidence({ generated_at: "2026-08-14T16:20:00" }),
+    );
+
+    expect(ready.supportGroups.flatMap(({ rows }) => rows)).toContainEqual({
+      label: "Generated at",
+      value: "14 Aug 2026, 08:20 UTC",
+    });
+    expect(unzoned.supportGroups.flatMap(({ rows }) => rows)).toContainEqual({
+      label: "Generated at",
+      value: "Not reported",
+    });
+  });
+
   it("admits source-confirmed evidence only for internal review", () => {
     const view = buildPerformanceEvidenceAssuranceViewModel(supportedCapability, evidence());
 
