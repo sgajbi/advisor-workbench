@@ -57,6 +57,20 @@ describe("proposal risk and impact view model", () => {
     );
   });
 
+  it("uses the disclosed UTC calendar and fails closed on unzoned version time", () => {
+    const offsetEnvelope = proposalRiskImpactFixture();
+    offsetEnvelope.data.version_created_at = "2026-08-19T23:30:00-05:00";
+    const unzonedEnvelope = proposalRiskImpactFixture();
+    unzonedEnvelope.data.version_created_at = "2026-08-19T20:30:00";
+
+    expect(buildProposalRiskImpactModel(offsetEnvelope).identity.recorded).toBe(
+      "20 Aug 2026",
+    );
+    expect(buildProposalRiskImpactModel(unzonedEnvelope).identity.recorded).toBe(
+      "Not reported",
+    );
+  });
+
   it("keeps current and proposed source values separate without calculating a delta", () => {
     const model = buildProposalRiskImpactModel(proposalRiskImpactFixture());
     const equity = model.allocation.views[0]?.rows[0];
