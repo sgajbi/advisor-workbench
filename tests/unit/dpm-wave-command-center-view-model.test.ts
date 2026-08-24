@@ -899,7 +899,7 @@ describe("DPM wave command-center view model", () => {
       key: "dwv_campaign_launch_001:2026-05-10T00:00:00Z:2026-05-10:campaign-launch:campaign-holdings-202605:2026.05:abc",
       waveId: "dwv_campaign_launch_001",
       actor: "pm_sg_1",
-      launchedAt: "2026-05-10T00:00:00Z",
+      launchedAt: "10 May 2026, 00:00 UTC",
       requestedAsOfDate: "2026-05-10",
       correlationId: "corr-campaign-launch",
       idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
