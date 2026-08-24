@@ -6199,6 +6199,13 @@ Research was reviewed on 2026-08-24 from primary product and standards sources:
 5. [WAI-ARIA listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) and
    [WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) support predictable
    keyboard selection and preservation of content and function when available width narrows.
+6. [Avaloq Client Management](https://www.avaloq.com/platform/client-management) describes one
+   integrated front-office interface for daily tasks, transactions, relationships, prospects, and
+   news. Lotus applies the workflow-coherence principle without copying Avaloq's presentation or
+   claiming unsupported cross-domain capability.
+7. [IBM Carbon UI shell](https://web-components.carbondesignsystem.com/?path=/story/components-ui-shell--header-base-w-navigation-actions-and-side-nav)
+   assigns dependable product movement to side navigation, while contextual panels support the
+   current task. This supports one navigation owner and distinct evidence-only secondary rails.
 
 These sources inform workflow order and interaction quality. They do not transfer another
 vendor's visual identity, calculations, data, entitlement model, or claims to Lotus.
@@ -6220,6 +6227,9 @@ vendor's visual identity, calculations, data, entitlement model, or claims to Lo
    disclosure.
 7. Treat the first decision row below 900 pixels at 1440 as a product defect and protect the
    intended hierarchy with optimized-browser geometry assertions rather than screenshots alone.
+8. On Manage, keep workflow destinations in the left rail, operating posture and decisions in the
+   centre, and only distinct source-evidence availability in the right rail. On Cockpit, state the
+   action title once in the row and disclose its complete source reason in the selected pane.
 
 ### Rejected decisions
 
@@ -6229,6 +6239,8 @@ vendor's visual identity, calculations, data, entitlement model, or claims to Lo
 4. Rendering correlation, snapshot, or unknown-source codes as primary advisor content.
 5. Calling diagnostic fixtures canonical evidence or weakening geometry assertions to preserve a
    tall layout.
+6. Replacing a duplicate right rail with another page-local action menu, KPI stack, or navigation
+   treatment that creates a second information owner.
 
 ### Validation and publication decision
 
