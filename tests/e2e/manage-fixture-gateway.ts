@@ -90,6 +90,13 @@ export async function startManageFixtureGateway({
       sendJson(response, waveItemsEnvelope());
       return;
     }
+    if (
+      path === "/api/v1/dpm/command-center/outcome-reviews" &&
+      process.env.MANAGE_E2E_FIXTURE === "outcome-reviews"
+    ) {
+      sendJson(response, outcomeReviewEnvelope());
+      return;
+    }
     const launchedWaveItemsMatch = path.match(
       /^\/api\/v1\/dpm\/command-center\/waves\/(dwv_campaign_[^/]+)\/items$/,
     );
@@ -494,6 +501,120 @@ function waveItemsEnvelope() {
                 status: "READY",
               },
             ],
+          },
+        },
+      ],
+    },
+  };
+}
+
+function outcomeReviewEnvelope() {
+  return {
+    correlation_id: "corr-manage-outcome-reviews",
+    contract_version: "v1",
+    source_service: "lotus-manage",
+    upstream_status: 200,
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:RFC-0042",
+      state: "READY",
+      reason_codes: ["READY_FOR_REPORT_INPUT"],
+      blocked_actions: [],
+      remediation_owner: "Portfolio Management",
+      applied_filters: { portfolio_id: portfolioId },
+      source_owner_counts: {
+        "lotus-manage": 1,
+        "lotus-performance": 1,
+      },
+      source_type_counts: {
+        outcome_review: 1,
+        performance_result: 1,
+      },
+      support_boundary: {
+        result_scope: "selected_portfolio",
+        review_order: "source_ranked",
+      },
+    },
+    data: {
+      items: [
+        {
+          outcome_review_id: "outcome-review-2026-05-13",
+          state: "READY",
+          overall_outcome: "READY_WITHIN_TOLERANCE",
+          portfolio_id: portfolioId,
+          rebalance_run_id: "rebalance-run-2026-05-03",
+          wave_id: waveId,
+          proof_pack_id: "proof-pack-2026-05-13",
+          expected_snapshot_hash: "sha256:expected-review-snapshot",
+          realized_snapshot_hash: "sha256:realised-review-snapshot",
+          retain_until: "2033-05-13",
+          created_at: "2026-05-13T09:35:00Z",
+          updated_at: "2026-05-13T10:05:00Z",
+          review_window: {
+            start: "2026-05-01",
+            end: "2026-05-13",
+          },
+          variance_summary: { drift_improvement_pct: 72.4 },
+          supportability: {
+            explanation:
+              "Outcome comparison is ready for portfolio-manager review; client communication remains outside this screen.",
+          },
+          dimension_results: [
+            {
+              dimension: "ALLOCATION_DRIFT",
+              expected: { value: 4.2, unit: "%" },
+              realized: { value: 1.2, unit: "%" },
+              variance: { value: -3.0, unit: "percentage points" },
+              state: "WITHIN_TOLERANCE",
+              explanation:
+                "Realised allocation drift improved from 4.2% to 1.2% against the review expectation.",
+            },
+            {
+              dimension: "CASH_WEIGHT",
+              expected: { value: 3.0, unit: "%" },
+              realized: { value: 3.2, unit: "%" },
+              variance: { value: 0.2, unit: "percentage points" },
+              state: "WITHIN_TOLERANCE",
+              explanation:
+                "Realised cash weight remains within the expected review tolerance.",
+            },
+          ],
+          source_lineage: [
+            {
+              source_service: "lotus-manage",
+              source_type: "outcome_review",
+              source_ref: "manage-outcome-review-2026-05-13",
+              freshness_bucket: "current",
+              content_hash: "sha256:manage-outcome-review",
+            },
+            {
+              source_service: "lotus-performance",
+              source_type: "performance_result",
+              source_ref: "performance-result-2026-05-13",
+              freshness_bucket: "current",
+              content_hash: "sha256:performance-result",
+            },
+          ],
+          client_communication_boundary: {
+            boundary_id: "DPM_OUTCOME_CLIENT_COMMUNICATION_BOUNDARY",
+            supportability_state: "BLOCKED",
+            source_system: "lotus-manage",
+            source_product_name: "DpmPostTradeOutcomeReview",
+            source_product_version: "v1",
+            client_communication_projected: false,
+            client_approval_projected: false,
+            reason_code: "OUTCOME_CLIENT_COMMUNICATION_NOT_SUPPORTED",
+            blocked_capabilities: [
+              "client_approval",
+              "client_contact",
+              "client_message_generation",
+              "delivery_confirmation",
+            ],
+            required_owner: "Client Communications",
+            required_source_product: "ClientCommunicationRecord:v1",
+            summary:
+              "Client communication and approval remain in the owning client-communication workflow.",
+            content_hash: "sha256:client-communication-boundary",
           },
         },
       ],

@@ -17,6 +17,7 @@ const workbenchPort = Number.parseInt(
 const scenarioSpecs = {
   overview: "tests/e2e/manage-overview-workspace.spec.ts",
   "mandate-health": "tests/e2e/manage-mandate-health-workspace.spec.ts",
+  "outcome-reviews": "tests/e2e/manage-outcome-reviews-workspace.spec.ts",
   "rebalance-waves": "tests/e2e/manage-rebalance-workspace.spec.ts",
 };
 const spec = scenarioSpecs[scenario];
