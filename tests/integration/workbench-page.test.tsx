@@ -378,9 +378,9 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    expect(screen.getAllByRole("heading", { name: "Outcome Reviews" }).length).toBeGreaterThan(0);
-    expect(screen.getByText("Review Timeline")).toBeInTheDocument();
-    expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Outcome reviews" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("Review timeline")).toBeInTheDocument();
+    expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByText("Drift Reduction")).toBeInTheDocument();

@@ -17,7 +17,7 @@ describe("OutcomeReviewEvidenceGrid", () => {
     const grid = screen.getByLabelText("Outcome review evidence availability");
 
     expect(grid).toHaveTextContent("Expected outcome Available");
-    expect(grid).toHaveTextContent("Realized outcome Available");
+    expect(grid).toHaveTextContent("Realised outcome Available");
     expect(grid).toHaveTextContent("Evidence pack Available");
     expect(grid).toHaveTextContent("Source evidence Available");
     expect(screen.queryByText(/sha256|proof-pack-hidden|source_ref|content_hash/i)).not.toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("OutcomeReviewEvidenceGrid", () => {
     const grid = screen.getByLabelText("Outcome review evidence availability");
 
     expect(grid).toHaveTextContent("Expected outcome Not available");
-    expect(grid).toHaveTextContent("Realized outcome Available");
+    expect(grid).toHaveTextContent("Realised outcome Available");
     expect(grid).toHaveTextContent("Evidence pack Not available");
     expect(grid).toHaveTextContent("Source evidence Partial");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();

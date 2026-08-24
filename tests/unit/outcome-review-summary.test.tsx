@@ -28,7 +28,7 @@ describe("OutcomeReviewSummary", () => {
     expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
       "Available",
     );
-    expect(screen.getByText("Ready For Report Input")).toBeInTheDocument();
+    expect(screen.getByText("Report preparation ready")).toBeInTheDocument();
     expect(screen.queryByText(/or_1|rr_1|wave_1|sha256/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i }),
@@ -46,7 +46,7 @@ describe("OutcomeReviewSummary", () => {
           supportabilityState: "UNAVAILABLE",
           supportabilityReasons: ["GATEWAY_OUTCOME_REVIEW_UNAVAILABLE"],
           blockedActions: ["CREATE_REPORT_INPUT", "REQUEST_AI_NARRATIVE"],
-          remediationOwner: "Front Office Platform",
+          remediationOwner: "Front-office operations",
           items: [],
         }}
         primaryReview={null}
@@ -60,7 +60,7 @@ describe("OutcomeReviewSummary", () => {
       "Not available",
     );
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
-    expect(screen.getByText(/Front Office Platform/)).toBeInTheDocument();
+    expect(screen.getByText(/Front-office operations/)).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

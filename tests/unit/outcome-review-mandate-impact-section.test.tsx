@@ -24,7 +24,7 @@ describe("OutcomeReviewMandateImpactSection", () => {
 
     const section = screen.getByLabelText("Outcome review mandate impact");
 
-    expect(section).toHaveTextContent("Mandate Impact");
+    expect(section).toHaveTextContent("Mandate impact");
     expect(section).toHaveTextContent("Portfolio drift improved while mandate tolerance remained intact.");
     expect(section).toHaveTextContent("Allocation Drift");
     expect(section).toHaveTextContent("Within tolerance");

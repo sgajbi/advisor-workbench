@@ -16,8 +16,8 @@ describe("OutcomeReviewDetailContext", () => {
     const context = screen.getByLabelText("Selected review source posture");
 
     expect(context).toHaveTextContent("Updated 13 May 2026, 09:35 UTC");
-    expect(context).toHaveTextContent("Retention 31 Dec 2026");
-    expect(context).toHaveTextContent("4 source refs");
+    expect(context).toHaveTextContent("Retained until 31 Dec 2026");
+    expect(context).toHaveTextContent("4 source references");
   });
 
   it("keeps source lineage identifiers and unsupported workflow controls out of the row", () => {

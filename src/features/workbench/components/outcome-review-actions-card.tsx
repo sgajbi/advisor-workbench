@@ -1,6 +1,7 @@
 "use client";
 
 import type { OutcomeReviewListItem } from "@/features/workbench/outcome-review-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   primaryReview: OutcomeReviewListItem;
@@ -20,7 +21,7 @@ export default function OutcomeReviewActionsCard({
   return (
     <div className="outcome-review-card outcome-review-actions-card">
       <div className="outcome-review-card-header">
-        <h3>Recommended Actions</h3>
+        <h3>{MANAGE_OUTCOME_REVIEW_LABELS.recommendedActions}</h3>
       </div>
       <div className="outcome-review-action-stack">
         <a href="#outcome-review-detail">
@@ -35,7 +36,7 @@ export default function OutcomeReviewActionsCard({
         ) : (
           <button type="button" disabled>
             <strong>Open evidence pack</strong>
-            <span>Evidence pack has not been returned by Gateway.</span>
+            <span>Evidence pack is not available from the source.</span>
           </button>
         )}
         <button
@@ -43,8 +44,12 @@ export default function OutcomeReviewActionsCard({
           onClick={onRequestAiNarrative}
           disabled={!aiNarrativeAvailable || aiNarrativePending}
         >
-          <strong>{aiNarrativePending ? "Requesting advisor memo" : "Request advisor memo"}</strong>
-          <span>Ask the governed AI workflow for PM handoff commentary.</span>
+          <strong>
+            {aiNarrativePending
+              ? MANAGE_OUTCOME_REVIEW_LABELS.preparingAiAssistedReviewSummary
+              : MANAGE_OUTCOME_REVIEW_LABELS.prepareAiAssistedReviewSummary}
+          </strong>
+          <span>Prepare internal PM, CIO, and control commentary; human review remains required.</span>
         </button>
       </div>
     </div>

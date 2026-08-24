@@ -16,10 +16,10 @@ describe("OutcomeReviewReadinessBand", () => {
 
     const band = screen.getByLabelText("Selected outcome review readiness");
 
-    expect(band).toHaveTextContent("Review Window01 May 2026 - 13 May 2026");
-    expect(band).toHaveTextContent("Report InputReady");
-    expect(band).toHaveTextContent("AI NarrativeReady");
-    expect(band).toHaveTextContent("Source EvidenceAvailable");
+    expect(band).toHaveTextContent("Review window01 May 2026 - 13 May 2026");
+    expect(band).toHaveTextContent("Report preparationReady");
+    expect(band).toHaveTextContent("AI-assisted review summaryReady");
+    expect(band).toHaveTextContent("Source evidenceAvailable");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
@@ -39,9 +39,9 @@ describe("OutcomeReviewReadinessBand", () => {
 
     const band = screen.getByLabelText("Selected outcome review readiness");
 
-    expect(band).toHaveTextContent("Report InputBlocked");
-    expect(band).toHaveTextContent("AI NarrativeBlocked");
-    expect(band).toHaveTextContent("Source EvidencePartial");
+    expect(band).toHaveTextContent("Report preparationBlocked");
+    expect(band).toHaveTextContent("AI-assisted review summaryBlocked");
+    expect(band).toHaveTextContent("Source evidencePartial");
     expect(screen.queryByText(/source_ref|content_hash|sha256|outcome_review_id/i)).not.toBeInTheDocument();
   });
 });

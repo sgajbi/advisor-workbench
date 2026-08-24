@@ -9,7 +9,7 @@ describe("OutcomeReviewClientBoundaryCard", () => {
     render(<OutcomeReviewClientBoundaryCard boundary={clientCommunicationBoundary()} />);
 
     const boundary = screen.getByLabelText("Client communication boundary");
-    expect(boundary).toHaveTextContent("Client Communication Boundary");
+    expect(boundary).toHaveTextContent("Client communication controls");
     expect(boundary).toHaveTextContent("Blocked");
     expect(boundary).toHaveTextContent(
       "Manage does not publish client communication events for this outcome review."

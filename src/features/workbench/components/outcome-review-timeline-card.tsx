@@ -4,6 +4,7 @@ import { AnalyticsTable, SemanticBadge } from "@/design-system";
 import type { OutcomeReviewListItem } from "@/features/workbench/outcome-review-view-model";
 import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
   items: OutcomeReviewListItem[];
@@ -13,7 +14,7 @@ export default function OutcomeReviewTimelineCard({ items }: Props) {
   return (
     <div className="outcome-review-card outcome-review-timeline-card">
       <div className="outcome-review-card-header">
-        <h3>Review Timeline</h3>
+        <h3>{MANAGE_OUTCOME_REVIEW_LABELS.reviewTimeline}</h3>
         <span>{items.length} returned</span>
       </div>
       <AnalyticsTable

@@ -52,7 +52,7 @@ describe("useOutcomeReviewHandoffs", () => {
     });
   });
 
-  it("requests advisor memo evidence through Gateway and keeps workflow-pack status display-only", async () => {
+  it("requests AI-assisted review evidence through Gateway and keeps workflow-pack status display-only", async () => {
     vi.mocked(requestDpmOutcomeReviewAiNarrative).mockResolvedValue(aiNarrativeResponse());
 
     const { result } = renderHook(() =>

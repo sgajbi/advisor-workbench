@@ -7,7 +7,7 @@ describe("OutcomeReviewStatusStrip", () => {
   it("renders business-facing outcome review status metrics", () => {
     render(
       <OutcomeReviewStatusStrip
-        latestReview="Ready for adviser review"
+        reviewPosture="Ready for adviser review"
         outcomeStatus="Within expected tolerance"
         driftImprovement="72.4%"
         evidencePackStatus="Available"
@@ -16,17 +16,17 @@ describe("OutcomeReviewStatusStrip", () => {
 
     const strip = screen.getByLabelText("Outcome review status summary");
 
-    expect(strip).toHaveTextContent("Latest ReviewReady for adviser review");
-    expect(strip).toHaveTextContent("Outcome StatusWithin expected tolerance");
-    expect(strip).toHaveTextContent("Drift Improvement72.4%");
-    expect(strip).toHaveTextContent("Evidence PackAvailable");
+    expect(strip).toHaveTextContent("Review postureReady for adviser review");
+    expect(strip).toHaveTextContent("Comparison outcomeWithin expected tolerance");
+    expect(strip).toHaveTextContent("Drift improvement72.4%");
+    expect(strip).toHaveTextContent("Evidence packAvailable");
     expect(screen.queryByText(/source_ref|content_hash|sha256|outcome_review_id/i)).not.toBeInTheDocument();
   });
 
   it("fails closed to unavailable labels without adding workflow controls", () => {
     render(
       <OutcomeReviewStatusStrip
-        latestReview={null}
+        reviewPosture={null}
         outcomeStatus={undefined}
         driftImprovement={null}
         evidencePackStatus="Unavailable"
@@ -35,10 +35,10 @@ describe("OutcomeReviewStatusStrip", () => {
 
     const strip = screen.getByLabelText("Outcome review status summary");
 
-    expect(strip).toHaveTextContent("Latest ReviewN/A");
-    expect(strip).toHaveTextContent("Outcome StatusN/A");
-    expect(strip).toHaveTextContent("Drift ImprovementN/A");
-    expect(strip).toHaveTextContent("Evidence PackUnavailable");
+    expect(strip).toHaveTextContent("Review postureN/A");
+    expect(strip).toHaveTextContent("Comparison outcomeN/A");
+    expect(strip).toHaveTextContent("Drift improvementN/A");
+    expect(strip).toHaveTextContent("Evidence packUnavailable");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })

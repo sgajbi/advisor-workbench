@@ -45,7 +45,7 @@ describe("OutcomeReviewActionsCard", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recommended actions" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Review mandate impact/ })).toHaveAttribute(
       "href",
       "#outcome-review-detail"
@@ -55,7 +55,7 @@ describe("OutcomeReviewActionsCard", () => {
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Request advisor memo/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }));
     expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("or_hidden_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_hidden_1")).not.toBeInTheDocument();
@@ -76,7 +76,8 @@ describe("OutcomeReviewActionsCard", () => {
     );
 
     expect(screen.getByRole("button", { name: /Open evidence pack/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Request advisor memo/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Prepare AI-assisted review summary/ })).toBeDisabled();
+    expect(screen.getByText("Evidence pack is not available from the source.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client|communication|approval|delivery/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/order|OMS|execution|fill|settlement/i)).not.toBeInTheDocument();
   });

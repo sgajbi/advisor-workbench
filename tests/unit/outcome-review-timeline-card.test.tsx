@@ -35,7 +35,7 @@ describe("OutcomeReviewTimelineCard", () => {
   it("renders outcome review rows without leaking source identifiers", () => {
     render(<OutcomeReviewTimelineCard items={[baseItem]} />);
 
-    expect(screen.getByRole("heading", { name: "Review Timeline" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Review timeline" })).toBeInTheDocument();
     expect(screen.getByText("1 returned")).toBeInTheDocument();
 
     const table = screen.getByRole("table", { name: "Outcome reviews" });
