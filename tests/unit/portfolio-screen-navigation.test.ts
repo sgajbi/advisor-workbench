@@ -1,10 +1,16 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
+import { getPortfolioRecordScreenCopy } from "../../src/apps/portfolio/portfolio-record-screen-view-model";
 import {
   buildPortfolioScreenHref,
   buildPortfolioScreenNavigationItems,
   buildPortfolioScreenNavigationModel,
 } from "../../src/apps/portfolio/portfolio-screen-navigation";
+import { PORTFOLIO_SCREEN_LABELS } from "../../src/apps/portfolio/portfolio-terminology";
+import { REPORT_CENTRE_TITLE } from "../../src/features/report-ordering/report-ordering-terminology";
 
 describe("portfolio screen navigation", () => {
   it("builds encoded portfolio-scoped routes for every Workbench screen", () => {
@@ -128,6 +134,58 @@ describe("portfolio screen navigation", () => {
       { key: "analytics", items: ["risk"] },
       { key: "advice", items: ["proposal"] },
     ]);
+  });
+
+  it("uses the canonical business names for portfolio destinations", () => {
+    const items = buildPortfolioScreenNavigationItems({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+
+    expect(items.find((item) => item.key === "positions")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.positions,
+    );
+    expect(items.find((item) => item.key === "cashflow")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
+    );
+    expect(items.find((item) => item.key === "reports")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.reportCentre,
+    );
+  });
+
+  it("keeps navigation, page titles, and the screen registry on one name", () => {
+    const items = buildPortfolioScreenNavigationItems({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+    });
+    const registry = JSON.parse(
+      readFileSync(
+        join(
+          process.cwd(),
+          "docs",
+          "documentation",
+          "workbench-screen-registry.v1.json",
+        ),
+        "utf8",
+      ),
+    ) as { surfaces: Array<{ id: string; businessName: string }> };
+    const registeredName = (id: string) =>
+      registry.surfaces.find((surface) => surface.id === id)?.businessName;
+
+    expect(items.find((item) => item.key === "positions")?.label).toBe(
+      getPortfolioRecordScreenCopy("positions").title,
+    );
+    expect(getPortfolioRecordScreenCopy("positions").title).toBe(
+      registeredName("positions"),
+    );
+    expect(items.find((item) => item.key === "cashflow")?.label).toBe(
+      getPortfolioRecordScreenCopy("cashflow").title,
+    );
+    expect(getPortfolioRecordScreenCopy("cashflow").title).toBe(
+      registeredName("projected-cash-movement"),
+    );
+    expect(items.find((item) => item.key === "reports")?.label).toBe(
+      REPORT_CENTRE_TITLE,
+    );
+    expect(REPORT_CENTRE_TITLE).toBe(registeredName("report-centre"));
   });
 
   it("does not repeat a primary destination as a separate current task", () => {

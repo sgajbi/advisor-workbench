@@ -11,8 +11,8 @@ const ROUTES: Array<{ screen: PortfolioRecordScreenKind; title: string }> = [
   { screen: "allocation", title: "Allocation" },
   { screen: "positions", title: "Positions" },
   { screen: "transactions", title: "Transactions" },
-  { screen: "cashflow", title: "Cashflow" },
-  { screen: "income", title: "Income & Activity" },
+  { screen: "cashflow", title: "Projected cash flow" },
+  { screen: "income", title: "Income and activity" },
 ];
 
 vi.mock(

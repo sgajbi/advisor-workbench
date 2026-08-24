@@ -1,6 +1,6 @@
-# Projected Cash Movement
+# Projected cash flow
 
-Projected Cash Movement is the selected portfolio's forward movement review. It helps an advisor
+Projected cash flow is the selected portfolio's forward movement review. It helps an adviser
 or portfolio manager understand expected dated net cash movements before a client conversation,
 funding discussion, or mandate review. It does not calculate an ending cash balance, decide
 liquidity sufficiency, recommend funding, or initiate a transfer, trade, or settlement instruction.
@@ -10,7 +10,7 @@ liquidity sufficiency, recommend funding, or initiate a transfer, trade, or sett
 | Screen posture | Current truth |
 | --- | --- |
 | Canonical route | `/cashflow?portfolioId={portfolio_id}` |
-| Navigation | **Cashflow** in the selected-portfolio rail |
+| Navigation | **Projected cash flow** in the selected-portfolio rail |
 | Supported scope | One Gateway-backed portfolio at one governed as-of date, reviewed over 10, 30, or 90 days |
 | Evidence posture | Owned contract-valid browser proof for `PB_SG_GLOBAL_BAL_001` at desktop, tablet, and narrow widths |
 | Primary next action | Explain a material expected movement, investigate a source limitation, or continue to an adjacent source-backed workflow |
@@ -22,7 +22,7 @@ book, team book, or multiple mandates.
 
 ## Business Purpose
 
-Projected Cash Movement helps an advisor or portfolio manager answer four bounded questions:
+Projected cash flow helps an adviser or portfolio manager answer four bounded questions:
 
 1. What is the net expected cash movement over the selected horizon?
 2. How much positive and negative net movement appears across the returned dates?
@@ -131,7 +131,7 @@ success state or substitute a different horizon.
 
 ## Workbench Boundaries
 
-Projected Cash Movement deliberately does not:
+Projected cash flow deliberately does not:
 
 - calculate opening cash, ending cash, available cash, liquidity sufficiency, funding capacity, or
   a cash-buffer recommendation,

@@ -248,7 +248,7 @@ async function openCashflowPortfolio(
     return { portfolioId, available: false };
   }
 
-  await expect(page.getByRole('heading', { name: /^Cashflow$/i })).toBeVisible({
+  await expect(page.getByRole('heading', { name: /^Projected cash flow$/i })).toBeVisible({
     timeout: 15000,
   });
   return { portfolioId, available: true };
@@ -368,7 +368,7 @@ test.describe('Portfolio workbench smoke', () => {
       { label: 'Allocation', route: '/allocation', heading: /^Allocation$/i },
       { label: 'Transactions', route: '/transactions', heading: /^Transactions$/i },
       { label: 'Income', route: '/income', heading: /^Income & Activity$/i },
-      { label: 'Cashflow', route: '/cashflow', heading: /^Cashflow$/i },
+      { label: 'Projected cash flow', route: '/cashflow', heading: /^Projected cash flow$/i },
       { label: 'Positions', route: '/positions', heading: /^Positions$/i },
     ];
 
@@ -399,7 +399,7 @@ test.describe('Portfolio workbench smoke', () => {
       { route: '/positions', heading: /^Positions$/i },
       { route: '/transactions', heading: /^Transactions$/i },
       { route: '/income', heading: /^Income & Activity$/i },
-      { route: '/cashflow', heading: /^Cashflow$/i },
+      { route: '/cashflow', heading: /^Projected cash flow$/i },
     ];
 
     for (const destination of destinations) {
@@ -879,7 +879,7 @@ test.describe('Portfolio workbench smoke', () => {
     );
 
     await expect(
-      page.getByRole("heading", { name: /^Projected cash movement$/i }),
+      page.getByRole("heading", { name: /^Projected cash flow$/i }),
     ).toBeVisible();
     await expect(
       page.getByLabel("Projected cash movement summary"),

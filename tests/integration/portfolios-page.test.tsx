@@ -447,7 +447,7 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
     expect(
       screen
-        .getAllByRole("link", { name: /Holdings/i })
+        .getAllByRole("link", { name: /^Positions\b/i })
         .some((link) => link.getAttribute("href")?.includes("/positions"))
     ).toBe(true);
     expect(
@@ -457,7 +457,7 @@ describe("PortfolioFoundationPage", () => {
     ).toBe(true);
     expect(
       screen
-        .getAllByRole("link", { name: /Cash movements/i })
+        .getAllByRole("link", { name: /^Projected cash flow\b/i })
         .some((link) => link.getAttribute("href")?.includes("/cashflow"))
     ).toBe(true);
     expect(screen.queryByText("Performance not available yet")).not.toBeInTheDocument();
@@ -512,7 +512,7 @@ describe("PortfolioFoundationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
     expect(
       screen
-        .getAllByRole("link", { name: /Holdings/i })
+        .getAllByRole("link", { name: /^Positions\b/i })
         .some((link) => link.getAttribute("href")?.includes("/positions"))
     ).toBe(true);
   }, 30000);

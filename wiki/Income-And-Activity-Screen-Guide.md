@@ -1,6 +1,6 @@
-# Income And Activity
+# Income and activity
 
-Income And Activity is the selected portfolio's booked-income and booked-cash review. It explains
+Income and activity is the selected portfolio's booked-income and booked-cash review. It explains
 what was recorded in the reporting window, how gross income became net income, and which actual cash
 movements increased or reduced the portfolio. It does not forecast income, assess liquidity,
 calculate tax advice, reconcile bookings, or authorize a cash movement.
@@ -20,7 +20,7 @@ does not aggregate a household, advisor book, team book, or multiple mandates.
 
 ## Business Purpose
 
-Income And Activity helps an advisor or portfolio manager answer four practical questions before a
+Income and activity helps an adviser or portfolio manager answer four practical questions before a
 client review or portfolio discussion:
 
 1. How much dividend and interest income was booked in the reporting window?
@@ -115,7 +115,7 @@ manufacture a local success state.
 
 ## Workbench Boundaries
 
-Income And Activity deliberately does not:
+Income and activity deliberately does not:
 
 - forecast dividends, interest, accrued entitlement, or cash movement,
 - decide liquidity sufficiency, funding capacity, or cash-transfer recommendations,

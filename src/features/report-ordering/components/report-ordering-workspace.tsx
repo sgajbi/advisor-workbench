@@ -17,6 +17,7 @@ import {
 } from "@/design-system";
 import { buildReviewContextNavigationHref } from "@/shell/review-context";
 
+import { REPORT_CENTRE_TITLE } from "../report-ordering-terminology";
 import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
 import {
   findPortfolioReviewBatchMode,
@@ -194,7 +195,7 @@ function ReportOrderingWorkspaceSession({
           main={
             <WorkbenchPageFrame
               className={styles.frame}
-              title="Report Centre"
+              title={REPORT_CENTRE_TITLE}
               subtitle="Prepare approved portfolio reports, confirm readiness, and monitor each request."
             >
               <WorkbenchSectionStack className={styles.contentStack}>

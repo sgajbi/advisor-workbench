@@ -51,8 +51,8 @@ reviewing holdings, activity, income, liquidity, and source-record detail.
 | [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)       | `/allocation`   | Active  | Guide available | Gateway and Core                       |
 | [Positions](Positions-Screen-Guide)                             | `/positions`    | Active  | Guide available | Gateway and Core                       |
 | [Transactions](Transactions-Screen-Guide)                       | `/transactions` | Active  | Guide available | Gateway and Core                       |
-| [Income And Activity](Income-And-Activity-Screen-Guide)         | `/income`       | Active  | Guide available | Gateway and Core                       |
-| [Projected Cash Movement](Projected-Cash-Movement-Screen-Guide) | `/cashflow`     | Active  | Guide available | Gateway and Core                       |
+| [Income and activity](Income-And-Activity-Screen-Guide)         | `/income`       | Active  | Guide available | Gateway and Core                       |
+| [Projected cash flow](Projected-Cash-Movement-Screen-Guide) | `/cashflow`     | Active  | Guide available | Gateway and Core                       |
 | [Portfolio Intake](Portfolio-Intake-Screen-Guide)               | `/intake`       | Active  | Guide available | Gateway and Core                       |
 
 The `client-context` advisory mode resolves to Portfolio Review. It is an alias, not an additional
@@ -155,10 +155,10 @@ reporting or service contracts.
 
 | Business screen                                               | Route or mode    | Posture | Guide status    | Source authority                                   |
 | ------------------------------------------------------------- | ---------------- | ------- | --------------- | -------------------------------------------------- |
-| [Report Centre](Report-Centre-Screen-Guide)                   | `/reports`       | Active  | Guide available | Gateway and Report                                 |
+| [Report centre](Report-Centre-Screen-Guide)                   | `/reports`       | Active  | Guide available | Gateway and Report                                 |
 | [Data Product Catalogue](Data-Product-Catalogue-Screen-Guide) | `/data-products` | Active  | Guide available | Gateway, lotus-platform, and Lotus domain services |
 
-The Report Centre guide covers approved report choices, reviewed single-portfolio requests,
+The Report centre guide covers approved report choices, reviewed single-portfolio requests,
 source-backed portfolio-bundle selection, separate per-portfolio outcomes, archive and delivery
 boundaries, and failure recovery only where currently implemented. The Data Product Catalogue
 guide covers accountable ownership, approved use, live assurance, dependency impact, and
