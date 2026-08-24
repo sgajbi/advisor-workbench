@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  MANAGE_HEALTH_DIMENSION_LABELS,
   MANAGE_REBALANCE_LABELS,
   MANAGE_WORKFLOW_LABELS,
 } from "../../src/features/workbench/manage-terminology";
@@ -16,9 +17,23 @@ describe("manage terminology", () => {
       attentionItems: "Attention items",
       openAttentionItems: "Open attention items",
       sourceExceptions: "Source exceptions",
+      needsAttention: "Needs attention",
       dataAvailability: "Data availability",
       mandateHealthDimensions: "Mandate health dimensions",
       asOfDate: "As-of date",
+    });
+    expect(MANAGE_HEALTH_DIMENSION_LABELS).toEqual({
+      dataAvailability: "Data availability",
+      allocationDrift: "Allocation drift",
+      riskDrift: "Risk drift",
+      cashLiquidity: "Cash liquidity",
+      taxAndTurnover: "Tax and turnover",
+      eligibilityRestrictions: "Eligibility restrictions",
+      performanceReview: "Performance review",
+      reviewReadiness: "Review readiness",
+      reviewCadence: "Review cadence",
+      modelFreshness: "Model freshness",
+      mandateConstraints: "Mandate constraints",
     });
   });
 

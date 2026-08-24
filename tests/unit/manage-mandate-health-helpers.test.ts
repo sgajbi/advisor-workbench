@@ -72,9 +72,9 @@ describe("manage mandate health helpers", () => {
     expect(formatMandateHealthDisplayDate("2026-05-18T23:30:00-05:00")).toBe("19 May 2026");
     expect(formatMandateHealthDisplayDate("2026-05-18T00:00:00")).toBe("Not confirmed");
     expect(formatMandateHealthDisplayDate("13 May 2026")).toBe("Not confirmed");
-    expect(formatMandateHealthDimensionLabel("source_readiness")).toBe("Market Data Readiness");
-    expect(formatMandateHealthDimensionLabel("allocation_drift")).toBe("Allocation Drift");
-    expect(formatMandateHealthDimensionLabel("mandate_constraints")).toBe("Mandate Constraints");
+    expect(formatMandateHealthDimensionLabel("source_readiness")).toBe("Data availability");
+    expect(formatMandateHealthDimensionLabel("allocation_drift")).toBe("Allocation drift");
+    expect(formatMandateHealthDimensionLabel("mandate_constraints")).toBe("Mandate constraints");
   });
 
   it("formats attention observations and recommended actions from source reason codes", () => {

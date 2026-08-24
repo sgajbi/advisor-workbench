@@ -60,6 +60,8 @@ describe("DpmCampaignWorkflowAuditCard", () => {
     expect(screen.getByText("sha256:task")).toBeInTheDocument();
     expect(screen.getByText("21 May 2026, 08:00 UTC")).toBeInTheDocument();
     expect(screen.getByText("ASSIGNED_FOR_REVIEW: OPEN to WAITING_FOR_REVIEW")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Needs attention" })).toHaveValue("ATTENTION");
+    expect(screen.queryByRole("option", { name: "Attention required" })).not.toBeInTheDocument();
     const rendered = document.body.textContent ?? "";
     expect(rendered).not.toContain("order generated");
     expect(rendered).not.toContain("OMS execution");
