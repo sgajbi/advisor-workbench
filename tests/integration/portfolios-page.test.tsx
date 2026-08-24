@@ -265,9 +265,9 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByRole("heading", { name: /^Income$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /^Activity$/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText("As of")).toHaveValue("2026-02-24");
-    expect(screen.getByLabelText("Reporting Currency")).toHaveValue("USD");
+    expect(screen.getByLabelText("Reporting currency")).toHaveValue("USD");
     expect(screen.getByLabelText("As of")).toBeDisabled();
-    expect(screen.getByLabelText("Reporting Currency")).toBeDisabled();
+    expect(screen.getByLabelText("Reporting currency")).toBeDisabled();
     expect(screen.getByText(/Historical review is not available for this book yet/i)).toBeInTheDocument();
     expect(
       screen.getByText(/Some workflow views keep book currency until full restatement is available/i)
@@ -326,7 +326,7 @@ describe("PortfolioFoundationPage", () => {
     expect(document.querySelector(".portfolio-actions-card.workbench-rail-card")).toBeFalsy();
     expect(document.querySelectorAll(".portfolio-side-card")).toHaveLength(1);
     expect(screen.queryByText(/target: performance workflow for this portfolio/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Evidence Coverage" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence coverage" })).toBeInTheDocument();
     expect(screen.queryByText("PORTFOLIO_CASH_BALANCES_UNAVAILABLE")).not.toBeInTheDocument();
     expect(screen.getAllByText("cash balance service unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: /^Performance$/i })[0]).toHaveAttribute(
@@ -346,7 +346,7 @@ describe("PortfolioFoundationPage", () => {
       });
       fireEvent.click(within(currentKeyMetrics).getByRole("button", { name: buttonName }));
       expect(
-        await screen.findByText("Metric Detail", undefined, { timeout: 5000 }),
+        await screen.findByText("Metric detail", undefined, { timeout: 5000 }),
       ).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: linkName })).toHaveAttribute("href", href);
@@ -364,13 +364,13 @@ describe("PortfolioFoundationPage", () => {
     );
     await openKeyMetricDrawer(
       /Invested Assets/i,
-      "Invested Assets",
+      "Invested assets",
       "Open allocation",
       "/positions?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );
     await openKeyMetricDrawer(
       /^Cash:/i,
-      "Available Cash",
+      "Available cash",
       "Open liquidity",
       "/cashflow?portfolioId=PORT_UI_1001&asOfDate=2026-02-24&period=30D&reportingCurrency=USD"
     );

@@ -358,22 +358,22 @@ test.describe('Performance workbench smoke', () => {
     } else {
       await expectExecutiveMetric(
         executiveStrip,
-        'Opening MV',
+        'Opening market value',
         posture.metrics.openingMarketValue,
       );
-      await expectExecutiveMetric(executiveStrip, 'Net Flow', posture.metrics.netFlow);
+      await expectExecutiveMetric(executiveStrip, 'Net cash flow', posture.metrics.netFlow);
       await expectExecutiveMetric(
         executiveStrip,
-        'Flow-Adjusted MV',
+        'Flow-adjusted market value',
         posture.metrics.flowAdjustedMarketValue,
       );
-      await expect(executiveStrip.getByText('Ending MV', { exact: true })).toHaveCount(
+      await expect(executiveStrip.getByText('Ending market value', { exact: true })).toHaveCount(
         posture.metrics.endingMarketValue ? 1 : 0,
       );
-      await expect(executiveStrip.getByText('Opening Cash', { exact: true })).toHaveCount(
+      await expect(executiveStrip.getByText('Opening cash flow', { exact: true })).toHaveCount(
         posture.metrics.openingCash ? 1 : 0,
       );
-      await expect(executiveStrip.getByText('Closing Cash', { exact: true })).toHaveCount(
+      await expect(executiveStrip.getByText('Closing cash flow', { exact: true })).toHaveCount(
         posture.metrics.closingCash ? 1 : 0,
       );
     }
@@ -385,30 +385,30 @@ test.describe('Performance workbench smoke', () => {
     ) {
       await expect(returnDecisionReadout).toHaveCount(0);
       if (posture.capabilities.summary !== 'unavailable') {
-        await expect(getExecutiveMetric(executiveStrip, 'Benchmark Evidence')).toContainText(
+        await expect(getExecutiveMetric(executiveStrip, 'Benchmark evidence')).toContainText(
           'Unavailable',
         );
-        await expect(getExecutiveMetric(executiveStrip, 'Money-Weighted Return')).toContainText(
-          posture.metrics.moneyWeightedReturn ? /Money-Weighted Return/ : /Unavailable/,
+        await expect(getExecutiveMetric(executiveStrip, 'Money-weighted return (MWR)')).toContainText(
+          posture.metrics.moneyWeightedReturn ? /Money-weighted return \(MWR\)/ : /Unavailable/,
         );
       }
     } else {
       await expect(returnDecisionReadout).toBeVisible({ timeout: 15_000 });
       const moneyWeightedReturn = returnDecisionReadout
-        .getByText('Money-Weighted Return', { exact: true })
+        .getByText('Money-weighted return (MWR)', { exact: true })
         .locator('..');
       await expect(moneyWeightedReturn).toContainText(
-        posture.metrics.moneyWeightedReturn ? /Money-Weighted Return/ : /Unavailable/,
+        posture.metrics.moneyWeightedReturn ? /Money-weighted return \(MWR\)/ : /Unavailable/,
       );
     }
 
     if (posture.capabilities.returnPath === 'supported') {
       await expect(
-        page.getByLabel(/Net Return Path (?:chart|single observation comparison)/),
+        page.getByLabel(/Time-weighted return path · Net of fees (?:chart|single observation comparison)/),
       ).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByLabel('Net Return Path unavailable')).toHaveCount(0);
+      await expect(page.getByLabel('Time-weighted return path · Net of fees unavailable')).toHaveCount(0);
     } else {
-      await expect(page.getByLabel('Net Return Path unavailable')).toBeVisible({
+      await expect(page.getByLabel('Time-weighted return path · Net of fees unavailable')).toBeVisible({
         timeout: 30_000,
       });
     }
@@ -526,26 +526,26 @@ test.describe('Performance workbench smoke', () => {
 
     const executiveStrip = page.getByLabel('Executive return strip');
     for (const label of [
-      'Opening MV',
-      'Net Flow',
-      'Opening Cash',
-      'Closing Cash',
-      'Flow-Adjusted MV',
-      'Ending MV',
+      'Opening market value',
+      'Net cash flow',
+      'Opening cash flow',
+      'Closing cash flow',
+      'Flow-adjusted market value',
+      'Ending market value',
     ]) {
       await expect(getExecutiveMetric(executiveStrip, label)).toBeVisible();
       await expect(getExecutiveMetric(executiveStrip, label)).not.toContainText(/N\/A|Unavailable/);
     }
 
     await expect(
-      page.getByLabel(/Net Return Path (?:chart|single observation comparison)/),
+      page.getByLabel(/Time-weighted return path · Net of fees (?:chart|single observation comparison)/),
     ).toBeVisible({ timeout: 30_000 });
     const returnDecisionReadout = page.getByLabel('Return decision readout');
     await expect(returnDecisionReadout).toBeVisible({ timeout: 15_000 });
-    await expect(returnDecisionReadout).toContainText('Portfolio Return');
-    await expect(returnDecisionReadout).toContainText('Benchmark Return');
-    await expect(returnDecisionReadout).toContainText('Active Return');
-    await expect(returnDecisionReadout).toContainText('Money-Weighted Return');
+    await expect(returnDecisionReadout).toContainText('Portfolio TWR');
+    await expect(returnDecisionReadout).toContainText('Benchmark TWR');
+    await expect(returnDecisionReadout).toContainText('Active return');
+    await expect(returnDecisionReadout).toContainText('Money-weighted return (MWR)');
 
     const horizonModule = page
       .getByRole('heading', { name: /^Horizon Comparison$/i })
@@ -743,17 +743,19 @@ test.describe('Performance workbench smoke', () => {
       for (const heading of [
         'Period',
         'Window',
-        'Portfolio',
-        'Benchmark',
-        'Cum. Portfolio',
-        'Cum. Benchmark',
+        'Portfolio TWR',
+        'Benchmark TWR',
+        'Cumulative portfolio TWR',
+        'Cumulative benchmark TWR',
       ]) {
         await expect(
           historyTable.getByRole('columnheader', { name: heading, exact: true }),
         ).toBeAttached();
       }
-      await expect(historyTable.getByRole('columnheader', { name: 'Active' })).toHaveCount(0);
-      await expect(historyTable.getByRole('columnheader', { name: 'Cum. Active' })).toHaveCount(0);
+      await expect(historyTable.getByRole('columnheader', { name: 'Active return' })).toHaveCount(0);
+      await expect(
+        historyTable.getByRole('columnheader', { name: 'Cumulative active return' }),
+      ).toHaveCount(0);
 
       const historyGeometry = await historyRegion.evaluate((element) => ({
         clientWidth: element.clientWidth,
@@ -837,7 +839,7 @@ test.describe('Performance workbench smoke', () => {
     expect(session.available).toBe(true);
 
     const returnPath = page.getByRole('group', {
-      name: 'Net Return Path single observation comparison',
+      name: 'Time-weighted return path · Net of fees single observation comparison',
     });
     const comparison = returnPath.getByLabel('Single observation comparison');
     await expect(returnPath).toHaveAttribute('data-layout', 'single-observation');
@@ -969,17 +971,17 @@ test.describe('Performance workbench smoke', () => {
         name: /All workspaces/i,
       });
       await allWorkspaces.click();
-      const holdings = navigation.getByRole('link', {
-        name: /Holdings Valuation and profit or loss/i,
+      const positions = navigation.getByRole('link', {
+        name: /Positions Valuation and profit or loss/i,
       });
-      await expect(holdings).toBeVisible();
+      await expect(positions).toBeVisible();
       await expect(
         navigation.getByRole('link', { name: /Risk Exposure and risk review/i }),
       ).toBeVisible();
-      await holdings.focus();
+      await positions.focus();
       await page.keyboard.press('Escape');
       await expect(allWorkspaces).toBeFocused();
-      await expect(holdings).toHaveCount(0);
+      await expect(positions).toHaveCount(0);
 
       const changeWorkflow = navigation.getByRole('button', {
         name: /Change workflow step/i,
@@ -1995,8 +1997,8 @@ test.describe('Performance workbench smoke', () => {
     expect(positionHeaders.slice(0, 4)).toEqual([
       'Position',
       'Contribution',
-      'Average Weight',
-      'Return',
+      'Average weight',
+      'TWR',
     ]);
     const positionRows = contributionModule.locator(
       'table[aria-label="Position contribution table"] tbody tr'

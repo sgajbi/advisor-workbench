@@ -106,7 +106,7 @@ describe("PerformanceAnalysisContributionSection", () => {
 
     const positionTable = screen.getByLabelText("Position contribution table");
     expect(screen.queryByLabelText("Contribution detail summary strip")).not.toBeInTheDocument();
-    expect(within(positionTable).getByText("Return")).toBeInTheDocument();
+    expect(within(positionTable).getByRole("columnheader", { name: "TWR" })).toBeInTheDocument();
     expect(within(positionTable).getByText("Local")).toBeInTheDocument();
     expect(within(positionTable).getByText("FX")).toBeInTheDocument();
     expect(within(positionTable).getByText("AAPL US")).toBeInTheDocument();
