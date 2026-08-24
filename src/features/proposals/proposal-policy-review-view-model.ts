@@ -7,6 +7,7 @@ import type {
   AdvisoryPolicyWorkflowData,
 } from "./types";
 import { buildProposalDetailHref } from "./proposal-lifecycle-workspace-view-model";
+import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
 
 export type PolicyReviewQueueRow = {
   evaluationId: string;
@@ -173,23 +174,23 @@ export function buildPolicyReviewQueueEmptyPresentation({
   if (isRefreshing) {
     return {
       kind: "loading",
-      title: "Refreshing policy review queue",
-      body: "Confirming whether any suitability policy evaluations need advisor review.",
+      title: `Refreshing ${SUITABILITY_WORKFLOW_LABELS.reviewWorklist.toLowerCase()}`,
+      body: "Confirming whether any suitability evaluations need adviser review.",
     };
   }
 
   if (hasRefreshFailure) {
     return {
       kind: "partial",
-      title: "Policy review queue is unconfirmed",
-      body: "The latest suitability policy queue could not be confirmed. Retry before concluding that no evaluations need review.",
+      title: `${SUITABILITY_WORKFLOW_LABELS.reviewWorklist} is unconfirmed`,
+      body: "The latest suitability review worklist could not be confirmed. Retry before concluding that no evaluations need review.",
     };
   }
 
   return {
     kind: "empty",
-    title: "No policy evaluations need review",
-    body: `No suitability policy evaluations are waiting for ${portfolioId}.`,
+    title: "No suitability reviews need attention",
+    body: `No suitability evaluations are waiting for review for ${portfolioId}.`,
   };
 }
 
@@ -554,7 +555,7 @@ function nextAction({
   consentRequirements: string[];
 }): string {
   if (policyStatus === "BLOCKED") {
-    return "Resolve blocking policy evidence before advisor sign-off.";
+    return "Resolve blocking policy evidence before adviser sign-off.";
   }
   if (approvalDependencies.length > 0) {
     return "Complete required approval review.";
@@ -606,7 +607,7 @@ function slaPosture(posture: Record<string, unknown> | null): string {
     typeof posture?.open_requirement_count === "number"
       ? posture.open_requirement_count
       : null;
-  const label = status === "OVERDUE" ? "SLA overdue" : "Within review SLA";
+  const label = status === "OVERDUE" ? "Review overdue" : "Within review deadline";
   return openCount === null ? label : `${label}, ${openCount} open`;
 }
 
