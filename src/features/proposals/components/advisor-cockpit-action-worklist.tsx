@@ -67,6 +67,7 @@ export default function AdvisorCockpitActionWorklist({
       <div data-testid="advisor-cockpit-action-records">
         <WorkbenchWorklist
           ariaLabel="Advisor action review worklist"
+          relationshipIdBase="advisor-cockpit-action-worklist"
           eyebrow="Advisor priorities"
           title="Actions requiring a decision"
           items={rows.map((row) => ({

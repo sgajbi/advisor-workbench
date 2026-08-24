@@ -33,6 +33,7 @@ export default function ManageOverviewDecisionWorklist({
   return (
     <WorkbenchWorklist
       ariaLabel="Portfolio-management decision worklist"
+      relationshipIdBase="manage-overview-decision-worklist"
       eyebrow="Decision worklist"
       title="What needs review now"
       description="Select an item to review its evidence and continue in the source-owned workflow."

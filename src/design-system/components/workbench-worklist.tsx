@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import Text from "./text";
 import WorkbenchDecisionWorkspace from "./workbench-decision-workspace";
@@ -11,6 +11,7 @@ import styles from "./workbench-worklist.module.css";
 
 export default function WorkbenchWorklist<T extends string>({
   ariaLabel,
+  relationshipIdBase,
   title,
   eyebrow = "Priority worklist",
   description = "Use arrow keys to move through the worklist. Press Enter to review the selected record.",
@@ -25,6 +26,7 @@ export default function WorkbenchWorklist<T extends string>({
   decisionClassName,
 }: {
   ariaLabel: string;
+  relationshipIdBase: string;
   title: string;
   eyebrow?: string;
   description?: ReactNode;
@@ -38,9 +40,8 @@ export default function WorkbenchWorklist<T extends string>({
   worklistClassName?: string;
   decisionClassName?: string;
 }) {
-  const instanceId = useId();
-  const titleId = `${instanceId}-title`;
-  const decisionId = `${instanceId}-decision`;
+  const titleId = `${relationshipIdBase}-title`;
+  const decisionId = `${relationshipIdBase}-decision`;
   const decisionRef = useRef<HTMLElement>(null);
 
   return (
