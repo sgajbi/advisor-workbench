@@ -28,6 +28,7 @@ import PmOperatingQualityPanel from "@/features/workbench/components/pm-operatin
 import ProofPackPanel from "@/features/workbench/components/proof-pack-panel";
 import ManageEvidenceRail from "@/features/workbench/components/manage-evidence-rail";
 import ManageOverview from "@/features/workbench/components/manage-overview";
+import { ManageProofPackStateProvider } from "@/features/workbench/manage-proof-pack-state";
 import {
   buildManageModeItems,
   getManageModeDefinition,
@@ -80,6 +81,10 @@ export function ManageWorkspace({
   });
 
   return (
+    <ManageProofPackStateProvider
+      key={`${portfolio.portfolio_id}:${data.proofPack?.correlation_id ?? "no-pack"}`}
+      initialProofPack={data.proofPack}
+    >
     <AppPageShell
       pageKey="manage"
       className={`portfolio-page manage-page ${styles.manageScope}`}
@@ -136,6 +141,7 @@ export function ManageWorkspace({
         />
       </WorkbenchPageContainer>
     </AppPageShell>
+    </ManageProofPackStateProvider>
   );
 }
 

@@ -56,7 +56,10 @@ const readyProofPack: DpmProofPackGatewayResponse = {
   },
 };
 
-function renderProofPackActions(initialProofPack: DpmProofPackGatewayResponse | null = readyProofPack) {
+function renderProofPackActions(
+  initialProofPack: DpmProofPackGatewayResponse | null = readyProofPack,
+  onProofPackChange?: (proofPack: DpmProofPackGatewayResponse) => void,
+) {
   return renderHook(() =>
     useProofPackActions({
       initialProofPack,
@@ -64,6 +67,7 @@ function renderProofPackActions(initialProofPack: DpmProofPackGatewayResponse | 
       contextRebalanceRunId: "context_run",
       contextMandateId: "context_mandate",
       mandateId: "explicit_mandate",
+      onProofPackChange,
     })
   );
 }
@@ -85,7 +89,8 @@ describe("useProofPackActions", () => {
 
   it("generates a proof pack through Gateway using the resolved mandate", async () => {
     vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
-    const { result } = renderProofPackActions(null);
+    const onProofPackChange = vi.fn();
+    const { result } = renderProofPackActions(null, onProofPackChange);
 
     expect(result.current.proofPackId).toBe("context_ppack");
 
@@ -101,11 +106,13 @@ describe("useProofPackActions", () => {
     });
     await waitFor(() => expect(result.current.handoffStatus).toBe("Evidence pack prepared."));
     expect(result.current.model.proofPackId).toBe("ppack_1");
+    expect(onProofPackChange).toHaveBeenCalledWith(readyProofPack);
   });
 
   it("keeps context proof-pack ids available for intentional manual loading", async () => {
     vi.mocked(getDpmProofPack).mockResolvedValue(readyProofPack);
-    const { result } = renderProofPackActions(null);
+    const onProofPackChange = vi.fn();
+    const { result } = renderProofPackActions(null, onProofPackChange);
 
     expect(result.current.model.proofPackId).toBe("N/A");
     expect(result.current.proofPackId).toBe("context_ppack");
@@ -115,6 +122,7 @@ describe("useProofPackActions", () => {
     await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("context_ppack"));
     await waitFor(() => expect(result.current.handoffStatus).toBe("Evidence pack loaded."));
     expect(result.current.model.proofPackId).toBe("ppack_1");
+    expect(onProofPackChange).toHaveBeenCalledWith(readyProofPack);
   });
 
   it("reports missing context proof-pack detail as a product-safe unavailable state", async () => {

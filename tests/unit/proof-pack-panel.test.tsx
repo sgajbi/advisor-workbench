@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import ProofPackPanel from "../../src/features/workbench/components/proof-pack-panel";
@@ -14,6 +14,9 @@ import {
   requestDpmProofPackAiPmMemo,
 } from "../../src/features/workbench/proof-pack-api";
 import { buildDpmAiWorkflowExecution } from "../fixtures/dpm-ai-workflow-fixtures";
+import ManageEvidenceRail from "../../src/features/workbench/components/manage-evidence-rail";
+import { ManageProofPackStateProvider } from "../../src/features/workbench/manage-proof-pack-state";
+import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
 
 vi.mock("../../src/features/workbench/proof-pack-api", () => ({
   generateDpmProofPackFromRun: vi.fn(),
@@ -174,6 +177,36 @@ describe("ProofPackPanel", () => {
     });
     expect(await screen.findByText("Evidence pack prepared.")).toBeInTheDocument();
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
+  });
+
+  it("updates the adjacent evidence rail after a source-backed pack is prepared", async () => {
+    vi.mocked(generateDpmProofPackFromRun).mockResolvedValue(readyProofPack);
+    const data = buildManageWorkspaceData({
+      outcomeReviews,
+      proofPack: null,
+      proofPackError: null,
+    });
+
+    render(
+      <ManageProofPackStateProvider initialProofPack={null}>
+        <ProofPackPanel
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          mandateId="MANDATE_PB_SG_GLOBAL_BAL_001"
+          outcomeReviews={outcomeReviews}
+          rebalanceSnapshot={rebalanceSnapshot}
+          initialProofPack={null}
+        />
+        <ManageEvidenceRail data={data} />
+      </ManageProofPackStateProvider>
+    );
+
+    const rail = screen.getByLabelText("Manage source evidence");
+    expect(within(rail).getByText("Referenced; not retrieved")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare evidence" }));
+
+    await waitFor(() => expect(within(rail).getByText("Available")).toBeInTheDocument());
+    expect(within(rail).queryByText("Referenced; not retrieved")).not.toBeInTheDocument();
   });
 
   it("loads evidence detail and handoff payloads", async () => {
