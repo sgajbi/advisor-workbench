@@ -23,21 +23,29 @@ export function buildManageEvidenceRailModel(
     mandateHealth: data.mandateHealth,
   });
   const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
-  const hasEvidencePack = reviewModel.items.some(
+  const hasEvidencePackReference = reviewModel.items.some(
     (item) => item.proofPackId !== "N/A",
   );
+  const hasRetrievedEvidencePack = data.proofPack !== null;
+  const evidencePackValue = hasRetrievedEvidencePack
+    ? "Available"
+    : data.proofPackError
+      ? "Temporarily unavailable"
+      : hasEvidencePackReference
+        ? "Referenced; not retrieved"
+        : "Not requested";
   const hasTraceableMonitoring =
     commandModel.correlationId !== "N/A" || commandModel.sourceRunId !== "N/A";
 
   return {
     headline:
-      hasEvidencePack || hasTraceableMonitoring
+      hasRetrievedEvidencePack || hasTraceableMonitoring
         ? "Source evidence available"
         : "Source evidence needs confirmation",
     items: [
       {
         label: "Evidence pack",
-        value: hasEvidencePack ? "Available" : "Not requested",
+        value: evidencePackValue,
       },
       {
         label: "Monitoring record",

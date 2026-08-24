@@ -499,7 +499,8 @@ describe("manage workspace split components", () => {
     expect(within(evidence).getByText("Evidence pack")).toBeInTheDocument();
     expect(within(evidence).getByText("Monitoring record")).toBeInTheDocument();
     expect(within(evidence).getByText("Traceability")).toBeInTheDocument();
-    expect(within(evidence).getAllByText("Available")).toHaveLength(2);
+    expect(within(evidence).getByText("Referenced; not retrieved")).toBeInTheDocument();
+    expect(within(evidence).getAllByText("Available")).toHaveLength(1);
     expect(screen.queryByText("Attention Items")).not.toBeInTheDocument();
     expect(screen.queryByText("Data Readiness")).not.toBeInTheDocument();
     expect(screen.queryByText("Rebalance")).not.toBeInTheDocument();
