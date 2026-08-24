@@ -6510,3 +6510,80 @@ responsive browser, screen-documentation, full repository, protected CI, exact-m
 publication/parity, and clean branch evidence are required. Gateway #573 and Workbench #470 remain
 the authority for a future adviser-book aggregate. The broader product glossary and copy-layer
 mechanism remain sequenced under #799 and #798.
+
+## Product Vocabulary and Business Language
+
+### Business job
+
+A client adviser or portfolio manager moving between portfolio, performance, suitability,
+portfolio-management, and reporting work must encounter one stable business language. Terms must
+preserve the source and decision distinctions needed to reconcile a figure, judge readiness, and
+take the next permitted action without interpreting implementation vocabulary.
+
+### Current-product research
+
+Research was reviewed on 2026-08-24 from primary standards, regulatory, product, and service-design
+sources:
+
+1. [CFA Institute GIPS Standards Handbook for Firms](https://www.gipsstandards.org/standards/gips-standards-for-firms/gips-standards-handbook-for-firms/)
+   distinguishes time-weighted and money-weighted returns and supports explicit method disclosure
+   rather than a bare return label.
+2. [FCA COBS 9A suitability rules](https://handbook.fca.org.uk/handbook/COBS/9A/) use suitability
+   assessment and suitability-report language for the client-advice workflow. Policy evaluation is
+   supporting evidence, not the workflow name.
+3. [FCA investment-manager guidance](https://www.fca.org.uk/firms/authorisation/wholesale-markets/investment-managers)
+   and the FCA glossary distinguish discretionary management, advisory activity, and execution-only
+   transactions. Workbench may render only the service model supplied by its source contract.
+4. [SEC Form ADV instructions](https://www.sec.gov/files/formadv-instructions.pdf) define regulatory
+   assets under management as an adviser aggregate, supporting portfolio value for one selected
+   record and adviser book/AUM only for source-backed aggregate scope.
+5. [GOV.UK writing for user interfaces](https://www.gov.uk/service-manual/design/writing-for-user-interfaces)
+   recommends user language, short front-loaded labels, and sentence case for transactional UI.
+6. [SAP Fiori work-list guidance](https://experience.sap.com/fiori-design-web/v1-50/work-list/)
+   treats a worklist as prioritised, processable work. That supports attention item for the user
+   queue while retaining source exception as a distinct evidence record.
+7. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   separates book-level insights from individual portfolio management and uses consistent
+   portfolio language across the adviser workflow.
+
+These sources inform terminology and workflow hierarchy only. They do not transfer another
+provider's design, data, entitlement model, calculations, or product claims to Lotus.
+
+### Adopted decisions
+
+1. Maintain one cross-domain meaning authority in
+   `docs/documentation/product-vocabulary.md`, with a reader-facing wiki index; keep runtime copy in
+   the module that owns the business semantics.
+2. Use portfolio for one selected record and adviser book only for the adviser-level population.
+3. Use attention item for processable work and exception only for an actual source exception;
+   preserve availability, evidence coverage, and review readiness as separate facts.
+4. Preserve requested as-of date versus source valuation date and distinguish base, reporting,
+   instrument, and transaction currencies. Reporting currency requires explicit source acceptance.
+5. Name Time-weighted return (TWR) and Money-weighted return (MWR) at first meaningful use while
+   keeping NET/GROSS as a separate fee-basis dimension.
+6. Use proposal and Suitability review for the business workflows; policy remains supporting
+   evidence. Use instruction, wave, and campaign for increasing rebalance scope.
+7. Use UK English, sentence case, business benchmark labels, and progressive support disclosure for
+   technical references.
+
+### Rejected decisions
+
+1. One giant design-system or application-wide string constants file detached from domain meaning.
+2. A blind synonym replacement that collapses exception, attention, availability, coverage,
+   readiness, or supportability into one status.
+3. Calling a base-currency fallback reporting currency, a requested date valuation date, or
+   NET/GROSS the return method.
+4. Inferring execution-only service, action eligibility, source capability, or calculation method
+   from absent data.
+5. Renaming API fields, routes, or source identifiers merely to make implementation terms match UI
+   copy.
+6. Repeating raw benchmark codes, correlation identifiers, reason codes, or service names in the
+   primary business path.
+
+### Validation and publication decision
+
+Workbench #799 owns the vocabulary authority and the bounded Portfolio, Performance, Manage, and
+Suitability alignment. Each screen slice requires focused semantic and rendered proof before the
+next one begins, followed by full repository gates, protected exact-head review, exact-main
+validation, and wiki publication/parity. Workbench #798 remains the separate owner of a general
+copy-layer and jargon-enforcement mechanism; no competing framework is introduced here.

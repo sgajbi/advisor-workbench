@@ -5,6 +5,7 @@
 ### Orientation
 
 - [Overview](Overview)
+- [Product Vocabulary](Product-Vocabulary)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Positions](Positions-Screen-Guide)

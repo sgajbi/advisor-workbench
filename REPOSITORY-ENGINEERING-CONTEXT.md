@@ -1478,6 +1478,15 @@ Most relevant current governance:
     fields and reason codes may retain legacy AUM identifiers at the adapter boundary, but primary
     Workbench copy, record headers, metric definitions, and screen guides consume the portfolio
     terminology authority in `src/apps/portfolio/portfolio-terminology.ts`.
+21. `docs/documentation/product-vocabulary.md` is the cross-domain authority for productive
+    Workbench business language. Use UK English and sentence case; reserve **portfolio** for one
+    selected client record and **adviser book** for the adviser-level population; distinguish
+    attention items from source exceptions, availability from evidence coverage and review
+    readiness, requested as-of date from source valuation date, base/reporting/instrument/transaction
+    currencies, and TWR/MWR methods from NET/GROSS fee basis. Runtime terms remain in their owning
+    domain modules rather than a design-system or giant global-copy registry. Contract identifiers
+    remain at adapter and progressive support boundaries. Workbench #798 owns the general copy and
+    jargon-enforcement mechanism; do not create a competing framework while applying this vocabulary.
 
 ## Context Maintenance Rule
 
@@ -1499,3 +1508,4 @@ Update this document when:
 4. `../lotus-platform/context/Repository-Engineering-Context-Contract.md`
 5. [Lotus Developer Onboarding](../lotus-platform/docs/onboarding/LOTUS-DEVELOPER-ONBOARDING.md)
 6. [Lotus Agent Ramp-Up](../lotus-platform/docs/onboarding/LOTUS-AGENT-RAMP-UP.md)
+7. [Workbench product vocabulary](docs/documentation/product-vocabulary.md)
