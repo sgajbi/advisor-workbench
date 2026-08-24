@@ -19,6 +19,7 @@ export type PortfolioFixtureGateway = {
   getAllocationRequestCount: () => number;
   getWorkspaceRequestCount: () => number;
   port: number;
+  setReviewContextSourceState: (state: 'confirmed' | 'partial') => void;
 };
 
 export async function startPortfolioFixtureGateway({
@@ -30,6 +31,7 @@ export async function startPortfolioFixtureGateway({
 }): Promise<PortfolioFixtureGateway> {
   let workspaceRequestCount = 0;
   let allocationRequestCount = 0;
+  let reviewContextSourceState: 'confirmed' | 'partial' = 'confirmed';
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
 
@@ -61,7 +63,7 @@ export async function startPortfolioFixtureGateway({
         sendJson(response, { code: 'portfolio_workspace_unavailable' }, 503);
         return;
       }
-      sendJson(response, buildWorkspaceResponse(scenario));
+      sendJson(response, buildWorkspaceResponse(scenario, reviewContextSourceState));
       return;
     }
 
@@ -206,6 +208,12 @@ export async function startPortfolioFixtureGateway({
     close: () => close(server),
     getAllocationRequestCount: () => allocationRequestCount,
     getWorkspaceRequestCount: () => workspaceRequestCount,
+    setReviewContextSourceState: (state) => {
+      if (scenario !== 'review-context-states') {
+        throw new Error('Review Context source state can only change in its owned fixture scenario.');
+      }
+      reviewContextSourceState = state;
+    },
   };
 }
 
@@ -391,7 +399,10 @@ function buildActivityBucket(bucket: string, requested: number, yearToDate: numb
   };
 }
 
-function buildWorkspaceResponse(scenario: PortfolioFixtureScenario = 'cashflow') {
+function buildWorkspaceResponse(
+  scenario: PortfolioFixtureScenario = 'cashflow',
+  reviewContextSourceState: 'confirmed' | 'partial' = 'confirmed'
+) {
   return {
     as_of_date: AS_OF_DATE,
     portfolio: {
@@ -399,7 +410,8 @@ function buildWorkspaceResponse(scenario: PortfolioFixtureScenario = 'cashflow')
       display_name: 'Global Balanced Mandate',
       client_id: 'CLIENT_SG_001',
       base_currency: 'USD',
-      booking_center_code: scenario === 'review-context-states' ? null : 'SG',
+      booking_center_code:
+        scenario === 'review-context-states' && reviewContextSourceState === 'partial' ? null : 'SG',
     },
     profile: {
       status: 'ACTIVE',
