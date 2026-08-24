@@ -1424,9 +1424,11 @@ Most relevant current governance:
     an admitted identity through reordering, and choose a new fallback only after the source removes
     it. Reuse `useAdmittedSourceSelection`, scoped to the complete portfolio/worklist identity,
     instead of synchronizing fallback state in an effect or displaying a fallback over stale state.
-    State each count, status, destination, and title once in the primary scan path. A
-    secondary rail may carry different source, scope, or support evidence, but must not repeat the
-    worklist, navigation, metrics, or current decision. Book-wide posture may precede the worklist
+    State each count, status, destination, and title once in the primary scan path. On Manage, the
+    shell-owned left rail is the only workflow-navigation owner, the centre workspace is the only
+    operating-posture and decision owner, and the right rail may show only distinct source-evidence
+    availability. A secondary rail may carry different source, scope, or support evidence, but must
+    not repeat the worklist, navigation, metrics, or current decision. Book-wide posture may precede the worklist
     only when it changes prioritisation, and raw source references belong in progressive support
     detail. Cockpit, Manage Overview, and Advisory Overview use this pattern; Advisor Book retains
     a comparison register but follows the same compact-measure and progressive-evidence hierarchy.
