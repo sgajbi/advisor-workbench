@@ -1005,6 +1005,8 @@ describe("Workbench screen documentation governance", () => {
       )
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("exception-first workspace");
+    expect(guide).toContain("**Needs attention**");
+    expect(guide).not.toContain("**Attention required**");
     expect(guide).toContain("Missing or unfamiliar states fail closed");
     expect(guide).toContain("has no screen-local retry action");
     expect(guide).toContain("does not:\n\n- calculate or recalculate");
