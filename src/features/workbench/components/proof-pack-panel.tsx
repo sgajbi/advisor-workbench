@@ -51,7 +51,7 @@ export default function ProofPackPanel({
     loadReportInput,
     requestAiPmMemo,
   } = useProofPackActions({
-    initialProofPack,
+    initialProofPack: sharedProofPack?.proofPack ?? initialProofPack,
     contextProofPackId: context.proofPackId,
     contextRebalanceRunId: context.rebalanceRunId,
     contextMandateId: context.mandateId,
