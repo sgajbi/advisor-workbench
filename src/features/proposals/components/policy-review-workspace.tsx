@@ -95,7 +95,7 @@ export default function PolicyReviewWorkspace({
       <ScreenStatePanel
         kind="loading"
         title="Loading suitability reviews"
-        body="Retrieving the suitability evaluations that require adviser review for this portfolio."
+        body="Retrieving current suitability reviews for this portfolio."
         rows={5}
         surface="default"
       />
@@ -310,7 +310,7 @@ function PolicyEvaluationEvidenceSection({
       <ScreenStatePanel
         kind="loading"
         title="Checking selected suitability evidence"
-        body="Confirming the evaluation, sign-off package and workflow identity through Gateway."
+        body="Confirming the review, sign-off package and workflow identity with the authoritative advisory source."
         rows={5}
         surface="default"
       />

@@ -13,4 +13,6 @@ export const SUITABILITY_WORKFLOW_LABELS = {
   selectedReview: "Selected suitability review",
   evidence: "Suitability evidence",
   reviewDeadline: "Review deadline",
+  sourceRecord: "Authoritative suitability policy record",
+  selectedEvidenceSource: "Selected suitability evidence",
 } as const;

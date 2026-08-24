@@ -2282,7 +2282,7 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).not.toHaveLength(0);
     expect(
-      screen.getByText("Gateway-backed suitability policy review"),
+      screen.getByText("Authoritative suitability policy record"),
     ).toBeInTheDocument();
   });
 
@@ -2353,7 +2353,7 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).not.toHaveLength(0);
     expect(
-      screen.getByText("Gateway-backed suitability policy review"),
+      screen.getByText("Authoritative suitability policy record"),
     ).toBeInTheDocument();
   });
 
