@@ -81,6 +81,10 @@ handing the user to a focused Manage mode.
 - Presents Core-owned portfolio value, position count, cash weight, base currency, identity, and
   readable calendar business date through the Workbench BFF and Gateway; raw ISO date text is not
   used as advisor-facing rail copy.
+- Keeps calendar business dates distinct from exact workflow and audit instants. Exact instants
+  require a source timezone or offset, render through the shared UTC presentation authority, and
+  fail closed to **Not reported** when missing or ambiguous; the overview does not invent a fixed
+  demonstration date to preserve a favourable workflow posture.
 - Presents the mandate risk profile only when Manage reports a usable value; absent and governed
   unavailable values such as `UNKNOWN` or `NOT_AVAILABLE` are **Not reported** and make the
   overview incomplete.

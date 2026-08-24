@@ -68,6 +68,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   lifecycle action or announcing its success.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
   history already returned by the proposal contracts.
+- Presents proposal version, lineage, narrative review, implementation, and other exact audit
+  instants through the shared UTC authority. Calendar-semantic proposal dates remain separate;
+  missing, malformed, or unzoned audit values are **Not reported**, never raw source text.
 - Provides peer **Narrative review** and **Memo & evidence pack** work areas with explicit
   advisor-use, report-package, commentary, delivery, replay, and client-use boundaries.
 - Creates a next proposal version only from the current source proposal's retained simulation
