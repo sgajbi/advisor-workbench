@@ -564,6 +564,12 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           tone: "success",
           detail:
             "Supportability READY • Recorded by advisor_1 • Recorded 2026-04-21T03:22:00Z",
+          reviewEvidence: {
+            reviewState: "ACCEPTED",
+            supportability: "READY",
+            reviewer: "advisor_1",
+            recordedAt: "2026-04-21T03:22:00Z",
+          },
         }),
       ])
     );
@@ -612,6 +618,12 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           value: "Accepted for internal use",
           tone: "warn",
           detail: "Supportability READY • Review audit details not published",
+          reviewEvidence: {
+            reviewState: "ACCEPTED",
+            supportability: "READY",
+            reviewer: null,
+            recordedAt: null,
+          },
         }),
       ])
     );
@@ -1274,6 +1286,12 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           value: "Awaiting review",
           tone: "warn",
           detail: "Supportability ACTION REQUIRED",
+          reviewEvidence: {
+            reviewState: "AWAITING_REVIEW",
+            supportability: "ACTION_REQUIRED",
+            reviewer: null,
+            recordedAt: null,
+          },
         },
         {
           label: "Workflow Progress",
@@ -1399,6 +1417,12 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
           tone: "warn",
           detail:
             "Supportability READY • Review audit details not published • Superseded by packrun_advisor_brief_req-2",
+          reviewEvidence: {
+            reviewState: "ACCEPTED",
+            supportability: "READY",
+            reviewer: null,
+            recordedAt: null,
+          },
         },
         {
           label: "Workflow Progress",

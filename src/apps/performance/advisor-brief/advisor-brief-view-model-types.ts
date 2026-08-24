@@ -40,11 +40,19 @@ export type PerformanceAdvisorBriefMetric = {
   route: string;
 };
 
+export type PerformanceAdvisorBriefReviewEvidence = {
+  reviewState: string | null;
+  supportability: string | null;
+  reviewer: string | null;
+  recordedAt: string | null;
+};
+
 export type PerformanceAdvisorBriefSupportabilityItem = {
   label: string;
   value: string;
   tone: "success" | "warn" | "danger";
   detail?: string | null;
+  reviewEvidence?: PerformanceAdvisorBriefReviewEvidence;
 };
 
 export type PerformanceAdvisorBriefSupportDetail = {

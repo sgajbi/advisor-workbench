@@ -16,6 +16,7 @@ import {
   getAdvisorBriefReviewStateLabel,
   isHistoricalAdvisorBriefReviewState,
   isTerminalAdvisorBriefReviewState,
+  normalizeAdvisorBriefStateCode,
 } from "./advisor-brief-review-evidence";
 import type {
   PerformanceAdvisorBriefAction,
@@ -233,6 +234,7 @@ function normalizeGatewaySupportability(
       value: normalizeWorkflowPackReviewValue(advisorBrief.workflow_pack_run.review_state),
       tone: normalizeWorkflowPackReviewTone(advisorBrief.workflow_pack_run),
       detail: buildWorkflowPackReviewDetail(advisorBrief.workflow_pack_run),
+      reviewEvidence: buildWorkflowPackReviewEvidence(advisorBrief.workflow_pack_run),
     },
     ...(advisorBrief.workflow_pack_task_flow
       ? [
@@ -497,6 +499,25 @@ function buildWorkflowPackReviewDetail(
     );
   }
   return detailParts.join(" • ");
+}
+
+function buildWorkflowPackReviewEvidence(
+  workflowPackRun: NonNullable<WorkbenchPerformanceAdvisorBrief["workflow_pack_run"]>
+): NonNullable<
+  PerformanceAdvisorBriefViewModel["supportability"][number]["reviewEvidence"]
+> {
+  const humanReview = buildAdvisorBriefHumanReview(workflowPackRun);
+  const reviewState = normalizeAdvisorBriefStateCode(workflowPackRun.review_state);
+  const supportability = normalizeAdvisorBriefStateCode(
+    workflowPackRun.supportability_status
+  );
+
+  return {
+    reviewState: reviewState || null,
+    supportability: supportability || null,
+    reviewer: humanReview.sourceRecorded ? (humanReview.actor ?? null) : null,
+    recordedAt: humanReview.sourceRecorded ? (humanReview.occurredAt ?? null) : null,
+  };
 }
 
 function normalizeWorkflowPackRuntimeTone(

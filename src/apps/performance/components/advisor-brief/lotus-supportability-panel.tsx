@@ -6,6 +6,38 @@ function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem
   return item.label === "Brief Preparation" || item.label === "Human Review";
 }
 
+function LotusSupportabilityRow({
+  item,
+}: {
+  item: PerformanceAdvisorBriefSupportabilityItem;
+}) {
+  const reviewEvidence = item.reviewEvidence;
+
+  return (
+    <div
+      className="performance-advisor-brief-supportability-row"
+      data-recorded-at={reviewEvidence?.recordedAt ?? undefined}
+      data-review-state={reviewEvidence?.reviewState ?? undefined}
+      data-review-supportability={reviewEvidence?.supportability ?? undefined}
+      data-reviewer={reviewEvidence?.reviewer ?? undefined}
+      data-testid={reviewEvidence ? "advisor-brief-human-review-evidence" : undefined}
+    >
+      <div className="performance-advisor-brief-supportability-identity">
+        <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+        {item.detail ? (
+          <span className="performance-advisor-brief-supportability-detail">{item.detail}</span>
+        ) : null}
+      </div>
+      <span
+        className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
+      >
+        <span aria-hidden="true" className="performance-advisor-brief-supportability-dot" />
+        {item.value}
+      </span>
+    </div>
+  );
+}
+
 export default function LotusSupportabilityPanel({
   items,
   reviewNotes,
@@ -43,50 +75,14 @@ export default function LotusSupportabilityPanel({
           {workflowPackStateItems.length ? (
             <div className="performance-advisor-brief-supportability-grid">
               {workflowPackStateItems.map((item) => (
-                <div key={item.label} className="performance-advisor-brief-supportability-row">
-                  <div className="performance-advisor-brief-supportability-identity">
-                    <span className="performance-advisor-brief-supportability-label">{item.label}</span>
-                    {item.detail ? (
-                      <span className="performance-advisor-brief-supportability-detail">
-                        {item.detail}
-                      </span>
-                    ) : null}
-                  </div>
-                  <span
-                    className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="performance-advisor-brief-supportability-dot"
-                    />
-                    {item.value}
-                  </span>
-                </div>
+                <LotusSupportabilityRow key={item.label} item={item} />
               ))}
             </div>
           ) : null}
           {reviewItems.length ? (
             <div className="performance-advisor-brief-supportability-grid">
               {reviewItems.map((item) => (
-                <div key={item.label} className="performance-advisor-brief-supportability-row">
-                  <div className="performance-advisor-brief-supportability-identity">
-                    <span className="performance-advisor-brief-supportability-label">{item.label}</span>
-                    {item.detail ? (
-                      <span className="performance-advisor-brief-supportability-detail">
-                        {item.detail}
-                      </span>
-                    ) : null}
-                  </div>
-                  <span
-                    className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="performance-advisor-brief-supportability-dot"
-                    />
-                    {item.value}
-                  </span>
-                </div>
+                <LotusSupportabilityRow key={item.label} item={item} />
               ))}
             </div>
           ) : null}
