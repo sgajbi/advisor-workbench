@@ -24,6 +24,7 @@ describe("portfolio decision posture", () => {
     expect(screen.getByText("Portfolio book, Performance, Cashflow, Reporting")).toBeInTheDocument();
     expect(screen.getByText("11 rows")).toBeInTheDocument();
     expect(screen.queryByText("Ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Valuation date")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
       "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
@@ -36,6 +37,21 @@ describe("portfolio decision posture", () => {
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );
+  });
+
+  it("uses the canonical valuation label only when the source date differs", () => {
+    render(
+      <PortfolioEvidenceModule
+        workspace={buildPortfolioWorkspace({ as_of_date: "2026-04-10" })}
+        context={buildPortfolioWorkspaceContext({
+          selectedAsOfDate: "2026-04-01",
+        })}
+      />
+    );
+
+    expect(screen.getByText("Valuation date")).toBeInTheDocument();
+    expect(screen.getByText("10 Apr 2026")).toBeInTheDocument();
+    expect(screen.queryByText("Valuation as of")).not.toBeInTheDocument();
   });
 
   it("does not imply a benchmark assignment or absent evidence source", () => {

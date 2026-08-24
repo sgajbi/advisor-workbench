@@ -1,7 +1,10 @@
 "use client";
 
 import { formatCurrency, formatDate, formatPct } from "../formatters";
-import { PORTFOLIO_VALUE_COPY } from "../portfolio-terminology";
+import {
+  buildPortfolioDateFacts,
+  PORTFOLIO_VALUE_COPY,
+} from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import { getInvestedAssetWeight } from "../view-model";
@@ -22,10 +25,10 @@ export function buildMetricDrawer(
 ): PortfolioDetailDrawerState {
   const commonSummary = [
     { label: "Portfolio", value: workspace.portfolio.portfolio_id },
-    { label: "Valuation date", value: formatDate(workspace.as_of_date) },
-    ...(workspace.as_of_date !== context.selectedAsOfDate
-      ? [{ label: "Review date", value: formatDate(context.selectedAsOfDate) }]
-      : []),
+    ...buildPortfolioDateFacts(
+      workspace.as_of_date,
+      context.selectedAsOfDate,
+    ).map(({ label, date }) => ({ label, value: formatDate(date) })),
   ];
   const reviewContext = {
     portfolioId: workspace.portfolio.portfolio_id,

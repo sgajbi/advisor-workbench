@@ -3,6 +3,7 @@
 import { ActionLink, SemanticBadge, Text, WorkbenchRailCard } from "@/design-system";
 
 import { formatCount, formatDate } from "../formatters";
+import { PORTFOLIO_VALUATION_DATE_LABEL } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 
@@ -18,7 +19,12 @@ export function PortfolioEvidenceModule({
     { label: "Evidence", value: formatPortfolioEvidence(workspace) },
     { label: "Benchmark", value: formatPortfolioBenchmark(workspace) },
     ...(context.selectedAsOfDate !== workspace.as_of_date
-      ? [{ label: "Valuation as of", value: formatDate(workspace.as_of_date) }]
+      ? [
+          {
+            label: PORTFOLIO_VALUATION_DATE_LABEL,
+            value: formatDate(workspace.as_of_date),
+          },
+        ]
       : []),
     { label: "Reporting coverage", value: formatCount(workspace.readiness.reporting.row_count, "row") },
   ];

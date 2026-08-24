@@ -9,6 +9,7 @@ import {
 } from "../formatters";
 import type { PortfolioPositionView, PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
+import { buildPortfolioDateFacts } from "../portfolio-terminology";
 import {
   renderDrawerDefinitionList,
   renderDrawerParagraphs,
@@ -66,7 +67,10 @@ export function buildExceptionDrawer(
     summaryItems: [
       { label: "Severity", value: formatStatus(exception.tone) },
       { label: "Portfolio", value: workspace.portfolio.portfolio_id },
-      { label: "As of", value: formatDate(context.selectedAsOfDate) },
+      ...buildPortfolioDateFacts(
+        workspace.as_of_date,
+        context.selectedAsOfDate,
+      ).map(({ label, date }) => ({ label, value: formatDate(date) })),
     ],
     tabs,
     fullPageHref: exception.href,

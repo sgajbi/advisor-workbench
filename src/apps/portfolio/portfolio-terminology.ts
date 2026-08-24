@@ -3,6 +3,9 @@ export const PORTFOLIO_VALUE_LABEL = "Portfolio value";
 export const PORTFOLIO_VALUE_UNAVAILABLE_LABEL =
   "Portfolio value temporarily unavailable";
 
+export const PORTFOLIO_VALUATION_DATE_LABEL = "Valuation date";
+export const PORTFOLIO_REVIEW_DATE_LABEL = "Review date";
+
 export const PORTFOLIO_VALUE_COPY = {
   title: PORTFOLIO_VALUE_LABEL,
   description:
@@ -15,4 +18,16 @@ export const PORTFOLIO_VALUE_COPY = {
 
 export function formatShareOfPortfolioValue(formattedWeight: string): string {
   return `${formattedWeight} of portfolio value`;
+}
+
+export function buildPortfolioDateFacts(
+  valuationDate: string,
+  reviewDate: string,
+): Array<{ label: string; date: string }> {
+  return [
+    { label: PORTFOLIO_VALUATION_DATE_LABEL, date: valuationDate },
+    ...(reviewDate !== valuationDate
+      ? [{ label: PORTFOLIO_REVIEW_DATE_LABEL, date: reviewDate }]
+      : []),
+  ];
 }
