@@ -95,4 +95,22 @@ describe("Manage evidence rail view model", () => {
       ],
     });
   });
+
+  it("preserves a top-level pack reference when the detail response is not found", () => {
+    const data = buildManageWorkspaceData({
+      commandCenter: null,
+      mandateHealth: null,
+      outcomeReviews: {
+        ...buildManageWorkspaceData().outcomeReviews!,
+        data: { proof_pack_id: "ppack_top_level" },
+      },
+      proofPack: null,
+      proofPackError: null,
+    });
+
+    expect(buildManageEvidenceRailModel(data).items[0]).toEqual({
+      label: "Evidence pack",
+      value: "Referenced; not retrieved",
+    });
+  });
 });
