@@ -50,4 +50,84 @@ describe("manage terminology", () => {
       ),
     ).toContain("SUPERSEDED BY SOURCE-BACKED MANDATE ATTENTION WORKLIST (#799)");
   });
+
+  it("does not retain the superseded command-centre presentation path", () => {
+    const removedPaths = [
+      join(
+        process.cwd(),
+        "src",
+        "features",
+        "workbench",
+        "components",
+        "dpm-command-center-panel.tsx",
+      ),
+      join(
+        process.cwd(),
+        "src",
+        "features",
+        "workbench",
+        "dpm-command-center-panel-helpers.ts",
+      ),
+    ];
+
+    for (const removedPath of removedPaths) {
+      expect(existsSync(removedPath)).toBe(false);
+    }
+
+    const stylesheetPaths = [
+      join(
+        process.cwd(),
+        "src",
+        "styles",
+        "global",
+        "legacy-feature-overrides.css",
+      ),
+      join(
+        process.cwd(),
+        "src",
+        "styles",
+        "global",
+        "legacy-global.css",
+      ),
+      join(
+        process.cwd(),
+        "src",
+        "features",
+        "workbench",
+        "manage-workspace.module.css",
+      ),
+    ];
+
+    for (const stylesheetPath of stylesheetPaths) {
+      expect(readFileSync(stylesheetPath, "utf8")).not.toMatch(
+        /\.dpm-command-center-(?:panel|badge-row|action-row|reason-row|status-strip|summary-grid|metric-grid|subsection)\b/,
+      );
+    }
+
+    expect(
+      readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "features",
+          "workbench",
+          "dpm-command-center-api.ts",
+        ),
+        "utf8",
+      ),
+    ).not.toContain("runDpmCommandCenterMonitoring");
+    expect(
+      readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "features",
+          "workbench",
+          "components",
+          "dpm-copilot-workspace.tsx",
+        ),
+        "utf8",
+      ),
+    ).toContain("requestDpmExceptionSummary");
+  });
 });
