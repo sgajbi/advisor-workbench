@@ -6404,3 +6404,57 @@ canonical populated evidence; canonical capture remains blocked by #846. Screen 
 registry, repository context, and codebase review ledger must ship in the implementation PR. No
 Gateway/API/OpenAPI, source calculation, authentication, entitlement, dependency, or runtime
 topology change is required.
+
+## Stable Interactive Relationships Across Server Rendering
+
+### Business job
+
+An advisor must be able to open navigation and move from a prioritised worklist row to its selected
+decision without a stale or ambiguous control relationship. The same interaction must remain
+predictable on a fresh document load, after responsive reflow, and when reusable components share a
+screen.
+
+### Current-product research
+
+Research was reviewed on 2026-08-24 from primary framework and accessibility sources:
+
+1. [React `useId`](https://react.dev/reference/react/useId) requires server and client component
+   trees to match for generated ids to remain stable.
+2. [Next.js issue #84029](https://github.com/vercel/next.js/issues/84029) confirms a
+   composition-sensitive React-id hydration defect in the Workbench framework generation and
+   records its later-framework resolution.
+3. [WAI-ARIA Disclosure](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) requires the
+   disclosure control and disclosed region to retain an explicit relationship.
+4. [WCAG H93](https://www.w3.org/WAI/WCAG21/Techniques/html/H93) requires unique page ids so
+   assistive-technology relationships do not become ambiguous.
+
+### Adopted decisions
+
+1. Let each business screen name its shared rail or worklist once with a semantic
+   `relationshipIdBase`; let the component derive all subordinate relationship ids.
+2. Keep relationship ownership independent of render order, sibling composition, and the current
+   framework defect so identifiers stay legible in diagnostics and collision-safe in reuse.
+3. Prove fresh optimized-production loads on Portfolio Review, Performance, and Manage with a
+   reusable browser helper that checks exact targets, controller presence, duplicate ids, and
+   browser runtime failures.
+4. Retain the server-rendered, keyboard-operable component architecture and the existing Gateway
+   source boundaries.
+
+### Rejected decisions
+
+1. `suppressHydrationWarning`, because it hides drift and leaves React attributes stale.
+2. Making shared navigation or decision worklists client-only, because it removes useful server
+   output and masks the ownership defect.
+3. Patching installed framework files, adopting a canary, or mixing the Next.js 16 upgrade from
+   #624 into a bounded accessibility regression.
+4. Hard-coding one repeated id inside the shared component or weakening browser assertions to copy
+   that happens to render today.
+
+### Validation and publication decision
+
+Workbench #855 owns the reusable correction. Unit collision proof, production-caller governance,
+focused integration tests, shared-runtime read-only reproduction, optimized production browser
+proof, evidence publication, repository context, architecture wiki source, protected review/CI,
+exact-main validation, wiki parity, and clean branch/worktree restoration are required. No Gateway,
+API/OpenAPI, business calculation, authentication, entitlement, dependency, or runtime topology
+change is required.

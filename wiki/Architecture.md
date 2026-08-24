@@ -68,6 +68,14 @@ service destinations without duplicating the active task. The same model reflows
 tablet, and compact widths. Links remain semantic links; disclosure buttons close on Escape and
 restore focus. A route being implemented does not override a disabled global capability posture.
 
+Interactive relationships are owned by the business screen, not by render order. Each screen gives
+the shared portfolio rail and decision worklist a stable semantic relationship base; the component
+derives its navigation, directory, and selected-decision ids from that base. This keeps server and
+initial-client HTML identical, prevents collisions when reusable components appear more than once,
+and preserves truthful `aria-controls` relationships across desktop and compact compositions.
+Suppressing hydration warnings or moving shared navigation to a client-only fallback is not an
+accepted recovery strategy.
+
 ### Governed review context
 
 `src/shell/review-context.ts` is the single URL authority for portfolio, valuation date, period,
