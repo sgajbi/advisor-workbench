@@ -287,7 +287,7 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Risks and Exceptions")).toHaveTextContent(
       "No material supportability exceptions are flagged"
     );
-    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active Return");
+    expect(screen.getByLabelText("Source Metrics")).toHaveTextContent("Active return");
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
     expect(screen.getByText("Partial output")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();
@@ -304,7 +304,7 @@ describe("PerformanceAdvisorBriefMode", () => {
 
     fireEvent.click(
       within(screen.getByLabelText("Recommended Actions")).getByRole("button", {
-        name: /Review Contribution/,
+        name: /Review contribution/,
       })
     );
 
@@ -385,7 +385,7 @@ describe("PerformanceAdvisorBriefMode", () => {
 
     fireEvent.click(
       within(screen.getByLabelText("Source Metrics")).getByRole("button", {
-        name: /Active Return/,
+        name: /Active return/,
       })
     );
 

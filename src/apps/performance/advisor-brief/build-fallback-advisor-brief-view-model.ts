@@ -14,6 +14,12 @@ import {
   formatPerformancePositionLabel,
 } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
+import {
+  getPerformanceFeeBasisLabel,
+  PERFORMANCE_ACTION_LABELS,
+  PERFORMANCE_ECONOMICS_LABELS,
+  PERFORMANCE_RETURN_LABELS,
+} from "../performance-terminology";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
 import {
@@ -139,35 +145,38 @@ export function buildFallbackAdvisorBriefViewModel({
   ];
   const sourceMetrics: PerformanceAdvisorBriefMetric[] = [
     {
-      label: "Portfolio Return",
+      label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
       value: portfolioReturnValue,
       supportingText: `${formatDate(workspace.report_start_date)} - ${formatDate(workspace.report_end_date)}`,
       targetMode: "summary",
       route,
     },
     {
-      label: "Benchmark Return",
+      label: PERFORMANCE_RETURN_LABELS.benchmarkTwr,
       value: benchmarkReturnValue,
       supportingText: benchmarkLabel,
       targetMode: "summary",
       route,
     },
     {
-      label: "Active Return",
+      label: PERFORMANCE_RETURN_LABELS.activeReturn,
       value: activeReturnValue,
-      supportingText: `${detailBasis} basis`,
+      supportingText: getPerformanceFeeBasisLabel(detailBasis),
       targetMode: "summary",
       route,
     },
     {
-      label: "Net Flow",
+      label: PERFORMANCE_ECONOMICS_LABELS.netCashFlow,
       value: formatCurrency(selectedPerformance.net_cash_flow, currency),
-      supportingText: `Closing MV ${formatCurrency(selectedPerformance.end_market_value, currency)}`,
+      supportingText: `${PERFORMANCE_ECONOMICS_LABELS.endingMarketValue} ${formatCurrency(
+        selectedPerformance.end_market_value,
+        currency
+      )}`,
       targetMode: "summary",
       route,
     },
     {
-      label: "Ending MV",
+      label: PERFORMANCE_ECONOMICS_LABELS.endingMarketValue,
       value: formatCurrency(selectedPerformance.end_market_value, currency),
       supportingText: formatDate(workspace.as_of_date),
       targetMode: "summary",
@@ -200,12 +209,12 @@ export function buildFallbackAdvisorBriefViewModel({
       status === "unavailable" || status === "permission_blocked" ? [] : talkingPoints,
     recommendedActions: [
       {
-        label: "Open Return Path",
+        label: PERFORMANCE_ACTION_LABELS.openReturnPath,
         route,
         targetMode: "summary",
       },
       {
-        label: "Review Contribution",
+        label: PERFORMANCE_ACTION_LABELS.reviewContribution,
         route,
         targetMode: "analysis",
       },
@@ -436,7 +445,7 @@ function buildTalkingPoints({
         ? `Portfolio delivered ${portfolioReturnValue} versus benchmark ${benchmarkReturnValue}.`
         : `Portfolio delivered ${portfolioReturnValue} for ${period}.`,
       detail: hasBenchmark && activeReturnValue !== "N/A"
-        ? `Active Return is ${activeReturnValue}; use Return Path to inspect the benchmark-relative gap.`
+        ? `Active return is ${activeReturnValue}; use the return path to inspect the benchmark-relative gap.`
         : "Benchmark context is not assigned for this mandate; the brief stays portfolio-only until benchmark data is available.",
       tone:
         hasBenchmark && activeReturnValue.startsWith("-")
@@ -446,7 +455,7 @@ function buildTalkingPoints({
             : "neutral",
       evidenceRefs: [
         {
-          metricLabel: "Active Return",
+          metricLabel: PERFORMANCE_RETURN_LABELS.activeReturn,
           metricValue: activeReturnValue,
           sourceSurface: "performance.return_path",
           route,

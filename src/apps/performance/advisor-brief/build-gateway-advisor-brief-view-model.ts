@@ -10,6 +10,12 @@ import { formatTimestampValue } from "@/design-system/utils/financial-formatters
 
 import { formatCurrency, formatDate } from "../formatters";
 import { buildPerformanceHref } from "../navigation";
+import {
+  normalizePerformanceActionLabel,
+  normalizePerformanceMetricLabel,
+  PERFORMANCE_ECONOMICS_LABELS,
+  PERFORMANCE_RETURN_LABELS,
+} from "../performance-terminology";
 import type { PerformanceWorkspaceMode } from "../performance-workspace-modes";
 import { getPerformanceBenchmarkLabel } from "../components/performance-summary-context-helpers";
 import {
@@ -364,9 +370,10 @@ function normalizeGatewaySourceMetrics({
   const normalizedMetrics = advisorBrief.source_metrics
     .filter((metric) => shouldIncludeAdvisorRiskTarget(metric.target_mode, hasBackedRiskEvidence))
     .map((metric) => {
-      const isBenchmarkMetric = metric.label.toLowerCase() === "benchmark return";
+      const label = normalizePerformanceMetricLabel(metric.label);
+      const isBenchmarkMetric = label === PERFORMANCE_RETURN_LABELS.benchmarkTwr;
       return {
-        label: metric.label,
+        label,
         value: metric.value,
         supportingText: isBenchmarkMetric ? benchmarkLabel : metric.support_label,
         route: metric.route,
@@ -374,14 +381,18 @@ function normalizeGatewaySourceMetrics({
       } satisfies PerformanceAdvisorBriefMetric;
     });
 
-  if (normalizedMetrics.some((metric) => metric.label === "Ending MV")) {
+  if (
+    normalizedMetrics.some(
+      (metric) => metric.label === PERFORMANCE_ECONOMICS_LABELS.endingMarketValue
+    )
+  ) {
     return normalizedMetrics;
   }
 
   return [
     ...normalizedMetrics,
     {
-      label: "Ending MV",
+      label: PERFORMANCE_ECONOMICS_LABELS.endingMarketValue,
       value: endingMarketValue,
       supportingText: formatDate(advisorBrief.as_of_date ?? workspace.as_of_date),
       route,
@@ -400,7 +411,7 @@ function normalizeGatewayNarrativeItems(
         shouldIncludeAdvisorRiskTarget(evidenceRef.target_mode, hasBackedRiskEvidence)
       )
       .map((evidenceRef) => ({
-        metricLabel: evidenceRef.metric_label,
+        metricLabel: normalizePerformanceMetricLabel(evidenceRef.metric_label),
         metricValue: evidenceRef.metric_value,
         sourceSurface: evidenceRef.source_surface,
         route: evidenceRef.route,
@@ -429,7 +440,7 @@ function normalizeGatewayActions(
   return actions
     .filter((action) => shouldIncludeAdvisorRiskTarget(action.target_mode, hasBackedRiskEvidence))
     .map((action) => ({
-      label: action.label,
+      label: normalizePerformanceActionLabel(action.label),
       route: action.route,
       targetMode: normalizeAdvisorTargetMode(action.target_mode),
     }));

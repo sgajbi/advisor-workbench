@@ -56,3 +56,46 @@ export function getPerformanceFeeBasisLabel(basis: string | null | undefined): s
 export function getPerformanceReturnPathTitle(basis: string | null | undefined): string {
   return `Time-weighted return path · ${getPerformanceFeeBasisLabel(basis)}`;
 }
+
+const PERFORMANCE_METRIC_LABEL_ALIASES: Readonly<Record<string, string>> = {
+  "portfolio return": PERFORMANCE_RETURN_LABELS.portfolioTwr,
+  "portfolio twr": PERFORMANCE_RETURN_LABELS.portfolioTwr,
+  "time-weighted return": PERFORMANCE_RETURN_LABELS.portfolioTwr,
+  "time-weighted return (twr)": PERFORMANCE_RETURN_LABELS.portfolioTwr,
+  "benchmark return": PERFORMANCE_RETURN_LABELS.benchmarkTwr,
+  "benchmark twr": PERFORMANCE_RETURN_LABELS.benchmarkTwr,
+  "active return": PERFORMANCE_RETURN_LABELS.activeReturn,
+  "money-weighted return": PERFORMANCE_RETURN_LABELS.moneyWeightedReturn,
+  "money-weighted return (mwr)": PERFORMANCE_RETURN_LABELS.moneyWeightedReturn,
+  mwr: PERFORMANCE_RETURN_LABELS.moneyWeightedReturn,
+  "opening mv": PERFORMANCE_ECONOMICS_LABELS.openingMarketValue,
+  "opening market value": PERFORMANCE_ECONOMICS_LABELS.openingMarketValue,
+  "ending mv": PERFORMANCE_ECONOMICS_LABELS.endingMarketValue,
+  "ending market value": PERFORMANCE_ECONOMICS_LABELS.endingMarketValue,
+  "flow-adjusted mv": PERFORMANCE_ECONOMICS_LABELS.flowAdjustedMarketValue,
+  "flow-adjusted market value": PERFORMANCE_ECONOMICS_LABELS.flowAdjustedMarketValue,
+  "net flow": PERFORMANCE_ECONOMICS_LABELS.netCashFlow,
+  "net cash flow": PERFORMANCE_ECONOMICS_LABELS.netCashFlow,
+};
+
+export function normalizePerformanceMetricLabel(label: string): string {
+  const trimmed = label.trim();
+  const normalizedKey = trimmed.toLowerCase().replace(/\s+/g, " ");
+  return PERFORMANCE_METRIC_LABEL_ALIASES[normalizedKey] ?? trimmed;
+}
+
+export const PERFORMANCE_ACTION_LABELS = {
+  openReturnPath: "Open return path",
+  reviewContribution: "Review contribution",
+} as const;
+
+const PERFORMANCE_ACTION_LABEL_ALIASES: Readonly<Record<string, string>> = {
+  "open return path": PERFORMANCE_ACTION_LABELS.openReturnPath,
+  "review contribution": PERFORMANCE_ACTION_LABELS.reviewContribution,
+};
+
+export function normalizePerformanceActionLabel(label: string): string {
+  const trimmed = label.trim();
+  const normalizedKey = trimmed.toLowerCase().replace(/\s+/g, " ");
+  return PERFORMANCE_ACTION_LABEL_ALIASES[normalizedKey] ?? trimmed;
+}
