@@ -53,6 +53,11 @@ describe("portfolio record screen view model", () => {
       { label: "Invested", value: "920,000 USD" },
       { label: "Cash", value: "80,000 USD" },
     ]);
+    expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "income")).toEqual([
+      { label: "Net income", value: "N/A" },
+      { label: "Net cash movement", value: "N/A" },
+      { label: PORTFOLIO_CURRENCY_LABELS.base, value: "USD" },
+    ]);
     expect(
       buildPortfolioRecordHeaderKpis(
         {
@@ -74,7 +79,7 @@ describe("portfolio record screen view model", () => {
         {
           ...workspace,
           income_summary: {
-            reporting_currency: "USD",
+            reporting_currency: "SGD",
             window_start_date: "2026-04-12",
             window_end_date: "2026-05-12",
             totals_requested_window: buildIncomePeriod(42901.4, 3),
@@ -82,7 +87,7 @@ describe("portfolio record screen view model", () => {
             income_types: [],
           },
           activity_summary: {
-            reporting_currency: "USD",
+            reporting_currency: "SGD",
             window_start_date: "2026-04-12",
             window_end_date: "2026-05-12",
             buckets: [
@@ -115,9 +120,9 @@ describe("portfolio record screen view model", () => {
         "income"
       )
     ).toEqual([
-      { label: "Net income", value: "42,901.4 USD" },
-      { label: "Net cash movement", value: "148,550 USD" },
-      { label: PORTFOLIO_CURRENCY_LABELS.reporting, value: "USD" },
+      { label: "Net income", value: "42,901.4 SGD" },
+      { label: "Net cash movement", value: "148,550 SGD" },
+      { label: PORTFOLIO_CURRENCY_LABELS.reporting, value: "SGD" },
     ]);
 
     expect(

@@ -88,7 +88,7 @@ client communication, or approval record.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio, mandate, date, reporting currency, and current cash weight | Formats the selected workspace facts without replacing their source date | Gateway over Core portfolio contracts |
+| Portfolio, mandate, date, source-returned reporting currency, and current cash weight | Formats the selected workspace facts without replacing their source date or relabelling a base-currency fallback | Gateway over Core portfolio contracts |
 | Gross income, deductions, net income, booking counts, and income types | Reconciles and labels returned figures; performs no tax calculation | Core booked-income data composed by Gateway |
 | Inflows, outflows, fees, taxes, and unknown activity | Maps governed identities to business direction; unknown direction stays excluded | Gateway activity-summary contract over Core records |
 | Classified net movement | Sums only the documented inflow and outflow families | Deterministic Workbench projection over the Gateway contract |
@@ -105,6 +105,7 @@ Workbench uses the BFF and Gateway; it does not call Core directly. Shared contr
 | Ready | Both booked-review modules with source context and exact evidence | Continue the review |
 | Income absent | **No booked income in this window** while available activity can remain visible | Confirm portfolio and window; absence is not a forecast |
 | Activity absent | **No booked cash movements in this window** while available income can remain visible | Confirm portfolio and window; use Cashflow only for projections |
+| Both reporting summaries absent | Header measures remain unavailable and the currency fact is explicitly **Base currency** | Restore the source summaries before claiming a reporting-currency result |
 | Summary present with no categories | An explicit module-level empty state | Treat the returned summary and absent detail separately |
 | Unknown classification | Amount remains visible as **Excluded from net** | Investigate source classification; Workbench does not guess |
 | Partial or degraded source | Available evidence remains bounded by the shared record-shell posture | Restore the named source before relying on missing evidence |

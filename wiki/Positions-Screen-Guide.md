@@ -51,7 +51,7 @@ portfolio-entitlement work remains governed separately.
 
 1. Start from [Advisor Book](Advisor-Book-Workflow) or [Portfolio Review](Portfolio-Review-Screen-Guide)
    with a selected portfolio.
-2. Confirm the mandate, client reference, currency, and as-of date before interpreting figures.
+2. Confirm the mandate, client reference, base currency, and as-of date before interpreting figures.
 3. Use portfolio value, invested value, and cash to orient the inventory; these measures remain source-owned
    portfolio facts rather than totals recalculated from the visible grid.
 4. Search by instrument, choose the business columns needed for the review, and inspect explicit
@@ -65,8 +65,9 @@ portfolio-entitlement work remains governed separately.
 
 - Presents booked securities and source-returned cash balances in one searchable, sortable,
   keyboard-operable data grid.
-- Shows instrument, asset class, quantity, price, market value, cost basis, weight, unrealised P&L,
-  currency, business status, sector, held-since date, and ISIN when the source supplies them.
+- Shows instrument, asset class, quantity, price, base-currency market value and cost, weight,
+  unrealised P&L, instrument currency, business status, sector, held-since date, and ISIN when the
+  source supplies them.
 - Keeps essential columns visible by default and supports an expanded or user-chosen column set
   without changing source data.
 - Uses one fail-closed position-state projection across the grid, CSV export, and evidence rail:
@@ -99,8 +100,9 @@ complete, or communicate with a client.
 
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
-| Portfolio identity, as-of date, currency, portfolio value, invested value, and cash | Presented from the selected workspace; not reconstructed from filtered grid rows | Gateway over Core portfolio book and summary contracts |
+| Portfolio identity, as-of date, base currency, portfolio value, invested value, and cash | Presented from the selected workspace; not reconstructed from filtered grid rows | Gateway over Core portfolio book and summary contracts |
 | Security positions, quantities, price, valuation, cost, weight, classification, dates, and identifiers | Formatted and arranged for review without recalculating source facts | Core booked position records composed by Gateway |
+| Instrument currency | Labels the source-returned denomination separately from portfolio base-currency values | Core booked position record composed by Gateway |
 | Cash balances in the inventory | Added only from the source-returned liquidity detail and deduplicated by security id | Core liquidity records composed by Gateway |
 | Position status | Mapped to stable business language; unknown non-empty states fail closed to **Review required** and raw codes remain out of primary UI/export | Core position source status and operations evidence composed by Gateway |
 | Pricing and source evidence rail | Summarizes the returned records; any warning or failed source posture qualifies the overall rail as **Partial** | Workbench presentation over named Gateway/Core evidence, not reconciliation approval |
