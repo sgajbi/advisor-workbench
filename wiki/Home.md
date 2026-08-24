@@ -12,6 +12,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - Repo context: [REPOSITORY-ENGINEERING-CONTEXT.md](../REPOSITORY-ENGINEERING-CONTEXT.md)
 - Product architecture blueprint:
   [docs/documentation/product-architecture-blueprint.md](../docs/documentation/product-architecture-blueprint.md)
+- Canonical business language and semantic boundaries:
+  [Product vocabulary](Product-Vocabulary)
 - Canonical local runtime:
   [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
 - Business-facing Portfolio screen flow:
@@ -120,6 +122,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 ## Navigation
 
 - [Overview](Overview)
+- [Product Vocabulary](Product-Vocabulary)
 - [Portfolio Review](Portfolio-Review-Screen-Guide)
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
