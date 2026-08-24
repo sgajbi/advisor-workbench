@@ -1,4 +1,9 @@
 import type { DpmOutcomeReviewGatewayResponse } from "./types";
+import {
+  formatBusinessDateValue,
+  formatCalendarDateValue,
+  formatTimestampValue,
+} from "@/design-system/utils/financial-formatters";
 
 export type OutcomeReviewPanelState =
   | "ready"
@@ -225,8 +230,14 @@ function buildOutcomeReviewListItem(
     proofPackId: readString(record, "proof_pack_id") || "N/A",
     expectedSnapshotHash: readString(record, "expected_snapshot_hash") || "N/A",
     realizedSnapshotHash: readString(record, "realized_snapshot_hash") || "N/A",
-    retentionUntil: readString(record, "retain_until") || readString(record, "retention_until") || "N/A",
-    updatedAt: readString(record, "updated_at") || readString(record, "created_at") || "N/A",
+    retentionUntil: formatBusinessDateValue(
+      readString(record, "retain_until") || readString(record, "retention_until"),
+      { nullDisplay: "Not reported" },
+    ),
+    updatedAt: formatTimestampValue(
+      readString(record, "updated_at") || readString(record, "created_at"),
+      { nullDisplay: "Not reported" },
+    ),
     reportInputBlocked: blockedActions.includes("CREATE_REPORT_INPUT"),
     aiEvidenceBlocked: blockedActions.includes("REQUEST_AI_NARRATIVE"),
     clientCommunicationBoundary: buildOutcomeClientCommunicationBoundaryView(record),
@@ -431,18 +442,7 @@ function formatReviewWindow(window: Record<string, unknown>): string {
 }
 
 function formatDateLabel(value: string): string {
-  if (!value) {
-    return "";
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatCalendarDateValue(value, { nullDisplay: "" });
 }
 
 function outcomeStatusLabel(overallOutcome: string, state: string): string {
