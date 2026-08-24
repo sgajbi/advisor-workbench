@@ -38,7 +38,7 @@ const launchHistoryRows: DpmCampaignLaunchHistoryRow[] = [
     waveId: "dwv_campaign_launch_001",
     actor: "pm_sg_1",
     launchedAt: "10 May 2026, 00:00 UTC",
-    requestedAsOfDate: "2026-05-10",
+    requestedAsOfDate: "10 May 2026",
     correlationId: "corr-campaign-launch",
     idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
   },
@@ -75,19 +75,23 @@ describe("DpmCampaignLaunchHistoryCard", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Campaign Launch History" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign launch history" })).toBeInTheDocument();
     expect(screen.getByText("Apple and Tesla holdings review version 2026.05 | 1 of 21 launch records")).toBeInTheDocument();
     expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(screen.getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
+    expect(screen.getByText("10 May 2026")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Manager")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
 
     const boundaries = screen.getByLabelText("Campaign launch history boundaries");
     expect(
       within(boundaries).getByText(
-        "NO_MAKER_CHECKER_WORKFLOW, NO_TRADE_APPROVAL, NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM"
+        "No maker-checker workflow, No trade approval, No order generation, No execution claim"
       )
     ).toBeInTheDocument();
     expect(within(boundaries).getByText("11-11 of 21")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Review Date" })).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "As-of date" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Previous" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));

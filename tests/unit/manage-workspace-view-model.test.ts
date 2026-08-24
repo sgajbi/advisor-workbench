@@ -5,6 +5,7 @@ import {
   buildManageExceptionRowsResult,
   buildManageReviewContextStrip,
   filterManageExceptionRowsForMandate,
+  formatBusinessBoundary,
   formatBusinessBook,
   formatBusinessExceptionTitle,
   formatBusinessMandateType,
@@ -29,6 +30,12 @@ describe("manage workspace business presentation", () => {
     );
     expect(formatBusinessReason("SOURCE_RISK_HEALTH_ATTENTION")).toBe(
       "Risk posture requires review",
+    );
+    expect(formatBusinessBoundary("NO_CAMPAIGN_MEMBERSHIP_CALCULATION")).toBe(
+      "Campaign membership remains source-owned",
+    );
+    expect(formatBusinessBoundary("NO_OMS_EXECUTION_CLAIM")).toBe(
+      "No execution claim",
     );
   });
 

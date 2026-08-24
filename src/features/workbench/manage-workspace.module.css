@@ -2591,11 +2591,11 @@
 .manageScope :global(.rebalance-summary-cell span),
 .manageScope :global(.rebalance-metric-tile span) {
   color: #45464d;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 14px;
-  text-transform: uppercase;
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--tracking-label);
+  line-height: var(--type-label-line-height);
+  text-transform: none;
 }
 
 .manageScope :global(.rebalance-summary-cell strong) {

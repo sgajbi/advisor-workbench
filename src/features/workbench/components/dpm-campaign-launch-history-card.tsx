@@ -8,6 +8,11 @@ import type {
   DpmCampaignLaunchHistoryRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
+import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
+import {
+  formatBusinessBoundary,
+  formatBusinessOwner,
+} from "@/features/workbench/manage-workspace-view-model";
 
 export { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE };
 
@@ -32,7 +37,9 @@ export default function DpmCampaignLaunchHistoryCard({
     <div className="rebalance-campaign-evidence" aria-labelledby="campaign-launch-history-title">
       <div className="rebalance-table-heading">
         <div>
-          <h4 id="campaign-launch-history-title">Campaign Launch History</h4>
+          <h4 id="campaign-launch-history-title">
+            {MANAGE_REBALANCE_LABELS.campaignLaunchHistory}
+          </h4>
           <p>
             {selectedCampaign
               ? `${selectedCampaign.displayName} version ${selectedCampaign.campaignVersion} | ${page.count} of ${page.totalCount} launch records`
@@ -52,22 +59,22 @@ export default function DpmCampaignLaunchHistoryCard({
         />
       ) : null}
       <AnalyticsTable
-        ariaLabel="DPM campaign launch history"
+        ariaLabel="Rebalance campaign launch history"
         variant="portfolio"
         density="compact"
         columns={[
-          { key: "wave", label: "Wave" },
-          { key: "actor", label: "Launched By" },
+          { key: "wave", label: MANAGE_REBALANCE_LABELS.rebalanceWave },
+          { key: "actor", label: "Launched by" },
           { key: "launched", label: "Recorded" },
-          { key: "reviewDate", label: "Review Date" },
-          { key: "correlation", label: "Correlation" },
-          { key: "idempotency", label: "Idempotency" },
+          { key: "reviewDate", label: MANAGE_REBALANCE_LABELS.asOfDate },
+          { key: "correlation", label: MANAGE_REBALANCE_LABELS.supportReference },
+          { key: "idempotency", label: MANAGE_REBALANCE_LABELS.replayKey },
         ]}
         rows={rows.map((row) => ({
           key: row.key,
           cells: [
             row.waveId,
-            row.actor,
+            formatBusinessOwner(row.actor),
             row.launchedAt,
             row.requestedAsOfDate,
             row.correlationId,
@@ -91,14 +98,14 @@ export default function DpmCampaignLaunchHistoryCard({
           }
         />
         <DpmWaveSummaryCell
-          label="Page Size"
+          label="Page size"
           value={String(page.limit || CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE)}
         />
         <DpmWaveSummaryCell
-          label="Operating Boundary"
+          label="Operating boundaries"
           value={
             page.operatingBoundaries.length > 0
-              ? page.operatingBoundaries.join(", ")
+              ? page.operatingBoundaries.map(formatBusinessBoundary).join(", ")
               : "No order generation or OMS execution claim"
           }
         />

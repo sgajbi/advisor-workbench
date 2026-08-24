@@ -337,7 +337,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByText("Source-backed")).toBeInTheDocument();
     expect(screen.getByRole("toolbar", { name: "Campaign administration modes" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review posture" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("heading", { name: "Campaign Launch Posture" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Campaign launch decision" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recommended Actions" })).toBeInTheDocument();
 
     const activeRebalance = screen.getByRole("heading", { name: "Active Rebalance" });
@@ -384,14 +384,14 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByText("Lifecycle history and technical trace"));
 
     const table = await screen.findByRole("table", {
-      name: "DPM campaign lifecycle evidence",
+      name: "Rebalance campaign lifecycle evidence",
     });
     expect(within(table).getByText("Launched")).toBeInTheDocument();
     expect(within(table).getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
     expect(within(table).queryByText("2026-05-14T09:30:00Z")).not.toBeInTheDocument();
-    expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Manager")).toBeInTheDocument();
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
-    expect(within(table).getByText("2026-05-10")).toBeInTheDocument();
+    expect(within(table).getByText("10 May 2026")).toBeInTheDocument();
     expect(within(table).getByText("campaign_definition_launched")).toBeInTheDocument();
     expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(
@@ -421,9 +421,9 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
     fireEvent.click(screen.getByText("Launch history and replay evidence"));
 
-    const table = await screen.findByRole("table", { name: "DPM campaign launch history" });
+    const table = await screen.findByRole("table", { name: "Rebalance campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
-    expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Manager")).toBeInTheDocument();
     expect(within(table).getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
     expect(within(table).queryByText("2026-05-10T00:00:00Z")).not.toBeInTheDocument();
     expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
@@ -432,7 +432,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "NO_MAKER_CHECKER_WORKFLOW, NO_TRADE_APPROVAL, NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM",
+        "No maker-checker workflow, No trade approval, No order generation, No execution claim",
       ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -474,7 +474,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(screen.getByText("No launch records")).toBeInTheDocument();
     expect(screen.getByText("0 of 0")).toBeInTheDocument();
     expect(screen.queryByText("1-0 of 0")).not.toBeInTheDocument();
-    expect(screen.getAllByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("No order generation, No execution claim").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
@@ -504,12 +504,12 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
     expect((await screen.findAllByText("Ready")).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("NO_ORDER_GENERATION, NO_OMS_EXECUTION_CLAIM").length).toBeGreaterThan(0);
-    const launchButton = screen.getByRole("button", { name: "Launch governed wave" });
+    expect(screen.getAllByText("No order generation, No execution claim").length).toBeGreaterThan(0);
+    const launchButton = screen.getByRole("button", { name: "Launch rebalance wave" });
     expect(launchButton).toBeDisabled();
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /I reviewed the source readiness and understand this creates a durable campaign wave only/i,
+        name: /I reviewed the source readiness.*one governed rebalance wave.*does not approve trades or send orders/i,
       }),
     );
     fireEvent.click(launchButton);
@@ -526,7 +526,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(
       screen.getAllByText("campaign-launch:campaign-holdings-202605:2026.05:abc").length,
     ).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
     expect(
       screen.getAllByText("corr-campaign-launch").every((element) => element.closest("details") !== null),
     ).toBe(true);
@@ -555,8 +555,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
     expect((await screen.findAllByText("Campaign Definition Actor Not Entitled")).length).toBeGreaterThan(0);
     expect(screen.getByText("Blocked")).toBeInTheDocument();
-    expect(await screen.findByText("preview_wave, create_wave")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Launch governed wave" })).toBeDisabled();
+    expect(await screen.findByText("Preview Wave, Create Wave")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
     expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });

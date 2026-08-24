@@ -2,7 +2,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { MANAGE_WORKFLOW_LABELS } from "../../src/features/workbench/manage-terminology";
+import {
+  MANAGE_REBALANCE_LABELS,
+  MANAGE_WORKFLOW_LABELS,
+} from "../../src/features/workbench/manage-terminology";
 
 describe("manage terminology", () => {
   it("keeps user work, source records, data presence, and date scope distinct", () => {
@@ -16,6 +19,24 @@ describe("manage terminology", () => {
       dataAvailability: "Data availability",
       mandateHealthDimensions: "Mandate health dimensions",
       asOfDate: "As-of date",
+    });
+  });
+
+  it("names the campaign-to-wave hierarchy and support evidence consistently", () => {
+    expect(MANAGE_REBALANCE_LABELS).toEqual({
+      campaignLaunchDecision: "Campaign launch decision",
+      campaignLaunchHistory: "Campaign launch history",
+      campaignLifecycleEvidence: "Campaign lifecycle evidence",
+      previewReadiness: "Preview readiness",
+      launchReadiness: "Launch readiness",
+      asOfDate: "As-of date",
+      previewAsOfDate: "Preview as-of date",
+      reviewedBy: "Reviewed by",
+      previewReviewedBy: "Preview reviewed by",
+      rebalanceWave: "Rebalance wave",
+      rebalanceWaveReference: "Rebalance wave reference",
+      supportReference: "Support reference",
+      replayKey: "Replay key",
     });
   });
 
@@ -129,5 +150,27 @@ describe("manage terminology", () => {
         "utf8",
       ),
     ).toContain("requestDpmExceptionSummary");
+  });
+
+  it("keeps rebalance summary labels on the productive type contract", () => {
+    const styles = readFileSync(
+      join(
+        process.cwd(),
+        "src",
+        "features",
+        "workbench",
+        "manage-workspace.module.css",
+      ),
+      "utf8",
+    );
+    const summaryLabelRule = styles.match(
+      /\.manageScope :global\(\.rebalance-summary-cell span\),[\s\S]*?\n}/,
+    )?.[0];
+
+    expect(summaryLabelRule).toBeDefined();
+    expect(summaryLabelRule).toContain("font-size: var(--type-label-size)");
+    expect(summaryLabelRule).toContain("font-weight: var(--type-label-weight)");
+    expect(summaryLabelRule).toContain("text-transform: none");
+    expect(summaryLabelRule).not.toMatch(/font-size:\s*10px|font-weight:\s*700/);
   });
 });
