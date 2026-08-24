@@ -101,7 +101,7 @@ while the user moves from attention posture into construction, review, and evide
 | Portfolio Memory          | `/workbench/{portfolioId}?mode=memory`       | Active  | Guide planned — #605 | Gateway and Manage            |
 | PM Copilot                | `/workbench/{portfolioId}?mode=copilot`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
 | PM Operating Quality      | `/workbench/{portfolioId}?mode=quality`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
-| Outcome Reviews           | `/workbench/{portfolioId}?mode=reviews`      | Active  | Guide planned — #605 | Gateway and Manage            |
+| [Outcome reviews](Outcome-Reviews-Screen-Guide) | `/workbench/{portfolioId}?mode=reviews` | Active | Guide available | Gateway, Manage, Report, and Lotus AI |
 | Evidence Pack             | `/workbench/{portfolioId}?mode=proof`        | Active  | Guide planned — #605 | Gateway, Manage, and Report   |
 
 The presence of an AI-assisted mode does not make generated content authoritative. Its guide must

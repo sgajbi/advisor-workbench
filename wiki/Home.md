@@ -146,6 +146,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide)
 - [Manage Overview](Manage-Overview-Screen-Guide)
 - [Rebalance Waves](Rebalance-Waves-Screen-Guide)
+- [Outcome reviews](Outcome-Reviews-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)
 - [Report centre](Report-Centre-Screen-Guide)

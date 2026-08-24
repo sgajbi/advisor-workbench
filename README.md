@@ -61,11 +61,11 @@ Boundary rules that matter:
 6. Manage surfaces are Gateway-backed and cover RFC-0038 mandate command center, RFC-0041
    rebalance waves, RFC-0039 construction alternatives, RFC40-WTBD-010 portfolio memory,
    RFC-0042 outcome reviews, RFC-0040 proof-pack evidence, RFC-0043 exception-summary requests,
-   and rebalance action-register supportability. Workbench renders Gateway/manage/lotus-ai truth
+   and rebalance action-register supportability. Workbench renders Gateway/Manage/Lotus AI truth
    and does not calculate mandate health, wave readiness, optimizer output, outcome variance,
    proof-pack hashes, report inputs, AI prompts, PM memos, narratives, or execution claims locally.
    `mode=copilot` centralizes the existing Gateway-backed proof-pack PM memo, wave PM memo,
-   operations handoff summary, exception summary, outcome narrative, and PM quality support-summary
+   operations handoff summary, exception summary, AI-assisted outcome review summary, and PM quality support-summary
    workflow-pack requests without browser-owned prompt construction, generated text storage,
    PM ranking, client contact, order, or OMS claims.
 7. Recommendations provide a compatibility advisory workspace. `mode=cockpit` is the Gateway-backed RFC-0026

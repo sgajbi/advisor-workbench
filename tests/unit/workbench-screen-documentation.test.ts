@@ -87,9 +87,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 27,
-      coverageExceptions: 9,
-      unmappedGuides: 9,
+      mappedGuides: 28,
+      coverageExceptions: 8,
+      unmappedGuides: 8,
     });
   });
 
@@ -901,6 +901,48 @@ describe("Workbench screen documentation governance", () => {
     );
     expect(guide).toContain("does not:\n\n- calculate proposed trades");
     expect(guide).toContain("not a claim of competitor superiority");
+    expect(validate(registry).errors).toEqual([]);
+  });
+
+  it("maps Outcome reviews to one comparison-truthful evidence guide", () => {
+    const registry = loadRegistry();
+    const outcomeReviews = registry.surfaces.find(
+      (candidate: { id: string }) => candidate.id === "outcome-reviews",
+    );
+
+    expect(outcomeReviews).toMatchObject({
+      businessName: "Outcome reviews",
+      routePattern: "/workbench/{portfolioId}",
+      mode: "reviews",
+      wikiSlug: "Outcome-Reviews-Screen-Guide",
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-manage",
+        "lotus-report",
+        "lotus-ai",
+      ],
+      implementationEvidence: expect.arrayContaining([
+        "src/features/workbench/outcome-review-view-model.ts",
+        "src/features/workbench/components/outcome-review-panel.tsx",
+        "src/features/workbench/use-outcome-review-handoffs.ts",
+      ]),
+      runtimeEvidence: ["tests/integration/workbench-page.test.tsx"],
+      coverageException: null,
+    });
+    const guide = fs
+      .readFileSync(
+        path.join(rootDirectory, "wiki", "Outcome-Reviews-Screen-Guide.md"),
+        "utf8",
+      )
+      .replaceAll("\r\n", "\n");
+    expect(guide).toContain("compare Manage-recorded expected and realised outcomes");
+    expect(guide).toContain(
+      "**Within expected tolerance** is a comparison outcome, not a statement",
+    );
+    expect(guide).toContain("presents the first source-ranked review");
+    expect(guide).toContain("AI-assisted result remains internal and review-gated");
+    expect(guide).toContain("does not:\n\n- calculate expected or realised outcomes");
+    expect(guide).toContain("not a claim of competitor\nsuperiority");
     expect(validate(registry).errors).toEqual([]);
   });
 

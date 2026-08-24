@@ -6572,6 +6572,22 @@ guidance before the workflow language was aligned:
    keeps the source policy record and its evaluation identity visible as supporting evidence while
    presenting one prioritised review worklist and next permitted action.
 
+Outcome-review implementation was reconfirmed on 2026-08-25 against primary regulatory and
+wealth-platform sources before the comparison and handoff language was aligned:
+
+1. [FCA COBS 9A](https://handbook.fca.org.uk/handbook/COBS/9A/) requires client-facing information
+   and suitability reporting to remain fair, clear, and not misleading. Lotus therefore does not
+   promote a narrow tolerance comparison into a broader mandate-compliance or client-suitability
+   conclusion.
+2. [Commission Delegated Regulation (EU) 2017/565](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A02017R0565-20191011)
+   requires portfolio-management periodic statements to support meaningful comparison with agreed
+   objectives or benchmarks. Lotus therefore keeps expected outcome, realised outcome, variance,
+   review posture, and evidence availability distinct.
+3. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes connected portfolio monitoring and outcome-oriented review across the adviser
+   workflow. Lotus adopts the connected, exception-led review principle without copying another
+   product's layout or claiming unsupported optimisation, entitlement, or decision authority.
+
 ### Adopted decisions
 
 1. Maintain one cross-domain meaning authority in
@@ -6591,6 +6607,12 @@ guidance before the workflow language was aligned:
 8. Name the Suitability review source boundary as an authoritative policy record, not as
    `Gateway-backed` implementation topology; preserve Gateway and Advise ownership in engineering
    and integration documentation.
+9. Present Manage tolerance results as **Within expected tolerance** or **Outside expected
+   tolerance** and keep them separate from **Review posture** and source-evidence availability.
+10. Label the generated handoff as an **AI-assisted review summary**, state that human review is
+    required, and keep it behind the source-returned action gate.
+11. Order Outcome reviews around comparison, mandate impact, source evidence, and the next permitted
+    action; keep source lineage and support reasons as progressive detail.
 
 ### Rejected decisions
 
@@ -6608,6 +6630,10 @@ guidance before the workflow language was aligned:
 7. Renaming a policy evaluation as the adviser workflow, presenting Gateway topology as productive
    UI, or claiming that Workbench assesses suitability, approves sign-off, waives controls, or
    authorises client communication.
+8. Translating a tolerance result into **Within mandate**, compliant, suitable, approved,
+   client-ready, or execution-complete.
+9. Calling a generated workflow action `AI narrative` in the productive path, hiding AI provenance,
+   or presenting generated commentary as source evidence or approved advice.
 
 ### Validation and publication decision
 

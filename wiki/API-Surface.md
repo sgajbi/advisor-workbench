@@ -282,7 +282,7 @@ promote dormant labels into product ownership just because historical route file
   calculating supportability locally.
 - RFC-0098/RFC-0042 post-trade outcome-review rendering is implemented on
   `/workbench/{portfolioId}?mode=reviews` through Gateway `/api/v1/dpm/command-center/outcome-reviews*`.
-  Workbench renders manage-owned review state, expected-versus-realized dimensions, hashes,
+  Workbench renders Manage-owned review state, expected-versus-realised dimensions, hashes,
   source lineage, source-owner/source-type facets, applied source-lineage filters, support
   boundary, supportability, report-input posture, AI-evidence posture, and
   `client_communication_boundary` posture without calculating those values client-side, querying
@@ -291,7 +291,7 @@ promote dormant labels into product ownership just because historical route file
   loading manage report input through Gateway and then submitting Gateway
   `POST /api/v1/reports/outcome-reviews`; report rendering and archive lifecycle remain owned by
   `lotus-report`, `lotus-render`, and `lotus-archive`. The panel can also request a governed
-  outcome-review AI narrative through Gateway
+  AI-assisted outcome-review summary through Gateway
   `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`; evidence
   remains manage-owned, narrative execution remains `lotus-ai` owned, and Workbench shows only
   bounded workflow-pack run posture. Demo promotion still requires the canonical

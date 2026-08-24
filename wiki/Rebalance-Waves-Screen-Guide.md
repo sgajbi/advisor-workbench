@@ -195,7 +195,7 @@ this guide is not a claim of competitor superiority.
 - Mandate Health owns detailed mandate evidence and attention review.
 - Construction Alternatives owns governed alternative generation and comparison.
 - Portfolio Memory owns source-recorded decisions and operating events.
-- Outcome Reviews owns expected-versus-realized evidence.
+- [Outcome reviews](Outcome-Reviews-Screen-Guide) owns expected-versus-realised evidence.
 - Evidence Pack owns the broader selected-portfolio proof record.
 - [Report Centre](Report-Centre-Screen-Guide) owns supported report ordering; this screen does not
   publish a client report.
