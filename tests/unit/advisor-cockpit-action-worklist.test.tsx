@@ -155,6 +155,7 @@ describe("AdvisorCockpitActionWorklist", () => {
 
     rerender(
       <AdvisorCockpitActionWorklist
+        selectionScopeKey="portfolio-a"
         rows={rows}
         evidenceConfirmed={false}
         transaction={idleTransaction}
@@ -164,6 +165,29 @@ describe("AdvisorCockpitActionWorklist", () => {
     expect(
       screen.getByRole("button", { name: "Acknowledge review" }),
     ).toBeDisabled();
+  });
+
+  it("retains the admitted fallback action when source ranking changes", () => {
+    const { rerender } = renderWorklist();
+
+    rerender(
+      <AdvisorCockpitActionWorklist
+        selectionScopeKey="portfolio-a"
+        rows={[rows[1], rows[0]]}
+        evidenceConfirmed
+        transaction={idleTransaction}
+        onAcknowledge={vi.fn()}
+      />,
+    );
+
+    const options = screen.getAllByRole("option");
+    expect(options[0]).toHaveTextContent("Liquidity evidence review");
+    expect(options[0]).toHaveAttribute("aria-selected", "false");
+    expect(options[1]).toHaveTextContent("Policy review required");
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByRole("region", { name: "Selected advisor action" }),
+    ).toHaveTextContent("Review policy evidence before client discussion.");
   });
 });
 
@@ -183,6 +207,7 @@ function renderWorklist({
 } = {}) {
   return render(
     <AdvisorCockpitActionWorklist
+      selectionScopeKey="portfolio-a"
       rows={rows}
       evidenceConfirmed={evidenceConfirmed}
       transaction={transaction}

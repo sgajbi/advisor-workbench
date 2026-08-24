@@ -314,6 +314,7 @@ export default function AdvisorCockpitWorkspace({
         />
       ) : (
         <AdvisorCockpitActionWorklist
+          selectionScopeKey={portfolioId}
           rows={model.actionRows}
           evidenceConfirmed={evidencePresentation.actionsEnabled}
           transaction={acknowledgementTransaction}
