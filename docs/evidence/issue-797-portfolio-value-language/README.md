@@ -7,7 +7,7 @@ It contains two deliberately separate evidence classes:
 
 | Evidence | Runtime | What it proves | What it does not prove |
 | --- | --- | --- | --- |
-| Optimized-production fixture at 1440 and 519 pixels | Checkout-owned Workbench and deterministic Gateway fixture | Exact rendered copy, responsive layout, keyboard/focus evidence, source-state handling, and absence of page overflow across seven governed widths | Live Gateway state, canonical readiness, demo readiness, or production identity |
+| Optimized-production fixture at 1440 and 519 pixels | Checkout-owned Workbench and deterministic Gateway fixture | Exact rendered copy, responsive layout and absence of page overflow across seven governed widths, plus keyboard/focus evidence at the compact 519-pixel width | Live Gateway state, canonical readiness, demo readiness, or production identity |
 | Read-only live diagnostic at 1440 pixels | Existing shared Workbench development runtime over the real Workbench BFF and Gateway | `PB_SG_GLOBAL_BAL_001` renders **Portfolio value** from live source data with confirmed identity and successful BFF reads | Full canonical validation, all-panel readiness, demo readiness, or bank certification |
 
 All screenshots retain the required `diagnostic-` prefix. The shared stack was neither restarted nor
@@ -35,8 +35,8 @@ Machine-readable evidence:
   and page overflow is zero.
 - The live book, workflow, performance, income, activity, and capability reads complete through the
   Workbench BFF; the captured network record shows HTTP 200 for the completed reads.
-- The deterministic production proof passes at 1440, 1024, 768, 721, 720, 561, and 519 pixels with
-  focus-visible keyboard traversal and no page overflow.
+- The deterministic production proof records no page overflow at 1440, 1024, 768, 721, 720, 561,
+  and 519 pixels. Focus-visible keyboard traversal is recorded at the compact 519-pixel width.
 
 The Gateway field `assets_under_management_base` and reason code
 `PORTFOLIO_AUM_UNAVAILABLE` remain raw contract identifiers at the adapter boundary. They are not
