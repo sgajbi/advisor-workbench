@@ -77,6 +77,8 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeInTheDocument();
     expect(await screen.findByText("Included Reviewed Narrative")).toBeInTheDocument();
     expect(await screen.findByText("Report Requested")).toBeInTheDocument();
+    expect(await screen.findByText(/22 May 2026, 09:00 UTC/)).toBeInTheDocument();
+    expect(screen.queryByText(/2026-05-22T09:00:00Z/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /archive/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /render/i })).not.toBeInTheDocument();

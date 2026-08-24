@@ -48,7 +48,7 @@ describe("buildProposalDetailEvidenceModel", () => {
     expect(model.artifactHash).toBe("sha256:artifact");
     expect(model.requestHash).toBe("sha256:request");
     expect(model.simulationHash).toBe("sha256:simulation");
-    expect(model.generatedAt).toBe("2026-05-25T01:00:00Z");
+    expect(model.generatedAt).toBe("25 May 2026, 01:00 UTC");
     expect(model.stageItems).toEqual([
       { label: "Draft", reached: true },
       { label: "Review", reached: true },
