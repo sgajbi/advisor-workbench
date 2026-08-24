@@ -29,6 +29,7 @@ test.beforeAll(async () => {
     scenario !== 'cashflow' &&
     scenario !== 'allocation-recovery' &&
     scenario !== 'income-activity' &&
+    scenario !== 'review-context-states' &&
     scenario !== 'shell-unavailable' &&
     scenario !== 'positions-status' &&
     scenario !== 'transactions-status'
@@ -96,6 +97,41 @@ async function openPortfolioReview(
   await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible({ timeout: 15000 });
 
   return { portfolioId, available: true };
+}
+
+async function expectProductiveReviewContextTypography(
+  page: import('@playwright/test').Page,
+  sourceState: 'confirmed' | 'partial' | 'unavailable'
+) {
+  const typography = await collectReviewContextTypographyEvidence(page);
+  expect(typography).toMatchObject({
+    eyebrow: {
+      fontSize: '12px',
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    factLabel: {
+      fontSize: '12px',
+      fontWeight: '500',
+      textTransform: 'none',
+    },
+    factValue: {
+      fontSize: '14px',
+      fontWeight: sourceState === 'unavailable' ? '400' : '500',
+      textTransform: 'none',
+    },
+    supportControl: {
+      fontSize: '14px',
+      fontWeight: '600',
+      textTransform: 'none',
+    },
+  });
+  expect(
+    Object.values(typography).every(({ fontFamily }) =>
+      fontFamily.includes('IBM Plex Sans')
+    )
+  ).toBe(true);
+  return typography;
 }
 
 async function openIncomePortfolio(
@@ -218,6 +254,60 @@ async function openCashflowPortfolio(
 }
 
 test.describe('Portfolio workbench smoke', () => {
+  test('review context keeps productive typography across source states', async ({ page }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_FIXTURE !== 'review-context-states',
+      'Review Context state proof requires the owned partial-context fixture.'
+    );
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    const evidence = [];
+
+    for (const sourceState of ['partial', 'unavailable'] as const) {
+      const portfolioId =
+        sourceState === 'partial' ? 'PB_SG_GLOBAL_BAL_001' : 'PB_CONTEXT_NOT_AVAILABLE';
+
+      for (const viewport of [
+        { width: 1440, height: 1000 },
+        { width: 519, height: 900 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto(`/portfolio?portfolioId=${portfolioId}`, {
+          waitUntil: 'domcontentloaded',
+        });
+        const reviewContext = page.getByTestId('review-context-strip');
+        await expect(reviewContext).toBeVisible({ timeout: 15_000 });
+        await expect(reviewContext).toHaveAttribute('data-source-state', sourceState);
+        await expect(reviewContext.locator('dd[data-confirmed="false"]').first()).toHaveText(
+          'Not confirmed'
+        );
+        const typography = await expectProductiveReviewContextTypography(page, sourceState);
+        const measurements = await measureViewportEvidence(page);
+        expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
+          measurements.document.clientWidth + 1
+        );
+
+        evidence.push({ sourceState, viewport, typography, measurements });
+        if (evidenceDirectory) {
+          await mkdir(evidenceDirectory, { recursive: true });
+          await reviewContext.screenshot({
+            path: resolve(
+              evidenceDirectory,
+              `diagnostic-${sourceState}-review-context-${viewport.width}.png`
+            ),
+          });
+        }
+      }
+    }
+
+    if (evidenceDirectory) {
+      await writeFile(
+        resolve(evidenceDirectory, 'review-context-typography-states.json'),
+        `${JSON.stringify({ proofType: 'owned source-state fixture', evidence }, null, 2)}\n`,
+        'utf8'
+      );
+    }
+  });
+
   test('selected shell failure reaches one truthful terminal recovery state', async ({
     page,
   }) => {
@@ -423,34 +513,7 @@ test.describe('Portfolio workbench smoke', () => {
       ]);
       expect(identityOwnership.every((fact) => fact.presentInReviewContext)).toBe(true);
       expect(identityOwnership.every((fact) => !fact.presentOutsideReviewContext)).toBe(true);
-      const typography = await collectReviewContextTypographyEvidence(page);
-      expect(typography).toMatchObject({
-        eyebrow: {
-          fontSize: '12px',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-        },
-        factLabel: {
-          fontSize: '12px',
-          fontWeight: '500',
-          textTransform: 'none',
-        },
-        factValue: {
-          fontSize: '14px',
-          fontWeight: '500',
-          textTransform: 'none',
-        },
-        supportControl: {
-          fontSize: '14px',
-          fontWeight: '600',
-          textTransform: 'none',
-        },
-      });
-      expect(
-        Object.values(typography).every(({ fontFamily }) =>
-          fontFamily.includes('IBM Plex Sans')
-        )
-      ).toBe(true);
+      const typography = await expectProductiveReviewContextTypography(page, 'confirmed');
       await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Base currency', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Reporting currency', { exact: true })).toHaveCount(0);
