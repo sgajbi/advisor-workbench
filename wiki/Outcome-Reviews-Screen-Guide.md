@@ -83,6 +83,8 @@ client-delivery authority, trade approval, order-routing authority, or execution
   browser does not overwrite source narrative with a stronger mandate claim.
 - Presents known handoff reason codes as **Report preparation ready**, **Report preparation
   blocked**, or **AI-assisted review summary blocked** while leaving unknown reasons readable.
+- Uses one AI-assisted summary action and keeps source facets and blocked client-action detail behind
+  explicit progressive disclosure, avoiding duplicated controls and always-on technical evidence.
 - Shows expected snapshot, realised snapshot, evidence pack, and combined source-evidence
   availability separately; an available hash is not exposed as primary business copy.
 - Loads Manage report input through Gateway before submitting a report request. Success is shown
@@ -182,9 +184,15 @@ superiority.
   no-call posture.
 - `tests/integration/workbench-page.test.tsx` proves the selected Manage route reads Outcome reviews
   through Gateway and renders the source comparison without exposing review ids or hashes.
+- `tests/e2e/manage-outcome-reviews-workspace.spec.ts` proves the optimized production screen at
+  1440, 1024, 768, and 519 pixels with one screen heading, one AI-assisted action, readable
+  two-column decision summaries, progressive source/client-control detail, no page-level overflow,
+  and no raw known source commands or contract names in the business path.
+- Reviewable rendered evidence is committed under
+  `docs/evidence/issue-799-product-vocabulary/outcome-reviews/`.
 - `scripts/live/validation/browser-workflows.mjs` remains the governed canonical Manage browser
-  entrypoint. Optimized production, protected PR, exact-main, and canonical populated evidence are
-  separate release controls and must not be inferred from component tests.
+  entrypoint. Protected PR, exact-main, and canonical populated evidence remain separate release
+  controls and must not be inferred from fixture-backed optimized-production proof.
 
 Use [Validation and CI](Validation-and-CI) and [Operations Runbook](Operations-Runbook) for the
 governed validation sequence.

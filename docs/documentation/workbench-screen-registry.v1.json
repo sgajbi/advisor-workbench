@@ -812,7 +812,10 @@
         "src/features/workbench/components/outcome-review-panel.tsx",
         "src/features/workbench/use-outcome-review-handoffs.ts"
       ],
-      "runtimeEvidence": ["tests/integration/workbench-page.test.tsx"],
+      "runtimeEvidence": [
+        "tests/integration/workbench-page.test.tsx",
+        "tests/e2e/manage-outcome-reviews-workspace.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
       "coverageException": null
     },
