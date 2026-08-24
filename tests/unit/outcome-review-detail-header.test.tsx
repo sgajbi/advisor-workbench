@@ -4,19 +4,15 @@ import { describe, expect, it, vi } from "vitest";
 import OutcomeReviewDetailHeader from "../../src/features/workbench/components/outcome-review-detail-header";
 
 describe("OutcomeReviewDetailHeader", () => {
-  it("renders selected review actions and delegates supported requests", () => {
+  it("renders the selected review report action without duplicating AI support", () => {
     const onRequestReportJob = vi.fn();
-    const onRequestAiNarrative = vi.fn();
 
     render(
       <OutcomeReviewDetailHeader
         reviewLabel="13 May 2026 outcome review"
         reportJobAvailable
         reportJobPending={false}
-        aiNarrativeAvailable
-        aiNarrativePending={false}
         onRequestReportJob={onRequestReportJob}
-        onRequestAiNarrative={onRequestAiNarrative}
       />,
     );
 
@@ -24,10 +20,11 @@ describe("OutcomeReviewDetailHeader", () => {
     expect(screen.getByText("13 May 2026 outcome review")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Prepare AI-assisted review summary" }));
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
-    expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("button", { name: /Prepare AI-assisted review summary/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps unavailable handoffs disabled without client communication or execution actions", () => {
@@ -36,15 +33,14 @@ describe("OutcomeReviewDetailHeader", () => {
         reviewLabel="Blocked outcome review"
         reportJobAvailable={false}
         reportJobPending={false}
-        aiNarrativeAvailable={false}
-        aiNarrativePending={false}
         onRequestReportJob={vi.fn()}
-        onRequestAiNarrative={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Prepare AI-assisted review summary" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /Prepare AI-assisted review summary/ }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /client|communication|approval|delivery/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/order|OMS|execution|fill|settlement/i)).not.toBeInTheDocument();
   });
@@ -55,14 +51,13 @@ describe("OutcomeReviewDetailHeader", () => {
         reviewLabel="Pending outcome review"
         reportJobAvailable
         reportJobPending
-        aiNarrativeAvailable
-        aiNarrativePending
         onRequestReportJob={vi.fn()}
-        onRequestAiNarrative={vi.fn()}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Requesting report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Preparing AI-assisted review summary" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /AI-assisted review summary/ }),
+    ).not.toBeInTheDocument();
   });
 });

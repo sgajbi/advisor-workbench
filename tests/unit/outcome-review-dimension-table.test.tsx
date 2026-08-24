@@ -14,7 +14,7 @@ describe("OutcomeReviewDimensionTable", () => {
             expected: "1.2%",
             realized: "1.1%",
             variance: "-0.1%",
-            state: "READY",
+            state: "WITHIN_TOLERANCE",
             explanation: "Drift reduction achieved within tolerance.",
           },
         ]}
@@ -26,7 +26,8 @@ describe("OutcomeReviewDimensionTable", () => {
     expect(table).toHaveTextContent("1.2%");
     expect(table).toHaveTextContent("1.1%");
     expect(table).toHaveTextContent("-0.1%");
-    expect(table).toHaveTextContent("Ready");
+    expect(table).toHaveTextContent("Within expected tolerance");
+    expect(table).not.toHaveTextContent("Within Tolerance");
     expect(screen.queryByText(/source_ref|content_hash|sha256|outcome_review_id/i)).not.toBeInTheDocument();
   });
 

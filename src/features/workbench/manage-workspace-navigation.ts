@@ -1,5 +1,6 @@
 import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
 import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 import { buildReviewContextHref } from "@/shell/review-context";
 
 export type ManageMode =
@@ -75,8 +76,9 @@ export const MANAGE_MODE_DEFINITIONS: ManageModeDefinition[] = [
     key: "reviews",
     label: "Reviews",
     detail: "Outcome review",
-    title: "Outcome Reviews",
-    description: "Post-trade review and realized-versus-expected variance.",
+    title: MANAGE_OUTCOME_REVIEW_LABELS.screenTitle,
+    description:
+      "Post-rebalance expected-versus-realised comparison and evidence review.",
   },
   {
     key: "proof",

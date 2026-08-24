@@ -12,7 +12,6 @@ import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-termin
 import DpmAiWorkflowResult from "./dpm-ai-workflow-result";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewSummary from "./outcome-review-summary";
-import OutcomeReviewSupportBadges from "./outcome-review-support-badges";
 import OutcomeReviewWorkspace from "./outcome-review-workspace";
 
 type Props = {
@@ -43,12 +42,9 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
 
   return (
     <SectionBlock
-      title={MANAGE_OUTCOME_REVIEW_LABELS.screenTitle}
+      title={MANAGE_OUTCOME_REVIEW_LABELS.panelTitle}
       subtitle={MANAGE_OUTCOME_REVIEW_LABELS.screenDescription}
       className="outcome-review-panel"
-      actions={
-        <OutcomeReviewSupportBadges supportabilityState={model.supportabilityState} />
-      }
     >
       <OutcomeReviewSummary
         portfolioId={portfolioId}

@@ -7,20 +7,14 @@ type Props = {
   reviewLabel: string;
   reportJobAvailable: boolean;
   reportJobPending: boolean;
-  aiNarrativeAvailable: boolean;
-  aiNarrativePending: boolean;
   onRequestReportJob: () => void;
-  onRequestAiNarrative: () => void;
 };
 
 export default function OutcomeReviewDetailHeader({
   reviewLabel,
   reportJobAvailable,
   reportJobPending,
-  aiNarrativeAvailable,
-  aiNarrativePending,
   onRequestReportJob,
-  onRequestAiNarrative,
 }: Props) {
   return (
     <div className="outcome-review-detail-header">
@@ -35,15 +29,6 @@ export default function OutcomeReviewDetailHeader({
           disabled={!reportJobAvailable || reportJobPending}
         >
           {reportJobPending ? "Requesting report" : "Request report"}
-        </ActionButton>
-        <ActionButton
-          priority="secondary"
-          onClick={onRequestAiNarrative}
-          disabled={!aiNarrativeAvailable || aiNarrativePending}
-        >
-          {aiNarrativePending
-            ? MANAGE_OUTCOME_REVIEW_LABELS.preparingAiAssistedReviewSummary
-            : MANAGE_OUTCOME_REVIEW_LABELS.prepareAiAssistedReviewSummary}
         </ActionButton>
       </div>
     </div>

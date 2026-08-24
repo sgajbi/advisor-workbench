@@ -90,18 +90,19 @@ describe("OutcomeReviewPanel", () => {
   it("renders outcome review state and evidence posture", () => {
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
 
-    expect(screen.getByRole("heading", { name: "Outcome reviews" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Outcome comparison" })).toBeInTheDocument();
     expect(
       screen.getByText(
         "Compare expected and realised outcomes, review mandate impact, and confirm evidence readiness.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Supported")).toBeInTheDocument();
+    expect(screen.queryByText("Supported")).not.toBeInTheDocument();
     expect(screen.getByText("Review timeline")).toBeInTheDocument();
     expect(screen.getByText("Recommended actions")).toBeInTheDocument();
     expect(screen.getByText("Recorded evidence profile")).toBeInTheDocument();
-    expect(screen.getByText("PortfolioRealizedTaxSummary:v1")).toBeInTheDocument();
-    expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("View source profile"));
+    expect(screen.getByText("Portfolio realised tax summary")).toBeInTheDocument();
+    expect(screen.getByText("Source owner store query: No")).toBeInTheDocument();
     expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getByText("Ready for adviser review")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
@@ -132,14 +133,15 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
       "Not projected"
     );
-    expect(screen.getByText("ClientCommunicationRecord:v1")).toBeInTheDocument();
-    expect(screen.getByText("Client Message Generation")).toBeInTheDocument();
+    expect(screen.getByText("Client communication record")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("View blocked client actions"));
+    expect(screen.getByText("Client message generation")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request report" })).toBeEnabled();
     expect(
-      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+      screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }),
     ).toBeEnabled();
   });
 
@@ -182,7 +184,7 @@ describe("OutcomeReviewPanel", () => {
     });
     expect(screen.getByText("Report request Accepted.")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
-      "ClientCommunicationRecord:v1"
+      "Client communication record"
     );
   });
 
@@ -212,7 +214,7 @@ describe("OutcomeReviewPanel", () => {
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+      screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }),
     );
 
     await waitFor(() => {
@@ -226,7 +228,7 @@ describe("OutcomeReviewPanel", () => {
     expect(resultHeading).toHaveFocus();
     expect(screen.getByLabelText("Status Live output • review required")).toBeInTheDocument();
     expect(screen.getByLabelText("Client communication boundary")).toHaveTextContent(
-      "Delivery Confirmation"
+      "Delivery confirmation"
     );
   });
 
@@ -261,7 +263,7 @@ describe("OutcomeReviewPanel", () => {
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+      screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }),
     );
 
     expect(await screen.findByText("Report request Accepted.")).toBeInTheDocument();
@@ -291,7 +293,7 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Portfolio Operations/)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Prepare AI-assisted review summary" }),
+      screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }),
     ).toBeDisabled();
   });
 

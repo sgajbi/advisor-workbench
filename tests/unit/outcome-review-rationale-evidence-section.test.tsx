@@ -24,7 +24,7 @@ describe("OutcomeReviewRationaleEvidenceSection", () => {
     expect(section).toHaveTextContent("Client communication controls");
     expect(section).toHaveTextContent("CommunicationNot projected");
     expect(section).toHaveTextContent("ApprovalNot projected");
-    expect(section).toHaveTextContent("ClientCommunicationRecord:v1");
+    expect(section).toHaveTextContent("Client communication record");
     expect(section).toHaveTextContent("Evidence availability");
     expect(section).toHaveTextContent("Expected outcome Available");
     expect(section).toHaveTextContent("Realised outcome Available");

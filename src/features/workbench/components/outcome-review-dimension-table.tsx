@@ -1,7 +1,10 @@
 "use client";
 
 import { AnalyticsTable, SemanticBadge } from "@/design-system";
-import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
+import {
+  outcomeReviewBadgeTone,
+  outcomeReviewDimensionStateLabel,
+} from "@/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewDimensionRow } from "@/features/workbench/outcome-review-view-model";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
@@ -31,7 +34,7 @@ export default function OutcomeReviewDimensionTable({ dimensions }: Props) {
           row.realized,
           row.variance,
           <SemanticBadge key={`${row.key}-state`} tone={outcomeReviewBadgeTone(row.state)}>
-            {businessStateLabel(row.state)}
+            {outcomeReviewDimensionStateLabel(row.state)}
           </SemanticBadge>,
         ],
       }))}

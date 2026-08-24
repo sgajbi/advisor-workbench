@@ -43,6 +43,7 @@ export const MANAGE_REBALANCE_LABELS = {
 
 export const MANAGE_OUTCOME_REVIEW_LABELS = {
   screenTitle: "Outcome reviews",
+  panelTitle: "Outcome comparison",
   screenDescription:
     "Compare expected and realised outcomes, review mandate impact, and confirm evidence readiness.",
   reviewPosture: "Review posture",

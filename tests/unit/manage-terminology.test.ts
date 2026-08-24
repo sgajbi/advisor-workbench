@@ -59,6 +59,7 @@ describe("manage terminology", () => {
   it("keeps outcome comparison truth separate from adviser review posture", () => {
     expect(MANAGE_OUTCOME_REVIEW_LABELS).toEqual({
       screenTitle: "Outcome reviews",
+      panelTitle: "Outcome comparison",
       screenDescription:
         "Compare expected and realised outcomes, review mandate impact, and confirm evidence readiness.",
       reviewPosture: "Review posture",

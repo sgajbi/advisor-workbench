@@ -15,10 +15,7 @@ type Props = {
   readyEvidenceCount: number;
   reportJobAvailable: boolean;
   reportJobPending: boolean;
-  aiNarrativeAvailable: boolean;
-  aiNarrativePending: boolean;
   onRequestReportJob: () => void;
-  onRequestAiNarrative: () => void;
 };
 
 export default function OutcomeReviewDetailPanel({
@@ -27,10 +24,7 @@ export default function OutcomeReviewDetailPanel({
   readyEvidenceCount,
   reportJobAvailable,
   reportJobPending,
-  aiNarrativeAvailable,
-  aiNarrativePending,
   onRequestReportJob,
-  onRequestAiNarrative,
 }: Props) {
   return (
     <div className="outcome-review-detail-panel" id="outcome-review-detail">
@@ -38,10 +32,7 @@ export default function OutcomeReviewDetailPanel({
         reviewLabel={primaryReview.reviewLabel}
         reportJobAvailable={reportJobAvailable}
         reportJobPending={reportJobPending}
-        aiNarrativeAvailable={aiNarrativeAvailable}
-        aiNarrativePending={aiNarrativePending}
         onRequestReportJob={onRequestReportJob}
-        onRequestAiNarrative={onRequestAiNarrative}
       />
       <OutcomeReviewDetailContext
         updatedAt={primaryReview.updatedAt}

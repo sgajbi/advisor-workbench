@@ -8,9 +8,8 @@ import type {
 } from "../../src/features/workbench/outcome-review-view-model";
 
 describe("OutcomeReviewDetailPanel", () => {
-  it("renders selected review detail and delegates handoff actions", () => {
+  it("renders selected review detail and delegates its report action", () => {
     const onRequestReportJob = vi.fn();
-    const onRequestAiNarrative = vi.fn();
 
     render(
       <OutcomeReviewDetailPanel
@@ -19,10 +18,7 @@ describe("OutcomeReviewDetailPanel", () => {
         readyEvidenceCount={4}
         reportJobAvailable
         reportJobPending={false}
-        aiNarrativeAvailable
-        aiNarrativePending={false}
         onRequestReportJob={onRequestReportJob}
-        onRequestAiNarrative={onRequestAiNarrative}
       />
     );
 
@@ -35,10 +31,13 @@ describe("OutcomeReviewDetailPanel", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Request report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Prepare AI-assisted review summary" }));
 
     expect(onRequestReportJob).toHaveBeenCalledTimes(1);
-    expect(onRequestAiNarrative).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("button", {
+        name: "Prepare AI-assisted review summary",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps unsupported handoffs disabled without exposing workflow controls", () => {
@@ -49,15 +48,16 @@ describe("OutcomeReviewDetailPanel", () => {
         readyEvidenceCount={2}
         reportJobAvailable={false}
         reportJobPending={false}
-        aiNarrativeAvailable={false}
-        aiNarrativePending={false}
         onRequestReportJob={vi.fn()}
-        onRequestAiNarrative={vi.fn()}
       />
     );
 
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Prepare AI-assisted review summary" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", {
+        name: "Prepare AI-assisted review summary",
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/outcome_review_id|rebalance_run_id|wave_id|sha256/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /client|communication|approval|delivery/i })

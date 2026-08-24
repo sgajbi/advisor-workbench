@@ -285,19 +285,19 @@ describe("outcome review view model", () => {
     expect(sourceBoundary.sourceOwnerFacets).toEqual([
       {
         key: "owner-lotus-performance",
-        label: "lotus-performance",
+        label: "Performance analytics",
         count: "2",
         family: "owner",
       },
     ]);
     expect(sourceBoundary.sourceTypeFacets.map((row) => row.label)).toEqual([
-      "PortfolioCashMovementSummary:v1",
-      "PortfolioRealizedTaxSummary:v1",
+      "Portfolio cash movement summary",
+      "Portfolio realised tax summary",
     ]);
     expect(sourceBoundary.appliedFilters).toContain(
-      "Source Type: PortfolioCashMovementSummary:v1",
+      "Source type: Portfolio cash movement summary",
     );
-    expect(sourceBoundary.supportBoundary).toContain("Source Owner Store Query: No");
+    expect(sourceBoundary.supportBoundary).toContain("Source owner store query: No");
   });
 
   it("marks blocked handoffs from manage supportability without inventing UI support", () => {

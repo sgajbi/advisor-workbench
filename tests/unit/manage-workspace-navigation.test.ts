@@ -62,6 +62,11 @@ describe("manage workspace navigation", () => {
   it("keeps mode titles in private-banking language", () => {
     expect(getManageModeDefinition("mandate").title).toBe("Mandate Health");
     expect(getManageModeDefinition("copilot").title).toBe("PM Copilot Workspace");
+    expect(getManageModeDefinition("reviews")).toMatchObject({
+      title: "Outcome reviews",
+      description:
+        "Post-rebalance expected-versus-realised comparison and evidence review.",
+    });
     expect(getManageModeDefinition("construction").description).toBe(
       "Supported construction alternatives for advisor and PM review."
     );

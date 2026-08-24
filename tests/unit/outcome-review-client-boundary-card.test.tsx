@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import OutcomeReviewClientBoundaryCard from "../../src/features/workbench/components/outcome-review-client-boundary-card";
@@ -16,9 +16,16 @@ describe("OutcomeReviewClientBoundaryCard", () => {
     );
     expect(boundary).toHaveTextContent("CommunicationNot projected");
     expect(boundary).toHaveTextContent("ApprovalNot projected");
-    expect(boundary).toHaveTextContent("ClientCommunicationRecord:v1");
-    expect(boundary).toHaveTextContent("Outcome Client Communication Not Supported");
-    expect(boundary).toHaveTextContent("Client Message Generation");
+    expect(boundary).toHaveTextContent("Required recordClient communication record");
+    expect(boundary).toHaveTextContent(
+      "Client communication is not supported on this screen",
+    );
+    const blockedActions = screen.getByText("View blocked client actions");
+    expect(blockedActions.closest("details")).not.toHaveAttribute("open");
+    fireEvent.click(blockedActions);
+    expect(blockedActions.closest("details")).toHaveAttribute("open");
+    expect(boundary).toHaveTextContent("Client message generation");
+    expect(boundary).not.toHaveTextContent("ClientCommunicationRecord:v1");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });

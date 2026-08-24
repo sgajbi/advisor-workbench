@@ -1974,7 +1974,7 @@
 
 .manageScope :global(.outcome-review-status-strip) {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   overflow: hidden;
   margin-top: 14px;
@@ -1990,6 +1990,7 @@
   min-height: 88px;
   padding: 14px 16px;
   border-right: 1px solid #e0e3e5;
+  border-bottom: 1px solid #e0e3e5;
 }
 
 .manageScope :global(.outcome-review-status-strip .suite-row:last-child) {
@@ -2018,7 +2019,7 @@
 
 .manageScope :global(.outcome-review-readiness-band) {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   overflow: hidden;
   margin-top: 14px;
@@ -2033,10 +2034,21 @@
   min-height: 72px;
   padding: 12px 14px;
   border-right: 1px solid #e0e3e5;
+  border-bottom: 1px solid #e0e3e5;
 }
 
 .manageScope :global(.outcome-review-readiness-band div:last-child) {
   border-right: 0;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row:nth-child(2n)),
+.manageScope :global(.outcome-review-readiness-band div:nth-child(2n)) {
+  border-right: 0;
+}
+
+.manageScope :global(.outcome-review-status-strip .suite-row:nth-last-child(-n + 2)),
+.manageScope :global(.outcome-review-readiness-band div:nth-last-child(-n + 2)) {
+  border-bottom: 0;
 }
 
 .manageScope :global(.outcome-review-readiness-band span) {
@@ -2101,6 +2113,18 @@
   text-transform: uppercase;
 }
 
+.manageScope :global(.outcome-review-source-card .outcome-review-card-header > div) {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.manageScope :global(.outcome-review-source-card .outcome-review-card-header strong) {
+  color: #191c1e;
+  font-size: 14px;
+  line-height: 18px;
+}
+
 .manageScope :global(.outcome-review-card .analytics-table-frame) {
   margin: 0;
   border: 0;
@@ -2111,6 +2135,29 @@
   display: grid;
   gap: 10px;
   padding: 14px;
+}
+
+.manageScope :global(.outcome-review-timeline-card) {
+  grid-column: 1 / -1;
+}
+
+.manageScope :global(.outcome-review-source-profile > summary) {
+  margin: 14px;
+  padding: 10px 12px;
+  border: 1px solid #c6c6cd;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #191c1e;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+.manageScope :global(.outcome-review-source-profile[open] > summary) {
+  margin-bottom: 0;
+  border-color: #725b26;
+  background: #f7f9fb;
 }
 
 .manageScope :global(.outcome-review-action-stack button),
@@ -2263,6 +2310,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 8px;
+}
+
+.manageScope :global(.outcome-review-client-boundary-details > summary) {
+  color: #5f6368;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
 }
 
 .manageScope :global(.outcome-review-evidence-grid) {
@@ -2299,8 +2355,6 @@
 }
 
 @media (max-width: 1180px) {
-  .manageScope :global(.outcome-review-status-strip),
-  .manageScope :global(.outcome-review-readiness-band),
   .manageScope :global(.outcome-review-workspace-grid),
   .manageScope :global(.outcome-review-detail-grid),
   .manageScope :global(.proof-pack-status-strip),
@@ -2311,15 +2365,49 @@
   }
 
   .manageScope :global(.outcome-review-status-strip .suite-row),
-  .manageScope :global(.outcome-review-readiness-band div),
+  .manageScope :global(.outcome-review-readiness-band div) {
+    border-right: 1px solid #e0e3e5;
+    border-bottom: 1px solid #e0e3e5;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row:nth-child(2n)),
+  .manageScope :global(.outcome-review-readiness-band div:nth-child(2n)) {
+    border-right: 0;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row:nth-last-child(-n + 2)),
+  .manageScope :global(.outcome-review-readiness-band div:nth-last-child(-n + 2)) {
+    border-bottom: 0;
+  }
+
   .manageScope :global(.proof-pack-status-strip .suite-row) {
     border-right: 0;
     border-bottom: 1px solid #e0e3e5;
   }
 
-  .manageScope :global(.outcome-review-status-strip .suite-row:last-child),
-  .manageScope :global(.outcome-review-readiness-band div:last-child),
   .manageScope :global(.proof-pack-status-strip .suite-row:last-child) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .manageScope :global(.outcome-review-status-strip),
+  .manageScope :global(.outcome-review-readiness-band) {
+    grid-template-columns: 1fr;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row),
+  .manageScope :global(.outcome-review-readiness-band div),
+  .manageScope :global(.outcome-review-status-strip .suite-row:nth-child(2n)),
+  .manageScope :global(.outcome-review-readiness-band div:nth-child(2n)),
+  .manageScope :global(.outcome-review-status-strip .suite-row:nth-last-child(-n + 2)),
+  .manageScope :global(.outcome-review-readiness-band div:nth-last-child(-n + 2)) {
+    border-right: 0;
+    border-bottom: 1px solid #e0e3e5;
+  }
+
+  .manageScope :global(.outcome-review-status-strip .suite-row:last-child),
+  .manageScope :global(.outcome-review-readiness-band div:last-child) {
     border-bottom: 0;
   }
 }
