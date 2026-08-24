@@ -7,6 +7,7 @@ import {
   mandateHealthScoreToPercent,
 } from "@/features/workbench/manage-mandate-health-helpers";
 import { buildManageModeHref } from "@/features/workbench/manage-workspace-navigation";
+import { MANAGE_WORKFLOW_LABELS } from "@/features/workbench/manage-terminology";
 import {
   businessStateLabel,
   buildManageExceptionRows,
@@ -121,10 +122,10 @@ export function buildManageOverviewModel(
       },
       {
         key: "data",
-        label: "Data readiness",
+        label: MANAGE_WORKFLOW_LABELS.dataAvailability,
         value: businessStateLabel(commandModel.dataCompletenessState),
         tone: dataTone === "danger" ? "danger" : dataTone === "success" ? "success" : "warn",
-        support: "Mandate source completeness",
+        support: "Mandate source availability",
       },
       {
         key: "rebalance",
@@ -138,7 +139,7 @@ export function buildManageOverviewModel(
       },
       {
         key: "attention",
-        label: "Active attention",
+        label: MANAGE_WORKFLOW_LABELS.openAttentionItems,
         value:
           exceptionEvidencePosture === "unavailable"
             ? "Not available"
@@ -196,7 +197,7 @@ function buildManageOverviewDecisions({
     key: `attention:${row.key}`,
     kind: "attention" as const,
     title: formatBusinessExceptionTitle(row.title),
-    subtitle: "Mandate attention",
+    subtitle: "Mandate attention item",
     status: businessStateLabel(row.severity),
     tone: toneForState(row.severity),
     facts: [

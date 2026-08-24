@@ -27,7 +27,7 @@ describe("manage workspace split components", () => {
   it("binds the selected attention item to its source-owned owner, action, and evidence", () => {
     render(<ManageMandateHealth data={buildManageWorkspaceData()} />);
 
-    expect(screen.getByText("Mandate monitoring requires attention")).toBeInTheDocument();
+    expect(screen.getByText("Mandate review evidence is incomplete")).toBeInTheDocument();
     const detail = screen.getByLabelText("Selected mandate review item");
     expect(within(detail).getByRole("heading", { name: "Benchmark mapping requires review" })).toBeInTheDocument();
     expect(within(detail).getByText("Portfolio Manager")).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("manage workspace split components", () => {
     ["EMPTY", "No mandate monitoring records"],
     ["BLOCKED", "Mandate monitoring is not available for this access context"],
     ["UNSUPPORTED", "Mandate monitoring is not supported"],
-    ["DEGRADED", "Mandate monitoring requires attention"],
+    ["DEGRADED", "Mandate review evidence is incomplete"],
   ])("presents %s command-center posture in business language", (state, title) => {
     const data = buildManageWorkspaceData();
     if (!data.commandCenter) {
@@ -152,7 +152,7 @@ describe("manage workspace split components", () => {
 
     render(<ManageMandateHealth data={data} />);
 
-    expect(screen.queryByText("Mandate monitoring requires attention")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mandate review evidence is incomplete")).not.toBeInTheDocument();
     expect(
       within(screen.getByLabelText("Mandate health summary")).getAllByText("Ready").length,
     ).toBeGreaterThan(0);
@@ -176,7 +176,7 @@ describe("manage workspace split components", () => {
 
     render(<ManageMandateHealth data={data} />);
 
-    expect(screen.getByText("Mandate monitoring requires attention")).toBeInTheDocument();
+    expect(screen.getByText("Mandate review evidence is incomplete")).toBeInTheDocument();
     const summary = screen.getByLabelText("Mandate health summary");
     expect(within(summary).getAllByText("Not available").length).toBeGreaterThan(0);
   });
@@ -442,10 +442,11 @@ describe("manage workspace split components", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Portfolio Management Decisions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio management decisions" })).toBeInTheDocument();
     const posture = screen.getByLabelText("Operating posture");
     expect(within(posture).getByText("Mandate health")).toBeInTheDocument();
-    expect(within(posture).getByText("Active attention")).toBeInTheDocument();
+    expect(within(posture).getByText("Open attention items")).toBeInTheDocument();
+    expect(within(posture).getByText("Data availability")).toBeInTheDocument();
     expect(within(posture).getAllByText("Needs attention")).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "What needs review now" })).toBeInTheDocument();
     expect(screen.getAllByText("Benchmark mapping requires review")).toHaveLength(1);
