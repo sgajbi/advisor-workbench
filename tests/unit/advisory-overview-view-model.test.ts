@@ -144,9 +144,7 @@ describe("buildAdvisoryOverviewModel", () => {
         ],
       }).proposalRows[0];
 
-    expect(buildRow("  Relationship Manager  ").sourceOwner).toBe(
-      "Relationship Manager",
-    );
+    expect(buildRow("advisor_sg_01").sourceOwner).toBe("Recorded by source");
     expect(buildRow("   ").sourceOwner).toBe("Not reported");
     expect(buildRow(undefined).sourceOwner).toBe("Not reported");
   });
