@@ -2424,7 +2424,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("No policy evaluations need review"),
+      await screen.findByText("No suitability reviews need attention"),
     ).toBeInTheDocument();
     getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
       new Error("policy refresh unavailable"),
@@ -2437,7 +2437,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByText("Policy review queue is unconfirmed"),
+      await screen.findByText("Suitability review worklist is unconfirmed"),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -2445,7 +2445,7 @@ describe("ProposalLifecycleWorkspace", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("No policy evaluations need review"),
+      screen.queryByText("No suitability reviews need attention"),
     ).not.toBeInTheDocument();
   });
 
@@ -2527,7 +2527,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Your current role does not permit this portfolio's policy-review worklist to be viewed.",
+        "Your current role does not permit this portfolio's suitability review worklist to be viewed.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
@@ -2557,7 +2557,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Policy evidence access is not available",
+        name: "Suitability evidence access is unavailable",
       }),
     ).toBeInTheDocument();
     expect(
@@ -2598,7 +2598,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed"),
+      await screen.findByText("Selected suitability evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -2610,7 +2610,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(
       await screen.findAllByRole("heading", {
-        name: "Selected policy evidence is unconfirmed",
+        name: "Selected suitability evidence is unconfirmed",
       }),
     ).not.toHaveLength(0);
   });
@@ -2638,14 +2638,14 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed"),
+      await screen.findByText("Selected suitability evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Request more evidence" }),
     ).not.toBeInTheDocument();
     expect(
       await screen.findAllByRole("heading", {
-        name: "Selected policy evidence is unconfirmed",
+        name: "Selected suitability evidence is unconfirmed",
       }),
     ).not.toHaveLength(0);
   });
@@ -2673,7 +2673,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed"),
+      await screen.findByText("Selected suitability evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Request more evidence" }),
@@ -2712,7 +2712,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Selected policy evidence is unconfirmed"),
+      await screen.findByText("Selected suitability evidence is unconfirmed"),
     ).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /PRP-RISK/i })).toHaveAttribute(
       "aria-selected",
@@ -2956,12 +2956,12 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       await screen.findByRole("heading", {
         level: 3,
-        name: "Advisor decision worklist",
+        name: "Adviser decision worklist",
       }),
     ).toBeInTheDocument();
-    const policyCounts = screen.getByLabelText("Policy review counts");
+    const policyCounts = screen.getByLabelText("Suitability review counts");
     expect(within(policyCounts).getByText("In review")).toBeInTheDocument();
-    expect(within(policyCounts).getByText("Need action")).toBeInTheDocument();
+    expect(within(policyCounts).getByText("Needs action")).toBeInTheDocument();
     expect(within(policyCounts).getAllByText("1")).toHaveLength(2);
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(
@@ -2986,7 +2986,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByText("Independent checker required"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Within review SLA, 2 open")).toBeInTheDocument();
+    expect(screen.getByText("Within review deadline, 2 open")).toBeInTheDocument();
     expect(screen.getByText("Request more evidence")).toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(
@@ -3356,11 +3356,11 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByText(
-        "Policy review queue is unavailable. No fallback suitability policy queue is shown.",
+        "Suitability review worklist is unavailable. No fallback suitability worklist is shown.",
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Suitability worklist unavailable"),
+      screen.getByText("Suitability review worklist is unavailable"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
   });
