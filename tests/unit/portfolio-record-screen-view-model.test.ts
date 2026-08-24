@@ -35,17 +35,17 @@ describe("portfolio record screen view model", () => {
       "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity."
     );
     expect(buildPortfolioRecordHeaderKpis(workspace)).toEqual([
-      { label: "AUM", value: "1,000,000 USD" },
+      { label: "Portfolio value", value: "1,000,000 USD" },
       { label: "Positions", value: "11" },
       { label: "Window", value: "30D" },
     ]);
     expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "allocation")).toEqual([
-      { label: "AUM", value: "1,000,000 USD" },
+      { label: "Portfolio value", value: "1,000,000 USD" },
       { label: "Exposure Views", value: "1" },
       { label: "Positions", value: "11" },
     ]);
     expect(buildPortfolioRecordHeaderKpis(workspace, "30D", "positions")).toEqual([
-      { label: "AUM", value: "1,000,000 USD" },
+      { label: "Portfolio value", value: "1,000,000 USD" },
       { label: "Invested", value: "920,000 USD" },
       { label: "Cash", value: "80,000 USD" },
     ]);

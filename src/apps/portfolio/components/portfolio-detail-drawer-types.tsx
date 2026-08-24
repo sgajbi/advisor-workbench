@@ -19,4 +19,7 @@ export type PortfolioDetailDrawerState = {
   fullPageLabel?: string;
 };
 
-export type PortfolioMetricDrawerKey = "aum" | "invested_assets" | "available_cash";
+export type PortfolioMetricDrawerKey =
+  | "portfolio_value"
+  | "invested_assets"
+  | "available_cash";

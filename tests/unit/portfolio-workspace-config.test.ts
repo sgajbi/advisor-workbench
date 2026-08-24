@@ -36,7 +36,7 @@ describe("portfolio workspace config", () => {
       "Cash balances temporarily unavailable"
     );
     expect(getCoverageWarningLabel("PORTFOLIO_AUM_UNAVAILABLE")).toBe(
-      "Assets under management temporarily unavailable"
+      "Portfolio value temporarily unavailable"
     );
     expect(getCoverageWarningLabel("FOUNDATION_REPORTING_UNAVAILABLE")).toBe(
       "Reporting temporarily unavailable"

@@ -7,6 +7,10 @@ import {
   getPortfolioSummaryValueToneClass,
   resolvePortfolioPerformancePeriodReturns,
 } from "../portfolio-summary-view-model";
+import {
+  formatShareOfPortfolioValue,
+  PORTFOLIO_VALUE_LABEL,
+} from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import {
   getInvestedAssetWeight,
@@ -31,13 +35,13 @@ export default function PortfolioSummaryHeaderSection({
         <PortfolioHealthStrip
           tiles={[
             {
-              key: "aum",
-              label: "AUM",
+              key: "portfolio_value",
+              label: PORTFOLIO_VALUE_LABEL,
               value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Total portfolio market value in the portfolio base currency at the stated valuation date.",
               support: "Portfolio base currency",
-              onClick: () => onOpenMetricDrawer("aum"),
+              onClick: () => onOpenMetricDrawer("portfolio_value"),
             },
             {
               key: "invested_assets",
@@ -49,7 +53,9 @@ export default function PortfolioSummaryHeaderSection({
               ),
               definition:
                 "Market value currently invested in funded holdings, excluding operational cash inventory.",
-              support: `${formatPct(getInvestedAssetWeight(workspace))} of AUM`,
+              support: formatShareOfPortfolioValue(
+                formatPct(getInvestedAssetWeight(workspace))
+              ),
               onClick: () => onOpenMetricDrawer("invested_assets"),
             },
             {
@@ -58,7 +64,9 @@ export default function PortfolioSummaryHeaderSection({
               value: formatCurrency(workspace.summary.total_cash_base, workspace.portfolio.base_currency, 0),
               definition:
                 "Available cash inventory in the portfolio base currency across published cash balances.",
-              support: `${formatPct(workspace.summary.cash_weight_pct)} of AUM`,
+              support: formatShareOfPortfolioValue(
+                formatPct(workspace.summary.cash_weight_pct)
+              ),
               onClick: () => onOpenMetricDrawer("available_cash"),
             },
             {

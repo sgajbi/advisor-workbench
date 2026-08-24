@@ -1,5 +1,6 @@
 import { formatCurrency, formatDate, formatPct } from "./formatters";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
+import { PORTFOLIO_VALUE_LABEL } from "./portfolio-terminology";
 import type { PortfolioWorkspace } from "./types";
 import {
   resolveEffectivePeriod,
@@ -67,7 +68,7 @@ export function buildPortfolioRecordHeaderKpis(
   if (screen === "allocation") {
     return [
       {
-        label: "AUM",
+        label: PORTFOLIO_VALUE_LABEL,
         value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
       },
       {
@@ -116,7 +117,7 @@ export function buildPortfolioRecordHeaderKpis(
   if (screen === "positions") {
     return [
       {
-        label: "AUM",
+        label: PORTFOLIO_VALUE_LABEL,
         value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
       },
       {
@@ -175,7 +176,7 @@ export function buildPortfolioRecordHeaderKpis(
 
   return [
     {
-      label: "AUM",
+      label: PORTFOLIO_VALUE_LABEL,
       value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency),
     },
     {
