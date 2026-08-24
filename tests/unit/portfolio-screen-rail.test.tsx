@@ -103,11 +103,13 @@ describe("PortfolioScreenRail", () => {
     expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     const disclosure = screen.getByRole("button", { name: /current view income/i });
     expect(disclosure).toHaveAttribute("aria-expanded", "false");
-    expect(disclosure).toHaveAttribute("aria-controls");
-    expect(screen.getByRole("navigation", { name: "Workbench screen navigation" })).toHaveAttribute(
-      "data-navigation-state",
-      "collapsed",
+    expect(disclosure).toHaveAttribute(
+      "aria-controls",
+      "portfolio-screen-rail-test-navigation",
     );
+    expect(
+      screen.getByRole("navigation", { name: "Workbench screen navigation" }),
+    ).toHaveAttribute("id", "portfolio-screen-rail-test-navigation");
     expect(screen.getByRole("link", { name: /income and activity booked income/i })).toHaveAttribute(
       "aria-current",
       "page",
@@ -116,10 +118,63 @@ describe("PortfolioScreenRail", () => {
       screen.getByRole("group", { name: "Primary workspaces" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /all workspaces/i })).toHaveAttribute(
-      "aria-expanded",
-      "false",
+      "aria-controls",
+      "portfolio-screen-rail-test-workspace-directory",
     );
     expect(screen.queryByRole("link", { name: /holdings valuation/i })).not.toBeInTheDocument();
+  });
+
+  it("keeps every disclosure relationship unique across multiple rail instances", () => {
+    const modeItems = [
+      {
+        key: "overview",
+        label: "Overview",
+        detail: "Advisor priorities",
+        active: true,
+        href: "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001",
+      },
+      {
+        key: "suitability",
+        label: "Suitability",
+        detail: "Mandate fit",
+        active: false,
+        href: "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=suitability",
+      },
+    ];
+
+    const { container } = render(
+      <>
+        <PortfolioScreenRailComponent
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          activeScreen="advisory"
+          relationshipIdBase="primary-advisory-rail"
+          modeItems={modeItems}
+        />
+        <PortfolioScreenRailComponent
+          portfolioId="PB_SG_GLOBAL_BAL_001"
+          activeScreen="advisory"
+          relationshipIdBase="secondary-advisory-rail"
+          modeItems={modeItems}
+        />
+      </>,
+    );
+
+    const controlledIds = screen
+      .getAllByRole("button")
+      .map((button) => button.getAttribute("aria-controls"))
+      .filter((id): id is string => Boolean(id));
+    expect(controlledIds).toEqual([
+      "primary-advisory-rail-navigation",
+      "primary-advisory-rail-workspace-directory",
+      "primary-advisory-rail-workflow-directory",
+      "secondary-advisory-rail-navigation",
+      "secondary-advisory-rail-workspace-directory",
+      "secondary-advisory-rail-workflow-directory",
+    ]);
+    expect(new Set(controlledIds).size).toBe(controlledIds.length);
+    for (const controlledId of controlledIds) {
+      expect(container.querySelectorAll(`#${controlledId}`)).toHaveLength(1);
+    }
   });
 
   it("opens with native button behavior and closes after destination selection", () => {
