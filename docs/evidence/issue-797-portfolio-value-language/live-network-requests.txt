@@ -1,0 +1,62 @@
+### Result
+15. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=MTD&report_end_date=2026-04-10
+16. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=QTD&report_end_date=2026-04-10
+17. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=YTD&report_end_date=2026-04-10 => [200] OK
+18. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=EXPLICIT&report_end_date=2026-04-10&report_start_date=2026-03-11
+19. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/workflow?as_of_date=2026-04-10 => [200] OK
+20. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/book?as_of_date=2026-04-10&reporting_currency=USD&include_projected=false => [200] OK
+21. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/income-summary?as_of_date=2026-04-10&reporting_currency=USD&start_date=2026-03-11&end_date=2026-04-10 => [200] OK
+22. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/activity-summary?as_of_date=2026-04-10&reporting_currency=USD&start_date=2026-03-11&end_date=2026-04-10 => [200] OK
+24. [GET] http://workbench.dev.lotus/api/bff/api/v1/platform/capabilities?consumerSystem=UI&tenantId=default => [200] OK
+25. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+26. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+27. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+28. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+29. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+30. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+31. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+32. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+33. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+34. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+35. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+36. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+37. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+38. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+39. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+40. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+55. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=MTD&report_end_date=2026-04-10 => [200] OK
+56. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=QTD&report_end_date=2026-04-10 => [200] OK
+57. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=YTD&report_end_date=2026-04-10 => [200] OK
+58. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/performance-snapshot?period=EXPLICIT&report_end_date=2026-04-10&report_start_date=2026-03-11 => [200] OK
+59. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/workflow?as_of_date=2026-04-10 => [200] OK
+60. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/book?as_of_date=2026-04-10&reporting_currency=USD&include_projected=false => [200] OK
+61. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/income-summary?as_of_date=2026-04-10&reporting_currency=USD&start_date=2026-03-11&end_date=2026-04-10 => [200] OK
+62. [GET] http://workbench.dev.lotus/api/bff/api/v1/portfolio/portfolios/PB_SG_GLOBAL_BAL_001/activity-summary?as_of_date=2026-04-10&reporting_currency=USD&start_date=2026-03-11&end_date=2026-04-10 => [200] OK
+64. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+65. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+66. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+67. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+68. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+69. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+70. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+71. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+72. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+73. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+74. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+75. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+76. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+77. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+78. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+79. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+80. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+81. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+82. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+83. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+84. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+85. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+86. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+87. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+88. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+89. [POST] http://workbench.dev.lotus/api/metrics/events => [202] Accepted
+
+Note: 30 static requests not shown, run with --static option to see them.
