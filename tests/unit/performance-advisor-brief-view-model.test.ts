@@ -627,6 +627,62 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
         }),
       ])
     );
+    expect(canCopyAdvisorBrief(brief)).toBe(false);
+  });
+
+  it("fails human review and copy closed for a namespace-only source actor", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const brief = buildPerformanceAdvisorBriefViewModel({
+      workspace: scenario.workspace,
+      advisorBrief: buildGatewayAdvisorBriefFixture(scenario.workspace, {
+        workflow_pack_run: {
+          run_id: "packrun_advisor_brief_req-1",
+          runtime_state: "COMPLETED",
+          review_state: "ACCEPTED",
+          latest_review_event_at: "2026-04-21T03:22:00Z",
+          latest_review_actor: "review:",
+          review_transition_count: 1,
+          has_review_history: true,
+          allowed_review_actions: [],
+          supportability_status: "READY",
+          review_pending: false,
+          superseded: false,
+          workflow_authority_owner: "lotus-gateway",
+          current_summary_note: "Review decision recorded.",
+          findings: [],
+        },
+      }),
+      capabilities: scenario.capabilities,
+      period: scenario.workspace.period,
+      detailBasis: "NET",
+      contributionDimension: "asset_class",
+      attributionDimension: "asset_class",
+      chartFrequency: "monthly",
+      benchmark: scenario.workspace.benchmark_code ?? undefined,
+      isDetailsPending: false,
+    });
+
+    expect(brief.aiDisclosure.humanReview).toEqual({
+      state: "unavailable",
+      sourceRecorded: false,
+    });
+    expect(brief.supportability).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Human Review",
+          value: "Accepted for internal use",
+          tone: "warn",
+          detail: "Supportability READY • Review audit details not published",
+          reviewEvidence: {
+            reviewState: "ACCEPTED",
+            supportability: "READY",
+            reviewer: null,
+            recordedAt: null,
+          },
+        }),
+      ]),
+    );
+    expect(canCopyAdvisorBrief(brief)).toBe(false);
   });
 
   it.each([
