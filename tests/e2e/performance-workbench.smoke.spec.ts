@@ -1792,6 +1792,7 @@ test.describe('Performance workbench smoke', () => {
   });
 
   test('Advisor Brief review transaction requires confirmation and renders source-recorded proof', async ({
+    browser,
     page,
     request,
   }) => {
@@ -1815,12 +1816,6 @@ test.describe('Performance workbench smoke', () => {
     await review
       .getByLabel('Review rationale')
       .fill('Source evidence and narrative are suitable for permitted internal use.');
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
-    await page.screenshot({
-      path: 'output/playwright/issue-697-advisor-brief-review-desktop.png',
-      fullPage: true,
-    });
-
     const reviewRequests: string[] = [];
     page.on('request', (browserRequest) => {
       if (browserRequest.url().includes('/performance/advisor-brief/review-actions')) {
@@ -1861,13 +1856,48 @@ test.describe('Performance workbench smoke', () => {
       'data-recorded-at',
       '2026-04-21T03:22:00Z',
     );
+    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await page.screenshot({
+      path: 'output/playwright/issue-786-advisor-brief-reviewed-1440.png',
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await reviewEvidence.scrollIntoViewIfNeeded();
+    await reviewEvidence.screenshot({
+      path: 'output/playwright/issue-786-human-review-evidence-1440.png',
+      animations: 'disabled',
+    });
+
+    const singaporeContext = await browser.newContext({
+      baseURL: new URL(page.url()).origin,
+      timezoneId: 'Asia/Singapore',
+      viewport: { width: 1440, height: 1100 },
+    });
+    try {
+      const singaporePage = await singaporeContext.newPage();
+      const singaporeSession = await openPerformanceWorkbench(singaporePage, request);
+      expect(singaporeSession.available).toBe(true);
+      await (await openPerformanceWorkflowStep(singaporePage, /^Advisor Brief/i)).click();
+
+      const singaporeEvidence = singaporePage.getByTestId(
+        'advisor-brief-human-review-evidence',
+      );
+      await expect(singaporeEvidence).toContainText('Recorded 21 Apr 2026, 03:22 UTC');
+      await expect(singaporeEvidence).toHaveAttribute(
+        'data-recorded-at',
+        '2026-04-21T03:22:00Z',
+      );
+      await expect(singaporeEvidence).not.toContainText('11:22');
+    } finally {
+      await singaporeContext.close();
+    }
 
     const supportDetails = page.locator('details').filter({
       hasText: 'Technical support details',
     });
     await expect(supportDetails).not.toHaveAttribute('open', '');
 
-    for (const width of [1440, 1024, 720, 390]) {
+    for (const width of [1440, 1024, 720, 519]) {
       await page.setViewportSize({ width, height: 1000 });
       await review.scrollIntoViewIfNeeded();
       await expect(review).toBeVisible();
@@ -1880,8 +1910,9 @@ test.describe('Performance workbench smoke', () => {
 
     await page.evaluate(() => window.scrollTo({ top: 0 }));
     await page.screenshot({
-      path: 'output/playwright/issue-697-advisor-brief-reviewed-narrow.png',
+      path: 'output/playwright/issue-786-advisor-brief-reviewed-519.png',
       fullPage: true,
+      animations: 'disabled',
     });
     await runtime.assertStylesAreHeadManaged();
     expect(runtime.snapshot()).toEqual([]);
