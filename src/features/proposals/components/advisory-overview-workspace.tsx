@@ -390,6 +390,7 @@ export default function AdvisoryOverviewWorkspace({
           ) : (
             <WorkbenchWorklist
               ariaLabel="Advisory proposal decision worklist"
+              relationshipIdBase="advisory-proposal-decision-worklist"
               eyebrow="Advisor worklist"
               title="Proposal decisions"
               description="Select a proposal to review its current business status and next permitted action."

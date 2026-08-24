@@ -15,6 +15,7 @@ describe("WorkbenchWorklist", () => {
     render(
       <WorkbenchWorklist
         ariaLabel="Advisor actions"
+        relationshipIdBase="advisor-actions-test"
         title="Actions requiring review"
         items={items}
         selectedKey="action-1"
@@ -40,6 +41,7 @@ describe("WorkbenchWorklist", () => {
     const { rerender } = render(
       <WorkbenchWorklist
         ariaLabel="Advisor actions"
+        relationshipIdBase="advisor-actions-test"
         title="Actions requiring review"
         items={items}
         selectedKey="action-2"
@@ -52,6 +54,7 @@ describe("WorkbenchWorklist", () => {
     rerender(
       <WorkbenchWorklist
         ariaLabel="Advisor actions"
+        relationshipIdBase="advisor-actions-test"
         title="Actions requiring review"
         items={[...items].reverse()}
         selectedKey="action-2"
