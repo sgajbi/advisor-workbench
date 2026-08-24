@@ -65,7 +65,7 @@ decision, clear a gate, approve suitability, or create an order.
 
 | Direction | Adjacent workspace | Context preserved |
 | --- | --- | --- |
-| Inbound | Approval Queue, Suitability Review, or another proposal lifecycle mode | Selected portfolio and bounded lifecycle context |
+| Inbound | Approval Queue, Suitability review, or another proposal lifecycle mode | Selected portfolio and bounded lifecycle context |
 | Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, and Risk and Impact origin |
 | Return | Risk and Impact from Proposal Detail | Source proposal portfolio and originating lifecycle mode |
 | Specialist review | Owning risk, allocation, policy, or workflow service | Source identity and support reference; no browser-created decision |

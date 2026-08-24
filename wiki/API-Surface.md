@@ -313,7 +313,7 @@ promote dormant labels into product ownership just because historical route file
   `GET /api/v1/proposals/{proposal_id}?include_evidence=true`,
   `/workflow-events`, `/approvals`, and `/lineage` as one maker-checker evidence set. The browser
   does not fan these record reads across the visible worklist or infer approval from list state.
-- Suitability Review does not read the generic proposal list. It reads the portfolio-scoped
+- Suitability review does not read the generic proposal list. It reads the portfolio-scoped
   advisory-policy review queue through `/api/bff/api/v1/advisory-policy-evaluations/review-queue`,
   then reads evaluation, sign-off-package, and workflow evidence for the selected evaluation only.
   Manual refresh repeats that exact four-read set and confirms success only after the selected

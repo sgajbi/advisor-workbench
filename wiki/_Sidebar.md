@@ -17,7 +17,7 @@
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
-- [Suitability Review](Suitability-Review-Screen-Guide)
+- [Suitability review](Suitability-Review-Screen-Guide)
 - [Proposal Detail](Proposal-Detail-Screen-Guide)
 - [Risk and Impact](Risk-And-Impact-Screen-Guide)
 - [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide)

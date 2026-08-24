@@ -444,7 +444,7 @@ RFC-0025 policy checks now use the governed
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` to activate the
 Singapore private-banking policy pack, create a structured-note `PENDING_REVIEW` policy evaluation
 through Gateway, verify the review queue, workflow, sign-off package, blocked client-ready posture,
-and a bounded request-more-evidence decision, and then render the Suitability Review route from the
+and a bounded request-more-evidence decision, and then render the Suitability review route from the
 same source-owned queue. The validator records this as
 `POLICY_EVALUATION_PENDING_REVIEW_CREATED` so reviewers can distinguish real policy evidence from a
 route-only screenshot.
@@ -465,7 +465,7 @@ validator treats the returned acknowledgement state as replay evidence and skips
 acknowledgement write rather than forcing a conflicting idempotency key.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
-Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
+Suitability review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
 Status. The Proposal Builder check evaluates its draft through Gateway and Advise before capturing
 the same screen; evaluation is a source-backed result state, not a separately addressable screen.
 These journey checks are route-level evidence over existing Gateway-backed Workbench screens;

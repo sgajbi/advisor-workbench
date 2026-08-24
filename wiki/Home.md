@@ -41,7 +41,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - Portfolio-scoped proposal triage, selected review posture, and context-preserving drill-in:
   [Approval Queue](Approval-Queue-Screen-Guide)
 - One source-backed policy-evaluation worklist, selected suitability evidence, exact recovery, and
-  bounded evidence requests: [Suitability Review](Suitability-Review-Screen-Guide)
+  bounded evidence requests: [Suitability review](Suitability-Review-Screen-Guide)
 - Full proposal decision record, workflow gates, approvals, lineage, narrative, and memo review:
   [Proposal Detail](Proposal-Detail-Screen-Guide)
 - Exact current-versus-proposed allocation, risk exceptions, workflow gates, and source lineage:
@@ -129,7 +129,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
-- [Suitability Review](Suitability-Review-Screen-Guide)
+- [Suitability review](Suitability-Review-Screen-Guide)
 - [Proposal Detail](Proposal-Detail-Screen-Guide)
 - [Risk and Impact](Risk-And-Impact-Screen-Guide)
 - [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide)

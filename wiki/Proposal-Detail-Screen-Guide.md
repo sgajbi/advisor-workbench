@@ -48,7 +48,7 @@ These use cases do not substitute for authenticated production-role or portfolio
 
 1. Enter from [Approval Queue](Approval-Queue-Screen-Guide),
    [Risk and Impact](Risk-And-Impact-Screen-Guide),
-   [Implementation Status](Implementation-Status-Screen-Guide), Suitability Review, Discussion Pack
+   [Implementation Status](Implementation-Status-Screen-Guide), Suitability review, Discussion Pack
    Review, or another supported proposal handoff.
 2. Confirm the proposal header and active version before reviewing supporting evidence.
 3. Review the decision-first change, impact, gate, approval, and lineage sections.
