@@ -16,7 +16,7 @@ decision-first worklist and the four daily Workbench surfaces changed under issu
 
 | Surface | Evidence | What the browser proof establishes |
 | --- | --- | --- |
-| Advisor Cockpit | `advisor-cockpit/` | One action title per worklist row, complete reasons in selected detail, addressable keyboard flow, decision above the fold, responsive stacking, and no page overflow |
+| Advisor Cockpit | `advisor-cockpit/` | One action title per worklist row, source category and complete reasons in selected detail, addressable keyboard flow, decision above the fold, responsive stacking, and no page overflow |
 | Manage Overview | `manage-overview/` | Left-rail-only workflow navigation, centre-only operating posture, distinct right-rail source evidence, selected pane containment, at least 40% desktop-height reduction, responsive stacking, and no page overflow |
 | Advisory Overview | `advisory-overview/` | Needs-action count stated once, combined stage/readiness status, selected next-action pane, source-window truth, action containment, responsive stacking, and recovery |
 | Advisor Book | `advisor-book/` | Horizontal desktop measures, first portfolio row above 900 pixels, one collapsed support disclosure, raw references excluded from the primary path, responsive reflow, and failure/date recovery |

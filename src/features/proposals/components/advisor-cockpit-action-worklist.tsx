@@ -129,6 +129,10 @@ function SelectedAdvisorAction({
 
       <dl className={styles.evidenceGrid}>
         <div>
+          <dt>Action category</dt>
+          <dd>{row.family}</dd>
+        </div>
+        <div>
           <dt>Workflow reasons</dt>
           <dd>{row.reasonSummary}</dd>
         </div>
