@@ -6052,6 +6052,54 @@ request after recovery, keyboard usability, responsive layout, and zero page ove
 and Manage wiki guides plus repository context carry the durable policy; protected CI, exact-main
 validation, wiki publication/parity, issue closure, and branch hygiene remain required.
 
+### Reopened same-pattern audit — 24 August 2026
+
+The initial slice did not catch a raw Advisor Brief review timestamp and several adjacent
+feature-local presentation paths. The issue was reopened and the production tree was re-audited as
+one presentation-boundary problem rather than patched only at the reported screen.
+
+Additional primary standards reviewed:
+
+1. [Unicode CLDR date and time patterns](https://unicode.org/reports/tr35/tr35-dates.html) separate
+   calendar date, clock time, and timezone presentation so an exact instant is not shown without its
+   zone context.
+2. [ECMA-402 `Intl.DateTimeFormat`](https://tc39.es/ecma402/2024/#datetimeformat-objects) uses the
+   host environment timezone when no explicit `timeZone` is supplied; browser-local defaults are
+   therefore unsuitable for stable audit evidence.
+3. [WHATWG HTML `time`](https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-time-element)
+   separates human-readable content from a machine-readable date/time value.
+
+Adopted:
+
+1. Use the existing design-system formatter as the only production formatting authority; add a
+   source-tree governance test that rejects `Intl.DateTimeFormat` and `toLocaleDateString` outside
+   that module.
+2. Keep calendar-semantic business dates and exact audit instants as separate typed presentation
+   decisions. Exact instants require `Z` or an offset, normalize to UTC, and name UTC visibly.
+3. Preserve the raw exact source value only in source models or an atomic machine-readable evidence
+   attribute. Visible business copy is readable and never exposes ISO transport syntax.
+4. Fail closed for missing, malformed, impossible, or unzoned values rather than echoing the input,
+   guessing a date kind, or substituting a demonstration date.
+5. Prove timezone invariance with the Advisor Brief review transaction in both the default browser
+   context and `Asia/Singapore`, including source persistence, reload, exact machine evidence,
+   responsive containment, and absence of raw ISO visible text.
+
+Rejected:
+
+1. A one-off Advisor Brief string replacement that leaves the same pattern elsewhere.
+2. Browser-local rendering, implicit timezone conversion, or locale-dependent audit semantics.
+3. Automatic guessing between a business date and an exact timestamp.
+4. A competing per-feature formatter or new date dependency.
+5. Treating a fixture-backed screenshot as proof of the canonical Gateway/Lotus AI runtime.
+
+Implementation removes local/raw timestamp presentation across Advisor Brief, DPM campaign and
+rebalance workflows, AI preparation, proposal audit/version/implementation evidence, portfolio
+memory, outcome review, fairness evidence, report ordering, and Manage workflow helpers. Dead raw
+timestamp projections and fixed-date fallbacks were removed where no supported consumer remained.
+The diagnostic browser pack is published under
+`docs/evidence/issue-786-business-timestamps/`; canonical source-backed validation, protected CI,
+review authority, wiki publication, issue closure, and clean-main hygiene remain release gates.
+
 ## Governed Review Context And Cross-Workspace Continuity
 
 ### Business job
