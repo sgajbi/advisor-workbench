@@ -23,20 +23,22 @@ export default function WorkbenchDecisionWorkspace({
   decisionRef?: Ref<HTMLElement>;
 }) {
   return (
-    <div
-      className={cx(styles.workspace, className)}
-      data-testid="workbench-decision-workspace"
-    >
-      <div className={cx(styles.worklist, worklistClassName)}>{worklist}</div>
-      <section
-        ref={decisionRef}
-        id={decisionId}
-        className={cx(styles.decision, decisionClassName)}
-        aria-label={ariaLabel}
-        tabIndex={decisionRef ? -1 : undefined}
+    <div className={styles.container}>
+      <div
+        className={cx(styles.workspace, className)}
+        data-testid="workbench-decision-workspace"
       >
-        {decision}
-      </section>
+        <div className={cx(styles.worklist, worklistClassName)}>{worklist}</div>
+        <section
+          ref={decisionRef}
+          id={decisionId}
+          className={cx(styles.decision, decisionClassName)}
+          aria-label={ariaLabel}
+          tabIndex={decisionRef ? -1 : undefined}
+        >
+          {decision}
+        </section>
+      </div>
     </div>
   );
 }
