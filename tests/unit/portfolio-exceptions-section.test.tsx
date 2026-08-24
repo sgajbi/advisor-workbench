@@ -15,7 +15,7 @@ describe("PortfolioExceptionsSection", () => {
     expect(screen.queryByText(/No active exceptions/i)).not.toBeInTheDocument();
   });
 
-  it("renders service area and advisor-readable detail for active coverage failures", () => {
+  it("renders service area and adviser-readable detail for active coverage failures", () => {
     render(
       <PortfolioExceptionsSection
         workspace={buildPortfolioWorkspace({
@@ -31,8 +31,10 @@ describe("PortfolioExceptionsSection", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Source Limitations" })
+      screen.getByRole("heading", { name: "Source limitations" })
     ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence coverage" })).toBeInTheDocument();
+    expect(screen.queryByText(/Unresolved source issues/i)).not.toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
     expect(screen.getByText("Reporting coverage needs attention")).toBeInTheDocument();
     expect(screen.getByText("Source: Portfolio data")).toBeInTheDocument();

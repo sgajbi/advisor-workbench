@@ -7,6 +7,7 @@ import {
   formatShareOfPortfolioValue,
   PORTFOLIO_REVIEW_DATE_LABEL,
   PORTFOLIO_CURRENCY_LABELS,
+  PORTFOLIO_EVIDENCE_LABELS,
   PORTFOLIO_SCREEN_LABELS,
   PORTFOLIO_VALUATION_DATE_LABEL,
   PORTFOLIO_VALUE_LABEL,
@@ -88,6 +89,11 @@ describe("portfolio terminology", () => {
       reporting: "Reporting currency",
       instrument: "Instrument currency",
       transaction: "Transaction currency",
+    });
+    expect(PORTFOLIO_EVIDENCE_LABELS).toEqual({
+      sourceLimitations: "Source limitations",
+      evidenceCoverage: "Evidence coverage",
+      activeLimitations: "Active limitations",
     });
   });
 
