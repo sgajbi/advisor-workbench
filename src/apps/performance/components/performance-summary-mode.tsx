@@ -6,6 +6,7 @@ import {
   WorkspaceGrid,
 } from "@/design-system";
 
+import { getPerformanceReturnPathTitle } from "../performance-terminology";
 import PerformanceChartPanel from "./performance-chart-panel";
 import {
   hasActiveReturnSeries,
@@ -54,7 +55,7 @@ export default function PerformanceSummaryMode({
     >
       <WorkspaceGrid className="performance-chart-grid performance-lotus-stage performance-lotus-stage-chart workbench-summary-region performance-analysis-top-region">
         <PerformanceChartPanel
-          title={detailBasis === "GROSS" ? "Gross Return Path" : "Net Return Path"}
+          title={getPerformanceReturnPathTitle(detailBasis)}
           points={returnPoints}
           summary={detailBasis === "GROSS" ? workspace.gross_performance : workspace.net_performance}
           portfolioId={workspace.portfolio.portfolio_id}

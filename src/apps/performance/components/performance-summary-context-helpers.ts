@@ -4,8 +4,11 @@ import type {
 } from "@/features/workbench/types";
 
 import type { PerformanceWorkspaceCapabilities } from "../capabilities";
-
 import { formatCurrency, formatLabel, formatPct } from "../formatters";
+import {
+  PERFORMANCE_RETURN_DEFINITIONS,
+  PERFORMANCE_RETURN_LABELS,
+} from "../performance-terminology";
 
 export type PerformanceReturnPathMetric = {
   key: string;
@@ -210,27 +213,29 @@ function buildPerformanceReturnPathMetrics({
   return [
     {
       key: "portfolio-return",
-      label: "Portfolio Return",
+      label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
       value: portfolioReturnValue,
+      definition: PERFORMANCE_RETURN_DEFINITIONS.timeWeightedReturn,
       unavailable: summary.portfolio_return_pct == null,
     },
     {
       key: "benchmark-return",
-      label: "Benchmark Return",
+      label: PERFORMANCE_RETURN_LABELS.benchmarkTwr,
       value: benchmarkReturnValue,
       unavailable: !benchmarkAssigned || summary.benchmark_return_pct == null,
     },
     {
       key: "active-return",
-      label: "Active Return",
+      label: PERFORMANCE_RETURN_LABELS.activeReturn,
       value: activeReturnValue,
+      definition: PERFORMANCE_RETURN_DEFINITIONS.activeReturn,
       unavailable: activeReturnValue === "Unavailable",
     },
     ...(benchmarkAssigned
       ? [
           {
             key: "benchmark-evidence",
-            label: "Benchmark Evidence",
+            label: "Benchmark evidence",
             value: formatBenchmarkEvidenceValue(summary),
             definition:
               "Benchmark supportability evidence from lotus-performance, including currency treatment and portfolio-vs-benchmark calendar alignment.",
@@ -240,15 +245,15 @@ function buildPerformanceReturnPathMetrics({
       : []),
     {
       key: "mwrr",
-      label: "Money-Weighted Return",
+      label: PERFORMANCE_RETURN_LABELS.moneyWeightedReturn,
       value: resolvedEconomics.moneyWeightedReturnValue,
       definition:
-        "Annualized money-weighted return for the selected window, reflecting the timing and size of external cash flows.",
+        PERFORMANCE_RETURN_DEFINITIONS.moneyWeightedReturn,
       unavailable: moneyWeightedReturn?.money_weighted_return_pct == null,
     },
     {
       key: "flow-adjusted-mv",
-      label: "Flow-Adjusted MV",
+      label: "Flow-adjusted market value",
       value: formatCurrency(resolvedEconomics.flowAdjustedEndMarketValue, reportingCurrency),
       definition:
         "Ending market value adjusted for external cash flows to isolate investment performance from funding activity.",
@@ -258,7 +263,7 @@ function buildPerformanceReturnPathMetrics({
       ? [
           {
             key: "ending-mv",
-            label: "Ending MV",
+            label: "Ending market value",
             value: formatCurrency(resolvedEconomics.endMarketValue, reportingCurrency),
             definition:
               "Ending market value at the close of the reporting window after market movement and cash activity are recognized.",
@@ -268,7 +273,7 @@ function buildPerformanceReturnPathMetrics({
       : []),
     {
       key: "opening-mv",
-      label: "Opening MV",
+      label: "Opening market value",
       value: formatCurrency(resolvedEconomics.beginMarketValue, reportingCurrency),
       definition:
         "Opening market value at the start of the reporting window before current-period returns and flows.",
@@ -276,7 +281,7 @@ function buildPerformanceReturnPathMetrics({
     },
     {
       key: "net-flow",
-      label: "Net Flow",
+      label: "Net cash flow",
       value: formatCurrency(resolvedEconomics.netCashFlow, reportingCurrency),
       definition:
         "Net external cash movement during the reporting window after subscriptions, withdrawals, and other funded activity.",
@@ -286,7 +291,7 @@ function buildPerformanceReturnPathMetrics({
       ? [
           {
             key: "opening-cash",
-            label: "Opening Cash",
+            label: "Opening cash flow",
             value: formatCurrency(resolvedEconomics.beginningCashFlow, reportingCurrency),
             definition:
               "Opening external cash position resolved for the reporting window before current-period activity is applied.",
@@ -298,7 +303,7 @@ function buildPerformanceReturnPathMetrics({
       ? [
           {
             key: "closing-cash",
-            label: "Closing Cash",
+            label: "Closing cash flow",
             value: formatCurrency(resolvedEconomics.endingCashFlow, reportingCurrency),
             definition:
               "Closing external cash position after subscriptions, withdrawals, and other funded activity in the selected window.",

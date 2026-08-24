@@ -31,7 +31,7 @@ import { expectReviewContextOwns } from "../review-context-census";
 const replaceMock = vi.fn();
 const pushMock = vi.fn();
 const RETURN_PATH_EVIDENCE_NAME =
-  /^Net Return Path (?:chart|single observation comparison)$/;
+  /^Time-weighted return path · Net of fees (?:chart|single observation comparison)$/;
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/performance",
@@ -674,14 +674,14 @@ describe("PerformanceAnalyticsPage", () => {
     expect(mainShell?.querySelectorAll(".workbench-summary-region")).toHaveLength(2);
     const chartSummaryBand = mainShell?.querySelector(".performance-outcome-strip.workbench-summary-metric-strip");
     expect(chartSummaryBand).toBeTruthy();
-    expect(within(chartSummaryBand as HTMLElement).queryByText("Portfolio Return")).not.toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark Return")).not.toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).queryByText("Active Return")).not.toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).queryByText("Money-Weighted Return")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Portfolio TWR")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Benchmark TWR")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Active return")).not.toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).queryByText("Money-weighted return (MWR)")).not.toBeInTheDocument();
     const returnDecisionReadout = screen.getByLabelText("Return decision readout");
     expect(returnDecisionReadout).toHaveTextContent(
       compactPattern(
-        "Active Return 0.52% Money-Weighted Return 5.12% Portfolio Return 5.42% Benchmark Return 4.91%"
+        "Active return 0.52% Money-weighted return (MWR) 5.12% Portfolio TWR 5.42% Benchmark TWR 4.91%"
       )
     );
     expect(
@@ -690,11 +690,11 @@ describe("PerformanceAnalyticsPage", () => {
           Node.DOCUMENT_POSITION_FOLLOWING
       )
     ).toBe(true);
-    expect(within(chartSummaryBand as HTMLElement).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Opening Cash")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Closing Cash")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(within(chartSummaryBand as HTMLElement).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Net cash flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Opening cash flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Closing cash flow")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Flow-adjusted market value")).toBeInTheDocument();
+    expect(within(chartSummaryBand as HTMLElement).getByText("Ending market value")).toBeInTheDocument();
     expect(
       within(chartSummaryBand as HTMLElement).queryByText("Period Range / Basis")
     ).not.toBeInTheDocument();
@@ -723,20 +723,20 @@ describe("PerformanceAnalyticsPage", () => {
       expect(screen.getByLabelText(RETURN_PATH_EVIDENCE_NAME)).toBeInTheDocument();
     });
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Opening Cash")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Closing Cash")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening market value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Closing cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Flow-adjusted market value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending market value")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
-    expect(executiveStrip).toHaveTextContent(compactPattern("Opening Cash $50,000"));
-    expect(executiveStrip).toHaveTextContent(compactPattern("Closing Cash -$8,000"));
-    expect(executiveStrip).toHaveTextContent(compactPattern("Ending MV $1,250,000"));
+    expect(executiveStrip).toHaveTextContent(compactPattern("Opening cash flow $50,000"));
+    expect(executiveStrip).toHaveTextContent(compactPattern("Closing cash flow -$8,000"));
+    expect(executiveStrip).toHaveTextContent(compactPattern("Ending market value $1,250,000"));
     expect(executiveStrip.querySelector(".performance-outcome-strip-item")).toBeTruthy();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern(
-        "Active Return 0.52% Money-Weighted Return 5.12% Portfolio Return 5.42% Benchmark Return 4.91%"
+        "Active return 0.52% Money-weighted return (MWR) 5.12% Portfolio TWR 5.42% Benchmark TWR 4.91%"
       )
     );
     expect(screen.getAllByLabelText("Status Ready").length).toBeGreaterThanOrEqual(2);
@@ -811,7 +811,7 @@ describe("PerformanceAnalyticsPage", () => {
     const executiveStrip = await screen.findByLabelText("Executive return strip");
     const returnDecisionReadout = await screen.findByLabelText("Return decision readout");
     await waitFor(() => {
-      expect(within(returnDecisionReadout).getByText("Money-Weighted Return")).toBeInTheDocument();
+      expect(within(returnDecisionReadout).getByText("Money-weighted return (MWR)")).toBeInTheDocument();
     });
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Return path context" })).not.toBeInTheDocument();
@@ -822,7 +822,7 @@ describe("PerformanceAnalyticsPage", () => {
 
     await renderPerformancePage();
 
-    expect(await screen.findByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Time-weighted return path · Net of fees unavailable")).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("N/A")).not.toBeInTheDocument();
   });
@@ -1526,7 +1526,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "supported workspace",
       scenario: buildSupportedPerformanceScenario(),
-      summaryExpectations: ["Portfolio Return", "Horizon Comparison"],
+      summaryExpectations: ["Portfolio TWR", "Horizon Comparison"],
       analysisExpectations: ["Attribution Over Time", "Performance Drivers"],
       evidenceExpectations: [],
       summaryAbsent: ["Benchmark not assigned"],
@@ -1535,7 +1535,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "unavailable attribution workspace",
       scenario: buildUnavailableAttributionPerformanceScenario(),
-      summaryExpectations: ["Portfolio Return", "Horizon Comparison"],
+      summaryExpectations: ["Portfolio TWR", "Horizon Comparison"],
       analysisExpectations: ["Performance Drivers"],
       evidenceExpectations: [],
       analysisAbsent: ["Relative Segment Context"],
@@ -1543,7 +1543,7 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "unavailable contribution workspace",
       scenario: buildUnavailableContributionPerformanceScenario(),
-      summaryExpectations: ["Portfolio Return", "Horizon Comparison"],
+      summaryExpectations: ["Portfolio TWR", "Horizon Comparison"],
       analysisExpectations: [
         "Attribution Over Time",
         "Contribution detail unavailable",
@@ -1613,7 +1613,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(await screen.findByRole("button", { name: "Performance Overview" })).toBeInTheDocument();
     expect(screen.getAllByLabelText("Status Unavailable").length).toBeGreaterThanOrEqual(1);
     await waitFor(() => {
-      expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+      expect(screen.getByLabelText("Time-weighted return path · Net of fees unavailable")).toBeInTheDocument();
       expect(
         screen.getByText("Return history is unavailable for the selected window")
       ).toBeInTheDocument();
@@ -1689,8 +1689,8 @@ describe("PerformanceAnalyticsPage", () => {
       name: "benchmark-unassigned and return-series-unavailable",
       scenario: buildBenchmarkUnassignedPerformanceScenario(),
       executiveExpectations: [
-        "Money-Weighted Return",
-        "Flow-Adjusted MV",
+        "Money-weighted return (MWR)",
+        "Flow-adjusted market value",
       ],
       deferredExpectations: [
         "Return history is unavailable for the selected window",
@@ -1701,8 +1701,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "assigned benchmark with partial relative comparison",
       scenario: buildPartialBenchmarkPerformanceScenario(),
-      executiveExpectations: ["Flow-Adjusted MV"],
-      readoutExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Flow-adjusted market value"],
+      readoutExpectations: ["Money-weighted return (MWR)"],
       horizonExpectations: [
         "Benchmark Global Balanced 60/40",
       ],
@@ -1711,8 +1711,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "aggregate-only contribution ranking",
       scenario: buildAggregateContributionPerformanceScenario(),
-      executiveExpectations: ["Flow-Adjusted MV"],
-      readoutExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Flow-adjusted market value"],
+      readoutExpectations: ["Money-weighted return (MWR)"],
       deferredExpectations: ["Top Contributors", "Top Detractors"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["AAPL"],
@@ -1720,8 +1720,8 @@ describe("PerformanceAnalyticsPage", () => {
     {
       name: "combined benchmark, attribution, and contributor support gaps",
       scenario: buildCombinedPartialPerformanceScenario(),
-      executiveExpectations: ["Flow-Adjusted MV"],
-      readoutExpectations: ["Money-Weighted Return"],
+      executiveExpectations: ["Flow-adjusted market value"],
+      readoutExpectations: ["Money-weighted return (MWR)"],
       deferredExpectations: ["Top Contributors", "Top Detractors"],
       horizonExpectations: ["Benchmark Global Balanced 60/40"],
       absentTexts: ["Benchmark unassigned", "AAPL"],

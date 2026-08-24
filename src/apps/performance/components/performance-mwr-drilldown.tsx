@@ -1,6 +1,7 @@
 import type { MoneyWeightedReturnSummary } from "@/features/workbench/types";
 
 import { formatPct } from "../formatters";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
 
 export type PerformanceMwrDrilldownModel = {
   summaryLabel: string;
@@ -47,7 +48,7 @@ export function buildPerformanceMwrDrilldown(
   ].filter(Boolean);
 
   return {
-    summaryLabel: summaryParts.join(" • ") || "MWR supportability",
+    summaryLabel: summaryParts.join(" • ") || "Method evidence",
     statusLabel: status ? formatMwrContractLabel(status) : null,
     methodLabel: moneyWeightedReturn.method
       ? formatMwrMethodLabel(moneyWeightedReturn.method)
@@ -92,9 +93,12 @@ export default function PerformanceMwrDrilldown({
   ].filter((item): item is { label: string; value: string } => Boolean(item.value));
 
   return (
-    <details className="performance-mwr-drilldown" aria-label="MWR reason-code drill-down">
+    <details
+      className="performance-mwr-drilldown"
+      aria-label="Money-weighted return method evidence"
+    >
       <summary>
-        <span>MWR supportability</span>
+        <span>{PERFORMANCE_RETURN_LABELS.moneyWeightedReturn} evidence</span>
         <strong>{model.summaryLabel}</strong>
       </summary>
       <div className="performance-mwr-drilldown-body">
@@ -122,7 +126,10 @@ function ReasonCodeList({ title, values }: { title: string; values: string[] }) 
   }
 
   return (
-    <section className="performance-mwr-reason-group" aria-label={`MWR ${title.toLowerCase()}`}>
+    <section
+      className="performance-mwr-reason-group"
+      aria-label={`Money-weighted return ${title.toLowerCase()}`}
+    >
       <h4>{title}</h4>
       <ul>
         {values.map((value) => (

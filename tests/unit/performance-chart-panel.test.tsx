@@ -68,7 +68,7 @@ function buildChartProps(
   const workspace = { ...scenario.workspace, portfolio_id: "DEMO_ADV_USD_001" };
   const returnPath = buildPerformanceReturnPathScenarioData(scenario);
   return {
-    title: "Net Return Path",
+    title: "Time-weighted return path · Net of fees",
     points: returnPath.points,
     summary: {
       ...returnPath.summary,
@@ -273,27 +273,27 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByRole("group", { name: "Return-path presentation" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Basis" })).toBeInTheDocument();
     const executiveStrip = screen.getByLabelText("Executive return strip");
-    expect(within(executiveStrip).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Opening Cash")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Closing Cash")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(within(executiveStrip).getByText("Ending MV")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening market value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Net cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Opening cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Closing cash flow")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Flow-adjusted market value")).toBeInTheDocument();
+    expect(within(executiveStrip).getByText("Ending market value")).toBeInTheDocument();
     expect(within(executiveStrip).queryByText("Period Range / Basis")).not.toBeInTheDocument();
     expect(screen.queryByText("Latest")).not.toBeInTheDocument();
     expect(screen.queryByText("High")).not.toBeInTheDocument();
     expect(screen.queryByText("Low")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening MV");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening market value");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,200,000");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Net Flow");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Net cash flow");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$42,000");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening Cash");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Opening cash flow");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$50,000");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Closing Cash");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Closing cash flow");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("-$8,000");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Flow-Adjusted MV");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Flow-adjusted market value");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,208,000");
-    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Ending MV");
+    expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Ending market value");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,250,000");
     expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
@@ -343,7 +343,7 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Return path legend")).not.toHaveTextContent("0.80%");
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
       compactPattern(
-        "Active Return 0.80% Money-Weighted Return 5.12% Portfolio Return 3.30% Benchmark Return 2.50%"
+        "Active return 0.80% Money-weighted return (MWR) 5.12% Portfolio TWR 3.30% Benchmark TWR 2.50%"
       )
     );
     expect(screen.queryByLabelText("Return series context")).not.toBeInTheDocument();
@@ -528,7 +528,7 @@ describe("PerformanceChartPanel", () => {
       "single-observation"
     );
     expect(
-      screen.getByRole("group", { name: "Net Return Path single observation comparison" })
+      screen.getByRole("group", { name: "Time-weighted return path · Net of fees single observation comparison" })
     ).toHaveTextContent(/Portfolio\s*\+0\.11%/);
     expect(within(singleObservation).getByText("Single published observation")).toBeInTheDocument();
     expect(within(singleObservation).getByText("14 Apr 2026")).toBeInTheDocument();
@@ -556,7 +556,7 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByRole("img", { name: "Net Return Path chart" })).toHaveAttribute(
+    expect(screen.getByRole("img", { name: "Time-weighted return path · Net of fees chart" })).toHaveAttribute(
       "data-layout",
       "time-series"
     );
@@ -573,11 +573,11 @@ describe("PerformanceChartPanel", () => {
     );
 
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Money-Weighted Return Unavailable")
+      compactPattern("Money-weighted return (MWR) Unavailable")
     );
     expect(
       within(screen.getByLabelText("Return decision readout")).getByText(
-        "Money-Weighted Return"
+        "Money-weighted return (MWR)"
       )
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).not.toHaveTextContent("XIRR");
@@ -604,11 +604,11 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    const drilldown = screen.getByLabelText("MWR reason-code drill-down");
-    expect(drilldown).toHaveTextContent("MWR supportability");
+    const drilldown = screen.getByLabelText("Money-weighted return method evidence");
+    expect(drilldown).toHaveTextContent("Money-weighted return (MWR) evidence");
     expect(drilldown).toHaveTextContent("Fallback Used • Modified Dietz • Approximation");
 
-    fireEvent.click(within(drilldown).getByText("MWR supportability"));
+    fireEvent.click(within(drilldown).getByText("Money-weighted return (MWR) evidence"));
 
     expect(within(drilldown).getByText("Reason codes")).toBeInTheDocument();
     expect(within(drilldown).getByText("NO_ROOT_FOUND")).toBeInTheDocument();
@@ -635,7 +635,7 @@ describe("PerformanceChartPanel", () => {
       />
     );
 
-    expect(screen.getByLabelText("Net Return Path unavailable")).toBeInTheDocument();
+    expect(screen.getByLabelText("Time-weighted return path · Net of fees unavailable")).toBeInTheDocument();
     expect(
       screen.getByText("Return history is unavailable for the selected window")
     ).toBeInTheDocument();
@@ -648,10 +648,10 @@ describe("PerformanceChartPanel", () => {
     expect(screen.queryByText("Needs source support")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent(
-      compactPattern("Money-Weighted Return 5.12%")
+      compactPattern("Money-weighted return (MWR) 5.12%")
     );
     expect(screen.queryByTestId("performance-echart")).not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Net Return Path chart" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Time-weighted return path · Net of fees chart" })).not.toBeInTheDocument();
   });
 
   it("renders an analytical loading state while detail series are pending", () => {
@@ -759,7 +759,7 @@ describe("PerformanceChartPanel", () => {
 
     expect(screen.queryByText("Benchmark unassigned")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Return decision readout")).toHaveTextContent(
-      compactPattern("Portfolio Return 6.20% Benchmark Return Unavailable")
+      compactPattern("Portfolio TWR 6.20% Benchmark TWR Unavailable")
     );
   });
 
@@ -792,7 +792,7 @@ describe("PerformanceChartPanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("performance-echart")).toBeInTheDocument();
     expect(
-      screen.getByRole("group", { name: "Net Return Path single observation comparison" })
+      screen.getByRole("group", { name: "Time-weighted return path · Net of fees single observation comparison" })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Return history partial state")).toBeInTheDocument();
   });
@@ -881,11 +881,11 @@ describe("PerformanceChartPanel", () => {
   it("exposes metric definitions through executive strip tooltips instead of inline copy", async () => {
     render(<PerformanceChartPanel {...buildChartProps()} />);
 
-    fireEvent.mouseOver(within(screen.getByLabelText("Return decision readout")).getByText("Money-Weighted Return"));
+    fireEvent.mouseOver(within(screen.getByLabelText("Return decision readout")).getByText("Money-weighted return (MWR)"));
 
     expect(
       await screen.findByText(
-        "Annualized money-weighted return for the selected window, reflecting the timing and size of external cash flows."
+        "Money-weighted return (MWR) reflects the timing and size of external cash flows during the selected period."
       )
     ).toBeInTheDocument();
   });
