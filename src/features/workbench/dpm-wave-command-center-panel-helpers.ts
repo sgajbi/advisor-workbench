@@ -1,3 +1,4 @@
+import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import type {
   DpmWaveItemRow,
   DpmWaveCommandCenterPanelState,
@@ -276,17 +277,6 @@ export function isDpmWaveActionBlocked(blockedActions: string[], action: string)
 }
 
 export function formatDpmWaveDisplayDate(value: string | undefined): string {
-  if (!value || value === "N/A") {
-    return "As of 03 May 2026";
-  }
-  const date = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) {
-    return `As of ${value}`;
-  }
-  return `As of ${date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  })}`;
+  const businessDate = formatBusinessDateValue(value, { nullDisplay: "" });
+  return businessDate ? `As of ${businessDate}` : "As of not confirmed";
 }

@@ -221,7 +221,11 @@ describe("DPM wave command-center panel helpers", () => {
     expect(resolveDpmWaveLifecycleIndex("APPROVAL_REQUESTED")).toBe(3);
     expect(resolveDpmWaveLifecycleIndex("HANDOFF_READY")).toBe(4);
     expect(formatDpmWaveDisplayDate("2026-05-03")).toBe("As of 03 May 2026");
-    expect(formatDpmWaveDisplayDate("not-a-date")).toBe("As of not-a-date");
+    expect(formatDpmWaveDisplayDate(undefined)).toBe("As of not confirmed");
+    expect(formatDpmWaveDisplayDate("not-a-date")).toBe("As of not confirmed");
+    expect(formatDpmWaveDisplayDate("2026-05-03T00:00:00Z")).toBe(
+      "As of not confirmed",
+    );
   });
 
   it("ignores technical placeholder values in business fallbacks", () => {
