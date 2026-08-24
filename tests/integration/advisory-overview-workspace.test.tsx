@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -135,6 +135,49 @@ describe("AdvisoryOverviewWorkspace", () => {
     fireEvent.keyDown(options[1], { key: "Enter" });
     expect(decision).toHaveFocus();
     expect(worklist).toContainElement(options[1]);
+  });
+
+  it("retains the admitted fallback proposal when a source refresh reorders the worklist", async () => {
+    const { queryClient } = renderWithQueryClient(
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
+    );
+
+    await waitFor(() => {
+      const options = screen.getAllByRole("option");
+      expect(options[0]).toHaveTextContent("Technology concentration trim");
+      expect(options[0]).toHaveAttribute("aria-selected", "true");
+    });
+
+    act(() => {
+      queryClient.setQueriesData(
+        {
+          queryKey: ["advisory-overview", "PB_SG_GLOBAL_BAL_001"],
+        },
+        {
+          ...defaultProposalList,
+          items: defaultProposalList.items.map((proposal) => ({
+            ...proposal,
+            current_state:
+              proposal.proposal_id === "PRP-RISK"
+                ? "EXECUTION_READY"
+                : "RISK_REVIEW",
+          })),
+        },
+      );
+    });
+
+    await waitFor(() => {
+      const options = screen.getAllByRole("option");
+      expect(options[0]).toHaveTextContent("Implementation handoff");
+      expect(options[0]).toHaveAttribute("aria-selected", "false");
+      expect(options[1]).toHaveTextContent("Technology concentration trim");
+      expect(options[1]).toHaveAttribute("aria-selected", "true");
+    });
+    expect(
+      screen.getByRole("link", { name: "Open proposal review" }),
+    ).toHaveAttribute("href", "/proposals/PRP-RISK");
   });
 
   it("starts from the first source window when the selected portfolio changes", async () => {
