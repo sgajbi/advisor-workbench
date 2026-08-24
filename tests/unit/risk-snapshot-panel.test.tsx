@@ -33,10 +33,10 @@ describe("RiskSnapshotPanel", () => {
     const viewModel = buildRiskViewModel();
     const { container } = render(<RiskSnapshotPanel viewModel={viewModel} />);
 
-    expect(screen.getByRole("heading", { name: "Risk Snapshot" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Risk snapshot" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" })
+      screen.getByRole("button", { name: "Risk snapshot methodology and coverage" })
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Context and methodology" })).not.toBeInTheDocument();
     expect(screen.queryByText("Stateful risk metric")).not.toBeInTheDocument();
@@ -48,10 +48,10 @@ describe("RiskSnapshotPanel", () => {
       "Volatility",
       "Sharpe",
       "Beta",
-      "Tracking Error",
-      "Information Ratio",
+      "Tracking error",
+      "Information ratio",
       "Sortino",
-      "Value at Risk",
+      "Value at risk",
     ]);
     expect(
       screen.queryByText("Overall realised risk level of the portfolio over the selected period.")
@@ -61,7 +61,7 @@ describe("RiskSnapshotPanel", () => {
     expect(screen.queryByText("Efficiency of active risk taken versus the benchmark.")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Information Ratio: Active return earned per unit of tracking error.",
+        name: "Information ratio: Active return earned per unit of tracking error.",
       })
     ).toBeInTheDocument();
   });
@@ -71,13 +71,13 @@ describe("RiskSnapshotPanel", () => {
     render(<RiskSnapshotPanel viewModel={viewModel} />);
 
     expect(
-      screen.queryByRole("dialog", { name: "Risk Snapshot methodology and coverage" })
+      screen.queryByRole("dialog", { name: "Risk snapshot methodology and coverage" })
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" }));
+    fireEvent.click(screen.getByRole("button", { name: "Risk snapshot methodology and coverage" }));
 
     const dialog = screen.getByRole("dialog", {
-      name: "Risk Snapshot methodology and coverage",
+      name: "Risk snapshot methodology and coverage",
     });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText("Portfolio observations")).toBeInTheDocument();
@@ -90,9 +90,9 @@ describe("RiskSnapshotPanel", () => {
 
     expect(screen.queryByLabelText("Risk snapshot business reading")).not.toBeInTheDocument();
     expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(2);
-    fireEvent.click(screen.getByRole("button", { name: "Risk Snapshot methodology and coverage" }));
+    fireEvent.click(screen.getByRole("button", { name: "Risk snapshot methodology and coverage" }));
     expect(
-      screen.getByRole("dialog", { name: "Risk Snapshot methodology and coverage" })
+      screen.getByRole("dialog", { name: "Risk snapshot methodology and coverage" })
     ).toHaveTextContent("Relative risk is not being applied for this selection.");
   });
 });

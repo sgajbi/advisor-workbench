@@ -109,7 +109,7 @@ export default function RiskAttributionPanel({
               className="performance-risk-attribution-detail-table"
               columns={[
                 { key: "group", label: "Group" },
-                { key: "avgWeight", label: "Avg Weight", align: "right" },
+                { key: "avgWeight", label: "Average weight", align: "right" },
                 { key: "marginalContribution", label: "Marginal", align: "right" },
                 { key: "componentContribution", label: "Component", align: "right" },
                 { key: "contributionShare", label: "Share", align: "right" },

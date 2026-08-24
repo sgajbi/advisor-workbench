@@ -62,11 +62,11 @@ describe("RiskRollingPanel", () => {
     expect(headlineLabels).toEqual(
       expect.arrayContaining([
         "Volatility",
-        "Tracking Error",
+        "Tracking error",
         "Beta",
-        "Max Drawdown",
+        "Max drawdown",
         "Sharpe",
-        "Information Ratio",
+        "Information ratio",
       ])
     );
     expect(headlineLabels.length).toBeGreaterThan(4);
@@ -118,7 +118,7 @@ describe("RiskRollingPanel", () => {
     renderRollingPanel(viewModel);
 
     expect(screen.queryByLabelText("Rolling risk business reading")).not.toBeInTheDocument();
-    expect(screen.queryByText("Tracking Error")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tracking error")).not.toBeInTheDocument();
     expect(screen.queryByText("Beta")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Rolling Risk methodology and coverage" }));

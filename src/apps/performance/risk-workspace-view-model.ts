@@ -1269,12 +1269,12 @@ function buildStateViewModel(
     supportability: [
       {
         key: "risk_bff",
-        label: "Risk BFF",
+        label: "Risk service",
         state: state === "loading" ? "partial" : "unavailable",
         reason:
           state === "loading"
             ? "Gateway risk contract is loading."
-            : "Gateway risk BFF response is not available.",
+            : "Gateway risk response is not available.",
       },
     ],
     warnings: state === "loading" ? [] : ["RISK_WORKSPACE_UNAVAILABLE"],
@@ -1503,6 +1503,15 @@ function metric(
 
 const SNAPSHOT_HEADLINE_METRIC_KEYS = ["VOLATILITY", "SHARPE", "BETA", "TRACKING_ERROR"] as const;
 const SNAPSHOT_SUPPORTING_METRIC_KEYS = ["INFORMATION_RATIO", "SORTINO", "VAR"] as const;
+const SNAPSHOT_METRIC_LABELS: Readonly<Record<string, string>> = {
+  VOLATILITY: "Volatility",
+  SHARPE: "Sharpe",
+  BETA: "Beta",
+  TRACKING_ERROR: "Tracking error",
+  INFORMATION_RATIO: "Information ratio",
+  SORTINO: "Sortino",
+  VAR: "Value at risk",
+};
 
 function mapSnapshotHeadlineMetrics(
   response: WorkbenchRiskSummaryResponse
@@ -1545,7 +1554,7 @@ function partitionSnapshotMetricCards(response: WorkbenchRiskSummaryResponse): {
 function mapSnapshotMetricCard(item: WorkbenchRiskMetric): PerformanceRiskMetricCard {
   return {
     key: item.key,
-    label: item.label,
+    label: SNAPSHOT_METRIC_LABELS[item.key] ?? item.label,
     value: item.state === "ready" || item.state === "partial" ? formatRiskMetric(item) : "N/A",
     support: describeSnapshotMetric(item),
     definition: defineSnapshotMetric(item),
@@ -1641,7 +1650,7 @@ function defineSnapshotMetric(metric: WorkbenchRiskMetric): string {
     case "SORTINO":
       return "Return delivered per unit of downside volatility.";
     case "VAR":
-      return "Value at Risk estimates the configured downside threshold over the selected horizon and confidence level.";
+      return "Value at risk estimates the configured downside threshold over the selected horizon and confidence level.";
     default:
       return metric.reason ?? "Risk measure definition unavailable.";
   }
@@ -1665,7 +1674,7 @@ function mapConcentrationIndicators(
   return [
     {
       key: "portfolio_hhi",
-      label: "Portfolio Concentration Index",
+      label: "Portfolio concentration index",
       value: formatNumber(payload.portfolio_concentration.hhi_current, { maximumFractionDigits: 0 }),
       support: "Position-level concentration across the live book",
       definition:
@@ -1673,7 +1682,7 @@ function mapConcentrationIndicators(
     },
     {
       key: "issuer_hhi",
-      label: "Issuer Concentration Index",
+      label: "Issuer concentration index",
       value: formatNumber(payload.issuer_concentration.hhi_current, { maximumFractionDigits: 0 }),
       support: "Issuer-level concentration after grouping",
       definition:
@@ -1682,7 +1691,7 @@ function mapConcentrationIndicators(
     },
     {
       key: "top_position_weight",
-      label: "Largest Position Weight",
+      label: "Largest position weight",
       value: formatRiskPercentValue(payload.single_position_concentration.top_position_weight_current),
       support: "Weight of the largest single holding",
       definition: "Weight of the single largest holding in the current portfolio.",
@@ -1690,7 +1699,7 @@ function mapConcentrationIndicators(
     },
     {
       key: "top_issuer_weight",
-      label: "Largest Issuer Weight",
+      label: "Largest issuer weight",
       value: formatRiskPercentValue(payload.issuer_concentration.top_issuer_weight_current),
       support: "Aggregated exposure to the largest issuer group",
       definition: "Combined weight of all holdings mapped to the largest issuer group.",
@@ -1698,7 +1707,7 @@ function mapConcentrationIndicators(
     },
     {
       key: "top_n_cumulative",
-      label: `Top ${payload.single_position_concentration.top_n} Weight`,
+      label: `Top ${payload.single_position_concentration.top_n} weight`,
       value: formatRiskPercentValue(
         payload.single_position_concentration.top_n_cumulative_weight_current
       ),
@@ -1855,7 +1864,7 @@ function mapDrawdownHeadlineMetrics(
   return [
     {
       key: "max_drawdown",
-      label: "Max Drawdown",
+      label: "Max drawdown",
       value: formatDrawdownPercent(summary.max_drawdown),
       support: describeDrawdownHeadlineMetric("max_drawdown", response, period),
       definition: "Largest realised peak-to-trough decline over the selected window.",
@@ -1863,7 +1872,7 @@ function mapDrawdownHeadlineMetrics(
     },
     {
       key: "relative_max_drawdown",
-      label: "Relative Max Drawdown",
+      label: "Relative max drawdown",
       value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
       support: describeDrawdownHeadlineMetric("relative_max_drawdown", response, period),
       definition:
@@ -1872,7 +1881,7 @@ function mapDrawdownHeadlineMetrics(
     },
     {
       key: "time_under_water_days",
-      label: "Time Under Water",
+      label: "Time under water",
       value: formatInteger(relative?.time_under_water_days ?? summary.time_under_water_days),
       support: describeDrawdownHeadlineMetric("time_under_water_days", response, period),
       definition: "Number of business days the portfolio remained below its prior peak.",
@@ -1880,7 +1889,7 @@ function mapDrawdownHeadlineMetrics(
     },
     {
       key: "recovery_status",
-      label: "Recovery Status",
+      label: "Recovery status",
       value: recoveryStatus,
       support: describeDrawdownHeadlineMetric("recovery_status", response, period),
       definition: "Whether the worst drawdown had recovered by the end of the selected window.",
@@ -1900,7 +1909,7 @@ function mapDrawdownSupportingMetrics(
   return [
     {
       key: "ulcer_index",
-      label: "Ulcer Index",
+      label: "Ulcer index",
       value: formatDrawdownPercent(summary.ulcer_index),
       support: "Shows how persistent and painful the underwater path was, not just how deep it got.",
       definition:
@@ -1988,7 +1997,7 @@ function mapRelativeDrawdownMetric(response: WorkbenchRiskDrawdownResponse) {
     return null;
   }
   return {
-    label: "Relative Max Drawdown",
+    label: "Relative max drawdown",
     value: relative ? formatDrawdownPercent(relative.max_drawdown) : "N/A",
     support:
       supportability?.reason ??
@@ -2158,15 +2167,15 @@ function resolveRollingMetricLabel(metricKey: string) {
     case "ROLLING_VOLATILITY":
       return "Volatility";
     case "ROLLING_MAX_DRAWDOWN":
-      return "Max Drawdown";
+      return "Max drawdown";
     case "ROLLING_SHARPE":
       return "Sharpe";
     case "ROLLING_BETA":
       return "Beta";
     case "ROLLING_TRACKING_ERROR":
-      return "Tracking Error";
+      return "Tracking error";
     case "ROLLING_INFORMATION_RATIO":
-      return "Information Ratio";
+      return "Information ratio";
     default:
       return metricKey.replaceAll("_", " ");
   }
@@ -2961,7 +2970,7 @@ function mapAttributionMethodologyRows(
     },
     {
       key: "annualization_basis",
-      label: "Annualization basis",
+      label: "Annualisation basis",
       value: formatInteger(methodologyContext.annualization_basis),
       support: "Periods used for annualised attribution metrics",
     },
@@ -3017,7 +3026,7 @@ function orderRollingMetricKeys(metricKeys: string[]) {
 }
 
 function shouldDisplayRollingMetricRow(metricLabel: string, latestValue: string) {
-  if ((metricLabel === "Sharpe" || metricLabel === "Information Ratio") && latestValue === "Unstable") {
+  if ((metricLabel === "Sharpe" || metricLabel === "Information ratio") && latestValue === "Unstable") {
     return false;
   }
   return true;

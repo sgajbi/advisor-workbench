@@ -1075,7 +1075,7 @@ describe("PerformanceAnalyticsPage", () => {
     );
     expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Typical");
     expect(screen.getByLabelText("Risk concentration indicator strip")).toHaveTextContent(
-      "Portfolio Concentration Index"
+      "Portfolio concentration index"
     );
     expect(screen.queryByLabelText("Risk concentration diagnostic table")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Risk support rail")).not.toBeInTheDocument();

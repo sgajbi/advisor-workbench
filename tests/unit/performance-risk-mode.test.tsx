@@ -412,7 +412,7 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(
         screen.getByLabelText("Risk drawdown headline metrics"),
-      ).toHaveTextContent("Relative Max Drawdown");
+      ).toHaveTextContent("Relative max drawdown");
     });
     expect(
       screen.getByLabelText("Risk drawdown headline metrics"),
@@ -445,7 +445,7 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
-          name: "Risk Snapshot methodology and coverage",
+          name: "Risk snapshot methodology and coverage",
         }),
       ).toBeInTheDocument();
     });
@@ -500,7 +500,7 @@ describe("PerformanceRiskMode", () => {
     );
     expect(
       within(concentrationMetricStrip)
-        .getByText("Portfolio Concentration Index")
+        .getByText("Portfolio concentration index")
         .closest(".performance-risk-concentration-indicator-tile"),
     ).toHaveAttribute(
       "title",

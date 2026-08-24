@@ -52,28 +52,28 @@ describe("buildPerformanceRiskViewModel", () => {
       "Volatility",
       "Sharpe",
       "Beta",
-      "Tracking Error",
+      "Tracking error",
     ]);
     expect(viewModel.snapshotSupportingMetrics.map((metric) => metric.label)).toEqual([
-      "Information Ratio",
+      "Information ratio",
       "Sortino",
-      "Value at Risk",
+      "Value at risk",
     ]);
     expect(viewModel.snapshotContextRows[0]).toMatchObject({
       label: "Portfolio observations",
     });
     expect(viewModel.concentrationIndicators.map((metric) => metric.label)).toEqual([
-      "Portfolio Concentration Index",
-      "Issuer Concentration Index",
-      "Largest Position Weight",
-      "Largest Issuer Weight",
-      "Top 10 Weight",
+      "Portfolio concentration index",
+      "Issuer concentration index",
+      "Largest position weight",
+      "Largest issuer weight",
+      "Top 10 weight",
     ]);
     expect(viewModel.concentrationIndicators).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Largest Position Weight", tone: "neutral" }),
-        expect.objectContaining({ label: "Largest Issuer Weight", tone: "warn" }),
-        expect.objectContaining({ label: "Top 10 Weight", tone: "neutral" }),
+        expect.objectContaining({ label: "Largest position weight", tone: "neutral" }),
+        expect.objectContaining({ label: "Largest issuer weight", tone: "warn" }),
+        expect.objectContaining({ label: "Top 10 weight", tone: "neutral" }),
       ]),
     );
     expect(JSON.stringify(viewModel.workspaceOverview)).not.toMatch(
@@ -123,13 +123,13 @@ describe("buildPerformanceRiskViewModel", () => {
       "rolling:rolling_time_series",
     ]);
     expect(viewModel.drawdownHeadlineMetrics.map((metric) => metric.label)).toEqual([
-      "Max Drawdown",
-      "Relative Max Drawdown",
-      "Time Under Water",
-      "Recovery Status",
+      "Max drawdown",
+      "Relative max drawdown",
+      "Time under water",
+      "Recovery status",
     ]);
     expect(viewModel.drawdownSupportingMetrics.map((metric) => metric.label)).toEqual([
-      "Ulcer Index",
+      "Ulcer index",
     ]);
     expect(viewModel.drawdownEpisodeInterpretation).toBeNull();
     expect(viewModel.drawdownContextRows[0]).toMatchObject({
