@@ -6549,6 +6549,17 @@ sources:
 These sources inform terminology and workflow hierarchy only. They do not transfer another
 provider's design, data, entitlement model, calculations, or product claims to Lotus.
 
+Performance implementation was reconfirmed on 2026-08-25 against two primary sources before the
+runtime terminology was introduced:
+
+1. [CFA Institute's time-weighted versus money-weighted return guidance](https://rpc.cfainstitute.org/sites/default/files/docs/codes-and-standards/introduction-to-the-gips-standards-for-asset-owners_requirements_online.pdf)
+   defines TWR as neutralising external-cash-flow effects and MWR as reflecting their timing and
+   size. Lotus therefore presents the two as different methods, never interchangeable figures.
+2. [BlackRock Aladdin investment accounting](https://www.blackrock.com/aladdin/platforms/products/aladdin-accounting)
+   separates official return production, valuation/performance oversight, and exception-based
+   control. Lotus adopts the source-owned, exception-led review principle without claiming Aladdin
+   parity, official-return status, or GIPS compliance.
+
 ### Adopted decisions
 
 1. Maintain one cross-domain meaning authority in
