@@ -53,7 +53,7 @@ describe("WorkbenchPage", () => {
     });
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Manage portfolio context")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Portfolio Management Decisions" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Portfolio management decisions" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Operating posture")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What needs review now" })).toBeInTheDocument();
@@ -193,10 +193,10 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getAllByRole("heading", { name: "Mandate Health" }).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Data readiness/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Data availability/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Selected mandate review item")).toBeInTheDocument();
-    expect(screen.getAllByText("Attention Required").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Health Dimensions Breakdown").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Attention items").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Mandate health dimensions").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Latest monitoring/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Market Data/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Stale price/i).length).toBeGreaterThan(0);

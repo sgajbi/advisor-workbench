@@ -1919,23 +1919,23 @@ export async function validateDpmCommandCenterPanel(
   });
   const mandatePanel = workbenchPanelByClass(page, "manage-mandate-panel");
   await expect(
-    mandatePanel.getByRole("heading", { name: "Mandate review workflow" }),
+    mandatePanel.getByRole("heading", { name: "Mandate review" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(mandatePanel.getByText("Mandate health", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(mandatePanel.getByText("Data readiness", { exact: true })).toBeVisible({
+  await expect(mandatePanel.getByText("Data availability", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    mandatePanel.getByRole("heading", { name: "Attention Required" }),
+    mandatePanel.getByRole("heading", { name: "Attention items" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    mandatePanel.getByRole("heading", { name: "Health Dimensions Breakdown" }),
+    mandatePanel.getByRole("heading", { name: "Mandate health dimensions" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });

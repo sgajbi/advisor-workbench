@@ -60,7 +60,7 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
     });
 
     await expect(
-      page.getByRole("heading", { name: "Portfolio Management Decisions" }),
+      page.getByRole("heading", { name: "Portfolio management decisions" }),
     ).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId("review-context-strip")).toHaveAttribute(
       "data-source-state",
@@ -70,9 +70,9 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
       "12,500,000.00 SGD",
     );
     await expect(page.getByLabel("Manage source evidence")).toBeVisible();
-    await expect(page.getByText("Data readiness", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Data availability", { exact: true })).toHaveCount(1);
     await expect(page.getByText("Rebalance status", { exact: true })).toHaveCount(1);
-    await expect(page.getByText("Active attention", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Open attention items", { exact: true })).toHaveCount(1);
     await expect(page.getByText("Next Actions", { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Open PM Quality", exact: true }),
