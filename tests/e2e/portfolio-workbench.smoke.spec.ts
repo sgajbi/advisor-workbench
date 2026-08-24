@@ -529,7 +529,7 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(reviewContext.getByText('Base currency', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Reporting currency', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
-      await expect(page.getByText('Valuation as of', { exact: true })).toHaveCount(0);
+      await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
       await expect(page.getByText('Benchmark', { exact: true })).toBeVisible();
       await expectWorkbenchRelationshipIntegrity(page, [
         'portfolio-review-workspace-rail-navigation',
@@ -681,8 +681,8 @@ test.describe('Portfolio workbench smoke', () => {
     await page.getByLabel('As of').fill('2026-04-01');
 
     await expect(page.getByText('Review date 01 Apr 2026')).toBeVisible();
-    await expect(page.getByText('Valuation as of 10 Apr 2026')).toBeVisible();
-    await expect(page.getByText('Valuation as of 01 Apr 2026')).toHaveCount(0);
+    await expect(page.getByText('Valuation date 10 Apr 2026')).toBeVisible();
+    await expect(page.getByText('Valuation date 01 Apr 2026')).toHaveCount(0);
     await expect(
       page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
     ).toBeVisible();
@@ -690,7 +690,7 @@ test.describe('Portfolio workbench smoke', () => {
     await page.getByLabel('As of').fill('2026-03-31');
 
     await expect(page.getByText('Review date 31 Mar 2026')).toBeVisible();
-    await expect(page.getByText('Valuation as of 31 Mar 2026')).toBeVisible();
+    await expect(page.getByText('Valuation date 31 Mar 2026')).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Portfolio value: 0 USD' }),
     ).toBeVisible();

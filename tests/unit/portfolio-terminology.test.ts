@@ -3,7 +3,10 @@ import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPortfolioDateFacts,
   formatShareOfPortfolioValue,
+  PORTFOLIO_REVIEW_DATE_LABEL,
+  PORTFOLIO_VALUATION_DATE_LABEL,
   PORTFOLIO_VALUE_LABEL,
 } from "../../src/apps/portfolio/portfolio-terminology";
 
@@ -54,6 +57,20 @@ describe("portfolio terminology", () => {
     expect(formatShareOfPortfolioValue("92.00%")).toBe(
       "92.00% of portfolio value",
     );
+  });
+
+  it("uses one date vocabulary and adds review date only when it differs", () => {
+    expect(
+      buildPortfolioDateFacts("2026-04-10", "2026-04-10"),
+    ).toEqual([
+      { label: PORTFOLIO_VALUATION_DATE_LABEL, date: "2026-04-10" },
+    ]);
+    expect(
+      buildPortfolioDateFacts("2026-04-10", "2026-04-01"),
+    ).toEqual([
+      { label: PORTFOLIO_VALUATION_DATE_LABEL, date: "2026-04-10" },
+      { label: PORTFOLIO_REVIEW_DATE_LABEL, date: "2026-04-01" },
+    ]);
   });
 
   it.each([
