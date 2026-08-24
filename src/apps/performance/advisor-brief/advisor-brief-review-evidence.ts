@@ -1,5 +1,8 @@
 import type { WorkbenchAdvisorBriefWorkflowPackRun } from "@/features/workbench/types";
 import type { AiHumanReviewState } from "@/design-system";
+import { resolveAdvisorBriefReviewerReference } from "./advisor-brief-review-actor.mjs";
+
+export { resolveAdvisorBriefReviewerReference } from "./advisor-brief-review-actor.mjs";
 
 type AdvisorBriefReviewEvidence = Pick<
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -19,8 +22,6 @@ const REVIEW_STATE_LABELS: Readonly<Record<string, string>> = {
   NOT_REVIEW_REQUIRED: "No review required",
 };
 
-const REVIEW_ACTOR_NAMESPACE = "review:";
-
 type AdvisorBriefHumanReview = {
   state: AiHumanReviewState;
   sourceRecorded: boolean;
@@ -34,20 +35,6 @@ export function normalizeAdvisorBriefStateCode(value: unknown): string {
 
 export function getAdvisorBriefReviewStateLabel(value: unknown): string {
   return REVIEW_STATE_LABELS[normalizeAdvisorBriefStateCode(value)] ?? "Not reported";
-}
-
-export function resolveAdvisorBriefReviewerReference(value: unknown): string | undefined {
-  const sourceActor = typeof value === "string" ? value.trim() : "";
-  if (!sourceActor) {
-    return undefined;
-  }
-
-  if (!sourceActor.startsWith(REVIEW_ACTOR_NAMESPACE)) {
-    return sourceActor;
-  }
-
-  const reviewerReference = sourceActor.slice(REVIEW_ACTOR_NAMESPACE.length).trim();
-  return reviewerReference || undefined;
 }
 
 export function buildAdvisorBriefHumanReview(

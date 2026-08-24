@@ -218,7 +218,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
-            latestReviewActor: "live.validator.accept",
+            latestReviewActor: "review:live.validator.accept",
           });
         }
         if (body.action_type === "SUPERSEDE") {
@@ -231,7 +231,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowId: "taskflow-explicit-net",
             taskFlowStatus: "SUPERSEDED",
             taskFlowSupportabilityStatus: "HISTORICAL",
-            latestReviewActor: "live.validator.supersede",
+            latestReviewActor: "review:live.validator.supersede",
           });
         }
         return createAdvisorBriefPayload({
@@ -243,7 +243,7 @@ describe("live validation workflow-pack proof", () => {
           taskFlowId: "taskflow-explicit-gross",
           taskFlowStatus: "SUPERSEDED",
           taskFlowSupportabilityStatus: "HISTORICAL",
-          latestReviewActor: "live.validator.revise",
+          latestReviewActor: "review:live.validator.revise",
         });
       },
     });
@@ -354,7 +354,7 @@ describe("live validation workflow-pack proof", () => {
             taskFlowStatus: "COMPLETED",
             taskFlowSupportabilityStatus: "READY",
             handoffStatus: "READY_FOR_HANDOFF",
-            latestReviewActor: "live.validator.ui",
+            latestReviewActor: "review:live.validator.ui",
           });
         }
         if (
@@ -507,6 +507,16 @@ describe("live validation workflow-pack proof", () => {
   it.each([
     [
       {
+        latest_review_event_at: "2026-04-21T03:22:00Z",
+        review_transition_count: 1,
+        has_review_history: true,
+        review_pending: false,
+      },
+      "returned no recorded reviewer",
+    ],
+    [
+      {
+        latest_review_actor: "review:",
         latest_review_event_at: "2026-04-21T03:22:00Z",
         review_transition_count: 1,
         has_review_history: true,
