@@ -1463,6 +1463,15 @@ Most relevant current governance:
     only when it changes prioritisation, and raw source references belong in progressive support
     detail. Cockpit, Manage Overview, and Advisory Overview use this pattern; Advisor Book retains
     a comparison register but follows the same compact-measure and progressive-evidence hierarchy.
+19. Hydration-sensitive relationships in shared interactive components use an explicit semantic
+    `relationshipIdBase` supplied by the owning business screen. The shared portfolio rail and
+    decision worklist derive every `id` and `aria-controls` value from that stable base; they must
+    not use render-order-generated ids, suppress hydration warnings, or become client-only to hide
+    an SSR mismatch. Production call sites must provide a screen-scoped base, and browser proof
+    must assert unique document ids, one present target for every relationship, and a clean console
+    on a fresh optimized-production document load. This rule remains valid after a framework
+    upgrade because semantic ownership is clearer and collision-safe; Next.js 16 certification is
+    tracked separately under #624.
 
 ## Context Maintenance Rule
 
