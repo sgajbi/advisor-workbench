@@ -6,6 +6,7 @@ import {
   type AiOutputAvailability,
   type AiPreparationMethod,
 } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 
 import {
   normalizeDpmAiWorkflowExecution,
@@ -332,7 +333,12 @@ function buildDiagnostics(normalized: NormalizedDpmAiExecution) {
       ? { label: "Safety outcome", value: normalized.safetyDisposition }
       : null,
     normalized.generatedAt
-      ? { label: "Prepared", value: normalized.generatedAt }
+      ? {
+          label: "Prepared",
+          value: formatTimestampValue(normalized.generatedAt, {
+            nullDisplay: "Not reported",
+          }),
+        }
       : null,
     normalized.providerId
       ? { label: "Execution provider", value: normalized.providerId }
