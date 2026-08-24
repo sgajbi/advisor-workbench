@@ -6,6 +6,28 @@ export const PERFORMANCE_RETURN_LABELS = {
   moneyWeightedReturn: "Money-weighted return (MWR)",
 } as const;
 
+export const PERFORMANCE_RETURN_TABLE_LABELS = {
+  segmentTwr: "TWR",
+  netTwr: "Net TWR",
+  grossTwr: "Gross TWR",
+  cumulativePortfolioTwr: "Cumulative portfolio TWR",
+  cumulativeBenchmarkTwr: "Cumulative benchmark TWR",
+  cumulativeActiveReturn: "Cumulative active return",
+  cumulativeNetTwr: "Cumulative net TWR",
+  cumulativeGrossTwr: "Cumulative gross TWR",
+  annualisedNetTwr: "Annualised net TWR",
+  annualisedGrossTwr: "Annualised gross TWR",
+} as const;
+
+export const PERFORMANCE_ECONOMICS_LABELS = {
+  openingMarketValue: "Opening market value",
+  endingMarketValue: "Ending market value",
+  flowAdjustedMarketValue: "Flow-adjusted market value",
+  openingCashFlow: "Opening cash flow",
+  closingCashFlow: "Closing cash flow",
+  netCashFlow: "Net cash flow",
+} as const;
+
 export const PERFORMANCE_RETURN_DEFINITIONS = {
   timeWeightedReturn:
     "Time-weighted return (TWR) measures portfolio performance while removing the effect of the timing and size of external cash flows.",

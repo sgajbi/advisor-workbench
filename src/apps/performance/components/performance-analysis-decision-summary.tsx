@@ -10,6 +10,7 @@ import {
   formatPerformancePositionLabel,
   formatPct,
 } from "../formatters";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
 import type { WorkbenchPerformanceWorkspace } from "@/features/workbench/types";
 import {
   getTopContributionRows,
@@ -59,7 +60,7 @@ export default function PerformanceAnalysisDecisionSummary({
   const cards = [
     analysisActiveReturn != null
       ? {
-          label: "Active Return",
+          label: PERFORMANCE_RETURN_LABELS.activeReturn,
           value: formatPct(analysisActiveReturn),
           support: selectedPerformance.benchmark_id
             ? "Benchmark-relative outcome"
@@ -70,7 +71,7 @@ export default function PerformanceAnalysisDecisionSummary({
       : null,
     attribution?.sum_of_effects_pct != null
       ? {
-          label: "Effects Sum",
+          label: "Sum of effects",
           value: formatPct(attribution.sum_of_effects_pct),
           support: attribution.model
             ? `${attribution.model} model`
@@ -95,7 +96,7 @@ export default function PerformanceAnalysisDecisionSummary({
       : null,
     attributionPosture?.state !== "supported"
       ? {
-          label: "Attribution Posture",
+          label: "Attribution availability",
           value: attributionPosture?.state === "partial" ? "Partial" : "Unavailable",
           support: attributionPosture?.reason ?? "Source supportability qualification",
           definition:
@@ -104,7 +105,7 @@ export default function PerformanceAnalysisDecisionSummary({
       : null,
     contributionCoverage != null
       ? {
-          label: "Contribution Coverage",
+          label: "Contribution coverage",
           value: formatPct(contributionCoverage),
           support: topDriverLabel ? `Top driver ${topDriverLabel}` : "Contribution coverage",
           definition:
@@ -117,7 +118,7 @@ export default function PerformanceAnalysisDecisionSummary({
     <section aria-label="Analysis decision summary">
       <Panel className="performance-analysis-summary-band performance-analysis-summary-band-compact">
         <div className="performance-analysis-summary-band-copy">
-          <span className="performance-analysis-summary-band-kicker">Analysis Snapshot</span>
+          <span className="performance-analysis-summary-band-kicker">Analysis snapshot</span>
           <Text variant="secondary" className="performance-analysis-summary-band-lead">
             {headline}
           </Text>

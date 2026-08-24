@@ -93,17 +93,17 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(
       horizonTable.closest(".performance-horizon-table.analytics-table-variant-observation")
     ).toBeTruthy();
-    expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Closing Cash Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Gross Return")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cumulative Gross")).not.toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Active")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening market value")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Closing cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-adjusted market value")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Gross TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee drag")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative net TWR")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative gross TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative benchmark TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative active return")).toBeInTheDocument();
     expect(within(horizonTable).getAllByText("$450,000")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("$26,000")).toHaveLength(2);
     expect(within(horizonTable).getAllByText("-$3,500")).toHaveLength(2);
@@ -126,26 +126,26 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(
       document.querySelector("[data-performance-comparison-display='override']"),
     ).toBeTruthy();
-    expect(within(horizonTable).queryByText("Opening MV")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Opening Cash Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Closing Cash Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Flow-Adjusted MV")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Net Flow")).not.toBeInTheDocument();
-    expect(within(horizonTable).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Benchmark")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Opening market value")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Opening cash flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Closing cash flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Flow-adjusted market value")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net cash flow")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Benchmark TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative net TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative benchmark TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualised net TWR")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Evidence columns"), {
       target: { value: "economics" },
     });
-    expect(within(horizonTable).getByText("Opening MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Opening Cash Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Closing Cash Flow")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Flow-Adjusted MV")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Net Flow")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Benchmark Return")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cumulative Active")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening market value")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Opening cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Closing cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Flow-adjusted market value")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net cash flow")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Benchmark TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative active return")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Return comparison"), {
       target: { value: "relative" },
@@ -159,12 +159,12 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.change(screen.getByLabelText("Evidence columns"), {
       target: { value: "combined" },
     });
-    expect(within(horizonTable).getByText("Net Return")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Net")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Annualized Net")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Gross Return")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cumulative Gross")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Net TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative net TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualised net TWR")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Gross TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative gross TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee drag")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Basis comparison"), {
       target: { value: "both" },
@@ -172,8 +172,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     expect(screen.getByLabelText("Horizon comparison display context")).toHaveTextContent(
       "Comparison display overrideNet and gross basis · Relative return view",
     );
-    expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Fee Drag")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Fee drag")).toBeInTheDocument();
     expect(within(horizonTable).getAllByText("5.88%").length).toBeGreaterThan(0);
     expect(within(horizonTable).getAllByText("0.46%").length).toBeGreaterThan(0);
     fireEvent.change(screen.getByLabelText("Return comparison"), {
@@ -188,12 +188,12 @@ describe("PerformanceMultiHorizonPanel", () => {
     fireEvent.change(screen.getByLabelText("Basis comparison"), {
       target: { value: "gross" },
     });
-    expect(within(horizonTable).getByText("Gross Return")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Cumulative Gross")).toBeInTheDocument();
-    expect(within(horizonTable).getByText("Annualized Gross")).toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Net Return")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Cumulative Net")).not.toBeInTheDocument();
-    expect(within(horizonTable).queryByText("Fee Drag")).not.toBeInTheDocument();
+    expect(within(horizonTable).getByText("Gross TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Cumulative gross TWR")).toBeInTheDocument();
+    expect(within(horizonTable).getByText("Annualised gross TWR")).toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Net TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Cumulative net TWR")).not.toBeInTheDocument();
+    expect(within(horizonTable).queryByText("Fee drag")).not.toBeInTheDocument();
     expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(1);
     expect(getHorizonComparisonClientMock).toHaveBeenCalledWith("PF_1001", {
       period: "YTD",
@@ -290,8 +290,8 @@ describe("PerformanceMultiHorizonPanel", () => {
     ).toBeTruthy();
     fireEvent.click(screen.getByText("Detailed table"));
     const table = screen.getByLabelText("Multi-horizon return table");
-    expect(within(table).getByText("Gross Return")).toBeInTheDocument();
-    expect(within(table).queryByText("Net Return")).not.toBeInTheDocument();
+    expect(within(table).getByText("Gross TWR")).toBeInTheDocument();
+    expect(within(table).queryByText("Net TWR")).not.toBeInTheDocument();
     expect(screen.getByLabelText("MTD Active")).toBeInTheDocument();
 
     view.rerender(
@@ -313,8 +313,8 @@ describe("PerformanceMultiHorizonPanel", () => {
       );
     });
     const resetTable = screen.getByLabelText("Multi-horizon return table");
-    expect(within(resetTable).getByText("Net Return")).toBeInTheDocument();
-    expect(within(resetTable).queryByText("Gross Return")).not.toBeInTheDocument();
+    expect(within(resetTable).getByText("Net TWR")).toBeInTheDocument();
+    expect(within(resetTable).queryByText("Gross TWR")).not.toBeInTheDocument();
   });
 
   it("reuses cached horizon data when rerendered with the same analytical inputs", async () => {

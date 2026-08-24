@@ -705,10 +705,10 @@ describe("PerformanceAnalyticsPage", () => {
       "tabindex",
       "0",
     );
-    expect(within(returnHistory).getByText("Portfolio")).toBeInTheDocument();
-    expect(within(returnHistory).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(returnHistory).queryByText("Active")).not.toBeInTheDocument();
-    expect(within(returnHistory).queryByText("Cum. Active")).not.toBeInTheDocument();
+    expect(within(returnHistory).getByText("Portfolio TWR")).toBeInTheDocument();
+    expect(within(returnHistory).getByText("Benchmark TWR")).toBeInTheDocument();
+    expect(within(returnHistory).queryByText("Active return")).not.toBeInTheDocument();
+    expect(within(returnHistory).queryByText("Cumulative active return")).not.toBeInTheDocument();
     expect(mainShell?.querySelector(".performance-detail-grid")).toBeTruthy();
   });
 
@@ -881,7 +881,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByRole("group", { name: "Return-path presentation" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radiogroup", { name: "Return view" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Analysis decision summary")).toHaveTextContent(
-      "Analysis Snapshot"
+      "Analysis snapshot"
     );
     expect(screen.queryByLabelText("Analysis evidence gaps")).not.toBeInTheDocument();
     expect(await screen.findByText("Attribution Observation")).toBeInTheDocument();
@@ -1398,7 +1398,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.queryByRole("tab", { name: /^Relative Segment Context/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Attribution Summary")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Asset Class attribution totals")).toBeInTheDocument();
-    expect(await screen.findByText("Summary Total")).toBeInTheDocument();
+    expect(await screen.findByText("Summary total")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Relative Segment Context" })

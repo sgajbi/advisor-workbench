@@ -53,12 +53,12 @@ describe("PerformanceAnalysisAttributionSection", () => {
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution table")).toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution effect legend")).not.toBeInTheDocument();
-    expect(screen.getByText("Active Weight")).toBeInTheDocument();
-    expect(screen.getByText("Active Return")).toBeInTheDocument();
+    expect(screen.getByText("Active weight")).toBeInTheDocument();
+    expect(screen.getByText("Active return")).toBeInTheDocument();
     expect(screen.getByText("Allocation")).toBeInTheDocument();
     expect(screen.getByText("Selection")).toBeInTheDocument();
     expect(screen.getByText("Interaction")).toBeInTheDocument();
-    expect(screen.getByText("Total Effect")).toBeInTheDocument();
+    expect(screen.getByText("Total effect")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Attribution Detail methodology and coverage" }));
 
@@ -123,11 +123,11 @@ describe("PerformanceAnalysisAttributionSection", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution summary metrics")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Asset Class attribution totals")).toBeInTheDocument();
-    expect(screen.getByText("Summary Total")).toBeInTheDocument();
+    expect(screen.getByText("Summary total")).toBeInTheDocument();
     expect(screen.getByText("Allocation")).toBeInTheDocument();
     expect(screen.getByText("Selection")).toBeInTheDocument();
     expect(screen.getByText("Interaction")).toBeInTheDocument();
-    expect(screen.getByText("Total Effect")).toBeInTheDocument();
+    expect(screen.getByText("Total effect")).toBeInTheDocument();
     expect(screen.queryByLabelText("Asset Class attribution table")).not.toBeInTheDocument();
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByText("Top Active Effects")).not.toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("PerformanceAnalysisAttributionSection", () => {
         "Sector attribution detail is unavailable because the selected benchmark does not expose complete sector classification for every component."
       )
     ).toBeInTheDocument();
-    expect(screen.queryByText("Summary Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("Summary total")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Sector attribution totals")).not.toBeInTheDocument();
   });
 
@@ -173,16 +173,16 @@ describe("PerformanceAnalysisAttributionSection", () => {
 
     const table = screen.getByLabelText("Asset Class attribution table");
     expect(table).toBeInTheDocument();
-    expect(within(table).getByText("Portfolio Weight")).toBeInTheDocument();
-    expect(within(table).getByText("Benchmark Weight")).toBeInTheDocument();
-    expect(within(table).getByText("Active Weight")).toBeInTheDocument();
-    expect(within(table).getByText("Portfolio Return")).toBeInTheDocument();
-    expect(within(table).getByText("Benchmark Return")).toBeInTheDocument();
-    expect(within(table).getByText("Active Return")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio weight")).toBeInTheDocument();
+    expect(within(table).getByText("Benchmark weight")).toBeInTheDocument();
+    expect(within(table).getByText("Active weight")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio TWR")).toBeInTheDocument();
+    expect(within(table).getByText("Benchmark TWR")).toBeInTheDocument();
+    expect(within(table).getByText("Active return")).toBeInTheDocument();
     expect(within(table).getByText("Allocation")).toBeInTheDocument();
     expect(within(table).getByText("Selection")).toBeInTheDocument();
     expect(within(table).getByText("Interaction")).toBeInTheDocument();
-    expect(within(table).getByText("Total Effect")).toBeInTheDocument();
+    expect(within(table).getByText("Total effect")).toBeInTheDocument();
   });
 
   it("keeps domain-authored effect totals authoritative when detail rows disagree", () => {
