@@ -273,6 +273,44 @@ describe("ProofPackPanel", () => {
     expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
   });
 
+  it("adopts refreshed shared server evidence before any local action", () => {
+    const refreshedProofPack: DpmProofPackGatewayResponse = {
+      ...readyProofPack,
+      correlation_id: "corr-refreshed-server-pack",
+      data: {
+        ...readyProofPack.data,
+        proof_pack: {
+          ...(readyProofPack.data.proof_pack as Record<string, unknown>),
+          decision_summary: {
+            approval_state: "REVIEW_PENDING",
+            business_rationale: "Refreshed source evidence is under review.",
+          },
+        },
+      },
+    };
+
+    function Harness({ serverPack }: { serverPack: DpmProofPackGatewayResponse }) {
+      return (
+        <ManageProofPackStateProvider initialProofPack={serverPack}>
+          <ProofPackPanel
+            portfolioId="PB_SG_GLOBAL_BAL_001"
+            outcomeReviews={outcomeReviews}
+            rebalanceSnapshot={rebalanceSnapshot}
+            initialProofPack={serverPack}
+          />
+        </ManageProofPackStateProvider>
+      );
+    }
+
+    const { rerender } = render(<Harness serverPack={readyProofPack} />);
+    expect(screen.getByText("Signature Pending")).toBeInTheDocument();
+
+    rerender(<Harness serverPack={refreshedProofPack} />);
+
+    expect(screen.getByText("Review Pending")).toBeInTheDocument();
+    expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
+  });
+
   it("loads evidence detail and handoff payloads", async () => {
     vi.mocked(getDpmProofPack).mockResolvedValue(readyProofPack);
     vi.mocked(getDpmProofPackMarkdown).mockResolvedValue({
