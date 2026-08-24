@@ -71,6 +71,8 @@ describe("outcome review view model", () => {
         proofPackId: "ppack_1",
         expectedSnapshotHash: "sha256:expected",
         realizedSnapshotHash: "sha256:realized",
+        retentionUntil: "24 Feb 2033",
+        updatedAt: "24 Feb 2026, 10:00 UTC",
         reportInputBlocked: false,
         aiEvidenceBlocked: false,
       })
@@ -92,6 +94,25 @@ describe("outcome review view model", () => {
         hash: "sha256:perf",
       })
     );
+  });
+
+  it("fails closed when outcome audit and retention dates are not valid source values", () => {
+    const model = buildOutcomeReviewPanelModel(
+      response({
+        items: [
+          {
+            outcome_review_id: "or_invalid_time",
+            updated_at: "2026-02-24T10:00:00",
+            retain_until: "2033-02-29",
+          },
+        ],
+      }),
+    );
+
+    expect(model.items[0]?.updatedAt).toBe("Not reported");
+    expect(model.items[0]?.retentionUntil).toBe("Not reported");
+    expect(JSON.stringify(model)).not.toContain("2026-02-24T10:00:00");
+    expect(JSON.stringify(model)).not.toContain("2033-02-29");
   });
 
   it("maps manage RFC-0042 source lineage fields without degrading them to N/A", () => {

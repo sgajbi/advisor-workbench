@@ -7,24 +7,24 @@ describe("OutcomeReviewDetailContext", () => {
   it("renders selected review timing and source-reference posture", () => {
     render(
       <OutcomeReviewDetailContext
-        updatedAt="2026-05-13T09:35:00Z"
-        retentionUntil="2026-12-31"
+        updatedAt="13 May 2026, 09:35 UTC"
+        retentionUntil="31 Dec 2026"
         sourceReferenceCount={4}
       />,
     );
 
     const context = screen.getByLabelText("Selected review source posture");
 
-    expect(context).toHaveTextContent("Updated 2026-05-13T09:35:00Z");
-    expect(context).toHaveTextContent("Retention 2026-12-31");
+    expect(context).toHaveTextContent("Updated 13 May 2026, 09:35 UTC");
+    expect(context).toHaveTextContent("Retention 31 Dec 2026");
     expect(context).toHaveTextContent("4 source refs");
   });
 
   it("keeps source lineage identifiers and unsupported workflow controls out of the row", () => {
     render(
       <OutcomeReviewDetailContext
-        updatedAt="2026-05-13T09:35:00Z"
-        retentionUntil="2026-12-31"
+        updatedAt="13 May 2026, 09:35 UTC"
+        retentionUntil="31 Dec 2026"
         sourceReferenceCount={1}
       />,
     );
