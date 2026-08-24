@@ -23,6 +23,12 @@ describe("PortfolioSummaryHeaderSection", () => {
     expect(screen.queryByText("Valuation as of 12 May 2026")).not.toBeInTheDocument();
     expect(screen.getByText("1,000,000 USD")).toBeInTheDocument();
     expect(screen.getByText("Portfolio value")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Portfolio value:/ }),
+    ).toHaveAttribute(
+      "title",
+      "Total portfolio market value in the portfolio base currency at the stated valuation date.",
+    );
     expect(screen.getByText("92.00% of portfolio value")).toBeInTheDocument();
     expect(screen.getByText("8.00% of portfolio value")).toBeInTheDocument();
     expect(screen.queryByText("AUM")).not.toBeInTheDocument();

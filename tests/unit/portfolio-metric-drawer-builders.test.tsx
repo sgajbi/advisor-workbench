@@ -18,7 +18,8 @@ describe("portfolio metric drawer builders", () => {
 
     expect(drawer).toMatchObject({
       title: "Portfolio value",
-      subtitle: "Current market value of the selected portfolio in its base currency.",
+      subtitle:
+        "Total portfolio market value in the portfolio base currency at the stated valuation date.",
     });
     expect(drawer.summaryItems).toContainEqual({
       label: "Value",

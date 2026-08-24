@@ -9,6 +9,7 @@ import {
 } from "../portfolio-summary-view-model";
 import {
   formatShareOfPortfolioValue,
+  PORTFOLIO_VALUE_COPY,
   PORTFOLIO_VALUE_LABEL,
 } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
@@ -38,8 +39,7 @@ export default function PortfolioSummaryHeaderSection({
               key: "portfolio_value",
               label: PORTFOLIO_VALUE_LABEL,
               value: formatCurrency(workspace.summary.market_value_base, workspace.portfolio.base_currency, 0),
-              definition:
-                "Total portfolio market value in the portfolio base currency at the stated valuation date.",
+              definition: PORTFOLIO_VALUE_COPY.description,
               support: "Portfolio base currency",
               onClick: () => onOpenMetricDrawer("portfolio_value"),
             },
