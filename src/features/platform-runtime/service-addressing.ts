@@ -37,6 +37,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
       "cashflow",
       "allocation-recovery",
       "income-activity",
+      "review-context-states",
       "shell-unavailable",
       "positions-status",
       "transactions-status",
