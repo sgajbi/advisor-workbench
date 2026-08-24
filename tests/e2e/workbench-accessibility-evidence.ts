@@ -225,3 +225,38 @@ export async function collectReviewContextOwnershipEvidence(
     }));
   }, facts);
 }
+
+export async function collectReviewContextTypographyEvidence(page: Page) {
+  return page.evaluate(() => {
+    const reviewContext = document.querySelector<HTMLElement>(
+      '[data-testid="review-context-strip"]'
+    );
+    const elements = {
+      eyebrow: reviewContext?.querySelector<HTMLElement>(':scope > div:first-child > span'),
+      factLabel: reviewContext?.querySelector<HTMLElement>(':scope > dl dt'),
+      factValue: reviewContext?.querySelector<HTMLElement>(':scope > dl dd'),
+      supportControl: reviewContext?.querySelector<HTMLElement>(':scope > details > summary'),
+    };
+
+    return Object.fromEntries(
+      Object.entries(elements).map(([role, element]) => {
+        if (!element) {
+          throw new Error(`Review Context typography role ${role} is not rendered.`);
+        }
+        const style = getComputedStyle(element);
+        return [
+          role,
+          {
+            text: element.textContent?.trim() ?? '',
+            fontFamily: style.fontFamily,
+            fontSize: style.fontSize,
+            fontWeight: style.fontWeight,
+            lineHeight: style.lineHeight,
+            letterSpacing: style.letterSpacing,
+            textTransform: style.textTransform,
+          },
+        ];
+      })
+    );
+  });
+}
