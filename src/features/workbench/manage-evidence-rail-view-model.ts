@@ -4,6 +4,10 @@ import {
   type ManageWorkspaceData,
 } from "@/features/workbench/manage-workspace-data";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import {
+  buildProofPackPanelModel,
+  type ProofPackPanelState,
+} from "@/features/workbench/proof-pack-view-model";
 
 export type ManageEvidenceRailItem = {
   label: string;
@@ -27,9 +31,13 @@ export function buildManageEvidenceRailModel(
   const hasEvidencePackReference = Boolean(
     readDpmProofPackId(data.outcomeReviews?.data ?? null),
   );
-  const hasRetrievedEvidencePack = data.proofPack !== null;
-  const evidencePackValue = hasRetrievedEvidencePack
-    ? "Available"
+  const proofPackModel = data.proofPack
+    ? buildProofPackPanelModel(data.proofPack)
+    : null;
+  const hasUsableEvidencePack =
+    proofPackModel?.state === "ready" || proofPackModel?.state === "partial";
+  const evidencePackValue = proofPackModel
+    ? evidencePackPostureLabel(proofPackModel.state)
     : data.proofPackError
       ? "Temporarily unavailable"
       : hasEvidencePackReference
@@ -40,7 +48,7 @@ export function buildManageEvidenceRailModel(
 
   return {
     headline:
-      hasRetrievedEvidencePack || hasTraceableMonitoring
+      hasUsableEvidencePack || hasTraceableMonitoring
         ? "Source evidence available"
         : "Source evidence needs confirmation",
     items: [
@@ -58,4 +66,21 @@ export function buildManageEvidenceRailModel(
       },
     ],
   };
+}
+
+function evidencePackPostureLabel(state: ProofPackPanelState): string {
+  switch (state) {
+    case "ready":
+      return "Available";
+    case "partial":
+      return "Partially available";
+    case "blocked":
+      return "Blocked";
+    case "unsupported":
+      return "Not supported";
+    case "empty":
+      return "Not linked";
+    case "unavailable":
+      return "Temporarily unavailable";
+  }
 }

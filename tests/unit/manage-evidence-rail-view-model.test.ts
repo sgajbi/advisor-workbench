@@ -2,6 +2,30 @@ import { describe, expect, it } from "vitest";
 
 import { buildManageEvidenceRailModel } from "../../src/features/workbench/manage-evidence-rail-view-model";
 import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
+import type { DpmProofPackGatewayResponse } from "../../src/features/workbench/types";
+
+function buildProofPackResponse(
+  state: string,
+  proofPackId: string | null,
+): DpmProofPackGatewayResponse {
+  return {
+    correlation_id: `corr_${state.toLowerCase()}`,
+    contract_version: "v1",
+    source_service: "lotus-manage",
+    upstream_status: 200,
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:proof-pack",
+      state,
+      proof_pack_id: proofPackId,
+      reason_codes: [`PROOF_PACK_${state}`],
+      markdown_available: state === "READY",
+      report_input_available: state === "READY",
+      ai_evidence_input_available: state === "READY",
+    },
+    data: proofPackId ? { proof_pack_id: proofPackId } : {},
+  };
+}
 
 describe("Manage evidence rail view model", () => {
   it("publishes only source-evidence facts that are distinct from overview posture", () => {
@@ -28,7 +52,7 @@ describe("Manage evidence rail view model", () => {
     expect(model).toEqual({
       headline: "Source evidence available",
       items: [
-        { label: "Evidence pack", value: "Available" },
+        { label: "Evidence pack", value: "Partially available" },
         { label: "Monitoring record", value: "Ready" },
         { label: "Traceability", value: "Available" },
       ],
@@ -111,6 +135,50 @@ describe("Manage evidence rail view model", () => {
     expect(buildManageEvidenceRailModel(data).items[0]).toEqual({
       label: "Evidence pack",
       value: "Referenced; not retrieved",
+    });
+  });
+
+  it.each([
+    ["BLOCKED", "ppack_blocked", "Blocked"],
+    ["UNSUPPORTED", "ppack_unsupported", "Not supported"],
+    ["SUPPORTED", null, "Not linked"],
+    ["DEGRADED", null, "Temporarily unavailable"],
+  ])(
+    "does not claim a %s response is available when the normalized pack posture is not usable",
+    (state, proofPackId, expectedValue) => {
+      const data = buildManageWorkspaceData({
+        commandCenter: null,
+        mandateHealth: null,
+        outcomeReviews: null,
+        proofPack: buildProofPackResponse(state, proofPackId),
+      });
+
+      expect(buildManageEvidenceRailModel(data)).toEqual({
+        headline: "Source evidence needs confirmation",
+        items: [
+          { label: "Evidence pack", value: expectedValue },
+          { label: "Monitoring record", value: "Not available" },
+          { label: "Traceability", value: "Not available" },
+        ],
+      });
+    },
+  );
+
+  it("distinguishes a partial retrieved pack from complete evidence", () => {
+    const data = buildManageWorkspaceData({
+      commandCenter: null,
+      mandateHealth: null,
+      outcomeReviews: null,
+      proofPack: buildProofPackResponse("PARTIAL", "ppack_partial"),
+    });
+
+    expect(buildManageEvidenceRailModel(data)).toEqual({
+      headline: "Source evidence available",
+      items: [
+        { label: "Evidence pack", value: "Partially available" },
+        { label: "Monitoring record", value: "Not available" },
+        { label: "Traceability", value: "Not available" },
+      ],
     });
   });
 });
