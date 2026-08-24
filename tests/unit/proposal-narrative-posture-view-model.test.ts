@@ -49,7 +49,22 @@ describe("proposal narrative posture view model", () => {
     expect(model.sourceNarrativeHash).toBe("sha256:narrative-001");
     expect(model.eventCount).toBe(2);
     expect(model.latestEventLabel).toBe("Report Requested");
+    expect(model.latestEventTime).toBe("22 May 2026, 09:00 UTC");
     expect(model.policyVersion).toBe("proposal-narrative-deterministic.v1");
+  });
+
+  it("fails closed when a delivery event omits timezone evidence", () => {
+    const model = buildProposalNarrativePostureModel({
+      events: {
+        event_count: 1,
+        latest_event: {
+          event_type: "REPORT_REQUESTED",
+          occurred_at: "2026-05-22T09:00:00",
+        },
+      },
+    });
+
+    expect(model.latestEventTime).toBe("Not reported");
   });
 
   it("keeps missing posture explicit instead of inventing client-ready state", () => {

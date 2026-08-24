@@ -1,6 +1,7 @@
 import { Alert, Button, Divider, FormControlLabel, Switch } from "@mui/material";
 
 import { SemanticBadge, Text } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import {
   querySourceAvailability,
   type QuerySourcePosture,
@@ -176,7 +177,11 @@ export function ProposalEvidenceControlsPanel({
         <div className={detailStyles.loadedVersion}>
           <Text variant="cardTitle">Loaded Version {String(versionLookup.version_no ?? versionLookupNo)}</Text>
           <Text variant="metadata">Status at creation: {String(versionLookup.status_at_creation ?? "N/A")}</Text>
-          <Text variant="metadata">Created at: {String(versionLookup.created_at ?? "N/A")}</Text>
+          <Text variant="metadata">
+            Created at: {formatTimestampValue(versionLookup.created_at, {
+              nullDisplay: "Not reported",
+            })}
+          </Text>
           <Text variant="metadata">Artifact hash: {String(versionLookup.artifact_hash ?? "N/A")}</Text>
         </div>
       ) : null}
@@ -232,7 +237,11 @@ export function ProposalLineageAuditPanel({
           {lineageVersions.map((version) => (
             <div key={`lineage-${String(version.version_no ?? "na")}`}>
               <strong>Version {String(version.version_no ?? "N/A")}</strong>
-              <span>{String(version.created_at ?? "Created time unavailable")}</span>
+              <span>
+                {formatTimestampValue(version.created_at, {
+                  nullDisplay: "Created time not reported",
+                })}
+              </span>
             </div>
           ))}
         </div>

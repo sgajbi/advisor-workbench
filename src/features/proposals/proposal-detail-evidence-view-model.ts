@@ -1,3 +1,5 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+
 import type {
   ProposalDetailData,
   ProposalLineageData,
@@ -53,7 +55,7 @@ export function buildProposalDetailEvidenceModel({
     typeof evidenceHashes.simulation_hash === "string"
       ? evidenceHashes.simulation_hash
       : undefined;
-  const generatedAt =
+  const sourceGeneratedAt =
     typeof artifact.generated_at === "string"
       ? artifact.generated_at
       : typeof currentVersion.created_at === "string"
@@ -61,6 +63,9 @@ export function buildProposalDetailEvidenceModel({
         : typeof evidence?.generated_at === "string"
           ? evidence.generated_at
           : undefined;
+  const generatedAt = sourceGeneratedAt
+    ? formatTimestampValue(sourceGeneratedAt, { nullDisplay: "Not reported" })
+    : undefined;
   const workflowStage = proposalStageOrder(data.proposal.current_state);
   const visibleWorkflowEvents = workflow?.events?.slice(0, 8) ?? [];
 

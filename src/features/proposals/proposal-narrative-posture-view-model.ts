@@ -1,3 +1,5 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+
 import type {
   ProposalDeliveryEventsData,
   ProposalDeliverySummaryData,
@@ -60,7 +62,9 @@ export function buildProposalNarrativePostureModel({
     sourceNarrativeHash,
     eventCount: events?.event_count ?? events?.events?.length ?? 0,
     latestEventLabel: normalizeLabel(latestEvent?.event_type, "No Delivery Event"),
-    latestEventTime: latestEvent?.occurred_at ?? null,
+    latestEventTime: latestEvent?.occurred_at
+      ? formatTimestampValue(latestEvent.occurred_at, { nullDisplay: "Not reported" })
+      : null,
     policyVersion: review?.policy_version ?? null,
   };
 }
