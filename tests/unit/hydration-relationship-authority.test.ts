@@ -58,4 +58,20 @@ describe("hydration relationship authority", () => {
       ).toEqual([]);
     },
   );
+
+  it("keeps every production relationship base distinct", () => {
+    const relationshipBases = ["PortfolioScreenRail", "WorkbenchWorklist"].flatMap(
+      (componentName) =>
+        collectComponentTags(componentName).map(({ tag }) => {
+          const match = tag.match(
+            /relationshipIdBase=(?:"([^"]+)"|\{`([^`]+)`\})/,
+          );
+          expect(match, `${componentName} must use an inspectable semantic base.`).not.toBeNull();
+          return match?.[1] ?? match?.[2] ?? "";
+        }),
+    );
+
+    expect(relationshipBases.length).toBeGreaterThan(0);
+    expect(new Set(relationshipBases).size).toBe(relationshipBases.length);
+  });
 });
