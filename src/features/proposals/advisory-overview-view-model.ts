@@ -110,7 +110,9 @@ export function buildAdvisoryOverviewModel({
       status: proposalDecisionStatus(proposal.current_state),
       statusTone: proposalStageTone(proposal.current_state),
       nextAction: proposalNextAction(proposal.current_state),
-      sourceOwner: proposal.created_by?.trim() || "Not reported",
+      sourceOwner: proposal.created_by?.trim()
+        ? "Recorded by source"
+        : "Not reported",
       recordedAt: formatTimestampValue(proposal.created_at, {
         nullDisplay: "Not reported",
       }),
