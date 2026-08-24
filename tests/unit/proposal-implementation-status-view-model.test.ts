@@ -14,7 +14,21 @@ describe("proposal implementation status view model", () => {
     expect(model.handoff.nextAction).toContain("Monitor source updates");
     expect(model.version.label).toBe("Current version");
     expect(model.event?.type).toBe("Execution Accepted");
+    expect(model.event?.occurredAt).toBe("20 Aug 2026, 09:05 UTC");
+    expect(model.lineage.freshness).toBe("20 Aug 2026, 09:05 UTC");
     expect(model.boundary).toContain("settlement");
+  });
+
+  it("normalizes offset-bearing implementation evidence to the disclosed UTC clock", () => {
+    const envelope = proposalImplementationStatusFixture();
+    envelope.data.latest_workflow_event!.occurred_at = "2026-08-20T17:05:00+08:00";
+    envelope.data.freshness.observed_at = "2026-08-20T17:05:00+08:00";
+
+    const model = buildProposalImplementationStatusModel(envelope);
+
+    expect(model.event?.occurredAt).toBe("20 Aug 2026, 09:05 UTC");
+    expect(model.lineage.freshness).toBe("20 Aug 2026, 09:05 UTC");
+    expect(JSON.stringify(model)).not.toContain("2026-08-20T17:05:00+08:00");
   });
 
   it("keeps historical-version handoff evidence visibly distinct", () => {

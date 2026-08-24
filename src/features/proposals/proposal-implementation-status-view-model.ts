@@ -1,5 +1,8 @@
 import type { SemanticBadgeTone } from "@/design-system";
-import { formatDateValue } from "@/design-system/utils/financial-formatters";
+import {
+  formatDateValue,
+  formatTimestampValue,
+} from "@/design-system/utils/financial-formatters";
 
 import type {
   ProposalImplementationHandoffStatus,
@@ -207,7 +210,9 @@ export function buildProposalImplementationStatusModel(
       ? {
           type: eventLabel(data.latest_workflow_event.event_type),
           actor: data.latest_workflow_event.actor_id,
-          occurredAt: formatDateTime(data.latest_workflow_event.occurred_at),
+          occurredAt: formatTimestampValue(data.latest_workflow_event.occurred_at, {
+            nullDisplay: "Time not reported",
+          }),
           eventId: data.latest_workflow_event.event_id,
         }
       : null,
@@ -215,7 +220,9 @@ export function buildProposalImplementationStatusModel(
       "This view confirms advisory handoff and reconciliation status only. Order, fill, allocation, settlement, custody-booking, and accounting detail are not supported by this contract and are not inferred.",
     lineage: {
       source: "Advisory implementation handoff through Gateway",
-      freshness: formatDateTime(data.freshness.observed_at),
+      freshness: formatTimestampValue(data.freshness.observed_at, {
+        nullDisplay: "Time not reported",
+      }),
       freshnessBasis:
         data.freshness.basis === "LATEST_EXECUTION_EVENT"
           ? "Latest implementation event"
@@ -231,17 +238,4 @@ function eventLabel(eventType: string): string {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat("en-SG", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-    timeZone: "UTC",
-    timeZoneName: "short",
-  }).format(new Date(value));
 }
