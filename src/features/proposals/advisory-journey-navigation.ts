@@ -3,6 +3,7 @@ import {
   buildReviewContextHref,
   type ReviewContext,
 } from "@/shell/review-context";
+import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
 
 export type AdvisoryJourneyReviewContext = ReviewContext &
   Readonly<{ portfolioId: string }>;
@@ -121,7 +122,7 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     key: "suitability",
     label: "Suitability",
     detail: "Mandate fit",
-    title: "Suitability Review",
+    title: SUITABILITY_WORKFLOW_LABELS.review,
     description: "Mandate, suitability, disclosure, and blocking-issue review.",
     primaryDecision:
       "Can the proposal proceed under documented client and product constraints?",

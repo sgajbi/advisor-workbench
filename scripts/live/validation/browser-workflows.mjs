@@ -795,7 +795,7 @@ export async function validateAdvisoryJourneyScreens(
   for (const lifecycle of [
     {
       key: "suitability",
-      title: "Suitability Review",
+      title: "Suitability review",
       screenshotName: "advisory-suitability-review-live.png",
       panel: "advisory.suitability_review",
       sourcePosture: "proposal-lifecycle-through-gateway",

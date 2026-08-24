@@ -12,6 +12,7 @@ import {
 
 import { Panel, SemanticBadge, Text } from "@/design-system";
 import type { ProposalWorkflowContextModel } from "../proposal-workflow-context-view-model";
+import { ADVISORY_WORKFLOW_LABELS } from "../suitability-terminology";
 import styles from "./proposal-workspace-shell.module.css";
 
 type ProposalWorkflowContextValue = {
@@ -142,7 +143,7 @@ export function ProposalWorkflowContextRail() {
         {model.blockers.length > 0 ? (
           <section className={styles.blockerBlock} aria-labelledby="workflow-blockers">
             <Text variant="microLabel" id="workflow-blockers">
-              Attention required
+              {ADVISORY_WORKFLOW_LABELS.needsAttention}
             </Text>
             <ul>
               {model.blockers.map((blocker, index) => (

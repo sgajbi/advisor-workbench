@@ -1,4 +1,5 @@
 import type { AdvisoryJourneyMode } from "./advisory-journey-navigation";
+import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
 import {
   buildReviewContextHref,
@@ -76,7 +77,7 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
       "Create an advisor-use draft when a client objective is ready for review.",
   },
   suitability: {
-    title: "Suitability Review",
+    title: SUITABILITY_WORKFLOW_LABELS.review,
     subtitle: "Mandate, suitability, disclosure, and blocking-issue review.",
     primaryDecision:
       "Can the proposal proceed under documented client and product constraints?",

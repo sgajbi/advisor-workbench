@@ -145,6 +145,7 @@ describe("proposal lifecycle workspace view model", () => {
     });
 
     expect(model.totalCount).toBe(0);
+    expect(model.title).toBe("Suitability review");
     expect(model.emptyTitle).toBe("No matching proposals in this view");
     expect(model.emptyBody).toContain("Review the next proposals");
     expect(model.emptyTitle).not.toBe("No suitability items need review");
