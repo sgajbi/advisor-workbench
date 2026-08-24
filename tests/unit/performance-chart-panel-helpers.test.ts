@@ -30,17 +30,17 @@ function buildPresentation(
     activeReturnValue: "10.66%",
     benchmarkStateBody: null,
     metrics: [
-      { key: "portfolio-return", label: "Portfolio Return", value: "16.19%" },
-      { key: "benchmark-return", label: "Benchmark Return", value: "5.53%" },
-      { key: "active-return", label: "Active Return", value: "10.66%" },
+      { key: "portfolio-return", label: "Portfolio TWR", value: "16.19%" },
+      { key: "benchmark-return", label: "Benchmark TWR", value: "5.53%" },
+      { key: "active-return", label: "Active return", value: "10.66%" },
       {
         key: "mwrr",
-        label: "Money-Weighted Return",
+        label: "Money-weighted return (MWR)",
         value: "-30.04%",
         definition: "Annualized money-weighted return.",
       },
-      { key: "opening-mv", label: "Opening MV", value: "$1,291,570" },
-      { key: "net-flow", label: "Net Flow", value: "$14,725" },
+      { key: "opening-mv", label: "Opening market value", value: "$1,291,570" },
+      { key: "net-flow", label: "Net cash flow", value: "$14,725" },
     ],
     ...overrides,
   };

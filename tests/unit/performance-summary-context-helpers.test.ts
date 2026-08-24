@@ -52,54 +52,54 @@ describe("performance summary context helpers", () => {
       benchmarkStateBody: null,
     });
     expect(presentation.metrics).toMatchObject([
-      { key: "portfolio-return", label: "Portfolio Return", value: "5.42%", unavailable: false },
-      { key: "benchmark-return", label: "Benchmark Return", value: "4.91%", unavailable: false },
-      { key: "active-return", label: "Active Return", value: "0.52%", unavailable: false },
+      { key: "portfolio-return", label: "Portfolio TWR", value: "5.42%", unavailable: false },
+      { key: "benchmark-return", label: "Benchmark TWR", value: "4.91%", unavailable: false },
+      { key: "active-return", label: "Active return", value: "0.52%", unavailable: false },
       {
         key: "benchmark-evidence",
-        label: "Benchmark Evidence",
+        label: "Benchmark evidence",
         value: "Fx Decomposed • Aligned",
         unavailable: false,
       },
       {
         key: "mwrr",
-        label: "Money-Weighted Return",
+        label: "Money-weighted return (MWR)",
         value: "5.12%",
         unavailable: false,
       },
       {
         key: "flow-adjusted-mv",
-        label: "Flow-Adjusted MV",
+        label: "Flow-adjusted market value",
         value: "$1,208,000",
         unavailable: false,
       },
       {
         key: "ending-mv",
-        label: "Ending MV",
+        label: "Ending market value",
         value: "$1,250,000",
         unavailable: false,
       },
       {
         key: "opening-mv",
-        label: "Opening MV",
+        label: "Opening market value",
         value: "$1,200,000",
         unavailable: false,
       },
       {
         key: "net-flow",
-        label: "Net Flow",
+        label: "Net cash flow",
         value: "$42,000",
         unavailable: false,
       },
       {
         key: "opening-cash",
-        label: "Opening Cash",
+        label: "Opening cash flow",
         value: "$50,000",
         unavailable: false,
       },
       {
         key: "closing-cash",
-        label: "Closing Cash",
+        label: "Closing cash flow",
         value: "-$8,000",
         unavailable: false,
       },
@@ -139,12 +139,12 @@ describe("performance summary context helpers", () => {
       benchmarkStateBody: null,
     });
     expect(presentation.metrics[1]).toMatchObject({
-      label: "Benchmark Return",
+      label: "Benchmark TWR",
       value: "Unavailable",
       unavailable: true,
     });
     expect(presentation.metrics[2]).toMatchObject({
-      label: "Active Return",
+      label: "Active return",
       value: "Unavailable",
       unavailable: true,
     });
@@ -180,7 +180,7 @@ describe("performance summary context helpers", () => {
       benchmarkStateBody: "No benchmark is assigned to this mandate.",
     });
     expect(presentation.metrics[1]).toMatchObject({
-      label: "Benchmark Return",
+      label: "Benchmark TWR",
       value: "Unavailable",
       unavailable: true,
     });
@@ -221,7 +221,7 @@ describe("performance summary context helpers", () => {
     });
 
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
-      label: "Net Flow",
+      label: "Net cash flow",
       value: "$42,000",
       unavailable: false,
     });
@@ -253,19 +253,19 @@ describe("performance summary context helpers", () => {
     });
 
     expect(presentation.metrics.find((metric) => metric.key === "net-flow")).toMatchObject({
-      label: "Net Flow",
+      label: "Net cash flow",
       value: "$42,000",
       unavailable: false,
     });
     expect(
       presentation.metrics.find((metric) => metric.key === "flow-adjusted-mv")
     ).toMatchObject({
-      label: "Flow-Adjusted MV",
+      label: "Flow-adjusted market value",
       value: "$1,208,000",
       unavailable: false,
     });
     expect(presentation.metrics.find((metric) => metric.key === "ending-mv")).toMatchObject({
-      label: "Ending MV",
+      label: "Ending market value",
       value: "$1,250,000",
       unavailable: false,
     });

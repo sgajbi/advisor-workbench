@@ -141,7 +141,7 @@ describe("PerformanceSummaryMode", () => {
     expect(screen.queryByText("Analysis Mode Panel")).not.toBeInTheDocument();
     expect(screen.queryByText("Evidence Mode Panel")).not.toBeInTheDocument();
     expect(screen.getByTestId("chart-panel")).toHaveTextContent(
-      "Gross Return Path:absolute:performance-trend"
+      "Time-weighted return path · Gross of fees:absolute:performance-trend"
     );
     expect(screen.getByTestId("multi-horizon-panel")).toHaveTextContent(
       `${scenario.workspace.portfolio_id}:YTD:GROSS:${scenario.selectedBenchmarkCode}:absolute`

@@ -4,6 +4,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatDate } from "../formatters";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
 import {
   buildPercentAxisBounds,
   resolveActiveCumulativeReturn,
@@ -164,23 +165,23 @@ export function buildReturnDecisionItems(
   const summaryItems = [
     {
       key: "active-return",
-      label: "Active Return",
+      label: PERFORMANCE_RETURN_LABELS.activeReturn,
       value: presentation.activeReturnValue,
     },
     {
       key: "money-weighted-return",
-      label: "Money-Weighted Return",
+      label: PERFORMANCE_RETURN_LABELS.moneyWeightedReturn,
       value: moneyWeightedMetric?.value?.toString() ?? "Unavailable",
       definition: moneyWeightedMetric?.definition,
     },
     {
       key: "portfolio-return",
-      label: "Portfolio Return",
+      label: PERFORMANCE_RETURN_LABELS.portfolioTwr,
       value: presentation.portfolioReturnValue,
     },
     {
       key: "benchmark-return",
-      label: "Benchmark Return",
+      label: PERFORMANCE_RETURN_LABELS.benchmarkTwr,
       value: presentation.benchmarkReturnValue,
     },
   ];
