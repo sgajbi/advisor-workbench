@@ -151,6 +151,11 @@ export function buildWorkbenchUrl(
   return suffix ? `${baseUrl}${path}?${suffix}` : `${baseUrl}${path}`;
 }
 
+/**
+ * Builds server-to-Gateway headers. `initialHeaders` may contribute request
+ * metadata such as correlation context, but caller authority is always
+ * replaced by the server-owned Workbench context below.
+ */
 export function buildServerGatewayHeaders(initialHeaders?: HeadersInit): Headers {
   const headers = buildAnalyticsUiCorrelationHeaders(initialHeaders);
   applyDefaultCallerContextHeaders(headers);

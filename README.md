@@ -213,8 +213,9 @@ adding governed caller context. It carries only content negotiation and type, id
 conditional/range download controls, and validated correlation/trace context. Browser
 `Authorization`, cookies, session identifiers, proxy/forwarded identity, Lotus caller authority,
 capabilities, and entitlements are never inherited by Gateway. The configured BFF caller context
-overwrites rather than fills any browser value. `npm run quality:bff-header-boundary` prevents BFF
-routes from copying or reading raw browser headers outside this shared boundary.
+overwrites rather than fills any browser value. `npm run quality:bff-header-boundary` is a
+syntax-aware CI backstop that fails when a checked-in BFF route bypasses the shared builder or when
+no BFF route is scanned; the closed allowlist remains the runtime security control.
 
 Lotus Idea queue, detail, and action routes then project route-specific subject, role, capability,
 and portfolio-entitlement authority. Advisor-book reads likewise apply only BFF-owned authority.

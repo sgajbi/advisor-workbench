@@ -48,8 +48,9 @@ identity, and portfolio/client/book entitlements are not forwarded. The BFF alwa
 configured development caller context and specialized adapters may replace it with narrower
 server-derived route authority.
 
-`npm run quality:bff-header-boundary` fails when a BFF route omits the shared builder or accesses
-`request.headers` elsewhere. Behavioral regression coverage injects every forbidden authority
+`npm run quality:bff-header-boundary` is a syntax-aware CI backstop that fails when a BFF route
+omits the shared builder, accesses browser headers outside it, or the scanner finds no BFF routes.
+Behavioral regression coverage injects every forbidden authority
 header across portfolio, Performance, Risk, DPM, proposals, advisory workspaces, documents,
 Intake, lookups, and platform route families.
 
