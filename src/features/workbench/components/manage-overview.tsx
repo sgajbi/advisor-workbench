@@ -47,7 +47,10 @@ export default function ManageOverview({
         }))}
       />
 
-      <ManageOverviewDecisionWorklist decisions={model.decisionItems} />
+      <ManageOverviewDecisionWorklist
+        selectionScopeKey={reviewContext.portfolioId}
+        decisions={model.decisionItems}
+      />
 
       {model.blockedSurfaces.length ? (
         <ScreenStatePanel

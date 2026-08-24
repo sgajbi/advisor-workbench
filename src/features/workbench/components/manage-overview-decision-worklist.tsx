@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   ActionLink,
   SemanticBadge,
   Text,
+  useAdmittedSourceSelection,
   WorkbenchWorklist,
 } from "@/design-system";
 import type { ManageOverviewDecision } from "@/features/workbench/manage-overview-model";
@@ -13,11 +12,17 @@ import type { ManageOverviewDecision } from "@/features/workbench/manage-overvie
 import styles from "./manage-overview.module.css";
 
 export default function ManageOverviewDecisionWorklist({
+  selectionScopeKey,
   decisions,
 }: {
+  selectionScopeKey: string;
   decisions: ManageOverviewDecision[];
 }) {
-  const [selectedKey, setSelectedKey] = useState(decisions[0]?.key ?? null);
+  const [selectedKey, setSelectedKey] = useAdmittedSourceSelection({
+    scopeKey: selectionScopeKey,
+    admittedKeys: decisions.map((decision) => decision.key),
+    sourceResolved: true,
+  });
   const selectedDecision =
     decisions.find((decision) => decision.key === selectedKey) ?? decisions[0];
 
