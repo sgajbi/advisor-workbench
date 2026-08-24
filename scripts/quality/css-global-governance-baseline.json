@@ -65,8 +65,8 @@
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
-      "maxLines": 239,
-      "maxBytes": 4627
+      "maxLines": 188,
+      "maxBytes": 3666
     },
     {
       "path": "src/styles/global/base.css",
@@ -83,8 +83,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 11146,
-      "maxBytes": 242869
+      "maxLines": 11140,
+      "maxBytes": 242713
     }
   ]
 }

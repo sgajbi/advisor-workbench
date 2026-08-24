@@ -17,18 +17,6 @@ import type {
   DpmPortfolioMemoryGatewayResponse,
 } from "@/features/workbench/types";
 
-function buildDpmCommandCenterCallerHeaders(params: {
-  actorId: string;
-  correlationId: string;
-}): Record<string, string> {
-  return {
-    "Content-Type": "application/json",
-    "X-Actor-Id": params.actorId,
-    "X-Caller-Application": "lotus-workbench",
-    "X-Correlation-Id": params.correlationId,
-  };
-}
-
 function buildDpmWaveCallerHeaders(actorId?: string): Record<string, string> {
   const callerContext = resolveDefaultCallerContext();
   return {
@@ -68,47 +56,6 @@ export async function getDpmCommandCenter(params?: {
         "/dpm/command-center",
         "DPM command center",
         query
-      )
-  );
-}
-
-export async function runDpmCommandCenterMonitoring(params?: {
-  mandateIds?: string[];
-  tenantId?: string;
-  portfolioManagerId?: string;
-  bookId?: string;
-  asOfDate?: string;
-  requestedBy?: string;
-}): Promise<DpmCommandCenterGatewayResponse> {
-  const dpmContext = resolveDefaultDpmContext();
-  const callerContext = resolveDefaultCallerContext();
-  const mandateIds = params?.mandateIds ?? [];
-  const asOfDate = params?.asOfDate ?? dpmContext.commandCenterAsOfDate;
-  return await observeWorkbenchMutation(
-    "dpm.command-center.monitoring.run-once",
-    async () =>
-      await fetchWorkbenchMutation<DpmCommandCenterGatewayResponse>(
-        buildWorkbenchUrl("client", "/dpm/command-center/monitoring/run-once"),
-        "run DPM command-center monitoring",
-        {
-          method: "POST",
-          headers: buildDpmCommandCenterCallerHeaders({
-            actorId: params?.requestedBy ?? callerContext.actorId,
-            correlationId: `corr-workbench-command-center-run-${asOfDate}`,
-          }),
-          body: JSON.stringify({
-            body: {
-              mandate_ids: mandateIds,
-              as_of_date: asOfDate,
-              tenant_id: params?.tenantId ?? dpmContext.commandCenterTenantId,
-              portfolio_manager_id:
-                params?.portfolioManagerId ??
-                dpmContext.commandCenterPortfolioManagerId,
-              book_id: params?.bookId ?? dpmContext.commandCenterBookId,
-              requested_by: params?.requestedBy ?? callerContext.actorId,
-            },
-          }),
-        }
       )
   );
 }

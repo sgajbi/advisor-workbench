@@ -94,7 +94,6 @@ import {
   getWorkbenchPerformanceWorkspaceSummary,
   inspectCompositePerformanceClient,
   postWorkbenchPerformanceAdvisorBriefReviewActionClient,
-  runDpmCommandCenterMonitoring,
   simulateDpmWave,
   selectDpmConstructionAlternative,
   sourceCheckDpmWave,
@@ -1752,60 +1751,6 @@ describe("workbench api", () => {
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("mandate-command-center");
     expect(metricEventsJson).not.toContain("PM_SG_DPM_001");
-    expect(metricEventsJson).not.toContain("dmr_1");
-  });
-
-  it("runs DPM command-center monitoring through Gateway PM-book discovery by default", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            correlation_id: "corr-command-run",
-            contract_version: "v1",
-            source_service: "lotus-manage",
-            upstream_status: 200,
-            supportability: {
-              source_service: "lotus-manage",
-              authority: "lotus-manage:RFC-0038",
-              state: "UNKNOWN",
-              partial_readiness_reasons: [],
-            },
-            data: { monitoring_run_id: "dmr_1", status: "SUCCEEDED" },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
-      )
-    );
-
-    await runDpmCommandCenterMonitoring({
-      tenantId: "default",
-      portfolioManagerId: "PM_SG_DPM_001",
-      bookId: "BOOK_SG_BALANCED_DPM",
-      asOfDate: "2026-05-03",
-      requestedBy: "workbench.pm.sg.001",
-    });
-
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      `${expectedBaseUrl}/dpm/command-center/monitoring/run-once`
-    );
-    expect(fetchMock.mock.calls[0][1].headers["X-Caller-Application"]).toBe(
-      "lotus-workbench"
-    );
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
-      body: {
-        mandate_ids: [],
-        as_of_date: "2026-05-03",
-        tenant_id: "default",
-        portfolio_manager_id: "PM_SG_DPM_001",
-        book_id: "BOOK_SG_BALANCED_DPM",
-        requested_by: "workbench.pm.sg.001",
-      },
-    });
-    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
-    expect(metricEventsJson).toContain("mandate-command-center-monitoring");
-    expect(metricEventsJson).not.toContain("MANDATE_PB_SG_GLOBAL_BAL_001");
     expect(metricEventsJson).not.toContain("dmr_1");
   });
 

@@ -9895,12 +9895,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .dpm-command-center-status-strip,
-  .dpm-command-center-summary-grid,
-  .dpm-command-center-metric-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .performance-summary-kpi-card-primary {
     grid-column: auto;
   }

@@ -810,7 +810,6 @@
   margin-top: 10px;
 }
 
-.manageScope :global(.dpm-command-center-panel),
 .manageScope :global(.dpm-wave-command-center-panel),
 .manageScope :global(.portfolio-memory-panel),
 .manageScope :global(.pm-operating-quality-panel),
@@ -827,7 +826,6 @@
     0 10px 28px rgba(19, 27, 46, 0.05);
 }
 
-.manageScope :global(.dpm-command-center-action-row),
 .manageScope :global(.dpm-wave-command-center-action-row) {
   align-items: center;
 }
