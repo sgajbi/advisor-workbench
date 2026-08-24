@@ -1725,7 +1725,7 @@ export async function validateRiskPanel(
   });
   await expect(executiveEvidence).toBeVisible({ timeout: timeoutMs });
   for (const label of [
-    "Realized volatility",
+    "Realised volatility",
     "Max drawdown",
     "Largest position",
     "Source coverage",

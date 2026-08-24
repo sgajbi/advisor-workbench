@@ -20,7 +20,7 @@ export default function RiskDrawdownDetailDrawer({
     <RiskDetailDrawer
       open={open}
       title="Underwater path"
-      subtitle="Realized drawdown path detail for the selected portfolio context."
+      subtitle="Realised drawdown path detail for the selected portfolio context."
       contextItems={[
         {
           label: "Max Drawdown",

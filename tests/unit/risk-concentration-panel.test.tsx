@@ -60,12 +60,12 @@ describe("RiskConcentrationPanel", () => {
       name: "Concentration methodology and coverage",
     });
 
-    expect(within(dialog).getByText("Top Position Methodology")).toBeInTheDocument();
+    expect(within(dialog).getByText("Top position methodology")).toBeInTheDocument();
     expect(within(dialog).getByText("TOP_POSITION_WEIGHT")).toBeInTheDocument();
-    expect(within(dialog).getByText("Top Position Driver")).toBeInTheDocument();
+    expect(within(dialog).getByText("Top position driver")).toBeInTheDocument();
     expect(within(dialog).getByText("PIMCO GIS Income Fund")).toBeInTheDocument();
-    expect(within(dialog).getByText("Issuer Coverage")).toBeInTheDocument();
-    expect(within(dialog).getByText("Grouping Level")).toBeInTheDocument();
-    expect(within(dialog).getByText("Reporting Currency")).toBeInTheDocument();
+    expect(within(dialog).getByText("Issuer coverage")).toBeInTheDocument();
+    expect(within(dialog).getByText("Grouping level")).toBeInTheDocument();
+    expect(within(dialog).getByText("Reporting currency")).toBeInTheDocument();
   });
 });

@@ -29,9 +29,9 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.title).toBe("Risk");
     expect(viewModel.workspaceOverview).toEqual([
       expect.objectContaining({
-        label: "Realized volatility",
+        label: "Realised volatility",
         value: "7.25%",
-        support: "YTD annualized source measure",
+        support: "YTD annualised source measure",
         tone: "default",
       }),
       expect.objectContaining({
@@ -82,19 +82,24 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.concentrationContextRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Top Position Methodology",
+          label: "Top position methodology",
           value: "TOP_POSITION_WEIGHT",
           support:
             "Gateway and Workbench render returned top-position weights and drivers without recalculating them.",
         }),
         expect.objectContaining({
-          label: "Top Position Driver",
+          label: "Top position driver",
           value: "PIMCO GIS Income Fund",
           support:
             "Current PIMCO GIS Income Fund 18.40%; proposed PIMCO GIS Income Fund 18.40%; source delta 0.00%.",
         }),
         expect.objectContaining({
-          label: "Issuer Coverage",
+          label: "Issuer coverage",
+        }),
+        expect.objectContaining({
+          label: "Reporting currency",
+          value: "USD",
+          support: "Same as base currency (USD)",
         }),
       ])
     );
@@ -183,6 +188,58 @@ describe("buildPerformanceRiskViewModel", () => {
     });
   });
 
+  it.each([
+    {
+      reportingCurrency: "SGD",
+      baseCurrency: "USD",
+      expectedValue: "SGD",
+      expectedSupport: "Base currency USD",
+    },
+    {
+      reportingCurrency: null,
+      baseCurrency: "USD",
+      expectedValue: "N/A",
+      expectedSupport: "Base currency USD; reporting currency not reported by the source",
+    },
+    {
+      reportingCurrency: "SGD",
+      baseCurrency: null,
+      expectedValue: "SGD",
+      expectedSupport: "Base currency not reported by the source",
+    },
+  ])(
+    "keeps reporting and base currency evidence distinct for $expectedSupport",
+    ({ reportingCurrency, baseCurrency, expectedValue, expectedSupport }) => {
+      const scenario = buildSupportedPerformanceScenario();
+      const concentration = buildFixtureRiskConcentration(scenario.workspace, "YTD");
+      const valuationContext = concentration.payload?.valuation_context;
+      if (!valuationContext) {
+        throw new Error("Expected the fixture to publish valuation context.");
+      }
+      valuationContext.reporting_currency = reportingCurrency;
+      valuationContext.portfolio_currency = baseCurrency;
+
+      const viewModel = buildPerformanceRiskViewModel({
+        workspace: scenario.workspace,
+        period: "YTD",
+        detailBasis: "NET",
+        riskSummary: buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+        riskConcentration: concentration,
+        riskAttribution: buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+        riskDrawdown: buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+        riskRolling: buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      });
+
+      expect(
+        viewModel.concentrationContextRows.find((row) => row.key === "reporting_currency"),
+      ).toMatchObject({
+        label: "Reporting currency",
+        value: expectedValue,
+        support: expectedSupport,
+      });
+    },
+  );
+
   it("does not imply benchmark-relative risk is ready when benchmark context is absent", () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
 
@@ -256,7 +313,7 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.workspaceOverview[0]).toMatchObject({
-      label: "Realized volatility",
+      label: "Realised volatility",
       value: "Unavailable",
       support: "The source did not return a numeric volatility measure.",
       tone: "warn",
@@ -286,9 +343,9 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.workspaceOverview[0]).toMatchObject({
-      label: "Realized volatility",
+      label: "Realised volatility",
       value: "0.75%",
-      support: "YTD annualized source measure",
+      support: "YTD annualised source measure",
     });
   });
 
@@ -316,7 +373,7 @@ describe("buildPerformanceRiskViewModel", () => {
     });
 
     expect(viewModel.workspaceOverview[0]).toMatchObject({
-      label: "Realized volatility",
+      label: "Realised volatility",
       value: "7.25%",
       support: "YTD: The source returned incomplete daily observations.",
       tone: "warn",

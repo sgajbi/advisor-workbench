@@ -122,7 +122,7 @@ describe("PerformanceRiskMode", () => {
       screen.queryByLabelText("Risk snapshot business reading"),
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
-      "Realized volatility",
+      "Realised volatility",
     );
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
       "Max drawdown",
@@ -461,9 +461,9 @@ describe("PerformanceRiskMode", () => {
     });
 
     expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText("Issuer Coverage")).toBeInTheDocument();
-    expect(within(dialog).getByText("Grouping Level")).toBeInTheDocument();
-    expect(within(dialog).getByText("Enrichment Policy")).toBeInTheDocument();
+    expect(within(dialog).getByText("Issuer coverage")).toBeInTheDocument();
+    expect(within(dialog).getByText("Grouping level")).toBeInTheDocument();
+    expect(within(dialog).getByText("Enrichment policy")).toBeInTheDocument();
     expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
   });
 
@@ -525,7 +525,7 @@ describe("PerformanceRiskMode", () => {
       name: "Concentration methodology and coverage",
     });
 
-    expect(concentrationDialog).toHaveTextContent("Grouping Level");
+    expect(concentrationDialog).toHaveTextContent("Grouping level");
     expect(
       screen.queryByLabelText("Risk concentration diagnostic table"),
     ).not.toBeInTheDocument();
