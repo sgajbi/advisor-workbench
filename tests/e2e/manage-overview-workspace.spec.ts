@@ -68,6 +68,37 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
     await expect(page.getByLabel("Portfolio operating summary")).toContainText(
       "12,500,000.00 SGD",
     );
+    await expect(page.getByLabel("Manage source evidence")).toBeVisible();
+    await expect(page.getByText("Data readiness", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Rebalance status", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Active attention", { exact: true })).toHaveCount(1);
+    await expect(page.getByText("Next Actions", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Open PM Quality", exact: true }),
+    ).toHaveCount(0);
+
+    const compactDisclosure = page
+      .getByTestId("portfolio-screen-rail-header")
+      .getByRole("button", { name: /Current view/ });
+    const workflowDisclosure = page.getByRole("button", {
+      name: /Change workflow step/,
+    });
+    const openedCompactNavigation = (await workflowDisclosure.count()) === 0;
+    if (openedCompactNavigation) {
+      await compactDisclosure.click();
+    }
+    await expect(workflowDisclosure).toHaveCount(1);
+    await workflowDisclosure.click();
+    const workflowDirectory = page.getByTestId("workbench-workflow-directory");
+    await expect(workflowDirectory.getByRole("link")).toHaveCount(8);
+    await expect(
+      workflowDirectory.getByRole("link", { name: /PM Quality/ }),
+    ).toHaveCount(1);
+    await workflowDisclosure.click();
+    await expect(workflowDirectory).toBeHidden();
+    if (openedCompactNavigation) {
+      await compactDisclosure.click();
+    }
 
     const worklist = page.getByRole("listbox", {
       name: "Portfolio-management decision worklist",
