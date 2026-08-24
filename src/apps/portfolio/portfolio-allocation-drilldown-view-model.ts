@@ -43,9 +43,9 @@ export function buildAllocationHoldingsBreakdown({
     return {
       positions: bookedHoldings,
       filterLabel: null,
-      title: "Booked holdings",
+      title: "Positions",
       description:
-        "Booked holdings are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
+        "Positions are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
       state: "expanded",
     };
   }
@@ -54,9 +54,9 @@ export function buildAllocationHoldingsBreakdown({
     return {
       positions: bookedHoldings,
       filterLabel: null,
-      title: "Booked holdings",
+      title: "Positions",
       description:
-        "Select a direct exposure above to review the booked holdings that contribute to it.",
+        "Select a direct exposure above to review the positions that contribute to it.",
       state: "all",
     };
   }
@@ -67,8 +67,8 @@ export function buildAllocationHoldingsBreakdown({
     return {
       positions: bookedHoldings,
       filterLabel: null,
-      title: "Booked holdings",
-      description: `${dimensionLabel} does not have a supported holdings classification for contributor review.`,
+      title: "Positions",
+      description: `${dimensionLabel} does not have a supported position classification for contributor review.`,
       state: "unsupported",
     };
   }
@@ -82,8 +82,8 @@ export function buildAllocationHoldingsBreakdown({
   return {
     positions: filteredPositions,
     filterLabel: `${dimensionLabel}: ${selection.bucket}`,
-    title: "Contributing holdings",
-    description: `${filteredPositions.length} of ${bookedHoldings.length} booked holdings contribute to this direct exposure.`,
+    title: "Contributing positions",
+    description: `${filteredPositions.length} of ${bookedHoldings.length} positions contribute to this direct exposure.`,
     state: "filtered",
   };
 }

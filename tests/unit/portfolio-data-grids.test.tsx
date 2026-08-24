@@ -109,19 +109,20 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Holdings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Positions" })).toBeInTheDocument();
     expect(screen.getByText("As of 28 Mar 2026 in USD")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Choose holdings columns" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Choose position columns" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Filter active: Filtered by Asset Class: Equities" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Export holdings" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show all holdings columns" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Export positions" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show all position columns" })).toBeInTheDocument();
     expect(screen.getByTestId("mock-grid")).toHaveAttribute("data-has-row-selection", "false");
     expect(screen.getByText("Instrument")).toBeInTheDocument();
-    expect(screen.getByText("Market Value")).toBeInTheDocument();
+    expect(screen.getByText("Market value")).toBeInTheDocument();
     expect(screen.getByText("Weight")).toBeInTheDocument();
-    expect(screen.getByText("Unrealized P&L")).toBeInTheDocument();
+    expect(screen.getByText("Unrealised P&L")).toBeInTheDocument();
+    expect(screen.getByText("Instrument currency")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
     expect(screen.getByTestId("marketValue-header-class")).toHaveTextContent(
       "portfolio-data-grid-header-cell-numeric"
@@ -258,7 +259,7 @@ describe("portfolio data grids", () => {
     });
     expect(screen.getByText("Gross Amount")).toBeInTheDocument();
     expect(screen.getByText("Settle Date")).toBeInTheDocument();
-    expect(screen.queryByText("Transaction Currency")).not.toBeInTheDocument();
+    expect(screen.queryByText("Transaction currency")).not.toBeInTheDocument();
     expect(screen.getByText("Net Cost (USD)")).toBeInTheDocument();
     expect(screen.getByText("Settlement Status")).toBeInTheDocument();
     expect(screen.getByTestId("grossAmount-header-class")).toHaveTextContent(
@@ -274,10 +275,10 @@ describe("portfolio data grids", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Show expanded transaction columns" }),
     );
-    expect(screen.getByText("Transaction Currency")).toBeInTheDocument();
+    expect(screen.getByText("Transaction currency")).toBeInTheDocument();
     expect(screen.getByText("Quantity")).toBeInTheDocument();
     expect(screen.getByText("Price")).toBeInTheDocument();
-    expect(screen.getByText("Realized P&L (USD)")).toBeInTheDocument();
+    expect(screen.getByText("Realised P&L (USD)")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /20 Mar 2026/i }));
     await waitFor(() => expect(onRowSelect).toHaveBeenCalledTimes(1));
@@ -924,7 +925,7 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
+    expect(screen.getByText("No positions in this portfolio")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Book first trade/i })).toHaveAttribute(
       "href",
       "/workbench/MANUAL_PB_USD_001?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=YTD&reportingCurrency=EUR",
@@ -962,7 +963,7 @@ describe("portfolio data grids", () => {
       />
     );
 
-    expect(screen.getByText("Holdings partially valued")).toBeInTheDocument();
+    expect(screen.getByText("Positions partially valued")).toBeInTheDocument();
     expect(container.querySelector(".portfolio-module-state")).toBeTruthy();
     expect(container.querySelector(".module-state-panel-partial")).toBeTruthy();
     expect(screen.getByTestId("mock-grid")).toBeInTheDocument();

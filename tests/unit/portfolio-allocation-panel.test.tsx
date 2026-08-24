@@ -131,7 +131,7 @@ describe("PortfolioAllocationPanel", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "USD: 925,000 USD, 74.00%, 9 positions. Review contributing holdings.",
+        name: "USD: 925,000 USD, 74.00%, 9 positions. Review contributing positions.",
       }),
     );
     expect(onSelectionChange).toHaveBeenCalledWith({
@@ -191,7 +191,7 @@ describe("PortfolioAllocationPanel", () => {
     );
 
     fireEvent.keyDown(
-      screen.getByLabelText("Equities: 58.00%. Review contributing holdings."),
+      screen.getByLabelText("Equities: 58.00%. Review contributing positions."),
       { key: "Enter" }
     );
 
@@ -242,7 +242,7 @@ describe("PortfolioAllocationPanel", () => {
     expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
     expect(
       screen.getAllByText(
-        "This dimension requires funded holdings with current valuations before a reliable composition view can be shown."
+        "This dimension requires funded positions with current valuations before a reliable composition view can be shown."
       )
     ).toHaveLength(1);
     expect(screen.getByRole("region", { name: "Asset Class allocation view" })).toBeInTheDocument();
@@ -416,7 +416,7 @@ describe("PortfolioAllocationPanel", () => {
 
     const recheck = screen.getByRole("button", { name: "Recheck exposure coverage" });
     const selectedExposure = screen.getByRole("button", {
-      name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing holdings.",
+      name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing positions.",
     });
     expect(selectedExposure).toHaveClass("portfolio-allocation-ranked-row-selected");
     recheck.focus();
@@ -489,7 +489,7 @@ describe("PortfolioAllocationPanel", () => {
 
     await waitFor(() => expect(onSelectionChange).toHaveBeenCalledWith(null));
     expect(onSelectionChange).toHaveBeenCalledTimes(1);
-    expect(screen.getByText("Direct holdings only")).toBeInTheDocument();
+    expect(screen.getByText("Direct positions only")).toBeInTheDocument();
     expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
     expect(screen.queryByText("725,000 USD")).not.toBeInTheDocument();
   });
@@ -516,7 +516,7 @@ describe("PortfolioAllocationPanel", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing holdings.",
+        name: "Equities: 725,000 USD, 58.00%, 7 positions. Review contributing positions.",
       }),
     );
     expect(onSelectionChange).toHaveBeenCalledWith({
@@ -590,12 +590,12 @@ describe("PortfolioAllocationPanel", () => {
     expect(
       screen.getByText("Expanded exposure is available for this portfolio snapshot"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Direct holdings only")).not.toBeInTheDocument();
+    expect(screen.queryByText("Direct positions only")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Show expanded exposure" }));
 
     expect(screen.getAllByText("Asset Class allocation is not available yet")).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Show direct holdings" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Show direct positions" })).toBeEnabled();
     expect(screen.getByText("Source coverage confirmed")).toBeInTheDocument();
   });
 
@@ -684,7 +684,7 @@ describe("PortfolioAllocationPanel", () => {
         onSelectionChange={onSelectionChange}
       />,
     );
-    await waitFor(() => expect(screen.getByText("Direct holdings only")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Direct positions only")).toBeInTheDocument());
 
     resolveSupersededRequest?.(
       jsonResponse({

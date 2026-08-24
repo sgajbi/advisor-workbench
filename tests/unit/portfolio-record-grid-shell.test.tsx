@@ -12,7 +12,7 @@ describe("PortfolioRecordGridShell", () => {
         description="As of 28 Mar 2026 in USD"
         summaryLabel="2 positions"
         summaryValue="USD 1.2m"
-        searchControl={<input aria-label="Search holdings" />}
+        searchControl={<input aria-label="Search positions" />}
         actions={<button type="button">Export</button>}
       >
         <div>Grid body</div>
@@ -24,7 +24,7 @@ describe("PortfolioRecordGridShell", () => {
     expect(screen.getByText("As of 28 Mar 2026 in USD")).toBeInTheDocument();
     expect(screen.getByText("2 positions")).toBeInTheDocument();
     expect(screen.getByText("USD 1.2m")).toBeInTheDocument();
-    expect(screen.getByLabelText("Search holdings")).toBeInTheDocument();
+    expect(screen.getByLabelText("Search positions")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Export" })).toBeInTheDocument();
     expect(screen.getByText("Grid body")).toBeInTheDocument();
   });

@@ -1,5 +1,6 @@
 import type { PortfolioTransactionDrilldownFilter, PortfolioTransactionView } from "../types";
 import { formatBusinessDate, formatStatus } from "../formatters";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import {
   buildPortfolioTransactionSettlementState,
   type PortfolioTransactionSettlementState,
@@ -166,10 +167,10 @@ export function buildTransactionExportRows(rows: TransactionRow[], baseCurrency:
     Instrument: row.instrument,
     Quantity: row.quantity,
     Price: row.price ?? "",
-    "Transaction Currency": row.transactionCurrency ?? "",
+    [PORTFOLIO_CURRENCY_LABELS.transaction]: row.transactionCurrency ?? "",
     "Gross Amount": row.grossAmount ?? "",
     [`Net Cost (${baseCurrency})`]: row.netCostBase ?? "",
-    [`Realized P&L (${baseCurrency})`]: row.realizedGainLossBase ?? "",
+    [`Realised P&L (${baseCurrency})`]: row.realizedGainLossBase ?? "",
     "Settlement Status": row.settlementState.label,
     Component: row.componentType ?? "",
     Source: row.sourceSystem ?? "",

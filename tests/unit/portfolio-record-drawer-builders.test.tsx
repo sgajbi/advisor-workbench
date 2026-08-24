@@ -44,7 +44,7 @@ describe("portfolio record drawer builders", () => {
     render(<div>{drawer.tabs.find((tab) => tab.key === "related-transactions")?.content}</div>);
 
     expect(
-      screen.getByText("Loading the latest related transactions for this holding.")
+      screen.getByText("Loading the latest related transactions for this position.")
     ).toBeInTheDocument();
     expect(drawer.fullPageHref).toBeUndefined();
     expect(drawer.fullPageLabel).toBeUndefined();
@@ -96,11 +96,11 @@ describe("portfolio record drawer builders", () => {
     render(<div>{drawer.tabs.find((tab) => tab.key === "related-transactions")?.content}</div>);
 
     expect(
-      screen.getByText("We could not load recent booked activity for this holding.")
+      screen.getByText("We could not load recent booked activity for this position.")
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Retry from the holdings grid or open the transactions workspace for broader ledger review."
+        "Retry from the positions grid or open the transactions workspace for broader ledger review."
       )
     ).toBeInTheDocument();
   });

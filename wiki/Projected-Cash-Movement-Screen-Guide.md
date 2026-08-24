@@ -152,7 +152,7 @@ competitor superiority.
 
 - [Advisor Book](Advisor-Book-Workflow) owns source-backed portfolio selection.
 - [Portfolio Review](Portfolio-Review-Screen-Guide) owns the daily mandate decision checkpoint.
-- [Positions](Positions-Screen-Guide) owns booked holdings and current source-returned cash rows.
+- [Positions](Positions-Screen-Guide) owns booked positions and current source-returned cash rows.
 - [Transactions](Transactions-Screen-Guide) owns booked ledger and applicable settlement review.
 - [Income And Activity](Income-And-Activity-Screen-Guide) owns booked historical income and cash
   activity; it is not a forecast.

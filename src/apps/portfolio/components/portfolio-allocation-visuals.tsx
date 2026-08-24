@@ -28,7 +28,7 @@ function buildHoldingsActionLabel(
   holdingsDrilldownAvailable: boolean,
 ): string {
   return holdingsDrilldownAvailable
-    ? `${exposureSummary}. Review contributing holdings.`
+    ? `${exposureSummary}. Review contributing positions.`
     : `${exposureSummary}. Expanded exposure contributor detail is unavailable.`;
 }
 
@@ -392,7 +392,7 @@ export function AllocationEmptyState({
       <div className="portfolio-allocation-empty-copy">
         <strong>{dimensionLabel} allocation is not available yet</strong>
         <p className="muted">
-          This dimension requires funded holdings with current valuations before
+          This dimension requires funded positions with current valuations before
           a reliable composition view can be shown.
         </p>
         <p className="muted">

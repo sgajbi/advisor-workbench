@@ -17,6 +17,7 @@ import {
 } from "../api";
 import { recordPortfolioShellRecoveryLifecycle } from "../portfolio-shell-recovery-observability";
 import { isPortfolioWorkspaceIdentityConfirmed } from "../portfolio-selection";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import {
   applyPortfolioControlPatch,
   buildPortfolioReviewHref,
@@ -536,7 +537,10 @@ export default function PortfolioWorkspaceClient({
                   contextMessage="Loading portfolio controls…"
                   fields={[
                     { key: "as-of", label: "As of" },
-                    { key: "reporting-currency", label: "Reporting Currency" },
+                    {
+                      key: "reporting-currency",
+                      label: PORTFOLIO_CURRENCY_LABELS.reporting,
+                    },
                     { key: "period", label: "Period", width: "period" },
                   ]}
                 />

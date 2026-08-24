@@ -176,15 +176,15 @@ function buildAllocationSourcePosture(
 
   return [
     {
-      label: "Allocation Views",
-      source: "Book records",
+      label: "Allocation views",
+      source: "Portfolio records",
       detail: `${formatCount(dimensions, "dimension")} and ${formatCount(bucketCount, "bucket")} available`,
       tone: bucketCount ? "success" : "warn",
       status: bucketCount ? "Ready" : "Pending",
     },
     {
-      label: "Holdings Coverage",
-      source: "Booked holdings inventory",
+      label: "Position coverage",
+      source: "Position inventory",
       detail: `${formatCount(workspace.positions.length, "position")} available for allocation review`,
       tone: workspace.positions.length ? "success" : "default",
       status: workspace.positions.length ? "Ready" : "Empty",
@@ -209,8 +209,8 @@ function buildIncomeActivitySourcePosture(
 
   return [
     {
-      label: "Income Source",
-      source: "Book records",
+      label: "Income source",
+      source: "Portfolio records",
       detail: income
         ? `${formatCount(incomeTypeCount, "income type")} and ${formatCount(
             incomeEventCount,
@@ -221,7 +221,7 @@ function buildIncomeActivitySourcePosture(
       status: income ? "Available" : "Unavailable",
     },
     {
-      label: "Activity Buckets",
+      label: "Activity buckets",
       source: "Activity classification",
       detail: activity
         ? `${formatCount(activityBucketCount, "bucket")} and ${formatCount(
@@ -382,26 +382,26 @@ function buildPositionSourcePosture(
 
   return [
     {
-      label: "Pricing Source",
-      source: "Book records",
+      label: "Pricing source",
+      source: "Portfolio records",
       detail: !positionCount
-        ? "No booked holdings are available for pricing review"
+        ? "No booked positions are available for pricing review"
         : unpricedCount
-        ? `${formatCount(unpricedCount, "holding")} missing price or valuation`
-        : "All visible holdings have price and valuation data",
+        ? `${formatCount(unpricedCount, "position")} missing price or valuation`
+        : "All visible positions have price and valuation data",
       tone: !positionCount ? "default" : unpricedCount ? "warn" : "success",
       status: !positionCount ? "N/A" : unpricedCount ? "Partial" : "Complete",
     },
     {
-      label: "Positions Ledger",
-      source: "Booked holdings inventory",
+      label: "Position ledger",
+      source: "Position inventory",
       detail: `${formatCount(workspace.positions.length, "position")} available for review`,
       tone: workspace.readiness.has_positions ? "success" : "default",
       status: workspace.readiness.has_positions ? "Available" : "Empty",
     },
     buildReportingSourcePosture(workspace),
     {
-      label: "Position Status",
+      label: "Position status",
       source: "Booked position controls",
       detail: positionState.detail,
       tone: positionState.tone,

@@ -3,6 +3,7 @@
 import { formatCurrency, formatDate, formatPct } from "../formatters";
 import {
   buildPortfolioDateFacts,
+  PORTFOLIO_CURRENCY_LABELS,
   PORTFOLIO_VALUE_COPY,
 } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
@@ -40,7 +41,7 @@ export function buildMetricDrawer(
   switch (metric) {
     case "portfolio_value":
       return {
-        kicker: "Metric Detail",
+        kicker: "Metric detail",
         title: PORTFOLIO_VALUE_COPY.title,
         subtitle: PORTFOLIO_VALUE_COPY.description,
         summaryItems: [
@@ -51,7 +52,7 @@ export function buildMetricDrawer(
               workspace.portfolio.base_currency
             ),
           },
-          { label: "Base Currency", value: workspace.portfolio.base_currency },
+          { label: PORTFOLIO_CURRENCY_LABELS.base, value: workspace.portfolio.base_currency },
           ...commonSummary,
         ],
         tabs: [
@@ -64,24 +65,24 @@ export function buildMetricDrawer(
           },
           {
             key: "detail",
-            label: "Underlying Detail",
+            label: "Underlying detail",
             content: renderDrawerDefinitionList([
               [
-                "Invested Assets",
+                "Invested assets",
                 formatCurrency(
                   workspace.summary.invested_market_value_base,
                   workspace.portfolio.base_currency
                 ),
               ],
               [
-                "Available Cash",
+                "Available cash",
                 formatCurrency(
                   workspace.summary.total_cash_base,
                   workspace.portfolio.base_currency
                 ),
               ],
-              ["Holdings", String(workspace.summary.position_count)],
-              ["Cash Accounts", String(workspace.summary.cash_balance_count ?? 0)],
+              ["Positions", String(workspace.summary.position_count)],
+              ["Cash accounts", String(workspace.summary.cash_balance_count ?? 0)],
             ]),
           },
         ],
@@ -93,8 +94,8 @@ export function buildMetricDrawer(
       };
     case "invested_assets":
       return {
-        kicker: "Metric Detail",
-        title: "Invested Assets",
+        kicker: "Metric detail",
+        title: "Invested assets",
         subtitle: "Value currently deployed into funded positions rather than cash inventory.",
         summaryItems: [
           {
@@ -118,16 +119,16 @@ export function buildMetricDrawer(
           },
           {
             key: "detail",
-            label: "Underlying Detail",
+            label: "Underlying detail",
             content: renderDrawerDefinitionList([
-              ["Top Holding", workspace.top_positions[0]?.instrument_name ?? "N/A"],
+              ["Top position", workspace.top_positions[0]?.instrument_name ?? "N/A"],
               [
-                "Top Holding Weight",
+                "Top position weight",
                 formatPct(workspace.top_positions[0]?.weight_pct ?? null),
               ],
-              ["Allocation Views", String(workspace.allocation_views?.length ?? 0)],
+              ["Allocation views", String(workspace.allocation_views?.length ?? 0)],
               [
-                "Valued Positions",
+                "Valued positions",
                 String(
                   workspace.positions.filter(
                     (position) => (position.market_value_base ?? 0) > 0
@@ -142,8 +143,8 @@ export function buildMetricDrawer(
       };
     case "available_cash":
       return {
-        kicker: "Metric Detail",
-        title: "Available Cash",
+        kicker: "Metric detail",
+        title: "Available cash",
         subtitle:
           "Published cash inventory available to fund activity and meet liquidity needs.",
         summaryItems: [
@@ -154,7 +155,7 @@ export function buildMetricDrawer(
               workspace.portfolio.base_currency
             ),
           },
-          { label: "Cash Allocation", value: formatPct(workspace.summary.cash_weight_pct) },
+          { label: "Cash allocation", value: formatPct(workspace.summary.cash_weight_pct) },
           ...commonSummary,
         ],
         tabs: [
@@ -168,7 +169,7 @@ export function buildMetricDrawer(
           },
           {
             key: "detail",
-            label: "Underlying Detail",
+            label: "Underlying detail",
             content: renderDrawerDefinitionList(
               workspace.cash_balances?.length
                 ? workspace.cash_balances.map((balance) => [
@@ -178,7 +179,7 @@ export function buildMetricDrawer(
                       workspace.portfolio.base_currency
                     ),
                   ])
-                : [["Cash Accounts", "No published cash balances available"]]
+                : [["Cash accounts", "No published cash balances available"]]
             ),
           },
         ],

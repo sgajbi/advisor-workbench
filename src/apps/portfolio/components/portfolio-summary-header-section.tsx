@@ -52,7 +52,7 @@ export default function PortfolioSummaryHeaderSection({
                 0
               ),
               definition:
-                "Market value currently invested in funded holdings, excluding operational cash inventory.",
+                "Market value currently invested in funded positions, excluding operational cash inventory.",
               support: formatShareOfPortfolioValue(
                 formatPct(getInvestedAssetWeight(workspace))
               ),
@@ -73,21 +73,21 @@ export default function PortfolioSummaryHeaderSection({
               key: "mtd_return",
               label: "MTD return",
               value: renderPerformanceReturn(performanceReturns, "MTD"),
-              definition: "Month-to-date net return for the selected book.",
+              definition: "Month-to-date net return for the selected portfolio.",
               support: "Net return",
             },
             {
               key: "qtd_return",
               label: "QTD return",
               value: renderPerformanceReturn(performanceReturns, "QTD"),
-              definition: "Quarter-to-date net return for the selected book.",
+              definition: "Quarter-to-date net return for the selected portfolio.",
               support: "Net return",
             },
             {
               key: "ytd_return",
               label: "YTD return",
               value: renderPerformanceReturn(performanceReturns, "YTD"),
-              definition: "Year-to-date net return for the selected book.",
+              definition: "Year-to-date net return for the selected portfolio.",
               support: "Net return",
             },
           ]}

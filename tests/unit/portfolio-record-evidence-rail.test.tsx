@@ -43,9 +43,9 @@ describe("PortfolioRecordEvidenceRail", () => {
 
     expect(screen.getByText("Data Readiness")).toBeInTheDocument();
     expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Book records").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Booked holdings inventory")).toBeInTheDocument();
-    expect(screen.getByText("1 holding missing price or valuation")).toBeInTheDocument();
+    expect(screen.getAllByText("Portfolio records").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Position inventory")).toBeInTheDocument();
+    expect(screen.getByText("1 position missing price or valuation")).toBeInTheDocument();
     expect(screen.getByText("2 positions available for review")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -163,11 +163,11 @@ describe("PortfolioRecordEvidenceRail", () => {
       />
     );
 
-    expect(screen.getByText("Income Source")).toBeInTheDocument();
+    expect(screen.getByText("Income source")).toBeInTheDocument();
     expect(screen.getByText(/1 income type and 3 income events through/i)).toBeInTheDocument();
-    expect(screen.getByText("Activity Buckets")).toBeInTheDocument();
+    expect(screen.getByText("Activity buckets")).toBeInTheDocument();
     expect(screen.getByText(/1 bucket and 1 activity event through/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Book records").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Portfolio records").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Activity classification")).toBeInTheDocument();
     expect(screen.queryByText("Gateway portfolio workspace")).not.toBeInTheDocument();
   });

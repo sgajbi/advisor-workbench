@@ -63,7 +63,7 @@ describe("PortfolioWorkspaceToolbar", () => {
     ).toBeInTheDocument();
     expect(
       screen
-        .getByLabelText("Reporting Currency")
+        .getByLabelText("Reporting currency")
         .closest("div[title='Full currency restatement is not available for every workflow yet.']")
     ).not.toBeNull();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("PortfolioWorkspaceToolbar", () => {
     ).toBeInTheDocument();
     expect(
       screen
-        .getByLabelText("Reporting Currency")
+        .getByLabelText("Reporting currency")
         .closest(
           "div[title='Full currency restatement is not available for every workflow yet.']"
         )

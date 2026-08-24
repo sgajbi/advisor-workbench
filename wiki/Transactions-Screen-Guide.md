@@ -139,7 +139,7 @@ claim of bank approval or competitor superiority.
 
 - [Advisor Book](Advisor-Book-Workflow) establishes own-book portfolio selection.
 - [Portfolio Review](Portfolio-Review-Screen-Guide) is the daily mandate decision checkpoint.
-- [Positions](Positions-Screen-Guide) connects booked holdings to recent activity.
+- [Positions](Positions-Screen-Guide) connects booked positions to recent activity.
 - Income And Activity owns income and transaction-activity interpretation.
 - Projected Cash Movement owns forward movement projection; Transactions does not derive it.
 - Report Centre owns governed report generation, archive, and retrieval.

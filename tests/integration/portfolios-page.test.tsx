@@ -289,7 +289,7 @@ describe("PortfolioFoundationPage", () => {
     expect(summaryCluster?.querySelector("#portfolio-summary")).toBeTruthy();
     expect(summaryCluster?.querySelector("#portfolio-attention")).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /Asset Allocation/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /^Top Holdings$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^Ranked positions$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Performance Snapshot/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Recent Transactions/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Cashflow Forecast/i })).not.toBeInTheDocument();

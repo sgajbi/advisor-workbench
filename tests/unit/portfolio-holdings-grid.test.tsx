@@ -21,11 +21,11 @@ describe("PortfolioHoldingsGrid empty states", () => {
       />,
     );
 
-    expect(screen.getByText("No contributing holdings found")).toBeInTheDocument();
+    expect(screen.getByText("No contributing positions found")).toBeInTheDocument();
     expect(
-      screen.getByText("No booked holdings match Sector: Technology."),
+      screen.getByText("No booked positions match Sector: Technology."),
     ).toBeInTheDocument();
-    expect(screen.queryByText("No holdings in this portfolio")).not.toBeInTheDocument();
+    expect(screen.queryByText("No positions in this portfolio")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear exposure" }));
     expect(onClearFilter).toHaveBeenCalledOnce();
@@ -44,7 +44,7 @@ describe("PortfolioHoldingsGrid empty states", () => {
       />,
     );
 
-    expect(screen.getByText("No holdings in this portfolio")).toBeInTheDocument();
-    expect(screen.queryByText("No contributing holdings found")).not.toBeInTheDocument();
+    expect(screen.getByText("No positions in this portfolio")).toBeInTheDocument();
+    expect(screen.queryByText("No contributing positions found")).not.toBeInTheDocument();
   });
 });

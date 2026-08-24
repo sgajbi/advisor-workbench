@@ -100,16 +100,16 @@ describe("portfolio holdings grid helpers", () => {
 
     expect(buildHoldingsExportRows(rows, visibility, "USD")[0]).toEqual({
       Instrument: "Apple Inc.",
-      "Asset Class": "Equity",
+      "Asset class": "Equity",
       Quantity: 700,
       Price: 210,
-      "Market Value (USD)": 147000,
+      "Market value (USD)": 147000,
       "Weight %": 14.67,
-      "Unrealized P&L (USD)": 12000,
-      Currency: "USD",
+      "Unrealised P&L (USD)": 12000,
+      "Instrument currency": "USD",
       Status: "Review required",
       Sector: "Technology",
-      "Held Since": "2026-03-10",
+      "Held since": "2026-03-10",
     });
   });
 

@@ -42,7 +42,7 @@ describe("portfolio metric drawer builders", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "It combines invested holdings and available cash at the stated valuation date.",
+        "It combines invested positions and available cash at the stated valuation date.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/assets under management/i)).not.toBeInTheDocument();

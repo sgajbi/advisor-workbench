@@ -54,7 +54,7 @@ export default function PortfolioReadinessModule({
       actions={
           !exceptions.length && reportingNeedsAttention ? (
             <StateInfoHint
-              body="Reporting needs the core book prerequisites to be in place: holdings coverage, pricing/valuation, transaction history, and a source-ready reporting state."
+              body="Reporting needs the portfolio prerequisites to be in place: position coverage, pricing and valuation, transaction history, and a source-ready reporting state."
               label="Why reporting is unavailable"
             />
           ) : undefined

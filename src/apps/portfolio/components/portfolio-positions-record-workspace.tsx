@@ -10,6 +10,7 @@ import {
   buildPositionsReviewAvailability,
   filterRecentTransactionsForHolding,
 } from "../portfolio-booked-holdings-view-model";
+import { PORTFOLIO_SCREEN_LABELS } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioTimeWindow } from "../view-model";
 import { buildHoldingDrawer } from "./portfolio-detail-drawer-builders";
@@ -107,11 +108,11 @@ export default function PortfolioPositionsRecordWorkspace({
         <PortfolioModuleState
           variant="status"
           state="error"
-          title="Holding is not in this confirmed portfolio view"
-          body="The requested holding identity was not returned for the selected portfolio and valuation date. No alternative holding was opened."
+          title="Position is not in this confirmed portfolio view"
+          body="The requested position identity was not returned for the selected portfolio and valuation date. No alternative position was opened."
           action={
             <Button size="small" variant="outlined" onClick={closeRecord}>
-              Clear holding review
+              Clear position review
             </Button>
           }
         />
@@ -127,11 +128,11 @@ export default function PortfolioPositionsRecordWorkspace({
         baseCurrency={workspace.portfolio.base_currency}
         columnMode="expanded"
         kicker="Position inventory"
-        title={availability.inventoryComplete ? "Booked holdings" : "Available holdings"}
+        title={PORTFOLIO_SCREEN_LABELS.positions}
         description={
           availability.inventoryComplete
             ? `Complete securities and cash inventory as of ${formatDate(asOfDate)} in ` +
-              `${workspace.portfolio.base_currency}. Select a holding to review valuation and recent activity.`
+              `${workspace.portfolio.base_currency}. Select a position to review valuation and recent activity.`
             : `Available booked records as of ${formatDate(asOfDate)} in ` +
               `${workspace.portfolio.base_currency}. The inventory remains partial until unavailable detail is restored.`
         }

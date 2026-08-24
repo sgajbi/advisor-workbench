@@ -723,7 +723,7 @@ without changing a supported route, backend contract, operator command, or publi
 
 A client advisor or portfolio manager opens Allocation Review to understand how the selected
 portfolio is invested, move across asset-class, currency, sector, and region exposure, and identify
-the booked holdings that contribute to a direct exposure. The screen explains current composition;
+the booked positions that contribute to a direct exposure. The screen explains current composition;
 it does not invent a strategic target, benchmark comparison, drift interpretation, suitability
 decision, or rebalance recommendation.
 
@@ -733,7 +733,7 @@ The reading order is:
 2. assets under management, available exposure views, and position count,
 3. the selected exposure dimension and direct or expanded exposure mode,
 4. ranked exposure value, weight, and source-reported position count,
-5. contributing booked holdings for a selected direct exposure,
+5. contributing booked positions for a selected direct exposure,
 6. adjacent Portfolio, Position, Mandate, Risk, or Performance workflows where supported.
 
 ### Current-product research
@@ -818,7 +818,7 @@ without moving focus. Lotus does not copy another product's layout, wording, cal
 unsupported capabilities.
 
 The prior client state converted any missing preferred-look-through response into a completed
-**Direct holdings only** conclusion. That made transport, HTTP, and parsing failure
+**Direct positions only** conclusion. That made transport, HTTP, and parsing failure
 indistinguishable from a valid source response that explicitly did not support expanded exposure.
 The replacement state model distinguishes checking, available, unsupported, and failed; treats the
 book-provided direct allocation as confirmed evidence; fences superseded portfolio responses; and
@@ -881,7 +881,7 @@ merges, then verify strict wiki parity.
 ### Business job
 
 A client advisor or portfolio manager opens Positions Review to verify the complete booked
-inventory at the portfolio as-of date, understand valuation and unrealized profit-and-loss posture,
+inventory at the portfolio as-of date, understand valuation and unrealised profit-and-loss posture,
 and move from a holding to its recent booked activity. The screen supports book review and meeting
 preparation; it does not infer tax lots, suitability, recommendations, targets, drift, risk,
 performance, orders, execution, or settlement authority.
@@ -891,7 +891,7 @@ The reading order is:
 1. portfolio identity, mandate, currency, and source as-of date,
 2. assets under management, invested assets, and cash,
 3. complete booked securities and source cash balances,
-4. valuation, cost basis, weight, unrealized P&L, currency, status, and identifiers,
+4. valuation, cost basis, weight, unrealised P&L, currency, status, and identifiers,
 5. holding overview, valuation detail, and recent booked activity,
 6. the full Transactions ledger when broader activity review is needed.
 
@@ -952,7 +952,7 @@ owns screen-level selection and composes the existing holdings grid with the reu
 detail-drawer controller.
 
 The standalone header now presents source-backed AUM, invested assets, and cash. The grid calls
-the inventory `Booked holdings`, counts holdings rather than positions, omits the filter when no
+the inventory **Positions**, counts positions, omits the filter when no
 filter exists, and no longer exposes checkbox selection without a bulk workflow. `Show all
 columns` replaces the ambiguous `Expand` action and disappears when every column is visible.
 
@@ -966,7 +966,7 @@ or transactions was unavailable. The record screen could therefore retain empty 
 describe missing cash as a complete inventory or missing activity as no recent transactions. The
 loader now preserves each independently successful detail slice and publishes explicit securities,
 liquidity, and activity availability to the record composition. Positions labels an incomplete
-book as `Available holdings`, presents a business-facing partial state, retains source summary
+portfolio as **Positions**, presents a business-facing partial state, retains source summary
 totals, and uses an unavailable recent-activity state instead of a false empty result.
 
 ### Validation record
@@ -1083,7 +1083,7 @@ and exposes previous and next entry controls when source totals require them.
 The screen now uses `Booked activity`, `Activity type`, `Booking component`, `Transaction Currency`,
 `Net Cost (<portfolio currency>)`, `Settlement Status`, and `Show all columns`. Empty copy directs
 the reviewer to verify the period and source-book availability without advertising unsupported
-booking. Transaction and holding drawers also describe whether a displayed amount is local gross
+booking. Transaction and position drawers also describe whether a displayed amount is local gross
 or portfolio-currency net cost.
 
 ### Validation record

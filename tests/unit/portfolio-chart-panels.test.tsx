@@ -30,14 +30,14 @@ describe("portfolio chart panels", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("listitem", { name: /Apple Inc: 250,000 USD. Select to filter holdings./i }),
+      screen.getByRole("listitem", { name: /Apple Inc: 250,000 USD. Select to filter positions./i }),
     );
 
     expect(onSelectionChange).toHaveBeenCalledWith("EQ_1");
-    expect(screen.getByLabelText("Top holdings chart")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ranked positions chart")).toBeInTheDocument();
     expect(screen.queryByLabelText("Top holdings table")).not.toBeInTheDocument();
-    expect(screen.getByText("Ranked Holdings")).toBeInTheDocument();
-    expect(screen.getByText("Market Value focus")).toBeInTheDocument();
+    expect(screen.getByText("Ranked positions")).toBeInTheDocument();
+    expect(screen.getByText("Market value focus")).toBeInTheDocument();
     expect(screen.getByText("Equities")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
   });
@@ -57,10 +57,10 @@ describe("portfolio chart panels", () => {
     expect(screen.getByRole("status")).toHaveTextContent("No top positions available for this view");
     expect(
       screen.getByText(
-        "Ranked positions require booked holdings with current market values. Adjust the allocation filter or publish valuations to populate this view.",
+        "Ranked positions require source-backed positions with current market values. Adjust the allocation filter or publish valuations to populate this view.",
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Top holdings chart")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Ranked positions chart")).not.toBeInTheDocument();
     expect(onSelectionChange).not.toHaveBeenCalled();
   });
 

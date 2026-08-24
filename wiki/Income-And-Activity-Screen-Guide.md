@@ -135,7 +135,7 @@ capability; this guide is not a claim of bank approval or competitor superiority
 
 - [Advisor Book](Advisor-Book-Workflow) owns the advisor's source-backed portfolio selection.
 - [Portfolio Review](Portfolio-Review-Screen-Guide) owns the daily mandate decision checkpoint.
-- [Positions](Positions-Screen-Guide) owns booked holdings and holding-level activity context.
+- [Positions](Positions-Screen-Guide) owns booked positions and position-level activity context.
 - [Transactions](Transactions-Screen-Guide) owns the booked ledger and applicable settlement review.
 - Projected Cash Movement owns forward-looking movement; this screen remains booked-history only.
 - [Report Centre](Report-Centre-Screen-Guide) owns governed report requests and source lifecycle.

@@ -19,6 +19,7 @@ import type {
   PortfolioWorkspaceContext,
   PortfolioWorkspaceControls,
 } from "../view-model";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import { PORTFOLIO_TIME_WINDOW_OPTIONS } from "../view-model";
 import choiceStyles from "./portfolio-choice-groups.module.css";
 
@@ -96,7 +97,9 @@ export default function PortfolioWorkspaceToolbar({
               </div>
 
               <div className="portfolio-workspace-toolbar-field">
-                <label htmlFor="portfolio-reporting-currency">Reporting Currency</label>
+                <label htmlFor="portfolio-reporting-currency">
+                  {PORTFOLIO_CURRENCY_LABELS.reporting}
+                </label>
                 <TextField
                   id="portfolio-reporting-currency"
                   select
