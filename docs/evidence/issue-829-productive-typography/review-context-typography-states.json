@@ -2,6 +2,116 @@
   "proofType": "owned source-state fixture",
   "evidence": [
     {
+      "sourceState": "confirmed",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "measurements": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "sourceState": "confirmed",
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Mandate",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Advisory",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "measurements": {
+        "viewport": {
+          "width": 519,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 519,
+          "scrollWidth": 519
+        }
+      }
+    },
+    {
       "sourceState": "partial",
       "viewport": {
         "width": 1440,

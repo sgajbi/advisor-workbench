@@ -262,9 +262,12 @@ test.describe('Portfolio workbench smoke', () => {
     const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
     const evidence = [];
 
-    for (const sourceState of ['partial', 'unavailable'] as const) {
+    for (const sourceState of ['confirmed', 'partial', 'unavailable'] as const) {
+      if (sourceState !== 'unavailable') {
+        fixtureGateway?.setReviewContextSourceState(sourceState);
+      }
       const portfolioId =
-        sourceState === 'partial' ? 'PB_SG_GLOBAL_BAL_001' : 'PB_CONTEXT_NOT_AVAILABLE';
+        sourceState === 'unavailable' ? 'PB_CONTEXT_NOT_AVAILABLE' : 'PB_SG_GLOBAL_BAL_001';
 
       for (const viewport of [
         { width: 1440, height: 1000 },
@@ -277,9 +280,13 @@ test.describe('Portfolio workbench smoke', () => {
         const reviewContext = page.getByTestId('review-context-strip');
         await expect(reviewContext).toBeVisible({ timeout: 15_000 });
         await expect(reviewContext).toHaveAttribute('data-source-state', sourceState);
-        await expect(reviewContext.locator('dd[data-confirmed="false"]').first()).toHaveText(
-          'Not confirmed'
-        );
+        if (sourceState === 'confirmed') {
+          await expect(reviewContext.locator('dd[data-confirmed="false"]')).toHaveCount(0);
+        } else {
+          await expect(reviewContext.locator('dd[data-confirmed="false"]').first()).toHaveText(
+            'Not confirmed'
+          );
+        }
         const typography = await expectProductiveReviewContextTypography(page, sourceState);
         const measurements = await measureViewportEvidence(page);
         expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
