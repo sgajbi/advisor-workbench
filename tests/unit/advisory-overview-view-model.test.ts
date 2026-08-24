@@ -106,6 +106,29 @@ describe("buildAdvisoryOverviewModel", () => {
     });
   });
 
+  it("normalizes source timestamps to disclosed UTC and fails closed without zone evidence", () => {
+    const buildRow = (createdAt: string | undefined) =>
+      buildAdvisoryOverviewModel({
+        reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
+        proposals: [
+          {
+            proposal_id: "PRP-DRAFT",
+            portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            current_state: "DRAFT",
+            title: "Income allocation review",
+            created_at: createdAt,
+          },
+        ],
+      }).proposalRows[0];
+
+    expect(buildRow("2026-03-28T16:00:00+08:00").recordedAt).toBe(
+      "28 Mar 2026, 08:00 UTC",
+    );
+    expect(buildRow("2026-03-28T08:00:00").recordedAt).toBe("Not reported");
+    expect(buildRow("not-a-timestamp").recordedAt).toBe("Not reported");
+    expect(buildRow(undefined).recordedAt).toBe("Not reported");
+  });
+
   it("discloses that metrics and ranking cover a partial source window", () => {
     const model = buildAdvisoryOverviewModel({
       reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },

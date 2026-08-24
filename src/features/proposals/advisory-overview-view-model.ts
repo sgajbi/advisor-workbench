@@ -1,5 +1,7 @@
-import type { AdvisoryJourneyReviewContext } from "./advisory-journey-navigation";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import { buildReviewContextHref } from "@/shell/review-context";
+
+import type { AdvisoryJourneyReviewContext } from "./advisory-journey-navigation";
 import {
   proposalNextAction,
   proposalStageLabel,
@@ -109,7 +111,9 @@ export function buildAdvisoryOverviewModel({
       statusTone: proposalStageTone(proposal.current_state),
       nextAction: proposalNextAction(proposal.current_state),
       sourceOwner: proposal.created_by || "Not reported",
-      recordedAt: proposal.created_at || "Not reported",
+      recordedAt: formatTimestampValue(proposal.created_at, {
+        nullDisplay: "Not reported",
+      }),
       href: buildReviewContextHref(
         `/proposals/${encodeURIComponent(proposal.proposal_id)}`,
         workspaceContext,
