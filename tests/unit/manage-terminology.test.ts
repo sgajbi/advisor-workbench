@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { MANAGE_WORKFLOW_LABELS } from "../../src/features/workbench/manage-terminology";
@@ -15,5 +17,37 @@ describe("manage terminology", () => {
       mandateHealthDimensions: "Mandate health dimensions",
       asOfDate: "As-of date",
     });
+  });
+
+  it("does not retain the superseded heuristic exception queue or its global styles", () => {
+    expect(
+      existsSync(
+        join(
+          process.cwd(),
+          "src",
+          "features",
+          "workbench",
+          "components",
+          "exception-queue.tsx",
+        ),
+      ),
+    ).toBe(false);
+    expect(
+      readFileSync(
+        join(process.cwd(), "src", "styles", "global", "legacy-global.css"),
+        "utf8",
+      ),
+    ).not.toMatch(/\.exception-(?:list|item)\b/);
+    expect(
+      readFileSync(
+        join(
+          process.cwd(),
+          "docs",
+          "rfcs",
+          "RFC-0013-workbench-exception-queue-and-advisor-summary.md",
+        ),
+        "utf8",
+      ),
+    ).toContain("SUPERSEDED BY SOURCE-BACKED MANDATE ATTENTION WORKLIST (#799)");
   });
 });

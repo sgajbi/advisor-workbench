@@ -18,7 +18,7 @@ Governance boundary:
 | RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | IMPLEMENTED | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
 | RFC-0011 | Workbench Split View and Constraint Rail | IMPLEMENTED | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
 | RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
-| RFC-0013 | Workbench Exception Queue and Advisor Summary | IMPLEMENTED | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
+| RFC-0013 | Workbench Exception Queue and Advisor Summary | SUPERSEDED — SOURCE-BACKED MANDATE ATTENTION WORKLIST UNDER #799 | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
 | RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
 | RFC-0015 | Valuation-Ready Default Routing and Workbench Readiness | SUPERSEDED IN PART — EXPLICIT REVIEW CONTEXT UNDER #779 | `docs/rfcs/RFC-0015-valuation-ready-default-routing-and-workbench-readiness.md` |
 | RFC-0016 | Workbench Application Shell and Design-System Foundation | IMPLEMENTED | `docs/rfcs/RFC-0016-workbench-application-shell-and-design-system-foundation.md` |
