@@ -1009,7 +1009,7 @@
     },
     {
       "id": "suitability-review",
-      "businessName": "Suitability Review",
+      "businessName": "Suitability review",
       "family": "proposal",
       "routePattern": "/proposals",
       "mode": "suitability",

@@ -145,7 +145,7 @@ explicit client-release boundary.
 
 | Direction | Workspace | Preserved context |
 | --- | --- | --- |
-| Inbound | Risk and Impact, Suitability Review, Approval Queue, or Proposal Detail | Selected portfolio and proposal lifecycle |
+| Inbound | Risk and Impact, Suitability review, Approval Queue, or Proposal Detail | Selected portfolio and proposal lifecycle |
 | Detail | Proposal Detail through **Open full proposal review** | Proposal, portfolio, and Discussion Pack origin |
 | Return | Discussion Pack Review through the governed detail return link | Source proposal portfolio and Discussion Pack mode |
 | Reporting | Report package evidence | Reference only; no direct browser-to-Report call or generation action |

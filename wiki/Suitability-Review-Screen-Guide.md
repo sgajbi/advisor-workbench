@@ -1,9 +1,10 @@
-# Suitability Review
+# Suitability review
 
-Suitability Review is the advisor's portfolio-scoped decision desk for policy evaluations that
-require evidence or control review before a client discussion. It keeps one authoritative
-policy-review worklist beside one selected evaluation so the advisor can identify the next
-supported action without confusing proposal lifecycle activity with suitability workload.
+Suitability review is the adviser's portfolio-scoped decision desk for recommendations that require
+evidence or control review before a client discussion. It keeps one authoritative suitability
+worklist beside one selected review so the adviser can identify the next supported action without
+confusing proposal lifecycle activity with suitability workload. Policy evaluations remain the
+supporting source records; they do not rename the business workflow.
 
 ## Current Scope
 
@@ -11,32 +12,32 @@ supported action without confusing proposal lifecycle activity with suitability 
 | ------------------- | ------------------------------------------------------------------------------------ |
 | Canonical route     | `/proposals?portfolioId={portfolio_id}&mode=suitability`                             |
 | Navigation          | Direct bounded route; the global **Proposal** workspace remains capability-disabled  |
-| Supported scope     | One selected portfolio, one Gateway policy-review queue, and one selected evaluation |
-| Evidence posture    | Gateway-backed queue, evaluation, sign-off package, and policy workflow evidence     |
-| Primary next action | Resolve the selected evaluation's source-owned evidence requirement                  |
+| Supported scope     | One selected portfolio, one authoritative suitability worklist, and one selected review |
+| Evidence posture    | Gateway-backed evaluation, sign-off package, and policy workflow evidence               |
+| Primary next action | Resolve the selected review's source-owned evidence requirement                         |
 
-The **In review** and **Need action** measures come only from the returned policy-review queue.
+The **In review** and **Needs action** measures come only from the returned suitability worklist.
 They are not proposal-list, whole-book, household, team, or global suitability totals. This route
 does not establish production identity, entitlement, policy approval, client publication, or bank
 certification.
 
 ## Business Purpose
 
-The screen helps an advisor answer five questions in one working context:
+The screen helps an adviser answer five questions in one working context:
 
-1. Which source-owned policy evaluations are waiting for this portfolio?
-2. Which evaluation is selected, and do its proposal, portfolio, version, package, and workflow
+1. Which source-owned suitability reviews are waiting for this portfolio?
+2. Which review is selected, and do its proposal, portfolio, version, package, and workflow
    identities agree?
 3. What approval, disclosure, consent, or evidence requirement blocks the next step?
 4. What are the current sign-off, maker-checker, client-publication, and review-SLA postures?
-5. Can the advisor request more evidence, or must the source package be rechecked first?
+5. Can the adviser request more evidence, or must the source package be rechecked first?
 
 This is a review and evidence-resolution workflow. It does not calculate whether a recommendation
 is suitable and does not turn a policy evaluation into an approval decision.
 
 ## Who Uses This Screen
 
-- **Client advisors and relationship managers** select the evaluation that requires attention and
+- **Client advisers and relationship managers** select the review that needs attention and
   resolve the next supported evidence step before client discussion.
 - **Investment and product specialists** review the recorded product-policy posture and supporting
   requirements for the selected proposal.
@@ -54,25 +55,25 @@ These roles describe intended business use, not authenticated production entitle
    [Proposal](Proposal-Detail-Screen-Guide).
 2. Confirm the portfolio and source boundary shown above the decision desk.
 3. Review the policy-queue counts; do not substitute a proposal-list count.
-4. Move through evaluations with pointer or Up/Down/Home/End keys.
-5. Read the selected evaluation's required next step, source completeness, blocking rules,
+4. Move through reviews with pointer or Up/Down/Home/End keys.
+5. Read the selected review's required next step, source completeness, blocking rules,
    sign-off package, workflow, maker-checker, publication, and SLA posture.
 6. Expand **Supporting evidence** only when dependencies, source references, gaps, or blockers are
    needed for the decision.
 7. Select **Request more evidence** only when all selected identities agree and the source
-   evaluation hash is present.
+   evaluation hash is present in the supporting source record.
 8. Open the full proposal when the broader decision record is required; portfolio and Suitability
    origin remain in the link.
 
 ## Implemented Capabilities
 
-- Uses the Gateway advisory-policy review queue as the only Suitability worklist and count
+- Uses the Gateway advisory-policy review queue as the only Suitability review worklist and count
   authority; the generic proposal-list request is not made in this mode.
-- Presents an adaptive worklist-and-decision layout: simultaneous panes on desktop and advisor
+- Presents an adaptive worklist-and-decision layout: simultaneous panes on desktop and adviser
   tablet, then worklist before decision on compact screens.
 - Keeps selection explicit and deterministic across queue reorder, while removed records,
   portfolio changes, and late completions cannot publish evidence for another evaluation.
-- Reads evaluation, sign-off package, and workflow detail for the selected evaluation only; it
+- Reads evaluation, sign-off package, and workflow detail for the selected review only; it
   never fans those reads across every worklist row.
 - Requires portfolio, evaluation, proposal, proposal-version, sign-off-package, and workflow
   identity agreement before enabling the evidence request.
@@ -81,7 +82,7 @@ These roles describe intended business use, not authenticated production entitle
 - Refreshes the queue and all three selected-evidence reads as one transaction. Success is
   announced only after every source returns and the refreshed identities still agree.
 - Keeps earlier evidence visible but explicitly unconfirmed when refresh fails, with an exact
-  source retry and focus restoration that does not steal focus after the advisor moves elsewhere.
+  source retry and focus restoration that does not steal focus after the adviser moves elsewhere.
 - Records a bounded **request more evidence** decision through Gateway with an idempotency key and
   the source evaluation hash.
 - Preserves portfolio and `fromMode=suitability` context when opening Proposal Detail.
@@ -92,8 +93,8 @@ These roles describe intended business use, not authenticated production entitle
 
 | User decision or action    | Required evidence or gate                                   | Persisted business change                                           |
 | -------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
-| Select an evaluation       | Evaluation is present in the current policy-review queue    | None; changes browser decision context only                         |
-| Refresh source evidence    | Current portfolio and selected evaluation identity          | None; replaces visible posture only after compound source agreement |
+| Select a suitability review | Review is present in the current suitability worklist       | None; changes browser decision context only                         |
+| Refresh source evidence     | Current portfolio and selected source-record identity       | None; replaces visible posture only after compound source agreement |
 | Request more evidence      | Exact source identity agreement plus source evaluation hash | Records a bounded evidence-review request through Gateway           |
 | Open full proposal         | Selected proposal identity and supported detail route       | None; opens the governed proposal record                            |
 | Expand supporting evidence | Selected source package is available                        | None; reveals dependencies, references, gaps, and blockers          |
@@ -110,7 +111,7 @@ authorize client publication, create an order, or instruct execution.
 | Approval, disclosure, consent, and source-evidence requirements        | Translated into private-banking workflow language without changing meaning | Advise policy evaluation through Gateway           |
 | Sign-off package and source lineage posture                            | Shown only when selected source identities agree                           | Advise sign-off package through Gateway            |
 | Workflow, maker-checker, client-publication, blockers, and SLA posture | Presented as source state, not browser approval                            | Advise policy workflow through Gateway             |
-| Selected evaluation                                                    | Advisor interaction state fenced by portfolio and evaluation identity      | Workbench interaction state; not a source mutation |
+| Selected suitability review                                            | Adviser interaction state fenced by portfolio and evaluation identity      | Workbench interaction state; not a source mutation |
 | Request more evidence                                                  | Submitted with idempotency and the source evaluation hash                  | Advise persistence through Gateway                 |
 
 Shared contract details remain in [API Surface](API-Surface) and [Integrations](Integrations).
@@ -120,9 +121,9 @@ Workbench never calls Advise directly.
 
 | State                        | What the user sees                                                             | Recovery posture                                                    |
 | ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Loading                      | Policy evaluations are being retrieved                                         | Wait; no proposal-list fallback or empty claim is shown             |
+| Loading                      | Suitability reviews are being retrieved                                        | Wait; no proposal-list fallback or empty claim is shown             |
 | Ready                        | One policy worklist, coherent counts, and one source-aligned selected decision | Resolve the named evidence step or open the full proposal           |
-| Empty                        | Gateway returned no pending evaluations for the portfolio                      | Continue only when a new source evaluation enters the queue         |
+| Empty                        | The authoritative source returned no pending reviews for the portfolio          | Continue when a new source review enters the worklist               |
 | Selected evidence checking   | Worklist remains visible while evaluation, package, and workflow settle        | Wait; no action is enabled from partial identity                    |
 | Partial or identity conflict | The conflicting selected evidence is named and the request action is withheld  | Recheck the exact policy identity and supporting sources            |
 | Refreshing                   | Earlier evidence remains visible under its confirmed context                   | Wait for the queue and three selected reads to complete             |
@@ -130,12 +131,12 @@ Workbench never calls Advise directly.
 | Permission blocked           | Policy details and cached selected facts remain hidden                         | Use the bank's access process; no browser bypass is offered         |
 | Unavailable                  | No fallback evaluation or inferred policy posture is shown                     | Retry through Gateway after source recovery                         |
 | Mutation pending             | The request control is disabled and recording is announced                     | Wait; do not submit a second request                                |
-| Mutation failed              | Failure is announced explicitly and no success posture is shown                | Retry only after confirming the selected evaluation remains current |
+| Mutation failed              | Failure is announced explicitly and no success posture is shown                | Retry only after confirming the selected review remains current     |
 | Mutation confirmed           | Confirmation appears only after Gateway persistence succeeds                   | Continue with the refreshed source posture                          |
 
 ## Workbench Boundaries
 
-Suitability Review deliberately does not:
+Suitability review deliberately does not:
 
 - calculate suitability, target-market eligibility, mandate compliance, risk tolerance, loss
   capacity, knowledge, or experience;
@@ -144,7 +145,7 @@ Suitability Review deliberately does not:
   settlement, custody, or accounting state;
 - invent client, household, assignee, urgency, due-date, priority, or whole-book facts;
 - use proposal lifecycle state as a substitute for policy evaluation evidence;
-- expose source hashes, raw reason codes, or technical payload fields as advisor conclusions;
+- expose source hashes, raw reason codes, or technical payload fields as adviser conclusions;
 - establish production identity, entitlement, unrestricted Proposal navigation, bank approval, or
   competitor superiority.
 
@@ -153,7 +154,7 @@ Suitability Review deliberately does not:
 | Direction          | Adjacent workspace                                                    | Context preserved                                       |
 | ------------------ | --------------------------------------------------------------------- | ------------------------------------------------------- |
 | Inbound            | Advisor Book, Advisory Overview, Proposal Builder, or Proposal Detail | Selected portfolio                                      |
-| Outbound           | Proposal Detail through **Open full proposal**                        | Proposal, portfolio, and Suitability origin             |
+| Outbound           | Proposal Detail through **Open full proposal**                        | Proposal, portfolio, and Suitability review origin      |
 | Related lifecycle  | [Risk and Impact](Risk-And-Impact-Screen-Guide)                       | Portfolio only; Risk proves its own selected evidence   |
 | Client preparation | [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide)         | Portfolio only; release controls remain independent     |
 | Later handoff      | [Implementation Status](Implementation-Status-Screen-Guide)           | Portfolio only; execution evidence remains source-owned |

@@ -6560,6 +6560,18 @@ runtime terminology was introduced:
    control. Lotus adopts the source-owned, exception-led review principle without claiming Aladdin
    parity, official-return status, or GIPS compliance.
 
+Suitability implementation was reconfirmed on 2026-08-25 against current primary regulatory
+guidance before the workflow language was aligned:
+
+1. [FCA COBS 9A.2](https://handbook.fca.org.uk/handbook/COBS/9A/2.html) frames suitability around
+   the client's knowledge and experience, financial situation and capacity for loss, investment
+   objectives, and risk tolerance. Lotus therefore names the adviser task **Suitability review**;
+   it does not imply that the browser itself performs or completes the assessment.
+2. [ESMA's 2022 MiFID II suitability guidelines](https://www.esma.europa.eu/sites/default/files/library/esma35-43-3172_final_report_on_mifid_ii_guidelines_on_suitability.pdf)
+   reinforce a client-specific, evidence-led assessment and durable controls. Lotus therefore
+   keeps the source policy record and its evaluation identity visible as supporting evidence while
+   presenting one prioritised review worklist and next permitted action.
+
 ### Adopted decisions
 
 1. Maintain one cross-domain meaning authority in
@@ -6576,6 +6588,9 @@ runtime terminology was introduced:
    evidence. Use instruction, wave, and campaign for increasing rebalance scope.
 7. Use UK English, sentence case, business benchmark labels, and progressive support disclosure for
    technical references.
+8. Name the Suitability review source boundary as an authoritative policy record, not as
+   `Gateway-backed` implementation topology; preserve Gateway and Advise ownership in engineering
+   and integration documentation.
 
 ### Rejected decisions
 
@@ -6590,6 +6605,9 @@ runtime terminology was introduced:
    copy.
 6. Repeating raw benchmark codes, correlation identifiers, reason codes, or service names in the
    primary business path.
+7. Renaming a policy evaluation as the adviser workflow, presenting Gateway topology as productive
+   UI, or claiming that Workbench assesses suitability, approves sign-off, waives controls, or
+   authorises client communication.
 
 ### Validation and publication decision
 

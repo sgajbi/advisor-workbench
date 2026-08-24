@@ -235,7 +235,7 @@ must travel through Gateway-shaped contracts.
     handoff and reconciliation, and the named downstream provider remains the execution system of
     record. Workbench never calls Advise or an execution provider directly and does not reinterpret
     downstream references as orders, fills, allocations, settlement, custody, or accounting proof.
-22. Suitability Review consumes the Advise-owned policy-review queue, evaluation, sign-off package,
+22. Suitability review consumes the Advise-owned policy-review queue, evaluation, sign-off package,
     workflow, and bounded evidence-request mutation only through the Workbench BFF and Gateway. The
     queue is the screen's sole count authority; selected evidence reads do not fan out across every
     row. Workbench requires exact selected identity agreement before action, keeps a failed compound

@@ -208,7 +208,7 @@ concurrency group.
   before the panel is classified as ready
 - RFC-0024 advisory journey route proof is recorded in `advisoryJourneyChecks` with screenshots for
   Advisory Overview, Client Context, Opportunities and Ideas, Proposal Builder, Proposal
-  Simulation, Suitability Review, Risk and Impact, Approval Queue, Discussion Pack Review, and
+  Simulation, Suitability review, Risk and Impact, Approval Queue, Discussion Pack Review, and
   Implementation Status. This is route evidence over existing Gateway-backed screens, not a new
   client-ready, communication, execution, or backend capability claim.
 - The focused Implementation Status Playwright proof is stronger than that route check: it verifies
@@ -216,7 +216,7 @@ concurrency group.
   unsupported order/fill/settlement boundary, refresh confirmation, focus continuity, and
   1440/1280/1024/720/390 reflow. Canonical readiness still requires fresh source-backed runtime
   evidence; a screenshot alone is not contract proof.
-- RFC-0025 Suitability Review policy-queue proof must use the Gateway-backed advisory policy
+- RFC-0025 Suitability review policy-queue proof must use the Gateway-backed advisory policy
   review queue, selected evaluation, sign-off package, workflow posture, and bounded
   request-more-evidence decision route. The live validator seeds this from the governed
   `RFC25_SG_STRUCTURED_NOTE_PENDING_REVIEW` scenario in the canonical front-office demo-data

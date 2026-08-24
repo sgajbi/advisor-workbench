@@ -96,7 +96,7 @@ return, approve client release, or provide a screen-local evidence retry.
 
 ## Advisor Suitability Policy Review Queue
 
-The RFC-0025 Suitability Review surface gives advisors and supervisors a governed queue of
+The RFC-0025 Suitability review surface gives advisers and supervisors a governed queue of
 source-owned policy evaluations that need review before client discussion.
 
 Implemented:

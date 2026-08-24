@@ -136,7 +136,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | ------------------------------------------------------------- | --------------------------------- | ------------------- | --------------- | ------------------------------------- |
 | [Proposal Builder](Proposal-Builder-Screen-Guide)             | `/proposals/simulate`             | Capability-disabled | Guide available | Gateway, Advise, and Core             |
 | [Approval Queue](Approval-Queue-Screen-Guide)                 | `/proposals?mode=approval-queue`  | Capability-disabled | Guide available | Gateway and Advise                    |
-| [Suitability Review](Suitability-Review-Screen-Guide)         | `/proposals?mode=suitability`     | Capability-disabled | Guide available | Gateway and Advise                    |
+| [Suitability review](Suitability-Review-Screen-Guide)         | `/proposals?mode=suitability`     | Capability-disabled | Guide available | Gateway and Advise                    |
 | [Risk and Impact](Risk-And-Impact-Screen-Guide)               | `/proposals?mode=risk-impact`     | Capability-disabled | Guide available | Gateway, Advise, Core, and Risk       |
 | [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide) | `/proposals?mode=discussion-pack` | Capability-disabled | Guide available | Gateway, Advise, and Report           |
 | [Implementation Status](Implementation-Status-Screen-Guide)   | `/proposals?mode=implementation`  | Capability-disabled | Guide available | Gateway and Advise                    |
