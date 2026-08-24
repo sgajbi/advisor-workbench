@@ -19,6 +19,8 @@ const REVIEW_STATE_LABELS: Readonly<Record<string, string>> = {
   NOT_REVIEW_REQUIRED: "No review required",
 };
 
+const REVIEW_ACTOR_NAMESPACE = "review:";
+
 type AdvisorBriefHumanReview = {
   state: AiHumanReviewState;
   sourceRecorded: boolean;
@@ -34,14 +36,25 @@ export function getAdvisorBriefReviewStateLabel(value: unknown): string {
   return REVIEW_STATE_LABELS[normalizeAdvisorBriefStateCode(value)] ?? "Not reported";
 }
 
+export function resolveAdvisorBriefReviewerReference(value: unknown): string | undefined {
+  const sourceActor = typeof value === "string" ? value.trim() : "";
+  if (!sourceActor) {
+    return undefined;
+  }
+
+  if (!sourceActor.startsWith(REVIEW_ACTOR_NAMESPACE)) {
+    return sourceActor;
+  }
+
+  const reviewerReference = sourceActor.slice(REVIEW_ACTOR_NAMESPACE.length).trim();
+  return reviewerReference || undefined;
+}
+
 export function buildAdvisorBriefHumanReview(
   workflowPackRun: WorkbenchAdvisorBriefWorkflowPackRun | null | undefined
 ): AdvisorBriefHumanReview {
   const sourceRecorded = hasRecordedAdvisorBriefReviewEvidence(workflowPackRun);
-  const actor =
-    typeof workflowPackRun?.latest_review_actor === "string"
-      ? workflowPackRun.latest_review_actor.trim()
-      : undefined;
+  const actor = resolveAdvisorBriefReviewerReference(workflowPackRun?.latest_review_actor);
   const occurredAt =
     typeof workflowPackRun?.latest_review_event_at === "string"
       ? workflowPackRun.latest_review_event_at.trim()
