@@ -61,7 +61,7 @@ export function buildPositionsReviewAvailability(
   const unavailableDetails = [
     !positionsAvailable ? "booked security detail" : null,
     !liquidityAvailable ? "cash-balance detail" : null,
-    !activityAvailable ? "recent holding activity" : null,
+    !activityAvailable ? "recent position activity" : null,
   ].filter((value): value is string => Boolean(value));
   const inventoryComplete = positionsAvailable && liquidityAvailable;
 
@@ -73,13 +73,13 @@ export function buildPositionsReviewAvailability(
     inventoryComplete,
     activityAvailable,
     partialState: {
-      title: "Holdings review partially available",
+      title: "Positions review partially available",
       body: `${capitalizeFirst(formatBusinessList(unavailableDetails))} ${
         unavailableDetails.length === 1 ? "is" : "are"
       } temporarily unavailable. Available source records remain visible.`,
       hint: inventoryComplete
         ? "The booked inventory remains available; open Transactions when activity is restored for full ledger review."
-        : "Portfolio totals above remain available from the source summary; the holdings inventory below is partial.",
+        : "Portfolio totals above remain available from the source summary; the position inventory below is partial.",
     },
   };
 }

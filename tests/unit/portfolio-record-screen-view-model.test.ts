@@ -20,7 +20,7 @@ describe("portfolio record screen view model", () => {
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
       title: "Allocation",
       subtitle:
-        "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
+        "Review portfolio exposures and trace each direct allocation to its contributing positions.",
     });
     expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
     expect(getPortfolioRecordScreenCopy("income").subtitle).toContain("booked income");
@@ -36,7 +36,7 @@ describe("portfolio record screen view model", () => {
     const workspace = buildWorkspace();
 
     expect(buildPortfolioRecordScreenSubtitle("positions")).toBe(
-      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity."
+      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent position activity."
     );
     expect(buildPortfolioRecordHeaderKpis(workspace)).toEqual([
       { label: "Portfolio value", value: "1,000,000 USD" },

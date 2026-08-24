@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 
 import type { PortfolioPositionView } from "../types";
 import { formatCount, formatCurrency, formatDate, formatPct, formatQuantity } from "../formatters";
+import { PORTFOLIO_CURRENCY_LABELS, PORTFOLIO_SCREEN_LABELS } from "../portfolio-terminology";
 import {
   buildPortfolioScreenHref,
   type PortfolioReviewContext,
@@ -58,7 +59,7 @@ export default function PortfolioHoldingsGrid({
   baseCurrency,
   columnMode,
   kicker = "Positions",
-  title = "Holdings",
+  title = PORTFOLIO_SCREEN_LABELS.positions,
   description,
   filterLabel,
   onClearFilter,
@@ -105,7 +106,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "assetClass",
-        headerName: "Asset Class",
+        headerName: "Asset class",
         field: "assetClass",
         pinned: pinImportantColumns ? "left" : null,
         hide: !columnVisibility.assetClass,
@@ -141,7 +142,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "marketValue",
-        headerName: "Market Value",
+        headerName: "Market value",
         field: "marketValue",
         type: "numericColumn",
         hide: !columnVisibility.marketValue,
@@ -150,7 +151,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "costBasis",
-        headerName: "Cost Basis",
+        headerName: "Cost basis",
         field: "costBasis",
         type: "numericColumn",
         hide: !columnVisibility.costBasis,
@@ -168,7 +169,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "upl",
-        headerName: "Unrealized P&L",
+        headerName: "Unrealised P&L",
         field: "upl",
         type: "numericColumn",
         hide: !columnVisibility.upl,
@@ -179,7 +180,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "currency",
-        headerName: "Currency",
+        headerName: PORTFOLIO_CURRENCY_LABELS.instrument,
         field: "currency",
         hide: !columnVisibility.currency,
         minWidth: 92,
@@ -193,7 +194,7 @@ export default function PortfolioHoldingsGrid({
       }),
       buildHoldingsColumn({
         key: "heldSince",
-        headerName: "Held Since",
+        headerName: "Held since",
         field: "heldSince",
         hide: !columnVisibility.heldSince,
         minWidth: 116,
@@ -215,7 +216,7 @@ export default function PortfolioHoldingsGrid({
       kicker={kicker}
       title={title}
       description={resolvedDescription}
-      summaryLabel={formatCount(rowData.length, "holding")}
+      summaryLabel={formatCount(rowData.length, "position")}
       summaryValue={formatCurrency(sumHoldingsMarketValue(rowData), baseCurrency)}
       searchControl={
         <TextField
@@ -223,7 +224,7 @@ export default function PortfolioHoldingsGrid({
           value={quickSearch}
           onChange={(event) => setQuickSearch(event.target.value)}
           placeholder="Search ticker or description"
-          inputProps={{ "aria-label": "Search holdings" }}
+          inputProps={{ "aria-label": "Search positions" }}
           className="portfolio-record-search"
         />
       }
@@ -234,7 +235,7 @@ export default function PortfolioHoldingsGrid({
             variant="outlined"
             aria-haspopup="menu"
             aria-expanded={Boolean(chooserAnchor)}
-            aria-label="Choose holdings columns"
+            aria-label="Choose position columns"
             onClick={(event) => setChooserAnchor(event.currentTarget)}
           >
             Columns
@@ -252,7 +253,7 @@ export default function PortfolioHoldingsGrid({
           <Button
             size="small"
             variant="outlined"
-            aria-label="Export holdings"
+            aria-label="Export positions"
             onClick={() => exportHoldingsCsv(rowData, columnVisibility, baseCurrency)}
           >
             Export
@@ -261,7 +262,7 @@ export default function PortfolioHoldingsGrid({
             <Button
               size="small"
               variant="outlined"
-              aria-label="Show all holdings columns"
+              aria-label="Show all position columns"
               onClick={() => setColumnVisibility(buildExpandedHoldingsColumnVisibility())}
             >
               Show all columns
@@ -280,7 +281,7 @@ export default function PortfolioHoldingsGrid({
             <Button size="small" variant="text" onClick={onClearFilter}>
               Clear filter
             </Button>
-            <span>{formatCount(rowData.length, "holding")} in the current book view</span>
+            <span>{formatCount(rowData.length, "position")} in the selected portfolio</span>
           </div>
         </div>
       ) : null}
@@ -291,13 +292,13 @@ export default function PortfolioHoldingsGrid({
             <PortfolioModuleState
               variant="status"
               state="partial"
-              title="Holdings partially valued"
-              body={`${formatCount(unpricedCount, "holding")} is missing current price or valuation data.`}
-              hint="The visible book is usable, but market value and P&L are incomplete for some positions."
+              title="Positions partially valued"
+              body={`${formatCount(unpricedCount, "position")} is missing current price or valuation data.`}
+              hint="The selected portfolio remains usable, but market value and P&L are incomplete for some positions."
             />
           ) : null}
           <PortfolioDataGridFrame<HoldingsRow>
-            ariaLabel="Portfolio holdings grid"
+            ariaLabel="Portfolio positions grid"
             density={columnMode}
             rowData={rowData}
             columnDefs={columnDefs}
@@ -317,8 +318,8 @@ export default function PortfolioHoldingsGrid({
         <PortfolioModuleState
           variant="status"
           state="empty"
-          title="No contributing holdings found"
-          body={`No booked holdings match ${filterLabel}.`}
+          title="No contributing positions found"
+          body={`No booked positions match ${filterLabel}.`}
           hint="The exposure may rely on classification detail that is not present on the booked positions."
           action={
             <button type="button" onClick={onClearFilter}>
@@ -330,13 +331,13 @@ export default function PortfolioHoldingsGrid({
         <PortfolioModuleState
           variant="status"
           state="empty"
-          title="No holdings in this portfolio"
-          body="The holdings inventory is empty."
-          hint="Add securities, cash funding, or subscriptions to populate the book."
+          title="No positions in this portfolio"
+          body="The position inventory is empty."
+          hint="Add securities, cash funding, or subscriptions to populate the portfolio."
           why={{
             body:
-              "Holdings require booked positions or funded balances. Until inventory is booked into the portfolio, the holdings grid stays empty.",
-            label: "Why holdings are unavailable",
+              "Positions require booked securities or funded balances. Until inventory is booked into the portfolio, the positions grid stays empty.",
+            label: "Why positions are unavailable",
           }}
           action={
             <>
@@ -390,7 +391,7 @@ function holdingsInstrumentCellRenderer(
     <button
       type="button"
       className="portfolio-instrument-cell portfolio-instrument-review"
-      aria-label={`Review ${row.instrument} holding`}
+      aria-label={`Review ${row.instrument} position`}
       onClick={(event) => {
         event.stopPropagation();
         params.onReview?.(row);
@@ -425,5 +426,5 @@ function exportHoldingsCsv(
   visibility: Record<HoldingsColumnKey, boolean>,
   baseCurrency: string
 ) {
-  downloadCsv("portfolio-holdings.csv", buildHoldingsExportRows(rows, visibility, baseCurrency));
+  downloadCsv("portfolio-positions.csv", buildHoldingsExportRows(rows, visibility, baseCurrency));
 }

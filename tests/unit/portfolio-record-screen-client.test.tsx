@@ -131,7 +131,7 @@ vi.mock(
       onClearFilter?: () => void;
       onRowSelect?: (row: HoldingsRow) => void;
     }) => (
-      <section aria-label="Holdings breakdown">
+      <section aria-label="Positions breakdown">
         <span>{kicker}</span>
         <h2>{title}</h2>
         <p>{description}</p>
@@ -205,7 +205,7 @@ vi.mock(
       onClose: () => void;
     }) =>
       detailDrawer ? (
-        <aside aria-label="Holding review drawer">
+        <aside aria-label="Position review drawer">
           <h2>{detailDrawer.title}</h2>
           {detailDrawer.tabs.map((tab) => (
             <section key={tab.key} aria-label={tab.label}>
@@ -215,14 +215,14 @@ vi.mock(
           {detailDrawer.fullPageHref && detailDrawer.fullPageLabel ? (
             <a href={detailDrawer.fullPageHref}>{detailDrawer.fullPageLabel}</a>
           ) : null}
-          <button type="button" onClick={onClose}>Close holding review</button>
+          <button type="button" onClick={onClose}>Close position review</button>
         </aside>
       ) : null,
   }),
 );
 
 describe("PortfolioRecordScreenClient allocation flow", () => {
-  it("connects direct exposure selection to contributing holdings and clears it", () => {
+  it("connects direct exposure selection to contributing positions and clears it", () => {
     render(
       <PortfolioAllocationRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -232,19 +232,19 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     );
 
     expect(screen.getByText("Exposure contributors")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Positions" })).toBeInTheDocument();
     expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
     expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Select Technology" }));
 
     expect(
-      screen.getByRole("heading", { name: "Contributing holdings" }),
+      screen.getByRole("heading", { name: "Contributing positions" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Sector: Technology")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "1 of 3 booked holdings contribute to this direct exposure.",
+        "1 of 3 positions contribute to this direct exposure.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
@@ -252,7 +252,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Clear exposure" }));
 
-    expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Positions" })).toBeInTheDocument();
     expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
   });
 
@@ -272,7 +272,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
     expect(screen.queryByText("US Technology Equity")).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        "1 of 3 booked holdings contribute to this direct exposure.",
+        "1 of 3 positions contribute to this direct exposure.",
       ),
     ).toBeInTheDocument();
   });
@@ -300,7 +300,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Positions" })).toBeInTheDocument();
     expect(screen.queryByText("Sector: Technology")).not.toBeInTheDocument();
     expect(screen.getByText("US Technology Equity")).toBeInTheDocument();
     expect(screen.getByText("Singapore Government Bond")).toBeInTheDocument();
@@ -320,10 +320,10 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
       screen.getByRole("button", { name: "Use expanded exposure" }),
     );
 
-    expect(screen.getByRole("heading", { name: "Booked holdings" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Positions" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Booked holdings are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
+        "Positions are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Sector: Technology")).not.toBeInTheDocument();
@@ -333,7 +333,7 @@ describe("PortfolioRecordScreenClient allocation flow", () => {
 });
 
 describe("PortfolioRecordScreenClient positions flow", () => {
-  it("shows point-in-time book composition and opens source-backed holding activity", () => {
+  it("shows point-in-time portfolio composition and opens source-backed position activity", () => {
     const workspace = buildWorkspace();
     workspace.summary = {
       ...workspace.summary,
@@ -385,9 +385,9 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       screen.getByRole("button", { name: "Review US Technology Equity" }),
     );
 
-    expect(screen.getByRole("complementary", { name: "Holding review drawer" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Position review drawer" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "US Technology Equity" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Recent Activity")).toHaveTextContent(
+    expect(screen.getByLabelText("Recent activity")).toHaveTextContent(
       "Recent booked activity supplied with the portfolio review as of 10 Apr 2026",
     );
     expect(screen.getByText("US_TECH · 100 USD gross")).toBeInTheDocument();
@@ -402,10 +402,10 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Close holding review" }),
+      screen.getByRole("button", { name: "Close position review" }),
     );
     expect(
-      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+      screen.queryByRole("complementary", { name: "Position review drawer" }),
     ).not.toBeInTheDocument();
     expect(routerPushMock).toHaveBeenLastCalledWith(
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
@@ -439,10 +439,10 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     );
 
     expect(
-      screen.getByText("Holding is not in this confirmed portfolio view"),
+      screen.getByText("Position is not in this confirmed portfolio view"),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+      screen.queryByRole("complementary", { name: "Position review drawer" }),
     ).not.toBeInTheDocument();
   });
 
@@ -469,7 +469,7 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       />,
     );
     expect(
-      screen.queryByRole("complementary", { name: "Holding review drawer" }),
+      screen.queryByRole("complementary", { name: "Position review drawer" }),
     ).not.toBeInTheDocument();
 
     rerender(
@@ -503,20 +503,20 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       />,
     );
 
-    expect(screen.getByText("Holdings review partially available")).toBeInTheDocument();
+    expect(screen.getByText("Positions review partially available")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Cash-balance detail and recent holding activity are temporarily unavailable. Available source records remain visible.",
+        "Cash-balance detail and recent position activity are temporarily unavailable. Available source records remain visible.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Available holdings" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Positions" })).toHaveLength(2);
     expect(screen.queryByRole("button", { name: "Review USD Operating Cash" })).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Review US Technology Equity" }),
     );
-    expect(screen.getByLabelText("Recent Activity")).toHaveTextContent(
-      "We could not load recent booked activity for this holding.",
+    expect(screen.getByLabelText("Recent activity")).toHaveTextContent(
+      "We could not load recent booked activity for this position.",
     );
   });
 });

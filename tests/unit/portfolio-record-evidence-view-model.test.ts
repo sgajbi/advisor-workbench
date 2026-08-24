@@ -50,17 +50,17 @@ describe("portfolio record evidence view model", () => {
     expect(viewModel.sourcePostureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Pricing Source",
-          detail: "1 holding missing price or valuation",
+          label: "Pricing source",
+          detail: "1 position missing price or valuation",
           status: "Partial",
           tone: "warn",
         }),
         expect.objectContaining({
-          label: "Positions Ledger",
+          label: "Position ledger",
           detail: "2 positions available for review",
         }),
         expect.objectContaining({
-          label: "Position Status",
+          label: "Position status",
           detail:
             "1 position requires review; 1 position status not reported; 1 source key stale",
           status: "Review required",
@@ -104,7 +104,7 @@ describe("portfolio record evidence view model", () => {
     expect(viewModel.status).toEqual({ label: "Partial", tone: "warn" });
     expect(viewModel.sourcePostureItems).toContainEqual(
       expect.objectContaining({
-        label: "Position Status",
+        label: "Position status",
         detail: "1 position status not reported",
         status: "Not reported",
         tone: "warn",
@@ -135,7 +135,7 @@ describe("portfolio record evidence view model", () => {
     expect(viewModel.status).toEqual({ label: "Ready", tone: "success" });
     expect(viewModel.sourcePostureItems).toContainEqual(
       expect.objectContaining({
-        label: "Position Status",
+        label: "Position status",
         detail: "1 position status current",
         status: "Current",
         tone: "success",
@@ -176,13 +176,13 @@ describe("portfolio record evidence view model", () => {
     expect(viewModel.sourcePostureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          label: "Income Source",
-          source: "Book records",
+          label: "Income source",
+          source: "Portfolio records",
           detail: "No classified income returned for the selected reporting window",
           status: "Unavailable",
         }),
         expect.objectContaining({
-          label: "Activity Buckets",
+          label: "Activity buckets",
           source: "Activity classification",
           detail: "No activity buckets returned for the selected reporting window",
           status: "Unavailable",

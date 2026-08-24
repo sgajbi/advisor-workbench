@@ -121,7 +121,7 @@ export default function PortfolioAllocationPanel({
             aria-label={
               lookThroughSupported
                 ? lookThroughRequestedMode === "prefer_look_through"
-                  ? "Show direct holdings"
+                  ? "Show direct positions"
                   : "Show expanded exposure"
                 : lookThroughCoverageStatus === "failed"
                   ? "Expanded exposure coverage could not be confirmed"
@@ -142,7 +142,7 @@ export default function PortfolioAllocationPanel({
           >
             {lookThroughRequestedMode === "prefer_look_through"
               ? "Expanded exposure"
-              : "Direct holdings"}
+              : "Direct positions"}
           </button>
 
           <ActionButton
@@ -233,7 +233,7 @@ function AllocationCoverageStatus({ status }: { status: AllocationCoverageStatus
         title="Checking expanded exposure"
         message="Direct allocation remains available while source coverage is confirmed."
         requestedContext="Expanded exposure"
-        confirmedContext="Direct holdings"
+        confirmedContext="Direct positions"
       />
     );
   }
@@ -246,7 +246,7 @@ function AllocationCoverageStatus({ status }: { status: AllocationCoverageStatus
         title="Expanded exposure could not be confirmed"
         message="Direct allocation remains available. Recheck source coverage before using expanded exposure."
         requestedContext="Expanded exposure"
-        confirmedContext="Direct holdings"
+        confirmedContext="Direct positions"
       />
     );
   }
@@ -255,7 +255,7 @@ function AllocationCoverageStatus({ status }: { status: AllocationCoverageStatus
     <WorkbenchRefreshStatus
       kind="confirmed"
       eyebrow="Exposure coverage"
-      title={status === "available" ? "Source coverage confirmed" : "Direct holdings only"}
+      title={status === "available" ? "Source coverage confirmed" : "Direct positions only"}
       confirmedContext={
         status === "available"
           ? "Expanded exposure is available for this portfolio snapshot"

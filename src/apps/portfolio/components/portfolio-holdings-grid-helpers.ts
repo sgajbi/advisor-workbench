@@ -1,5 +1,6 @@
 import type { PortfolioPositionView } from "../types";
 import { formatStatus } from "../formatters";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import {
   buildPortfolioPositionState,
   type PortfolioPositionStateKind,
@@ -59,17 +60,17 @@ export const DEFAULT_HOLDINGS_COLUMN_VISIBILITY: Record<HoldingsColumnKey, boole
 
 export const HOLDINGS_COLUMN_LABELS: Record<HoldingsColumnKey, string> = {
   instrument: "Instrument",
-  assetClass: "Asset Class",
+  assetClass: "Asset class",
   quantity: "Quantity",
   price: "Price",
-  marketValue: "Market Value",
-  costBasis: "Cost Basis",
+  marketValue: "Market value",
+  costBasis: "Cost basis",
   weight: "Weight",
-  upl: "Unrealized P&L",
-  currency: "Currency",
+  upl: "Unrealised P&L",
+  currency: PORTFOLIO_CURRENCY_LABELS.instrument,
   status: "Status",
   sector: "Sector",
-  heldSince: "Held Since",
+  heldSince: "Held since",
   isin: "ISIN",
 };
 
@@ -153,7 +154,7 @@ export function buildHoldingsExportRows(
           output["Instrument"] = row.instrument;
           break;
         case "assetClass":
-          output["Asset Class"] = row.assetClass;
+          output["Asset class"] = row.assetClass;
           break;
         case "quantity":
           output["Quantity"] = row.quantity;
@@ -162,19 +163,19 @@ export function buildHoldingsExportRows(
           output["Price"] = row.price ?? "";
           break;
         case "marketValue":
-          output[`Market Value (${baseCurrency})`] = row.marketValue ?? "";
+          output[`Market value (${baseCurrency})`] = row.marketValue ?? "";
           break;
         case "costBasis":
-          output[`Cost Basis (${baseCurrency})`] = row.costBasis ?? "";
+          output[`Cost basis (${baseCurrency})`] = row.costBasis ?? "";
           break;
         case "weight":
           output["Weight %"] = row.weight ?? "";
           break;
         case "upl":
-          output[`Unrealized P&L (${baseCurrency})`] = row.upl ?? "";
+          output[`Unrealised P&L (${baseCurrency})`] = row.upl ?? "";
           break;
         case "currency":
-          output["Currency"] = row.currency;
+          output[PORTFOLIO_CURRENCY_LABELS.instrument] = row.currency;
           break;
         case "status":
           output["Status"] = row.status;
@@ -183,7 +184,7 @@ export function buildHoldingsExportRows(
           output["Sector"] = row.sector;
           break;
         case "heldSince":
-          output["Held Since"] = row.heldSince ?? "";
+          output["Held since"] = row.heldSince ?? "";
           break;
         case "isin":
           output["ISIN"] = row.isin ?? "";

@@ -471,7 +471,7 @@ describe("portfolio view model", () => {
     expect(getBookReadinessTone(workspace)).toBe("success");
 
     expect(buildPortfolioReadinessIndicators(workspace)).toEqual([
-      { key: "holdings", label: "Holdings", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
+      { key: "holdings", label: "Positions", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
       { key: "transactions", label: "Transactions", status: "Ready", href: `/transactions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },
@@ -497,7 +497,7 @@ describe("portfolio view model", () => {
     workspace.recent_transactions = [];
 
     expect(buildPortfolioReadinessIndicators(workspace)).toEqual([
-      { key: "holdings", label: "Holdings", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
+      { key: "holdings", label: "Positions", status: "Ready", href: `/positions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "pricing", label: "Pricing", status: "Ready", href: "#portfolio-attention" },
       { key: "transactions", label: "Transactions", status: "Ready", href: `/transactions?portfolioId=${workspace.portfolio.portfolio_id}` },
       { key: "reporting", label: "Reporting", status: "Ready", href: "#portfolio-health" },

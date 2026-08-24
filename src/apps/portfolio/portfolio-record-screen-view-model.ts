@@ -29,12 +29,12 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
 > = {
   allocation: {
     title: "Allocation",
-    subtitle: "Review portfolio exposures and trace each direct allocation to its contributing holdings.",
+    subtitle: "Review portfolio exposures and trace each direct allocation to its contributing positions.",
   },
   positions: {
     title: PORTFOLIO_SCREEN_LABELS.positions,
     subtitle:
-      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent holding activity.",
+      "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent position activity.",
   },
   transactions: {
     title: "Transactions",

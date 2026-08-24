@@ -1,7 +1,7 @@
 # Portfolio Allocation
 
 Portfolio Allocation is the selected mandate's exposure-review workspace. It connects source
-allocation views to the booked holdings that contribute to a direct exposure while keeping
+allocation views to the booked positions that contribute to a direct exposure while keeping
 expanded look-through coverage visibly separate. It does not set a target allocation, diagnose a
 breach, recommend a rebalance, or authorize execution.
 
@@ -26,17 +26,17 @@ questions before a portfolio review:
 
 1. How is the selected mandate currently distributed across the available exposure dimensions?
 2. Which exposures are largest by source market value and portfolio weight?
-3. Which booked holdings contribute to a selected direct exposure?
+3. Which booked positions contribute to a selected direct exposure?
 4. Has the source confirmed that expanded exposure is available for this portfolio snapshot?
 
 The reading order is portfolio context, compact mandate measures, exposure dimension, exact ranked
-values, source-coverage posture, and contributing holdings. This supports a fast whole-portfolio
+values, source-coverage posture, and contributing positions. This supports a fast whole-portfolio
 review without turning a chart into an investment conclusion.
 
 ## Who Uses This Screen
 
 - **Client advisors and relationship managers** use it for meeting preparation and to trace a
-  direct exposure back to the selected mandate's booked holdings.
+  direct exposure back to the selected mandate's booked positions.
 - **Portfolio managers and investment specialists** compare current source classifications before
   opening the owning analytical or mandate workflow.
 - **Operations and support teams** use explicit coverage and degraded states to distinguish usable
@@ -52,11 +52,11 @@ These roles describe business use, not production entitlement or approval author
 2. Confirm mandate, client reference, reporting currency, and as-of date.
 3. Move among asset class, currency, sector, and region when those source views are available.
 4. Compare exact market value, weight, and source-reported position count in the ranked view.
-5. Select a direct exposure to inspect its booked contributing holdings; clear the filter to return
+5. Select a direct exposure to inspect its booked contributing positions; clear the filter to return
    to the complete booked inventory.
 6. Use expanded exposure only after the source-coverage status confirms it for the current
    snapshot. Expanded contributors remain unavailable until source lineage is published.
-7. Continue to Positions for holding detail, Performance or Risk for source-owned analytics, or
+7. Continue to Positions for position detail, Performance or Risk for source-owned analytics, or
    Portfolio Review for the daily decision checkpoint.
 
 ## Implemented Capabilities
@@ -67,7 +67,7 @@ These roles describe business use, not production entitlement or approval author
   compact layouts prioritize the exact ranked values and omit a chart that cannot remain legible.
 - Shows market value, weight, source position count, reporting currency, and direct or expanded
   exposure mode beside the selected dimension.
-- Filters the reusable booked-holdings grid from a direct exposure selection, including
+- Filters the reusable positions grid from a direct exposure selection, including
   source-returned cash balances where applicable.
 - Requests preferred look-through coverage separately and distinguishes checking, available,
   unsupported, and failed source states.
@@ -83,7 +83,7 @@ These roles describe business use, not production entitlement or approval author
 | --- | --- | --- |
 | Change exposure dimension | The source returned that dimension | None; current evidence is rearranged |
 | Change presentation | A loaded exposure view and sufficient layout capacity | None; source values do not change |
-| Review direct contributors | A direct exposure with booked-position classification | None; the holdings grid is filtered locally |
+| Review direct contributors | A direct exposure with booked-position classification | None; the positions grid is filtered locally |
 | Show expanded exposure | Source-confirmed preferred look-through response | None; Workbench switches between cached source responses |
 | Recheck coverage | Coverage is unresolved, unsupported, or previously confirmed | None; Workbench forces a new Gateway read |
 | Change portfolio | A source-backed selection through shared context | None on Allocation; the new mandate is requested |
@@ -98,7 +98,7 @@ submit a rebalance, or place an order.
 | Portfolio identity, mandate, client reference, as-of date, currency, portfolio value, and position count | Presented from the selected portfolio book; not reconstructed from filtered rows | Gateway over Core portfolio book and summary records |
 | Direct allocation views and buckets | Formatted into dimensions and ranked values without browser recomputation | Core allocation records composed by Gateway |
 | Expanded-exposure capability and effective mode | Accepted only from a successful preferred-look-through allocation response | Gateway/Core allocation contract |
-| Direct contributing holdings | Matches source-booked positions and cash records against the selected direct classification | Workbench projection over Gateway/Core booked records |
+| Direct contributing positions | Matches source-booked positions and cash records against the selected direct classification | Workbench projection over Gateway/Core booked records |
 | Coverage recheck | Forces a new same-origin BFF request; success is shown only after a valid source response | Gateway read through the Workbench BFF |
 
 Browser and server requests use Gateway; the screen never calls Core directly. Shared contract
@@ -110,11 +110,11 @@ detail remains in [API Surface](API-Surface) and ownership flow in [Integrations
 | --- | --- | --- |
 | Loading | Shared route loading while selected portfolio records settle | Wait for source evidence; no fallback portfolio is substituted |
 | Checking coverage | Direct allocation stays usable and the status names the requested and confirmed contexts | Wait or continue with direct evidence; duplicate recheck is suppressed |
-| Ready with expanded exposure | **Source coverage confirmed** and the expanded-exposure control is enabled | Use the confirmed view or return to direct holdings |
-| Direct holdings only | A valid response explicitly does not support expanded exposure for this snapshot | Continue with direct evidence; recheck only when source posture may have changed |
+| Ready with expanded exposure | **Source coverage confirmed** and the expanded-exposure control is enabled | Use the confirmed view or return to direct positions |
+| Direct positions only | A valid response explicitly does not support expanded exposure for this snapshot | Continue with direct evidence; recheck only when source posture may have changed |
 | Coverage failed | Direct allocation remains visible and the status says expanded exposure could not be confirmed | Use **Recheck coverage**; Workbench does not relabel failure as unsupported |
 | Source-confirmed empty view | The source supports the selected direct or expanded mode but returns no buckets | Confirm source population; empty coverage is neither unsupported nor presented as an all-clear |
-| Expanded contributors unavailable | Expanded values remain readable but exposure rows cannot claim booked contributors | Return to direct holdings for contributor review |
+| Expanded contributors unavailable | Expanded values remain readable but exposure rows cannot claim booked contributors | Return to direct positions for contributor review |
 | Portfolio records unavailable | A degraded route state replaces the allocation workspace | Restore a valid source-backed portfolio selection through the governed runtime |
 
 ## Workbench Boundaries
@@ -123,13 +123,13 @@ Portfolio Allocation deliberately does not:
 
 - calculate or infer target weights, benchmark weights, drift, mandate compliance, concentration
   thresholds, suitability, tax consequences, risk severity, or recommendation posture,
-- equate a booked parent holding with decomposed expanded-exposure contributors,
+- equate a booked parent position with decomposed expanded-exposure contributors,
 - recalculate portfolio value, currency conversion, or source position counts,
 - persist portfolio changes, create proposals, rebalance, trade, route orders, or claim execution,
 - treat a screenshot, chart, or successful browser render as bank approval or competitor
   superiority.
 
-The adopted pattern combines whole-portfolio composition with holdings-based drill-down, informed
+The adopted pattern combines whole-portfolio composition with position-based drill-down, informed
 by official BlackRock Advisor Center 360, BlackRock Aladdin Wealth, and Morningstar Portfolio X-Ray
 workflow research. Lotus uses the workflow principle, not another product's visual identity,
 wording, calculations, or unsupported capability.
@@ -138,7 +138,7 @@ wording, calculations, or unsupported capability.
 
 - [Advisor Book](Advisor-Book-Workflow) establishes own-book portfolio context.
 - [Portfolio Review](Portfolio-Review-Screen-Guide) is the daily mandate decision checkpoint.
-- [Positions](Positions-Screen-Guide) owns the complete booked inventory and holding detail.
+- [Positions](Positions-Screen-Guide) owns the complete booked inventory and position detail.
 - Performance Summary and Risk Review own source-calculated analytical interpretation.
 - Mandate Operations owns mandate state; Report Centre owns governed report requests.
 

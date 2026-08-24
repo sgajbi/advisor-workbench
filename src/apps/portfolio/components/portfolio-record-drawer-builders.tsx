@@ -14,6 +14,7 @@ import type {
   PortfolioTransactionView,
   PortfolioWorkspace,
 } from "../types";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import type { HoldingsRow } from "./portfolio-holdings-grid";
 import type { TransactionRow } from "./portfolio-transactions-grid";
 import {
@@ -42,13 +43,13 @@ export function buildHoldingDrawer(
   );
 
   return {
-    kicker: "Holding review",
+    kicker: "Position review",
     title: row.instrument,
     subtitle: row.assetClass,
     summaryItems: [
-      { label: "Market Value", value: formatCurrency(row.marketValue, baseCurrency) },
+      { label: "Market value", value: formatCurrency(row.marketValue, baseCurrency) },
       { label: "Weight", value: formatPct(row.weight) },
-      { label: "Currency", value: row.currency },
+      { label: PORTFOLIO_CURRENCY_LABELS.instrument, value: row.currency },
     ],
     tabs: [
       {
@@ -61,15 +62,15 @@ export function buildHoldingDrawer(
             "Price",
             row.price === null ? "—" : formatCurrency(row.price, row.currency),
           ],
-          ["Held Since", formatDate(row.heldSince)],
+          ["Held since", formatDate(row.heldSince)],
         ]),
       },
       {
         key: "valuation",
         label: "Valuation",
         content: renderDrawerDefinitionList([
-          ["Market Value", formatCurrency(row.marketValue, baseCurrency)],
-          ["Unrealized P&L", formatCurrency(row.upl, baseCurrency)],
+          ["Market value", formatCurrency(row.marketValue, baseCurrency)],
+          ["Unrealised P&L", formatCurrency(row.upl, baseCurrency)],
           ["Weight", formatPct(row.weight)],
           ["Sector", row.sector],
           ["ISIN", row.isin ?? "N/A"],
@@ -77,7 +78,7 @@ export function buildHoldingDrawer(
       },
       {
         key: "related-transactions",
-        label: "Recent Activity",
+        label: "Recent activity",
         content: relatedTransactionsTab,
       },
     ],
@@ -111,15 +112,15 @@ export function buildTransactionDrawer(
     Boolean(row.raw.far_leg_group_id) && Boolean(actions?.onOpenFarLegGroup);
 
   return {
-    kicker: "Transaction Detail",
+    kicker: "Transaction detail",
     title: row.type,
     subtitle: row.instrument,
     summaryItems: [
       {
-        label: "Gross Amount",
+        label: "Gross amount",
         value: formatCurrency(row.grossAmount, row.transactionCurrency ?? baseCurrency),
       },
-      { label: "Net Cost", value: formatCurrency(row.netCostBase, baseCurrency) },
+      { label: "Net cost", value: formatCurrency(row.netCostBase, baseCurrency) },
       { label: "Settlement status", value: row.settlementState.label },
     ],
     tabs: [
@@ -130,34 +131,34 @@ export function buildTransactionDrawer(
           ["Transaction ID", row.transactionId],
           ["Type", row.type],
           ["Instrument", row.instrument],
-          ["Economic Event ID", row.raw.economic_event_id ?? "N/A"],
-          ["Linked Transaction Group", row.raw.linked_transaction_group_id ?? "N/A"],
+          ["Economic event ID", row.raw.economic_event_id ?? "N/A"],
+          ["Linked transaction group", row.raw.linked_transaction_group_id ?? "N/A"],
           ["Quantity", formatQuantity(row.quantity)],
           [
-            "Gross Amount",
+            "Gross amount",
             formatCurrency(row.grossAmount, row.transactionCurrency ?? baseCurrency),
           ],
-          ["Transaction Currency", row.transactionCurrency ?? "N/A"],
-          ["Net Cost", formatCurrency(row.netCostBase, baseCurrency)],
-          ["Realized P&L", formatCurrency(row.realizedGainLossBase, baseCurrency)],
+          [PORTFOLIO_CURRENCY_LABELS.transaction, row.transactionCurrency ?? "N/A"],
+          ["Net cost", formatCurrency(row.netCostBase, baseCurrency)],
+          ["Realised P&L", formatCurrency(row.realizedGainLossBase, baseCurrency)],
         ]),
       },
       {
         key: "lifecycle",
         label: "Lifecycle",
         content: renderDrawerDefinitionList([
-          ["Trade Date", formatBusinessDate(row.tradeDate)],
-          ["Settlement Date", formatBusinessDate(row.settleDate)],
+          ["Trade date", formatBusinessDate(row.tradeDate)],
+          ["Settlement date", formatBusinessDate(row.settleDate)],
           ["Settlement status", row.settlementState.label],
           [
-            "Component Type",
+            "Component type",
             row.componentType ? formatStatus(row.componentType) : "Not reported",
           ],
           ["FX Contract ID", row.raw.fx_contract_id ?? "N/A"],
-          ["Swap Event ID", row.raw.swap_event_id ?? "N/A"],
-          ["Near-Leg Group", row.raw.near_leg_group_id ?? "N/A"],
-          ["Far-Leg Group", row.raw.far_leg_group_id ?? "N/A"],
-          ["Portfolio Currency", baseCurrency],
+          ["Swap event ID", row.raw.swap_event_id ?? "N/A"],
+          ["Near-leg group", row.raw.near_leg_group_id ?? "N/A"],
+          ["Far-leg group", row.raw.far_leg_group_id ?? "N/A"],
+          [PORTFOLIO_CURRENCY_LABELS.base, baseCurrency],
         ]),
       },
       {
@@ -264,14 +265,14 @@ function buildHoldingRelatedTransactionsTab(
 ) {
   if (relatedTransactionsState.state === "loading") {
     return renderDrawerParagraphs([
-      "Loading the latest related transactions for this holding.",
+      "Loading the latest related transactions for this position.",
     ]);
   }
 
   if (relatedTransactionsState.state === "error") {
     return renderDrawerParagraphs([
-      "We could not load recent booked activity for this holding.",
-      "Retry from the holdings grid or open the transactions workspace for broader ledger review.",
+      "We could not load recent booked activity for this position.",
+      "Retry from the positions grid or open the transactions workspace for broader ledger review.",
     ]);
   }
 
@@ -295,7 +296,7 @@ function buildHoldingRelatedTransactionsTab(
             ])
           )
         : renderDrawerParagraphs([
-            "No recent booked activity was returned for this holding.",
+            "No recent booked activity was returned for this position.",
           ])}
     </>
   );

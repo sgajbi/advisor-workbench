@@ -25,7 +25,7 @@ export const PORTFOLIO_VALUE_COPY = {
     "Total portfolio market value in the portfolio base currency at the stated valuation date.",
   definition: [
     "Portfolio value is the current base-currency market value of the selected portfolio.",
-    "It combines invested holdings and available cash at the stated valuation date.",
+    "It combines invested positions and available cash at the stated valuation date.",
   ],
 } as const;
 

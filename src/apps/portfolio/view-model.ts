@@ -460,7 +460,7 @@ export function buildPortfolioReadinessIndicators(workspace: PortfolioWorkspace)
   return [
     {
       key: "holdings",
-      label: "Holdings",
+      label: "Positions",
       status: getHoldingsReadinessStatus(workspace),
       href: `/positions?portfolioId=${encodeURIComponent(workspace.portfolio.portfolio_id)}`,
     },
@@ -610,7 +610,7 @@ export function buildSecurityDrilldownLabel(
   target: "holdings" | "transactions"
 ): string {
   return target === "holdings"
-    ? `Filtered by holding: ${instrumentName}`
+    ? `Filtered by position: ${instrumentName}`
     : `Filtered by security: ${instrumentName}`;
 }
 
@@ -619,7 +619,7 @@ export function buildActivityDrilldownLabel(bucket: string): string {
 }
 
 export function buildHoldingsStatusDrilldownLabel(status: "Unpriced"): string {
-  return status === "Unpriced" ? "Filtered by pricing exception: Unpriced holdings" : status;
+  return status === "Unpriced" ? "Filtered by pricing exception: Unpriced positions" : status;
 }
 
 function clampAsOfDate(workspace: PortfolioWorkspace | null, requested: string): string {

@@ -182,7 +182,7 @@ export function usePortfolioAllocationPanelState({
     activeAllocationState.lookThroughRequestedMode === "prefer_look_through" &&
     activeAllocationState.lookThroughEffectiveMode === "prefer_look_through"
       ? "Expanded exposure"
-      : "Direct holdings";
+      : "Direct positions";
   const exposureMode: AllocationExposureMode =
     lookThroughLabel === "Expanded exposure" ? "expanded" : "direct";
 

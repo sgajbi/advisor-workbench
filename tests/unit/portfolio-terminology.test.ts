@@ -15,6 +15,8 @@ import {
 const PORTFOLIO_SOURCE_ROOT = join(process.cwd(), "src", "apps", "portfolio");
 const FORBIDDEN_PORTFOLIO_AUM_COPY =
   /\bAUM\b|assets under management|PORTFOLIO_AUM_UNAVAILABLE|assets_under_management_base/i;
+const FORBIDDEN_PORTFOLIO_UI_COPY =
+  /\b(?:Booked holdings|Available holdings|Top holdings|Ranked holdings|Direct holdings(?: only)?|contributing holdings|Search holdings|Export holdings|Unrealized P&L|Realized P&L|Portfolio Currency|Base Currency|Reporting Currency|Transaction Currency|Trade currency)\b/;
 const ALLOWED_BOUNDARY_REFERENCES = {
   "api.ts": [
     { snippet: "assets_under_management_base: number;", count: 2 },
@@ -131,6 +133,14 @@ describe("portfolio terminology", () => {
 
       expect(sourceWithoutContractIdentifiers, filePath).not.toMatch(
         FORBIDDEN_PORTFOLIO_AUM_COPY,
+      );
+    }
+  });
+
+  it("prevents retired position, currency, and UK-English variants from returning to portfolio UI", () => {
+    for (const filePath of portfolioSourceFiles(PORTFOLIO_SOURCE_ROOT)) {
+      expect(readFileSync(filePath, "utf8"), filePath).not.toMatch(
+        FORBIDDEN_PORTFOLIO_UI_COPY,
       );
     }
   });

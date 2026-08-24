@@ -54,7 +54,7 @@ describe("PortfolioReviewDecisionBrief", () => {
     expect(screen.queryByText("Liquidity horizon")).not.toBeInTheDocument();
     expect(screen.queryByText("Mandate workflow")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Asset Allocation" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Top Holdings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Ranked positions" })).not.toBeInTheDocument();
   });
 
   it("does not declare a partial portfolio ready when no exception or action is present", () => {

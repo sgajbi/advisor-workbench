@@ -14,7 +14,7 @@ import { buildTopHoldingTooltip } from "../portfolio-chart-view-model";
 import type { HoldingsMetric } from "../portfolio-chart-view-model";
 import type { PortfolioTopPosition } from "../types";
 
-const TOP_HOLDINGS_CHART_COLORS = {
+const TOP_POSITIONS_CHART_COLORS = {
   accent: "#315d8a",
 } as const;
 
@@ -60,7 +60,7 @@ export default function PortfolioTopHoldingsPanel({
       <WorkbenchSummaryToolbar className="portfolio-chart-module-toolbar">
         <div
           className="portfolio-chart-toggle-group"
-          aria-label="Top holdings metric"
+          aria-label="Ranked positions metric"
         >
           <button
             type="button"
@@ -72,7 +72,7 @@ export default function PortfolioTopHoldingsPanel({
             }
             onClick={() => setMetric("market_value")}
           >
-            Market Value
+            Market value
           </button>
           <button
             type="button"
@@ -91,17 +91,17 @@ export default function PortfolioTopHoldingsPanel({
       <div className="portfolio-chart-module-body portfolio-top-holdings-body">
         <div className="portfolio-analytics-canvas portfolio-chart-card portfolio-top-holdings-list-card">
           <div className="portfolio-analytical-utility-header">
-            <span>Ranked Holdings</span>
+            <span>Ranked positions</span>
             <strong>
               {metric === "market_value"
-                ? "Market Value focus"
+                ? "Market value focus"
                 : "Weight focus"}
             </strong>
           </div>
           {sortedPositions.length ? (
             <div
               className="portfolio-horizontal-bar-chart"
-              aria-label="Top holdings chart"
+              aria-label="Ranked positions chart"
               role="list"
             >
               {sortedPositions.map((position) => {
@@ -143,7 +143,7 @@ export default function PortfolioTopHoldingsPanel({
                             baseCurrency,
                           )
                         : formatPct(position.weight_pct)
-                    }. Select to filter holdings.`}
+                    }. Select to filter positions.`}
                     title={buildTopHoldingTooltip(
                       position,
                       metric,
@@ -164,7 +164,7 @@ export default function PortfolioTopHoldingsPanel({
                         className="portfolio-horizontal-bar-fill"
                         style={{
                           width,
-                          backgroundColor: TOP_HOLDINGS_CHART_COLORS.accent,
+                          backgroundColor: TOP_POSITIONS_CHART_COLORS.accent,
                         }}
                       />
                     </span>
@@ -184,7 +184,7 @@ export default function PortfolioTopHoldingsPanel({
             <div className="portfolio-top-holdings-empty" role="status">
               <strong>No top positions available for this view</strong>
               <p className="muted">
-                Ranked positions require booked holdings with current market
+                Ranked positions require source-backed positions with current market
                 values. Adjust the allocation filter or publish valuations to
                 populate this view.
               </p>

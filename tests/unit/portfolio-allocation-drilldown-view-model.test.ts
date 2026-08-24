@@ -46,7 +46,7 @@ describe("allocation holdings breakdown", () => {
     ["sector", "technology", "EQ_US_1"],
     ["region", "singapore", "FI_SG_1"],
   ])(
-    "filters direct %s exposure to its contributing holdings",
+    "filters direct %s exposure to its contributing positions",
     (dimension, bucket, expectedSecurityId) => {
       const result = buildAllocationHoldingsBreakdown({
         positions,
@@ -58,9 +58,9 @@ describe("allocation holdings breakdown", () => {
       expect(result.positions.map((position) => position.security_id)).toEqual([
         expectedSecurityId,
       ]);
-      expect(result.title).toBe("Contributing holdings");
+      expect(result.title).toBe("Contributing positions");
       expect(result.description).toBe(
-        "1 of 2 booked holdings contribute to this direct exposure.",
+        "1 of 2 positions contribute to this direct exposure.",
       );
     },
   );
@@ -75,7 +75,7 @@ describe("allocation holdings breakdown", () => {
     ).toMatchObject({
       positions,
       filterLabel: null,
-      title: "Booked holdings",
+      title: "Positions",
       state: "all",
     });
   });
@@ -96,7 +96,7 @@ describe("allocation holdings breakdown", () => {
       }),
     ]);
     expect(result.description).toBe(
-      "1 of 3 booked holdings contribute to this direct exposure.",
+      "1 of 3 positions contribute to this direct exposure.",
     );
   });
 
@@ -131,9 +131,9 @@ describe("allocation holdings breakdown", () => {
     ).toEqual({
       positions,
       filterLabel: null,
-      title: "Booked holdings",
+      title: "Positions",
       description:
-        "Booked holdings are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
+        "Positions are shown for reference. Expanded exposure contributors require source-backed look-through detail.",
       state: "expanded",
     });
   });
@@ -149,7 +149,7 @@ describe("allocation holdings breakdown", () => {
     expect(result.positions).toBe(positions);
     expect(result.filterLabel).toBeNull();
     expect(result.description).toContain(
-      "Issuer Group does not have a supported holdings classification",
+      "Issuer Group does not have a supported position classification",
     );
   });
 });

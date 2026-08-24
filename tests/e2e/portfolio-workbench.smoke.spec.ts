@@ -466,7 +466,7 @@ test.describe('Portfolio workbench smoke', () => {
     }
 
     await expect(page.getByRole('heading', { name: /Asset Allocation/i })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /Top Holdings/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Ranked positions/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Cashflow Forecast/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Liquidity and Projected Cash/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Performance Snapshot/i })).toHaveCount(0);
@@ -1044,7 +1044,7 @@ test.describe('Portfolio workbench smoke', () => {
     test.skip(!session.available, 'Portfolio allocation upstream unavailable in standalone smoke environment.');
 
     await expect(page.getByText('Portfolio exposure', { exact: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
     await expect(page.getByText('Exposure Views')).toBeVisible();
     await expect(page.getByText('Target allocation', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Allocation drift', { exact: true })).toHaveCount(0);
@@ -1059,7 +1059,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('button', { name: /^Clear filter$/i })).toBeVisible();
 
     await page.getByRole('button', { name: /^Clear filter$/i }).click();
-    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
 
     const showExpandedExposure = page.getByRole('button', { name: 'Show expanded exposure' });
     const unsupportedExposure = page.getByRole('button', {
@@ -1088,7 +1088,7 @@ test.describe('Portfolio workbench smoke', () => {
     if (coverageState === 'available') {
       await expect(showExpandedExposure).toBeEnabled();
       await showExpandedExposure.click();
-      await expect(page.getByRole('button', { name: 'Show direct holdings' })).toContainText(
+      await expect(page.getByRole('button', { name: 'Show direct positions' })).toContainText(
         'Expanded exposure',
       );
       await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
@@ -1097,7 +1097,7 @@ test.describe('Portfolio workbench smoke', () => {
       ).toBeVisible();
     } else if (coverageState === 'unsupported') {
       await expect(unsupportedExposure).toBeDisabled();
-      await expect(page.getByText('Direct holdings only', { exact: true })).toBeVisible();
+      await expect(page.getByText('Direct positions only', { exact: true })).toBeVisible();
     } else {
       await expect(failedExposure).toBeDisabled();
       await expect(
@@ -1155,7 +1155,7 @@ test.describe('Portfolio workbench smoke', () => {
     );
 
     await page.getByRole('button', { name: 'Show expanded exposure' }).click();
-    await expect(page.getByRole('button', { name: 'Show direct holdings' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Show direct positions' })).toBeVisible();
     await expect(page.getByText('Region • 3 exposures • Expanded exposure')).toBeVisible();
     await expect(page.locator('.portfolio-allocation-ranked-row').first()).toBeDisabled();
     await expect(
@@ -1268,7 +1268,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(headerKpis.getByText('Invested', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Cash', { exact: true })).toBeVisible();
     await expect(headerKpis.getByText('Window', { exact: true })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
     await expect(page.getByLabel('Portfolio holdings grid')).toBeVisible();
     await expect(page.getByRole('button', { name: /Filter holdings/i })).toHaveCount(0);
     await expect(page.locator('.ag-selection-checkbox, .ag-header-select-all')).toHaveCount(0);
@@ -1333,7 +1333,7 @@ test.describe('Portfolio workbench smoke', () => {
     ).toBeVisible();
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Export holdings' }).click();
+    await page.getByRole('button', { name: 'Export positions' }).click();
     const download = await downloadPromise;
     const downloadedPath = await download.path();
     expect(downloadedPath).not.toBeNull();
@@ -1396,7 +1396,7 @@ test.describe('Portfolio workbench smoke', () => {
       'Portfolio positions upstream unavailable in standalone smoke environment.',
     );
 
-    await expect(page.getByRole('heading', { name: /^Booked holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
     const compactNavigation = page
       .getByTestId('portfolio-screen-rail')
       .getByRole('button', { name: /Current view Holdings/i });

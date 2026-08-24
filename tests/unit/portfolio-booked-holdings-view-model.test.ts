@@ -106,11 +106,11 @@ describe("portfolio booked holdings view model", () => {
       inventoryComplete: false,
       activityAvailable: false,
       partialState: {
-        title: "Holdings review partially available",
+        title: "Positions review partially available",
         body:
-          "Cash-balance detail and recent holding activity are temporarily unavailable. Available source records remain visible.",
+          "Cash-balance detail and recent position activity are temporarily unavailable. Available source records remain visible.",
         hint:
-          "Portfolio totals above remain available from the source summary; the holdings inventory below is partial.",
+          "Portfolio totals above remain available from the source summary; the position inventory below is partial.",
       },
     });
 

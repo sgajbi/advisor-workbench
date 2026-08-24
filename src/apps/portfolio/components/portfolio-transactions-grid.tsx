@@ -27,6 +27,7 @@ import type {
 } from "../types";
 import { filterTransactionsByDrilldown } from "../view-model";
 import { buildPortfolioTransactionSettlementSummary } from "../portfolio-transaction-settlement-view-model";
+import { PORTFOLIO_CURRENCY_LABELS } from "../portfolio-terminology";
 import {
   buildPortfolioDataGridColumn,
   getPortfolioAmountToneClass,
@@ -301,7 +302,7 @@ function PortfolioTransactionsGridBody({
       }),
       buildTransactionColumn({
         field: "transactionCurrency",
-        headerName: "Transaction Currency",
+        headerName: PORTFOLIO_CURRENCY_LABELS.transaction,
         minWidth: 118,
         hide: !showExpandedColumns,
       }),
@@ -316,7 +317,7 @@ function PortfolioTransactionsGridBody({
       }),
       buildTransactionColumn({
         field: "realizedGainLossBase",
-        headerName: `Realized P&L (${baseCurrency})`,
+        headerName: `Realised P&L (${baseCurrency})`,
         minWidth: 142,
         type: "numericColumn",
         valueFormatter: ({ value }) => formatCurrency(value, baseCurrency),

@@ -45,8 +45,8 @@ export function buildExceptionDrawer(
 
   if (exception.key === "pricing" && affectedPositions.length) {
     tabs.push({
-      key: "affected-holdings",
-      label: "Affected Holdings",
+      key: "affected-positions",
+      label: "Affected positions",
       content: renderDrawerDefinitionList(
         affectedPositions.slice(0, 8).map((position) => [
           position.instrument_name,
@@ -61,7 +61,7 @@ export function buildExceptionDrawer(
   }
 
   return {
-    kicker: "Readiness Issue",
+    kicker: "Readiness issue",
     title: exception.title,
     subtitle: "Operational explanation and current evidence for this portfolio gap.",
     summaryItems: [
@@ -86,58 +86,58 @@ function resolveExceptionEvidence(
     case "holdings":
       return [
         ["Positions", formatCount(workspace.positions.length, "position")],
-        ["Top Holdings", formatCount(workspace.top_positions.length, "holding")],
+        ["Ranked positions", formatCount(workspace.top_positions.length, "position")],
         [
-          "Reported Position Count",
-          formatCount(workspace.summary.position_count, "holding"),
+          "Reported position count",
+          formatCount(workspace.summary.position_count, "position"),
         ],
       ];
     case "pricing":
       return [
         [
-          "Valued Positions",
+          "Valued positions",
           formatCount(
             workspace.positions.filter((position) => (position.market_value_base ?? 0) > 0)
               .length,
             "position"
           ),
         ],
-        ["Allocation Views", String(workspace.allocation_views?.length ?? 0)],
+        ["Allocation views", String(workspace.allocation_views?.length ?? 0)],
         [
-          "Failed Valuation Jobs",
+          "Failed valuation jobs",
           String(workspace.operations?.failed_valuation_jobs_within_window ?? 0),
         ],
       ];
     case "transactions":
       return [
         [
-          "Transactions in View",
+          "Transactions in view",
           formatCount(workspace.recent_transactions.length, "transaction"),
         ],
         [
-          "Latest Booked Transaction",
+          "Latest booked transaction",
           formatDate(workspace.operations?.latest_booked_transaction_date),
         ],
-        ["Window End", formatDate(workspace.as_of_date)],
+        ["Window end", formatDate(workspace.as_of_date)],
       ];
     case "reporting":
       return [
-        ["Reporting Status", formatStatus(workspace.readiness.reporting.status)],
-        ["Report Rows", String(workspace.readiness.reporting.row_count)],
-        ["Generated At", formatTimestamp(workspace.readiness.reporting.generated_at_utc)],
+        ["Reporting status", formatStatus(workspace.readiness.reporting.status)],
+        ["Report rows", String(workspace.readiness.reporting.row_count)],
+        ["Generated at", formatTimestamp(workspace.readiness.reporting.generated_at_utc)],
       ];
     case "controls_blocking":
       return [
         [
-          "Publishing Allowed",
+          "Publishing allowed",
           formatBooleanFlag(workspace.operations?.publish_allowed),
         ],
         [
-          "Blocking Controls",
+          "Blocking controls",
           formatBooleanFlag(workspace.operations?.controls_blocking),
         ],
         [
-          "Active Reprocessing Keys",
+          "Active reprocessing keys",
           String(workspace.operations?.active_reprocessing_keys ?? 0),
         ],
       ];
@@ -146,8 +146,8 @@ function resolveExceptionEvidence(
         (item) => `partial_failure_${item.error_code}` === key
       );
       return [
-        ["Source Service", failure?.source_service ?? "Unknown"],
-        ["Error Code", failure?.error_code ?? "Unknown"],
+        ["Source service", failure?.source_service ?? "Unknown"],
+        ["Error code", failure?.error_code ?? "Unknown"],
         ["Detail", failure?.detail ?? "No additional evidence available"],
       ];
     }
