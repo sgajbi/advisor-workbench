@@ -36,38 +36,94 @@ export function resolveHighCashIdeaCandidateId(candidateHref, workbenchBaseUrl) 
   return candidateId;
 }
 
-export function hasAcceptedAdvisorBriefReviewPosture(text) {
+function normalizeAdvisorBriefReviewEvidenceValue(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function hasValidAdvisorBriefReviewTimestamp(value) {
+  const timestamp = normalizeAdvisorBriefReviewEvidenceValue(value);
+  const match = timestamp?.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|\+00:00)$/,
+  );
+  if (!timestamp || !match) {
+    return false;
+  }
+
+  const parsedTimestamp = Date.parse(timestamp);
+  if (!Number.isFinite(parsedTimestamp)) {
+    return false;
+  }
+
+  const parsedDate = new Date(parsedTimestamp);
+  const [, year, month, day, hour, minute, second] = match;
   return (
-    text.includes("Human Review") &&
-    text.includes("Accepted for internal use") &&
-    text.includes("Supportability READY") &&
-    text.includes("Review recorded by") &&
-    /Review\s+recorded\s+(?!by\b)\S+/i.test(text)
+    parsedDate.getUTCFullYear() === Number(year) &&
+    parsedDate.getUTCMonth() + 1 === Number(month) &&
+    parsedDate.getUTCDate() === Number(day) &&
+    parsedDate.getUTCHours() === Number(hour) &&
+    parsedDate.getUTCMinutes() === Number(minute) &&
+    parsedDate.getUTCSeconds() === Number(second)
   );
 }
 
-export function hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer) {
-  const reviewer =
-    typeof expectedReviewer === "string" ? expectedReviewer.trim() : "";
-  const escapedReviewer = reviewer.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export async function readAdvisorBriefReviewEvidence(supportabilityRegion) {
+  const evidenceRows = supportabilityRegion.getByTestId(
+    "advisor-brief-human-review-evidence",
+  );
+  const rowCount = await evidenceRows.count();
+  if (rowCount !== 1) {
+    return {
+      rowCount,
+      reviewState: null,
+      supportability: null,
+      reviewer: null,
+      recordedAt: null,
+    };
+  }
+
+  const evidenceRow = evidenceRows.first();
+  const [reviewState, supportability, reviewer, recordedAt] = await Promise.all([
+    evidenceRow.getAttribute("data-review-state"),
+    evidenceRow.getAttribute("data-review-supportability"),
+    evidenceRow.getAttribute("data-reviewer"),
+    evidenceRow.getAttribute("data-recorded-at"),
+  ]);
+  return { rowCount, reviewState, supportability, reviewer, recordedAt };
+}
+
+export function hasAcceptedAdvisorBriefReviewPosture(evidence) {
   return (
-    hasAcceptedAdvisorBriefReviewPosture(text) &&
-    reviewer.length > 0 &&
-    new RegExp(
-      `Review\\s+recorded\\s+by\\s+${escapedReviewer}(?=\\s|•|$)`,
-      "i",
-    ).test(text)
+    evidence?.rowCount === 1 &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.reviewState) === "ACCEPTED" &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.supportability) === "READY" &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.reviewer) !== null &&
+    hasValidAdvisorBriefReviewTimestamp(evidence.recordedAt)
   );
 }
 
-export function classifyAdvisorBriefAcceptProofPosture(text, expectedReviewer) {
-  if (hasRecordedAdvisorBriefAcceptProof(text, expectedReviewer)) {
+export function hasRecordedAdvisorBriefAcceptProof(evidence, expectedReviewer) {
+  const reviewer = normalizeAdvisorBriefReviewEvidenceValue(expectedReviewer);
+  return (
+    hasAcceptedAdvisorBriefReviewPosture(evidence) &&
+    reviewer !== null &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.reviewer) === reviewer
+  );
+}
+
+export function classifyAdvisorBriefAcceptProofPosture(evidence, expectedReviewer) {
+  if (hasRecordedAdvisorBriefAcceptProof(evidence, expectedReviewer)) {
     return "source-confirmed-existing-action";
   }
-  if (hasAcceptedAdvisorBriefReviewPosture(text)) {
+  if (hasAcceptedAdvisorBriefReviewPosture(evidence)) {
     return "accepted-by-another-reviewer";
   }
-  if (text.includes("Human Review") && text.includes("Awaiting review")) {
+  if (
+    evidence?.rowCount === 1 &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.reviewState) === "AWAITING_REVIEW" &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.supportability) === "ACTION_REQUIRED" &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.reviewer) === null &&
+    normalizeAdvisorBriefReviewEvidenceValue(evidence.recordedAt) === null
+  ) {
     return "review-action-available";
   }
   return "review-action-unavailable";
@@ -1236,8 +1292,11 @@ export async function validateAdvisorBriefPanel(
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
     const expectedReviewer = "live.validator.ui";
+    let reviewEvidence = await readAdvisorBriefReviewEvidence(
+      supportabilityRegion,
+    );
     let proofPosture = classifyAdvisorBriefAcceptProofPosture(
-      (await supportabilityRegion.textContent()) ?? "",
+      reviewEvidence,
       expectedReviewer,
     );
     if (
@@ -1253,8 +1312,11 @@ export async function validateAdvisorBriefPanel(
       supportabilityRegion = page.getByLabel("Advisor brief supportability");
       await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
       await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
+      reviewEvidence = await readAdvisorBriefReviewEvidence(
+        supportabilityRegion,
+      );
       proofPosture = classifyAdvisorBriefAcceptProofPosture(
-        (await supportabilityRegion.textContent()) ?? "",
+        reviewEvidence,
         expectedReviewer,
       );
       if (
@@ -1298,7 +1360,7 @@ export async function validateAdvisorBriefPanel(
       .poll(
         async () =>
           hasRecordedAdvisorBriefAcceptProof(
-            (await supportabilityRegion.textContent()) ?? "",
+            await readAdvisorBriefReviewEvidence(supportabilityRegion),
             expectedReviewer,
           ),
         {
@@ -1306,9 +1368,17 @@ export async function validateAdvisorBriefPanel(
         },
       )
       .toBe(true);
-    await expect(supportabilityRegion).toContainText(expectedReviewer, {
-      timeout: timeoutMs,
-    });
+    const recordedReviewEvidence = await readAdvisorBriefReviewEvidence(
+      supportabilityRegion,
+    );
+    const reviewEvidenceRow = supportabilityRegion.getByTestId(
+      "advisor-brief-human-review-evidence",
+    );
+    await expect(reviewEvidenceRow).toHaveAttribute(
+      "data-reviewer",
+      expectedReviewer,
+      { timeout: timeoutMs },
+    );
     summary.uiChecks.push({
       description: "Advisor brief ACCEPT review action",
       kind: "workflow-pack-review-action",
@@ -1319,6 +1389,10 @@ export async function validateAdvisorBriefPanel(
         : "workbench-review-action",
       detailBasis: proofQuery.detailBasis,
       chartFrequency: proofQuery.chartFrequency,
+      reviewState: recordedReviewEvidence.reviewState,
+      supportability: recordedReviewEvidence.supportability,
+      reviewer: recordedReviewEvidence.reviewer,
+      recordedAt: recordedReviewEvidence.recordedAt,
     });
     return proofQuery;
   }

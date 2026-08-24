@@ -15,18 +15,37 @@ export function createBrowserValidationHelpers(input: {
   panelRegistryById: Map<string, Pick<PanelRegistryEntry, "screenshotName" | "route">>;
 }): BrowserValidationHelpers;
 
-export function hasAcceptedAdvisorBriefReviewPosture(text: string): boolean;
+export type AdvisorBriefReviewEvidence = {
+  rowCount: number;
+  reviewState: string | null;
+  supportability: string | null;
+  reviewer: string | null;
+  recordedAt: string | null;
+};
+
+export function readAdvisorBriefReviewEvidence(supportabilityRegion: {
+  getByTestId(testId: string): {
+    count(): Promise<number>;
+    first(): {
+      getAttribute(name: string): Promise<string | null>;
+    };
+  };
+}): Promise<AdvisorBriefReviewEvidence>;
+export function hasAcceptedAdvisorBriefReviewPosture(
+  evidence: AdvisorBriefReviewEvidence,
+): boolean;
 export function hasRecordedAdvisorBriefAcceptProof(
-  text: string,
+  evidence: AdvisorBriefReviewEvidence,
   expectedReviewer: string,
 ): boolean;
 export function classifyAdvisorBriefAcceptProofPosture(
-  text: string,
+  evidence: AdvisorBriefReviewEvidence,
   expectedReviewer: string,
 ):
   | "source-confirmed-existing-action"
   | "accepted-by-another-reviewer"
-  | "review-action-available";
+  | "review-action-available"
+  | "review-action-unavailable";
 
 export function validatePortfolioPanels(
   page: BrowserValidationPage,
