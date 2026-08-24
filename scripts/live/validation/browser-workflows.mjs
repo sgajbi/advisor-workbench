@@ -129,6 +129,52 @@ export function classifyAdvisorBriefAcceptProofPosture(evidence, expectedReviewe
   return "review-action-unavailable";
 }
 
+const ADVISOR_BRIEF_ACCEPT_SUCCESS_MESSAGE =
+  "The brief was accepted for its permitted internal workflow use.";
+
+export async function waitForAdvisorBriefReviewConfirmation(
+  reviewRegion,
+  { timeoutMs, pollIntervalMs = 250, wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)) },
+) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() <= deadline) {
+    const failureFeedback = reviewRegion.getByRole("alert");
+    const failureCount = await failureFeedback.count();
+    if (failureCount > 1) {
+      throw new Error(
+        `Advisor brief review action rendered ${failureCount} failure messages; expected at most one.`,
+      );
+    }
+    if (failureCount === 1 && await failureFeedback.isVisible()) {
+      const failureMessage = (await failureFeedback.textContent())?.trim();
+      throw new Error(
+        `Advisor brief review action failed in Workbench: ${failureMessage || "No failure detail was rendered."}`,
+      );
+    }
+
+    const statusFeedback = reviewRegion.getByRole("status");
+    const statusCount = await statusFeedback.count();
+    if (statusCount > 1) {
+      throw new Error(
+        `Advisor brief review action rendered ${statusCount} status messages; expected at most one.`,
+      );
+    }
+    if (statusCount === 1 && await statusFeedback.isVisible()) {
+      const statusMessage = (await statusFeedback.textContent())?.trim() ?? "";
+      if (statusMessage.includes(ADVISOR_BRIEF_ACCEPT_SUCCESS_MESSAGE)) {
+        return;
+      }
+    }
+
+    await wait(pollIntervalMs);
+  }
+
+  throw new Error(
+    `Advisor brief review action did not reach source-confirmed success within ${timeoutMs}ms.`,
+  );
+}
+
 export function classifyRegisteredPanelScreenshotState(panelState, requiredSupportState) {
   return panelState && requiredSupportState && panelState === requiredSupportState
     ? "demo_ready"
@@ -1351,10 +1397,7 @@ export async function validateAdvisorBriefPanel(
       });
       await expect(confirmAcceptance).toBeVisible({ timeout: timeoutMs });
       await confirmAcceptance.click();
-      await expect(reviewRegion.getByRole("status")).toContainText(
-        "The brief was accepted for its permitted internal workflow use.",
-        { timeout: timeoutMs },
-      );
+      await waitForAdvisorBriefReviewConfirmation(reviewRegion, { timeoutMs });
     }
     await expect
       .poll(

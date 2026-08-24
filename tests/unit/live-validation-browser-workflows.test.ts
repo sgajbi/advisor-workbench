@@ -15,6 +15,7 @@ const {
   hasAcceptedAdvisorBriefReviewPosture,
   hasRecordedAdvisorBriefAcceptProof,
   readAdvisorBriefReviewEvidence,
+  waitForAdvisorBriefReviewConfirmation,
   navigateForBusinessProof,
   resolveHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
@@ -65,6 +66,20 @@ const {
       };
     };
   }) => Promise<AdvisorBriefReviewEvidence>;
+  waitForAdvisorBriefReviewConfirmation: (
+    reviewRegion: {
+      getByRole: (role: "alert" | "status") => {
+        count: () => Promise<number>;
+        isVisible: () => Promise<boolean>;
+        textContent: () => Promise<string | null>;
+      };
+    },
+    options: {
+      timeoutMs: number;
+      pollIntervalMs?: number;
+      wait?: (delayMs: number) => Promise<void>;
+    },
+  ) => Promise<void>;
   navigateForBusinessProof: (
     page: {
       goto: (
@@ -274,6 +289,56 @@ describe("live validation browser workflow helpers", () => {
     ).toBe(false);
   });
 
+  it("completes browser proof only from the explicit Workbench success confirmation", async () => {
+    const reviewRegion = {
+      getByRole: (role: "alert" | "status") => ({
+        count: vi.fn().mockResolvedValue(role === "status" ? 1 : 0),
+        isVisible: vi.fn().mockResolvedValue(role === "status"),
+        textContent: vi
+          .fn()
+          .mockResolvedValue(
+            role === "status"
+              ? "The brief was accepted for its permitted internal workflow use."
+              : null,
+          ),
+      }),
+    };
+
+    await expect(
+      waitForAdvisorBriefReviewConfirmation(reviewRegion, {
+        timeoutMs: 1_000,
+        wait: vi.fn(),
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("fails browser proof immediately when Workbench exposes a source-confirmation failure", async () => {
+    const wait = vi.fn();
+    const reviewRegion = {
+      getByRole: (role: "alert" | "status") => ({
+        count: vi.fn().mockResolvedValue(role === "alert" ? 1 : 0),
+        isVisible: vi.fn().mockResolvedValue(role === "alert"),
+        textContent: vi
+          .fn()
+          .mockResolvedValue(
+            role === "alert"
+              ? "The review decision could not be confirmed."
+              : null,
+          ),
+      }),
+    };
+
+    await expect(
+      waitForAdvisorBriefReviewConfirmation(reviewRegion, {
+        timeoutMs: 90_000,
+        wait,
+      }),
+    ).rejects.toThrow(
+      "Advisor brief review action failed in Workbench: The review decision could not be confirmed.",
+    );
+    expect(wait).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["missing review state", { reviewState: null }],
     ["unexpected review state", { reviewState: "REJECTED" }],
@@ -355,10 +420,11 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('getByLabel("Reviewer reference")');
     expect(source).toContain('getByLabel("Review rationale")');
     expect(source).toContain('name: "Confirm acceptance"');
+    expect(source).toContain("waitForAdvisorBriefReviewConfirmation");
     expect(source).toContain("readAdvisorBriefReviewEvidence");
     expect(source).not.toContain("supportabilityRegion.textContent()");
-    expect(source).toContain(
-      "The brief was accepted for its permitted internal workflow use.",
+    expect(waitForAdvisorBriefReviewConfirmation.toString()).toContain(
+      "ADVISOR_BRIEF_ACCEPT_SUCCESS_MESSAGE",
     );
     expect(source).not.toContain("Advisor brief review actions");
     expect(source).not.toContain("not-currently-allowed");

@@ -46,6 +46,20 @@ export function classifyAdvisorBriefAcceptProofPosture(
   | "accepted-by-another-reviewer"
   | "review-action-available"
   | "review-action-unavailable";
+export function waitForAdvisorBriefReviewConfirmation(
+  reviewRegion: {
+    getByRole(role: "alert" | "status"): {
+      count(): Promise<number>;
+      isVisible(): Promise<boolean>;
+      textContent(): Promise<string | null>;
+    };
+  },
+  options: {
+    timeoutMs: number;
+    pollIntervalMs?: number;
+    wait?: (delayMs: number) => Promise<void>;
+  },
+): Promise<void>;
 
 export function validatePortfolioPanels(
   page: BrowserValidationPage,
