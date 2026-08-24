@@ -24,8 +24,8 @@ unless the Gateway response confirms that no continuation cursor remains.
 Mandate Health helps a portfolio manager answer five practical questions:
 
 1. Is the mandate-monitoring evidence available and usable?
-2. What health, data-readiness, benchmark-alignment, and latest-monitoring posture did Manage
-   report?
+2. What health, data-availability, review-readiness, benchmark-alignment, and latest-monitoring
+   posture did Manage report?
 3. Which source-returned attention item should be reviewed now?
 4. Who is recorded as accountable, how long has the item been open, and what next step did the
    source publish?
@@ -34,6 +34,11 @@ Mandate Health helps a portfolio manager answer five practical questions:
 
 The result is a dense exception desk for one mandate. It prioritises evidence and review continuity
 over decorative metrics or browser-calculated readiness.
+
+The Manage source dimension `SOURCE_READINESS` is presented as **Data availability** because it
+describes the availability and freshness of supporting holdings, market data, eligibility,
+tax-lot, and lineage evidence. It is not a decision-readiness conclusion. **Review readiness**
+remains a separate health dimension for whether the workflow has sufficient evidence to proceed.
 
 ## Who Uses This Screen
 
@@ -65,8 +70,8 @@ investment approval, exception-resolution authority, or client-delivery authorit
 ## Implemented Capabilities
 
 - Presents the selected portfolio and Manage mandate context through the Workbench BFF and Gateway.
-- Presents Manage-owned mandate health, data readiness, benchmark alignment, latest monitoring,
-  and health-dimension evidence without recalculating them in the browser.
+- Presents Manage-owned mandate health, data availability, review readiness, benchmark alignment,
+  latest monitoring, and health-dimension evidence without recalculating them in the browser.
 - Filters each portfolio-scoped source window to the exact selected mandate. Rows without a
   source-owned exception identity are rejected and reported as partial evidence instead of being
   silently converted into an empty queue.
@@ -106,7 +111,7 @@ Mandate Health does not acknowledge, resolve, assign, approve, waive, or execute
 | --- | --- | --- |
 | Portfolio identity, base currency, booking centre, and portfolio as-of context | Presents the selected portfolio context | Gateway over Core portfolio contracts |
 | Mandate identity, type, risk profile, currency, and mandate as-of evidence | Presents available mandate values; current implementation may display portfolio context when mandate currency or date is absent, but does not promote that fallback to mandate evidence | Gateway over Manage mandate contracts; Core remains portfolio-context authority |
-| Health, readiness, benchmark, monitoring, and health dimensions | Formats source values and explicit absence | Gateway over Manage command-centre and mandate-health contracts |
+| Health, data availability, review readiness, benchmark alignment, monitoring, and health dimensions | Formats source values and explicit absence; keeps availability distinct from workflow readiness | Gateway over Manage command-centre and mandate-health contracts |
 | Active exceptions, ordering, continuation cursor, owner, age, severity, state, next step, and lineage | Filters each returned source view to the selected mandate; does not merge, reprioritise, or total the queue | Gateway over Manage exception contracts |
 | Previous, next, selection, and technical-evidence disclosure | Maintains local review continuity without changing source state | Workbench presentation over source identity |
 
@@ -133,8 +138,8 @@ Shared endpoint detail remains in [API Surface](API-Surface), and service owners
 
 Mandate Health deliberately does not:
 
-- calculate mandate health, data readiness, benchmark alignment, exception severity, age, owner,
-  priority, ordering, membership, or remediation status,
+- calculate mandate health, data availability, review readiness, benchmark alignment, exception
+  severity, age, owner, priority, ordering, membership, or remediation status,
 - invent an exception identity, merge source views, or claim a complete total from visible rows,
 - infer a favourable state from a low item count or a positive summary score,
 - turn portfolio currency or as-of context into unqualified mandate evidence,

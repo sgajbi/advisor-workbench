@@ -843,6 +843,13 @@ describe("Workbench screen documentation governance", () => {
       "every returned row has a source-owned exception identity",
     );
     expect(guide).toContain("last confirmed source view during continuation loading or failure");
+    expect(guide).toContain(
+      "`SOURCE_READINESS` is presented as **Data availability**",
+    );
+    expect(guide).toContain(
+      "**Review readiness**\nremains a separate health dimension",
+    );
+    expect(guide).not.toContain("data readiness, benchmark alignment");
     expect(guide).toContain("does not:\n\n- calculate mandate health");
     expect(validate(registry).errors).toEqual([]);
   });
@@ -883,6 +890,12 @@ describe("Workbench screen documentation governance", () => {
       .replaceAll("\r\n", "\n");
     expect(guide).toContain("source-reported mandate type, portfolio currency, and as-of date");
     expect(guide).toContain("Evidence not opened or not requested");
+    expect(guide).toContain(
+      "`ATTENTION` as **Needs attention** while preserving the\n  source enum",
+    );
+    expect(guide).toContain(
+      "submits the unchanged source enum",
+    );
     expect(guide.replaceAll(/\s+/g, " ")).toContain(
       "selected rebalance decision and proposed changes in document order",
     );
