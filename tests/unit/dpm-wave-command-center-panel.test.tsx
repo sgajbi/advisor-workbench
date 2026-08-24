@@ -387,7 +387,8 @@ describe("DpmWaveCommandCenterPanel", () => {
       name: "DPM campaign lifecycle evidence",
     });
     expect(within(table).getByText("Launched")).toBeInTheDocument();
-    expect(within(table).getByText("2026-05-14T09:30:00Z")).toBeInTheDocument();
+    expect(within(table).getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
+    expect(within(table).queryByText("2026-05-14T09:30:00Z")).not.toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(within(table).getByText("2026-05-10")).toBeInTheDocument();
@@ -423,7 +424,8 @@ describe("DpmWaveCommandCenterPanel", () => {
     const table = await screen.findByRole("table", { name: "DPM campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(within(table).getByText("pm_sg_1")).toBeInTheDocument();
-    expect(within(table).getByText("2026-05-10T00:00:00Z")).toBeInTheDocument();
+    expect(within(table).getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
+    expect(within(table).queryByText("2026-05-10T00:00:00Z")).not.toBeInTheDocument();
     expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(
       within(table).getByText("campaign-launch:campaign-holdings-202605:2026.05:abc"),

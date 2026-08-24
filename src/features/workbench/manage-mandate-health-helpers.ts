@@ -1,3 +1,4 @@
+import { formatCalendarDateValue } from "@/design-system/utils/financial-formatters";
 import {
   businessStateLabel,
   formatBusinessExceptionTitle,
@@ -46,16 +47,7 @@ export function clampMandateHealthPercent(value: number): number {
 }
 
 export function formatMandateHealthDisplayDate(value: string): string {
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    const [year, month, day] = value.slice(0, 10).split("-");
-    const date = new Date(Number(year), Number(month) - 1, Number(day));
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }
-  return value;
+  return formatCalendarDateValue(value, { nullDisplay: "Not confirmed" });
 }
 
 export function formatMandateHealthDimensionLabel(value: string): string {
