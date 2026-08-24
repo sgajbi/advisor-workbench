@@ -180,6 +180,43 @@ describe("AdvisoryOverviewWorkspace", () => {
     ).toHaveAttribute("href", "/proposals/PRP-RISK");
   });
 
+  it("retains a requested proposal while Gateway resolves its source identity", async () => {
+    let resolveProposals!: (value: typeof defaultProposalList) => void;
+    const pendingProposals = new Promise<typeof defaultProposalList>(
+      (resolve) => {
+        resolveProposals = resolve;
+      },
+    );
+    listProposalsMock.mockImplementationOnce(
+      async () => await pendingProposals,
+    );
+
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          selectedRecordId: "PRP-READY",
+        }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("listbox", {
+        name: "Advisory proposal decision worklist",
+      }),
+    ).not.toBeInTheDocument();
+
+    await act(async () => resolveProposals(defaultProposalList));
+
+    const options = await screen.findAllByRole("option");
+    expect(options[0]).toHaveAttribute("aria-selected", "false");
+    expect(options[1]).toHaveTextContent("Implementation handoff");
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByRole("link", { name: "Open proposal review" }),
+    ).toHaveAttribute("href", "/proposals/PRP-READY");
+  });
+
   it("starts from the first source window when the selected portfolio changes", async () => {
     listProposalsMock.mockResolvedValueOnce({
       items: [],

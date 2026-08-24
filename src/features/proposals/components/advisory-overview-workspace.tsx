@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -13,6 +13,7 @@ import {
   SourceRefreshAction,
   SourceWindowNavigation,
   Text,
+  useAdmittedSourceSelection,
   useSourceWindow,
   WorkbenchWorklist,
 } from "@/design-system";
@@ -77,19 +78,17 @@ export default function AdvisoryOverviewWorkspace({
       sourceWindow.windowNumber,
     ],
   );
-  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
-    reviewContext.selectedRecordId ?? null,
-  );
+  const [selectedProposalId, setSelectedProposalId] =
+    useAdmittedSourceSelection({
+      scopeKey: `${portfolioId}:${reviewContext.selectedRecordId ?? ""}`,
+      requestedKey: reviewContext.selectedRecordId,
+      admittedKeys: model.proposalRows.map((proposal) => proposal.proposalId),
+      sourceResolved: proposalQuery.data !== undefined,
+    });
   const selectedProposal =
     model.proposalRows.find(
       (proposal) => proposal.proposalId === selectedProposalId,
     ) ?? model.proposalRows[0];
-  const admittedSelectedProposalId = selectedProposal?.proposalId ?? null;
-  useEffect(() => {
-    if (admittedSelectedProposalId !== selectedProposalId) {
-      setSelectedProposalId(admittedSelectedProposalId);
-    }
-  }, [admittedSelectedProposalId, selectedProposalId]);
   const sourcePosture = projectQuerySourcePosture({
     hasData: Boolean(proposalQuery.data),
     isLoading: proposalQuery.isLoading,
