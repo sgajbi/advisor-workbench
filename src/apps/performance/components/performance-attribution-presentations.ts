@@ -6,9 +6,8 @@ import type {
 } from "@/features/workbench/types";
 
 import { formatLabel, formatPct } from "../formatters";
-import {
-  getPerformanceBenchmarkContextValue,
-} from "./performance-summary-context-helpers";
+import { PERFORMANCE_RETURN_LABELS } from "../performance-terminology";
+import { getPerformanceBenchmarkContextValue } from "./performance-summary-context-helpers";
 
 function getAttributionResidualAssessment(
   attribution:
@@ -153,15 +152,15 @@ export function getAttributionTrendSummaryItems(
 
   return [
     {
-      label: "Total Effect",
+      label: "Total effect",
       value: formatPct(latestRow.total_effect_pct),
       support:
         latestRow.active_return_pct != null
-          ? `Active ${formatPct(latestRow.active_return_pct)}`
+          ? `${PERFORMANCE_RETURN_LABELS.activeReturn} ${formatPct(latestRow.active_return_pct)}`
           : null,
     },
     {
-      label: "Cumulative Total",
+      label: "Cumulative effect",
       value: formatPct(latestRow.cumulative_total_effect_pct),
     },
   ];

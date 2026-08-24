@@ -833,7 +833,7 @@ describe("PerformanceContributionContextNote", () => {
     );
     const evidence = openCalculationEvidence();
     expectEvidenceValue(evidence, "Portfolio contribution", "5.1%");
-    expectEvidenceValue(evidence, "Portfolio return", "5.42%");
+    expectEvidenceValue(evidence, "Portfolio TWR", "5.42%");
   });
 
   it("keeps missing evidence explicit instead of implying source completeness", () => {

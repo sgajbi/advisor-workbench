@@ -173,7 +173,7 @@ export default function PerformanceAttributionTrendPanel({
           },
         },
         {
-          name: "Cumulative Total",
+          name: "Cumulative effect",
           type: "line",
           data: rows.map((row) => row.cumulative_total_effect_pct),
           smooth: false,
