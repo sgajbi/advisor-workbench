@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "lotus-workbench.issue-855.hydration-relationship-proof.v1",
+  "portfolioId": "PB_SG_GLOBAL_BAL_001",
+  "runtime": "governed-local-shared-read-only",
+  "routes": [
+    {
+      "path": "/workbench/PB_SG_GLOBAL_BAL_001?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "browserRuntimeFailures": [],
+      "duplicateIds": [],
+      "relationshipIds": [
+        "manage-workspace-rail-navigation",
+        "manage-workspace-rail-workspace-directory",
+        "manage-workspace-rail-workflow-directory",
+        "manage-overview-decision-worklist-decision"
+      ],
+      "unresolvedRelationshipCount": 0
+    },
+    {
+      "path": "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=EXPLICIT&detailBasis=NET&benchmark=BMK_PB_GLOBAL_BALANCED_60_40&reportStartDate=2025-03-31&reportEndDate=2026-04-10",
+      "browserRuntimeFailures": [],
+      "duplicateIds": [],
+      "relationshipIds": [
+        "performance-workspace-rail-navigation",
+        "performance-workspace-rail-workspace-directory",
+        "performance-workspace-rail-workflow-directory"
+      ],
+      "unresolvedRelationshipCount": 0
+    },
+    {
+      "path": "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "browserRuntimeFailures": [],
+      "duplicateIds": [],
+      "relationshipIds": [
+        "portfolio-review-workspace-rail-navigation",
+        "portfolio-review-workspace-rail-workspace-directory"
+      ],
+      "unresolvedRelationshipCount": 0
+    }
+  ],
+  "optimizedProductionValidation": {
+    "status": "passed",
+    "implementationHead": "59d0fa56",
+    "browserRuntimeFailures": [],
+    "duplicateIds": [],
+    "commands": [
+      {
+        "command": "npm run test:e2e:manage:overview",
+        "result": "1 passed",
+        "viewports": [1440, 1024, 768, 519],
+        "relationshipTargets": [
+          "manage-workspace-rail-navigation",
+          "manage-workspace-rail-workspace-directory",
+          "manage-workspace-rail-workflow-directory",
+          "manage-overview-decision-worklist-decision"
+        ]
+      },
+      {
+        "command": "npm run test:e2e:portfolio:review-matrix",
+        "result": "1 passed",
+        "viewports": [1440, 1024, 768, 721, 720, 561, 519],
+        "relationshipTargets": [
+          "portfolio-review-workspace-rail-navigation",
+          "portfolio-review-workspace-rail-workspace-directory"
+        ]
+      },
+      {
+        "command": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"task-aware navigation keeps Performance work available\"",
+        "result": "1 passed",
+        "viewports": [1440, 1024, 519],
+        "relationshipTargets": [
+          "performance-workspace-rail-navigation",
+          "performance-workspace-rail-workspace-directory",
+          "performance-workspace-rail-workflow-directory"
+        ]
+      }
+    ]
+  }
+}
