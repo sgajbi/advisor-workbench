@@ -110,6 +110,7 @@ describe("useOutcomeReviewHandoffs", () => {
         proofPackId: "ppack_2",
         expectedSnapshotHash: "sha256:expected-2",
         realizedSnapshotHash: "sha256:realized-2",
+        sourceUpdatedAt: "2026-05-14T09:35:00Z",
         updatedAt: "2026-05-14T09:35:00Z",
       }),
     });
@@ -185,6 +186,47 @@ describe("useOutcomeReviewHandoffs", () => {
     rerender({ primaryReview: reviewItem() });
 
     expect(result.current.aiNarrativePending).toBe(false);
+    expect(result.current.aiNarrativeOutcome).toBeNull();
+    expect(result.current.clientCommunicationBoundary).toBeNull();
+  });
+
+  it("invalidates an in-flight narrative when the raw source instant changes within one displayed minute", async () => {
+    const narrativeRequest = deferred<DpmOutcomeReviewNarrativeResponse>();
+    vi.mocked(requestDpmOutcomeReviewAiNarrative).mockReturnValue(narrativeRequest.promise);
+    const visibleUpdatedAt = "13 May 2026, 09:35 UTC";
+
+    const { result, rerender } = renderHook(
+      ({ primaryReview }) => useOutcomeReviewHandoffs({ primaryReview }),
+      {
+        initialProps: {
+          primaryReview: reviewItem({
+            sourceUpdatedAt: "2026-05-13T09:35:10.125Z",
+            updatedAt: visibleUpdatedAt,
+          }),
+        },
+      },
+    );
+
+    let completion!: Promise<void>;
+    act(() => {
+      completion = result.current.requestOutcomeAiNarrative();
+    });
+    expect(result.current.aiNarrativePending).toBe(true);
+
+    rerender({
+      primaryReview: reviewItem({
+        sourceUpdatedAt: "2026-05-13T09:35:45.875Z",
+        updatedAt: visibleUpdatedAt,
+      }),
+    });
+
+    expect(result.current.aiNarrativePending).toBe(false);
+
+    await act(async () => {
+      narrativeRequest.resolve(aiNarrativeResponse("or_1", "packrun_obsolete"));
+      await completion;
+    });
+
     expect(result.current.aiNarrativeOutcome).toBeNull();
     expect(result.current.clientCommunicationBoundary).toBeNull();
   });
@@ -517,6 +559,7 @@ function reviewItem(overrides: Partial<OutcomeReviewListItem> = {}): OutcomeRevi
     expectedSnapshotHash: "sha256:expected",
     realizedSnapshotHash: "sha256:realized",
     retentionUntil: "2026-06-13T09:35:00Z",
+    sourceUpdatedAt: "2026-05-13T09:35:00Z",
     updatedAt: "2026-05-13T09:35:00Z",
     reportInputBlocked: false,
     aiEvidenceBlocked: false,

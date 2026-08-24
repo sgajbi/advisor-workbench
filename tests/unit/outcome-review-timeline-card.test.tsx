@@ -22,6 +22,7 @@ const baseItem: OutcomeReviewListItem = {
   expectedSnapshotHash: "sha256:expected",
   realizedSnapshotHash: "sha256:realized",
   retentionUntil: "2026-12-31",
+  sourceUpdatedAt: "2026-05-13T09:35:00Z",
   updatedAt: "2026-05-13T09:35:00Z",
   reportInputBlocked: false,
   aiEvidenceBlocked: false,
