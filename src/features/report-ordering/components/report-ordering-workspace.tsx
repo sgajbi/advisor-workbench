@@ -188,6 +188,7 @@ function ReportOrderingWorkspaceSession({
             <PortfolioScreenRail
               portfolioId={portfolio.portfolioId}
               activeScreen="reports"
+              relationshipIdBase="report-ordering-workspace-rail"
             />
           }
           main={

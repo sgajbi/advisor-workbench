@@ -59,6 +59,7 @@ export default function PortfolioRecordScreenShell({
             <PortfolioScreenRail
               portfolioId={confirmedReviewContext.portfolio.portfolio_id}
               activeScreen={screen}
+              relationshipIdBase={`portfolio-${screen}-record-rail`}
             />
           ) : undefined
         }

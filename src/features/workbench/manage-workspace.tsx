@@ -110,6 +110,7 @@ export function ManageWorkspace({
             <PortfolioScreenRail
               portfolioId={portfolio.portfolio_id}
               activeScreen="manage"
+              relationshipIdBase="manage-workspace-rail"
               modeItems={buildManageModeItems(reviewContext, mode)}
               modeNavigationLabel="Manage workspace navigation"
             />

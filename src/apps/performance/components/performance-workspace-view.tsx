@@ -156,6 +156,7 @@ export default function PerformanceWorkspaceView({
         <PortfolioScreenRail
           portfolioId={railPortfolioId}
           activeScreen={activeWorkbenchScreen}
+          relationshipIdBase="performance-workspace-rail"
           modeItems={performanceRailModeItems}
           modeNavigationLabel="Performance surface navigation"
         />

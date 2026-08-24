@@ -122,6 +122,7 @@ export default async function ProposalWorkspaceShell({
               <PortfolioScreenRail
                 portfolioId={portfolioContext.portfolio.portfolio_id}
                 activeScreen={activeScreen}
+                relationshipIdBase="advisory-workspace-rail"
                 modeItems={buildAdvisoryJourneyModeItems(reviewContext, activeMode)}
                 modeNavigationLabel="Advisory lifecycle navigation"
               />
