@@ -1,7 +1,7 @@
 "use client";
 
 import { formatCurrency, formatDate, formatPct } from "../formatters";
-import { PORTFOLIO_VALUE_DRAWER_COPY } from "../portfolio-terminology";
+import { PORTFOLIO_VALUE_COPY } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioWorkspaceContext } from "../view-model";
 import { getInvestedAssetWeight } from "../view-model";
@@ -35,8 +35,8 @@ export function buildMetricDrawer(
     case "portfolio_value":
       return {
         kicker: "Metric Detail",
-        title: PORTFOLIO_VALUE_DRAWER_COPY.title,
-        subtitle: PORTFOLIO_VALUE_DRAWER_COPY.subtitle,
+        title: PORTFOLIO_VALUE_COPY.title,
+        subtitle: PORTFOLIO_VALUE_COPY.description,
         summaryItems: [
           {
             label: "Value",
@@ -53,7 +53,7 @@ export function buildMetricDrawer(
             key: "definition",
             label: "Definition",
             content: renderDrawerParagraphs(
-              PORTFOLIO_VALUE_DRAWER_COPY.definition
+              PORTFOLIO_VALUE_COPY.definition
             ),
           },
           {
