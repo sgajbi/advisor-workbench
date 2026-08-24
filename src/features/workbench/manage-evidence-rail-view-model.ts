@@ -1,7 +1,9 @@
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
-import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
+import {
+  readDpmProofPackId,
+  type ManageWorkspaceData,
+} from "@/features/workbench/manage-workspace-data";
 import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
-import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
 
 export type ManageEvidenceRailItem = {
   label: string;
@@ -22,9 +24,8 @@ export function buildManageEvidenceRailModel(
     mandate: data.mandate,
     mandateHealth: data.mandateHealth,
   });
-  const reviewModel = buildOutcomeReviewPanelModel(data.outcomeReviews);
-  const hasEvidencePackReference = reviewModel.items.some(
-    (item) => item.proofPackId !== "N/A",
+  const hasEvidencePackReference = Boolean(
+    readDpmProofPackId(data.outcomeReviews?.data ?? null),
   );
   const hasRetrievedEvidencePack = data.proofPack !== null;
   const evidencePackValue = hasRetrievedEvidencePack
