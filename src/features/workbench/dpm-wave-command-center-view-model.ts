@@ -1,3 +1,5 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmCampaignWorkflowGatewayResponse,
@@ -464,6 +466,10 @@ function buildCampaignWorkflowEvidenceRow(
         })
         .join(" | ")
     : "N/A";
+  const recordedAt =
+    readString(record, "recorded_at") ||
+    readString(record, "created_at") ||
+    readString(record, "updated_at");
   return {
     key: [
       evidenceType.toLowerCase().replaceAll(" ", "-"),
@@ -496,11 +502,7 @@ function buildCampaignWorkflowEvidenceRow(
       readString(record, "actor_id") ||
       readString(record, "created_by") ||
       "N/A",
-    recordedAt:
-      readString(record, "recorded_at") ||
-      readString(record, "created_at") ||
-      readString(record, "updated_at") ||
-      "N/A",
+    recordedAt: formatTimestampValue(recordedAt, { nullDisplay: "Not reported" }),
     reasonCodes: formatStringList(extractStringArray(record.reason_codes ?? record.reason_code)),
     sourceRefs: formatValue(sourceRefs.length),
     contentHash: readString(record, "content_hash") || "N/A",
@@ -954,6 +956,10 @@ function buildCampaignLifecycleEventRows(
   return extractRecordArray(data?.events ?? data?.lifecycle_events ?? data?.items).map(
     (record, index) => {
       const metadata = readRecord(record.metadata);
+      const occurredAt =
+        readString(record, "occurred_at") ||
+        readString(record, "created_at") ||
+        readString(record, "effective_at");
       return {
         key:
           readString(record, "event_id") ||
@@ -967,11 +973,7 @@ function buildCampaignLifecycleEventRows(
             readString(record, "lifecycle_event") ||
             "Lifecycle Event"
         ),
-        occurredAt:
-          readString(record, "occurred_at") ||
-          readString(record, "created_at") ||
-          readString(record, "effective_at") ||
-          "N/A",
+        occurredAt: formatTimestampValue(occurredAt, { nullDisplay: "Not reported" }),
         actor:
           readString(record, "actor_id") ||
           readString(record, "created_by") ||

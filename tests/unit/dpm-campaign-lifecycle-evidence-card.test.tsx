@@ -35,7 +35,7 @@ const lifecycleRows: DpmCampaignLifecycleEventRow[] = [
   {
     key: "event-1",
     eventType: "LAUNCHED",
-    occurredAt: "2026-05-14T09:30:00Z",
+    occurredAt: "14 May 2026, 09:30 UTC",
     actor: "pm_sg_1",
     status: "RECORDED",
     reason: "campaign_definition_launched",
@@ -60,6 +60,7 @@ describe("DpmCampaignLifecycleEvidenceCard", () => {
     expect(screen.getByRole("table", { name: "DPM campaign lifecycle evidence" })).toBeInTheDocument();
     expect(screen.getByText("LAUNCHED")).toBeInTheDocument();
     expect(screen.getByText("campaign_definition_launched")).toBeInTheDocument();
+    expect(screen.getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
     expect(screen.getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /trade/i })).not.toBeInTheDocument();

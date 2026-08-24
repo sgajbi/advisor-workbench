@@ -405,7 +405,7 @@ describe("DPM wave command-center view model", () => {
       {
         key: "CAMPAIGN_DEFINITION_CREATED:2026-05-14T09:30:00Z",
         eventType: "Campaign Definition Created",
-        occurredAt: "2026-05-14T09:30:00Z",
+        occurredAt: "14 May 2026, 09:30 UTC",
         actor: "pm_sg_1",
         status: "RECORDED",
         reason: "source_backed_candidate_set",
@@ -786,6 +786,7 @@ describe("DPM wave command-center view model", () => {
       evidenceRef: "task_001",
       status: "WAITING_FOR_REVIEW",
       actor: "pm_sg_1",
+      recordedAt: "21 May 2026, 08:00 UTC",
       reasonCodes: "TASK_RECORDED",
       sourceRefs: "1",
       contentHash: "sha256:task",
@@ -795,6 +796,44 @@ describe("DPM wave command-center view model", () => {
     expect(renderedRows).not.toContain("raw rationale");
     expect(renderedRows).not.toContain("reviewer notes");
     expect(renderedRows).not.toContain("OMS");
+  });
+
+  it("fails DPM audit timestamps closed when source zone evidence is missing or malformed", () => {
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      campaignLifecycleEvents: {
+        correlation_id: "corr-campaign-lifecycle",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          events: [
+            {
+              event_id: "event-unzoned",
+              event_type: "CAMPAIGN_DEFINITION_CREATED",
+              occurred_at: "2026-05-14T09:30:00",
+            },
+          ],
+        },
+      },
+      campaignAssignmentTasks: {
+        correlation_id: "corr-assignment-tasks",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        data: {
+          items: [
+            {
+              task_ref: "task-invalid-time",
+              recorded_at: "not-a-timestamp",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.campaignLifecycleRows[0]?.occurredAt).toBe("Not reported");
+    expect(model.campaignWorkflowEvidenceRows[0]?.recordedAt).toBe("Not reported");
   });
 
   it("preserves launched lifecycle events and append-only launch history", () => {
