@@ -140,11 +140,27 @@ describe("report ordering view model", () => {
 
     expect(rows[0]).toEqual(
       expect.objectContaining({
+        reportDate: "22 Apr 2026",
+        requestedAt: "22 Apr 2026, 09:00 UTC",
         statusLabel: "Report data complete",
         statusDetail: expect.stringContaining("Archive and client delivery remain separate"),
         tone: "success",
       }),
     );
+  });
+
+  it("normalizes report request instants to disclosed UTC and fails closed without a source zone", () => {
+    const [request] = buildReportJobListResponse().items;
+    const [normalized] = toReportRequestRows([
+      { ...request, createdAt: "2026-04-22T17:00:00+08:00" },
+    ]);
+    const [unconfirmed] = toReportRequestRows([
+      { ...request, createdAt: "2026-04-22T09:00:00" },
+    ]);
+
+    expect(normalized?.requestedAt).toBe("22 Apr 2026, 09:00 UTC");
+    expect(unconfirmed?.requestedAt).toBe("Time unavailable");
+    expect(JSON.stringify(unconfirmed)).not.toContain("2026-04-22T09:00:00");
   });
 
   it("separates directly orderable reports from evidence created by governed workflows", () => {

@@ -1,3 +1,8 @@
+import {
+  formatBusinessDateValue,
+  formatTimestampValue,
+  isBusinessDateValue,
+} from "@/design-system/utils/financial-formatters";
 import type {
   ReportFamily,
   ReportJobListItem,
@@ -241,8 +246,8 @@ export function toReportRequestRows(items: ReportJobListItem[]): ReportRequestRo
     return {
       key: item.reportJobId,
       reportLabel: "Portfolio review",
-      reportDate: formatBusinessDate(item.asOfDate),
-      requestedAt: formatBusinessDateTime(item.createdAt),
+      reportDate: formatBusinessDateValue(item.asOfDate, { nullDisplay: "Date unavailable" }),
+      requestedAt: formatTimestampValue(item.createdAt, { nullDisplay: "Time unavailable" }),
       statusLabel: lifecycle.label,
       statusDetail: lifecycle.detail,
       tone: lifecycle.tone,
@@ -277,7 +282,7 @@ function evaluateReadiness(
   } else if (!mode) {
     issues.push("Portfolio bundle ordering is not currently published for this report.");
   }
-  if (!isBusinessDate(configuration.asOfDate)) {
+  if (!isBusinessDateValue(configuration.asOfDate)) {
     issues.push("Select a valid report date.");
   }
   if (
@@ -493,32 +498,4 @@ function reportLifecycleCopy(status: string, currentStep: string) {
 
 function byDisplayOrder(left: ReportSection, right: ReportSection): number {
   return left.displayOrder - right.displayOrder;
-}
-
-function isBusinessDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
-}
-
-function formatBusinessDate(value: string): string {
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isNaN(date.getTime())
-    ? "Date unavailable"
-    : new Intl.DateTimeFormat("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      }).format(date);
-}
-
-function formatBusinessDateTime(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "Time unavailable"
-    : new Intl.DateTimeFormat("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(date);
 }
