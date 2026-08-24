@@ -22,7 +22,10 @@ export function buildMetricDrawer(
 ): PortfolioDetailDrawerState {
   const commonSummary = [
     { label: "Portfolio", value: workspace.portfolio.portfolio_id },
-    { label: "As of", value: formatDate(context.selectedAsOfDate) },
+    { label: "Valuation date", value: formatDate(workspace.as_of_date) },
+    ...(workspace.as_of_date !== context.selectedAsOfDate
+      ? [{ label: "Review date", value: formatDate(context.selectedAsOfDate) }]
+      : []),
   ];
   const reviewContext = {
     portfolioId: workspace.portfolio.portfolio_id,

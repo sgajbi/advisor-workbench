@@ -25,6 +25,13 @@ describe("portfolio metric drawer builders", () => {
       label: "Value",
       value: "1,000,000 USD",
     });
+    expect(drawer.summaryItems).toContainEqual({
+      label: "Valuation date",
+      value: "12 May 2026",
+    });
+    expect(drawer.summaryItems).not.toContainEqual(
+      expect.objectContaining({ label: "Review date" }),
+    );
 
     render(<>{drawer.tabs.find((tab) => tab.key === "definition")?.content}</>);
 
@@ -39,5 +46,25 @@ describe("portfolio metric drawer builders", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/assets under management/i)).not.toBeInTheDocument();
+  });
+
+  it("distinguishes a retained source valuation date from the requested review date", () => {
+    const drawer = buildMetricDrawer(
+      "portfolio_value",
+      buildPortfolioWorkspace({ as_of_date: "2026-04-10" }),
+      buildPortfolioWorkspaceContext({ selectedAsOfDate: "2026-04-01" }),
+    );
+
+    expect(drawer.summaryItems).toContainEqual({
+      label: "Valuation date",
+      value: "10 Apr 2026",
+    });
+    expect(drawer.summaryItems).toContainEqual({
+      label: "Review date",
+      value: "01 Apr 2026",
+    });
+    expect(drawer.summaryItems).not.toContainEqual(
+      expect.objectContaining({ label: "As of" }),
+    );
   });
 });
