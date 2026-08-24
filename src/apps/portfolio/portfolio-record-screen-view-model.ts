@@ -91,9 +91,9 @@ export function buildPortfolioRecordHeaderKpis(
     const activity = workspace.activity_summary;
     const activityMovement = buildActivityMovementSummary(activity);
     const reportingCurrency =
-      income?.reporting_currency ??
-      activity?.reporting_currency ??
-      workspace.portfolio.base_currency;
+      income?.reporting_currency ?? activity?.reporting_currency ?? null;
+    const displayCurrency =
+      reportingCurrency ?? workspace.portfolio.base_currency;
 
     return [
       {
@@ -109,11 +109,13 @@ export function buildPortfolioRecordHeaderKpis(
         label: "Net cash movement",
         value: activityMovement == null
           ? "N/A"
-          : formatCurrency(activityMovement.netMovement, reportingCurrency),
+          : formatCurrency(activityMovement.netMovement, displayCurrency),
       },
       {
-        label: PORTFOLIO_CURRENCY_LABELS.reporting,
-        value: reportingCurrency,
+        label: reportingCurrency
+          ? PORTFOLIO_CURRENCY_LABELS.reporting
+          : PORTFOLIO_CURRENCY_LABELS.base,
+        value: displayCurrency,
       },
     ];
   }

@@ -3,8 +3,6 @@ import { isBusinessDateValue } from "@/design-system/utils/financial-formatters"
 import { WORKFLOW_DISPLAY_ORDER } from "./workspace-config";
 import { formatDate, formatTimestamp } from "./formatters";
 import type {
-  PortfolioActivitySummaryView,
-  PortfolioIncomeSummaryView,
   PortfolioReadinessIndicator,
   PortfolioReadinessStatus,
   PortfolioTransactionDrilldownFilter,
@@ -266,32 +264,6 @@ export function resolveEffectivePeriod(
     isCustomRange: usesCustomRange,
     label: usesCustomRange ? "Custom" : timeWindow,
   };
-}
-
-export function getIncomeDisplayCurrency(
-  summary: PortfolioIncomeSummaryView | null | undefined,
-  selectedReportingCurrency: string,
-  baseCurrency: string
-): string {
-  if (!summary) {
-    return selectedReportingCurrency || baseCurrency;
-  }
-  return selectedReportingCurrency === summary.reporting_currency
-    ? summary.reporting_currency
-    : summary.reporting_currency;
-}
-
-export function getActivityDisplayCurrency(
-  summary: PortfolioActivitySummaryView | null | undefined,
-  selectedReportingCurrency: string,
-  baseCurrency: string
-): string {
-  if (!summary) {
-    return selectedReportingCurrency || baseCurrency;
-  }
-  return selectedReportingCurrency === summary.reporting_currency
-    ? summary.reporting_currency
-    : summary.reporting_currency;
 }
 
 export function buildPortfolioExportPayload(
