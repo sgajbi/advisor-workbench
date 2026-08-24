@@ -1234,7 +1234,11 @@ Important validation expectations:
     must exactly match the request.
     Exact timestamps require `Z` or a numeric offset, normalize to UTC, and disclose **UTC** in
     business copy. Do not render raw ISO dates, accept unzoned timestamps, silently substitute a
-    fixed demonstration date, or reintroduce feature-local date parsers.
+    fixed demonstration date, or reintroduce feature-local date parsers. Preserve the exact source
+    value only in source models or stable machine-readable evidence, not visible business copy.
+    `tests/unit/date-presentation-authority.test.ts` rejects competing production formatter
+    authorities, and audit evidence browser proof must demonstrate that changing the browser
+    timezone cannot change the disclosed UTC instant.
 38. Governed cross-workspace review context consists only of portfolio, valuation date, review
     period, and reporting currency. `selectedRecordId` and `batchId` are screen-local identities:
     strip them when switching workspaces and retain them only within their owning record or batch
