@@ -93,6 +93,9 @@ describe("portfolio-memory view model", () => {
   });
 
   it("fails closed when source audit instants are malformed or omit timezone evidence", () => {
+    const [sourceEvent] = (memoryResponse.data as {
+      events: Array<Record<string, unknown>>;
+    }).events;
     const model = buildPortfolioMemoryPanelModel({
       ...memoryResponse,
       data: {
@@ -100,7 +103,7 @@ describe("portfolio-memory view model", () => {
         summary: { latest_event_at: "not-a-timestamp" },
         events: [
           {
-            ...memoryResponse.data.events[0],
+            ...sourceEvent,
             event_time: "2026-05-07T10:00:00",
           },
         ],

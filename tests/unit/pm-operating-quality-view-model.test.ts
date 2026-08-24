@@ -957,15 +957,17 @@ describe("PM operating quality view model", () => {
   });
 
   it("fails closed when fairness generation time lacks source timezone evidence", () => {
+    const sourceData = fairnessPreview.data as Record<string, unknown>;
+    const sourceFairnessAnalysis = sourceData.fairness_analysis as Record<string, unknown>;
     const model = buildPmOperatingQualityPanelModel({
       policies,
       scoreRuns,
       fairnessPreview: {
         ...fairnessPreview,
         data: {
-          ...fairnessPreview.data,
+          ...sourceData,
           fairness_analysis: {
-            ...fairnessPreview.data.fairness_analysis,
+            ...sourceFairnessAnalysis,
             generated_at: "2026-05-13T09:40:00",
           },
         },

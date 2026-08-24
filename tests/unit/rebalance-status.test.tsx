@@ -76,6 +76,7 @@ describe("RebalanceStatus", () => {
       <RebalanceStatus
         snapshot={{
           status: "READY",
+          last_rebalance_run_id: null,
           last_run_at_utc: "2026-03-27T12:00:00",
           recent_runs: [
             {
