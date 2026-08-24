@@ -381,7 +381,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getAllByRole("heading", { name: "Outcome Reviews" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Review Timeline")).toBeInTheDocument();
     expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
-    expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();

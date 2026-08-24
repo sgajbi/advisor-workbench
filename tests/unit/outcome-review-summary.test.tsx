@@ -19,10 +19,10 @@ describe("OutcomeReviewSummary", () => {
 
     expect(screen.queryByText("Outcome review data is unavailable")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
-      "Ready for Advisor Review",
+      "Ready for adviser review",
     );
     expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
-      "Within Mandate",
+      "Within expected tolerance",
     );
     expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent("72.4%");
     expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
@@ -87,11 +87,11 @@ function reviewItem(): OutcomeReviewListItem {
     state: "READY",
     overallOutcome: "READY_WITHIN_TOLERANCE",
     reviewWindow: "01 May 2026 - 13 May 2026",
-    outcomeStatusLabel: "Within Mandate",
-    reviewPostureLabel: "Ready for Advisor Review",
+    outcomeStatusLabel: "Within expected tolerance",
+    reviewPostureLabel: "Ready for adviser review",
     driftImprovementLabel: "72.4%",
     mandateImpact: "Drift reduction achieved within tolerance.",
-    clientRationale: "Outcome remains within mandate tolerance for advisor handoff.",
+    clientRationale: "Outcome remains within mandate tolerance for adviser handoff.",
     portfolioId: "PB_SG_GLOBAL_BAL_001",
     rebalanceRunId: "rr_1",
     waveId: "wave_1",

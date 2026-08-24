@@ -36,7 +36,7 @@ export default function OutcomeReviewDimensionTable({ dimensions }: Props) {
       }))}
       emptyState={{
         title: "No dimension results returned",
-        body: "The review exists, but no expected-versus-realized dimension rows are available.",
+        body: "The review exists, but no expected-versus-realised dimension rows are available.",
       }}
     />
   );

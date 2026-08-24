@@ -26,6 +26,96 @@ function response(
 }
 
 describe("outcome review view model", () => {
+  it.each([
+    {
+      state: "READY",
+      overallOutcome: "READY_WITHIN_TOLERANCE",
+      blockedActions: [] as string[],
+      outcomeStatus: "Within expected tolerance",
+      reviewPosture: "Ready for adviser review",
+    },
+    {
+      state: "PENDING_REVIEW",
+      overallOutcome: "PENDING_REVIEW",
+      blockedActions: [] as string[],
+      outcomeStatus: "Review pending",
+      reviewPosture: "Adviser review pending",
+    },
+    {
+      state: "BREACHED",
+      overallOutcome: "BREACHED",
+      blockedActions: [] as string[],
+      outcomeStatus: "Outside expected tolerance",
+      reviewPosture: "Escalation required",
+    },
+    {
+      state: "BLOCKED",
+      overallOutcome: "BLOCKED",
+      blockedActions: [] as string[],
+      outcomeStatus: "Blocked",
+      reviewPosture: "Needs attention",
+    },
+    {
+      state: "READY",
+      overallOutcome: "READY",
+      blockedActions: ["CREATE_REPORT_INPUT"],
+      outcomeStatus: "Outcome evidence ready",
+      reviewPosture: "Needs attention",
+    },
+    {
+      state: "UNKNOWN",
+      overallOutcome: "FUTURE_OUTCOME_STATE",
+      blockedActions: [] as string[],
+      outcomeStatus: "Review required",
+      reviewPosture: "Review required",
+    },
+  ])(
+    "keeps $overallOutcome comparison truth distinct from $state workflow posture",
+    ({ state, overallOutcome, blockedActions, outcomeStatus, reviewPosture }) => {
+      const model = buildOutcomeReviewPanelModel(
+        response(
+          {
+            items: [
+              {
+                outcome_review_id: `or_${state.toLowerCase()}`,
+                state,
+                overall_outcome: overallOutcome,
+              },
+            ],
+          },
+          { blocked_actions: blockedActions },
+        ),
+      );
+
+      expect(model.items[0]).toMatchObject({
+        outcomeStatusLabel: outcomeStatus,
+        reviewPostureLabel: reviewPosture,
+      });
+    },
+  );
+
+  it("preserves a source-authored business outcome instead of forcing an enum label", () => {
+    const summary = "Implemented rebalance stayed inside expected bands.";
+    const model = buildOutcomeReviewPanelModel(
+      response({
+        items: [
+          {
+            outcome_review_id: "or_source_summary",
+            state: "READY",
+            overall_outcome: summary,
+          },
+        ],
+      }),
+    );
+
+    expect(model.items[0]).toMatchObject({
+      outcomeStatusLabel: summary,
+      reviewPostureLabel: "Ready for adviser review",
+    });
+    expect(model.items[0].mandateImpact).toContain(summary);
+    expect(model.items[0].clientRationale).toContain(summary);
+  });
+
   it("normalizes list payloads into review, variance, lineage, and handoff posture", () => {
     const model = buildOutcomeReviewPanelModel(
       response({

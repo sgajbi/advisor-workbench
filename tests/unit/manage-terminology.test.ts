@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MANAGE_HEALTH_DIMENSION_LABELS,
+  MANAGE_OUTCOME_REVIEW_LABELS,
   MANAGE_REBALANCE_LABELS,
   MANAGE_WORKFLOW_LABELS,
 } from "../../src/features/workbench/manage-terminology";
@@ -52,6 +53,21 @@ describe("manage terminology", () => {
       rebalanceWaveReference: "Rebalance wave reference",
       supportReference: "Support reference",
       replayKey: "Replay key",
+    });
+  });
+
+  it("keeps outcome comparison truth separate from adviser review posture", () => {
+    expect(MANAGE_OUTCOME_REVIEW_LABELS).toEqual({
+      withinExpectedTolerance: "Within expected tolerance",
+      reviewPending: "Review pending",
+      outsideExpectedTolerance: "Outside expected tolerance",
+      blocked: "Blocked",
+      reviewRequired: "Review required",
+      outcomeEvidenceReady: "Outcome evidence ready",
+      needsAttention: "Needs attention",
+      readyForAdviserReview: "Ready for adviser review",
+      adviserReviewPending: "Adviser review pending",
+      escalationRequired: "Escalation required",
     });
   });
 

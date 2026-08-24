@@ -36,7 +36,7 @@ describe("OutcomeReviewDimensionTable", () => {
     const table = screen.getByRole("table", { name: "Outcome review dimensions" });
     expect(table).toHaveTextContent("No dimension results returned");
     expect(table).toHaveTextContent(
-      "The review exists, but no expected-versus-realized dimension rows are available.",
+      "The review exists, but no expected-versus-realised dimension rows are available.",
     );
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(
