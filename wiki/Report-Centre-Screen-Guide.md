@@ -90,6 +90,9 @@ controls and do not occur on this screen.
   readiness, audience, limitations, and supported submission mode.
 - Preserves the current selected-portfolio workflow for one reviewed, idempotent portfolio-review
   request and recent report-data job history.
+- Presents each exact request instant as readable, disclosed UTC while keeping the selected report
+  date as a calendar business term. Missing, malformed, or unzoned request instants are **Not
+  reported** and raw ISO values are not shown in either the comparison table or compact record.
 - Offers portfolio-bundle ordering only when the exact batch capability and route are published.
 - Loads up to the first 100 source-ordered Advisor Book memberships for the business date, supports
   search by client, mandate, portfolio, or booking centre, and disables inactive portfolios.

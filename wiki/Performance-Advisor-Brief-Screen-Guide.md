@@ -72,6 +72,10 @@ client communication, order a report, or authorize downstream use.
   source-recorded human review, freshness, and client-use permission.
 - Treats review as source-recorded only when the returned workflow evidence includes review
   history, a positive transition count, a reviewer reference, and a review timestamp.
+- Presents a source-recorded review instant as a readable UTC audit fact only after persistence is
+  confirmed. The exact offset-bearing source value remains available on the atomic machine-readable
+  review record, never as advisor-facing ISO text; missing, malformed, or unzoned values are **Not
+  reported**.
 - Presents the bank staff reviewer reference without Lotus AI's technical `review:` actor namespace;
   the raw source actor remains unchanged in the Gateway evidence and only the governed namespace is
   adapted at the Workbench boundary.
@@ -134,7 +138,7 @@ directly. Shared contract detail remains in [API Surface](API-Surface), and owne
 | Partial or limited | Usable evidence retained with named warnings, partial failures, or unavailable preparation dimensions | Qualify the discussion and investigate the named source |
 | Review confirmation | Exact decision consequence, staff reference, rationale, optional replacement, and prohibited downstream uses | Confirm or return to editing |
 | Recording review | Controls remain unavailable while the exact source request is pending; polite status feedback is announced | Wait for Gateway and Lotus AI completion |
-| Review recorded | Source-returned decision posture plus actor, timestamp, transition count, and review-history evidence; focus remains on the source-confirmed status | Continue only within the displayed internal boundary |
+| Review recorded | Source-returned decision posture plus actor, readable UTC timestamp, transition count, and review-history evidence; focus remains on the source-confirmed status | Continue only within the displayed internal boundary |
 | Review failed | Persistent assertive failure feedback; entered decision information remains available | Correct the input or retry through the same control |
 | Permission blocked | Business-safe restricted posture without entitlement internals or stale success | Use an entitled approved path or contact platform support |
 | No allowed decision | Source workflow publishes no current action; no local action is invented | Inspect the recorded state and technical support disclosure |
@@ -194,6 +198,11 @@ capability.
   request occurs before confirmation, verifies confirmation focus and exactly one POST, renders the
   source actor/time/history only after success, rejects unexpected browser failures, and verifies no
   page overflow at 1440, 1024, 720, and 390 pixels.
+- The same journey reloads the persisted review and opens a second `Asia/Singapore` browser context
+  to prove the visible audit instant remains `21 Apr 2026, 03:22 UTC`, the exact source value remains
+  available to machine proof, and browser timezone cannot change the business disclosure. The
+  diagnostic evidence pack is
+  [Issue #786 Business Timestamp Evidence](https://github.com/sgajbi/lotus-workbench/tree/main/docs/evidence/issue-786-business-timestamps).
 - Canonical ACCEPT validation reads review state, supportability, reviewer, and recorded time from
   exactly one machine-readable record on the same visible **Human Review** row. It rejects missing,
   duplicate, malformed, non-ready, or wrong-reviewer evidence instead of parsing flattened panel

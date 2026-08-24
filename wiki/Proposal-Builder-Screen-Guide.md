@@ -86,6 +86,9 @@ before handoff; a prior visual result never substitutes for current source confi
   currency through the Workbench BFF and Gateway.
 - Starts the advisory date unconfirmed unless the route supplies a valid calendar date; it never
   inserts a fixed demonstration date into the advisor's draft.
+- Separates that calendar-semantic advisory date from exact AI preparation and workflow audit
+  instants. Exact instants require source timezone evidence, render in disclosed UTC, and fail
+  closed rather than echoing malformed or browser-local time.
 - Distinguishes loading, confirmed, confirmed-empty, stale-refresh, mismatched, incomplete,
   restricted, and unavailable evidence instead of creating fallback holdings or cash.
 - Supports held-position buy and sell changes, cash movements, and off-book draft orders.

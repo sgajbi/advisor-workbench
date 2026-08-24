@@ -86,6 +86,9 @@ investment suitability, client-publication authority, or supervisory approval.
   calculation purpose for unknown source values.
 - Opens source-published input, lineage, or archived evidence records through the returned
   Workbench/Gateway route. Workbench does not synthesize an artifact.
+- Presents source generation instants through the shared readable UTC audit-time authority. A
+  missing, malformed, or unzoned value is **Not reported**; raw ISO transport text is retained only
+  in source evidence and never promoted into the business scan path.
 - Keeps services, calculation identifiers, versions, raw lifecycle states, source reasons,
   upstream snapshots, artifact routes, fallbacks, limitations, and methodology references inside
   one collapsed **Technical support details** disclosure.

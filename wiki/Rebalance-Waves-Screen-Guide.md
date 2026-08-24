@@ -76,6 +76,9 @@ client-delivery authority, or execution authority.
 
 - Presents mandate type and portfolio currency from the current Manage/Core-backed workspace
   context, and the wave as-of date from the Manage wave response.
+- Keeps the calendar-semantic wave date distinct from exact campaign, lifecycle, launch, review,
+  and workflow audit instants. Exact instants require a source offset and render in disclosed UTC;
+  absent or ambiguous values fail closed instead of using a fixed date or browser timezone.
 - Presents source-owned wave lifecycle, item and issue counts, supportability, reason codes,
   blocked actions, source readiness, and remediation posture.
 - Loads the active wave's proposed changes and shows security, proposed action, source-estimated
