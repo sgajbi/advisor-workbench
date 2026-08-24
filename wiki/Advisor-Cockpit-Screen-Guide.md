@@ -174,9 +174,9 @@ identity, data, or unsupported capability.
 
 - Focused view-model and readiness-presentation tests prove business-language projection,
   fail-closed source posture, totals-versus-detail qualification, and operating boundaries.
-- `tests/unit/advisor-cockpit-action-worklist.test.tsx` proves semantic parity between table and
-  selected-decision evidence, keyboard selection and detail transfer, exact selected-action
-  feedback, failure posture, and fail-closed action controls.
+- `tests/unit/advisor-cockpit-action-worklist.test.tsx` proves one worklist and associated
+  selected-decision region, keyboard selection and detail transfer, exact selected-action feedback,
+  failure posture, and fail-closed action controls.
 - `tests/e2e/advisor-cockpit-business-readiness.spec.ts` proves source-backed rendering, selected
   action persistence, reconciliation, focus stability, 44-pixel minimum action targets,
   worklist/detail association and responsive stacking, one visible valid proposal handoff,

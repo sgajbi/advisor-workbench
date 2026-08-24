@@ -160,8 +160,8 @@ guide does not turn a supported screen into a claim of bank approval or producti
   disclosure, raw-reference exclusion from the primary path, explicit open/close behavior, the
   first portfolio decision row above 900 pixels at 1440, 1024/720/519 reflow, and failure/date
   recovery without a fabricated request.
-- `output/issue-811/advisor-book/` contains reviewed diagnostic desktop, tablet, and compact
-  decision-first screenshots. They are not canonical runtime proof.
+- `docs/evidence/issue-811-decision-worklists/advisor-book/` contains reviewed diagnostic desktop,
+  tablet, and compact decision-first screenshots. They are not canonical runtime proof.
 - `scripts/live/validation/browser-workflows.mjs` validates the browser workflow through Gateway.
 - Canonical proof uses `PB_SG_GLOBAL_BAL_001` and requires exactly one canonical portfolio,
   `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current accepted snapshot

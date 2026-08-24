@@ -93,6 +93,31 @@ describe("Workbench screen documentation governance", () => {
     });
   });
 
+  it("keeps decision-worklist evidence references on committed paths", () => {
+    const evidenceReferences = [
+      {
+        guide: "Advisory-Overview-Screen-Guide.md",
+        directory:
+          "docs/evidence/issue-811-decision-worklists/advisory-overview",
+      },
+      {
+        guide: "Advisor-Book-Workflow.md",
+        directory: "docs/evidence/issue-811-decision-worklists/advisor-book",
+      },
+    ];
+
+    for (const reference of evidenceReferences) {
+      const guide = fs
+        .readFileSync(path.join(rootDirectory, "wiki", reference.guide), "utf8")
+        .replaceAll("\\", "/");
+
+      expect(guide).toContain(`\`${reference.directory}/\``);
+      expect(fs.existsSync(path.join(rootDirectory, reference.directory))).toBe(
+        true,
+      );
+    }
+  });
+
   it("maps Proposal Builder to its ordered source-confirmed workflow guide", () => {
     const registry = loadRegistry();
     const proposalBuilder = registry.surfaces.find(
@@ -548,6 +573,9 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "Uses the shared decision-first worklist: compact action rows identify priority",
     );
+    expect(guide).toContain(
+      "proves one worklist and associated\n  selected-decision region",
+    );
     expect(advisorCockpit?.implementationEvidence).toEqual(
       expect.arrayContaining([
         "src/design-system/components/workbench-worklist.tsx",
@@ -766,7 +794,12 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "only when both carry the same source wave identity; row evidence remains authoritative",
     );
-    expect(guide).toContain("Overview does not load or prove\n  an existing alternative set");
+    expect(guide).toContain(
+      "These entries hand off only to Mandate\n  Health or Rebalance Waves",
+    );
+    expect(guide).toContain(
+      "other Manage work areas remain available through Manage\n  navigation and are not presented as decision-worklist records",
+    );
     expect(guide).toContain("Uses the shared decision-first worklist");
     expect(guide).toContain("does not:\n\n- calculate portfolio value");
     expect(guide).toContain("not a claim of competitor superiority");
