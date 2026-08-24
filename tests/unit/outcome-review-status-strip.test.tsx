@@ -7,8 +7,8 @@ describe("OutcomeReviewStatusStrip", () => {
   it("renders business-facing outcome review status metrics", () => {
     render(
       <OutcomeReviewStatusStrip
-        latestReview="Ready for Advisor Review"
-        outcomeStatus="Within Mandate"
+        latestReview="Ready for adviser review"
+        outcomeStatus="Within expected tolerance"
         driftImprovement="72.4%"
         evidencePackStatus="Available"
       />
@@ -16,8 +16,8 @@ describe("OutcomeReviewStatusStrip", () => {
 
     const strip = screen.getByLabelText("Outcome review status summary");
 
-    expect(strip).toHaveTextContent("Latest ReviewReady for Advisor Review");
-    expect(strip).toHaveTextContent("Outcome StatusWithin Mandate");
+    expect(strip).toHaveTextContent("Latest ReviewReady for adviser review");
+    expect(strip).toHaveTextContent("Outcome StatusWithin expected tolerance");
     expect(strip).toHaveTextContent("Drift Improvement72.4%");
     expect(strip).toHaveTextContent("Evidence PackAvailable");
     expect(screen.queryByText(/source_ref|content_hash|sha256|outcome_review_id/i)).not.toBeInTheDocument();

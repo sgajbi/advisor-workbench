@@ -5,6 +5,7 @@ import {
   formatTimestampValue,
   isTimestampValue,
 } from "@/design-system/utils/financial-formatters";
+import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 export type OutcomeReviewPanelState =
   | "ready"
@@ -447,37 +448,47 @@ function formatDateLabel(value: string): string {
 }
 
 function outcomeStatusLabel(overallOutcome: string, state: string): string {
-  const normalized = normalizeState(overallOutcome || state);
-  if (normalized.includes("WITHIN_TOLERANCE") || normalized === "READY") {
-    return "Within Mandate";
+  const sourceOutcome = overallOutcome.trim();
+  if (sourceOutcome && !isMachineStateValue(sourceOutcome)) {
+    return sourceOutcome;
   }
-  if (normalized.includes("PENDING") || normalized.includes("REVIEW")) {
-    return "Advisor Review";
+  const normalized = normalizeState(sourceOutcome || state);
+  if (normalized.includes("WITHIN_TOLERANCE") || normalized === "READY") {
+    return normalized === "READY"
+      ? MANAGE_OUTCOME_REVIEW_LABELS.outcomeEvidenceReady
+      : MANAGE_OUTCOME_REVIEW_LABELS.withinExpectedTolerance;
+  }
+  if (normalized.includes("PENDING")) {
+    return MANAGE_OUTCOME_REVIEW_LABELS.reviewPending;
   }
   if (normalized.includes("BREACH")) {
-    return "Outside Mandate";
+    return MANAGE_OUTCOME_REVIEW_LABELS.outsideExpectedTolerance;
   }
   if (normalized.includes("BLOCK")) {
-    return "Blocked";
+    return MANAGE_OUTCOME_REVIEW_LABELS.blocked;
   }
-  return "Review Required";
+  return MANAGE_OUTCOME_REVIEW_LABELS.reviewRequired;
 }
 
 function reviewPostureLabel(state: string, blockedActions: string[]): string {
   const normalized = normalizeState(state);
   if (blockedActions.length > 0 || normalized === "BLOCKED") {
-    return "Attention Required";
+    return MANAGE_OUTCOME_REVIEW_LABELS.needsAttention;
   }
   if (normalized === "READY") {
-    return "Ready for Advisor Review";
+    return MANAGE_OUTCOME_REVIEW_LABELS.readyForAdviserReview;
   }
   if (normalized === "PENDING_REVIEW") {
-    return "Pending Advisor Review";
+    return MANAGE_OUTCOME_REVIEW_LABELS.adviserReviewPending;
   }
   if (normalized === "BREACHED") {
-    return "Escalation Required";
+    return MANAGE_OUTCOME_REVIEW_LABELS.escalationRequired;
   }
-  return "Review Required";
+  return MANAGE_OUTCOME_REVIEW_LABELS.reviewRequired;
+}
+
+function isMachineStateValue(value: string): boolean {
+  return /^[A-Z][A-Z0-9_:-]*$/.test(value);
 }
 
 function driftImprovementLabel(
@@ -509,11 +520,11 @@ function mandateImpactCopy(
     topDimension?.explanation && topDimension.explanation !== "No dimension explanation returned."
       ? topDimension.explanation
       : "";
-  const status = outcomeStatusLabel(overallOutcome, overallOutcome).toLowerCase();
+  const status = outcomeStatusLabel(overallOutcome, overallOutcome);
   if (topExplanation) {
-    return `${topExplanation} Overall outcome is ${status}.`;
+    return `${topExplanation} Overall outcome: ${withTerminalFullStop(status)}`;
   }
-  return `Outcome review is ${status} based on the returned expected-versus-realized mandate dimensions.`;
+  return `Outcome review: ${withTerminalFullStop(status)} Evidence is based on the returned expected-versus-realised dimensions.`;
 }
 
 function clientRationaleCopy(
@@ -528,9 +539,14 @@ function clientRationaleCopy(
   }
   const pendingDimension = dimensions.find((dimension) => normalizeState(dimension.state).includes("REVIEW"));
   if (pendingDimension) {
-    return `${pendingDimension.dimension} needs advisor review before the outcome can be closed.`;
+    return `${pendingDimension.dimension} needs adviser review before the outcome can be closed.`;
   }
-  return `The review outcome is ${outcomeStatusLabel(overallOutcome, overallOutcome).toLowerCase()} against the mandate evidence available for this period.`;
+  return `Review outcome: ${withTerminalFullStop(outcomeStatusLabel(overallOutcome, overallOutcome))} Evidence is limited to the expected-versus-realised results available for this period.`;
+}
+
+function withTerminalFullStop(value: string): string {
+  const trimmed = value.trim();
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
 
 function readNumber(record: Record<string, unknown>, key: string): number | null {

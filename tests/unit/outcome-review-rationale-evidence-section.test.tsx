@@ -35,7 +35,7 @@ describe("OutcomeReviewRationaleEvidenceSection", () => {
   it("keeps rationale evidence display-only without source identifiers or workflow controls", () => {
     render(
       <OutcomeReviewRationaleEvidenceSection
-        clientRationale="Outcome remains suitable for advisor review."
+        clientRationale="Outcome remains suitable for adviser review."
         clientCommunicationBoundary={null}
         expectedSnapshotHash=""
         realizedSnapshotHash=""

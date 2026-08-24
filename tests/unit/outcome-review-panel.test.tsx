@@ -98,8 +98,8 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("PortfolioRealizedTaxSummary:v1")).toBeInTheDocument();
     expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
     expect(screen.getByText("Selected Review Detail")).toBeInTheDocument();
-    expect(screen.getByText("Ready for Advisor Review")).toBeInTheDocument();
-    expect(screen.getAllByText("Within Mandate").length).toBeGreaterThan(0);
+    expect(screen.getByText("Ready for adviser review")).toBeInTheDocument();
+    expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
       "Report InputReady"

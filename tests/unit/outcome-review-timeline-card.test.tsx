@@ -10,8 +10,8 @@ const baseItem: OutcomeReviewListItem = {
   state: "READY",
   overallOutcome: "READY_WITHIN_TOLERANCE",
   reviewWindow: "01 May 2026 - 13 May 2026",
-  outcomeStatusLabel: "Within Mandate",
-  reviewPostureLabel: "Ready for Advisor Review",
+  outcomeStatusLabel: "Within expected tolerance",
+  reviewPostureLabel: "Ready for adviser review",
   driftImprovementLabel: "72.4%",
   mandateImpact: "Outcome remains within mandate tolerance.",
   clientRationale: "Internal review rationale.",
@@ -41,7 +41,7 @@ describe("OutcomeReviewTimelineCard", () => {
     const table = screen.getByRole("table", { name: "Outcome reviews" });
     expect(within(table).getByText("Review 1")).toBeInTheDocument();
     expect(within(table).getByText("01 May 2026 - 13 May 2026")).toBeInTheDocument();
-    expect(within(table).getByText("Within Mandate")).toBeInTheDocument();
+    expect(within(table).getByText("Within expected tolerance")).toBeInTheDocument();
     expect(within(table).getByText("Ready")).toBeInTheDocument();
     expect(within(table).getByText("Available")).toBeInTheDocument();
 

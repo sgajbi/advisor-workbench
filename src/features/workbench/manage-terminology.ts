@@ -40,3 +40,16 @@ export const MANAGE_REBALANCE_LABELS = {
   supportReference: "Support reference",
   replayKey: "Replay key",
 } as const;
+
+export const MANAGE_OUTCOME_REVIEW_LABELS = {
+  withinExpectedTolerance: "Within expected tolerance",
+  reviewPending: "Review pending",
+  outsideExpectedTolerance: "Outside expected tolerance",
+  blocked: "Blocked",
+  reviewRequired: "Review required",
+  outcomeEvidenceReady: "Outcome evidence ready",
+  needsAttention: MANAGE_WORKFLOW_LABELS.needsAttention,
+  readyForAdviserReview: "Ready for adviser review",
+  adviserReviewPending: "Adviser review pending",
+  escalationRequired: "Escalation required",
+} as const;
