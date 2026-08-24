@@ -112,12 +112,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Active");
     expect(seriesNames).toContain("Portfolio");
     expect(seriesNames).toContain("Benchmark");
-    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Portfolio TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Active return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative portfolio TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative benchmark TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative active return")).toBeInTheDocument();
 
     const activeCumulativeSeries = series.find((entry) => entry?.name === "Active");
     expect(activeCumulativeSeries?.type).toBe("line");
@@ -190,12 +190,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Active");
     expect(seriesNames).not.toContain("Portfolio");
     expect(seriesNames).not.toContain("Benchmark");
-    expect(within(observationTable).queryByText("Portfolio")).not.toBeInTheDocument();
-    expect(within(observationTable).queryByText("Benchmark")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum. Portfolio")).not.toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum. Benchmark")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Portfolio TWR")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Benchmark TWR")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Active return")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative portfolio TWR")).not.toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative benchmark TWR")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative active return")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "Absolute" }));
 
@@ -206,12 +206,12 @@ describe("PerformanceChartPanel", () => {
     expect(seriesNames).toContain("Portfolio");
     expect(seriesNames).toContain("Benchmark");
     expect(seriesNames).not.toContain("Active");
-    expect(within(observationTable).getByText("Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Active")).not.toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).queryByText("Cum. Active")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Portfolio TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Benchmark TWR")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Active return")).not.toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative portfolio TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative benchmark TWR")).toBeInTheDocument();
+    expect(within(observationTable).queryByText("Cumulative active return")).not.toBeInTheDocument();
   });
 
   it("falls back to chart point dates when report dates are missing", () => {
@@ -299,9 +299,9 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
     fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
-    expect(within(observationTable).getByText("Cum. Portfolio")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Benchmark")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative portfolio TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative benchmark TWR")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative active return")).toBeInTheDocument();
     expect(observationTable).toHaveTextContent("01-31 Jan 2026");
     expect(observationTable).toHaveTextContent("01-28 Feb 2026");
     expect(within(observationTable).getByText("2026-01")).toBeInTheDocument();
@@ -610,6 +610,8 @@ describe("PerformanceChartPanel", () => {
 
     fireEvent.click(within(drilldown).getByText("Money-weighted return (MWR) evidence"));
 
+    expect(within(drilldown).getByText("Annualised")).toBeInTheDocument();
+    expect(within(drilldown).queryByText("Annualized")).not.toBeInTheDocument();
     expect(within(drilldown).getByText("Reason codes")).toBeInTheDocument();
     expect(within(drilldown).getByText("NO_ROOT_FOUND")).toBeInTheDocument();
     expect(within(drilldown).getByText("DIETZ_FALLBACK_USED")).toBeInTheDocument();
@@ -830,8 +832,8 @@ describe("PerformanceChartPanel", () => {
 
     fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
-    expect(within(observationTable).getByText("Active")).toBeInTheDocument();
-    expect(within(observationTable).getByText("Cum. Active")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Active return")).toBeInTheDocument();
+    expect(within(observationTable).getByText("Cumulative active return")).toBeInTheDocument();
     expect(observationTable).toHaveTextContent(compactPattern("0.30%"));
     expect(observationTable).toHaveTextContent(compactPattern("0.40%"));
 

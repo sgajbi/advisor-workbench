@@ -1250,7 +1250,7 @@ test.describe('Performance workbench smoke', () => {
         name: 'Risk executive overview',
       });
       await expect(executiveEvidence).toBeVisible();
-      await expect(executiveEvidence).toContainText('Realized volatility');
+      await expect(executiveEvidence).toContainText('Realised volatility');
       await expect(executiveEvidence).toContainText('7.25%');
       await expect(executiveEvidence).toContainText('Max drawdown');
       await expect(executiveEvidence).toContainText('-12.45%');

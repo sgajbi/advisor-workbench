@@ -14,6 +14,7 @@ import {
   formatNumber,
   formatPercent,
 } from "@/design-system/utils/financial-formatters";
+import { PORTFOLIO_CURRENCY_LABELS } from "@/apps/portfolio/portfolio-terminology";
 
 export type PerformanceRiskState =
   | "loading"
@@ -1327,7 +1328,7 @@ function buildRiskWorkspaceOverview({
   return [
     {
       key: "realized_volatility",
-      label: "Realized volatility",
+      label: "Realised volatility",
       ...resolveRiskSnapshotOverview(summary),
     },
     {
@@ -1381,8 +1382,8 @@ function resolveRiskSnapshotOverview(response: WorkbenchRiskSummaryResponse): Pi
     value: formatPercent(volatility.value),
     support:
       volatility.state === "partial"
-        ? `${period.label}: ${volatility.reason ?? "Source coverage is partial for this annualized measure."}`
-        : `${period.label} annualized source measure`,
+        ? `${period.label}: ${volatility.reason ?? "Source coverage is partial for this annualised measure."}`
+        : `${period.label} annualised source measure`,
     tone: volatility.state === "partial" ? "warn" : "default",
   };
 }
@@ -1564,7 +1565,7 @@ function mapSnapshotContextRows(
       key: "portfolio_observations",
       label: "Portfolio observations",
       value: formatInteger(period.portfolio_observation_count),
-      support: "Return observations backing the realized risk reading.",
+      support: "Return observations backing the realised risk reading.",
     },
     {
       key: "benchmark_observations",
@@ -1628,13 +1629,13 @@ function describeSnapshotMetric(metric: WorkbenchRiskMetric): string {
 function defineSnapshotMetric(metric: WorkbenchRiskMetric): string {
   switch (metric.key) {
     case "VOLATILITY":
-      return "Annualized realized volatility of portfolio returns over the selected period.";
+      return "Annualised realised volatility of portfolio returns over the selected period.";
     case "SHARPE":
-      return "Portfolio excess return per unit of realized volatility.";
+      return "Portfolio excess return per unit of realised volatility.";
     case "BETA":
       return "Sensitivity of portfolio returns relative to the assigned benchmark.";
     case "TRACKING_ERROR":
-      return "Realized standard deviation of active returns versus the benchmark.";
+      return "Realised standard deviation of active returns versus the benchmark.";
     case "INFORMATION_RATIO":
       return "Active return earned per unit of tracking error.";
     case "SORTINO":
@@ -1722,7 +1723,7 @@ function mapConcentrationContextRows(
   return [
     {
       key: "top_position_methodology",
-      label: "Top Position Methodology",
+      label: "Top position methodology",
       value: "TOP_POSITION_WEIGHT",
       definition:
         "Source-owned concentration methodology from lotus-risk ConcentrationRiskReport:v1.",
@@ -1731,7 +1732,7 @@ function mapConcentrationContextRows(
     },
     {
       key: "top_position_driver",
-      label: "Top Position Driver",
+      label: "Top position driver",
       value: formatConcentrationPositionDriverLabel(currentTopPosition),
       definition:
         "Current largest-position driver returned by the source concentration report.",
@@ -1743,7 +1744,7 @@ function mapConcentrationContextRows(
     },
     {
       key: "issuer_coverage",
-      label: "Issuer Coverage",
+      label: "Issuer coverage",
       value: formatRiskPercentValue(payload.issuer_concentration.coverage_ratio_current),
       definition:
         "Share of positions with issuer mapping sufficient for issuer-level concentration analysis.",
@@ -1751,14 +1752,14 @@ function mapConcentrationContextRows(
     },
     {
       key: "grouping_level",
-      label: "Grouping Level",
+      label: "Grouping level",
       value: formatEnumLabel(executionContext?.issuer_grouping_level) ?? "N/A",
       definition: "Issuer grouping level used to aggregate exposures for concentration review.",
       support: "Aggregation level used for issuer groups",
     },
     {
       key: "enrichment_policy",
-      label: "Enrichment Policy",
+      label: "Enrichment policy",
       value: formatEnumLabel(executionContext?.enrichment_policy) ?? "N/A",
       definition:
         "Policy used to combine caller-supplied mapping and core enrichment when forming issuer groups.",
@@ -1766,19 +1767,37 @@ function mapConcentrationContextRows(
     },
     {
       key: "weight_basis",
-      label: "Weight Basis",
+      label: "Weight basis",
       value: formatEnumLabel(valuationContext?.weight_basis) ?? "N/A",
       definition: "Portfolio denominator used to calculate concentration weights.",
       support: "Denominator used for weight calculations",
     },
     {
       key: "reporting_currency",
-      label: "Reporting Currency",
+      label: PORTFOLIO_CURRENCY_LABELS.reporting,
       value: valuationContext?.reporting_currency ?? "N/A",
       definition: "Reporting currency used for the current concentration review.",
-      support: valuationContext?.portfolio_currency ? "Portfolio currency" : "Portfolio currency",
+      support: buildConcentrationCurrencySupport(
+        valuationContext?.reporting_currency,
+        valuationContext?.portfolio_currency,
+      ),
     },
   ];
+}
+
+function buildConcentrationCurrencySupport(
+  reportingCurrency?: string | null,
+  baseCurrency?: string | null,
+): string {
+  if (!baseCurrency) {
+    return `${PORTFOLIO_CURRENCY_LABELS.base} not reported by the source`;
+  }
+  if (!reportingCurrency) {
+    return `${PORTFOLIO_CURRENCY_LABELS.base} ${baseCurrency}; reporting currency not reported by the source`;
+  }
+  return reportingCurrency === baseCurrency
+    ? `Same as ${PORTFOLIO_CURRENCY_LABELS.base.toLowerCase()} (${baseCurrency})`
+    : `${PORTFOLIO_CURRENCY_LABELS.base} ${baseCurrency}`;
 }
 
 function formatConcentrationPositionDriverLabel(driver: {
@@ -1839,7 +1858,7 @@ function mapDrawdownHeadlineMetrics(
       label: "Max Drawdown",
       value: formatDrawdownPercent(summary.max_drawdown),
       support: describeDrawdownHeadlineMetric("max_drawdown", response, period),
-      definition: "Largest realized peak-to-trough decline over the selected window.",
+      definition: "Largest realised peak-to-trough decline over the selected window.",
       state: resolveModuleState(response.state),
     },
     {
@@ -1904,7 +1923,7 @@ function mapDrawdownContextRows(
       key: "portfolio_observations",
       label: "Portfolio observations",
       value: formatInteger(period.portfolio_observation_count),
-      support: "Observation count supporting the realized loss-path review.",
+      support: "Observation count supporting the realised loss-path review.",
     },
     {
       key: "benchmark_relative_review",
@@ -2401,7 +2420,7 @@ function buildRollingDetailInterpretation(
       return "Current drawdown reading unavailable.";
     }
     if (latest === 0) {
-      return "No realized drawdown is showing in the current rolling window.";
+      return "No realised drawdown is showing in the current rolling window.";
     }
     if (typeof p05 === "number" && latest <= p05) {
       return "Current loss path is worse than the recent rolling norm.";
@@ -2944,7 +2963,7 @@ function mapAttributionMethodologyRows(
       key: "annualization_basis",
       label: "Annualization basis",
       value: formatInteger(methodologyContext.annualization_basis),
-      support: "Periods used for annualized attribution metrics",
+      support: "Periods used for annualised attribution metrics",
     },
     {
       key: "requested_metric",

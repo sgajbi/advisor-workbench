@@ -52,7 +52,7 @@ describe("Risk Review interpretation authority", () => {
 
     expect(browserWorkflow).toContain('name: "Risk executive overview"');
     expect(browserWorkflow).toContain('name: "Risk mandate comparison boundary"');
-    expect(browserWorkflow).toContain('"Realized volatility"');
+    expect(browserWorkflow).toContain('"Realised volatility"');
     expect(browserWorkflow).toContain('"Source coverage"');
     expect(browserWorkflow).toContain("for (const width of [1440, 1024, 519])");
     expect(browserWorkflow).toContain("Risk Review creates page-level horizontal scrolling");

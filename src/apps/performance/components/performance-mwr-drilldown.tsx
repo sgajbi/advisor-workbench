@@ -86,7 +86,7 @@ export default function PerformanceMwrDrilldown({
     { label: "Status", value: model.statusLabel },
     { label: "Method", value: model.methodLabel },
     { label: "Input mode", value: model.inputModeLabel },
-    { label: "Annualized", value: model.annualizedLabel },
+    { label: "Annualised", value: model.annualizedLabel },
     { label: "Holding period", value: model.holdingPeriodLabel },
     { label: "Approximation", value: model.approximationLabel },
     { label: "Fallback", value: model.fallbackLabel },
