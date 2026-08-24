@@ -72,6 +72,10 @@ investment approval, exception-resolution authority, or client-delivery authorit
   silently converted into an empty queue.
 - Provides keyboard-operable exception selection and keeps the selected record's business
   observation, severity, owner, age, source, status, and next step together.
+- Keeps a selected source exception stable when a resolved response reorders the current view. If
+  that identity leaves the response, the first source-ranked item is admitted once and remains
+  selected through later reordering. Portfolio, mandate, and source-window changes start a new
+  selection scope so evidence from the prior review cannot remain active.
 - Keeps monitoring-run, source-run, exception, mandate, correlation, and authority identifiers
   behind progressive disclosure.
 - Separates **complete**, **partial**, and **unavailable** exception evidence. Valid rows remain
@@ -89,7 +93,7 @@ investment approval, exception-resolution authority, or client-delivery authorit
 | --- | --- | --- |
 | Decide whether the attention view is reviewable | Supported Gateway response with an item collection and valid `next_cursor` metadata | None |
 | Treat the visible view as exhaustive | `next_cursor` is explicitly `null` and every returned row has a source-owned exception identity | None |
-| Select an attention item | Valid source-owned exception identity belonging to the selected mandate | None; local review selection only |
+| Select an attention item | Valid source-owned exception identity belonging to the selected mandate and current source view | None; local review selection only; selection follows source identity rather than row position |
 | Inspect supporting lineage | Selected source exception | None; expands technical evidence |
 | Continue to another source view | Source continuation cursor or previously confirmed cursor history | None; performs a new Gateway read |
 | Retry a failed continuation | Last confirmed view plus failed source-view request | None; repeats the exact scoped read |

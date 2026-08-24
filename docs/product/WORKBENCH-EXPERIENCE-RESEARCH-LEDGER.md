@@ -5,6 +5,53 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## Mandate Health review continuity: source identity before row position
+
+### Business job
+
+A portfolio manager reviewing a mandate exception must keep the same evidence and next step active
+when a refreshed source view changes rank. If the source removes that exception, Workbench must
+admit one truthful fallback and then keep it stable; portfolio, mandate, and source-window changes
+must never retain evidence from the prior review scope.
+
+### Research inputs
+
+Research was reviewed on 2026-08-24 from current official sources:
+
+1. [React — Preserving and Resetting State](https://react.dev/learn/preserving-and-resetting-state)
+   explains that state should be preserved for the same rendered identity and deliberately reset
+   when the identity changes.
+2. [W3C WAI-ARIA — Listbox Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)
+   distinguishes focus from selection and returns focus to an existing selected option when a
+   single-select list receives focus.
+
+### Adopted
+
+1. Reuse `useAdmittedSourceSelection`; do not add a Mandate Health synchronization effect or copy
+   its admission logic.
+2. Key selection by portfolio, source-confirmed mandate, and cursor-window identity.
+3. Preserve a selected source exception across reorder, admit the first source-ranked identity
+   only after the prior identity is absent from a resolved response, and retain that fallback
+   through later reorder.
+4. Prove behavior at the rendered queue and detail pane with mutable source-response regressions.
+
+### Rejected
+
+1. Derive detail as `selected ?? rows[0]` while retaining a stale controlled key: the visible
+   record can change without repairing selection authority.
+2. Select by row index: source ranking changes would silently change the reviewed evidence.
+3. Persist selection across portfolio, mandate, or source-window boundaries.
+4. Recalculate ordering, invent exception identity, or add a browser-owned exception action.
+
+### Implementation and validation decision
+
+Workbench #848 is a Workbench-only continuity correction. Gateway/Manage remain authoritative for
+exception identity, rank, cursor windows, mandate membership, and business evidence. There is no
+visual composition, API, dependency, CSS, authentication, or persisted-action change. Focused
+proof covers reorder, removal plus second reorder, portfolio/mandate reset, source-window reset,
+keyboard selection, existing partial/unavailable/retry posture, and the established responsive
+Mandate Health browser matrix.
+
 ## BFF browser-header trust boundary: allowlist before authority
 
 ### Business and control job
