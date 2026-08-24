@@ -3,6 +3,7 @@ import {
   type AiAssistanceDisclosureModel,
   type SemanticBadgeTone,
 } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 
 import type {
   AdvisoryCopilotAudience,
@@ -211,7 +212,14 @@ function buildCopilotAiDisclosure(
           value: `${runBody.workflow_pack_id}${runBody.workflow_pack_version ? `@${runBody.workflow_pack_version}` : ""}`,
         }
       : null,
-    runBody?.created_at ? { label: "Prepared", value: runBody.created_at } : null,
+    runBody?.created_at
+      ? {
+          label: "Prepared",
+          value: formatTimestampValue(runBody.created_at, {
+            nullDisplay: "Not reported",
+          }),
+        }
+      : null,
     evidencePacketId ? { label: "Evidence packet", value: evidencePacketId } : null,
     evidencePacketHash ? { label: "Evidence packet hash", value: evidencePacketHash } : null,
     runBody?.output_hash ? { label: "Output hash", value: runBody.output_hash } : null,

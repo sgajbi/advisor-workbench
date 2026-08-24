@@ -64,6 +64,10 @@ describe("buildAdvisoryCopilotWorkspaceModel AI disclosure", () => {
       humanReview: { state: "review-required", sourceRecorded: false },
       clientUse: "blocked",
     });
+    expect(model.aiDisclosure.diagnostics).toContainEqual({
+      label: "Prepared",
+      value: "04 Aug 2026, 08:00 UTC",
+    });
   });
 
   it("does not treat packet and output hashes as underlying source evidence", () => {

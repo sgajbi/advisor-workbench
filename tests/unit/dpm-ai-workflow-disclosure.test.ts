@@ -24,6 +24,18 @@ function buildDpmAiWorkflowOutcome(
 }
 
 describe("buildDpmAiWorkflowOutcome", () => {
+  it("formats AI preparation instants through the governed UTC presentation policy", () => {
+    const outcome = buildDpmAiWorkflowOutcome(
+      "proof-pack-memo",
+      buildDpmAiWorkflowResponse("proof-pack-memo"),
+    );
+
+    expect(outcome.disclosure.diagnostics).toContainEqual({
+      label: "Prepared",
+      value: "05 Aug 2026, 08:00 UTC",
+    });
+  });
+
   it.each(Object.entries(DPM_AI_WORKFLOW_PROFILES))(
     "adopts every default output requested by the %s workflow",
     (_family, profile) => {
