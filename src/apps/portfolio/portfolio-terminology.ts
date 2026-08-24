@@ -19,6 +19,12 @@ export const PORTFOLIO_CURRENCY_LABELS = {
   transaction: "Transaction currency",
 } as const;
 
+export const PORTFOLIO_EVIDENCE_LABELS = {
+  sourceLimitations: "Source limitations",
+  evidenceCoverage: "Evidence coverage",
+  activeLimitations: "Active limitations",
+} as const;
+
 export const PORTFOLIO_VALUE_COPY = {
   title: PORTFOLIO_VALUE_LABEL,
   description:
