@@ -142,6 +142,9 @@ test("Manage Overview keeps the portfolio decision first without repeated destin
       page.getByRole("heading", { name: "Recent Operating Activity" }),
     ).toHaveCount(0);
 
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForFunction(() => window.scrollY === 0);
+
     const geometry = await page.evaluate(() => {
       const firstRow = document.querySelector<HTMLElement>(
         '[aria-label="Portfolio-management decision worklist"] [role="option"]',
