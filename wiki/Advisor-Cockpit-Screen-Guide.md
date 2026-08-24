@@ -71,7 +71,8 @@ portfolio ownership, or production identity posture.
 - Preserves action identity, version, family, status, priority, owner, review window, reason,
   evidence, source-gap, dependency, and next-action truth returned by Advise.
 - Uses the shared decision-first worklist: compact action rows identify priority, owner, and review
-  window once; one selected-action pane holds the complete evidence and permitted next action.
+  window once; each action title appears once in the worklist; one selected-action pane holds the
+  complete reason, evidence, constraints, and permitted next action.
 - Supports Arrow Up and Arrow Down movement through action rows, Enter transfer into the associated
   decision pane, stable addressable row/detail relationships, and stacked presentation when the
   module no longer owns enough inline width.
@@ -176,7 +177,8 @@ identity, data, or unsupported capability.
   fail-closed source posture, totals-versus-detail qualification, and operating boundaries.
 - `tests/unit/advisor-cockpit-action-worklist.test.tsx` proves one worklist and associated
   selected-decision region, keyboard selection and detail transfer, exact selected-action feedback,
-  failure posture, and fail-closed action controls.
+  progressive reason detail, failure posture, fail-closed action controls, and absence of a second
+  action-title treatment in each row.
 - `tests/e2e/advisor-cockpit-business-readiness.spec.ts` proves source-backed rendering, selected
   action persistence, reconciliation, focus stability, 44-pixel minimum action targets,
   worklist/detail association and responsive stacking, one visible valid proposal handoff,
