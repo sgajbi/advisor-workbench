@@ -121,13 +121,12 @@ export function hasRecordedAdvisorBriefReviewEvidence(
   evidence: AdvisorBriefReviewEvidence | null | undefined
 ): boolean {
   const reviewTransitionCount = evidence?.review_transition_count;
-  const reviewActor =
-    typeof evidence?.latest_review_actor === "string"
-      ? evidence.latest_review_actor.trim()
-      : "";
+  const reviewerReference = resolveAdvisorBriefReviewerReference(
+    evidence?.latest_review_actor,
+  );
   return (
     evidence?.has_review_history === true &&
-    Boolean(reviewActor) &&
+    Boolean(reviewerReference) &&
     typeof reviewTransitionCount === "number" &&
     Number.isInteger(reviewTransitionCount) &&
     reviewTransitionCount > 0 &&

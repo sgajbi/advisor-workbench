@@ -129,9 +129,18 @@ describe("advisor brief review transition evidence", () => {
   });
 
   it.each([undefined, null, "", "  ", "review:", " review:  "])(
-    "does not manufacture a reviewer reference from %s",
+    "does not manufacture recorded review evidence from reviewer actor %s",
     (sourceActor) => {
       expect(resolveAdvisorBriefReviewerReference(sourceActor)).toBeUndefined();
+      const sourceRun = {
+        ...baseRun,
+        latest_review_actor: sourceActor as string | null | undefined,
+      };
+      expect(buildAdvisorBriefHumanReview(sourceRun)).toEqual({
+        state: "unavailable",
+        sourceRecorded: false,
+      });
+      expect(isConfirmed({ run: sourceRun })).toBe(false);
     },
   );
 
