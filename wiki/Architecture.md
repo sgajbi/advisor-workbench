@@ -88,6 +88,13 @@ mounted workspace, invalidate obsolete requests and caches as one boundary, and 
 stable visible control. Query-key remounts are not an acceptable history mechanism because they
 discard focus and local interaction continuity.
 
+`ReviewContextStrip` presents the source-confirmed orientation consistently across Portfolio,
+Performance, Mandate Management, Advice, and Reporting. Routine business facts use sentence-case
+productive labels and 14px values; only the short **Review portfolio** eyebrow is uppercase.
+Partial and unavailable values remain readable but visually quieter, while identifiers stay behind
+**Support details**. Consuming screens must pass a source-backed model and must not restyle the strip
+or recreate its typography locally.
+
 ## Product-surface map
 
 - `Portfolio`
