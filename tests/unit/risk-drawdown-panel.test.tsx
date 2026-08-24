@@ -63,11 +63,11 @@ describe("RiskDrawdownPanel", () => {
       container.querySelectorAll(".performance-risk-drawdown-headline-grid .ui-text-label")
     ).map((node) => node.textContent?.trim());
     expect(headlineLabels).toEqual([
-      "Max Drawdown",
-      "Relative Max Drawdown",
-      "Time Under Water",
-      "Recovery Status",
-      "Ulcer Index",
+      "Max drawdown",
+      "Relative max drawdown",
+      "Time under water",
+      "Recovery status",
+      "Ulcer index",
     ]);
     expect(screen.queryByRole("heading", { name: "Supporting risk measures" })).not.toBeInTheDocument();
     expect(
@@ -75,7 +75,7 @@ describe("RiskDrawdownPanel", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Ulcer Index: Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
+        name: "Ulcer index: Path-sensitive drawdown measure that reflects both drawdown depth and time spent underwater.",
       })
     ).toBeInTheDocument();
 

@@ -10,13 +10,13 @@ export default function RiskSnapshotPanel({
 }) {
   return (
     <RiskModuleShell
-      title="Risk Snapshot"
+      title="Risk snapshot"
       priority="primary"
       density="compact"
       className="performance-risk-snapshot-panel"
       actions={
         <RiskPanelUtilityRow
-          panelTitle="Risk Snapshot"
+          panelTitle="Risk snapshot"
           methodologyRows={viewModel.snapshotContextRows}
         />
       }

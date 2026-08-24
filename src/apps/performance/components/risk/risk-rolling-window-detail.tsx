@@ -11,7 +11,7 @@ import { riskRollingPanelCopy } from "./risk-secondary-copy";
 import choiceStyles from "../performance-choice-groups.module.css";
 import RiskTableText from "./risk-table-text";
 
-const PRIMARY_ROLLING_MEASURES = new Set(["Volatility", "Tracking Error", "Beta", "Max Drawdown"]);
+const PRIMARY_ROLLING_MEASURES = new Set(["Volatility", "Tracking error", "Beta", "Max drawdown"]);
 
 export default function RiskRollingWindowDetail({
   viewModel,

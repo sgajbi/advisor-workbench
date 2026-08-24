@@ -23,7 +23,7 @@ export default function RiskDrawdownDetailDrawer({
       subtitle="Realised drawdown path detail for the selected portfolio context."
       contextItems={[
         {
-          label: "Max Drawdown",
+          label: "Max drawdown",
           value: viewModel.drawdownHeadlineMetrics.find((metric) => metric.key === "max_drawdown")
             ?.value ?? "N/A",
         },
@@ -33,7 +33,7 @@ export default function RiskDrawdownDetailDrawer({
             ?.value ?? "N/A",
         },
         {
-          label: "Relative Review",
+          label: "Relative review",
           value: relativeMetric?.value ?? "N/A",
         },
       ]}

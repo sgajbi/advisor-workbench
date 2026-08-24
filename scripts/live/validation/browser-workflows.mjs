@@ -1687,7 +1687,7 @@ export async function validateRiskPanel(
   );
   await assertRailModeActive(page, /^Risk Review/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Risk Snapshot", exact: true }),
+    page.getByRole("heading", { name: "Risk snapshot", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });

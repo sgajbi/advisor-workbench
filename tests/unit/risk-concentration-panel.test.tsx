@@ -36,7 +36,7 @@ describe("RiskConcentrationPanel", () => {
     expect(screen.queryByText("Position-level concentration across the live book")).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("button", {
-        name: "Portfolio Concentration Index: Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
+        name: "Portfolio concentration index: Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
       }).length
     ).toBeGreaterThan(0);
     expect(container.querySelector(".performance-risk-module-body-context-only")).toBeNull();
