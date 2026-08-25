@@ -151,6 +151,37 @@ describe("product-copy governance", () => {
     ]);
   });
 
+  it("resolves copy inherited through statically inspectable object spreads", () => {
+    const findings = scan(`
+      const baseCopy = { panelTitle: "Gateway posture" } as const;
+      const sharedCopy = { ...baseCopy } as const;
+      const screenCopy = { ...sharedCopy } as const;
+      export function Example() {
+        return <Panel title={screenCopy.panelTitle} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+    ]);
+  });
+
+  it("honours static spread override order and fails safely for cyclic spreads", () => {
+    expect(
+      scan(`
+        const technicalCopy = { panelTitle: "Gateway posture" } as const;
+        const businessCopy = { panelTitle: "Client review status" } as const;
+        const screenCopy = { ...technicalCopy, ...businessCopy } as const;
+        const first = { ...second };
+        const second = { ...first };
+        export function Example() {
+          return <><Panel title={screenCopy.panelTitle} /><Panel title={first.panelTitle} /></>;
+        }
+      `),
+    ).toEqual([]);
+  });
+
   it("resolves chains of local constants without evaluating executable code", () => {
     const findings = scan(`
       const technicalCopy = "HTTP status unavailable";
