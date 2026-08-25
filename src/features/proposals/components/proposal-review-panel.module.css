@@ -108,6 +108,13 @@
   gap: 12px;
 }
 
+.memoRecordGrid {
+  grid-template-columns: minmax(130px, 0.36fr) minmax(220px, 1fr) minmax(
+      180px,
+      0.7fr
+    );
+}
+
 .readOnlyRecord {
   display: grid;
   align-content: center;
@@ -126,6 +133,10 @@
   border: 1px solid var(--portfolio-ui-border, #d7dde7);
   border-radius: 6px;
   overflow: hidden;
+}
+
+.memoSupportFacts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .supportFacts > div {
@@ -152,7 +163,15 @@
 .supportFacts dd {
   margin: 0;
   color: var(--portfolio-ui-ink, #0f172a);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace
+  );
   font-size: 0.72rem;
   line-height: 1rem;
   overflow-wrap: anywhere;
