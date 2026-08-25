@@ -214,10 +214,12 @@ concurrency group.
   Implementation Status. This is route evidence over existing Gateway-backed screens, not a new
   client-ready, communication, execution, or backend capability claim.
 - The focused Implementation Status Playwright proof is stronger than that route check: it verifies
-  selected proposal/version posture, Gateway/BFF request, source currentness, lineage, the
-  unsupported order/fill/settlement boundary, refresh confirmation, focus continuity, and
-  1440/1280/1024/720/390 reflow. Canonical readiness still requires fresh source-backed runtime
-  evidence; a screenshot alone is not contract proof.
+  selected proposal/version posture, Gateway/BFF request, currentness, lineage, progressive support
+  detail, the unsupported order/fill/settlement boundary, compound refresh confirmation, focus
+  continuity, non-duplicated supplementary context, exact visible-overflow diagnostics, and
+  1440/1280/1024/720/519/390 reflow. It generates reviewed desktop and compact images under
+  `docs/evidence/issue-798-product-copy/implementation-follow-up/`. Canonical readiness still
+  requires fresh source-backed runtime evidence; a screenshot alone is not contract proof.
 - RFC-0025 Suitability review policy-queue proof must use the Gateway-backed advisory policy
   review queue, selected evaluation, sign-off package, workflow posture, and bounded
   request-more-evidence decision route. The live validator seeds this from the governed

@@ -5771,7 +5771,7 @@ prove. The screen must remain an advisory reconciliation surface rather than an 
 
 ### Current-product research
 
-Research was reviewed on 2026-08-22 from official product, industry-protocol, post-trade, and
+Research was reviewed on 2026-08-25 from official regulatory, product, industry-protocol, post-trade, and
 accessibility sources:
 
 1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
@@ -5787,6 +5787,17 @@ accessibility sources:
    confirms settlement is a distinct post-trade chain and cannot be inferred from a handoff event.
 5. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) governs reflow, focus order, target size, and
    programmatically determinable asynchronous status.
+6. [FCA COBS 11.3.2A](https://handbook.fca.org.uk/handbook/COBS/11/3.html) requires firms to inform
+   clients about material difficulty relevant to proper execution. Lotus adopts the principle that
+   a material implementation difficulty must be explicit and actionable, without claiming that the
+   advisory handoff record is itself an order or execution report.
+7. [FCA COBS 11.2A](https://handbook.fca.org.uk/handbook/COBS/11/2A.html) frames order execution in
+   the client's best interests. Lotus preserves this as an implementation boundary and does not
+   infer execution quality from proposal lifecycle or handoff acceptance.
+8. [FINRA's 2024 Regulation Best Interest and Form CRS report](https://www.finra.org/rules-guidance/guidance/reports/2024-finra-annual-regulatory-oversight-report/reg-bi-form-crs)
+   reinforces accurate recommendation records, disclosures, and supervisory evidence. Lotus adopts
+   accurate business status and optional support evidence, not US-regulatory applicability or an
+   unsupported supervisory approval claim.
 
 ### Adopted decisions
 
@@ -5800,6 +5811,18 @@ accessibility sources:
    reconcile; preserve prior evidence without relabelling it current on failure.
 5. Reuse the Proposal lifecycle worklist, selected-record layout, design-system source action,
    semantic badges, CSS Module ownership, and existing React Query stack.
+6. Translate every known status, next action, version relationship, event, evidence, and recovery
+   state through one exhaustive typed business-copy authority. Preserve raw values only in the
+   support disclosure.
+7. Order the selected decision as status and material difficulty, key times, proposal-version
+   relationship, then next business action. Do not lead with service names, contract names, or
+   reconciliation identifiers.
+8. Use the existing supplementary-context pattern because the main selected-record panel owns the
+   decision. Retain the source-coverage boundary once and remove the duplicate responsive decision
+   rail.
+9. Reflow against the selected pane's actual inline size with container queries. Visible-overflow
+   browser diagnostics must identify the exact rendered element, dimensions, and text when the gate
+   fails while excluding only computed 1px clipped accessibility announcements.
 
 ### Rejected decisions
 
@@ -5810,15 +5833,23 @@ accessibility sources:
    completion.
 5. Calling Advise, an OMS, broker, or settlement provider directly from the browser.
 6. Adding decorative timelines, KPIs, cards, dependencies, or global CSS without source evidence.
+7. Repeating proposal, handoff, version, timestamp, counts, and next action in a secondary rail
+   after the main decision panel already provides them.
+8. Using generic `source-confirmed`, `Gateway`, contract, provider, request, event, or reason-code
+   language in the primary advisor workflow.
 
 ### Validation and publication decision
 
-Workbench #750 owns the screen and Gateway #560 owns the contract. Focused parser, view-model, and
-integration tests prove the eight statuses, fail-closed identity and semantics, partial and
-historical evidence, selected-only reads, permission handling, and atomic refresh. Optimized
-Playwright proves the BFF request, source boundary, focus-stable confirmation, and zero-overflow
-reflow at 1440, 1280, 1024, 720, and 390 pixels. Protected PR, exact-main validation, canonical
-source proof, wiki publication, strict parity, issue closure, and branch hygiene remain required.
+Workbench #750 owns the screen, #798 owns this business-copy and presentation refinement, and
+Gateway #560 owns the contract. Six focused files now prove 129 copy, parser, view-model,
+integration, non-duplication, fail-closed identity, partial/historical evidence, selected-only read,
+permission, and atomic-refresh behaviors. Optimized Playwright proves the BFF request, progressive
+support detail, source boundary, focus-stable confirmation, exact visible-overflow diagnostics, and
+reflow at 1440, 1280, 1024, 720, 519, and 390 pixels. Reviewed desktop and compact evidence is
+generated under `docs/evidence/issue-798-product-copy/implementation-follow-up/`. Fresh canonical
+source proof remains blocked by `lotus-advise#482`; the Workbench browser journey does not weaken or
+bypass that retained-state conflict. Protected exact-head review/CI, exact-main validation, wiki
+publication, strict parity, issue closure, and branch hygiene remain required.
 
 ## Manage Overview Exception-Led Decision Flow
 

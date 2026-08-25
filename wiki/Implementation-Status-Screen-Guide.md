@@ -13,17 +13,17 @@ browser into an order-management or settlement system.
 | Navigation | Direct bounded route; the global **Proposal** workspace remains capability-disabled |
 | Worklist scope | Handoff, completion, and exception proposals in one cursor-bounded Gateway source window |
 | Evidence scope | One selected proposal and one `proposal-implementation-status.v1` read |
-| Screen authority | Read-only handoff review and exception follow-up |
+| Screen authority | Read-only implementation monitoring and exception follow-up |
 
 The screen never claims a whole-book total. Its **In view** measure covers only the returned source
 window. It makes no production identity or entitlement claim.
 
 ## Business Purpose
 
-The screen helps an advisor answer: what is the latest source-confirmed implementation handoff
-posture, which exception needs follow-up, does the evidence relate to the current proposal version,
-and when was the status last observed? It keeps these facts beside the selected proposal so the
-advisor does not have to open each full record for routine follow-up.
+The screen helps an advisor answer four questions in order: which proposal needs attention, what is
+its current implementation status, does that status relate to the proposal version being reviewed,
+and what should happen next? The selected decision stays beside the bounded worklist so routine
+monitoring and material-difficulty follow-up do not require opening every full proposal record.
 
 ## Who Uses This Screen
 
@@ -42,10 +42,12 @@ These roles describe business use. They do not create browser-owned roles or ent
 2. Implementation Status lists matching proposals in the current Gateway window.
 3. The advisor selects one proposal; Workbench reads implementation status only for that record.
 4. Workbench reconciles proposal, portfolio, lifecycle state, and current version before showing
-   handoff evidence.
-5. The advisor monitors a pending handoff, investigates an exception, or confirms that this source
+   the implementation status.
+5. The advisor sees business status, version relationship, latest update, and next action first;
+   provider and correlation values remain in optional support detail.
+6. The advisor monitors a pending handoff, investigates an exception, or confirms that this source
    reports implementation complete.
-6. **Open full proposal record** preserves portfolio and Implementation origin context for governed
+7. **Open full proposal record** preserves portfolio and Implementation origin context for governed
    proposal or handoff actions.
 
 ## Implemented Capabilities
@@ -53,6 +55,9 @@ These roles describe business use. They do not create browser-owned roles or ent
 - Retains `EXECUTION_READY`, `EXECUTED`, `REJECTED`, `CANCELLED`, and `EXPIRED` proposals from the
   cursor-bounded Gateway source window so completed and exception follow-up does not disappear.
 - Uses the shared keyboard-operable proposal worklist and selected-record decision pattern.
+- Uses one typed copy authority for every supported handoff, next-action, version, event, evidence,
+  loading, failure, and recovery state; unknown states fail closed instead of becoming generic
+  productive language.
 - Performs one selected-record implementation-status read; it never fans out across the worklist.
 - Distinguishes handoff not requested, requested, accepted, partially implemented, reported
   complete, rejected, cancelled, and expired.
@@ -63,7 +68,10 @@ These roles describe business use. They do not create browser-owned roles or ent
 - Lets the advisor recheck an unversioned proposal in place; evidence remains withheld until the
   refreshed worklist supplies a version that can be correlated safely, then focus returns to the
   same proposal's newly mounted evidence-refresh control.
-- Shows the latest source event and correlation evidence in progressive disclosure.
+- Leads with implementation status, requested and latest-update times, proposal-version
+  relationship, and next business action.
+- Keeps the latest event, provider, request, contract, correlation, downstream, and reason values in
+  **Implementation support details** so business users are not asked to interpret system topology.
 - Preserves visible confirmed evidence when a refresh fails, without relabelling it current.
 - Announces success only after the worklist and selected evidence both refresh and still identify
   the same proposal, portfolio, version, and lifecycle state.
@@ -71,7 +79,13 @@ These roles describe business use. They do not create browser-owned roles or ent
   failed posture for the complete worklist-plus-detail transaction, including version changes.
 - Discards a late refresh transaction when a newer refresh, selection, portfolio, or source window
   has superseded it, so an older worklist cannot replace newer selected evidence.
-- Reflows worklist before evidence at compact and 200%-zoom-equivalent widths without page overflow.
+- Uses the shared supplementary-context posture because the selected-record panel already owns the
+  decision; only the source-coverage boundary remains in the rail instead of repeating status,
+  version, timestamps, counts, and next action.
+- Uses selected-pane container queries, rather than viewport guesses, to reflow facts and actions
+  when the three-rail workstation gives the panel limited inline space.
+- Reflows worklist before evidence at compact and 200%-zoom-equivalent widths without visible page
+  or panel overflow.
 
 ## Decisions And Actions
 
@@ -137,10 +151,13 @@ completion. Workbench does not invent owner, assignee, SLA, due date, urgency, o
 - The worklist implements visible single selection and Up/Down/Home/End keyboard movement.
 - Selection precedes evidence in document and focus order.
 - Worklist and decision pane remain simultaneous at wide desktop widths and stack without overlap at
-  1280, 1024, 720, and 390 pixels.
+  1280, 1024, 720, 519, and 390 pixels.
 - Refresh status is programmatically announced and restores the initiating control only when focus
   has not deliberately moved.
-- Raw provider, request, event, and correlation identifiers stay secondary to business decisions.
+- The implementation decision is not repeated in a lower-priority responsive rail; source scope is
+  retained once after the main workflow.
+- Raw provider, request, contract, event, correlation, downstream, and reason identifiers stay in a
+  keyboard-operable disclosure and remain secondary to business decisions.
 
 ## Current-Product Research
 
@@ -153,6 +170,13 @@ completion. Workbench does not invent owner, assignee, SLA, due date, urgency, o
 - [Swift settlement and reconciliation](https://www.swift.com/securities/settlement-and-reconciliation)
   informed the separate downstream settlement boundary.
 - [WCAG 2.2](https://www.w3.org/TR/WCAG22/) informed reflow, focus, target, and status evidence.
+- [FCA COBS 11.3.2A](https://handbook.fca.org.uk/handbook/COBS/11/3.html) informed the requirement to
+  surface material implementation difficulty without claiming unsupported execution detail.
+- [FCA COBS 11.2A](https://handbook.fca.org.uk/handbook/COBS/11/2A.html) informed the clear
+  client-interest boundary around implementation decisions.
+- [FINRA 2024 Regulation Best Interest and Form CRS report](https://www.finra.org/rules-guidance/guidance/reports/2024-finra-annual-regulatory-oversight-report/reg-bi-form-crs)
+  reinforced accurate record, recommendation, and disclosure language without turning an internal
+  handoff screen into an approval or execution claim.
 
 These sources guide workflow principles. They are not a claim of bank approval or competitor
 superiority.
@@ -165,9 +189,13 @@ superiority.
   earlier-version warning, partial evidence, and non-ownership boundaries.
 - `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only reads, no N+1,
   permission and partial states, context-preserving detail, atomic refresh confirmation,
-  superseded-transaction fencing, and unversioned-proposal recovery.
+  superseded-transaction fencing, unversioned-proposal recovery, and non-duplicated supplementary
+  context.
 - `tests/e2e/proposal-workflow-context.spec.ts` proves optimized-production rendering, Gateway/BFF
-  use, focus-stable refresh, 1440/1280/1024/720/390 reflow, and zero horizontal overflow.
+  use, focus-stable refresh, 1440/1280/1024/720/519/390 reflow, exact visible-overflow diagnostics,
+  and review-image generation.
+- [Rendered desktop and compact evidence](https://github.com/sgajbi/lotus-workbench/tree/main/docs/evidence/issue-798-product-copy/implementation-follow-up)
+  is generated by the same optimized-production browser journey.
 - Canonical runtime uses `PB_SG_GLOBAL_BAL_001`; route screenshots alone are not source proof.
 
 ## First Support Step
