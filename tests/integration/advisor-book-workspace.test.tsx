@@ -110,14 +110,24 @@ describe("AdvisorBookWorkspace", () => {
       "href",
       "/portfolio?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10",
     );
-    const supportDisclosure = screen
-      .getByText("Book scope and operating evidence")
-      .closest("details");
+    const supportDisclosure = screen.getByTestId(
+      "advisor-book-operating-evidence",
+    );
     expect(supportDisclosure).not.toHaveAttribute("open");
     expect(screen.getByText("Own book only")).not.toBeVisible();
     expect(screen.getByText("advisor_book_ready")).not.toBeVisible();
     fireEvent.click(screen.getByText("Book scope and operating evidence"));
     expect(supportDisclosure).toHaveAttribute("open");
+    expect(
+      within(supportDisclosure).getByRole("heading", {
+        name: "Operating boundaries",
+      }),
+    ).toBeVisible();
+    expect(
+      within(supportDisclosure).getByRole("heading", {
+        name: "Support references",
+      }),
+    ).toBeVisible();
     expect(screen.getByText("Own book only")).toBeVisible();
     expect(screen.getByText("advisor_book_ready")).toBeVisible();
     expect(
@@ -142,9 +152,7 @@ describe("AdvisorBookWorkspace", () => {
     render(<AdvisorBookWorkspace />);
     await screen.findByText("Available with limitations");
 
-    const disclosure = screen
-      .getByText("Book scope and operating evidence")
-      .closest("details");
+    const disclosure = screen.getByTestId("advisor-book-operating-evidence");
     expect(disclosure).not.toHaveAttribute("open");
     expect(screen.getAllByText("Additional operating limitation")).toHaveLength(1);
     expect(screen.getByText("3 related limitations consolidated")).not.toBeVisible();
