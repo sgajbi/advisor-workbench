@@ -15,6 +15,8 @@ type ProposalMockOptions = {
   actionFailure?: boolean;
   blocked?: boolean;
   memoInitialState?: "unreviewed" | "reviewed" | "complete";
+  memoCommentaryInitiallyRecorded?: boolean;
+  memoCommentaryRefreshMismatch?: boolean;
   memoReviewFailure?: boolean;
   memoReviewRefreshMismatch?: boolean;
   narrativeReviewFailure?: boolean;
@@ -35,7 +37,10 @@ async function mockProposalDetail(
   const initialMemoState = options.memoInitialState ?? "complete";
   let memoReviewed = initialMemoState !== "unreviewed";
   let memoReportRecorded = initialMemoState === "complete";
-  let memoCommentaryRecorded = false;
+  let memoCommentaryRecorded = options.memoCommentaryInitiallyRecorded ?? false;
+  let memoCommentaryEventId = memoCommentaryRecorded
+    ? "memo-ai-event-prior"
+    : null;
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
     await route.fulfill({
       json: {
@@ -283,13 +288,20 @@ async function mockProposalDetail(
     "**/api/bff/api/v1/proposals/pp_1/versions/2/memo/ai-commentary",
     async (route) => {
       memoCommentaryRecorded = true;
+      const actionEventId = "memo-ai-event-current";
+      if (!options.memoCommentaryRefreshMismatch) {
+        memoCommentaryEventId = actionEventId;
+      }
       await route.fulfill({
         json: {
           correlation_id: "corr-memo-commentary",
           contract_version: "v1",
           data: {
             memo: memoResponse(),
-            ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
+            ai_event: {
+              event_id: actionEventId,
+              event_type: "MEMO_AI_REFERENCE_RECORDED",
+            },
             commentary: { status: "REVIEW_REQUIRED", authoritative_for_memo_status: false },
             replayed: false,
           },
@@ -348,7 +360,17 @@ async function mockProposalDetail(
         data: {
           subject: { memo_id: "memo_1", proposal_version_no: 2 },
           hashes: { memo_hash: "sha256:memo-001" },
-          audit_events: [{ event_type: "MEMO_DRAFT_CREATED" }],
+          audit_events: [
+            { event_type: "MEMO_DRAFT_CREATED" },
+            ...(memoCommentaryEventId
+              ? [
+                  {
+                    event_id: memoCommentaryEventId,
+                    event_type: "MEMO_AI_REFERENCE_RECORDED",
+                  },
+                ]
+              : []),
+          ],
           explanation: { client_ready_publication: "BLOCKED" },
         },
       },
@@ -420,6 +442,14 @@ async function mockProposalDetail(
       review_posture: memoReviewed ? recordedReviewPosture() : { status: "NOT_RECORDED" },
       report_package_posture: reportPosture(),
       ai_commentary_posture: commentaryPosture(),
+      audit_events: memoCommentaryEventId
+        ? [
+            {
+              event_id: memoCommentaryEventId,
+              event_type: "MEMO_AI_REFERENCE_RECORDED",
+            },
+          ]
+        : [],
     };
   }
 }
@@ -629,6 +659,32 @@ test.describe("proposal memo posture", () => {
       ),
     ).toBeVisible();
     await expect(page.getByTestId("proposal-narrative-action-status")).toHaveCount(0);
+  });
+
+  test("does not confirm repeated commentary from a prior audit event", async ({
+    page,
+  }) => {
+    await mockProposalDetail(page, {
+      memoCommentaryInitiallyRecorded: true,
+      memoCommentaryRefreshMismatch: true,
+    });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Advisor or reviewer reference" })
+      .fill("advisor_1");
+
+    await page
+      .getByRole("button", { name: "Refresh advisor commentary" })
+      .click();
+
+    await expect(
+      page.getByText(
+        "The commentary request was submitted, but the current memo record could not confirm it. Refresh before retrying.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByTestId("proposal-memo-action-status")).toHaveCount(0);
   });
 
   test("keeps proposal decisions, review modes, and actions usable across supported widths", async ({
