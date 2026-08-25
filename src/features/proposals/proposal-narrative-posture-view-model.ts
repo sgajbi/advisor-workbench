@@ -48,14 +48,21 @@ export function buildProposalNarrativePostureModel({
   const reportingSummary = summary?.reporting_summary ?? null;
   const latestEvent = events?.latest_event ?? events?.events?.[0] ?? null;
   const reviewedNarrativeHash = reviewRecord?.source_narrative_hash ?? null;
-  const reportMatchesReviewedNarrative = narrativeHashMatches(
+  const reviewedVersionNo = reviewRecord?.proposal_version_no ?? null;
+  const reportMatchesReviewedNarrative = narrativeIdentityMatches(
     reviewedNarrativeHash,
     reportPackage?.source_narrative_hash,
+    reviewedVersionNo,
+    report?.explanation?.related_version_no ?? reportPackage?.related_version_no,
   );
-  const summaryMatchesReviewedNarrative = narrativeHashMatches(
+  const summaryMatchesReviewedNarrative = narrativeIdentityMatches(
     reviewedNarrativeHash,
     summaryPackage?.source_narrative_hash ??
       reportingSummary?.source_narrative_hash,
+    reviewedVersionNo,
+    summaryReporting?.related_version_no ??
+      summaryPackage?.related_version_no ??
+      reportingSummary?.related_version_no,
   );
 
   const sourceNarrativeHash = reviewedNarrativeHash;
@@ -168,14 +175,21 @@ function isAdvisorReviewConfirmed(
   }
 }
 
-function narrativeHashMatches(
+function narrativeIdentityMatches(
   reviewedNarrativeHash: string | null | undefined,
   packageNarrativeHash: string | null | undefined,
+  reviewedVersionNo: number | null | undefined,
+  packageVersionNo: number | null | undefined,
 ): boolean {
   return Boolean(
     reviewedNarrativeHash &&
       packageNarrativeHash &&
-      reviewedNarrativeHash === packageNarrativeHash,
+      reviewedNarrativeHash === packageNarrativeHash &&
+      reviewedVersionNo !== null &&
+      reviewedVersionNo !== undefined &&
+      packageVersionNo !== null &&
+      packageVersionNo !== undefined &&
+      reviewedVersionNo === packageVersionNo,
   );
 }
 
@@ -253,9 +267,16 @@ export function confirmDiscussionPackRefresh({
 }): void {
   const actionNarrativeHash =
     report.explanation?.proposal_narrative_package?.source_narrative_hash;
+  const actionVersionNo =
+    report.explanation?.related_version_no ??
+    report.explanation?.proposal_narrative_package?.related_version_no;
   const refreshedNarrativeHash =
     summary?.reporting?.proposal_narrative_package?.source_narrative_hash ??
     summary?.reporting_summary?.source_narrative_hash;
+  const refreshedVersionNo =
+    summary?.reporting?.related_version_no ??
+    summary?.reporting?.proposal_narrative_package?.related_version_no ??
+    summary?.reporting_summary?.related_version_no;
   const refreshedPackageState = normalizeLabel(
     summary?.reporting?.proposal_narrative_package?.package_status,
     summary?.reporting?.include_reviewed_narrative ||
@@ -264,7 +285,12 @@ export function confirmDiscussionPackRefresh({
       : "Not Requested",
   );
   if (
-    !narrativeHashMatches(actionNarrativeHash, refreshedNarrativeHash) ||
+    !narrativeIdentityMatches(
+      actionNarrativeHash,
+      refreshedNarrativeHash,
+      actionVersionNo,
+      refreshedVersionNo,
+    ) ||
     refreshedPackageState === "Not Requested"
   ) {
     throw new Error(
