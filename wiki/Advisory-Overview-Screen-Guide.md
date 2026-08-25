@@ -134,7 +134,7 @@ Shared request families remain summarized in [API Surface](API-Surface), with ow
 
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
-| Loading | A shaped loading state under stable Advisor Priorities context | Wait for Gateway; no fallback queue is shown |
+| Loading | A shaped loading state under stable Adviser priorities context | Wait for Gateway; no fallback queue is shown |
 | Ready | Decision, worklist and window posture, selected evidence, and supported next action | Review the source record or refresh the window |
 | Complete empty | No open proposals in the complete source window | Review source-backed ideas or start a draft; this is not an approval all-clear |
 | Partial empty | No proposals in this window while another window remains | Review adjacent windows before concluding the portfolio is clear |

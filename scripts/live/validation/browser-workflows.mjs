@@ -446,9 +446,13 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByLabel("Advisory journey screens")).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(page.getByText("Priority Advisory Actions")).toBeVisible({
-        timeout: timeoutMs,
-      });
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "Adviser priorities",
+          exact: true,
+        }),
+      ).toBeVisible({ timeout: timeoutMs });
     },
   });
 

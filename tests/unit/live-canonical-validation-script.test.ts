@@ -1269,6 +1269,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'name: "Report centre", exact: true',
     );
+    expect(browserWorkflowModule).toMatch(
+      /getByRole\("heading", \{[\s\S]{0,80}level: 2,[\s\S]{0,80}name: "Adviser priorities",[\s\S]{0,40}exact: true/,
+    );
+    expect(browserWorkflowModule).not.toContain("Priority Advisory Actions");
     for (const label of ["MTD return", "QTD return", "YTD return"]) {
       expect(browserWorkflowModule).toContain(
         `page.getByText("${label}", { exact: true })`,

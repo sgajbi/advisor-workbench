@@ -47,6 +47,15 @@ function renderWithQueryClient(ui: React.ReactElement) {
   };
 }
 
+async function expectAdviserPrioritiesHeading() {
+  expect(
+    await screen.findByRole("heading", {
+      level: 2,
+      name: "Adviser priorities",
+    }),
+  ).toBeInTheDocument();
+}
+
 describe("AdvisoryOverviewWorkspace", () => {
   beforeEach(() => {
     listProposalsMock.mockReset();
@@ -68,12 +77,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       });
     });
 
-    expect(
-      await screen.findByRole("heading", {
-        level: 2,
-        name: "Advisor Priorities",
-      }),
-    ).toBeInTheDocument();
+    await expectAdviserPrioritiesHeading();
     expect(
       screen.getByText(
         "Resolve review blockers before preparing any client discussion material.",
@@ -205,6 +209,7 @@ describe("AdvisoryOverviewWorkspace", () => {
         name: "Advisory proposal decision worklist",
       }),
     ).not.toBeInTheDocument();
+    await expectAdviserPrioritiesHeading();
 
     await act(async () => resolveProposals(defaultProposalList));
 
@@ -274,6 +279,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(
       await screen.findByText("Advisory priorities are unavailable"),
     ).toBeInTheDocument();
+    await expectAdviserPrioritiesHeading();
     expect(
       screen.getByText(
         /No fallback proposal, review, or implementation posture is shown/,
@@ -658,6 +664,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(
       await screen.findByText("Advisory proposal access is not available"),
     ).toBeInTheDocument();
+    await expectAdviserPrioritiesHeading();
     expect(
       screen.queryByTestId("advisory-priority-worklist"),
     ).not.toBeInTheDocument();
