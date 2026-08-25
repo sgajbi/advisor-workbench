@@ -52,8 +52,10 @@ export function buildProposalNarrativePostureModel({
   const summaryPackage = summary?.reporting?.proposal_narrative_package ?? null;
   const summaryReporting = summary?.reporting ?? null;
   const reportingSummary = summary?.reporting_summary ?? null;
+  const activeProposalIdentityIsValid =
+    isNonBlankString(proposalId) && isPositiveSafeInteger(versionNo);
   const reviewMatchesActiveVersion = Boolean(
-    versionNo !== null &&
+    activeProposalIdentityIsValid &&
       reviewRecord?.proposal_id === proposalId &&
       reviewRecord.proposal_version_no === versionNo,
   );
@@ -96,8 +98,13 @@ export function buildProposalNarrativePostureModel({
     ]) &&
     isNonBlankString(summaryReporting?.report_request_id) &&
     summaryReporting?.report_type === DISCUSSION_PACK_REPORT_TYPE &&
-    isSupportedReportState(summaryReporting.status) &&
-    isSupportedPackageState(summaryPackage?.package_status);
+    isCoherentDiscussionPackRecord({
+      status: summaryReporting.status,
+      packageStatus: summaryPackage?.package_status,
+      packageReviewState: summaryPackage?.review_state,
+      reportReferenceId: summaryReporting.report_reference_id,
+      generatedAt: summaryReporting.generated_at,
+    });
 
   const currentEvents = deliveryEventsMatchActiveProposal({
     events,
@@ -214,12 +221,44 @@ function isAdvisorReviewConfirmed(
   return reviewRecord.review_state === "APPROVED_FOR_ADVISOR_USE";
 }
 
-function isSupportedReportState(value: unknown): value is string {
-  return value === "REQUESTED" || value === "READY";
+function isPositiveSafeInteger(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value > 0
+  );
 }
 
-function isSupportedPackageState(value: unknown): value is string {
-  return value === "REQUESTED" || value === "INCLUDED_REVIEWED_NARRATIVE";
+function isCoherentDiscussionPackRecord({
+  status,
+  packageStatus,
+  packageReviewState,
+  reportReferenceId,
+  generatedAt,
+}: {
+  status: unknown;
+  packageStatus: unknown;
+  packageReviewState: unknown;
+  reportReferenceId: unknown;
+  generatedAt: unknown;
+}): boolean {
+  if (
+    packageReviewState !== undefined &&
+    packageReviewState !== null &&
+    packageReviewState !== "APPROVED_FOR_ADVISOR_USE"
+  ) {
+    return false;
+  }
+  if (status === "REQUESTED" && packageStatus === "REQUESTED") {
+    return true;
+  }
+  return (
+    status === "READY" &&
+    packageStatus === "INCLUDED_REVIEWED_NARRATIVE" &&
+    isNonBlankString(reportReferenceId) &&
+    typeof generatedAt === "string" &&
+    isTimestampValue(generatedAt)
+  );
 }
 
 function deliveryEventsMatchActiveProposal({
@@ -232,9 +271,38 @@ function deliveryEventsMatchActiveProposal({
   versionNo: number | null;
 }): boolean {
   return Boolean(
-    versionNo !== null &&
+    isNonBlankString(proposalId) &&
+      isPositiveSafeInteger(versionNo) &&
       events?.proposal?.proposal_id === proposalId &&
-      events.proposal.current_version_no === versionNo,
+      events.proposal.current_version_no === versionNo &&
+      deliveryEventAggregateIsCoherent(events),
+  );
+}
+
+function deliveryEventAggregateIsCoherent(
+  events: ProposalDeliveryEventsData,
+): boolean {
+  const count = events.event_count;
+  if (
+    typeof count !== "number" ||
+    !Number.isSafeInteger(count) ||
+    count < 0
+  ) {
+    return false;
+  }
+  const listedCount = events.events?.length ?? 0;
+  const hasLatestEvent = events.latest_event !== undefined;
+  if (count === 0) {
+    return listedCount === 0 && !hasLatestEvent;
+  }
+  if (listedCount > count) {
+    return false;
+  }
+  const latestEvent = events.latest_event ?? events.events?.[0];
+  return Boolean(
+    latestEvent &&
+      isNonBlankString(latestEvent.event_type) &&
+      isTimestampValue(latestEvent.occurred_at),
   );
 }
 
@@ -372,6 +440,8 @@ export function confirmNarrativeReviewRefresh({
   const actionRecord = review.narrative_review;
   const refreshedRecord = refreshedReview?.narrative_review;
   if (
+    !isNonBlankString(proposalId) ||
+    !isPositiveSafeInteger(versionNo) ||
     !isAdvisorReviewConfirmed(actionRecord) ||
     !isAdvisorReviewConfirmed(refreshedRecord) ||
     actionRecord.review_id !== refreshedRecord?.review_id ||
@@ -438,6 +508,8 @@ export function confirmDiscussionPackRefresh({
   const actionRequestId = report.report_request_id?.trim();
   const refreshedRequestId = summary?.reporting?.report_request_id?.trim();
   if (
+    !isNonBlankString(proposalId) ||
+    !isPositiveSafeInteger(versionNo) ||
     summary?.proposal?.proposal_id !== proposalId ||
     summary.proposal.current_version_no !== versionNo ||
     !deliveryEventsMatchActiveProposal({ events, proposalId, versionNo }) ||
@@ -450,10 +522,22 @@ export function confirmDiscussionPackRefresh({
     actionRequestId !== refreshedRequestId ||
     report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
     summary.reporting?.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
-    !isSupportedReportState(report.status) ||
-    !isSupportedReportState(summary.reporting?.status) ||
-    !isSupportedPackageState(actionPackageState) ||
-    !isSupportedPackageState(refreshedPackageState)
+    !isCoherentDiscussionPackRecord({
+      status: report.status,
+      packageStatus: actionPackageState,
+      packageReviewState:
+        report.explanation?.proposal_narrative_package?.review_state,
+      reportReferenceId: report.report_reference_id,
+      generatedAt: report.generated_at,
+    }) ||
+    !isCoherentDiscussionPackRecord({
+      status: summary.reporting?.status,
+      packageStatus: refreshedPackageState,
+      packageReviewState:
+        summary.reporting?.proposal_narrative_package?.review_state,
+      reportReferenceId: summary.reporting?.report_reference_id,
+      generatedAt: summary.reporting?.generated_at,
+    })
   ) {
     throw new Error(
       "The discussion-pack request completed, but refreshed preparation status for the reviewed proposal version was not available.",

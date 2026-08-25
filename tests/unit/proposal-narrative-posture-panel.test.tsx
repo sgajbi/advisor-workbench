@@ -81,6 +81,8 @@ describe("ProposalNarrativePosturePanel", () => {
         report_type: "PORTFOLIO_REVIEW",
         related_version_no: 2,
         status: "READY",
+        report_reference_id: "report-document-001",
+        generated_at: "2026-05-22T09:01:00Z",
         include_reviewed_narrative: true,
         proposal_narrative_package: {
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
@@ -105,12 +107,12 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.mocked(createProposalReportRequest).mockResolvedValue({
       report_request_id: "report-001",
       report_type: "PORTFOLIO_REVIEW",
-      status: "READY",
+      status: "REQUESTED",
       explanation: {
         related_version_no: 2,
         include_reviewed_narrative: true,
         proposal_narrative_package: {
-          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          package_status: "REQUESTED",
           source_narrative_hash: "sha256:narrative-001",
         },
       },
