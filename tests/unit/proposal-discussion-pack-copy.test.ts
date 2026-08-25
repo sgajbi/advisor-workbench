@@ -15,6 +15,18 @@ import {
 } from "../../src/copy/proposal-discussion-pack-copy";
 
 describe("Proposal Discussion Pack business copy", () => {
+  it("owns the parent workspace and empty-state language", () => {
+    expect(PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle).toBe(
+      "Client meeting preparation",
+    );
+    expect(PROPOSAL_DISCUSSION_PACK_COPY.emptyTitle).toBe(
+      "No discussion packs need review",
+    );
+    expect(
+      `${PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle} ${PROPOSAL_DISCUSSION_PACK_COPY.emptyBody}`,
+    ).not.toMatch(/gateway|source-owned|posture|advisor-use|client-ready/i);
+  });
+
   it("follows the internal meeting-preparation decision sequence", () => {
     expect(PROPOSAL_DISCUSSION_PACK_COPY.navigation).toMatchObject({
       label: "Discussion pack",
@@ -77,6 +89,7 @@ describe("Proposal Discussion Pack business copy", () => {
     ).toEqual({
       eyebrow: "Discussion pack updated",
       title: "Current version available",
+      message: undefined,
     });
   });
 

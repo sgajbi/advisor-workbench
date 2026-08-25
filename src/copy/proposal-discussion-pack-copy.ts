@@ -11,14 +11,25 @@ export const PROPOSAL_DISCUSSION_PACK_COPY = Object.freeze({
       "Resolve narrative, memo, disclosure and consent actions before using the pack.",
   }),
   worklistAriaLabel: "Discussion pack proposals",
+  workspaceTitle: "Client meeting preparation",
+  workspaceSubtitle:
+    "Select a proposal, review the current meeting material, and resolve every client-use control before the discussion.",
+  emptyTitle: "No discussion packs need review",
+  emptyBody:
+    "No proposals in this view are awaiting discussion-pack preparation.",
+  selectionUnavailableError:
+    "The selected discussion pack is no longer available in the current proposal view.",
   defaultNextAction:
     "Confirm the meeting material and every client-use control.",
   selectedRecordLabel: "Selected discussion pack",
+  proposalReferenceLabel: "Proposal reference",
   selectionStatus:
     "Discussion-pack information is being checked for the selected proposal version.",
   decisionLabel: "Meeting decision",
   refreshAction: "Refresh discussion pack",
   refreshingAction: "Refreshing discussion pack…",
+  retryAction: "Retry discussion pack",
+  retryingAction: "Retrying discussion pack…",
   controlsLabel: "Meeting controls",
   controlsTitle: "Client-discussion checklist",
   controlsBoundary: "Internal approval does not permit client release.",
@@ -55,6 +66,9 @@ export const PROPOSAL_DISCUSSION_PACK_COPY = Object.freeze({
   noIssueTitle: "No disclosure issue reported",
   noIssueBody:
     "An empty register does not confirm client-release approval. Verify the release control before any external use.",
+  policyDisclosureUnavailableLabel: "Disclosure requirements unavailable",
+  policyDisclosureUnavailableBody:
+    "Policy wording is withheld because disclosure requirements are unavailable for this proposal version.",
   memoUnavailable:
     "No usable adviser memo is available for this proposal version.",
   sourceLabel: "Proposal discussion material and client-use controls",
@@ -134,13 +148,37 @@ export type ProposalDiscussionPackRefreshState =
   | "pending"
   | "confirmed";
 
+type ProposalDiscussionPackRefreshInput = {
+  state: ProposalDiscussionPackRefreshState;
+  hasConfirmedMaterial: boolean;
+};
+
+type ProposalDiscussionPackRefreshCopyWithMessage = {
+  eyebrow: string;
+  title: string;
+  message: string;
+};
+
+type ProposalDiscussionPackConfirmedRefreshCopy = {
+  eyebrow: string;
+  title: string;
+  message: undefined;
+};
+
+export function proposalDiscussionPackRefreshCopy(
+  input: ProposalDiscussionPackRefreshInput & {
+    state: "failed" | "pending";
+  },
+): ProposalDiscussionPackRefreshCopyWithMessage;
+export function proposalDiscussionPackRefreshCopy(
+  input: ProposalDiscussionPackRefreshInput & { state: "confirmed" },
+): ProposalDiscussionPackConfirmedRefreshCopy;
 export function proposalDiscussionPackRefreshCopy({
   state,
   hasConfirmedMaterial,
-}: {
-  state: ProposalDiscussionPackRefreshState;
-  hasConfirmedMaterial: boolean;
-}) {
+}: ProposalDiscussionPackRefreshInput):
+  | ProposalDiscussionPackRefreshCopyWithMessage
+  | ProposalDiscussionPackConfirmedRefreshCopy {
   if (state === "failed") {
     return {
       eyebrow: "Discussion pack not updated",
@@ -161,6 +199,7 @@ export function proposalDiscussionPackRefreshCopy({
   return {
     eyebrow: "Discussion pack updated",
     title: "Current version available",
+    message: undefined,
   };
 }
 

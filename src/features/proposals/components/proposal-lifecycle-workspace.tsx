@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
+import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
 import {
   ScreenStatePanel,
   SectionBlock,
@@ -906,7 +907,7 @@ export default function ProposalLifecycleWorkspace({
       );
       if (!refreshedProposal || refreshedProposal.versionNo === null) {
         throw new Error(
-          "The selected proposal is no longer available for conversation preparation.",
+          PROPOSAL_DISCUSSION_PACK_COPY.selectionUnavailableError,
         );
       }
       const refreshedEvidence =
@@ -1050,7 +1051,7 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Suitability decision desk"
             : mode === "discussion-pack"
-              ? "Conversation preparation desk"
+              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle
               : mode === "implementation"
                 ? "Implementation follow-up desk"
                 : model.title
@@ -1061,7 +1062,7 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Select a suitability review, confirm its client and product constraints, and resolve the next evidence requirement."
             : mode === "discussion-pack"
-              ? "Select a proposal, verify advisor-use material, and resolve every client-control boundary before the meeting."
+              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle
               : mode === "implementation"
                 ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
                 : model.subtitle
@@ -1198,7 +1199,7 @@ export default function ProposalLifecycleWorkspace({
               className="nav-link"
               href={proposalBuilderHref}
             >
-              Build advisor-use draft
+              Build proposal
             </Link>
           }
           surface="default"

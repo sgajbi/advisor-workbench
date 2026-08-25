@@ -2924,7 +2924,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByRole("link", { name: "Build advisor-use draft" }),
+      await screen.findByRole("link", { name: "Build proposal" }),
     ).toHaveAttribute(
       "href",
       "/proposals/simulate?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
@@ -3499,16 +3499,16 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     const refresh = await screen.findByRole("button", {
-      name: "Refresh evidence",
+      name: "Refresh discussion pack",
     });
     refresh.focus();
     fireEvent.click(refresh);
 
     expect(
-      await screen.findByText("Reconfirming the selected proposal"),
+      await screen.findByText("Checking the current version"),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("Selected proposal evidence confirmed"),
+      screen.queryByText("Current version available"),
     ).not.toBeInTheDocument();
 
     await act(async () => {
@@ -3516,7 +3516,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
 
     expect(
-      await screen.findByText("Selected proposal evidence confirmed"),
+      await screen.findByText("Current version available"),
     ).toBeInTheDocument();
     await waitFor(() => expect(refresh).toHaveFocus());
   });
@@ -3566,12 +3566,12 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     const refresh = await screen.findByRole("button", {
-      name: "Refresh evidence",
+      name: "Refresh discussion pack",
     });
     fireEvent.click(refresh);
 
     expect(
-      await screen.findByText("Selected proposal evidence confirmed"),
+      await screen.findByText("Current version available"),
     ).toBeInTheDocument();
     expect(getProposalDiscussionPackMock).toHaveBeenLastCalledWith(
       "proposal-1",
@@ -3618,11 +3618,11 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Refresh evidence" }),
+      await screen.findByRole("button", { name: "Refresh discussion pack" }),
     );
 
     expect(
-      await screen.findByText("Source refresh failed"),
+      await screen.findByText("Update failed"),
     ).toBeInTheDocument();
     expect(
       await screen.findByText(
@@ -3671,7 +3671,9 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(await screen.findByText("Conversation opening")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Refresh evidence" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Refresh discussion pack" }),
+    );
 
     expect(
       await screen.findByText("Proposal access is not available"),
@@ -3710,7 +3712,9 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("No source-backed memo sections are available."),
+      await screen.findByText(
+        "No usable adviser memo is available for this proposal version.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -3754,7 +3758,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Advisor narrative is not confirmed"),
+      await screen.findByText("Conversation narrative is unavailable"),
     ).toBeInTheDocument();
     expect(screen.queryByText("AI-assisted draft")).not.toBeInTheDocument();
     expect(screen.queryByText("How this was prepared")).not.toBeInTheDocument();
@@ -3800,12 +3804,12 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Policy disclosure evidence unavailable"),
+      await screen.findByText("Disclosure requirements unavailable"),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByText("Policy disclosure evidence unavailable"));
+    fireEvent.click(screen.getByText("Disclosure requirements unavailable"));
     expect(
       screen.getByText(
-        "Policy text is withheld because source disclosure support is not available for this proposal version.",
+        "Policy wording is withheld because disclosure requirements are unavailable for this proposal version.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(hiddenPolicyText)).not.toBeInTheDocument();
@@ -3839,13 +3843,13 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByText("Conversation evidence is unavailable"),
+      await screen.findByText("Discussion pack is unavailable"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Retry conversation evidence" }),
+      screen.getByRole("button", { name: "Retry discussion pack" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("Advisor-use conversation evidence is confirmed"),
+      screen.queryByText("Meeting material is ready for internal use"),
     ).not.toBeInTheDocument();
   });
 });

@@ -125,7 +125,11 @@ describe("proposal lifecycle workspace view model", () => {
       proposals,
     });
 
-    expect(model.title).toBe("Discussion Pack Review");
+    expect(model.title).toBe("Discussion pack review");
+    expect(model.subtitle).toBe(
+      "Review the current meeting rationale, decision memo, disclosures and client-use controls.",
+    );
+    expect(model.emptyTitle).toBe("No discussion packs need review");
     expect(model.totalCount).toBe(1);
     expect(
       `${model.subtitle} ${model.primaryDecision} ${model.recommendedAction}`,

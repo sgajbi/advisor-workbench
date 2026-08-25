@@ -1,4 +1,5 @@
 import type { PortfolioScreenRailModeItem } from "@/apps/portfolio/components/portfolio-screen-rail";
+import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
 import {
   buildReviewContextHref,
   type ReviewContext,
@@ -162,15 +163,7 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
   },
   {
     key: "discussion-pack",
-    label: "Discussion Pack",
-    detail: "Gated rationale",
-    title: "Discussion Pack Review",
-    description:
-      "Advisor-reviewed rationale, evidence, and gated discussion-pack posture.",
-    primaryDecision:
-      "What evidence or review remains before client discussion?",
-    nextAction:
-      "Resolve policy, memo, narrative, and consent blockers before using the pack.",
+    ...PROPOSAL_DISCUSSION_PACK_COPY.navigation,
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-report"],
     shellVisible: true,
   },
