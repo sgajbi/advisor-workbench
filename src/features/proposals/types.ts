@@ -830,11 +830,13 @@ export type ProposalReportRequestData = {
   report_reference_id?: string | null;
   generated_at?: string | null;
   explanation?: {
+    related_version_no?: number | null;
     include_reviewed_narrative?: boolean;
     proposal_narrative_package?: {
       package_status?: string;
       review_state?: string;
       source_narrative_hash?: string | null;
+      related_version_no?: number | null;
       [key: string]: unknown;
     };
     [key: string]: unknown;
@@ -850,16 +852,19 @@ export type ProposalDeliverySummaryData = {
     report_type?: string;
     report_reference_id?: string | null;
     requested_by?: string | null;
+    related_version_no?: number | null;
     include_reviewed_narrative?: boolean;
     proposal_narrative_package?: {
       package_status?: string;
       review_state?: string;
       source_narrative_hash?: string | null;
+      related_version_no?: number | null;
       [key: string]: unknown;
     };
     [key: string]: unknown;
   };
   reporting_summary?: {
+    related_version_no?: number | null;
     include_reviewed_narrative?: boolean;
     source_narrative_hash?: string | null;
     [key: string]: unknown;
