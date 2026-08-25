@@ -960,7 +960,9 @@ export async function validateReportCentrePanel(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/reports?portfolioId=${portfolioId}`, {
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Report Centre" })).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: "Report centre", exact: true }),
+  ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
