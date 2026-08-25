@@ -383,7 +383,12 @@ export function confirmMemoReviewRefresh({
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
-    || action.review_event?.event_type !== "MEMO_REVIEW_RECORDED"
+    || !memoActionEventConfirmed({
+      event: action.review_event,
+      eventType: "MEMO_REVIEW_RECORDED",
+      memoHash: actionIdentity?.memoHash ?? null,
+      refreshed,
+    })
     || !isReviewConfirmed(action.memo?.review_posture, actionIdentity?.memoHash ?? null)
     || !refreshedModel.reviewConfirmed
   ) {
@@ -406,7 +411,12 @@ export function confirmMemoReportPackageRefresh({
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
-    || action.report_package_event?.event_type !== "MEMO_REPORT_PACKAGE_RECORDED"
+    || !memoActionEventConfirmed({
+      event: action.report_package_event,
+      eventType: "MEMO_REPORT_PACKAGE_RECORDED",
+      memoHash: actionIdentity?.memoHash ?? null,
+      refreshed,
+    })
     || !action.report
     || !refreshedModel.reportPackageRecorded
   ) {
@@ -428,20 +438,18 @@ export function confirmMemoCommentaryRefresh({
     refreshed.proposalId,
     refreshed.versionNo,
   );
-  const actionEventId = exactString(action.ai_event, "event_id");
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
-    || action.ai_event?.event_type !== "MEMO_AI_REFERENCE_RECORDED"
-    || !actionEventId
+    || !memoActionEventConfirmed({
+      event: action.ai_event,
+      eventType: "MEMO_AI_REFERENCE_RECORDED",
+      memoHash: actionIdentity?.memoHash ?? null,
+      refreshed,
+    })
     || !action.commentary
     || action.commentary.authoritative_for_memo_status !== false
     || !refreshedModel.commentaryRecorded
-    || !hasRefreshedMemoAuditEvent(
-      refreshed,
-      actionEventId,
-      "MEMO_AI_REFERENCE_RECORDED",
-    )
   ) {
     throw new Error(
       "Advisor commentary was requested, but refreshed memo evidence did not confirm it.",
@@ -449,10 +457,38 @@ export function confirmMemoCommentaryRefresh({
   }
 }
 
+function memoActionEventConfirmed({
+  event,
+  eventType,
+  memoHash,
+  refreshed,
+}: {
+  event: Record<string, unknown> | null | undefined;
+  eventType: string;
+  memoHash: string | null;
+  refreshed: ProposalMemoRefreshEvidence;
+}): boolean {
+  const eventId = exactString(event, "event_id");
+  const reason = event?.reason;
+  if (
+    !eventId
+    || !memoHash
+    || exactString(event, "event_type") !== eventType
+    || typeof reason !== "object"
+    || reason === null
+    || Array.isArray(reason)
+    || exactString(reason as Record<string, unknown>, "source_memo_hash") !== memoHash
+  ) {
+    return false;
+  }
+  return hasRefreshedMemoAuditEvent(refreshed, eventId, eventType, memoHash);
+}
+
 function hasRefreshedMemoAuditEvent(
   refreshed: ProposalMemoRefreshEvidence,
   eventId: string,
   eventType: string,
+  memoHash: string,
 ): boolean {
   return [
     ...(refreshed.memo?.audit_events ?? []),
@@ -460,7 +496,14 @@ function hasRefreshedMemoAuditEvent(
   ].some(
     (event) =>
       exactString(event, "event_id") === eventId
-      && exactString(event, "event_type") === eventType,
+      && exactString(event, "event_type") === eventType
+      && typeof event.reason === "object"
+      && event.reason !== null
+      && !Array.isArray(event.reason)
+      && exactString(
+        event.reason as Record<string, unknown>,
+        "source_memo_hash",
+      ) === memoHash,
   );
 }
 
