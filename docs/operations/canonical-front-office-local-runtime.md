@@ -465,12 +465,16 @@ validator treats the returned acknowledgement state as replay evidence and skips
 acknowledgement write rather than forcing a conflicting idempotency key.
 The validator also records `advisoryJourneyChecks` for the front-office advisory route sequence:
 Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas, Proposal Builder,
-Suitability review, Risk and Impact, Approval Queue, Discussion Pack Review, and Implementation
+Suitability review, Risk and Impact, Approval Queue, Discussion pack review, and Implementation
 Status. The Proposal Builder check evaluates its draft through Gateway and Advise before capturing
 the same screen; evaluation is a source-backed result state, not a separately addressable screen.
 These journey checks are route-level evidence over existing Gateway-backed Workbench screens;
 they do not promote new backend capability, client-ready release, client communication, execution,
-or product support. Implementation Status becomes source proof only when validation also confirms the
+or product support. Discussion pack review records a populated screen as ready only after the
+selected `proposal-discussion-pack-review.v1` projection renders, a source refresh reconciles the
+current version, the client-release boundary remains visible, and unsupported external-use actions
+remain absent. A source-confirmed empty worklist is recorded as empty and truthfully degraded rather
+than demo-ready. Implementation Status becomes source proof only when validation also confirms the
 selected proposal and version against `proposal-implementation-status.v1`, its evidence posture,
 lineage, source observation, and explicit unsupported order/fill/settlement capability. A route
 screenshot alone remains navigation evidence.
