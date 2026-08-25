@@ -4,6 +4,11 @@ import Link from "next/link";
 import type { Ref } from "react";
 
 import {
+  PROPOSAL_DISCUSSION_PACK_COPY,
+  PROPOSAL_DISCUSSION_PACK_STATE_COPY,
+  proposalDiscussionPackRefreshCopy,
+} from "@/copy/proposal-discussion-pack-copy";
+import {
   AiAssistanceDisclosure,
   ScreenStatePanel,
   SemanticBadge,
@@ -71,14 +76,14 @@ export default function ProposalDiscussionPackWorkspace({
       data-testid="proposal-discussion-pack-workspace"
     >
       <ProposalLifecycleWorklist
-        ariaLabel="Discussion Pack Review proposals"
+        ariaLabel={PROPOSAL_DISCUSSION_PACK_COPY.worklistAriaLabel}
         rows={rows}
         selectedProposalId={selectedProposal.proposalId}
         onSelectProposal={(proposalId) => {
           resetRefresh();
           onSelectProposal(proposalId);
         }}
-        defaultNextAction="Confirm advisor-use material and every client boundary."
+        defaultNextAction={PROPOSAL_DISCUSSION_PACK_COPY.defaultNextAction}
         selectedPresentation={
           model
             ? {
@@ -102,16 +107,21 @@ export default function ProposalDiscussionPackWorkspace({
           aria-live="polite"
           aria-atomic="true"
         >
-          Selected proposal: {selectedProposal.title}. Conversation evidence is
-          being checked for {selectedProposal.version}.
+          Selected proposal: {selectedProposal.title}.{" "}
+          {PROPOSAL_DISCUSSION_PACK_COPY.selectionStatus} {selectedProposal.version}.
         </p>
         <div className={lifecycleStyles.selectedProposalHeader}>
           <div>
-            <Text variant="microLabel">Selected conversation record</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.selectedRecordLabel}
+            </Text>
             <Text variant="subsectionTitle" as="h3">
               {selectedProposal.title}
             </Text>
-            <Text variant="metadata">{selectedProposal.proposalId}</Text>
+            <Text variant="metadata">
+              {PROPOSAL_DISCUSSION_PACK_COPY.proposalReferenceLabel}{" "}
+              {selectedProposal.proposalId}
+            </Text>
           </div>
           <SemanticBadge
             tone={model?.status.tone ?? selectedProposal.stageTone}
@@ -137,27 +147,24 @@ export default function ProposalDiscussionPackWorkspace({
         {isPermissionBlocked ? (
           <ScreenStatePanel
             kind="permission_blocked"
-            title="Conversation evidence is restricted"
-            body="Your current role cannot view the selected narrative, memo, report-package, consent, or release evidence. No discussion posture is inferred."
+            {...PROPOSAL_DISCUSSION_PACK_STATE_COPY.permissionBlocked}
           />
         ) : isLoading && !model ? (
           <ScreenStatePanel
             kind="loading"
-            title="Checking conversation evidence"
-            body="Retrieving the selected proposal's source-backed advisor material and client-control boundaries through Gateway."
+            {...PROPOSAL_DISCUSSION_PACK_STATE_COPY.loading}
             rows={5}
           />
         ) : hasError && !model ? (
           <ScreenStatePanel
             kind="error"
-            title="Conversation evidence is unavailable"
-            body="Gateway could not confirm the selected proposal's narrative, memo, package, consent, and release boundaries. Lifecycle stage alone is not shown as meeting readiness."
+            {...PROPOSAL_DISCUSSION_PACK_STATE_COPY.unavailable}
             action={
               <SourceRefreshAction
                 ref={refreshActionRef}
                 refreshScope={`proposal-discussion-pack:${selectedProposal.proposalId}`}
-                idleLabel="Retry conversation evidence"
-                busyLabel="Retrying conversation evidence…"
+                idleLabel={PROPOSAL_DISCUSSION_PACK_COPY.retryAction}
+                busyLabel={PROPOSAL_DISCUSSION_PACK_COPY.retryingAction}
                 isRefreshing={isRefreshing}
                 onRefresh={refresh}
               />
@@ -166,14 +173,13 @@ export default function ProposalDiscussionPackWorkspace({
         ) : !model ? (
           <ScreenStatePanel
             kind="partial"
-            title="Conversation evidence is incomplete"
-            body="Gateway did not return one request-bound evidence set for the selected proposal version. Refresh before relying on this material."
+            {...PROPOSAL_DISCUSSION_PACK_STATE_COPY.incomplete}
             action={
               <SourceRefreshAction
                 ref={refreshActionRef}
                 refreshScope={`proposal-discussion-pack:${selectedProposal.proposalId}`}
-                idleLabel="Refresh conversation evidence"
-                busyLabel="Refreshing conversation evidence…"
+                idleLabel={PROPOSAL_DISCUSSION_PACK_COPY.refreshAction}
+                busyLabel={PROPOSAL_DISCUSSION_PACK_COPY.refreshingAction}
                 isRefreshing={isRefreshing}
                 onRefresh={refresh}
               />
@@ -214,7 +220,9 @@ function DiscussionPackDecision({
       >
         <div className={styles.sectionHeading}>
           <div>
-            <Text variant="microLabel">Conversation decision</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.decisionLabel}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h4"
@@ -226,8 +234,8 @@ function DiscussionPackDecision({
           <SourceRefreshAction
             ref={refreshActionRef}
             refreshScope={`proposal-discussion-pack:${model.identity.proposalId}`}
-            idleLabel="Refresh evidence"
-            busyLabel="Refreshing evidence…"
+            idleLabel={PROPOSAL_DISCUSSION_PACK_COPY.refreshAction}
+            busyLabel={PROPOSAL_DISCUSSION_PACK_COPY.refreshingAction}
             isRefreshing={isRefreshing}
             onRefresh={onRefresh}
           />
@@ -268,17 +276,19 @@ function DiscussionPackDecision({
       >
         <div className={styles.sectionHeading}>
           <div>
-            <Text variant="microLabel">Independent controls</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.controlsLabel}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h4"
               id="conversation-controls-title"
             >
-              Conversation control ledger
+              {PROPOSAL_DISCUSSION_PACK_COPY.controlsTitle}
             </Text>
           </div>
           <Text variant="secondary">
-            Advisor use is not client-release authority.
+            {PROPOSAL_DISCUSSION_PACK_COPY.controlsBoundary}
           </Text>
         </div>
         <ol>
@@ -306,13 +316,15 @@ function DiscussionPackDecision({
       >
         <div className={styles.sectionHeading}>
           <div>
-            <Text variant="microLabel">Meeting preparation</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.narrativeLabel}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h4"
               id="meeting-narrative-title"
             >
-              Advisor conversation narrative
+              {PROPOSAL_DISCUSSION_PACK_COPY.narrativeTitle}
             </Text>
           </div>
           <SemanticBadge
@@ -350,8 +362,7 @@ function DiscussionPackDecision({
         ) : (
           <ScreenStatePanel
             kind="partial"
-            title="Advisor narrative is not confirmed"
-            body="No source-backed conversation narrative is available for the selected version. Do not substitute lifecycle stage or an earlier-version narrative."
+            {...PROPOSAL_DISCUSSION_PACK_STATE_COPY.narrativeUnavailable}
           />
         )}
       </section>
@@ -359,7 +370,7 @@ function DiscussionPackDecision({
       <SupportingEvidence model={model} />
 
       <details className={styles.provenance}>
-        <summary>Evidence capability and lineage</summary>
+        <summary>{PROPOSAL_DISCUSSION_PACK_COPY.supportDetailsLabel}</summary>
         <div className={styles.provenanceBody}>
           <ul className={styles.capabilities}>
             {model.capabilities.map((capability) => (
@@ -380,11 +391,11 @@ function DiscussionPackDecision({
               <dd>{model.lineage.proposalVersionId}</dd>
             </div>
             <div>
-              <dt>Gateway correlation</dt>
+              <dt>{PROPOSAL_DISCUSSION_PACK_COPY.supportReferenceLabel}</dt>
               <dd>{model.lineage.correlationId}</dd>
             </div>
             <div>
-              <dt>Response contract</dt>
+              <dt>{PROPOSAL_DISCUSSION_PACK_COPY.responseVersionLabel}</dt>
               <dd>{model.lineage.contractVersion}</dd>
             </div>
             <div>
@@ -395,15 +406,17 @@ function DiscussionPackDecision({
               <dt>Artifact hash</dt>
               <dd>{model.lineage.artifactHash}</dd>
             </div>
+            <div>
+              <dt>Client-release boundary</dt>
+              <dd>{model.support.clientReleaseExplanation}</dd>
+            </div>
           </dl>
         </div>
       </details>
 
       <footer className={lifecycleStyles.selectedProposalActions}>
         <p>
-          Review and workflow actions remain in the governed full proposal
-          record. This workspace does not publish, deliver, or contact the
-          client.
+          {PROPOSAL_DISCUSSION_PACK_COPY.footer}
         </p>
         <Link
           className={lifecycleStyles.reviewProposalLink}
@@ -422,9 +435,11 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
       <section aria-labelledby="memo-evidence-title">
         <div className={styles.sectionHeading}>
           <div>
-            <Text variant="microLabel">Decision record</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.memoLabel}
+            </Text>
             <Text variant="subsectionTitle" as="h4" id="memo-evidence-title">
-              Advisor memo
+              {PROPOSAL_DISCUSSION_PACK_COPY.memoTitle}
             </Text>
           </div>
           <SemanticBadge tone={model.memo.tone}>
@@ -448,7 +463,7 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
           </ul>
         ) : (
           <p className={styles.emptyEvidence}>
-            No source-backed memo sections are available.
+            {PROPOSAL_DISCUSSION_PACK_COPY.memoUnavailable}
           </p>
         )}
       </section>
@@ -456,17 +471,22 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
       <section aria-labelledby="exception-register-title">
         <div className={styles.sectionHeading}>
           <div>
-            <Text variant="microLabel">External-use controls</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_DISCUSSION_PACK_COPY.registerLabel}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h4"
               id="exception-register-title"
             >
-              Disclosure and limitation register
+              {PROPOSAL_DISCUSSION_PACK_COPY.registerTitle}
             </Text>
           </div>
           <span className={styles.exceptionCount}>
-            {model.blockers.length + model.limitations.length} exceptions
+            {model.blockers.length + model.limitations.length}{" "}
+            {model.blockers.length + model.limitations.length === 1
+              ? "item"
+              : "items"}
           </span>
         </div>
         <ul className={styles.exceptionList}>
@@ -484,11 +504,8 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
           ))}
           {model.blockers.length === 0 && model.limitations.length === 0 ? (
             <li>
-              <strong>No source exception reported</strong>
-              <p>
-                Client release remains governed separately even when this
-                register is empty.
-              </p>
+              <strong>{PROPOSAL_DISCUSSION_PACK_COPY.noIssueTitle}</strong>
+              <p>{PROPOSAL_DISCUSSION_PACK_COPY.noIssueBody}</p>
             </li>
           ) : null}
         </ul>
@@ -498,7 +515,7 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
               ? `${model.disclosures.length} policy ${
                   model.disclosures.length === 1 ? "disclosure" : "disclosures"
                 }`
-              : "Policy disclosure evidence unavailable"}
+              : PROPOSAL_DISCUSSION_PACK_COPY.policyDisclosureUnavailableLabel}
           </summary>
           {model.disclosurePolicy.isSupported ? (
             <ul>
@@ -515,10 +532,7 @@ function SupportingEvidence({ model }: { model: ProposalDiscussionPackModel }) {
               ))}
             </ul>
           ) : (
-            <p>
-              Policy text is withheld because source disclosure support is not
-              available for this proposal version.
-            </p>
+            <p>{PROPOSAL_DISCUSSION_PACK_COPY.policyDisclosureUnavailableBody}</p>
           )}
         </details>
       </section>
@@ -538,38 +552,46 @@ function DiscussionPackRefreshStatus({
   hasConfirmedEvidence: boolean;
 }) {
   if (state === "failed") {
+    const copy = proposalDiscussionPackRefreshCopy({
+      state: "failed",
+      hasConfirmedMaterial: hasConfirmedEvidence,
+    });
     return (
       <WorkbenchRefreshStatus
         kind="failed"
-        eyebrow="Conversation evidence not updated"
-        title="Source refresh failed"
-        message={
-          hasConfirmedEvidence
-            ? "Previously confirmed evidence remains visible and is not relabelled as current."
-            : "No source-confirmed conversation evidence is available."
-        }
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        message={copy.message}
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
       />
     );
   }
   if (state === "pending") {
+    const copy = proposalDiscussionPackRefreshCopy({
+      state: "pending",
+      hasConfirmedMaterial: hasConfirmedEvidence,
+    });
     return (
       <WorkbenchRefreshStatus
         kind="pending"
-        eyebrow="Updating conversation evidence"
-        title="Reconfirming the selected proposal"
-        message="Gateway is refreshing narrative, memo, report-package, consent, and release-boundary evidence."
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        message={copy.message}
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
       />
     );
   }
+  const copy = proposalDiscussionPackRefreshCopy({
+    state: "confirmed",
+    hasConfirmedMaterial: hasConfirmedEvidence,
+  });
   return (
     <WorkbenchRefreshStatus
       kind="confirmed"
-      eyebrow="Conversation evidence updated"
-      title="Selected proposal evidence confirmed"
+      eyebrow={copy.eyebrow}
+      title={copy.title}
       confirmedContext={confirmedContext}
     />
   );

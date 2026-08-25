@@ -1,10 +1,11 @@
-import type { AdvisoryJourneyMode } from "./advisory-journey-navigation";
-import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
+import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
 import {
   buildReviewContextHref,
   type WorkspaceReviewContext,
 } from "@/shell/review-context";
+
+import type { AdvisoryJourneyMode } from "./advisory-journey-navigation";
 import {
   proposalNextAction,
   proposalReadinessLabel,
@@ -13,6 +14,7 @@ import {
   proposalStageLabel,
   proposalStageTone,
 } from "./proposal-workflow-copy";
+import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
 import type { ProposalSummary } from "./types";
 
 export type ProposalLifecycleMode =
@@ -74,7 +76,7 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
       "Open the proposal to verify approvals and supporting evidence before advancing it.",
     emptyTitle: "No proposals in the approval queue",
     emptyBody:
-      "Create an advisor-use draft when a client objective is ready for review.",
+      "Create a proposal draft when a client objective is ready for review.",
   },
   suitability: {
     title: SUITABILITY_WORKFLOW_LABELS.review,
@@ -100,16 +102,12 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
     includedStates: ["RISK_REVIEW"],
   },
   "discussion-pack": {
-    title: "Discussion Pack Review",
-    subtitle:
-      "Advisor-reviewed rationale, evidence, and client-consent gate posture.",
-    primaryDecision:
-      "What evidence or review remains before client discussion?",
-    recommendedAction:
-      "Resolve policy, memo, narrative, and consent blockers before using the pack.",
-    emptyTitle: "No discussion-pack reviews are pending",
-    emptyBody:
-      "There are no proposals currently waiting at the client-consent gate.",
+    title: PROPOSAL_DISCUSSION_PACK_COPY.navigation.title,
+    subtitle: PROPOSAL_DISCUSSION_PACK_COPY.navigation.description,
+    primaryDecision: PROPOSAL_DISCUSSION_PACK_COPY.navigation.primaryDecision,
+    recommendedAction: PROPOSAL_DISCUSSION_PACK_COPY.navigation.nextAction,
+    emptyTitle: PROPOSAL_DISCUSSION_PACK_COPY.emptyTitle,
+    emptyBody: PROPOSAL_DISCUSSION_PACK_COPY.emptyBody,
     includedStates: ["AWAITING_CLIENT_CONSENT"],
   },
   implementation: {

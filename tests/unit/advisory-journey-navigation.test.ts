@@ -105,7 +105,7 @@ describe("advisory journey navigation", () => {
       expect(definition.dataSources).toContain("lotus-gateway");
     }
     const discussionPack = getAdvisoryJourneyDefinition("discussion-pack");
-    expect(discussionPack.title).toBe("Discussion Pack Review");
+    expect(discussionPack.title).toBe("Discussion pack review");
     expect(
       `${discussionPack.description} ${discussionPack.primaryDecision} ${discussionPack.nextAction}`,
     ).not.toMatch(/client-ready/i);
