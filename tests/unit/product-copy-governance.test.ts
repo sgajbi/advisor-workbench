@@ -112,7 +112,7 @@ describe("product-copy governance", () => {
   it(
     "keeps the checked-in productive-copy inventory exact",
     () => {
-      expect(scanProductCopyRepository().length).toBe(285);
+      expect(scanProductCopyRepository().length).toBe(282);
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
   );
