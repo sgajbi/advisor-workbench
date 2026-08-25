@@ -53,7 +53,7 @@ export function buildProposalNarrativePostureModel({
   const summaryReporting = summary?.reporting ?? null;
   const reportingSummary = summary?.reporting_summary ?? null;
   const activeProposalIdentityIsValid =
-    isNonBlankString(proposalId) && isPositiveSafeInteger(versionNo);
+    isExactNonBlankString(proposalId) && isPositiveSafeInteger(versionNo);
   const reviewMatchesActiveVersion = Boolean(
     activeProposalIdentityIsValid &&
       reviewRecord?.proposal_id === proposalId &&
@@ -96,7 +96,7 @@ export function buildProposalNarrativePostureModel({
       summaryReporting?.include_reviewed_narrative,
       reportingSummary?.include_reviewed_narrative,
     ]) &&
-    isNonBlankString(summaryReporting?.report_request_id) &&
+    isExactNonBlankString(summaryReporting?.report_request_id) &&
     summaryReporting?.report_type === DISCUSSION_PACK_REPORT_TYPE &&
     isCoherentDiscussionPackRecord({
       status: summaryReporting.status,
@@ -210,9 +210,9 @@ function isAdvisorReviewConfirmed(
   reviewRecord: ProposalNarrativeReviewData["narrative_review"] | null,
 ): reviewRecord is ConfirmedNarrativeReview {
   if (
-    !isNonBlankString(reviewRecord?.review_id) ||
-    !isNonBlankString(reviewRecord.source_narrative_hash) ||
-    !isNonBlankString(reviewRecord.reviewed_by) ||
+    !isExactNonBlankString(reviewRecord?.review_id) ||
+    !isExactNonBlankString(reviewRecord.source_narrative_hash) ||
+    !isExactNonBlankString(reviewRecord.reviewed_by) ||
     !isTimestampValue(reviewRecord.reviewed_at) ||
     (reviewRecord.action !== undefined && reviewRecord.action !== "APPROVE")
   ) {
@@ -255,7 +255,7 @@ function isCoherentDiscussionPackRecord({
       packageStatus === "INCLUDED_REVIEWED_NARRATIVE");
   return (
     statusAndPackageAgree &&
-    isNonBlankString(reportReferenceId) &&
+    isExactNonBlankString(reportReferenceId) &&
     typeof generatedAt === "string" &&
     isTimestampValue(generatedAt)
   );
@@ -271,7 +271,7 @@ function deliveryEventsMatchActiveProposal({
   versionNo: number | null;
 }): boolean {
   return Boolean(
-    isNonBlankString(proposalId) &&
+    isExactNonBlankString(proposalId) &&
       isPositiveSafeInteger(versionNo) &&
       events?.proposal?.proposal_id === proposalId &&
       events.proposal.current_version_no === versionNo &&
@@ -309,7 +309,7 @@ function deliveryEventAggregateIsCoherent(
   const eventIds = eventHistory.map((event) => event.event_id);
   const allEventsAreGoverned = eventHistory.every(
     (event) =>
-      isNonBlankString(event.event_id) &&
+      isExactNonBlankString(event.event_id) &&
       event.proposal_id === proposalId &&
       event.related_version_no === versionNo &&
       isSupportedDeliveryEventType(event.event_type) &&
@@ -410,8 +410,12 @@ function resolveEventCount(
   return events?.events?.length ?? 0;
 }
 
-function isNonBlankString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
+function isExactNonBlankString(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value === value.trim()
+  );
 }
 
 type NarrativeIdentity = {
@@ -435,7 +439,7 @@ function resolveNarrativeIdentity({
   if (
     presentHashes.length === 0 ||
     presentVersions.length === 0 ||
-    !presentHashes.every(isNonBlankString) ||
+    !presentHashes.every(isExactNonBlankString) ||
     !presentVersions.every(
       (version) =>
         typeof version === "number" &&
@@ -531,7 +535,7 @@ export function confirmNarrativeReviewRefresh({
   const actionRecord = review.narrative_review;
   const refreshedRecord = refreshedReview?.narrative_review;
   if (
-    !isNonBlankString(proposalId) ||
+    !isExactNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
     !isAdvisorReviewConfirmed(actionRecord) ||
     !isAdvisorReviewConfirmed(refreshedRecord) ||
@@ -608,7 +612,7 @@ export function confirmDiscussionPackRefresh({
     report.report_reference_id === summary?.reporting?.report_reference_id &&
     report.generated_at === summary?.reporting?.generated_at;
   if (
-    !isNonBlankString(proposalId) ||
+    !isExactNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
     summary?.proposal?.proposal_id !== proposalId ||
     summary.proposal.current_version_no !== versionNo ||
@@ -618,8 +622,8 @@ export function confirmDiscussionPackRefresh({
     refreshedIdentity?.versionNo !== versionNo ||
     !actionIncludesReviewedNarrative ||
     !refreshedIncludesReviewedNarrative ||
-    !isNonBlankString(actionRequestId) ||
-    !isNonBlankString(refreshedRequestId) ||
+    !isExactNonBlankString(actionRequestId) ||
+    !isExactNonBlankString(refreshedRequestId) ||
     actionRequestId !== refreshedRequestId ||
     !deliveryHistoryConfirmsReportRequest(events, actionRequestId) ||
     !lifecycleIsMonotonic ||
