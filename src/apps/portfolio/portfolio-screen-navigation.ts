@@ -106,7 +106,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "income",
-    label: "Income and activity",
+    label: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
     detail: "Booked income, fees, and taxes",
     href: "/income",
     group: "portfolio-records",

@@ -6,13 +6,14 @@ import {
   PortfolioRecordRouteLoading,
 } from "../../src/apps/portfolio/components/portfolio-record-route-state";
 import type { PortfolioRecordScreenKind } from "../../src/apps/portfolio/portfolio-record-screen-view-model";
+import { PORTFOLIO_SCREEN_LABELS } from "../../src/apps/portfolio/portfolio-terminology";
 
 const ROUTES: Array<{ screen: PortfolioRecordScreenKind; title: string }> = [
   { screen: "allocation", title: "Allocation" },
   { screen: "positions", title: "Positions" },
   { screen: "transactions", title: "Transactions" },
   { screen: "cashflow", title: "Projected cash flow" },
-  { screen: "income", title: "Income and activity" },
+  { screen: "income", title: PORTFOLIO_SCREEN_LABELS.incomeAndActivity },
 ];
 
 vi.mock(

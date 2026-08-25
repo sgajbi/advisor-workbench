@@ -443,7 +443,9 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.getAllByText("As of").length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByRole("heading", { name: /Mandate Overview/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Portfolio Health Snapshot/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /Income & Activity/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /^Income and activity$/ }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /All workspaces/i }));
     expect(
       screen
@@ -485,7 +487,9 @@ describe("PortfolioFoundationPage", () => {
     });
 
     expect(window.localStorage.getItem("lotus:portfolio:view-mode")).toBe("detailed");
-    expect(screen.queryByRole("heading", { name: /Income & Activity/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /^Income and activity$/ }),
+    ).not.toBeInTheDocument();
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
     expect(requestedUrls.some((url) => url.includes("/liquidity"))).toBe(false);

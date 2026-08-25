@@ -57,7 +57,7 @@ describe("PortfolioRecordEvidenceRail", () => {
       "href",
       "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001"
     );
-    expect(screen.getByRole("link", { name: "Income & Activity" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Income and activity" })).toHaveAttribute(
       "href",
       "/income?portfolioId=PB_SG_GLOBAL_BAL_001"
     );

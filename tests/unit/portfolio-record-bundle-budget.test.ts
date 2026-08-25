@@ -55,7 +55,7 @@ describe("portfolio record bundle budget", () => {
       "Positions",
       "Transactions",
       "Cashflow",
-      "Income & Activity",
+      "Income and activity",
     ]);
     expect(report.slice(0, 3).every(({ includesAgGrid }) => includesAgGrid)).toBe(true);
     expect(report.slice(3).every(({ includesAgGrid }) => !includesAgGrid)).toBe(true);

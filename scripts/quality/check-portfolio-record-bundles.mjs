@@ -9,7 +9,7 @@ export const PORTFOLIO_RECORD_ROUTE_POLICIES = Object.freeze([
   { route: "/positions/page", task: "Positions", maxInitialJsBytes: 4_500_000, agGrid: "required" },
   { route: "/transactions/page", task: "Transactions", maxInitialJsBytes: 4_500_000, agGrid: "required" },
   { route: "/cashflow/page", task: "Cashflow", maxInitialJsBytes: 3_350_000, agGrid: "forbidden" },
-  { route: "/income/page", task: "Income & Activity", maxInitialJsBytes: 3_350_000, agGrid: "forbidden" },
+  { route: "/income/page", task: "Income and activity", maxInitialJsBytes: 3_350_000, agGrid: "forbidden" },
 ]);
 
 const AG_GRID_MARKER = "ag-grid-community";
