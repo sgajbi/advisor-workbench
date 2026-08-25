@@ -1,6 +1,7 @@
 "use client";
 
 import { formatBusinessReason } from "@/copy/business-state-copy";
+import { CONSTRUCTION_COPY } from "@/copy/construction-copy";
 import {
   ActionButton,
   MetricRow,
@@ -11,6 +12,7 @@ import {
 import type { ConstructionPanelModel } from "@/features/workbench/construction-alternatives-view-model";
 import {
   buildConstructionStatePanelCopy,
+  shouldShowConstructionAttentionReasons,
   shouldShowConstructionStatePanel,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
 
@@ -45,10 +47,10 @@ export default function ConstructionCommandSummaryCard({
           surface="portfolio"
           title={
             actionError
-              ? "Construction endpoint is unavailable"
+              ? CONSTRUCTION_COPY.unavailableTitle
               : stateCopy.title
           }
-          body={actionError ?? stateCopy.body}
+          body={actionError ? CONSTRUCTION_COPY.unavailableBody : stateCopy.body}
         />
       ) : null}
 
@@ -81,7 +83,10 @@ export default function ConstructionCommandSummaryCard({
         </div>
       </div>
 
-      {model.supportabilityReasons.length > 0 ? (
+      {shouldShowConstructionAttentionReasons(
+        model.state,
+        model.supportabilityReasons,
+      ) ? (
         <div className="construction-alternatives-reason-row">
           {model.supportabilityReasons.map((reason) => (
             <SemanticBadge key={reason} tone="warn">

@@ -53,7 +53,7 @@ export default function ExecutionAcknowledgementSupportabilityPanel({
 
       <div className="execution-acknowledgement-summary">
         <MetricRow label="Evidence" value={model.evidenceLabel} />
-        <MetricRow label="Posture" value={model.state} />
+        <MetricRow label="Record status" value={model.state} />
         <MetricRow
           label="Acknowledgements"
           value={model.acknowledgementCount}

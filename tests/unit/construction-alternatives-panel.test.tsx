@@ -275,6 +275,7 @@ describe("ConstructionAlternativesPanel", () => {
       screen.getByText("ExternalOrderExecutionAcknowledgement v1"),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.getByText("Record status")).toBeInTheDocument();
     expect(screen.getByText("Missing")).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -6,7 +6,7 @@ import {
 export const EXECUTION_EVIDENCE_COPY = Object.freeze({
   title: "Order acknowledgement evidence",
   description:
-    "Source-owned order acknowledgement posture for audit and execution control.",
+    "Order acknowledgement records and related execution-control evidence.",
   evidenceLabel: "Order acknowledgement evidence",
   loadingTitle: "Checking order acknowledgement evidence",
   loadingBody: "Loading source-owned order acknowledgement records.",

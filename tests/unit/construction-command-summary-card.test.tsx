@@ -62,7 +62,10 @@ describe("ConstructionCommandSummaryCard", () => {
     expect(screen.getByText(/PB_SG_GLOBAL_BAL_001/)).toBeInTheDocument();
     expect(screen.getByText("Recommended Path")).toBeInTheDocument();
     expect(screen.getAllByText("Not generated").length).toBeGreaterThan(0);
-    expect(screen.getByText("Construction Alternatives Not Requested")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Construction Alternatives Not Requested"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Review required")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Generate alternatives" }));
     expect(onGenerateAlternatives).toHaveBeenCalledTimes(1);
@@ -86,7 +89,8 @@ describe("ConstructionCommandSummaryCard", () => {
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("Construction alternatives generated.")).toBeInTheDocument();
-    expect(screen.getByText("Regime Scenario Pack Ready")).toBeInTheDocument();
+    expect(screen.queryByText("Regime Scenario Pack Ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Review required")).not.toBeInTheDocument();
     expect(screen.queryByText("cas_1")).not.toBeInTheDocument();
     expect(screen.queryByText("corr-rfc39")).not.toBeInTheDocument();
   });
@@ -103,8 +107,15 @@ describe("ConstructionCommandSummaryCard", () => {
       />,
     );
 
-    expect(screen.getByText("Construction endpoint is unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Gateway unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Construction alternatives unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Existing portfolio and mandate information remains available. Try again before selecting an implementation path.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Gateway unavailable")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Generating alternatives" })).toBeDisabled();
     expect(screen.queryByText("Message client")).not.toBeInTheDocument();
     expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();
