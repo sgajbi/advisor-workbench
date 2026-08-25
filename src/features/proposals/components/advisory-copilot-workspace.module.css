@@ -31,6 +31,12 @@
   padding: 10px 12px;
 }
 
+.metricTile {
+  align-content: start;
+  display: grid;
+  gap: 6px;
+}
+
 .metricTile strong,
 .actionCard strong,
 .evidenceItem strong {

@@ -3,6 +3,45 @@ import { describe, expect, it } from "vitest";
 import { buildAdvisoryCopilotWorkspaceModel } from "@/features/proposals/advisory-copilot-view-model";
 
 describe("buildAdvisoryCopilotWorkspaceModel AI disclosure", () => {
+  it("presents source-declared preparation state without technical status codes", () => {
+    const model = buildAdvisoryCopilotWorkspaceModel({
+      proposals: [
+        {
+          proposal_id: "proposal_1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          current_state: "COMPLIANCE_REVIEW",
+          title: "Income portfolio review",
+        },
+      ],
+      supportability: {
+        support_status:
+          "ADVISE_COPILOT_GATEWAY_WORKBENCH_CANONICAL_PROOF_SUPPORTED",
+        client_ready_publication: "BLOCKED",
+        supported_action_families: ["PROPOSAL_EXPLANATION"],
+      },
+    });
+
+    expect(model.supportabilityRows).toEqual(
+      expect.arrayContaining([
+        {
+          label: "Review preparation",
+          value: "Available",
+          tone: "success",
+        },
+        {
+          label: "Client use",
+          value: "Not approved for client use",
+          tone: "warn",
+        },
+        {
+          label: "Active proposal",
+          value: "Income portfolio review",
+          tone: "success",
+        },
+      ]),
+    );
+  });
+
   it("keeps the untouched workspace unavailable until an action is requested", () => {
     const model = buildAdvisoryCopilotWorkspaceModel({ proposals: [] });
 

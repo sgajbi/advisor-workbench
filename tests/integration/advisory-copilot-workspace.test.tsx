@@ -161,6 +161,18 @@ describe("AdvisoryCopilotWorkspace", () => {
       <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
+    expect(
+      await screen.findByText(
+        "AI-assisted preparation for proposal review, with proposal evidence and mandatory human review before any client use.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Not approved for client use").length).toBeGreaterThan(0);
+    expect(
+      screen.queryByText(
+        "Advise Copilot Gateway Workbench Canonical Proof Supported",
+      ),
+    ).not.toBeInTheDocument();
+
     fireEvent.click(
       (await screen.findAllByRole("button", { name: "Prepare review" }))[0],
     );
@@ -198,12 +210,17 @@ describe("AdvisoryCopilotWorkspace", () => {
     expect(
       screen.getByText("Policy evaluation requires compliance review."),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Blocked").length).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText("Not approved for client use").length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Blocked")).not.toBeInTheDocument();
     expect(screen.getByText("Live output • review required")).toBeInTheDocument();
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Prepared with AI assistance")).toBeInTheDocument();
     expect(screen.getByText("Limited source evidence")).toBeInTheDocument();
-    expect(screen.getByText("Not approved for client use")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Not approved for client use").length,
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("workflow_pack")).not.toBeInTheDocument();
     expect(screen.queryByText("PROPOSAL_EXPLANATION")).not.toBeInTheDocument();
   });
@@ -251,7 +268,9 @@ describe("AdvisoryCopilotWorkspace", () => {
       <AdvisoryCopilotWorkspace portfolioId="PB_SG_GLOBAL_BAL_001" />,
     );
 
-    expect(await screen.findByText("No supported copilot actions")).toBeInTheDocument();
+    expect(
+      await screen.findByText("No AI-assisted review tasks available"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Prepare review" }),
     ).not.toBeInTheDocument();
@@ -284,7 +303,7 @@ describe("AdvisoryCopilotWorkspace", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getAllByText("Guardrail Rejected").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Review controls not met").length).toBeGreaterThan(0);
     });
     expect(
       screen.getByRole("button", { name: "Record internal review" }),
@@ -316,10 +335,10 @@ describe("AdvisoryCopilotWorkspace", () => {
       );
     });
     await waitFor(() => {
-      expect(screen.getAllByText("Approved For Internal Use").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Approved for internal use").length).toBeGreaterThan(0);
     });
-    expect(screen.getByText(/Client publication:/).parentElement).toHaveTextContent(
-      "Blocked",
+    expect(screen.getByText(/Client use:/).parentElement).toHaveTextContent(
+      "Not approved for client use",
     );
     expect(screen.queryByText("Client-ready approved")).not.toBeInTheDocument();
   });

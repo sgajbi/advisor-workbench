@@ -4,6 +4,11 @@ import {
   type SemanticBadgeTone,
 } from "@/design-system";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+import {
+  advisoryCopilotAvailabilityLabel,
+  advisoryCopilotClientUseLabel,
+  advisoryCopilotReviewLabel,
+} from "@/copy/advisory-copilot-copy";
 
 import type {
   AdvisoryCopilotAudience,
@@ -120,13 +125,21 @@ export function buildAdvisoryCopilotWorkspaceModel({
     availableActions,
     supportabilityRows: [
       {
-        label: "Copilot posture",
-        value: formatCode(supportability?.support_status ?? "Not reported"),
-        tone: supportability?.support_status ? "success" : "warn",
+        label: "Review preparation",
+        value: advisoryCopilotAvailabilityLabel(
+          supportability?.support_status,
+        ),
+        tone:
+          advisoryCopilotAvailabilityLabel(supportability?.support_status) ===
+          "Available"
+            ? "success"
+            : "warn",
       },
       {
-        label: "Client publication",
-        value: formatCode(supportability?.client_ready_publication ?? "BLOCKED"),
+        label: "Client use",
+        value: advisoryCopilotClientUseLabel(
+          supportability?.client_ready_publication,
+        ),
         tone: "warn",
       },
       {
@@ -136,7 +149,7 @@ export function buildAdvisoryCopilotWorkspaceModel({
       },
       {
         label: "Active proposal",
-        value: proposal?.proposal_id ?? "No proposal selected",
+        value: proposal?.title ?? proposal?.proposal_id ?? "No proposal selected",
         tone: proposal ? "success" : "warn",
       },
     ],
@@ -153,9 +166,11 @@ export function buildAdvisoryCopilotWorkspaceModel({
     })),
     reviewGuidance: runBody?.review_guidance_json ?? [],
     guardrailResults: (runBody?.guardrail_results_json ?? []).map(formatCode),
-    runPosture: formatCode(runBody?.review_posture ?? "No run yet"),
+    runPosture: advisoryCopilotReviewLabel(runBody?.review_posture),
     runTone: reviewTone(runBody?.review_posture),
-    clientReadyPosture: formatCode(runBody?.client_ready_publication ?? "BLOCKED"),
+    clientReadyPosture: advisoryCopilotClientUseLabel(
+      runBody?.client_ready_publication,
+    ),
     aiDisclosure: buildCopilotAiDisclosure(packet, run),
   };
 }

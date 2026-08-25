@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
+import { ADVISORY_COPILOT_COPY } from "@/copy/advisory-copilot-copy";
 import {
   ActionButton,
   AiAssistanceDisclosure,
@@ -143,7 +144,7 @@ export default function AdvisoryCopilotWorkspace({
       <SectionBlock>
         <Stack direction="row" spacing={1} alignItems="center">
           <CircularProgress size={16} />
-          <Text variant="body">Loading advisory copilot...</Text>
+          <Text variant="body">{ADVISORY_COPILOT_COPY.loading}</Text>
         </Stack>
       </SectionBlock>
     );
@@ -151,35 +152,39 @@ export default function AdvisoryCopilotWorkspace({
 
   return (
     <SectionBlock
-      title="Advisory Copilot"
-      subtitle="Gateway-backed advisor-use copilot actions, evidence projection, review posture, and publication boundaries."
+      title={ADVISORY_COPILOT_COPY.title}
+      subtitle={ADVISORY_COPILOT_COPY.subtitle}
     >
       {hasError ? (
         <Alert severity="warning" sx={{ mb: 1 }}>
-          Advisory copilot supportability or proposal scope is unavailable. No
-          fallback copilot action is shown.
+          {ADVISORY_COPILOT_COPY.unavailable}
         </Alert>
       ) : null}
       <div className={styles.copilotHeader}>
         <div className={styles.decisionPanel}>
           <div>
-            <Text variant="microLabel">Advisor Decision</Text>
+            <Text variant="microLabel">
+              {ADVISORY_COPILOT_COPY.decisionLabel}
+            </Text>
             <Text variant="subsectionTitle" as="h2">
-              Prepare source-backed advisor review
+              {ADVISORY_COPILOT_COPY.decisionTitle}
             </Text>
             <Text variant="secondary">
-              Use the selected proposal version and Advise-owned source projection before
-              relying on generated output.
+              {ADVISORY_COPILOT_COPY.decisionBody}
             </Text>
           </div>
-          <SemanticBadge tone="warn">Client-ready blocked</SemanticBadge>
+          <SemanticBadge tone="warn">
+            {ADVISORY_COPILOT_COPY.clientBoundary}
+          </SemanticBadge>
         </div>
-        <div className={styles.metricGrid} aria-label="Advisory copilot posture">
+        <div
+          className={styles.metricGrid}
+          aria-label={ADVISORY_COPILOT_COPY.statusAriaLabel}
+        >
           {model.supportabilityRows.map((row) => (
             <div className={styles.metricTile} key={row.label}>
               <Text variant="microLabel">{row.label}</Text>
-              <strong>{row.value}</strong>
-              <SemanticBadge tone={row.tone}>{row.label}</SemanticBadge>
+              <SemanticBadge tone={row.tone}>{row.value}</SemanticBadge>
             </div>
           ))}
         </div>
@@ -188,8 +193,8 @@ export default function AdvisoryCopilotWorkspace({
       {!model.proposal ? (
         <ScreenStatePanel
           kind="empty"
-          title="No advisory proposal in scope"
-          body={`No Gateway-backed advisory proposal is available for ${portfolioId}.`}
+          title={ADVISORY_COPILOT_COPY.noProposal.title}
+          body={ADVISORY_COPILOT_COPY.noProposal.body}
           surface="default"
         />
       ) : (
@@ -204,13 +209,13 @@ export default function AdvisoryCopilotWorkspace({
 
       {runMutation.error ? (
         <Alert severity="warning">
-          Advisory copilot action could not be completed through Gateway.
+          {ADVISORY_COPILOT_COPY.actionFailure}
         </Alert>
       ) : null}
 
       <SectionBlock
-        title="Source Evidence"
-        subtitle="Advise-owned evidence projection and unsupported-evidence posture."
+        title={ADVISORY_COPILOT_COPY.evidenceTitle}
+        subtitle={ADVISORY_COPILOT_COPY.evidenceSubtitle}
       >
         {model.packetSections.length > 0 ? (
           <div className={styles.evidenceGrid}>
@@ -225,8 +230,8 @@ export default function AdvisoryCopilotWorkspace({
         ) : (
           <ScreenStatePanel
             kind="empty"
-            title="No copilot evidence packet requested"
-            body="Select a copilot action to request an Advise-owned evidence packet through Gateway."
+            title={ADVISORY_COPILOT_COPY.evidenceEmpty.title}
+            body={ADVISORY_COPILOT_COPY.evidenceEmpty.body}
             surface="default"
           />
         )}
@@ -240,18 +245,20 @@ export default function AdvisoryCopilotWorkspace({
       </SectionBlock>
 
       <SectionBlock
-        title="Review Posture"
-        subtitle="Human review and client-publication boundary."
+        title={ADVISORY_COPILOT_COPY.reviewTitle}
+        subtitle={ADVISORY_COPILOT_COPY.reviewSubtitle}
       >
         <div className={styles.reviewPanel}>
           <div className={styles.reviewHeader}>
             <div>
-              <Text variant="microLabel">Run posture</Text>
+              <Text variant="microLabel">
+                {ADVISORY_COPILOT_COPY.reviewStatusLabel}
+              </Text>
               <Text variant="subsectionTitle" as="h2">
                 {model.runPosture}
               </Text>
               <Text variant="secondary">
-                Client publication: {model.clientReadyPosture}
+                Client use: {model.clientReadyPosture}
               </Text>
             </div>
             <Stack direction="row" spacing={1}>
@@ -279,7 +286,7 @@ export default function AdvisoryCopilotWorkspace({
             </div>
           ) : (
             <Text variant="secondary">
-              No advisor-use copilot output has been returned for this scope.
+              {ADVISORY_COPILOT_COPY.outputEmpty}
             </Text>
           )}
           {model.reviewGuidance.length > 0 ? (
@@ -298,7 +305,7 @@ export default function AdvisoryCopilotWorkspace({
           ) : null}
           {reviewMutation.error ? (
             <Alert severity="warning">
-              Internal review could not be recorded through Gateway.
+              {ADVISORY_COPILOT_COPY.reviewFailure}
             </Alert>
           ) : null}
         </div>
@@ -320,8 +327,8 @@ function AdvisoryCopilotActionGrid({
     return (
       <ScreenStatePanel
         kind="unavailable"
-        title="No supported copilot actions"
-        body="Gateway supportability has not declared any advisory copilot action families for this scope."
+        title={ADVISORY_COPILOT_COPY.unavailableActions.title}
+        body={ADVISORY_COPILOT_COPY.unavailableActions.body}
         surface="default"
       />
     );
