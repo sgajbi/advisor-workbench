@@ -32,6 +32,7 @@ import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./advisory-overview-workspace.module.css";
 
 const ADVISORY_OVERVIEW_WINDOW_SIZE = 8;
+const ADVISER_PRIORITIES_HEADING = "Adviser priorities";
 
 type SourceRefreshOutcome = {
   queryIdentity: string;
@@ -190,7 +191,7 @@ export default function AdvisoryOverviewWorkspace({
   if (sourcePosture.isInitialLoading) {
     return (
       <SectionBlock
-        title="Advisor Priorities"
+        title={ADVISER_PRIORITIES_HEADING}
         subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
         actions={sectionActions}
       >
@@ -216,7 +217,7 @@ export default function AdvisoryOverviewWorkspace({
   if (sourcePosture.isPermissionBlocked) {
     return (
       <SectionBlock
-        title="Advisor Priorities"
+        title={ADVISER_PRIORITIES_HEADING}
         subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
       >
         <ScreenStatePanel
@@ -233,7 +234,7 @@ export default function AdvisoryOverviewWorkspace({
   if (sourcePosture.isUnavailable) {
     return (
       <SectionBlock
-        title="Advisor Priorities"
+        title={ADVISER_PRIORITIES_HEADING}
         subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
         actions={sectionActions}
       >
@@ -276,7 +277,7 @@ export default function AdvisoryOverviewWorkspace({
 
   return (
     <SectionBlock
-      title="Advisor Priorities"
+      title={ADVISER_PRIORITIES_HEADING}
       subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
       actions={sectionActions}
     >
