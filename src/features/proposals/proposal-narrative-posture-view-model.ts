@@ -34,6 +34,13 @@ export type ProposalNarrativeWorkflowItem = {
 };
 
 const DISCUSSION_PACK_REPORT_TYPE = "PORTFOLIO_REVIEW";
+const DISCUSSION_PACK_STATUS_RANK = Object.freeze({
+  REQUESTED: 0,
+  ACCEPTED: 1,
+  READY: 2,
+} as const);
+
+type DiscussionPackStatus = keyof typeof DISCUSSION_PACK_STATUS_RANK;
 
 export function buildProposalNarrativePostureModel({
   proposalId,
@@ -88,6 +95,7 @@ export function buildProposalNarrativePostureModel({
         versions: [
           summaryReporting?.related_version_no,
           summaryPackage?.related_version_no,
+          summaryPackage?.proposal_version_no,
           reportingSummary?.related_version_no,
         ],
       }),
@@ -123,15 +131,13 @@ export function buildProposalNarrativePostureModel({
     reviewConfirmed ? reviewRecord?.review_state : null,
     "Not Reviewed",
   );
-  const reportPackageState = normalizeLabel(
-    summaryMatchesReviewedNarrative ? summaryPackage?.package_status : null,
-    "Not Requested",
-  );
-  const deliveryState = normalizeLabel(
-    summaryMatchesReviewedNarrative ? summaryReporting?.status : null,
-    "No Report",
-  );
-  const discussionPackRequested = reportPackageState !== "Not Requested";
+  const reportPackageState = summaryMatchesReviewedNarrative
+    ? formatDiscussionPackPackageState(summaryPackage?.package_status)
+    : "Not requested";
+  const deliveryState = summaryMatchesReviewedNarrative
+    ? formatDiscussionPackDeliveryState(summaryReporting?.status)
+    : "No request";
+  const discussionPackRequested = summaryMatchesReviewedNarrative;
   const nextAction = projectNarrativeNextAction({
     discussionPackRequested,
     eventCount,
@@ -251,7 +257,7 @@ function isCoherentDiscussionPackRecord({
   }
   const statusAndPackageAgree =
     (status === "REQUESTED" && packageStatus === "REQUESTED") ||
-    (status === "READY" &&
+    ((status === "ACCEPTED" || status === "READY") &&
       packageStatus === "INCLUDED_REVIEWED_NARRATIVE");
   return (
     statusAndPackageAgree &&
@@ -259,6 +265,45 @@ function isCoherentDiscussionPackRecord({
     typeof generatedAt === "string" &&
     isTimestampValue(generatedAt)
   );
+}
+
+function isDiscussionPackStatus(value: unknown): value is DiscussionPackStatus {
+  return typeof value === "string" && value in DISCUSSION_PACK_STATUS_RANK;
+}
+
+function discussionPackLifecycleIsMonotonic(
+  actionStatus: unknown,
+  refreshedStatus: unknown,
+): boolean {
+  return Boolean(
+    isDiscussionPackStatus(actionStatus) &&
+      isDiscussionPackStatus(refreshedStatus) &&
+      DISCUSSION_PACK_STATUS_RANK[refreshedStatus] >=
+        DISCUSSION_PACK_STATUS_RANK[actionStatus],
+  );
+}
+
+function formatDiscussionPackPackageState(value: unknown): string {
+  switch (value) {
+    case "REQUESTED":
+      return "Request recorded";
+    case "INCLUDED_REVIEWED_NARRATIVE":
+      return "Reviewed rationale included";
+    default:
+      return "Not requested";
+  }
+}
+
+function formatDiscussionPackDeliveryState(value: unknown): string {
+  switch (value) {
+    case "REQUESTED":
+    case "ACCEPTED":
+      return "Preparation requested";
+    case "READY":
+      return "Available for review";
+    default:
+      return "No request";
+  }
 }
 
 function deliveryEventsMatchActiveProposal({
@@ -600,6 +645,7 @@ export function confirmDiscussionPackRefresh({
     versions: [
       report.explanation?.related_version_no,
       report.explanation?.proposal_narrative_package?.related_version_no,
+      report.explanation?.proposal_narrative_package?.proposal_version_no,
     ],
   });
   const refreshedIdentity = resolveNarrativeIdentity({
@@ -610,6 +656,7 @@ export function confirmDiscussionPackRefresh({
     versions: [
       summary?.reporting?.related_version_no,
       summary?.reporting?.proposal_narrative_package?.related_version_no,
+      summary?.reporting?.proposal_narrative_package?.proposal_version_no,
       summary?.reporting_summary?.related_version_no,
     ],
   });
@@ -628,10 +675,10 @@ export function confirmDiscussionPackRefresh({
   const refreshedRequestId = summary?.reporting?.report_request_id;
   const actionStatus = report.status;
   const refreshedStatus = summary?.reporting?.status;
-  const lifecycleIsMonotonic =
-    (actionStatus === "REQUESTED" &&
-      (refreshedStatus === "REQUESTED" || refreshedStatus === "READY")) ||
-    (actionStatus === "READY" && refreshedStatus === "READY");
+  const lifecycleIsMonotonic = discussionPackLifecycleIsMonotonic(
+    actionStatus,
+    refreshedStatus,
+  );
   const artifactsAgree =
     report.report_reference_id === summary?.reporting?.report_reference_id &&
     report.generated_at === summary?.reporting?.generated_at;
