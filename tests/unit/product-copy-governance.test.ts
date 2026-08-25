@@ -430,6 +430,37 @@ describe("product-copy governance", () => {
     ]);
   });
 
+  it("terminates conservatively without crashing on composite alias cycles", () => {
+    const cases = [
+      {
+        expression: 'ready ? nextTitle : "Client review status"',
+        expectedRuleIds: ["transport-gateway", "auditor-posture"],
+      },
+      {
+        expression: 'nextTitle ?? "Client review status"',
+        expectedRuleIds: [],
+      },
+      {
+        expression: 'nextTitle || "Client review status"',
+        expectedRuleIds: [],
+      },
+    ];
+
+    for (const { expression, expectedRuleIds } of cases) {
+      const findings = scan(`
+        const panelTitle = ${expression};
+        const nextTitle = panelTitle;
+        const copy = { panelTitle };
+        const { panelTitle: title = "Gateway posture" } = copy;
+        export function Example() {
+          return <Panel title={title} />;
+        }
+      `);
+
+      expect(findings.map((finding) => finding.ruleId)).toEqual(expectedRuleIds);
+    }
+  });
+
   it("resolves nested and object-rest destructured copy", () => {
     const findings = scan(`
       const copy = {
