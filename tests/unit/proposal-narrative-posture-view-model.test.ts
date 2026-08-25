@@ -115,6 +115,57 @@ describe("proposal narrative posture view model", () => {
     expect(model.nextActionTitle).toBe("Request the discussion pack");
   });
 
+  it("does not let an earlier-version discussion pack hide the current action", () => {
+    const model = buildProposalNarrativePostureModel({
+      review: {
+        narrative_review: {
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:narrative-current",
+        },
+      },
+      summary: {
+        reporting: {
+          status: "READY",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-earlier",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+    expect(model.nextActionTitle).toBe("Request the discussion pack");
+  });
+
+  it("recognizes only a discussion pack correlated to the reviewed narrative", () => {
+    const model = buildProposalNarrativePostureModel({
+      review: {
+        narrative_review: {
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:narrative-current",
+        },
+      },
+      summary: {
+        reporting: {
+          status: "READY",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-current",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(false);
+    expect(model.reportPackageState).toBe("Included Reviewed Narrative");
+    expect(model.deliveryState).toBe("Ready");
+  });
+
   it("does not authorize a discussion-pack request from delivery-summary fields", () => {
     const model = buildProposalNarrativePostureModel({
       summary: {
@@ -191,13 +242,32 @@ describe("proposal narrative posture view model", () => {
         summary: {
           reporting: {
             include_reviewed_narrative: true,
-            proposal_narrative_package: { package_status: "REQUESTED" },
+            proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-001",
+            },
           },
         },
       }),
     ).not.toThrow();
     expect(() => confirmDiscussionPackRefresh({ report, summary: {} })).toThrow(
-      "refreshed preparation status was not available",
+      "refreshed preparation status for the reviewed proposal version was not available",
+    );
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        report,
+        summary: {
+          reporting: {
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-earlier",
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "refreshed preparation status for the reviewed proposal version was not available",
     );
   });
 
