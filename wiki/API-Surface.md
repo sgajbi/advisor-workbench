@@ -168,10 +168,12 @@ promote dormant labels into product ownership just because historical route file
   using the current caller identity, a human business rationale, the exact Manage retirement or
   supersession fields, and an existing active replacement version where applicable. It refreshes
   campaign definitions and exact lifecycle evidence only after an accepted command, and renders
-  returned status, actor, reason, replacement version, correlation id, content hash, reason codes,
+  returned status, exact actor reference beside its readable business role, reason, replacement
+  version, correlation id, content hash, reason codes,
   and operating boundaries without browser-owned lifecycle truth. It also opens append-only launch history from
   `/api/v1/dpm/command-center/waves/campaign-definitions/{campaign_id}/versions/{campaign_version}/launch-history`
-  and displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+  and displays Manage-recorded wave id, launched-at time, launched-by business role plus exact
+  actor reference, requested as-of date,
   correlation id, idempotency key, count, total count, limit, offset, and operating boundaries
   without recomputing launch state, membership, readiness, idempotency, maker-checker, trade
   approval, order generation, routing, fills, settlement, or OMS execution. It first checks

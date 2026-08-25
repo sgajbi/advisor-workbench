@@ -55,6 +55,7 @@ reading path.
 | Generated outcome commentary | **AI-assisted review summary** | Internal PM, CIO, and control commentary returned through the governed AI workflow with human review required. | Do not call the technical action **AI narrative** in the productive path or present generated text as advice, approval, source evidence, or client-ready material. |
 | Benchmark identity | **Business benchmark label** | The source-provided business name is primary. | Put benchmark codes in support detail, not the primary rail or metric label. |
 | Technical identity | **Reference** or a precise business reference label | Show a source identifier only when support, reconciliation, or audit needs it, with copy affordance where useful. | Raw correlation IDs, reason codes, hashes, endpoint names, and service names never lead the business path. |
+| Audit actor identity | **Business role · exact actor reference** | In append-only operational evidence, show the readable role and retain the exact source actor so supervisors can distinguish operators. If the role is unknown, preserve the exact reference without guessing. | A role-only summary is allowed outside audit evidence; never replace distinct audit actors with one shared role label. |
 | Mandate service model | **Discretionary**, **Advisory**, **Execution only** | Render only the exact service model supplied by the owning source. | Never infer execution-only from absent advice, data, or controls; current Workbench support remains limited to admitted source values. |
 
 ## Business-boundary rules
@@ -90,6 +91,8 @@ browser.
 Suitability review is the adviser workflow; policy evidence supports that workflow. Proposal is the
 advice artefact. Rebalance instruction, wave, and campaign express increasing operational scope.
 Display actions remain governed by source capabilities and permissions, never by vocabulary alone.
+Role-first decision summaries remain concise, but append-only launch and lifecycle evidence keeps
+the exact source actor beside any readable business role.
 
 ### Outcome review truth
 

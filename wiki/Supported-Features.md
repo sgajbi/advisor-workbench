@@ -327,10 +327,12 @@ Implemented:
 10. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
     bounded Gateway-backed retire/supersede controls that use current caller identity, require a
     business rationale and explicit consequence confirmation, and limit supersession to an existing
-    active version; accepted commands refresh definitions and exact lifecycle evidence without
+    active version; accepted commands refresh definitions and lifecycle evidence with readable
+    roles plus exact source actor references without
     inferring lifecycle state or recalculating membership locally,
 11. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
-    displays Manage-recorded wave id, launched-at time, launched-by actor, requested as-of date,
+    displays Manage-recorded wave id, launched-at time, launched-by business role plus exact actor
+    reference, requested as-of date,
     correlation id, idempotency key, page counts, and operating boundaries without recomputing launch
     state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
     routing, fills, settlement, or OMS execution,
