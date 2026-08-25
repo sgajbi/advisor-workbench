@@ -211,14 +211,7 @@ function isAdvisorReviewConfirmed(
   ) {
     return false;
   }
-  switch (reviewRecord.review_state) {
-    case "APPROVED":
-    case "APPROVED_FOR_ADVISOR_USE":
-    case "REVIEWED":
-      return true;
-    default:
-      return false;
-  }
+  return reviewRecord.review_state === "APPROVED_FOR_ADVISOR_USE";
 }
 
 function isSupportedReportState(value: unknown): value is string {
