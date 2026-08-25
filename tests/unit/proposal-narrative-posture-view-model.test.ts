@@ -7,12 +7,16 @@ import {
 } from "../../src/features/proposals/proposal-narrative-posture-view-model";
 import { formatProposalEvidenceHash } from "../../src/features/proposals/proposal-evidence-formatters";
 
+const activeProposal = { proposalId: "pp_1", versionNo: 2 } as const;
+
 describe("proposal narrative posture view model", () => {
   it("prioritizes reviewed narrative and report-package posture from advisory payloads", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       review: {
         policy_version: "proposal-narrative-deterministic.v1",
         narrative_review: {
+          proposal_id: "pp_1",
           proposal_version_no: 2,
           review_state: "APPROVED_FOR_ADVISOR_USE",
           source_narrative_hash: "sha256:narrative-001",
@@ -77,6 +81,7 @@ describe("proposal narrative posture view model", () => {
 
   it("fails closed when a delivery event omits timezone evidence", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       events: {
         event_count: 1,
         latest_event: {
@@ -90,7 +95,7 @@ describe("proposal narrative posture view model", () => {
   });
 
   it("keeps missing posture explicit instead of inventing client-ready state", () => {
-    const model = buildProposalNarrativePostureModel({});
+    const model = buildProposalNarrativePostureModel(activeProposal);
 
     expect(model.reviewState).toBe("Not Reviewed");
     expect(model.reviewTone).toBe("warn");
@@ -105,8 +110,10 @@ describe("proposal narrative posture view model", () => {
 
   it("admits a discussion-pack request only after the source confirms advisor review", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       review: {
         narrative_review: {
+          proposal_id: "pp_1",
           proposal_version_no: 2,
           review_state: "APPROVED_FOR_ADVISOR_USE",
           source_narrative_hash: "sha256:narrative-001",
@@ -118,10 +125,31 @@ describe("proposal narrative posture view model", () => {
     expect(model.nextActionTitle).toBe("Request the discussion pack");
   });
 
-  it("does not let an earlier-version discussion pack hide the current action", () => {
+  it("does not admit a review returned for another proposal version", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       review: {
         narrative_review: {
+          proposal_id: "pp_1",
+          proposal_version_no: 1,
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:stable-narrative",
+        },
+      },
+    });
+
+    expect(model.reviewState).toBe("Not Reviewed");
+    expect(model.sourceNarrativeHash).toBeNull();
+    expect(model.canRequestDiscussionPack).toBe(false);
+    expect(model.nextActionTitle).toBe("Record advisor review");
+  });
+
+  it("does not let an earlier-version discussion pack hide the current action", () => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      review: {
+        narrative_review: {
+          proposal_id: "pp_1",
           proposal_version_no: 2,
           review_state: "APPROVED_FOR_ADVISOR_USE",
           source_narrative_hash: "sha256:narrative-current",
@@ -147,8 +175,10 @@ describe("proposal narrative posture view model", () => {
 
   it("recognizes only a discussion pack correlated to the reviewed narrative", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       review: {
         narrative_review: {
+          proposal_id: "pp_1",
           proposal_version_no: 2,
           review_state: "APPROVED_FOR_ADVISOR_USE",
           source_narrative_hash: "sha256:narrative-current",
@@ -174,8 +204,10 @@ describe("proposal narrative posture view model", () => {
 
   it("requires proposal version correlation even when narrative hashes match", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       review: {
         narrative_review: {
+          proposal_id: "pp_1",
           proposal_version_no: 2,
           review_state: "APPROVED_FOR_ADVISOR_USE",
           source_narrative_hash: "sha256:stable-narrative",
@@ -201,8 +233,98 @@ describe("proposal narrative posture view model", () => {
     expect(model.nextActionTitle).toBe("Request the discussion pack");
   });
 
+  it("rejects conflicting outer and package versions in summary evidence", () => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      review: {
+        narrative_review: {
+          proposal_id: "pp_1",
+          proposal_version_no: 2,
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:stable-narrative",
+        },
+      },
+      summary: {
+        reporting: {
+          related_version_no: 2,
+          status: "READY",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 1,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:stable-narrative",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+  });
+
+  it("rejects conflicting outer and package versions in report evidence", () => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      review: {
+        narrative_review: {
+          proposal_id: "pp_1",
+          proposal_version_no: 2,
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:stable-narrative",
+        },
+      },
+      report: {
+        status: "REQUESTED",
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 1,
+            package_status: "REQUESTED",
+            source_narrative_hash: "sha256:stable-narrative",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+  });
+
+  it("does not treat a package without reviewed rationale as requested", () => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      review: {
+        narrative_review: {
+          proposal_id: "pp_1",
+          proposal_version_no: 2,
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:stable-narrative",
+        },
+      },
+      summary: {
+        reporting: {
+          related_version_no: 2,
+          status: "REQUESTED",
+          include_reviewed_narrative: false,
+          proposal_narrative_package: {
+            package_status: "REQUESTED",
+            source_narrative_hash: "sha256:stable-narrative",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+  });
+
   it("does not authorize a discussion-pack request from delivery-summary fields", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       summary: {
         reporting: {
           status: "NOT_REQUESTED",
@@ -230,6 +352,7 @@ describe("proposal narrative posture view model", () => {
 
   it("does not present an earlier discussion pack as current rationale evidence", () => {
     const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
       summary: {
         reporting: {
           status: "READY",
@@ -270,6 +393,7 @@ describe("proposal narrative posture view model", () => {
 
     expect(() =>
       confirmNarrativeReviewRefresh({
+        ...activeProposal,
         review,
         refreshedReview: {
           narrative_review: {
@@ -280,6 +404,7 @@ describe("proposal narrative posture view model", () => {
     ).not.toThrow();
     expect(() =>
       confirmNarrativeReviewRefresh({
+        ...activeProposal,
         review,
         refreshedReview: {
           narrative_review: {
@@ -289,10 +414,23 @@ describe("proposal narrative posture view model", () => {
         },
       }),
     ).toThrow("refreshed proposal evidence did not confirm it");
+    expect(() =>
+      confirmNarrativeReviewRefresh({
+        ...activeProposal,
+        review,
+        refreshedReview: {
+          narrative_review: {
+            ...review.narrative_review,
+            proposal_version_no: 1,
+          },
+        },
+      }),
+    ).toThrow("refreshed proposal evidence did not confirm it");
   });
 
   it("requires refreshed preparation status before confirming a discussion-pack request", () => {
     const report = {
+      report_request_id: "report-001",
       status: "READY",
       explanation: {
         related_version_no: 2,
@@ -306,9 +444,11 @@ describe("proposal narrative posture view model", () => {
 
     expect(() =>
       confirmDiscussionPackRefresh({
+        versionNo: 2,
         report,
         summary: {
           reporting: {
+            report_request_id: "report-001",
             related_version_no: 2,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
@@ -319,14 +459,18 @@ describe("proposal narrative posture view model", () => {
         },
       }),
     ).not.toThrow();
-    expect(() => confirmDiscussionPackRefresh({ report, summary: {} })).toThrow(
+    expect(() =>
+      confirmDiscussionPackRefresh({ versionNo: 2, report, summary: {} }),
+    ).toThrow(
       "refreshed preparation status for the reviewed proposal version was not available",
     );
     expect(() =>
       confirmDiscussionPackRefresh({
+        versionNo: 2,
         report,
         summary: {
           reporting: {
+            report_request_id: "report-001",
             related_version_no: 2,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
@@ -341,12 +485,72 @@ describe("proposal narrative posture view model", () => {
     );
     expect(() =>
       confirmDiscussionPackRefresh({
+        versionNo: 2,
         report,
         summary: {
           reporting: {
+            report_request_id: "report-001",
             related_version_no: 1,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-001",
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "refreshed preparation status for the reviewed proposal version was not available",
+    );
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        versionNo: 2,
+        report,
+        summary: {
+          reporting: {
+            report_request_id: "report-earlier",
+            related_version_no: 2,
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-001",
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "refreshed preparation status for the reviewed proposal version was not available",
+    );
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        versionNo: 2,
+        report,
+        summary: {
+          reporting: {
+            report_request_id: "report-001",
+            related_version_no: 2,
+            include_reviewed_narrative: false,
+            proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-001",
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "refreshed preparation status for the reviewed proposal version was not available",
+    );
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        versionNo: 2,
+        report,
+        summary: {
+          reporting: {
+            report_request_id: "report-001",
+            related_version_no: 2,
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              related_version_no: 1,
               package_status: "REQUESTED",
               source_narrative_hash: "sha256:narrative-001",
             },
