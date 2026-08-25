@@ -381,6 +381,55 @@ describe("product-copy governance", () => {
     ]);
   });
 
+  it("resolves local aliases while proving composite values defined", () => {
+    expect(
+      scan(`
+        const clientLabel = "Client review status";
+        const portfolioLabel = "Portfolio review status";
+        const businessLabel = "Client review status";
+        const zero = 0;
+        const copy = {
+          panelTitle: ready ? clientLabel : portfolioLabel,
+          panelBody: maybeTitle ?? businessLabel,
+          summary: maybeTitle || businessLabel,
+          label: zero ?? undefined,
+        };
+        const {
+          panelTitle = "Gateway posture",
+          panelBody = "HTTP status unavailable",
+          summary = "Gateway status",
+          label = "Gateway response",
+        } = copy;
+        export function Example() {
+          return <Panel title={panelTitle} body={panelBody} summary={summary} label={label} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("keeps defaults reachable through explicitly undefined aliases", () => {
+    const findings = scan(`
+      const absent = undefined;
+      const copy = {
+        panelTitle: ready ? "Client review status" : absent,
+        panelBody: absent ?? absent,
+      };
+      const {
+        panelTitle = "Gateway posture",
+        panelBody = "HTTP status unavailable",
+      } = copy;
+      export function Example() {
+        return <Panel title={panelTitle} body={panelBody} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
   it("resolves nested and object-rest destructured copy", () => {
     const findings = scan(`
       const copy = {
