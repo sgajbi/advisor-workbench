@@ -124,6 +124,63 @@ export function scanProductCopySource({ filePath, sourceText }) {
 
   function inspectExpression(expression, context) {
     const resolvingDeclarations = new Set();
+    const STATIC_PROPERTY_ABSENT = Symbol("static-property-absent");
+    const STATIC_PROPERTY_UNKNOWN = Symbol("static-property-unknown");
+
+    function resolveObjectProperty(owner, propertyName, resolvingObjects = new Set()) {
+      if (resolvingObjects.has(owner)) {
+        return STATIC_PROPERTY_UNKNOWN;
+      }
+      resolvingObjects.add(owner);
+      for (let index = owner.properties.length - 1; index >= 0; index -= 1) {
+        const property = owner.properties[index];
+        if (ts.isSpreadAssignment(property)) {
+          const spreadOwner = resolveStaticExpression(property.expression);
+          if (!spreadOwner || !ts.isObjectLiteralExpression(spreadOwner)) {
+            resolvingObjects.delete(owner);
+            return STATIC_PROPERTY_UNKNOWN;
+          }
+          const spreadProperty = resolveObjectProperty(
+            spreadOwner,
+            propertyName,
+            resolvingObjects,
+          );
+          if (spreadProperty === STATIC_PROPERTY_UNKNOWN) {
+            resolvingObjects.delete(owner);
+            return STATIC_PROPERTY_UNKNOWN;
+          }
+          if (spreadProperty !== STATIC_PROPERTY_ABSENT) {
+            resolvingObjects.delete(owner);
+            return spreadProperty;
+          }
+          continue;
+        }
+        if (
+          ts.isPropertyAssignment(property)
+          || ts.isShorthandPropertyAssignment(property)
+        ) {
+          const staticName = staticObjectPropertyName(property.name);
+          if (staticName === null) {
+            resolvingObjects.delete(owner);
+            return STATIC_PROPERTY_UNKNOWN;
+          }
+          if (staticName === propertyName) {
+            resolvingObjects.delete(owner);
+            return ts.isPropertyAssignment(property)
+              ? property.initializer
+              : property.name;
+          }
+          continue;
+        }
+        const staticName = staticObjectPropertyName(property.name);
+        if (staticName === null || staticName === propertyName) {
+          resolvingObjects.delete(owner);
+          return STATIC_PROPERTY_UNKNOWN;
+        }
+      }
+      resolvingObjects.delete(owner);
+      return STATIC_PROPERTY_ABSENT;
+    }
 
     function resolveStaticExpression(node) {
       const unwrapped = unwrapCopyExpression(node);
@@ -146,17 +203,14 @@ export function scanProductCopySource({ filePath, sourceText }) {
         if (!propertyName || !owner || !ts.isObjectLiteralExpression(owner)) {
           return undefined;
         }
-        const matches = owner.properties.filter((property) =>
-          (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property))
-          && propertyNameText(property.name, sourceFile) === propertyName,
-        );
-        if (matches.length !== 1) {
+        const property = resolveObjectProperty(owner, propertyName);
+        if (
+          property === STATIC_PROPERTY_ABSENT
+          || property === STATIC_PROPERTY_UNKNOWN
+        ) {
           return undefined;
         }
-        const match = matches[0];
-        return resolveStaticExpression(
-          ts.isPropertyAssignment(match) ? match.initializer : match.name,
-        );
+        return resolveStaticExpression(property);
       }
       return unwrapped;
     }
@@ -294,6 +348,25 @@ function accessPropertyName(node) {
     (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))
     ? argument.text
     : null;
+}
+
+function staticObjectPropertyName(name) {
+  if (
+    ts.isIdentifier(name)
+    || ts.isStringLiteral(name)
+    || ts.isNumericLiteral(name)
+  ) {
+    return name.text;
+  }
+  if (
+    ts.isComputedPropertyName(name)
+    && (ts.isStringLiteral(name.expression)
+      || ts.isNoSubstitutionTemplateLiteral(name.expression)
+      || ts.isNumericLiteral(name.expression))
+  ) {
+    return name.expression.text;
+  }
+  return null;
 }
 
 function collectLocalConstantScopes(sourceFile) {
