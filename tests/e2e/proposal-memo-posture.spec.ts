@@ -29,6 +29,8 @@ async function mockProposalDetail(
   let sourceState = "DRAFT";
   let narrativeReviewState = "NOT_REVIEWED";
   let narrativeHash: string | null = null;
+  let narrativeReviewedBy: string | null = null;
+  let narrativeReviewedAt: string | null = null;
   let discussionPackRequested = false;
   const initialMemoState = options.memoInitialState ?? "complete";
   let memoReviewed = initialMemoState !== "unreviewed";
@@ -165,16 +167,32 @@ async function mockProposalDetail(
       narrativeHash = options.narrativeRefreshMismatch
         ? "sha256:mismatched-narrative"
         : "sha256:narrative-001";
+      narrativeReviewedBy = "advisor_1";
+      narrativeReviewedAt = "2026-05-24T10:01:30Z";
       await route.fulfill({
         json: {
           correlation_id: "corr-narrative-review",
           contract_version: "v1",
           data: {
             policy_version: "proposal-narrative-deterministic.v1",
-            narrative_review: {
-              review_state: "APPROVED_FOR_ADVISOR_USE",
-              source_narrative_hash: "sha256:narrative-001",
-            },
+            narrative_review: narrativeReviewRecord({
+              sourceNarrativeHash: "sha256:narrative-001",
+            }),
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/pp_1/versions/2/narrative",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-narrative",
+          contract_version: "v1",
+          data: {
+            policy_version: "proposal-narrative-deterministic.v1",
+            narrative_review: narrativeReviewRecord(),
           },
         },
       });
@@ -356,6 +374,26 @@ async function mockProposalDetail(
       status: "RECORDED",
       review_action: "APPROVE_FOR_ADVISOR_USE",
       source_memo_hash: "sha256:memo-001",
+    };
+  }
+  function narrativeReviewRecord({
+    sourceNarrativeHash = narrativeHash,
+  }: { sourceNarrativeHash?: string | null } = {}) {
+    return {
+      ...(narrativeReviewState === "APPROVED_FOR_ADVISOR_USE"
+        ? {
+            review_id: "narrative-review-001",
+            action: "APPROVE",
+            reviewed_by: narrativeReviewedBy,
+            reviewed_at: narrativeReviewedAt,
+          }
+        : {}),
+      proposal_id: "pp_1",
+      proposal_version_no: 2,
+      narrative_id: "narrative-001",
+      review_state: narrativeReviewState,
+      source_narrative_hash: sourceNarrativeHash,
+      client_ready_status: "NOT_REQUESTED",
     };
   }
   function reportPosture() {
