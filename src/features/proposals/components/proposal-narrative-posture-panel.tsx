@@ -176,6 +176,7 @@ export default function ProposalNarrativePosturePanel({
 
   return (
     <SectionBlock
+      id="proposal-narrative-review"
       className={styles.panel}
       title="Narrative review and discussion pack"
       subtitle="Confirm the recommendation rationale, record advisor review, then request client-discussion material."
