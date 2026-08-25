@@ -20,7 +20,6 @@ import {
   buildCreateMemoPayload,
   buildMemoActionIdempotencyKey,
   buildMemoReportPackagePayload,
-  DEFAULT_MEMO_ADVISOR_ID,
 } from "../proposal-memo-action-payloads";
 import {
   buildProposalMemoPostureModel,
@@ -47,7 +46,7 @@ const MEMO_ACTION_FAILURE_COPY: Record<PendingMemoAction, string> = {
 
 export default function ProposalMemoPosturePanel({ proposalId, currentVersionNo }: Props) {
   const [versionNo, setVersionNo] = useState(currentVersionNo ?? 1);
-  const [advisorId, setAdvisorId] = useState(DEFAULT_MEMO_ADVISOR_ID);
+  const [advisorId, setAdvisorId] = useState("");
   const [reviewReason, setReviewReason] = useState("");
   const [audience, setAudience] = useState<ProposalMemoProjectionAudience>("ADVISOR");
   const [pendingAction, setPendingAction] = useState<PendingMemoAction | null>(null);

@@ -6,15 +6,17 @@ import type {
 } from "./types";
 import { buildProposalActionIdempotencyKey } from "./proposal-workflow-copy";
 
-export const DEFAULT_MEMO_ADVISOR_ID = "advisor_1";
-
 export const ADVISOR_MEMO_COMMENTARY_SECTIONS = [
   "EXECUTIVE_SUMMARY",
   "LIMITATIONS_AND_DISCLOSURES",
 ] as const;
 
-export function resolveMemoAdvisorId(advisorId: string): string {
-  return advisorId.trim() || DEFAULT_MEMO_ADVISOR_ID;
+export function requireMemoActorReference(actorReference: string): string {
+  const normalizedReference = actorReference.trim();
+  if (!normalizedReference) {
+    throw new Error("An advisor or reviewer reference is required.");
+  }
+  return normalizedReference;
 }
 
 export type MemoActionIdempotencyOperation =
@@ -37,7 +39,7 @@ export function buildMemoActionIdempotencyKey({
 
 export function buildCreateMemoPayload(advisorId: string): ProposalMemoCreateRequest {
   return {
-    created_by: resolveMemoAdvisorId(advisorId),
+    created_by: requireMemoActorReference(advisorId),
     lifecycle_status: "DRAFT",
     reason: { source: "workbench", purpose: "advisor memo review" },
   };
@@ -54,7 +56,7 @@ export function buildApproveMemoPayload({
 }): ProposalMemoReviewRequest {
   return {
     action: "APPROVE_FOR_ADVISOR_USE",
-    reviewed_by: resolveMemoAdvisorId(advisorId),
+    reviewed_by: requireMemoActorReference(advisorId),
     reason: reviewReason.trim(),
     source_memo_hash: memoHash,
     client_ready_release_requested: false,
@@ -69,7 +71,7 @@ export function buildMemoReportPackagePayload({
   memoHash: string;
 }): ProposalMemoReportPackageRequest {
   return {
-    requested_by: resolveMemoAdvisorId(advisorId),
+    requested_by: requireMemoActorReference(advisorId),
     source_memo_hash: memoHash,
     requested_output_formats: ["pdf"],
     client_ready_document_requested: false,
@@ -85,7 +87,7 @@ export function buildAdvisorCommentaryPayload({
   memoHash: string;
 }): ProposalMemoAdvisorCommentaryRequest {
   return {
-    requested_by: resolveMemoAdvisorId(advisorId),
+    requested_by: requireMemoActorReference(advisorId),
     source_memo_hash: memoHash,
     requested_sections: [...ADVISOR_MEMO_COMMENTARY_SECTIONS],
     reason: { source: "workbench", purpose: "advisor-use commentary" },

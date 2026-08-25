@@ -6,13 +6,15 @@ import {
   buildCreateMemoPayload,
   buildMemoActionIdempotencyKey,
   buildMemoReportPackagePayload,
-  resolveMemoAdvisorId,
+  requireMemoActorReference,
 } from "../../src/features/proposals/proposal-memo-action-payloads";
 
 describe("proposal memo action payloads", () => {
-  it("normalizes advisor identity with a governed fallback", () => {
-    expect(resolveMemoAdvisorId(" advisor_9 ")).toBe("advisor_9");
-    expect(resolveMemoAdvisorId("   ")).toBe("advisor_1");
+  it("normalizes an explicit actor reference and rejects missing identity", () => {
+    expect(requireMemoActorReference(" advisor_9 ")).toBe("advisor_9");
+    expect(() => requireMemoActorReference("   ")).toThrow(
+      "An advisor or reviewer reference is required.",
+    );
   });
 
   it("builds domain-named idempotency keys for memo actions", () => {
@@ -51,11 +53,11 @@ describe("proposal memo action payloads", () => {
   it("builds report package and commentary payloads with source memo hash boundaries", () => {
     expect(
       buildMemoReportPackagePayload({
-        advisorId: "",
+        advisorId: " advisor_9 ",
         memoHash: "sha256:memo-001",
       }),
     ).toEqual({
-      requested_by: "advisor_1",
+      requested_by: "advisor_9",
       source_memo_hash: "sha256:memo-001",
       requested_output_formats: ["pdf"],
       client_ready_document_requested: false,
