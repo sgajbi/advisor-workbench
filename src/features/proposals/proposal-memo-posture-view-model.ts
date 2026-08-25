@@ -75,9 +75,11 @@ type MemoLineageItem = NonNullable<ProposalMemoLineageData["memos"]>[number];
 type BuildProposalMemoPostureModelInput = {
   lineageData?: ProposalMemoLineageData | null;
   memoData?: ProposalMemoData | null;
+  proposalId: string;
   projectionData?: ProposalMemoProjectionData | null;
   replayData?: ProposalMemoReplayEvidenceData | null;
   selectedAudience: ProposalMemoProjectionAudience;
+  versionNo: number | null;
 };
 
 const MEMO_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze({
@@ -115,54 +117,115 @@ const COMMENTARY_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze
 export function buildProposalMemoPostureModel({
   lineageData,
   memoData,
+  proposalId,
   projectionData,
   replayData,
   selectedAudience,
+  versionNo,
 }: BuildProposalMemoPostureModelInput): ProposalMemoPostureModel {
-  const memoHash = firstString(memoData, ["memo_hash"]);
-  const hasMemo = Boolean(memoData?.memo_id && memoHash);
-  const latestMemo = selectLatestMemo(lineageData, memoData?.memo_id, memoHash);
-  const replayHash = firstString(replayData?.hashes, ["memo_hash"]);
-  const reviewConfirmed = isReviewConfirmed(memoData?.review_posture, memoHash);
+  const memoMatchesActiveVersion = memoSourceMatchesActiveVersion(
+    memoData,
+    proposalId,
+    versionNo,
+  );
+  const projectionMatchesActiveVersion = projectionSourceMatchesActiveVersion(
+    projectionData,
+    proposalId,
+    versionNo,
+  );
+  const replayMatchesActiveVersion = replaySourceMatchesActiveVersion(
+    replayData,
+    proposalId,
+    versionNo,
+  );
+  const memoHash = memoMatchesActiveVersion
+    ? firstString(memoData, ["memo_hash"])
+    : null;
+  const hasMemo = Boolean(memoMatchesActiveVersion && memoData?.memo_id && memoHash);
+  const latestMemo = selectCurrentMemo(
+    lineageData,
+    memoData?.memo_id,
+    memoHash,
+    proposalId,
+    versionNo,
+  );
+  const lineageMatchesActiveVersion = Boolean(latestMemo);
+  const replayHash = replayMatchesActiveVersion
+    ? firstString(replayData?.hashes, ["memo_hash"])
+    : null;
+  const reviewConfirmed = Boolean(
+    memoMatchesActiveVersion && isReviewConfirmed(memoData?.review_posture, memoHash),
+  );
   const reportPackageRecorded = isSourceEventRecorded(
-    memoData?.report_package_posture,
+    memoMatchesActiveVersion ? memoData?.report_package_posture : undefined,
     memoHash,
   );
   const commentaryRecorded = isSourceEventRecorded(
-    memoData?.ai_commentary_posture,
+    memoMatchesActiveVersion ? memoData?.ai_commentary_posture : undefined,
     memoHash,
   );
   const archiveRefCount = latestMemo?.archive_refs?.length ?? 0;
   const projectionAudience = proposalMemoProjectionAudienceLabel(
-    projectionData?.audience,
+    projectionMatchesActiveVersion ? projectionData?.audience : undefined,
     selectedAudience,
   );
   const sourceEvidenceAligned = Boolean(
     hasMemo
+      && memoMatchesActiveVersion
+      && projectionMatchesActiveVersion
+      && lineageMatchesActiveVersion
+      && replayMatchesActiveVersion
       && projectionData?.memo_hash === memoHash
+      && projectionData?.memo_id === memoData?.memo_id
       && latestMemo?.memo_hash === memoHash
+      && latestMemo?.memo_id === memoData?.memo_id
       && replayHash === memoHash
-      && lineageData?.lineage_complete !== false,
+      && replayData?.subject?.memo_id === memoData?.memo_id
+      && lineageData?.lineage_complete === true,
   );
   const reportStatus =
-    firstString(memoData?.report_package_posture, ["report_status", "report_package_status"])
-    ?? firstString(memoData?.report_package_posture, ["status"]);
+    firstString(
+      memoMatchesActiveVersion ? memoData?.report_package_posture : undefined,
+      ["report_status", "report_package_status"],
+    )
+    ?? firstString(
+      memoMatchesActiveVersion ? memoData?.report_package_posture : undefined,
+      ["status"],
+    );
   const commentaryStatus =
-    firstString(memoData?.ai_commentary_posture, ["ai_status"])
-    ?? firstString(memoData?.ai_commentary_posture, ["status"]);
-  const reviewStatus = firstString(memoData?.review_posture, ["status"]);
+    firstString(
+      memoMatchesActiveVersion ? memoData?.ai_commentary_posture : undefined,
+      ["ai_status"],
+    )
+    ?? firstString(
+      memoMatchesActiveVersion ? memoData?.ai_commentary_posture : undefined,
+      ["status"],
+    );
+  const reviewStatus = firstString(
+    memoMatchesActiveVersion ? memoData?.review_posture : undefined,
+    ["status"],
+  );
   const clientDraftPublication =
-    firstString(projectionData?.projection_posture, ["client_ready_publication"])
-    ?? firstString(projectionData?.projection, ["client_ready_publication"]);
+    firstString(
+      projectionMatchesActiveVersion ? projectionData?.projection_posture : undefined,
+      ["client_ready_publication"],
+    )
+    ?? firstString(
+      projectionMatchesActiveVersion ? projectionData?.projection : undefined,
+      ["client_ready_publication"],
+    );
   const eventCount = Math.max(
-    memoData?.event_count ?? memoData?.audit_events?.length ?? 0,
+    memoMatchesActiveVersion
+      ? (memoData?.event_count ?? memoData?.audit_events?.length ?? 0)
+      : 0,
     latestMemo?.event_count ?? 0,
-    replayData?.audit_events?.length ?? 0,
+    replayMatchesActiveVersion ? (replayData?.audit_events?.length ?? 0) : 0,
   );
   const nextAction = projectMemoNextAction({
     hasMemo,
     reportPackageRecorded,
     reviewConfirmed,
+    sourceEvidenceAligned,
   });
   const reviewPostureLabel = reviewConfirmed
     ? "Approved for advisor use"
@@ -180,9 +243,10 @@ export function buildProposalMemoPostureModel({
 
   return {
     archiveRefCount,
-    canRecordReview: hasMemo && !reviewConfirmed,
-    canRequestCommentary: reviewConfirmed,
-    canRequestReportPackage: reviewConfirmed && !reportPackageRecorded,
+    canRecordReview: sourceEvidenceAligned && !reviewConfirmed,
+    canRequestCommentary: sourceEvidenceAligned && reviewConfirmed,
+    canRequestReportPackage:
+      sourceEvidenceAligned && reviewConfirmed && !reportPackageRecorded,
     clientDraftPublicationLabel: sourceLabel(
       clientDraftPublication,
       { BLOCKED: "Unavailable" },
@@ -200,7 +264,9 @@ export function buildProposalMemoPostureModel({
     nextActionKey: nextAction.key,
     nextActionTitle: nextAction.title,
     projectionAudienceLabel: projectionAudience,
-    projectionSectionCount: projectionData?.sections?.length ?? 0,
+    projectionSectionCount: projectionMatchesActiveVersion
+      ? (projectionData?.sections?.length ?? 0)
+      : 0,
     reportArchiveRefsLabel: proposalMemoArchiveRefsLabel(latestMemo?.archive_refs),
     reportPackageRecorded,
     reportPackageStatusLabel,
@@ -209,7 +275,7 @@ export function buildProposalMemoPostureModel({
     reviewPostureLabel,
     sourceEvidenceAligned,
     statusLabel: sourceLabel(
-      memoData?.memo_status,
+      memoMatchesActiveVersion ? memoData?.memo_status : undefined,
       MEMO_STATUS_LABELS,
       hasMemo ? "Review required" : "Memo not prepared",
     ),
@@ -243,7 +309,7 @@ export function buildProposalMemoPostureModel({
         label: "Record and audience",
         value: sourceEvidenceAligned ? "Evidence aligned" : "Review required",
         support: `${projectionAudience} · ${projectionSectionCountLabel(
-          projectionData?.sections?.length ?? 0,
+          projectionMatchesActiveVersion ? (projectionData?.sections?.length ?? 0) : 0,
         )}`,
         tone: sourceEvidenceAligned ? "success" : "warn",
       },
@@ -285,7 +351,11 @@ export function confirmMemoCreateRefresh({
 }): void {
   const actionHash = firstString(action, ["memo_hash"]);
   const refreshedModel = assertRefreshEvidence(refreshed);
-  if (!actionHash || actionHash !== refreshedModel.memoHash) {
+  if (
+    !memoSourceMatchesActiveVersion(action, refreshed.proposalId, refreshed.versionNo)
+    || !actionHash
+    || actionHash !== refreshedModel.memoHash
+  ) {
     throw new Error("Memo preparation completed, but refreshed source evidence did not confirm it.");
   }
 }
@@ -300,7 +370,12 @@ export function confirmMemoReviewRefresh({
   const actionHash = firstString(action.memo, ["memo_hash"]);
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
-    action.review_event?.event_type !== "MEMO_REVIEW_RECORDED"
+    !memoSourceMatchesActiveVersion(
+      action.memo,
+      refreshed.proposalId,
+      refreshed.versionNo,
+    )
+    || action.review_event?.event_type !== "MEMO_REVIEW_RECORDED"
     || !isReviewConfirmed(action.memo?.review_posture, actionHash)
     || actionHash !== refreshedModel.memoHash
     || !refreshedModel.reviewConfirmed
@@ -319,7 +394,12 @@ export function confirmMemoReportPackageRefresh({
   const actionHash = firstString(action.memo, ["memo_hash"]);
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
-    action.report_package_event?.event_type !== "MEMO_REPORT_PACKAGE_RECORDED"
+    !memoSourceMatchesActiveVersion(
+      action.memo,
+      refreshed.proposalId,
+      refreshed.versionNo,
+    )
+    || action.report_package_event?.event_type !== "MEMO_REPORT_PACKAGE_RECORDED"
     || !action.report
     || actionHash !== refreshedModel.memoHash
     || !refreshedModel.reportPackageRecorded
@@ -341,7 +421,12 @@ export function confirmMemoCommentaryRefresh({
   const actionEventId = firstString(action.ai_event, ["event_id"]);
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
-    action.ai_event?.event_type !== "MEMO_AI_REFERENCE_RECORDED"
+    !memoSourceMatchesActiveVersion(
+      action.memo,
+      refreshed.proposalId,
+      refreshed.versionNo,
+    )
+    || action.ai_event?.event_type !== "MEMO_AI_REFERENCE_RECORDED"
     || !actionEventId
     || !action.commentary
     || action.commentary.authoritative_for_memo_status !== false
@@ -377,18 +462,22 @@ function hasRefreshedMemoAuditEvent(
 export type ProposalMemoRefreshEvidence = {
   lineage?: ProposalMemoLineageData;
   memo?: ProposalMemoData;
+  proposalId: string;
   projection?: ProposalMemoProjectionData;
   replay?: ProposalMemoReplayEvidenceData;
   selectedAudience: ProposalMemoProjectionAudience;
+  versionNo: number;
 };
 
 function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): ProposalMemoPostureModel {
   const model = buildProposalMemoPostureModel({
     lineageData: refreshed.lineage,
     memoData: refreshed.memo,
+    proposalId: refreshed.proposalId,
     projectionData: refreshed.projection,
     replayData: refreshed.replay,
     selectedAudience: refreshed.selectedAudience,
+    versionNo: refreshed.versionNo,
   });
   if (!model.sourceEvidenceAligned) {
     throw new Error("Refreshed memo evidence is not aligned across the source record.");
@@ -419,35 +508,120 @@ function isSourceEventRecorded(
   );
 }
 
-function selectLatestMemo(
+function selectCurrentMemo(
   lineageData: ProposalMemoLineageData | null | undefined,
   currentMemoId: string | undefined,
   currentMemoHash: string | null,
+  proposalId: string,
+  versionNo: number | null,
 ): MemoLineageItem | undefined {
-  const memos = lineageData?.memos ?? [];
-  const latestMemoId = lineageData?.latest_memo_id;
-  return (
-    memos.find((memo) => memo.memo_id === latestMemoId)
-    ?? memos.find((memo) => memo.memo_id === currentMemoId)
-    ?? memos.find((memo) => memo.memo_hash === currentMemoHash)
-    ?? memos.at(-1)
+  if (
+    !activeProposalIdentityIsValid(proposalId, versionNo)
+    || !proposalSummaryMatchesActiveVersion(lineageData?.proposal, proposalId, versionNo)
+    || !currentMemoId
+    || !currentMemoHash
+  ) {
+    return undefined;
+  }
+  const matchingMemo = (lineageData?.memos ?? []).find(
+    (memo) =>
+      memo.memo_id === currentMemoId
+      && memo.memo_hash === currentMemoHash
+      && memo.proposal_version_no === versionNo,
   );
+  return matchingMemo?.memo_id === lineageData?.latest_memo_id
+    ? matchingMemo
+    : undefined;
+}
+
+function memoSourceMatchesActiveVersion(
+  source: ProposalMemoData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): boolean {
+  return Boolean(
+    activeProposalIdentityIsValid(proposalId, versionNo)
+      && proposalSummaryMatchesActiveVersion(source?.proposal, proposalId, versionNo)
+      && source?.proposal_version_no === versionNo
+      && source.memo?.proposal_id === proposalId
+      && source.memo.proposal_version_no === versionNo,
+  );
+}
+
+function projectionSourceMatchesActiveVersion(
+  source: ProposalMemoProjectionData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): boolean {
+  return Boolean(
+    activeProposalIdentityIsValid(proposalId, versionNo)
+      && proposalSummaryMatchesActiveVersion(source?.proposal, proposalId, versionNo)
+      && source?.proposal_version_no === versionNo,
+  );
+}
+
+function replaySourceMatchesActiveVersion(
+  source: ProposalMemoReplayEvidenceData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): boolean {
+  return Boolean(
+    activeProposalIdentityIsValid(proposalId, versionNo)
+      && source?.subject?.proposal_id === proposalId
+      && source.subject.proposal_version_no === versionNo,
+  );
+}
+
+function proposalSummaryMatchesActiveVersion(
+  proposal: ProposalMemoData["proposal"] | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): boolean {
+  return Boolean(
+    proposal?.proposal_id === proposalId
+      && proposal.current_version_no === versionNo,
+  );
+}
+
+function activeProposalIdentityIsValid(
+  proposalId: string,
+  versionNo: number | null,
+): versionNo is number {
+  return isExactNonBlankString(proposalId) && isPositiveSafeInteger(versionNo);
+}
+
+function isExactNonBlankString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value === value.trim();
+}
+
+function isPositiveSafeInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && Number(value) > 0;
 }
 
 function projectMemoNextAction({
   hasMemo,
   reportPackageRecorded,
   reviewConfirmed,
+  sourceEvidenceAligned,
 }: {
   hasMemo: boolean;
   reportPackageRecorded: boolean;
   reviewConfirmed: boolean;
+  sourceEvidenceAligned: boolean;
 }): { detail: string; key: ProposalMemoNextAction; title: string } {
   if (!hasMemo) {
     return {
       key: "prepare",
       title: "Prepare the advisor memo",
       detail: "Create the evidence-backed working memo for this proposal version.",
+    };
+  }
+  if (!sourceEvidenceAligned) {
+    return {
+      key: "track",
+      title: "Refresh the memo evidence",
+      detail:
+        "Current proposal, projection, lineage and replay evidence must agree before the next advisor action.",
     };
   }
   if (!reviewConfirmed) {

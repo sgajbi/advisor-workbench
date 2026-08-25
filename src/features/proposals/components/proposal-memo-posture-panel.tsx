@@ -127,16 +127,20 @@ export default function ProposalMemoPosturePanel({
       buildProposalMemoPostureModel({
         lineageData: lineageQuery.data,
         memoData: memoQuery.data,
+        proposalId,
         projectionData: projectionQuery.data,
         replayData: replayQuery.data,
         selectedAudience: audience,
+        versionNo,
       }),
     [
       audience,
       lineageQuery.data,
       memoQuery.data,
+      proposalId,
       projectionQuery.data,
       replayQuery.data,
+      versionNo,
     ],
   );
 
@@ -177,10 +181,12 @@ export default function ProposalMemoPosturePanel({
     }
     return {
       memo: memoResult.data,
+      proposalId,
       projection: projectionResult.data,
       lineage: lineageResult.data,
       replay: replayResult.data,
       selectedAudience: audience,
+      versionNo: requireVersion(versionNo),
     };
   }
 

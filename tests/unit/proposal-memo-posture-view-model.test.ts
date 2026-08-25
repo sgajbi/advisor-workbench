@@ -13,14 +13,32 @@ import {
 
 const MEMO_HASH = "sha256:memo-001";
 const COMMENTARY_EVENT_ID = "memo-ai-event-001";
+const PROPOSAL_ID = "pp_1";
+const VERSION_NO = 2;
+
+function proposalSummary() {
+  return {
+    proposal_id: PROPOSAL_ID,
+    current_state: "DRAFT",
+    current_version_no: VERSION_NO,
+  };
+}
 
 function alignedEvidence(): ProposalMemoRefreshEvidence {
   return {
+    proposalId: PROPOSAL_ID,
     selectedAudience: "COMPLIANCE",
+    versionNo: VERSION_NO,
     memo: {
+      proposal: proposalSummary(),
+      proposal_version_no: VERSION_NO,
       memo_id: "memo_2",
       memo_hash: MEMO_HASH,
       memo_status: "READY",
+      memo: {
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: VERSION_NO,
+      },
       event_count: 4,
       review_posture: {
         status: "RECORDED",
@@ -46,6 +64,8 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
       ],
     },
     projection: {
+      proposal: proposalSummary(),
+      proposal_version_no: VERSION_NO,
       memo_id: "memo_2",
       memo_hash: MEMO_HASH,
       audience: "COMPLIANCE",
@@ -53,17 +73,20 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
       projection_posture: { client_ready_publication: "BLOCKED" },
     },
     lineage: {
+      proposal: proposalSummary(),
       memo_count: 2,
       latest_memo_id: "memo_2",
       lineage_complete: true,
       memos: [
         {
           memo_id: "memo_1",
+          proposal_version_no: 1,
           memo_hash: "sha256:older",
           event_count: 1,
         },
         {
           memo_id: "memo_2",
+          proposal_version_no: VERSION_NO,
           memo_hash: MEMO_HASH,
           event_count: 4,
           archive_refs: [{ document_id: "doc_memo_001" }],
@@ -71,6 +94,11 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
       ],
     },
     replay: {
+      subject: {
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: VERSION_NO,
+        memo_id: "memo_2",
+      },
       hashes: { memo_hash: MEMO_HASH },
       audit_events: [
         { event_type: "MEMO_DRAFT_CREATED" },
@@ -90,9 +118,11 @@ describe("buildProposalMemoPostureModel", () => {
     const model = buildProposalMemoPostureModel({
       selectedAudience: evidence.selectedAudience,
       memoData: evidence.memo,
+      proposalId: evidence.proposalId,
       projectionData: evidence.projection,
       lineageData: evidence.lineage,
       replayData: evidence.replay,
+      versionNo: evidence.versionNo,
     });
 
     expect(model).toMatchObject({
@@ -148,9 +178,11 @@ describe("buildProposalMemoPostureModel", () => {
     const model = buildProposalMemoPostureModel({
       selectedAudience: evidence.selectedAudience,
       memoData: evidence.memo,
+      proposalId: evidence.proposalId,
       projectionData: evidence.projection,
       lineageData: evidence.lineage,
       replayData: evidence.replay,
+      versionNo: evidence.versionNo,
     });
 
     expect(model.statusLabel).toBe("Review required");
@@ -159,13 +191,16 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.sourceEvidenceAligned).toBe(false);
     expect(model.canRequestReportPackage).toBe(false);
     expect(model.canRequestCommentary).toBe(false);
-    expect(model.nextActionKey).toBe("review");
+    expect(model.nextActionKey).toBe("track");
+    expect(model.nextActionTitle).toBe("Refresh the memo evidence");
     expect(proposalMemoStatusLabel("SOURCE_VALIDATED_BY_RISK")).toBe("Review required");
   });
 
   it("shows a truthful preparation action when no memo exists", () => {
     const model = buildProposalMemoPostureModel({
+      proposalId: PROPOSAL_ID,
       selectedAudience: "CLIENT_DRAFT",
+      versionNo: VERSION_NO,
     });
 
     expect(model.hasMemo).toBe(false);
@@ -183,13 +218,160 @@ describe("buildProposalMemoPostureModel", () => {
     );
     expect(proposalMemoArchiveRefsLabel([])).toBe("No archived material");
   });
+
+  it("rejects coherent memo evidence from a stale proposal version", () => {
+    const evidence = alignedEvidence();
+    const staleVersion = 1;
+    evidence.memo = {
+      ...evidence.memo,
+      proposal: { ...proposalSummary(), current_version_no: staleVersion },
+      proposal_version_no: staleVersion,
+      memo: {
+        ...evidence.memo?.memo,
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: staleVersion,
+      },
+    };
+    evidence.projection = {
+      ...evidence.projection,
+      proposal: { ...proposalSummary(), current_version_no: staleVersion },
+      proposal_version_no: staleVersion,
+    };
+    evidence.lineage = {
+      ...evidence.lineage,
+      proposal: { ...proposalSummary(), current_version_no: staleVersion },
+      memos: evidence.lineage?.memos?.map((memo) => ({
+        ...memo,
+        proposal_version_no: staleVersion,
+      })),
+    };
+    evidence.replay = {
+      ...evidence.replay,
+      subject: {
+        ...evidence.replay?.subject,
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: staleVersion,
+      },
+    };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: PROPOSAL_ID,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: VERSION_NO,
+    });
+
+    expect(model).toMatchObject({
+      canRecordReview: false,
+      canRequestCommentary: false,
+      canRequestReportPackage: false,
+      hasMemo: false,
+      memoHash: null,
+      sourceEvidenceAligned: false,
+    });
+  });
+
+  it("rejects coherent memo evidence owned by another proposal", () => {
+    const evidence = alignedEvidence();
+    const otherProposalId = "pp_other";
+    const otherProposal = {
+      ...proposalSummary(),
+      proposal_id: otherProposalId,
+    };
+    evidence.memo = {
+      ...evidence.memo,
+      proposal: otherProposal,
+      memo: {
+        ...evidence.memo?.memo,
+        proposal_id: otherProposalId,
+        proposal_version_no: VERSION_NO,
+      },
+    };
+    evidence.projection = {
+      ...evidence.projection,
+      proposal: otherProposal,
+    };
+    evidence.lineage = {
+      ...evidence.lineage,
+      proposal: otherProposal,
+    };
+    evidence.replay = {
+      ...evidence.replay,
+      subject: {
+        ...evidence.replay?.subject,
+        proposal_id: otherProposalId,
+        proposal_version_no: VERSION_NO,
+      },
+    };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: PROPOSAL_ID,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: VERSION_NO,
+    });
+
+    expect(model).toMatchObject({
+      canRecordReview: false,
+      canRequestCommentary: false,
+      canRequestReportPackage: false,
+      hasMemo: false,
+      sourceEvidenceAligned: false,
+    });
+  });
+
+  it.each([
+    ["memo", (evidence: ProposalMemoRefreshEvidence) => {
+      evidence.memo = { ...evidence.memo, proposal_version_no: 1 };
+    }],
+    ["projection", (evidence: ProposalMemoRefreshEvidence) => {
+      evidence.projection = { ...evidence.projection, proposal_version_no: 1 };
+    }],
+    ["lineage", (evidence: ProposalMemoRefreshEvidence) => {
+      evidence.lineage = {
+        ...evidence.lineage,
+        memos: evidence.lineage?.memos?.map((memo) =>
+          memo.memo_id === "memo_2" ? { ...memo, proposal_version_no: 1 } : memo,
+        ),
+      };
+    }],
+    ["replay", (evidence: ProposalMemoRefreshEvidence) => {
+      evidence.replay = {
+        ...evidence.replay,
+        subject: { ...evidence.replay?.subject, proposal_version_no: 1 },
+      };
+    }],
+  ])("fails closed when the %s source view has a different version", (_source, mutate) => {
+    const evidence = alignedEvidence();
+    mutate(evidence);
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: evidence.proposalId,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: evidence.versionNo,
+    });
+
+    expect(model.sourceEvidenceAligned).toBe(false);
+    expect(model.canRequestCommentary).toBe(false);
+    expect(model.canRequestReportPackage).toBe(false);
+  });
 });
 
 describe("proposal memo source-refresh confirmation", () => {
   it("confirms memo preparation only when every refreshed source agrees", () => {
     expect(() =>
       confirmMemoCreateRefresh({
-        action: { memo_hash: MEMO_HASH },
+        action: alignedEvidence().memo!,
         refreshed: alignedEvidence(),
       }),
     ).not.toThrow();
@@ -197,8 +379,33 @@ describe("proposal memo source-refresh confirmation", () => {
     const stale = alignedEvidence();
     stale.replay = { hashes: { memo_hash: "sha256:stale" } };
     expect(() =>
-      confirmMemoCreateRefresh({ action: { memo_hash: MEMO_HASH }, refreshed: stale }),
+      confirmMemoCreateRefresh({ action: alignedEvidence().memo!, refreshed: stale }),
     ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+  });
+
+  it("rejects action confirmation when refreshed evidence belongs to another version", () => {
+    const stale = alignedEvidence();
+    stale.versionNo = 3;
+
+    expect(() =>
+      confirmMemoCreateRefresh({ action: alignedEvidence().memo!, refreshed: stale }),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+  });
+
+  it("rejects a stale-version action response even when refreshed evidence is current", () => {
+    const staleAction = {
+      ...alignedEvidence().memo!,
+      proposal: { ...proposalSummary(), current_version_no: 1 },
+      proposal_version_no: 1,
+      memo: {
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: 1,
+      },
+    };
+
+    expect(() =>
+      confirmMemoCreateRefresh({ action: staleAction, refreshed: alignedEvidence() }),
+    ).toThrow("Memo preparation completed, but refreshed source evidence did not confirm it.");
   });
 
   it("confirms review only from the review event and refreshed approved posture", () => {
