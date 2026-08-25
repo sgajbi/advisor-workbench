@@ -63,6 +63,13 @@ concurrency group.
   ownership, ownerless architecture or exit posture, expired reviews, prohibited state, and
   incomplete or expired exceptions. This is a blocking Workbench control; the referenced Lotus
   platform technology policy remains report-only.
+- `npm run quality:product-copy`
+  parses productive TypeScript and JSX, rejects transport and engineering language in business
+  copy, and requires the measured violation inventory to equal the checked-in baseline exactly.
+  Both regression and unused improvement headroom fail. Legitimate wealth-management terms or
+  identifiers may be admitted only through the exact, review-backed entries in
+  `config/product-copy-exceptions.v1.json`; stale, duplicated, broadened, unknown-rule, or
+  undocumented exceptions fail the same gate. A broad vocabulary allowlist is not supported.
 - `npm run lint:css-global`
   validates `src/app/globals.css`, `src/styles/global/*`, and
   `scripts/quality/css-global-governance-baseline.json` against the documented CSS layer model in

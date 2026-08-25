@@ -1507,6 +1507,12 @@ Most relevant current governance:
     quality:product-copy` is a semantic TypeScript-AST ratchet: the measured inventory must exactly
     equal its checked-in baseline, every fixing slice must lower both together, and a regression or
     stale higher baseline fails CI. Never raise the baseline or hide productive strings from analysis.
+    Some flagged terms are legitimate wealth-management language or identifiers in a specific
+    reviewed context. Admit those only through `config/product-copy-exceptions.v1.json`, keyed by
+    productive file, rule, rendered context, exact copy, and exact expected match count, with a
+    durable Workbench issue or PR review URL and a business-language rationale. Unknown rules,
+    duplicate signatures, malformed metadata, stale copy, and broader-than-reviewed match counts
+    fail the same gate. Never add a broad word allowlist or use an exception to avoid clearer copy.
     Proposal review actions follow the same source-confirmation rule as lifecycle actions: bind to
     the active source version, admit downstream packaging only after its prerequisite evidence is
     confirmed, and announce success only when the action response and refreshed owning read agree.
