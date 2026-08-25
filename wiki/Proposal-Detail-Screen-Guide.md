@@ -174,7 +174,9 @@ Proposal Detail deliberately does not:
   portfolio return, and routine/restricted/unavailable/not-found return context.
 - `tests/unit/proposal-narrative-posture-panel.test.tsx` and
   `tests/unit/proposal-memo-posture-panel.test.tsx` prove the two advisor-review modes and their
-  fail-closed action posture.
+  fail-closed action posture. Discussion-pack state must match the active reviewed narrative hash;
+  repeat commentary succeeds only when the exact returned event appears in refreshed memo or replay
+  evidence.
 - `tests/e2e/proposal-memo-posture.spec.ts` provides optimized-production browser proof for proposal
   detail, memo, source-confirmed narrative review, discussion-pack gating, safe action failure,
   refresh disagreement, keyboard, responsive container reflow, and exact visible-overflow behavior.
