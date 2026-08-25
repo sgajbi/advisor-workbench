@@ -549,7 +549,11 @@ Current repository posture:
     progressive disclosure. A proposal action is confirmed only after Gateway persistence succeeds
     and the action-specific authoritative reads refresh coherently from source truth. Narrative
     review is confirmed from the current-version narrative read; delivery summary and events remain
-    independent downstream package posture and cannot authorize review. The route does not generate
+    independent downstream package posture and cannot authorize review. Delivery history must be
+    complete, chronological, uniquely identified, bound event-by-event to the active proposal
+    version, and consistent with its final/latest record. A discussion-pack action is confirmed only
+    when the latest report-request event carries the exact returned request identity. The route does
+    not generate
     narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
