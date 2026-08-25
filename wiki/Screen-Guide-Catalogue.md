@@ -118,7 +118,7 @@ describe implemented validation surfaces rather than a promise of unrestricted p
 | --------------------------------------------------- | ------------------------------------- | ------------------- | -------------------- | ----------------------------- |
 | [Advisory Overview](Advisory-Overview-Screen-Guide) | `/recommendations?mode=overview`      | Capability-disabled | Guide available      | Gateway and Advise            |
 | [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)     | `/recommendations?mode=cockpit`       | Capability-disabled | Guide available      | Gateway and Advise            |
-| Advisory Copilot                                    | `/recommendations?mode=copilot`       | Capability-disabled | Guide planned — #605 | Gateway, Advise, and Lotus AI |
+| [Advisory Copilot](Advisory-Copilot-Screen-Guide)   | `/recommendations?mode=copilot`       | Capability-disabled | Guide available      | Gateway, Advise, and Lotus AI |
 | Opportunities And Ideas                             | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway and Lotus Idea        |
 | Bank Demo Proof                                     | `/recommendations?mode=proof`         | Capability-disabled | Guide planned — #605 | Gateway and Advise            |
 

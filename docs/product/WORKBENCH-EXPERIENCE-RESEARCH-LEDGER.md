@@ -6628,6 +6628,14 @@ wealth-platform sources before the comparison and handoff language was aligned:
     auditor posture, and non-inference disclaimers remain in engineering or progressive support
     evidence rather than the adviser decision path. This #798 slice preserves the source-returned
     workflow gate and does not promote evidence availability into approval or client readiness.
+15. Present Advisory Copilot as **AI-assisted proposal-review preparation** and show the proposal
+    evidence, human-review requirement, and client-use boundary together. Map canonical
+    availability, review, and client-use codes through a typed copy authority; use the proposal
+    title rather than its source id in the primary status summary; and keep exact workflow, packet,
+    run, hash, provider, and model references in the output-adjacent disclosure. Internal review
+    remains a persisted source action but cannot upgrade generated material to client-approved
+    communication. This bounded #798 copy slice and #605 guide use the existing Carbon, Microsoft
+    HAX, NIST AI RMF, and FINRA research rather than introducing a competing AI presentation.
 
 ### Delivery scope and deferred surfaces
 

@@ -15,6 +15,7 @@
 - [Portfolio Intake](Portfolio-Intake-Screen-Guide)
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
+- [Advisory Copilot](Advisory-Copilot-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
 - [Suitability review](Suitability-Review-Screen-Guide)

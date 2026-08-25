@@ -901,16 +901,21 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Advisory-Copilot-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-ai"],
-      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/apps/recommendations/page.tsx",
+        "src/copy/advisory-copilot-copy.ts",
+        "src/features/proposals/components/advisory-copilot-workspace.tsx",
+        "src/features/proposals/advisory-copilot-view-model.ts",
+        "tests/integration/advisory-copilot-workspace.test.tsx"
+      ],
+      "runtimeEvidence": [
+        "tests/unit/advisory-copilot-proof.test.ts",
+        "scripts/live/validation/browser-workflows.mjs"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "advisory-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "opportunities-and-ideas",

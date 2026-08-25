@@ -36,6 +36,8 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
   [Advisory Overview](Advisory-Overview-Screen-Guide)
 - Source-backed advisor actions, evidence readiness, review acknowledgement, and operating boundaries:
   [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
+- AI-assisted proposal-review preparation, proposal evidence, mandatory human review, and client-use boundaries:
+  [Advisory Copilot](Advisory-Copilot-Screen-Guide)
 - Source-backed proposal construction, indicative impact, evaluation, and governed draft retention:
   [Proposal Builder](Proposal-Builder-Screen-Guide)
 - Portfolio-scoped proposal triage, selected review posture, and context-preserving drill-in:
@@ -127,6 +129,7 @@ itself a production-identity, entitlement, client-delivery, or bank-certificatio
 - [Portfolio Allocation](Portfolio-Allocation-Screen-Guide)
 - [Advisory Overview](Advisory-Overview-Screen-Guide)
 - [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)
+- [Advisory Copilot](Advisory-Copilot-Screen-Guide)
 - [Proposal Builder](Proposal-Builder-Screen-Guide)
 - [Approval Queue](Approval-Queue-Screen-Guide)
 - [Suitability review](Suitability-Review-Screen-Guide)
