@@ -1323,10 +1323,23 @@ describe("proposal api", () => {
               contract_version: "v1",
               data: {
                 memo_hash: "sha256:memo-001",
-                projection: { audience: "COMPLIANCE" },
-                report: { archive_refs: ["archive://memo/report/1"] },
-                commentary: { authority: "NON_AUTHORITATIVE" },
+                memo: {
+                  memo_hash: "sha256:memo-001",
+                  review_posture: {
+                    status: "RECORDED",
+                    review_action: "APPROVE_FOR_ADVISOR_USE",
+                  },
+                },
+                review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+                report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+                report: { status: "ARCHIVED" },
+                ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
+                commentary: {
+                  status: "REVIEW_REQUIRED",
+                  authoritative_for_memo_status: false,
+                },
                 hashes: { memo_hash: "sha256:memo-001" },
+                replayed: false,
               },
             }),
             {
@@ -1345,7 +1358,7 @@ describe("proposal api", () => {
     );
     await getProposalMemo("pp_1", 2);
     await getProposalMemoProjection("pp_1", 2, "COMPLIANCE");
-    await reviewProposalMemo(
+    const reviewResult = await reviewProposalMemo(
       "pp_1",
       2,
       {
@@ -1357,7 +1370,7 @@ describe("proposal api", () => {
       },
       "idem-memo-review-1",
     );
-    await requestProposalMemoReportPackage(
+    const reportResult = await requestProposalMemoReportPackage(
       "pp_1",
       2,
       {
@@ -1374,7 +1387,7 @@ describe("proposal api", () => {
       { body: { event_type: "ARCHIVED", archive_ref: "archive_1" } },
       "idem-memo-report-event-1",
     );
-    await requestProposalMemoAiCommentary(
+    const commentaryResult = await requestProposalMemoAiCommentary(
       "pp_1",
       2,
       {
@@ -1396,6 +1409,16 @@ describe("proposal api", () => {
     );
     await getProposalMemoLineage("pp_1");
     await getProposalMemoReplayEvidence("pp_1", 2);
+
+    expect(reviewResult.memo?.review_posture?.review_action).toBe(
+      "APPROVE_FOR_ADVISOR_USE",
+    );
+    expect(reviewResult.review_event?.event_type).toBe("MEMO_REVIEW_RECORDED");
+    expect(reportResult.report_package_event?.event_type).toBe(
+      "MEMO_REPORT_PACKAGE_RECORDED",
+    );
+    expect(commentaryResult.ai_event?.event_type).toBe("MEMO_AI_REFERENCE_RECORDED");
+    expect(commentaryResult.commentary?.authoritative_for_memo_status).toBe(false);
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(

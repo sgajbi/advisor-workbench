@@ -936,23 +936,43 @@ export type ProposalMemoData = {
 
 export type ProposalMemoProjectionData = {
   proposal?: ProposalSummary;
+  proposal_version_no?: number;
+  memo_id?: string;
+  memo_hash?: string;
+  audience?: string | null;
   projection?: Record<string, unknown>;
   sections?: Array<Record<string, unknown>>;
   projection_posture?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
+export type ProposalMemoAuditEvent = {
+  event_id?: string;
+  event_type?: string;
+  actor_id?: string;
+  occurred_at?: string;
+  reason?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+export type ProposalMemoReviewData = {
+  memo?: ProposalMemoData;
+  review_event?: ProposalMemoAuditEvent;
+  replayed?: boolean;
+  [key: string]: unknown;
+};
+
 export type ProposalMemoReportPackageData = {
-  memo?: Record<string, unknown>;
-  report_package_event?: Record<string, unknown>;
+  memo?: ProposalMemoData;
+  report_package_event?: ProposalMemoAuditEvent;
   report?: Record<string, unknown>;
   replayed?: boolean;
   [key: string]: unknown;
 };
 
 export type ProposalMemoAiCommentaryData = {
-  memo?: Record<string, unknown>;
-  ai_event?: Record<string, unknown>;
+  memo?: ProposalMemoData;
+  ai_event?: ProposalMemoAuditEvent;
   commentary?: Record<string, unknown>;
   replayed?: boolean;
   [key: string]: unknown;
@@ -963,21 +983,35 @@ export type ProposalMemoAdvisorCommentaryData = ProposalMemoAiCommentaryData;
 export type ProposalMemoLineageData = {
   proposal?: ProposalSummary;
   proposal_id?: string;
+  memo_count?: number;
+  latest_memo_id?: string | null;
+  lineage_complete?: boolean;
   memos?: Array<{
     memo_id?: string;
+    proposal_version_no?: number;
+    proposal_version_id?: string | null;
     memo_hash?: string;
     memo_status?: string;
+    lifecycle_status?: string;
+    source_input_hash?: string;
+    created_at?: string;
+    event_count?: number;
     report_package_posture?: Record<string, unknown>;
+    archive_refs?: Array<Record<string, unknown>>;
     ai_commentary_posture?: Record<string, unknown>;
     [key: string]: unknown;
   }>;
+  lineage_posture?: Record<string, unknown>;
   [key: string]: unknown;
 };
 
 export type ProposalMemoReplayEvidenceData = {
   proposal?: ProposalSummary;
+  subject?: Record<string, unknown>;
   hashes?: Record<string, unknown>;
+  replay_metadata?: Record<string, unknown>;
   audit_events?: Array<Record<string, unknown>>;
-  supportability?: Record<string, unknown>;
+  evidence?: Record<string, unknown>;
+  explanation?: Record<string, unknown>;
   [key: string]: unknown;
 };
