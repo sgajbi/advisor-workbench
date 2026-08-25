@@ -61,7 +61,7 @@ function evidenceState({
   commentaryRecorded?: boolean;
   reportRecorded?: boolean;
   reviewed?: boolean;
-} = {}): EvidenceState {
+} = {}, versionNo = VERSION_NO): EvidenceState {
   const reviewPosture = reviewed
     ? {
         status: "RECORDED",
@@ -86,8 +86,8 @@ function evidenceState({
     : { status: "NOT_RECORDED" };
   return {
     memo: {
-      proposal: proposalSummary(),
-      proposal_version_no: VERSION_NO,
+      proposal: proposalSummary(versionNo),
+      proposal_version_no: versionNo,
       memo_id: "memo_1",
       memo_hash: MEMO_HASH,
       memo_status: "READY",
@@ -95,7 +95,7 @@ function evidenceState({
         memo_hash: MEMO_HASH,
         memo_id: "memo_1",
         proposal_id: PROPOSAL_ID,
-        proposal_version_no: VERSION_NO,
+        proposal_version_no: versionNo,
       },
       event_count:
         1 +
@@ -115,8 +115,8 @@ function evidenceState({
         : [],
     },
     projection: {
-      proposal: proposalSummary(),
-      proposal_version_no: VERSION_NO,
+      proposal: proposalSummary(versionNo),
+      proposal_version_no: versionNo,
       memo_id: "memo_1",
       memo_hash: MEMO_HASH,
       audience: "ADVISOR",
@@ -124,14 +124,14 @@ function evidenceState({
       projection_posture: { client_ready_publication: "BLOCKED" },
     },
     lineage: {
-      proposal: proposalSummary(),
+      proposal: proposalSummary(versionNo),
       memo_count: 1,
       latest_memo_id: "memo_1",
       lineage_complete: true,
       memos: [
         {
           memo_id: "memo_1",
-          proposal_version_no: VERSION_NO,
+          proposal_version_no: versionNo,
           memo_hash: MEMO_HASH,
           event_count:
             1 +
@@ -145,7 +145,7 @@ function evidenceState({
     replay: {
       subject: {
         proposal_id: PROPOSAL_ID,
-        proposal_version_no: VERSION_NO,
+        proposal_version_no: versionNo,
         memo_id: "memo_1",
       },
       hashes: { memo_hash: MEMO_HASH },
@@ -183,7 +183,7 @@ function renderPanel(currentVersionNo: number | null = 2) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <ProposalMemoPosturePanel
         proposalId="pp_1"
@@ -191,6 +191,18 @@ function renderPanel(currentVersionNo: number | null = 2) {
       />
     </QueryClientProvider>,
   );
+  return {
+    rerenderPanel(nextVersionNo: number | null) {
+      view.rerender(
+        <QueryClientProvider client={queryClient}>
+          <ProposalMemoPosturePanel
+            proposalId={PROPOSAL_ID}
+            currentVersionNo={nextVersionNo}
+          />
+        </QueryClientProvider>,
+      );
+    },
+  };
 }
 
 function enterActor(reference = "advisor_9") {
@@ -490,6 +502,56 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.queryByTestId("proposal-memo-action-status"),
     ).not.toBeInTheDocument();
+  });
+
+  it("clears version-bound action state when the active proposal version changes", async () => {
+    sourceState = evidenceState();
+    vi.mocked(reviewProposalMemo).mockRejectedValue(
+      new Error("upstream review unavailable"),
+    );
+    const { rerenderPanel } = renderPanel(VERSION_NO);
+    fireEvent.click(screen.getByText("Memo record details"));
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    expect(
+      await screen.findByText(
+        "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+      ),
+    ).toBeInTheDocument();
+
+    sourceState = evidenceState({}, VERSION_NO + 1);
+    rerenderPanel(VERSION_NO + 1);
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(
+          "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+        ),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+    ).toHaveValue("");
+    const details = screen.getByText("Memo record details").closest("details");
+    if (!details?.hasAttribute("open")) {
+      fireEvent.click(screen.getByText("Memo record details"));
+    }
+    expect(screen.getByLabelText("Advisor or reviewer reference")).toHaveValue(
+      "",
+    );
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
   });
 
   it("does not unlock current-version actions from coherent stale-version evidence", async () => {

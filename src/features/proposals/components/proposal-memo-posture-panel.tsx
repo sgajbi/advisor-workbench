@@ -76,6 +76,19 @@ export default function ProposalMemoPosturePanel({
   proposalId,
   currentVersionNo,
 }: Props) {
+  return (
+    <ProposalMemoPosturePanelSession
+      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+      proposalId={proposalId}
+      currentVersionNo={currentVersionNo}
+    />
+  );
+}
+
+function ProposalMemoPosturePanelSession({
+  proposalId,
+  currentVersionNo,
+}: Props) {
   const versionNo = currentVersionNo ?? null;
   const [actorReference, setActorReference] = useState("");
   const [reviewRationale, setReviewRationale] = useState("");
@@ -106,7 +119,7 @@ export default function ProposalMemoPosturePanel({
     enabled: versionNo !== null,
   });
   const lineageQuery = useQuery({
-    queryKey: ["proposal-memo-lineage", proposalId],
+    queryKey: ["proposal-memo-lineage", proposalId, versionNo],
     queryFn: async () => await getProposalMemoLineage(proposalId),
     ...workbenchStrictQueryDefaults,
     enabled: versionNo !== null,
