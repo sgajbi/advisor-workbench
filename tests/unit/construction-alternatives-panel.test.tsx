@@ -251,7 +251,7 @@ describe("ConstructionAlternativesPanel", () => {
     expect(
       screen.getByRole("button", { name: "Generate alternatives" }),
     ).toBeEnabled();
-    expect(screen.getAllByText("Not Generated").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Not generated").length).toBeGreaterThan(0);
     await waitFor(() => {
       expect(getExternalOrderExecutionAcknowledgement).toHaveBeenCalledWith({
         portfolio,
@@ -268,20 +268,25 @@ describe("ConstructionAlternativesPanel", () => {
       });
     });
     expect(
-      screen.getByText("Execution Acknowledgement Supportability"),
+      screen.getByRole("heading", { name: "Order acknowledgement evidence" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Support details")).toBeInTheDocument();
     expect(
       screen.getByText("ExternalOrderExecutionAcknowledgement v1"),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
     expect(screen.getByText("Missing")).toBeInTheDocument();
-    expect(screen.getByText(/External OMS Source Not Ingested/)).toBeInTheDocument();
-    expect(screen.getByText("External OMS Order Execution Acknowledgement")).toBeInTheDocument();
-    expect(screen.getByText("Order Generation")).toBeInTheDocument();
-    expect(screen.getByText("OMS Acknowledgement")).toBeInTheDocument();
-    expect(screen.getByText("Fills")).toBeInTheDocument();
-    expect(screen.getByText("Settlement")).toBeInTheDocument();
-    expect(screen.getByText("Runtime Posture")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /External order acknowledgement records are not connected/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Order acknowledgement records")).toBeInTheDocument();
+    expect(screen.getByText("Order generation")).toBeInTheDocument();
+    expect(screen.getByText("Order-system acknowledgement")).toBeInTheDocument();
+    expect(screen.getByText("Fill evidence")).toBeInTheDocument();
+    expect(screen.getByText("Settlement evidence")).toBeInTheDocument();
+    expect(screen.getByText("Runtime posture")).toBeInTheDocument();
     expect(screen.getByText("fail_closed")).toBeInTheDocument();
     expect(screen.getByText(/does not treat this portfolio as OMS-acknowledged/i)).toBeInTheDocument();
     expect(screen.queryByText("Execution ready")).not.toBeInTheDocument();
@@ -344,20 +349,20 @@ describe("ConstructionAlternativesPanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Acknowledgement rows: 0")).toBeInTheDocument();
-    expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
-    expect(screen.getByText("Eligible Instrument Selection")).toBeInTheDocument();
-    expect(screen.getByText("Product Recommendation")).toBeInTheDocument();
-    expect(screen.getAllByText("Order Generation").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("OMS Acknowledgement").length).toBeGreaterThan(0);
+    expect(screen.getByText("Hedge policy approval")).toBeInTheDocument();
+    expect(screen.getByText("Eligible instrument selection")).toBeInTheDocument();
+    expect(screen.getByText("Product recommendation")).toBeInTheDocument();
+    expect(screen.getAllByText("Order generation").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Order-system acknowledgement").length).toBeGreaterThan(0);
     expect(
-      screen.getAllByText("External OMS Order Execution Acknowledgement").length,
+      screen.getAllByText("External order acknowledgement").length,
     ).toBeGreaterThan(0);
-    expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
+    expect(screen.getByText("External hedge policy unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText("External Eligible Hedge Instruments Fail Closed"),
+      screen.getByText("Eligible hedge instrument evidence unavailable"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("External Order Execution Acknowledgement Fail Closed"),
+      screen.getByText("Order acknowledgement evidence unavailable"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open evidence pack" })).toHaveAttribute(
       "href",
