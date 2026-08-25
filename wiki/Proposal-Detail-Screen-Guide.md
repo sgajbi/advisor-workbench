@@ -80,6 +80,14 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Enables **Request discussion pack** only after the current source read confirms advisor-review
   evidence. Review and pack success are announced only after the action response and refreshed
   proposal evidence agree; refresh disagreement remains an explicit failure.
+- Presents memo work as **memo evidence → advisor review → discussion material → record and
+  audience**. The advisor reference is always explicit, the active proposal version is read-only,
+  and unknown source states fail closed rather than becoming a permissive browser default.
+- Enables memo review, discussion material, and optional commentary only when their exact upstream
+  evidence is current. A successful mutation is not announced until memo, projection, lineage,
+  replay, review, report, and commentary reads reconcile where the action requires them.
+- Treats generated commentary as an optional working aid. It never upgrades the retained memo,
+  advisor review, suitability evidence, client-release posture, or proposal lifecycle state.
 - Creates a next proposal version only from the current source proposal's retained simulation
   request and refreshes the active record after source success.
 - Preserves a deterministic return to Approval Queue, Suitability, Risk and Impact, Discussion Pack,
@@ -96,8 +104,10 @@ These use cases do not substitute for authenticated production-role or portfolio
 | Create next version | Current version contains a usable retained simulation request and no conflicting action is active | Gateway creates a new proposal version |
 | Record advisor review | Current version, reviewer reference, and rationale are available | Gateway records advisor-use narrative review; it does not approve client release |
 | Request discussion pack | Refreshed current-version evidence confirms advisor review and a reviewer reference is available | Gateway records a discussion-pack request; rendering, archive, and delivery remain downstream |
-| Prepare, review, or package a memo | Current version and the memo action's evidence fields are available | Gateway records the corresponding advisor-use memo event |
-| Request advisor commentary | Memo evidence admits the bounded request | Gateway records the request; generated commentary is not authoritative proposal evidence |
+| Prepare advisor memo | Current proposal version and explicit advisor or reviewer reference are available | Gateway records the current-version working memo; this is not advisor approval or client release |
+| Record advisor review | Refreshed memo evidence matches the current version; advisor reference and rationale are present | Gateway records approval for advisor use against that memo hash |
+| Request discussion material | Refreshed advisor-review evidence matches the current memo | Gateway records the package request; rendering, archive, delivery, and client use remain downstream |
+| Request advisor commentary | Current memo and advisor-review evidence admit the bounded request | Gateway records the request; generated commentary remains optional and non-authoritative |
 
 The screen prevents concurrent conflicting lifecycle and version actions. A button label or HTTP
 success alone is not proof that the refreshed proposal posture agrees.
@@ -168,6 +178,10 @@ Proposal Detail deliberately does not:
 - Reviewed Proposal Detail narrative screenshots are published under
   `docs/evidence/issue-798-product-copy/narrative-review/`; they support visual review but do not
   replace Gateway action and refreshed-read proof.
+- Reviewed Proposal Detail memo screenshots are published under
+  `docs/evidence/issue-798-product-copy/memo-evidence-pack/`. The optimized browser proof covers
+  source-aligned success, persistence failure, refresh disagreement, sanitized failure copy,
+  audience switching, keyboard operation, 1440/768/640/519 reflow, and zero horizontal overflow.
 - `tests/e2e/proposal-workflow-context.spec.ts` proves Approval Queue drill-in and deterministic
   return context in the optimized Workbench.
 - Canonical validation uses `PB_SG_GLOBAL_BAL_001`; screenshots are supporting evidence, not proof

@@ -462,7 +462,8 @@
         "scripts/live/validation/browser-workflows.mjs",
         "tests/e2e/proposal-workflow-context.spec.ts",
         "tests/e2e/proposal-memo-posture.spec.ts",
-        "docs/evidence/issue-798-product-copy/narrative-review/README.md"
+        "docs/evidence/issue-798-product-copy/narrative-review/README.md",
+        "docs/evidence/issue-798-product-copy/memo-evidence-pack/README.md"
       ],
       "supportOwner": "lotus-workbench",
       "coverageException": null

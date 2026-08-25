@@ -1509,6 +1509,11 @@ Most relevant current governance:
     Proposal review actions follow the same source-confirmation rule as lifecycle actions: bind to
     the active source version, admit downstream packaging only after its prerequisite evidence is
     confirmed, and announce success only when the action response and refreshed owning read agree.
+    Memo and generated-working-aid workflows must require an explicit actor reference, preserve the
+    source-owned proposal version as read-only context, and fail closed on unknown source states.
+    Confirm compound success only when every source view required by that action agrees; never let a
+    mutation response, toast, generated commentary, or browser projection stand in for refreshed
+    source evidence.
 
 ## Context Maintenance Rule
 
