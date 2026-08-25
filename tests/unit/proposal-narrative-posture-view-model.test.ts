@@ -263,6 +263,39 @@ describe("proposal narrative posture view model", () => {
     expect(model.deliveryState).toBe("No Report");
   });
 
+  it.each([0, -1, 2.5, Number.MAX_SAFE_INTEGER + 1, Number.NaN, "2"])(
+    "rejects malformed package version marker %s",
+    (versionMarker) => {
+      const model = buildProposalNarrativePostureModel({
+        ...activeProposal,
+        review: {
+          narrative_review: {
+            proposal_id: "pp_1",
+            proposal_version_no: 2,
+            review_state: "APPROVED_FOR_ADVISOR_USE",
+            source_narrative_hash: "sha256:stable-narrative",
+          },
+        },
+        summary: {
+          reporting: {
+            related_version_no: 2,
+            status: "READY",
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              related_version_no: versionMarker as number,
+              package_status: "INCLUDED_REVIEWED_NARRATIVE",
+              source_narrative_hash: "sha256:stable-narrative",
+            },
+          },
+        },
+      });
+
+      expect(model.canRequestDiscussionPack).toBe(true);
+      expect(model.reportPackageState).toBe("Not Requested");
+      expect(model.deliveryState).toBe("No Report");
+    },
+  );
+
   it("rejects conflicting outer and package versions in report evidence", () => {
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
@@ -309,6 +342,35 @@ describe("proposal narrative posture view model", () => {
           related_version_no: 2,
           status: "REQUESTED",
           include_reviewed_narrative: false,
+          proposal_narrative_package: {
+            package_status: "REQUESTED",
+            source_narrative_hash: "sha256:stable-narrative",
+          },
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+  });
+
+  it("rejects malformed reviewed-rationale markers", () => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      review: {
+        narrative_review: {
+          proposal_id: "pp_1",
+          proposal_version_no: 2,
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:stable-narrative",
+        },
+      },
+      summary: {
+        reporting: {
+          related_version_no: 2,
+          status: "REQUESTED",
+          include_reviewed_narrative: "true" as unknown as boolean,
           proposal_narrative_package: {
             package_status: "REQUESTED",
             source_narrative_hash: "sha256:stable-narrative",
@@ -551,6 +613,26 @@ describe("proposal narrative posture view model", () => {
             include_reviewed_narrative: true,
             proposal_narrative_package: {
               related_version_no: 1,
+              package_status: "REQUESTED",
+              source_narrative_hash: "sha256:narrative-001",
+            },
+          },
+        },
+      }),
+    ).toThrow(
+      "refreshed preparation status for the reviewed proposal version was not available",
+    );
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        versionNo: 2,
+        report,
+        summary: {
+          reporting: {
+            report_request_id: "report-001",
+            related_version_no: 2,
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              related_version_no: 0,
               package_status: "REQUESTED",
               source_narrative_hash: "sha256:narrative-001",
             },
