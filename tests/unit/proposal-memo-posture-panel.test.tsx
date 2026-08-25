@@ -33,6 +33,8 @@ vi.mock("../../src/features/proposals/api", () => ({
 
 const MEMO_HASH = "sha256:memo-001";
 const COMMENTARY_EVENT_ID = "memo-ai-event-001";
+const REPORT_EVENT_ID = "memo-report-event-001";
+const REVIEW_EVENT_ID = "memo-review-event-001";
 const PROPOSAL_ID = "pp_1";
 const VERSION_NO = 2;
 
@@ -41,6 +43,14 @@ function proposalSummary(versionNo = VERSION_NO) {
     proposal_id: PROPOSAL_ID,
     current_state: "DRAFT",
     current_version_no: versionNo,
+  };
+}
+
+function actionEvent(eventId: string, eventType: string) {
+  return {
+    event_id: eventId,
+    event_type: eventType,
+    reason: { source_memo_hash: MEMO_HASH },
   };
 }
 
@@ -105,14 +115,27 @@ function evidenceState({
       review_posture: reviewPosture,
       report_package_posture: reportPosture,
       ai_commentary_posture: commentaryPosture,
-      audit_events: commentaryRecorded
-        ? [
-            {
-              event_id: COMMENTARY_EVENT_ID,
-              event_type: "MEMO_AI_REFERENCE_RECORDED",
-            },
-          ]
-        : [],
+      audit_events: [
+        ...(reviewed
+          ? [actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED")]
+          : []),
+        ...(reportRecorded
+          ? [
+              actionEvent(
+                REPORT_EVENT_ID,
+                "MEMO_REPORT_PACKAGE_RECORDED",
+              ),
+            ]
+          : []),
+        ...(commentaryRecorded
+          ? [
+              actionEvent(
+                COMMENTARY_EVENT_ID,
+                "MEMO_AI_REFERENCE_RECORDED",
+              ),
+            ]
+          : []),
+      ],
     },
     projection: {
       proposal: proposalSummary(versionNo),
@@ -151,12 +174,23 @@ function evidenceState({
       hashes: { memo_hash: MEMO_HASH },
       audit_events: [
         { event_type: "MEMO_DRAFT_CREATED" },
+        ...(reviewed
+          ? [actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED")]
+          : []),
+        ...(reportRecorded
+          ? [
+              actionEvent(
+                REPORT_EVENT_ID,
+                "MEMO_REPORT_PACKAGE_RECORDED",
+              ),
+            ]
+          : []),
         ...(commentaryRecorded
           ? [
-              {
-                event_id: COMMENTARY_EVENT_ID,
-                event_type: "MEMO_AI_REFERENCE_RECORDED",
-              },
+              actionEvent(
+                COMMENTARY_EVENT_ID,
+                "MEMO_AI_REFERENCE_RECORDED",
+              ),
             ]
           : []),
       ],
@@ -295,7 +329,7 @@ describe("ProposalMemoPosturePanel", () => {
       sourceState = evidenceState({ reviewed: true });
       return {
         memo: sourceState.memo,
-        review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+        review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
         replayed: false,
       };
     });
@@ -346,7 +380,10 @@ describe("ProposalMemoPosturePanel", () => {
       sourceState = evidenceState({ reviewed: true, reportRecorded: true });
       return {
         memo: sourceState.memo,
-        report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+        report_package_event: actionEvent(
+          REPORT_EVENT_ID,
+          "MEMO_REPORT_PACKAGE_RECORDED",
+        ),
         report: { status: "ARCHIVED" },
         replayed: false,
       };
@@ -389,10 +426,10 @@ describe("ProposalMemoPosturePanel", () => {
         });
         return {
           memo: sourceState.memo,
-          ai_event: {
-            event_id: COMMENTARY_EVENT_ID,
-            event_type: "MEMO_AI_REFERENCE_RECORDED",
-          },
+          ai_event: actionEvent(
+            COMMENTARY_EVENT_ID,
+            "MEMO_AI_REFERENCE_RECORDED",
+          ),
           commentary: {
             status: "REVIEW_REQUIRED",
             authoritative_for_memo_status: false,
@@ -438,10 +475,10 @@ describe("ProposalMemoPosturePanel", () => {
     });
     vi.mocked(requestProposalMemoAdvisorCommentary).mockResolvedValue({
       memo: sourceState.memo,
-      ai_event: {
-        event_id: "memo-ai-event-current",
-        event_type: "MEMO_AI_REFERENCE_RECORDED",
-      },
+      ai_event: actionEvent(
+        "memo-ai-event-current",
+        "MEMO_AI_REFERENCE_RECORDED",
+      ),
       commentary: {
         status: "REVIEW_REQUIRED",
         authoritative_for_memo_status: false,
@@ -477,7 +514,7 @@ describe("ProposalMemoPosturePanel", () => {
           source_memo_hash: MEMO_HASH,
         },
       },
-      review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
       replayed: false,
     });
     renderPanel();

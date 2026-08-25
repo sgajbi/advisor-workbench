@@ -13,6 +13,8 @@ import {
 
 const MEMO_HASH = "sha256:memo-001";
 const COMMENTARY_EVENT_ID = "memo-ai-event-001";
+const REPORT_EVENT_ID = "memo-report-event-001";
+const REVIEW_EVENT_ID = "memo-review-event-001";
 const PROPOSAL_ID = "pp_1";
 const VERSION_NO = 2;
 
@@ -21,6 +23,14 @@ function proposalSummary() {
     proposal_id: PROPOSAL_ID,
     current_state: "DRAFT",
     current_version_no: VERSION_NO,
+  };
+}
+
+function actionEvent(eventId: string, eventType: string, memoHash = MEMO_HASH) {
+  return {
+    event_id: eventId,
+    event_type: eventType,
+    reason: { source_memo_hash: memoHash },
   };
 }
 
@@ -59,10 +69,9 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
         authoritative_for_memo_status: false,
       },
       audit_events: [
-        {
-          event_id: COMMENTARY_EVENT_ID,
-          event_type: "MEMO_AI_REFERENCE_RECORDED",
-        },
+        actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+        actionEvent(REPORT_EVENT_ID, "MEMO_REPORT_PACKAGE_RECORDED"),
+        actionEvent(COMMENTARY_EVENT_ID, "MEMO_AI_REFERENCE_RECORDED"),
       ],
     },
     projection: {
@@ -104,10 +113,9 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
       hashes: { memo_hash: MEMO_HASH },
       audit_events: [
         { event_type: "MEMO_DRAFT_CREATED" },
-        {
-          event_id: COMMENTARY_EVENT_ID,
-          event_type: "MEMO_AI_REFERENCE_RECORDED",
-        },
+        actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+        actionEvent(REPORT_EVENT_ID, "MEMO_REPORT_PACKAGE_RECORDED"),
+        actionEvent(COMMENTARY_EVENT_ID, "MEMO_AI_REFERENCE_RECORDED"),
       ],
       explanation: { client_ready_publication: "BLOCKED" },
     },
@@ -489,7 +497,7 @@ describe("proposal memo source-refresh confirmation", () => {
       confirmMemoReviewRefresh({
         action: {
           memo: staleMemo,
-          review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+          review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
         },
         refreshed,
       }),
@@ -498,7 +506,10 @@ describe("proposal memo source-refresh confirmation", () => {
       confirmMemoReportPackageRefresh({
         action: {
           memo: staleMemo,
-          report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+          report_package_event: actionEvent(
+            REPORT_EVENT_ID,
+            "MEMO_REPORT_PACKAGE_RECORDED",
+          ),
           report: { status: "ARCHIVED" },
         },
         refreshed,
@@ -510,10 +521,10 @@ describe("proposal memo source-refresh confirmation", () => {
       confirmMemoCommentaryRefresh({
         action: {
           memo: staleMemo,
-          ai_event: {
-            event_id: COMMENTARY_EVENT_ID,
-            event_type: "MEMO_AI_REFERENCE_RECORDED",
-          },
+          ai_event: actionEvent(
+            COMMENTARY_EVENT_ID,
+            "MEMO_AI_REFERENCE_RECORDED",
+          ),
           commentary: {
             authoritative_for_memo_status: false,
             status: "REVIEW_REQUIRED",
@@ -529,7 +540,7 @@ describe("proposal memo source-refresh confirmation", () => {
   it("confirms review only from the review event and refreshed approved posture", () => {
     const action = {
       memo: alignedEvidence().memo,
-      review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
       replayed: false,
     };
     expect(() =>
@@ -538,7 +549,10 @@ describe("proposal memo source-refresh confirmation", () => {
 
     expect(() =>
       confirmMemoReviewRefresh({
-        action: { ...action, review_event: { event_type: "MEMO_REVIEW_REQUESTED" } },
+        action: {
+          ...action,
+          review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_REQUESTED"),
+        },
         refreshed: alignedEvidence(),
       }),
     ).toThrow("Advisor review was recorded, but refreshed memo evidence did not confirm it.");
@@ -547,7 +561,10 @@ describe("proposal memo source-refresh confirmation", () => {
   it("confirms discussion material only after the report event appears in refreshed posture", () => {
     const action = {
       memo: alignedEvidence().memo,
-      report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+      report_package_event: actionEvent(
+        REPORT_EVENT_ID,
+        "MEMO_REPORT_PACKAGE_RECORDED",
+      ),
       report: { status: "ARCHIVED" },
       replayed: false,
     };
@@ -565,13 +582,74 @@ describe("proposal memo source-refresh confirmation", () => {
     );
   });
 
+  it("rejects action events that are absent, stale, or padded in refreshed evidence", () => {
+    const withoutReviewEvent = alignedEvidence();
+    withoutReviewEvent.memo = {
+      ...withoutReviewEvent.memo,
+      audit_events: withoutReviewEvent.memo?.audit_events?.filter(
+        (event) => event.event_id !== REVIEW_EVENT_ID,
+      ),
+    };
+    withoutReviewEvent.replay = {
+      ...withoutReviewEvent.replay,
+      audit_events: withoutReviewEvent.replay?.audit_events?.filter(
+        (event) => event.event_id !== REVIEW_EVENT_ID,
+      ),
+    };
+    expect(() =>
+      confirmMemoReviewRefresh({
+        action: {
+          memo: alignedEvidence().memo,
+          review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+        },
+        refreshed: withoutReviewEvent,
+      }),
+    ).toThrow("Advisor review was recorded, but refreshed memo evidence did not confirm it.");
+
+    expect(() =>
+      confirmMemoReportPackageRefresh({
+        action: {
+          memo: alignedEvidence().memo,
+          report_package_event: actionEvent(
+            REPORT_EVENT_ID,
+            "MEMO_REPORT_PACKAGE_RECORDED",
+            "sha256:stale",
+          ),
+          report: { status: "ARCHIVED" },
+        },
+        refreshed: alignedEvidence(),
+      }),
+    ).toThrow(
+      "Discussion material was requested, but refreshed memo evidence did not confirm it.",
+    );
+
+    expect(() =>
+      confirmMemoCommentaryRefresh({
+        action: {
+          memo: alignedEvidence().memo,
+          ai_event: actionEvent(
+            ` ${COMMENTARY_EVENT_ID}`,
+            "MEMO_AI_REFERENCE_RECORDED",
+          ),
+          commentary: {
+            authoritative_for_memo_status: false,
+            status: "REVIEW_REQUIRED",
+          },
+        },
+        refreshed: alignedEvidence(),
+      }),
+    ).toThrow(
+      "Advisor commentary was requested, but refreshed memo evidence did not confirm it.",
+    );
+  });
+
   it("keeps commentary non-authoritative and requires refreshed source evidence", () => {
     const action = {
       memo: alignedEvidence().memo,
-      ai_event: {
-        event_id: COMMENTARY_EVENT_ID,
-        event_type: "MEMO_AI_REFERENCE_RECORDED",
-      },
+      ai_event: actionEvent(
+        COMMENTARY_EVENT_ID,
+        "MEMO_AI_REFERENCE_RECORDED",
+      ),
       commentary: { status: "REVIEW_REQUIRED", authoritative_for_memo_status: false },
       replayed: false,
     };
@@ -583,10 +661,10 @@ describe("proposal memo source-refresh confirmation", () => {
       confirmMemoCommentaryRefresh({
         action: {
           ...action,
-          ai_event: {
-            event_id: "memo-ai-event-current",
-            event_type: "MEMO_AI_REFERENCE_RECORDED",
-          },
+          ai_event: actionEvent(
+            "memo-ai-event-current",
+            "MEMO_AI_REFERENCE_RECORDED",
+          ),
         },
         refreshed: alignedEvidence(),
       }),

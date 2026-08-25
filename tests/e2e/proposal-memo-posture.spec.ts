@@ -36,6 +36,9 @@ async function mockProposalDetail(
   let narrativeReviewedBy: string | null = null;
   let narrativeReviewedAt: string | null = null;
   let discussionPackRequested = false;
+  const memoHash = "sha256:memo-001";
+  const memoReportEventId = "memo-report-event-001";
+  const memoReviewEventId = "memo-review-event-001";
   const initialMemoState = options.memoInitialState ?? "complete";
   const memoSourceVersionNo = options.memoSourceVersionNo ?? 2;
   let memoReviewed = initialMemoState !== "unreviewed";
@@ -306,7 +309,10 @@ async function mockProposalDetail(
           contract_version: "v1",
           data: {
             memo: { ...memoResponse(), review_posture: recordedReviewPosture() },
-            review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+            review_event: memoActionEvent(
+              memoReviewEventId,
+              "MEMO_REVIEW_RECORDED",
+            ),
             replayed: false,
           },
         },
@@ -323,7 +329,10 @@ async function mockProposalDetail(
           contract_version: "v1",
           data: {
             memo: memoResponse(),
-            report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+            report_package_event: memoActionEvent(
+              memoReportEventId,
+              "MEMO_REPORT_PACKAGE_RECORDED",
+            ),
             report: { status: "ARCHIVED" },
             replayed: false,
           },
@@ -345,10 +354,10 @@ async function mockProposalDetail(
           contract_version: "v1",
           data: {
             memo: memoResponse(),
-            ai_event: {
-              event_id: actionEventId,
-              event_type: "MEMO_AI_REFERENCE_RECORDED",
-            },
+            ai_event: memoActionEvent(
+              actionEventId,
+              "MEMO_AI_REFERENCE_RECORDED",
+            ),
             commentary: { status: "REVIEW_REQUIRED", authoritative_for_memo_status: false },
             replayed: false,
           },
@@ -425,12 +434,23 @@ async function mockProposalDetail(
           hashes: { memo_hash: "sha256:memo-001" },
           audit_events: [
             { event_type: "MEMO_DRAFT_CREATED" },
+            ...(memoReviewed
+              ? [memoActionEvent(memoReviewEventId, "MEMO_REVIEW_RECORDED")]
+              : []),
+            ...(memoReportRecorded
+              ? [
+                  memoActionEvent(
+                    memoReportEventId,
+                    "MEMO_REPORT_PACKAGE_RECORDED",
+                  ),
+                ]
+              : []),
             ...(memoCommentaryEventId
               ? [
-                  {
-                    event_id: memoCommentaryEventId,
-                    event_type: "MEMO_AI_REFERENCE_RECORDED",
-                  },
+                  memoActionEvent(
+                    memoCommentaryEventId,
+                    "MEMO_AI_REFERENCE_RECORDED",
+                  ),
                 ]
               : []),
           ],
@@ -459,6 +479,13 @@ async function mockProposalDetail(
       status: "RECORDED",
       review_action: "APPROVE_FOR_ADVISOR_USE",
       source_memo_hash: "sha256:memo-001",
+    };
+  }
+  function memoActionEvent(eventId: string, eventType: string) {
+    return {
+      event_id: eventId,
+      event_type: eventType,
+      reason: { source_memo_hash: memoHash },
     };
   }
   function narrativeReviewRecord({
@@ -506,11 +533,11 @@ async function mockProposalDetail(
       proposal_version_no: memoSourceVersionNo,
       memo_id: "memo_1",
       memo_status: "READY",
-      memo_hash: "sha256:memo-001",
+      memo_hash: memoHash,
       memo: {
         memo_hash: options.memoNestedIdentityMismatch
           ? "sha256:stale-pack"
-          : "sha256:memo-001",
+          : memoHash,
         memo_id: options.memoNestedIdentityMismatch ? "memo_stale" : "memo_1",
         proposal_id: "pp_1",
         proposal_version_no: memoSourceVersionNo,
@@ -519,14 +546,27 @@ async function mockProposalDetail(
       review_posture: memoReviewed ? recordedReviewPosture() : { status: "NOT_RECORDED" },
       report_package_posture: reportPosture(),
       ai_commentary_posture: commentaryPosture(),
-      audit_events: memoCommentaryEventId
-        ? [
-            {
-              event_id: memoCommentaryEventId,
-              event_type: "MEMO_AI_REFERENCE_RECORDED",
-            },
-          ]
-        : [],
+      audit_events: [
+        ...(memoReviewed
+          ? [memoActionEvent(memoReviewEventId, "MEMO_REVIEW_RECORDED")]
+          : []),
+        ...(memoReportRecorded
+          ? [
+              memoActionEvent(
+                memoReportEventId,
+                "MEMO_REPORT_PACKAGE_RECORDED",
+              ),
+            ]
+          : []),
+        ...(memoCommentaryEventId
+          ? [
+              memoActionEvent(
+                memoCommentaryEventId,
+                "MEMO_AI_REFERENCE_RECORDED",
+              ),
+            ]
+          : []),
+      ],
     };
   }
 }
