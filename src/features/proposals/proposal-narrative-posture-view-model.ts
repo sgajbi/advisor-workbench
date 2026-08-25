@@ -221,23 +221,33 @@ function resolveNarrativeIdentity({
   hashes,
   versions,
 }: {
-  hashes: readonly (string | null | undefined)[];
-  versions: readonly (number | null | undefined)[];
+  hashes: readonly unknown[];
+  versions: readonly unknown[];
 }): NarrativeIdentity | null {
   const presentHashes = hashes.filter(
-    (hash): hash is string => typeof hash === "string" && hash.length > 0,
+    (hash) => hash !== null && hash !== undefined,
   );
   const presentVersions = versions.filter(
-    (version): version is number =>
-      typeof version === "number" &&
-      Number.isSafeInteger(version) &&
-      version > 0,
+    (version) => version !== null && version !== undefined,
   );
-  const hash = presentHashes[0];
-  const versionNo = presentVersions[0];
   if (
-    hash === undefined ||
-    versionNo === undefined ||
+    presentHashes.length === 0 ||
+    presentVersions.length === 0 ||
+    !presentHashes.every(
+      (hash) => typeof hash === "string" && hash.length > 0,
+    ) ||
+    !presentVersions.every(
+      (version) =>
+        typeof version === "number" &&
+        Number.isSafeInteger(version) &&
+        version > 0,
+    )
+  ) {
+    return null;
+  }
+  const hash = presentHashes[0] as string;
+  const versionNo = presentVersions[0] as number;
+  if (
     !presentHashes.every((candidate) => candidate === hash) ||
     !presentVersions.every((candidate) => candidate === versionNo)
   ) {
@@ -259,12 +269,15 @@ function narrativeIdentitiesMatch(
 }
 
 function allPresentBooleanMarkersAreTrue(
-  markers: readonly (boolean | null | undefined)[],
+  markers: readonly unknown[],
 ): boolean {
   const presentMarkers = markers.filter(
-    (marker): marker is boolean => typeof marker === "boolean",
+    (marker) => marker !== null && marker !== undefined,
   );
-  return presentMarkers.length > 0 && presentMarkers.every(Boolean);
+  return (
+    presentMarkers.length > 0 &&
+    presentMarkers.every((marker) => marker === true)
+  );
 }
 
 function projectNarrativeNextAction({
