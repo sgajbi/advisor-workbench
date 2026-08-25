@@ -407,7 +407,9 @@ describe("live validation browser workflow helpers", () => {
   it("drives the current two-step Advisor Brief review workflow for canonical proof", () => {
     const source = validateAdvisorBriefPanel.toString();
 
-    expect(source).toContain('getByLabel("Adviser brief human review")');
+    expect(source).toMatch(
+      /getByLabel\("Adviser brief human review",\s*\{\s*exact: true/,
+    );
     expect(source).toContain("hasRecordedAdvisorBriefAcceptProof");
     expect(source).toContain("source-confirmed-existing-action");
     expect(source).toContain("accepted-by-another-reviewer");

@@ -1269,6 +1269,11 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'name: "Report centre", exact: true',
     );
+    for (const label of ["MTD return", "QTD return", "YTD return"]) {
+      expect(browserWorkflowModule).toContain(
+        `page.getByText("${label}", { exact: true })`,
+      );
+    }
     expect(browserWorkflowModule).toContain(
       'name: "Time-weighted return path · Net of fees"',
     );
@@ -1284,6 +1289,17 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'name: /Prepare AI-assisted review summary/',
     );
+    for (const label of [
+      "Adviser talking points",
+      "Source metrics",
+      "Mandate review",
+      "Attention items",
+      "Mandate health dimensions",
+    ]) {
+      expect(browserWorkflowModule).toMatch(
+        new RegExp(`name: "${label}",[\\s\\S]{0,40}exact: true`),
+      );
+    }
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Adviser brief human review");
     expect(browserWorkflowModule).toContain('selectOption("ACCEPT")');
