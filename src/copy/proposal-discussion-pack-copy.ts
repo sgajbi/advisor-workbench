@@ -11,6 +11,7 @@ export const PROPOSAL_DISCUSSION_PACK_COPY = Object.freeze({
       "Resolve narrative, memo, disclosure and consent actions before using the pack.",
   }),
   worklistAriaLabel: "Discussion pack proposals",
+  selectedRegionAriaLabel: "Selected discussion pack review",
   workspaceTitle: "Client meeting preparation",
   workspaceSubtitle:
     "Select a proposal, review the current meeting material, and resolve every client-use control before the discussion.",

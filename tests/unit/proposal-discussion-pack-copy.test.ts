@@ -19,6 +19,9 @@ describe("Proposal Discussion Pack business copy", () => {
     expect(PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle).toBe(
       "Client meeting preparation",
     );
+    expect(PROPOSAL_DISCUSSION_PACK_COPY.selectedRegionAriaLabel).toBe(
+      "Selected discussion pack review",
+    );
     expect(PROPOSAL_DISCUSSION_PACK_COPY.emptyTitle).toBe(
       "No discussion packs need review",
     );
