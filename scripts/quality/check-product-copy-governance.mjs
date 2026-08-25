@@ -208,7 +208,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
       if (isStaticObjectPropertyBinding(node)) {
         return resolveStaticObjectPropertyBinding(node);
       }
-      if (isStaticObjectRestBinding(node)) {
+      if (isStaticObjectRestBinding(node) || isStaticAlternatives(node)) {
         return node;
       }
       const unwrapped = unwrapCopyExpression(node);
@@ -261,7 +261,14 @@ export function scanProductCopySource({ filePath, sourceText }) {
       ) {
         return resolveStaticFallback(binding);
       }
-      return resolveStaticExpression(property) ?? resolveStaticFallback(binding);
+      const resolvedProperty = resolveStaticExpression(property);
+      const resolvedFallback = resolveStaticFallback(binding);
+      if (!resolvedFallback || isProvablyDefinedStaticValue(resolvedProperty)) {
+        return resolvedProperty ?? resolvedFallback;
+      }
+      return staticAlternatives(
+        [resolvedProperty, resolvedFallback].filter(Boolean),
+      );
     }
 
     function resolveStaticFallback(binding) {
@@ -278,6 +285,12 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
 
     function visitResolvedCopyExpression(node) {
+      if (isStaticAlternatives(node)) {
+        for (const candidate of node.candidates) {
+          visitResolvedCopyExpression(candidate);
+        }
+        return;
+      }
       if (
         ts.isStringLiteral(node) ||
         ts.isNoSubstitutionTemplateLiteral(node) ||
@@ -563,6 +576,36 @@ function staticObjectRestBinding(owner, excludedPropertyNames) {
 
 function isStaticObjectRestBinding(value) {
   return value?.bindingKind === "object-rest";
+}
+
+function staticAlternatives(candidates) {
+  return { bindingKind: "alternatives", candidates };
+}
+
+function isStaticAlternatives(value) {
+  return value?.bindingKind === "alternatives";
+}
+
+function isProvablyDefinedStaticValue(value) {
+  if (!value || isStaticAlternatives(value)) {
+    return false;
+  }
+  const node = unwrapCopyExpression(value);
+  return (
+    ts.isStringLiteral(node)
+    || ts.isNoSubstitutionTemplateLiteral(node)
+    || ts.isTemplateExpression(node)
+    || ts.isNumericLiteral(node)
+    || ts.isBigIntLiteral(node)
+    || ts.isObjectLiteralExpression(node)
+    || ts.isArrayLiteralExpression(node)
+    || ts.isFunctionExpression(node)
+    || ts.isArrowFunction(node)
+    || ts.isClassExpression(node)
+    || node.kind === ts.SyntaxKind.TrueKeyword
+    || node.kind === ts.SyntaxKind.FalseKeyword
+    || node.kind === ts.SyntaxKind.NullKeyword
+  );
 }
 
 function bindingIdentifiers(name) {
