@@ -72,6 +72,8 @@ export default function ProposalNarrativePosturePanel({
   const posture = useMemo(
     () =>
       buildProposalNarrativePostureModel({
+        proposalId,
+        versionNo,
         review: narrativeReviewQuery.data,
         report: reportData,
         summary: summaryQuery.data,
@@ -80,8 +82,10 @@ export default function ProposalNarrativePosturePanel({
     [
       eventsQuery.data,
       narrativeReviewQuery.data,
+      proposalId,
       reportData,
       summaryQuery.data,
+      versionNo,
     ],
   );
 
@@ -91,7 +95,11 @@ export default function ProposalNarrativePosturePanel({
     reviewReason.trim().length > 0;
 
   async function handleApproveNarrative() {
-    if (!canSubmit) {
+    if (
+      versionNo === null ||
+      reviewedBy.trim().length === 0 ||
+      reviewReason.trim().length === 0
+    ) {
       return;
     }
     setPendingAction("review");
@@ -123,6 +131,8 @@ export default function ProposalNarrativePosturePanel({
         throw new Error("REFRESH_UNAVAILABLE");
       }
       confirmNarrativeReviewRefresh({
+        proposalId,
+        versionNo,
         review: data,
         refreshedReview: narrativeResult.data ?? undefined,
       });
@@ -170,6 +180,7 @@ export default function ProposalNarrativePosturePanel({
         throw new Error("REFRESH_UNAVAILABLE");
       }
       confirmDiscussionPackRefresh({
+        versionNo,
         report: data,
         summary: summaryResult.data,
       });
