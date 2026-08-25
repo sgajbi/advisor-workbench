@@ -36,9 +36,11 @@ describe("manage overview model", () => {
           label: "Data availability",
           support: "Mandate source availability",
         }),
-      ])
+      ]),
     );
-    expect(model.postureItems.map((item) => item.key)).not.toContain("approval");
+    expect(model.postureItems.map((item) => item.key)).not.toContain(
+      "approval",
+    );
     expect(model.activeRebalance).toMatchObject({
       state: "READY",
       supportabilityState: "SUPPORTED",
@@ -60,7 +62,7 @@ describe("manage overview model", () => {
           status: "Supported",
           actionHref: "/workbench/PF_1001?portfolioId=PF_1001&mode=waves",
         }),
-      ])
+      ]),
     );
     expect(model.blockedSurfaces).toEqual([]);
     expect(model.overviewPostureLabel).toBe("Action required");
@@ -76,7 +78,7 @@ describe("manage overview model", () => {
         pmOperatingQualityPoliciesError: "Gateway timeout",
         pmOperatingQualityScoreRunsError: "Gateway timeout",
         outcomeReviewError: "Gateway timeout",
-      })
+      }),
     );
 
     expect(model.blockedSurfaces).toEqual(["Mandate health"]);
@@ -89,10 +91,14 @@ describe("manage overview model", () => {
           value: "Not available",
           tone: "warn",
         }),
-      ])
+      ]),
     );
-    expect(model.decisionItems.map((item) => item.title)).not.toContain("Client Communication");
-    expect(model.decisionItems.map((item) => item.title)).not.toContain("Trade Approval");
+    expect(model.decisionItems.map((item) => item.title)).not.toContain(
+      "Client Communication",
+    );
+    expect(model.decisionItems.map((item) => item.title)).not.toContain(
+      "Trade Approval",
+    );
   });
 
   it("does not infer a balanced mandate when the source omits risk profile", () => {
@@ -106,7 +112,7 @@ describe("manage overview model", () => {
             risk_profile: null,
           },
         },
-      })
+      }),
     );
 
     expect(model.portfolioSummary.riskProfile).toBe("Not reported");
@@ -149,7 +155,7 @@ describe("manage overview model", () => {
           ...base.commandCenterExceptions!,
           data: { items: [], next_cursor: null },
         },
-      })
+      }),
     );
 
     expect(model.blockedSurfaces).toEqual([]);
@@ -164,9 +170,9 @@ describe("manage overview model", () => {
     ["DEGRADED", "Needs attention", "warn"],
     ["STALE", "Stale", "warn"],
     ["BLOCKED", "Blocked", "danger"],
-    ["UNSUPPORTED", "Unsupported", "danger"],
+    ["UNSUPPORTED", "Not supported", "danger"],
     ["EMPTY", "Not available", "warn"],
-    ["UNKNOWN", "Not available", "warn"],
+    ["UNKNOWN", "Review required", "warn"],
   ] as const)(
     "keeps the source-owned mandate health state %s in the overview",
     (healthState, expectedValue, expectedTone) => {
@@ -184,7 +190,7 @@ describe("manage overview model", () => {
               health_state: healthState,
             },
           },
-        })
+        }),
       );
 
       expect(model.postureItems).toEqual(
@@ -194,9 +200,9 @@ describe("manage overview model", () => {
             value: expectedValue,
             tone: expectedTone,
           }),
-        ])
+        ]),
       );
-    }
+    },
   );
 
   it("keeps unavailable exception evidence distinct from a confirmed zero-attention queue", () => {
@@ -204,7 +210,7 @@ describe("manage overview model", () => {
       buildManageWorkspaceData({
         commandCenterExceptions: null,
         commandCenterExceptionsError: "Gateway timeout",
-      })
+      }),
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
@@ -215,7 +221,7 @@ describe("manage overview model", () => {
           value: "Not available",
           tone: "warn",
         }),
-      ])
+      ]),
     );
     expect(model.decisionItems).toEqual(
       expect.arrayContaining([
@@ -224,7 +230,7 @@ describe("manage overview model", () => {
           title: "Mandate attention evidence is unavailable",
           status: "Not available",
         }),
-      ])
+      ]),
     );
     expect(model.blockedSurfaces).toContain("Mandate attention items");
   });
@@ -240,13 +246,13 @@ describe("manage overview model", () => {
             state: "DEGRADED",
           },
         },
-      })
+      }),
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
-    expect(model.postureItems.find((item) => item.key === "attention")?.value).toBe(
-      "Not available"
-    );
+    expect(
+      model.postureItems.find((item) => item.key === "attention")?.value,
+    ).toBe("Not available");
   });
 
   it("keeps attention counts unknown when the portfolio exception page is truncated", () => {
@@ -260,15 +266,15 @@ describe("manage overview model", () => {
             next_cursor: "exc_002",
           },
         },
-      })
+      }),
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
     expect(model.hasAvailableExceptionEvidence).toBe(true);
     expect(model.exceptionEvidencePosture).toBe("partial");
-    expect(model.postureItems.find((item) => item.key === "attention")?.value).toBe(
-      "2 shown"
-    );
+    expect(
+      model.postureItems.find((item) => item.key === "attention")?.value,
+    ).toBe("2 shown");
     expect(model.decisionItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -282,7 +288,7 @@ describe("manage overview model", () => {
 
   it("preserves an unknown source issue count when wave evidence is unavailable", () => {
     const model = buildManageOverviewModel(
-      buildManageWorkspaceData({ waves: null, wavesError: "Gateway timeout" })
+      buildManageWorkspaceData({ waves: null, wavesError: "Gateway timeout" }),
     );
 
     expect(model.activeRebalance.issueCount).toBe("N/A");
@@ -377,7 +383,8 @@ describe("manage overview model", () => {
       supportabilityReason: "SOURCE_REVIEW_REQUIRED",
     });
     expect(
-      model.decisionItems.find((decision) => decision.kind === "rebalance")?.facts,
+      model.decisionItems.find((decision) => decision.kind === "rebalance")
+        ?.facts,
     ).toContainEqual({ label: "Proposed changes", value: "6" });
   });
 
@@ -407,7 +414,8 @@ describe("manage overview model", () => {
       supportabilityReason: "WAVE_READY",
     });
     expect(
-      model.decisionItems.find((decision) => decision.kind === "rebalance")?.facts,
+      model.decisionItems.find((decision) => decision.kind === "rebalance")
+        ?.facts,
     ).toContainEqual({ label: "Proposed changes", value: "4" });
   });
 
@@ -498,7 +506,7 @@ describe("manage overview model", () => {
     expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: "attention", value: "2" }),
-      ])
+      ]),
     );
   });
 
@@ -527,10 +535,12 @@ describe("manage overview model", () => {
           ...base.outcomeReviews!,
           data: { items: [] },
         },
-      })
+      }),
     );
 
-    expect(model.decisionItems.map((decision) => decision.kind)).toEqual(["rebalance"]);
+    expect(model.decisionItems.map((decision) => decision.kind)).toEqual([
+      "rebalance",
+    ]);
     expect(model.postureItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -538,7 +548,7 @@ describe("manage overview model", () => {
           value: "0",
           tone: "success",
         }),
-      ])
+      ]),
     );
   });
 });

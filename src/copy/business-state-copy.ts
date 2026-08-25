@@ -6,7 +6,11 @@ export type BusinessCopyProjection = {
 
 const BUSINESS_STATE_LABELS: Readonly<Record<string, string>> = Object.freeze({
   ACTIVE: "Open",
+  ACCEPTED: "Accepted",
   AVAILABLE: "Available",
+  AWAITING_REVIEW: "Awaiting review",
+  BALANCED: "Balanced",
+  BLOCKED: "Blocked",
   COMPLETE: "Complete",
   DEGRADED: "Needs attention",
   EMPTY: "Not available",
@@ -19,14 +23,18 @@ const BUSINESS_STATE_LABELS: Readonly<Record<string, string>> = Object.freeze({
   OPEN: "Open",
   PARTIAL: "Needs attention",
   PENDING: "In progress",
+  PENDING_REVIEW: "Pending review",
   PM_REVIEW_REQUIRED: "Portfolio manager review required",
   READY: "Ready",
   SIMULATION_READY: "Ready to simulate",
   SOURCE_CHECKED: "Data checked",
   SUCCEEDED: "Complete",
+  SUBMITTED: "Submitted",
   SUPPORTED: "Supported",
+  STALE: "Stale",
   UNKNOWN: "Review required",
   UNAVAILABLE: "Unavailable",
+  UNSUPPORTED: "Not supported",
 });
 
 const BUSINESS_REASON_LABELS: Readonly<Record<string, string>> = Object.freeze({
