@@ -473,7 +473,10 @@ function AdvisorBookSourceWorkspace({
       </SectionBlock>
 
       {model ? (
-        <details className={styles.supportDisclosure}>
+        <details
+          className={styles.supportDisclosure}
+          data-testid="advisor-book-operating-evidence"
+        >
           <summary>
             <span>
               <strong>Book scope and operating evidence</strong>

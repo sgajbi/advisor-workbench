@@ -1175,12 +1175,17 @@ export async function validateAdvisorBookPanel(
     .locator(`a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]`)
     .first();
   await expect(canonicalPortfolioLink).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByRole("heading", { name: "Operating boundaries" })).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(page.getByRole("heading", { name: "Operational details" })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  const operatingEvidence = page.getByTestId("advisor-book-operating-evidence");
+  await expect(operatingEvidence).toBeVisible({ timeout: timeoutMs });
+  await expect(operatingEvidence).not.toHaveAttribute("open", "");
+  await operatingEvidence.locator("summary").click();
+  await expect(operatingEvidence).toHaveAttribute("open", "");
+  await expect(
+    operatingEvidence.getByRole("heading", { name: "Operating boundaries" }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    operatingEvidence.getByRole("heading", { name: "Support references" }),
+  ).toBeVisible({ timeout: timeoutMs });
   await screenshotRegisteredPanel(page, "advisor.book_overview");
 }
 
