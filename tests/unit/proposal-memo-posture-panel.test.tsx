@@ -33,6 +33,16 @@ vi.mock("../../src/features/proposals/api", () => ({
 
 const MEMO_HASH = "sha256:memo-001";
 const COMMENTARY_EVENT_ID = "memo-ai-event-001";
+const PROPOSAL_ID = "pp_1";
+const VERSION_NO = 2;
+
+function proposalSummary(versionNo = VERSION_NO) {
+  return {
+    proposal_id: PROPOSAL_ID,
+    current_state: "DRAFT",
+    current_version_no: versionNo,
+  };
+}
 
 type EvidenceState = {
   lineage: ProposalMemoLineageData;
@@ -76,9 +86,15 @@ function evidenceState({
     : { status: "NOT_RECORDED" };
   return {
     memo: {
+      proposal: proposalSummary(),
+      proposal_version_no: VERSION_NO,
       memo_id: "memo_1",
       memo_hash: MEMO_HASH,
       memo_status: "READY",
+      memo: {
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: VERSION_NO,
+      },
       event_count:
         1 +
         Number(reviewed) +
@@ -97,6 +113,8 @@ function evidenceState({
         : [],
     },
     projection: {
+      proposal: proposalSummary(),
+      proposal_version_no: VERSION_NO,
       memo_id: "memo_1",
       memo_hash: MEMO_HASH,
       audience: "ADVISOR",
@@ -104,12 +122,14 @@ function evidenceState({
       projection_posture: { client_ready_publication: "BLOCKED" },
     },
     lineage: {
+      proposal: proposalSummary(),
       memo_count: 1,
       latest_memo_id: "memo_1",
       lineage_complete: true,
       memos: [
         {
           memo_id: "memo_1",
+          proposal_version_no: VERSION_NO,
           memo_hash: MEMO_HASH,
           event_count:
             1 +
@@ -121,6 +141,11 @@ function evidenceState({
       ],
     },
     replay: {
+      subject: {
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: VERSION_NO,
+        memo_id: "memo_1",
+      },
       hashes: { memo_hash: MEMO_HASH },
       audit_events: [
         { event_type: "MEMO_DRAFT_CREATED" },
@@ -221,7 +246,7 @@ describe("ProposalMemoPosturePanel", () => {
     sourceState = emptyEvidenceState();
     vi.mocked(createProposalMemo).mockImplementation(async () => {
       sourceState = evidenceState();
-      return { memo_hash: MEMO_HASH };
+      return sourceState.memo;
     });
     renderPanel();
     fireEvent.click(screen.getByText("Memo record details"));
@@ -462,6 +487,51 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByTestId("proposal-memo-action-status"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not unlock current-version actions from coherent stale-version evidence", async () => {
+    sourceState = evidenceState({ reviewed: true, reportRecorded: false });
+    sourceState.memo = {
+      ...sourceState.memo,
+      proposal: proposalSummary(1),
+      proposal_version_no: 1,
+      memo: {
+        ...sourceState.memo.memo,
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: 1,
+      },
+    };
+    sourceState.projection = {
+      ...sourceState.projection,
+      proposal: proposalSummary(1),
+      proposal_version_no: 1,
+    };
+    sourceState.lineage = {
+      ...sourceState.lineage,
+      proposal: proposalSummary(1),
+      memos: sourceState.lineage.memos?.map((memo) => ({
+        ...memo,
+        proposal_version_no: 1,
+      })),
+    };
+    sourceState.replay = {
+      ...sourceState.replay,
+      subject: {
+        ...sourceState.replay.subject,
+        proposal_id: PROPOSAL_ID,
+        proposal_version_no: 1,
+      },
+    };
+
+    renderPanel();
+
+    expect(await screen.findByText("Prepare the advisor memo")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Request discussion material" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /advisor commentary/i }),
     ).not.toBeInTheDocument();
   });
 

@@ -459,9 +459,19 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-memo-PRP-READY-001",
           contract_version: "v1",
           data: {
+            proposal: {
+              proposal_id: "PRP-READY-001",
+              current_state: "DRAFT",
+              current_version_no: 5,
+            },
+            proposal_version_no: 5,
             memo_id: "memo-PRP-READY-001",
             memo_status: "READY",
             memo_hash: "sha256:memo-PRP-READY-001",
+            memo: {
+              proposal_id: "PRP-READY-001",
+              proposal_version_no: 5,
+            },
             review_posture: {
               status: "RECORDED",
               review_action: "APPROVE_FOR_ADVISOR_USE",
@@ -482,6 +492,12 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-projection-PRP-READY-001",
           contract_version: "v1",
           data: {
+            proposal: {
+              proposal_id: "PRP-READY-001",
+              current_state: "DRAFT",
+              current_version_no: 5,
+            },
+            proposal_version_no: 5,
             memo_id: "memo-PRP-READY-001",
             memo_hash: "sha256:memo-PRP-READY-001",
             audience: "ADVISOR",
@@ -501,12 +517,18 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-memo-lineage-PRP-READY-001",
           contract_version: "v1",
           data: {
+            proposal: {
+              proposal_id: "PRP-READY-001",
+              current_state: "DRAFT",
+              current_version_no: 5,
+            },
             memo_count: 1,
             latest_memo_id: "memo-PRP-READY-001",
             lineage_complete: true,
             memos: [
               {
                 memo_id: "memo-PRP-READY-001",
+                proposal_version_no: 5,
                 memo_hash: "sha256:memo-PRP-READY-001",
                 memo_status: "READY",
                 event_count: 2,
@@ -526,7 +548,11 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-replay-PRP-READY-001",
           contract_version: "v1",
           data: {
-            subject: { memo_id: "memo-PRP-READY-001", proposal_version_no: 5 },
+            subject: {
+              proposal_id: "PRP-READY-001",
+              memo_id: "memo-PRP-READY-001",
+              proposal_version_no: 5,
+            },
             hashes: { memo_hash: "sha256:memo-PRP-READY-001" },
             audit_events: [
               { event_type: "MEMO_DRAFT_CREATED" },

@@ -1019,8 +1019,13 @@ export type ProposalMemoLineageData = {
 };
 
 export type ProposalMemoReplayEvidenceData = {
-  proposal?: ProposalSummary;
-  subject?: Record<string, unknown>;
+  subject?: {
+    proposal_id?: string;
+    proposal_version_no?: number;
+    proposal_version_id?: string | null;
+    memo_id?: string;
+    [key: string]: unknown;
+  };
   hashes?: Record<string, unknown>;
   replay_metadata?: Record<string, unknown>;
   audit_events?: Array<Record<string, unknown>>;

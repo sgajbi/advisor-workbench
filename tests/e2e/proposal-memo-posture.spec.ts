@@ -19,6 +19,7 @@ type ProposalMockOptions = {
   memoCommentaryRefreshMismatch?: boolean;
   memoReviewFailure?: boolean;
   memoReviewRefreshMismatch?: boolean;
+  memoSourceVersionNo?: number;
   narrativeReviewFailure?: boolean;
   narrativeRefreshMismatch?: boolean;
   workflowFailure?: boolean;
@@ -35,6 +36,7 @@ async function mockProposalDetail(
   let narrativeReviewedAt: string | null = null;
   let discussionPackRequested = false;
   const initialMemoState = options.memoInitialState ?? "complete";
+  const memoSourceVersionNo = options.memoSourceVersionNo ?? 2;
   let memoReviewed = initialMemoState !== "unreviewed";
   let memoReportRecorded = initialMemoState === "complete";
   let memoCommentaryRecorded = options.memoCommentaryInitiallyRecorded ?? false;
@@ -361,6 +363,12 @@ async function mockProposalDetail(
         correlation_id: "corr-projection",
         contract_version: "v1",
         data: {
+          proposal: {
+            proposal_id: "pp_1",
+            current_state: sourceState,
+            current_version_no: memoSourceVersionNo,
+          },
+          proposal_version_no: memoSourceVersionNo,
           memo_id: "memo_1",
           memo_hash: "sha256:memo-001",
           audience,
@@ -380,11 +388,17 @@ async function mockProposalDetail(
         correlation_id: "corr-memo-lineage",
         contract_version: "v1",
         data: {
+          proposal: {
+            proposal_id: "pp_1",
+            current_state: sourceState,
+            current_version_no: memoSourceVersionNo,
+          },
           memo_count: 1,
           latest_memo_id: "memo_1",
           lineage_complete: true,
           memos: [{
             memo_id: "memo_1",
+            proposal_version_no: memoSourceVersionNo,
             memo_hash: "sha256:memo-001",
             memo_status: "READY",
             event_count: 1 + Number(memoReviewed) + Number(memoReportRecorded) + Number(memoCommentaryRecorded),
@@ -402,7 +416,11 @@ async function mockProposalDetail(
         correlation_id: "corr-replay",
         contract_version: "v1",
         data: {
-          subject: { memo_id: "memo_1", proposal_version_no: 2 },
+          subject: {
+            proposal_id: "pp_1",
+            memo_id: "memo_1",
+            proposal_version_no: memoSourceVersionNo,
+          },
           hashes: { memo_hash: "sha256:memo-001" },
           audit_events: [
             { event_type: "MEMO_DRAFT_CREATED" },
@@ -479,9 +497,19 @@ async function mockProposalDetail(
   }
   function memoResponse() {
     return {
+      proposal: {
+        proposal_id: "pp_1",
+        current_state: sourceState,
+        current_version_no: memoSourceVersionNo,
+      },
+      proposal_version_no: memoSourceVersionNo,
       memo_id: "memo_1",
       memo_status: "READY",
       memo_hash: "sha256:memo-001",
+      memo: {
+        proposal_id: "pp_1",
+        proposal_version_no: memoSourceVersionNo,
+      },
       event_count: 1 + Number(memoReviewed) + Number(memoReportRecorded) + Number(memoCommentaryRecorded),
       review_posture: memoReviewed ? recordedReviewPosture() : { status: "NOT_RECORDED" },
       report_package_posture: reportPosture(),
@@ -546,6 +574,23 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByText("DEGRADED_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText("MEMO_BLOCKED_BY_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText(/ready for client/i)).toHaveCount(0);
+  });
+
+  test("does not authorize current-version actions from coherent stale-version evidence", async ({
+    page,
+  }) => {
+    await mockProposalDetail(page, { memoSourceVersionNo: 1 });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+
+    await expect(page.getByRole("heading", { name: "Prepare the advisor memo" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Request discussion material" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /advisor commentary/i }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Evidence aligned")).toHaveCount(0);
   });
 
   test("records memo review before requesting discussion material", async ({ page }) => {
