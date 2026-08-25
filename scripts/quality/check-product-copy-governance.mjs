@@ -185,13 +185,19 @@ export function scanProductCopySource({ filePath, sourceText }) {
     function resolveStaticExpression(node) {
       const unwrapped = unwrapCopyExpression(node);
       if (ts.isIdentifier(unwrapped)) {
-        const declaration = resolveLocalConstantInitializer(unwrapped);
-        if (!declaration || resolvingDeclarations.has(declaration)) {
+        const binding = resolveLocalConstantInitializer(unwrapped);
+        if (
+          binding === undefined
+          || binding === null
+          || resolvingDeclarations.has(binding)
+        ) {
           return undefined;
         }
-        resolvingDeclarations.add(declaration);
-        const resolved = resolveStaticExpression(declaration);
-        resolvingDeclarations.delete(declaration);
+        resolvingDeclarations.add(binding);
+        const resolved = isStaticObjectPropertyBinding(binding)
+          ? resolveStaticObjectPropertyBinding(binding)
+          : resolveStaticExpression(binding);
+        resolvingDeclarations.delete(binding);
         return resolved;
       }
       if (
@@ -213,6 +219,18 @@ export function scanProductCopySource({ filePath, sourceText }) {
         return resolveStaticExpression(property);
       }
       return unwrapped;
+    }
+
+    function resolveStaticObjectPropertyBinding(binding) {
+      const owner = resolveStaticExpression(binding.owner);
+      if (!owner || !ts.isObjectLiteralExpression(owner)) {
+        return undefined;
+      }
+      const property = resolveObjectProperty(owner, binding.propertyName);
+      return property === STATIC_PROPERTY_ABSENT
+        || property === STATIC_PROPERTY_UNKNOWN
+        ? undefined
+        : resolveStaticExpression(property);
     }
 
     function visitResolvedCopyExpression(node) {
@@ -372,22 +390,79 @@ function staticObjectPropertyName(name) {
 function collectLocalConstantScopes(sourceFile) {
   const scopes = new Map();
 
+  function recordBinding(scope, name, value) {
+    const bindings = scopes.get(scope) ?? new Map();
+    bindings.set(name, bindings.has(name) ? null : value);
+    scopes.set(scope, bindings);
+  }
+
+  function recordBarrierBindings(scope, name) {
+    for (const identifier of bindingIdentifiers(name)) {
+      recordBinding(scope, identifier, null);
+    }
+  }
+
+  function recordConstBinding(scope, name, initializer) {
+    if (ts.isIdentifier(name)) {
+      recordBinding(scope, name.text, initializer);
+      return;
+    }
+    if (!ts.isObjectBindingPattern(name)) {
+      recordBarrierBindings(scope, name);
+      return;
+    }
+    for (const element of name.elements) {
+      if (
+        element.dotDotDotToken
+        || element.initializer
+        || !ts.isIdentifier(element.name)
+      ) {
+        recordBarrierBindings(scope, element.name);
+        continue;
+      }
+      const propertyName = element.propertyName
+        ? staticObjectPropertyName(element.propertyName)
+        : element.name.text;
+      recordBinding(
+        scope,
+        element.name.text,
+        propertyName === null
+          ? null
+          : staticObjectPropertyBinding(initializer, propertyName),
+      );
+    }
+  }
+
   function visit(node) {
-    if (
-      ts.isVariableDeclaration(node) &&
-      ts.isIdentifier(node.name) &&
-      node.initializer &&
-      ts.isVariableDeclarationList(node.parent) &&
-      (node.parent.flags & ts.NodeFlags.Const) !== 0
-    ) {
-      const scope = findContainingLexicalScope(node);
+    if (ts.isVariableDeclaration(node)) {
+      const scope = variableBindingScope(node);
       if (scope) {
-        const bindings = scopes.get(scope) ?? new Map();
-        bindings.set(
-          node.name.text,
-          bindings.has(node.name.text) ? null : node.initializer,
-        );
-        scopes.set(scope, bindings);
+        const isConst =
+          ts.isVariableDeclarationList(node.parent)
+          && (node.parent.flags & ts.NodeFlags.Const) !== 0;
+        if (isConst && node.initializer) {
+          recordConstBinding(scope, node.name, node.initializer);
+        } else {
+          recordBarrierBindings(scope, node.name);
+        }
+      }
+    }
+    if (ts.isParameter(node)) {
+      const scope = findContainingFunctionScope(node);
+      if (scope) {
+        recordBarrierBindings(scope, node.name);
+      }
+    }
+    if (ts.isCatchClause(node) && node.variableDeclaration) {
+      recordBarrierBindings(node.block, node.variableDeclaration.name);
+    }
+    if (
+      (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node))
+      && node.name
+    ) {
+      const scope = findContainingLexicalScope(node.parent);
+      if (scope) {
+        recordBinding(scope, node.name.text, null);
       }
     }
     ts.forEachChild(node, visit);
@@ -395,6 +470,45 @@ function collectLocalConstantScopes(sourceFile) {
 
   visit(sourceFile);
   return scopes;
+}
+
+function staticObjectPropertyBinding(owner, propertyName) {
+  return { bindingKind: "object-property", owner, propertyName };
+}
+
+function isStaticObjectPropertyBinding(value) {
+  return value?.bindingKind === "object-property";
+}
+
+function bindingIdentifiers(name) {
+  if (ts.isIdentifier(name)) {
+    return [name.text];
+  }
+  return name.elements.flatMap((element) =>
+    ts.isOmittedExpression(element) ? [] : bindingIdentifiers(element.name),
+  );
+}
+
+function variableBindingScope(declaration) {
+  const declarationList = declaration.parent;
+  if (
+    ts.isVariableDeclarationList(declarationList)
+    && (declarationList.flags & ts.NodeFlags.BlockScoped) === 0
+  ) {
+    return findContainingFunctionScope(declaration);
+  }
+  return findContainingLexicalScope(declaration);
+}
+
+function findContainingFunctionScope(node) {
+  let current = node;
+  while (current) {
+    if (ts.isSourceFile(current) || ts.isFunctionLike(current)) {
+      return current;
+    }
+    current = current.parent;
+  }
+  return null;
 }
 
 function findContainingLexicalScope(node) {
@@ -406,7 +520,8 @@ function findContainingLexicalScope(node) {
       ts.isCaseBlock(current) ||
       ts.isForStatement(current) ||
       ts.isForInStatement(current) ||
-      ts.isForOfStatement(current)
+      ts.isForOfStatement(current) ||
+      ts.isFunctionLike(current)
     ) {
       return current;
     }

@@ -182,6 +182,91 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
+  it("resolves direct and aliased destructured copy constants", () => {
+    const findings = scan(`
+      const copy = {
+        panelTitle: "Gateway posture",
+        panelBody: "HTTP status unavailable",
+      } as const;
+      const { panelTitle, panelBody: bodyCopy } = copy;
+      export function Example() {
+        return <Panel title={panelTitle} body={bodyCopy} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
+  it("treats parameters and mutable bindings as outer-scope barriers", () => {
+    expect(
+      scan(`
+        const inheritedCopy = { panelTitle: "Gateway posture" } as const;
+        function ParameterShadow(inheritedCopy) {
+          const copy = { ...inheritedCopy };
+          return <Panel title={copy.panelTitle} />;
+        }
+        function MutableShadow() {
+          let inheritedCopy = getRuntimeCopy();
+          const copy = { ...inheritedCopy };
+          return <Panel title={copy.panelTitle} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("resolves destructured copy inherited through static spreads", () => {
+    const findings = scan(`
+      const baseCopy = { panelTitle: "Gateway posture" } as const;
+      const composedCopy = { ...baseCopy } as const;
+      const { panelTitle: title } = composedCopy;
+      export function Example() {
+        return <Panel title={title} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+    ]);
+  });
+
+  it("treats block constants and catch bindings as outer-scope barriers", () => {
+    expect(
+      scan(`
+        const copy = { panelTitle: "Gateway posture" } as const;
+        export function Example() {
+          {
+            const copy = getRuntimeCopy();
+            return <Panel title={copy.panelTitle} />;
+          }
+        }
+        export function CatchExample() {
+          try {
+            return null;
+          } catch (copy) {
+            return <Panel title={copy.panelTitle} />;
+          }
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("terminates safely when destructured bindings form a static cycle", () => {
+    expect(
+      scan(`
+        const { panelTitle } = copy;
+        const copy = { panelTitle } as const;
+        export function Example() {
+          return <Panel title={panelTitle} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
   it("resolves chains of local constants without evaluating executable code", () => {
     const findings = scan(`
       const technicalCopy = "HTTP status unavailable";
