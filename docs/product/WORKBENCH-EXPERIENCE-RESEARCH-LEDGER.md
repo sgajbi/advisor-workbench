@@ -6617,12 +6617,16 @@ wealth-platform sources before the comparison and handoff language was aligned:
     browser proof assert that exact accessible heading. This bounded correction is owned by #864;
     it repairs a pre-existing product/validation mismatch without expanding the slice into a blind
     application-wide rename.
+13. Keep role-first owner labels in productive summaries, but render **business role · exact actor
+    reference** in append-only campaign launch and lifecycle evidence. Unknown actors remain exact
+    and missing actors remain explicit; Workbench must not infer an unavailable role. This review
+    correction is owned by #866.
 
 ### Delivery scope and deferred surfaces
 
 This PR converts the vocabulary authority plus bounded Portfolio review, Positions, Income and
 activity, Projected cash flow, Performance, Manage, Suitability review, Report centre, Outcome
-review, and Adviser priorities paths covered by focused semantic and rendered tests. It deliberately
+review, Adviser priorities, and campaign audit-actor paths covered by focused semantic and rendered tests. It deliberately
 does not claim application-wide completion; #799 remains open until the remaining governed concepts
 are aligned and proven.
 
