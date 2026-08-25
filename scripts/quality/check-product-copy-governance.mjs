@@ -80,6 +80,19 @@ export function scanProductCopySource({ filePath, sourceText }) {
   );
   const findings = [];
   const inspectedNodes = new Set();
+  const localConstantScopes = collectLocalConstantScopes(sourceFile);
+
+  function resolveLocalConstantInitializer(identifier) {
+    let scope = findContainingLexicalScope(identifier);
+    while (scope) {
+      const bindings = localConstantScopes.get(scope);
+      if (bindings?.has(identifier.text)) {
+        return bindings.get(identifier.text);
+      }
+      scope = findContainingLexicalScope(scope.parent);
+    }
+    return undefined;
+  }
 
   function inspectLiteral(node, context) {
     if (inspectedNodes.has(node)) {
@@ -110,6 +123,53 @@ export function scanProductCopySource({ filePath, sourceText }) {
   }
 
   function inspectExpression(expression, context) {
+    const resolvingDeclarations = new Set();
+
+    function visitResolvedCopyExpression(node) {
+      if (
+        ts.isStringLiteral(node) ||
+        ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isTemplateExpression(node)
+      ) {
+        inspectLiteral(node, context);
+        return;
+      }
+      if (ts.isIdentifier(node)) {
+        const declaration = resolveLocalConstantInitializer(node);
+        if (declaration && !resolvingDeclarations.has(declaration)) {
+          resolvingDeclarations.add(declaration);
+          visitResolvedCopyExpression(declaration);
+          resolvingDeclarations.delete(declaration);
+        }
+        return;
+      }
+      if (ts.isConditionalExpression(node)) {
+        visitResolvedCopyExpression(node.whenTrue);
+        visitResolvedCopyExpression(node.whenFalse);
+        return;
+      }
+      if (
+        ts.isBinaryExpression(node) &&
+        [
+          ts.SyntaxKind.PlusToken,
+          ts.SyntaxKind.QuestionQuestionToken,
+          ts.SyntaxKind.BarBarToken,
+        ].includes(node.operatorToken.kind)
+      ) {
+        visitResolvedCopyExpression(node.left);
+        visitResolvedCopyExpression(node.right);
+        return;
+      }
+      if (
+        ts.isParenthesizedExpression(node) ||
+        ts.isAsExpression(node) ||
+        ts.isSatisfiesExpression(node) ||
+        ts.isNonNullExpression(node)
+      ) {
+        visitResolvedCopyExpression(node.expression);
+      }
+    }
+
     function visitExpression(node) {
       if (
         node !== expression &&
@@ -125,6 +185,10 @@ export function scanProductCopySource({ filePath, sourceText }) {
         ts.isTemplateExpression(node)
       ) {
         inspectLiteral(node, context);
+        return;
+      }
+      if (ts.isIdentifier(node) && isValueReferenceIdentifier(node)) {
+        visitResolvedCopyExpression(node);
         return;
       }
       ts.forEachChild(node, visitExpression);
@@ -164,6 +228,77 @@ export function scanProductCopySource({ filePath, sourceText }) {
 
   visit(sourceFile);
   return findings;
+}
+
+function collectLocalConstantScopes(sourceFile) {
+  const scopes = new Map();
+
+  function visit(node) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isVariableDeclarationList(node.parent) &&
+      (node.parent.flags & ts.NodeFlags.Const) !== 0
+    ) {
+      const scope = findContainingLexicalScope(node);
+      if (scope) {
+        const bindings = scopes.get(scope) ?? new Map();
+        bindings.set(
+          node.name.text,
+          bindings.has(node.name.text) ? null : node.initializer,
+        );
+        scopes.set(scope, bindings);
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return scopes;
+}
+
+function findContainingLexicalScope(node) {
+  let current = node;
+  while (current) {
+    if (
+      ts.isSourceFile(current) ||
+      ts.isBlock(current) ||
+      ts.isCaseBlock(current) ||
+      ts.isForStatement(current) ||
+      ts.isForInStatement(current) ||
+      ts.isForOfStatement(current)
+    ) {
+      return current;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+function isValueReferenceIdentifier(node) {
+  const { parent } = node;
+  const isNonCopyBinaryOperand =
+    ts.isBinaryExpression(parent) &&
+    ![
+      ts.SyntaxKind.PlusToken,
+      ts.SyntaxKind.QuestionQuestionToken,
+      ts.SyntaxKind.BarBarToken,
+    ].includes(parent.operatorToken.kind);
+  return !(
+    isNonCopyBinaryOperand ||
+    (ts.isConditionalExpression(parent) && parent.condition === node) ||
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    (ts.isPropertyAssignment(parent) && parent.name === node) ||
+    (ts.isShorthandPropertyAssignment(parent) && parent.name === node) ||
+    (ts.isVariableDeclaration(parent) && parent.name === node) ||
+    (ts.isParameter(parent) && parent.name === node) ||
+    (ts.isFunctionDeclaration(parent) && parent.name === node) ||
+    (ts.isFunctionExpression(parent) && parent.name === node) ||
+    (ts.isTypeReferenceNode(parent) && parent.typeName === node) ||
+    ts.isImportSpecifier(parent) ||
+    ts.isExportSpecifier(parent)
+  );
 }
 
 function isProductCopyProperty(node, propertyName, sourceFile) {

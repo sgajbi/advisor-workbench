@@ -111,6 +111,60 @@ describe("product-copy governance", () => {
     ]);
   });
 
+  it("resolves local constant copy rendered through JSX", () => {
+    const findings = scan(`
+      const panelTitle = "Gateway posture";
+      export function Example() {
+        return <Panel title={panelTitle} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+    ]);
+    expect(findings.every((finding) => finding.context === "JSX title")).toBe(
+      true,
+    );
+  });
+
+  it("resolves chains of local constants without evaluating executable code", () => {
+    const findings = scan(`
+      const technicalCopy = "HTTP status unavailable";
+      const panelTitle = technicalCopy;
+      const dynamicCopy = getRuntimeCopy();
+      const canReview = state === "AWAITING_REVIEW";
+      const sourceState = "PENDING_SOURCE_REVIEW";
+      export function Example() {
+        return <>{canReview && state === sourceState ? <Panel title={panelTitle} /> : <Panel title={dynamicCopy} />}</>;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-http-status",
+    ]);
+  });
+
+  it("resolves shadowed constants by lexical scope and fails safely for cycles", () => {
+    const findings = scan(`
+        const first = second;
+        const second = first;
+        function First() {
+          const copy = "Gateway status";
+          return <Panel title={copy} />;
+        }
+        function Second() {
+          const copy = "Client review status";
+          return <Panel title={copy} />;
+        }
+        export const Example = () => <Panel title={first} />;
+      `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+    ]);
+  });
+
   it("does not confuse internal contracts with productive copy", () => {
     expect(
       scan(`
