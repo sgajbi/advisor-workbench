@@ -598,9 +598,9 @@ Current repository posture:
     fail-closed and expose no retry. Keep the decision brief followed immediately by the proposal
     worklist in DOM, visual, and keyboard order; compact measures and lifecycle orientation are
     secondary. Proposal workflow-context models must explicitly classify responsive priority.
-    Persistent context remains visible when the shell stacks. Supplementary context may remove its
-    repeated decision/window panel at tablet and compact widths only when the main workspace owns
-    the same source-backed posture and the source-and-scope boundary remains visible.
+    Persistent context remains visible when the shell stacks. Supplementary context replaces its
+    repeated decision/window panel with the source-and-scope boundary when the main workspace owns
+    the same complete source-backed posture; use it only when no decision evidence is lost.
     `/proposals?mode=suitability`, `/proposals?mode=risk-impact`, and
     `/proposals?mode=discussion-pack` are focused
     lifecycle views over the Gateway proposal list contract; Workbench filters proposal lifecycle
@@ -638,7 +638,14 @@ Current repository posture:
     action and shared workflow rail from the complete worklist-plus-detail refresh transaction, not
     only the currently observed detail query. Treat a missing post-request handoff timestamp as
     partial evidence, reject request/downstream references for `NOT_REQUESTED`, and preserve focus
-    across an unversioned-to-versioned recovery for the same selected proposal. Do
+    across an unversioned-to-versioned recovery for the same selected proposal. Present supported
+    status, version, event, evidence, next-action, and recovery language through the exhaustive
+    `src/copy/proposal-implementation-copy.ts` authority. Lead with the implementation decision and
+    keep contract, provider, request, event, correlation, downstream, and reason values in the
+    progressive support disclosure. Because the selected-record panel owns the complete decision,
+    use supplementary workflow context so the rail retains the source boundary without repeating
+    status, version, timestamps, counts, and next action. Reflow facts and actions against the
+    selected pane's inline size, not the outer viewport. Do
     not mutate implementation status or invent owner, SLA, priority, order, fill, allocation,
     settlement, custody, or accounting completion.
     Discussion Pack Review is source-backed conversation preparation, not a lifecycle label. Its

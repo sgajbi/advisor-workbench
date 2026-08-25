@@ -1116,12 +1116,16 @@
       "wikiSlug": "Implementation-Status-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise"],
       "implementationEvidence": [
+        "src/copy/proposal-implementation-copy.ts",
         "src/features/proposals/proposal-implementation-status-contract.ts",
         "src/features/proposals/proposal-implementation-status-view-model.ts",
         "src/features/proposals/use-proposal-implementation-status.ts",
         "src/features/proposals/components/proposal-implementation-status-workspace.tsx"
       ],
-      "runtimeEvidence": ["tests/e2e/proposal-workflow-context.spec.ts"],
+      "runtimeEvidence": [
+        "tests/e2e/proposal-workflow-context.spec.ts",
+        "docs/evidence/issue-798-product-copy/implementation-follow-up/README.md"
+      ],
       "supportOwner": "lotus-workbench",
       "coverageException": null
     }
