@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import {
   SectionBlock,
   SemanticBadge,
@@ -15,7 +16,7 @@ import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/co
 import {
   constructionBadgeTone,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+
 import { useConstructionAlternativesActions } from "@/features/workbench/use-construction-alternatives-actions";
 
 type Props = {

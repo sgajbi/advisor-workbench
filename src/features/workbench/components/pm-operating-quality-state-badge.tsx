@@ -1,8 +1,8 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import { SemanticBadge } from "@/design-system";
 import {
-  businessStateLabel,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
 

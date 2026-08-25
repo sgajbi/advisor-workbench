@@ -1,8 +1,7 @@
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { formatCalendarDateValue } from "@/design-system/utils/financial-formatters";
 import {
-  businessStateLabel,
   formatBusinessExceptionTitle,
-  formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_HEALTH_DIMENSION_LABELS } from "@/features/workbench/manage-terminology";
 

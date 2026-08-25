@@ -1,11 +1,9 @@
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import type {
   OutcomeReviewListItem,
   OutcomeReviewPanelState,
 } from "./outcome-review-view-model";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "./manage-workspace-view-model";
+
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "./manage-terminology";
 import type { DpmAiWorkflowExecution } from "./dpm-ai-workflow-contract";
 

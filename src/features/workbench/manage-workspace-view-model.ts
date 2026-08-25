@@ -10,11 +10,6 @@ import { buildReviewContextStripModel } from "@/shell/review-context-strip-view-
 
 import type { ManageWorkspaceData } from "./manage-workspace-data";
 
-export {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/copy/business-state-copy";
-
 export type BadgeTone = "default" | "success" | "warn" | "danger";
 
 export type ManageExceptionRow = {

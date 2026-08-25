@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import {
   ActionButton,
   ScreenStatePanel,
@@ -22,7 +23,6 @@ import {
 } from "@/features/workbench/manage-mandate-health-helpers";
 import { formatBusinessOwner } from "@/features/workbench/manage-actor-presentation";
 import {
-  businessStateLabel,
   buildManageExceptionRowsResult,
   buildMandateHealthDimensionRows,
   filterManageExceptionRowsForMandate,

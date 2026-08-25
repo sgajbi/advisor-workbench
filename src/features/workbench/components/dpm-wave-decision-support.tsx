@@ -1,9 +1,9 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import { ActionButton, MetricRow, Text } from "@/design-system";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import type { DpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   waveId: string | null;

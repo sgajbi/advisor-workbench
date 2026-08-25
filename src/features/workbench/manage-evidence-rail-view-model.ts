@@ -1,9 +1,10 @@
+import { businessStateLabel } from "@/copy/business-state-copy";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
   readDpmProofPackId,
   type ManageWorkspaceData,
 } from "@/features/workbench/manage-workspace-data";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+
 import {
   buildProofPackPanelModel,
   type ProofPackPanelState,

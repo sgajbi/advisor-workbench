@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { useState } from "react";
 import { ActionButton, ScreenStatePanel } from "@/design-system";
 import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
@@ -12,9 +13,7 @@ import type {
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { formatBusinessOwner } from "@/features/workbench/manage-actor-presentation";
 import {
-  businessStateLabel,
   formatBusinessBoundary,
-  formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
 

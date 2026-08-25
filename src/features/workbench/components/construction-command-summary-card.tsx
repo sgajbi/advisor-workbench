@@ -1,5 +1,6 @@
 "use client";
 
+import { formatBusinessReason } from "@/copy/business-state-copy";
 import {
   ActionButton,
   MetricRow,
@@ -12,7 +13,6 @@ import {
   buildConstructionStatePanelCopy,
   shouldShowConstructionStatePanel,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
-import { formatBusinessReason } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: ConstructionPanelModel;

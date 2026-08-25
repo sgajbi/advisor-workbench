@@ -1,10 +1,8 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { SemanticBadge } from "@/design-system";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
+
 import {
   proofPackAvailabilityLabel,
   proofPackAvailabilityTone,

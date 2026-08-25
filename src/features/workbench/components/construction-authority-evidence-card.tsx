@@ -1,15 +1,12 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { SemanticBadge, Text } from "@/design-system";
 import type { ConstructionPanelModel } from "@/features/workbench/construction-alternatives-view-model";
 import {
   buildConstructionAuthorityEvidenceSummary,
   constructionBadgeTone,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: ConstructionPanelModel;

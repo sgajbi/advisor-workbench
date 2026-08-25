@@ -1,9 +1,9 @@
+import { businessStateLabel } from "@/copy/business-state-copy";
 import type {
   PortfolioMemoryDetailMetric,
   PortfolioMemoryEventRow,
   PortfolioMemoryPanelState,
 } from "./portfolio-memory-view-model";
-import { businessStateLabel } from "./manage-workspace-view-model";
 
 export type PortfolioMemoryBadgeTone =
   | "default"

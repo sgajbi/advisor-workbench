@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import {
   type Dispatch,
   type SetStateAction,
@@ -14,7 +15,7 @@ import {
   requestDpmOutcomeReviewAiNarrative,
   submitDpmOutcomeReviewReportJob,
 } from "@/features/workbench/outcome-review-api";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+
 import {
   buildDpmAiWorkflowOutcome,
   type DpmAiWorkflowOutcome,

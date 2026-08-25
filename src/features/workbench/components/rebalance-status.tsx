@@ -1,11 +1,9 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
+
 import type { WorkbenchOverview } from "@/features/workbench/types";
 
 type Props = {

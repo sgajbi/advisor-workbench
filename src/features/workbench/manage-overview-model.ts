@@ -1,3 +1,4 @@
+import { businessStateLabel } from "@/copy/business-state-copy";
 import type { SemanticBadgeTone } from "@/design-system";
 import type { PortfolioReviewContext } from "@/apps/portfolio/portfolio-screen-navigation";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
@@ -10,7 +11,6 @@ import { buildManageModeHref } from "@/features/workbench/manage-workspace-navig
 import { MANAGE_WORKFLOW_LABELS } from "@/features/workbench/manage-terminology";
 import { formatBusinessOwner } from "@/features/workbench/manage-actor-presentation";
 import {
-  businessStateLabel,
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,

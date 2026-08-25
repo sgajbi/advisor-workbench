@@ -1,9 +1,10 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import { AnalyticsTable, SemanticBadge } from "@/design-system";
 import type { OutcomeReviewListItem } from "@/features/workbench/outcome-review-view-model";
 import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
