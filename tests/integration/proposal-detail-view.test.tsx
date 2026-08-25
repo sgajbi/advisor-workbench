@@ -1060,7 +1060,7 @@ describe("ProposalDetailView", () => {
 
     expect(memoTab).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "false");
-    expect(await screen.findByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Advisor memo and evidence pack" })).toBeVisible();
   });
 
   it("abandons a version-creation completion after proposal identity changes", async () => {
