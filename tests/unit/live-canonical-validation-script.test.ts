@@ -1545,12 +1545,13 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("does not expose conversion-intent identifiers");
     expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
     expect(browserWorkflowModule).toContain("Request Reviewed Report");
-    expect(browserWorkflowModule).toContain("Prepare Or Refresh Memo");
-    expect(browserWorkflowModule).toContain("Memo evidence: sha256:");
-    expect(browserWorkflowModule).toContain("Approve Memo For Advisor Use");
-    expect(browserWorkflowModule).toContain("Prepare Report Package");
-    expect(browserWorkflowModule).toContain("Request Advisor Commentary");
-    expect(browserWorkflowModule).toContain("Replay evidence: sha256:");
+    expect(browserWorkflowModule).toContain("Prepare advisor memo");
+    expect(browserWorkflowModule).toContain("Advisor memo confirmed");
+    expect(browserWorkflowModule).toContain("Record advisor review");
+    expect(browserWorkflowModule).toContain("Request discussion material");
+    expect(browserWorkflowModule).toContain("Request advisor commentary");
+    expect(browserWorkflowModule).toContain("Evidence aligned");
+    expect(browserWorkflowModule).toContain("source-confirmed-advisor-use");
     expect(browserWorkflowModule).toContain("panel: panelId");
     expect(browserWorkflowModule).toContain(
       'return assuranceState === "ready" ? "demo_ready" : "truthfully_degraded"',

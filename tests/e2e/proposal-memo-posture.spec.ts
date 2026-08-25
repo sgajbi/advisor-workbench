@@ -4,13 +4,19 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { collectHorizontalOverflow } from "./support/horizontal-overflow";
 
-const evidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
+const narrativeEvidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_798_EVIDENCE_DIR, "narrative-review")
+  : null;
+const memoEvidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_798_EVIDENCE_DIR, "memo-evidence-pack")
   : null;
 
 type ProposalMockOptions = {
   actionFailure?: boolean;
   blocked?: boolean;
+  memoInitialState?: "unreviewed" | "reviewed" | "complete";
+  memoReviewFailure?: boolean;
+  memoReviewRefreshMismatch?: boolean;
   narrativeReviewFailure?: boolean;
   narrativeRefreshMismatch?: boolean;
   workflowFailure?: boolean;
@@ -24,6 +30,10 @@ async function mockProposalDetail(
   let narrativeReviewState = "NOT_REVIEWED";
   let narrativeHash: string | null = null;
   let discussionPackRequested = false;
+  const initialMemoState = options.memoInitialState ?? "complete";
+  let memoReviewed = initialMemoState !== "unreviewed";
+  let memoReportRecorded = initialMemoState === "complete";
+  let memoCommentaryRecorded = false;
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
     await route.fulfill({
       json: {
@@ -194,6 +204,12 @@ async function mockProposalDetail(
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        json: { correlation_id: "corr-memo-create", contract_version: "v1", data: memoResponse() },
+      });
+      return;
+    }
     if (options.blocked && route.request().method() === "GET") {
       await route.fulfill({ status: 409, body: "MEMO_BLOCKED_BY_SOURCE_EVIDENCE" });
       return;
@@ -202,24 +218,67 @@ async function mockProposalDetail(
       json: {
         correlation_id: "corr-memo",
         contract_version: "v1",
-        data: {
-          memo_id: "memo_1",
-          memo_status: "APPROVED_FOR_ADVISOR_USE",
-          memo_hash: "sha256:memo-001",
-          review_posture: { advisor_use: "APPROVED_FOR_ADVISOR_USE" },
-          report_package_posture: {
-            status: "READY",
-            archive_refs: ["archive://memo/report/1"],
-          },
-          ai_commentary_posture: {
-            status: "AVAILABLE",
-            authority: "NON_AUTHORITATIVE",
-          },
-          read_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
-        },
+        data: memoResponse(),
       },
     });
   });
+  await page.route(
+    "**/api/bff/api/v1/proposals/pp_1/versions/2/memo/review",
+    async (route) => {
+      if (options.memoReviewFailure) {
+        await route.fulfill({ status: 500, body: "INTERNAL_MEMO_REVIEW_FAILURE" });
+        return;
+      }
+      if (!options.memoReviewRefreshMismatch) memoReviewed = true;
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-memo-review",
+          contract_version: "v1",
+          data: {
+            memo: { ...memoResponse(), review_posture: recordedReviewPosture() },
+            review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+            replayed: false,
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/pp_1/versions/2/memo/report-packages",
+    async (route) => {
+      memoReportRecorded = true;
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-memo-report",
+          contract_version: "v1",
+          data: {
+            memo: memoResponse(),
+            report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+            report: { status: "ARCHIVED" },
+            replayed: false,
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    "**/api/bff/api/v1/proposals/pp_1/versions/2/memo/ai-commentary",
+    async (route) => {
+      memoCommentaryRecorded = true;
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-memo-commentary",
+          contract_version: "v1",
+          data: {
+            memo: memoResponse(),
+            ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
+            commentary: { status: "REVIEW_REQUIRED", authoritative_for_memo_status: false },
+            replayed: false,
+          },
+        },
+      });
+    },
+  );
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo/projection**", async (route) => {
     const requestUrl = new URL(route.request().url());
     const audience = requestUrl.searchParams.get("audience") ?? "ADVISOR";
@@ -228,13 +287,15 @@ async function mockProposalDetail(
         correlation_id: "corr-projection",
         contract_version: "v1",
         data: {
-          projection: {
-            audience,
-            client_ready_publication: options.blocked ? "BLOCKED_BY_SOURCE_EVIDENCE" : "BLOCKED",
-          },
-          projection_posture: {
-            supportability: options.blocked ? "DEGRADED_SOURCE_EVIDENCE" : "SUPPORTED_ADVISOR_USE",
-          },
+          memo_id: "memo_1",
+          memo_hash: "sha256:memo-001",
+          audience,
+          projection: { client_ready_publication: "BLOCKED" },
+          sections: [
+            { section_id: "SUMMARY", audience_visibility: [audience] },
+            { section_id: "DISCLOSURES", audience_visibility: [audience] },
+          ],
+          projection_posture: { client_ready_publication: "BLOCKED" },
         },
       },
     });
@@ -245,7 +306,18 @@ async function mockProposalDetail(
         correlation_id: "corr-memo-lineage",
         contract_version: "v1",
         data: {
-          memos: [{ memo_hash: "sha256:memo-001", memo_status: "APPROVED_FOR_ADVISOR_USE" }],
+          memo_count: 1,
+          latest_memo_id: "memo_1",
+          lineage_complete: true,
+          memos: [{
+            memo_id: "memo_1",
+            memo_hash: "sha256:memo-001",
+            memo_status: "READY",
+            event_count: 1 + Number(memoReviewed) + Number(memoReportRecorded) + Number(memoCommentaryRecorded),
+            report_package_posture: reportPosture(),
+            ai_commentary_posture: commentaryPosture(),
+            archive_refs: memoReportRecorded ? [{ document_id: "doc_memo_001" }] : [],
+          }],
         },
       },
     });
@@ -256,8 +328,10 @@ async function mockProposalDetail(
         correlation_id: "corr-replay",
         contract_version: "v1",
         data: {
+          subject: { memo_id: "memo_1", proposal_version_no: 2 },
           hashes: { memo_hash: "sha256:memo-001" },
-          supportability: { client_ready_publication: "BLOCKED" },
+          audit_events: [{ event_type: "MEMO_DRAFT_CREATED" }],
+          explanation: { client_ready_publication: "BLOCKED" },
         },
       },
     });
@@ -276,6 +350,40 @@ async function mockProposalDetail(
       },
     });
   });
+
+  function recordedReviewPosture() {
+    return {
+      status: "RECORDED",
+      review_action: "APPROVE_FOR_ADVISOR_USE",
+      source_memo_hash: "sha256:memo-001",
+    };
+  }
+  function reportPosture() {
+    return memoReportRecorded
+      ? { status: "RECORDED", report_status: "ARCHIVED", source_memo_hash: "sha256:memo-001" }
+      : { status: "NOT_RECORDED" };
+  }
+  function commentaryPosture() {
+    return memoCommentaryRecorded
+      ? {
+          status: "RECORDED",
+          ai_status: "REVIEW_REQUIRED",
+          source_memo_hash: "sha256:memo-001",
+          authoritative_for_memo_status: false,
+        }
+      : { status: "NOT_RECORDED" };
+  }
+  function memoResponse() {
+    return {
+      memo_id: "memo_1",
+      memo_status: "READY",
+      memo_hash: "sha256:memo-001",
+      event_count: 1 + Number(memoReviewed) + Number(memoReportRecorded) + Number(memoCommentaryRecorded),
+      review_posture: memoReviewed ? recordedReviewPosture() : { status: "NOT_RECORDED" },
+      report_package_posture: reportPosture(),
+      ai_commentary_posture: commentaryPosture(),
+    };
+  }
 }
 
 test.describe("proposal memo posture", () => {
@@ -291,20 +399,22 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByText("Global Equities")).toBeVisible();
     await expect(page.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeVisible();
     await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
-    await expect(page.getByRole("heading", { name: "Advisor Memo And Evidence Pack" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Advisor memo and evidence pack" })).toBeVisible();
     await expect(page.getByText("Approved for advisor use").first()).toBeVisible();
-    await expect(page.getByText("Advisor-use evidence ready").first()).toBeVisible();
-    await expect(page.getByText(/Client draft: Blocked/)).toBeVisible();
-    await expect(page.getByText(/Evidence archive: 1 archived report item/)).toBeVisible();
+    await expect(page.getByText("Review the evidence record")).toBeVisible();
+    await expect(page.getByText("Available in the record")).toBeVisible();
+    await expect(page.getByText("Evidence aligned")).toBeVisible();
+    await expect(page.getByText("1 archived item").first()).toBeVisible();
     await expect(page.getByText("APPROVED_FOR_ADVISOR_USE")).toHaveCount(0);
     await expect(page.getByText("SUPPORTED_ADVISOR_USE")).toHaveCount(0);
     await expect(page.getByText(/archive:\/\//)).toHaveCount(0);
 
-    await page.locator("select.input").selectOption("COMPLIANCE");
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("combobox", { name: "Audience view" }).selectOption("COMPLIANCE");
     await expect(page.getByText("Compliance review").first()).toBeVisible();
-    await page.locator("select.input").selectOption("OPERATIONS");
+    await page.getByRole("combobox", { name: "Audience view" }).selectOption("OPERATIONS");
     await expect(page.getByText("Operations handoff").first()).toBeVisible();
-    await page.locator("select.input").selectOption("CLIENT_DRAFT");
+    await page.getByRole("combobox", { name: "Audience view" }).selectOption("CLIENT_DRAFT");
     await expect(page.getByText("Client discussion draft").first()).toBeVisible();
     await expect(page.getByText("CLIENT_DRAFT")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /send to client/i })).toHaveCount(0);
@@ -317,13 +427,74 @@ test.describe("proposal memo posture", () => {
     await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
 
     await expect(
-      page.getByText(/Memo posture is degraded or blocked by source advisory evidence/),
+      page.getByText(/Current memo evidence is unavailable/),
     ).toBeVisible();
-    await expect(page.getByText("Source evidence degraded").first()).toBeVisible();
-    await expect(page.getByText(/Client draft: Blocked by source evidence/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Refresh record" })).toBeVisible();
+    await expect(page.getByText("Review required").first()).toBeVisible();
     await expect(page.getByText("DEGRADED_SOURCE_EVIDENCE")).toHaveCount(0);
-    await expect(page.getByText("BLOCKED_BY_SOURCE_EVIDENCE")).toHaveCount(0);
+    await expect(page.getByText("MEMO_BLOCKED_BY_SOURCE_EVIDENCE")).toHaveCount(0);
     await expect(page.getByText(/ready for client/i)).toHaveCount(0);
+  });
+
+  test("records memo review before requesting discussion material", async ({ page }) => {
+    await mockProposalDetail(page, { memoInitialState: "unreviewed" });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+    await expect(page.getByRole("heading", { name: "Record advisor review" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Request discussion material" })).toHaveCount(0);
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Advisor or reviewer reference" }).fill("advisor_9");
+    await page.getByRole("textbox", { name: "Advisor review rationale" }).fill(
+      "The retained evidence is appropriate for use in the advisor-led discussion.",
+    );
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+
+    await expect(page.getByTestId("proposal-memo-action-status")).toContainText(
+      "Advisor review confirmed for proposal version 2.",
+    );
+    const discussionMaterial = page.getByRole("button", { name: "Request discussion material" });
+    await expect(discussionMaterial).toBeEnabled();
+    await discussionMaterial.click();
+    await expect(page.getByTestId("proposal-memo-action-status")).toContainText(
+      "Discussion material confirmed for proposal version 2.",
+    );
+    await expect(page.getByRole("heading", { name: "Review the evidence record" })).toBeVisible();
+    await expect(page.getByText("1 archived item").first()).toBeVisible();
+  });
+
+  test("does not claim memo success when persistence or refreshed proof fails", async ({ page }) => {
+    await mockProposalDetail(page, { memoInitialState: "unreviewed", memoReviewFailure: true });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Advisor or reviewer reference" }).fill("advisor_9");
+    await page.getByRole("textbox", { name: "Advisor review rationale" }).fill(
+      "Evidence supports advisor use.",
+    );
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+    await expect(page.getByText(
+      "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+    )).toBeVisible();
+    await expect(page.getByText("INTERNAL_MEMO_REVIEW_FAILURE")).toHaveCount(0);
+    await expect(page.getByTestId("proposal-memo-action-status")).toHaveCount(0);
+
+    await page.unrouteAll({ behavior: "wait" });
+    await mockProposalDetail(page, {
+      memoInitialState: "unreviewed",
+      memoReviewRefreshMismatch: true,
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Advisor or reviewer reference" }).fill("advisor_9");
+    await page.getByRole("textbox", { name: "Advisor review rationale" }).fill(
+      "Evidence supports advisor use.",
+    );
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+    await expect(page.getByText(
+      "The review was submitted, but the current memo evidence could not confirm it. Refresh before taking another action.",
+    )).toBeVisible();
+    await expect(page.getByTestId("proposal-memo-action-status")).toHaveCount(0);
   });
 
   test("keeps the proposal decision usable when workflow evidence is unavailable", async ({ page }) => {
@@ -426,8 +597,11 @@ test.describe("proposal memo posture", () => {
     page,
   }) => {
     await mockProposalDetail(page);
-    if (evidenceDirectory) {
-      await mkdir(evidenceDirectory, { recursive: true });
+    if (narrativeEvidenceDirectory && memoEvidenceDirectory) {
+      await Promise.all([
+        mkdir(narrativeEvidenceDirectory, { recursive: true }),
+        mkdir(memoEvidenceDirectory, { recursive: true }),
+      ]);
     }
     await page.emulateMedia({ reducedMotion: "reduce" });
 
@@ -461,14 +635,26 @@ test.describe("proposal memo posture", () => {
       await memoTab.press("ArrowLeft");
       await expect(narrativeTab).toBeFocused();
       await expect(narrativeTab).toHaveAttribute("aria-selected", "true");
-      if (evidenceDirectory && ["desktop", "compact"].includes(viewport.name)) {
+      if (
+        narrativeEvidenceDirectory &&
+        memoEvidenceDirectory &&
+        ["desktop", "compact"].includes(viewport.name)
+      ) {
         // Keyboard checks intentionally move focus into the lower review workspace. Reset the
         // document before a full-page capture so the sticky shell is recorded at its true top
         // position rather than composited over evidence that Playwright scrolled into view.
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
         await expect(page.getByRole("heading", { level: 1, name: "Proposal pp_1" })).toBeInViewport();
         await page.screenshot({
-          path: path.join(evidenceDirectory, `narrative-review-${viewport.name}.png`),
+          path: path.join(narrativeEvidenceDirectory, `narrative-review-${viewport.name}.png`),
+          fullPage: true,
+        });
+        await memoTab.click();
+        await expect(page.getByRole("heading", { name: "Advisor memo and evidence pack" })).toBeVisible();
+        expect(await collectHorizontalOverflow(page.locator("main"))).toEqual([]);
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
+        await page.screenshot({
+          path: path.join(memoEvidenceDirectory, `memo-evidence-${viewport.name}.png`),
           fullPage: true,
         });
       }

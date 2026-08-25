@@ -332,6 +332,7 @@ export default function ProposalMemoPosturePanel({
 
   return (
     <SectionBlock
+      id="proposal-memo-evidence-pack"
       className={styles.panel}
       title="Advisor memo and evidence pack"
       subtitle="Prepare the working memo, record advisor review, then request material for the client discussion."
@@ -398,7 +399,7 @@ export default function ProposalMemoPosturePanel({
         className={styles.nextAction}
         aria-labelledby="memo-next-action-title"
       >
-        <Text variant="eyebrow">Next action</Text>
+        <Text variant="eyebrow">Memo next step</Text>
         <Text variant="cardTitle" as="h3" id="memo-next-action-title">
           {posture.nextActionTitle}
         </Text>
