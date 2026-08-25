@@ -37,12 +37,22 @@ export default function ProposalNarrativePosturePanel({
   proposalId,
   currentVersionNo,
 }: Props) {
+  return (
+    <ProposalNarrativePosturePanelSession
+      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+      proposalId={proposalId}
+      currentVersionNo={currentVersionNo}
+    />
+  );
+}
+
+function ProposalNarrativePosturePanelSession({
+  proposalId,
+  currentVersionNo,
+}: Props) {
   const versionNo = currentVersionNo ?? null;
   const [reviewedBy, setReviewedBy] = useState("");
   const [reviewReason, setReviewReason] = useState("");
-  const [reportData, setReportData] = useState<Awaited<
-    ReturnType<typeof createProposalReportRequest>
-  > | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -75,7 +85,6 @@ export default function ProposalNarrativePosturePanel({
         proposalId,
         versionNo,
         review: narrativeReviewQuery.data,
-        report: reportData,
         summary: summaryQuery.data,
         events: eventsQuery.data,
       }),
@@ -83,7 +92,6 @@ export default function ProposalNarrativePosturePanel({
       eventsQuery.data,
       narrativeReviewQuery.data,
       proposalId,
-      reportData,
       summaryQuery.data,
       versionNo,
     ],
@@ -180,11 +188,12 @@ export default function ProposalNarrativePosturePanel({
         throw new Error("REFRESH_UNAVAILABLE");
       }
       confirmDiscussionPackRefresh({
+        proposalId,
         versionNo,
         report: data,
         summary: summaryResult.data,
+        events: eventsResult.data,
       });
-      setReportData(data);
       setActionMessage(
         `Discussion-pack request confirmed for proposal version ${versionNo}.`,
       );

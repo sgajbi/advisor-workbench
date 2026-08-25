@@ -1,4 +1,7 @@
-import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+import {
+  formatTimestampValue,
+  isTimestampValue,
+} from "@/design-system/utils/financial-formatters";
 
 import type {
   ProposalDeliveryEventsData,
@@ -30,27 +33,30 @@ export type ProposalNarrativeWorkflowItem = {
   value: string;
 };
 
+const DISCUSSION_PACK_REPORT_TYPE = "PORTFOLIO_REVIEW";
+const SUPPORTED_REPORT_STATES = new Set(["REQUESTED", "READY"]);
+const SUPPORTED_PACKAGE_STATES = new Set([
+  "REQUESTED",
+  "INCLUDED_REVIEWED_NARRATIVE",
+]);
+
 export function buildProposalNarrativePostureModel({
   proposalId,
   versionNo,
   review,
-  report,
   summary,
   events,
 }: {
   proposalId: string;
   versionNo: number | null;
   review?: ProposalNarrativeReviewData | null;
-  report?: ProposalReportRequestData | null;
   summary?: ProposalDeliverySummaryData | null;
   events?: ProposalDeliveryEventsData | null;
 }): ProposalNarrativePostureModel {
   const reviewRecord = review?.narrative_review ?? null;
-  const reportPackage = report?.explanation?.proposal_narrative_package ?? null;
   const summaryPackage = summary?.reporting?.proposal_narrative_package ?? null;
   const summaryReporting = summary?.reporting ?? null;
   const reportingSummary = summary?.reporting_summary ?? null;
-  const latestEvent = events?.latest_event ?? events?.events?.[0] ?? null;
   const reviewMatchesActiveVersion = Boolean(
     versionNo !== null &&
       reviewRecord?.proposal_id === proposalId &&
@@ -66,21 +72,15 @@ export function buildProposalNarrativePostureModel({
     hashes: [reviewedNarrativeHash],
     versions: [reviewedVersionNo],
   });
-  const reportMatchesReviewedNarrative =
-    narrativeIdentitiesMatch(
-      reviewedNarrativeIdentity,
-      resolveNarrativeIdentity({
-        hashes: [reportPackage?.source_narrative_hash],
-        versions: [
-          report?.explanation?.related_version_no,
-          reportPackage?.related_version_no,
-        ],
-      }),
-    ) &&
-    allPresentBooleanMarkersAreTrue([
-      report?.explanation?.include_reviewed_narrative,
-    ]);
+  const reviewConfirmed =
+    reviewMatchesActiveVersion && isAdvisorReviewConfirmed(reviewRecord);
+  const summaryMatchesActiveProposal = Boolean(
+    summary?.proposal?.proposal_id === proposalId &&
+      summary.proposal.current_version_no === versionNo,
+  );
   const summaryMatchesReviewedNarrative =
+    reviewConfirmed &&
+    summaryMatchesActiveProposal &&
     narrativeIdentitiesMatch(
       reviewedNarrativeIdentity,
       resolveNarrativeIdentity({
@@ -98,43 +98,43 @@ export function buildProposalNarrativePostureModel({
     allPresentBooleanMarkersAreTrue([
       summaryReporting?.include_reviewed_narrative,
       reportingSummary?.include_reviewed_narrative,
-    ]);
+    ]) &&
+    isNonBlankString(summaryReporting?.report_request_id) &&
+    summaryReporting?.report_type === DISCUSSION_PACK_REPORT_TYPE &&
+    isSupportedReportState(summaryReporting.status) &&
+    isSupportedPackageState(summaryPackage?.package_status);
 
-  const sourceNarrativeHash = reviewedNarrativeHash;
+  const currentEvents = deliveryEventsMatchActiveProposal({
+    events,
+    proposalId,
+    versionNo,
+  })
+    ? events
+    : null;
+  const latestEvent =
+    currentEvents?.latest_event ?? currentEvents?.events?.[0] ?? null;
+  const eventCount = resolveEventCount(currentEvents);
+
+  const sourceNarrativeHash = reviewConfirmed ? reviewedNarrativeHash : null;
 
   const reviewState = normalizeLabel(
-    reviewMatchesActiveVersion ? reviewRecord?.review_state : null,
+    reviewConfirmed ? reviewRecord?.review_state : null,
     "Not Reviewed",
   );
   const reportPackageState = normalizeLabel(
-    (reportMatchesReviewedNarrative ? reportPackage?.package_status : null) ??
-      (summaryMatchesReviewedNarrative ? summaryPackage?.package_status : null),
-    (reportMatchesReviewedNarrative &&
-      report?.explanation?.include_reviewed_narrative) ||
-      (summaryMatchesReviewedNarrative &&
-        (summaryReporting?.include_reviewed_narrative ||
-          reportingSummary?.include_reviewed_narrative))
-      ? "Requested"
-      : "Not Requested",
+    summaryMatchesReviewedNarrative ? summaryPackage?.package_status : null,
+    "Not Requested",
   );
   const deliveryState = normalizeLabel(
-    (summaryMatchesReviewedNarrative ? summaryReporting?.status : null) ??
-      (reportMatchesReviewedNarrative ? report?.status : null),
+    summaryMatchesReviewedNarrative ? summaryReporting?.status : null,
     "No Report",
   );
-  const reviewConfirmed =
-    reviewMatchesActiveVersion &&
-    isAdvisorReviewConfirmed(
-      reviewRecord?.review_state,
-      reviewRecord?.source_narrative_hash ?? null,
-    );
   const discussionPackRequested = reportPackageState !== "Not Requested";
   const nextAction = projectNarrativeNextAction({
     discussionPackRequested,
-    eventCount: events?.event_count ?? events?.events?.length ?? 0,
+    eventCount,
     reviewConfirmed,
   });
-  const eventCount = events?.event_count ?? events?.events?.length ?? 0;
   const latestEventLabel = normalizeLabel(
     latestEvent?.event_type,
     "No delivery activity",
@@ -195,14 +195,28 @@ export function buildProposalNarrativePostureModel({
     ],
   };
 }
+type ConfirmedNarrativeReview = NonNullable<
+  ProposalNarrativeReviewData["narrative_review"]
+> & {
+  review_id: string;
+  reviewed_at: string;
+  reviewed_by: string;
+  source_narrative_hash: string;
+};
+
 function isAdvisorReviewConfirmed(
-  reviewState: string | null | undefined,
-  sourceNarrativeHash: string | null,
-): boolean {
-  if (!sourceNarrativeHash) {
+  reviewRecord: ProposalNarrativeReviewData["narrative_review"] | null,
+): reviewRecord is ConfirmedNarrativeReview {
+  if (
+    !isNonBlankString(reviewRecord?.review_id) ||
+    !isNonBlankString(reviewRecord.source_narrative_hash) ||
+    !isNonBlankString(reviewRecord.reviewed_by) ||
+    !isTimestampValue(reviewRecord.reviewed_at) ||
+    (reviewRecord.action !== undefined && reviewRecord.action !== "APPROVE")
+  ) {
     return false;
   }
-  switch (reviewState?.trim().toUpperCase()) {
+  switch (reviewRecord.review_state) {
     case "APPROVED":
     case "APPROVED_FOR_ADVISOR_USE":
     case "REVIEWED":
@@ -210,6 +224,47 @@ function isAdvisorReviewConfirmed(
     default:
       return false;
   }
+}
+
+function isSupportedReportState(value: unknown): value is string {
+  return typeof value === "string" && SUPPORTED_REPORT_STATES.has(value);
+}
+
+function isSupportedPackageState(value: unknown): value is string {
+  return typeof value === "string" && SUPPORTED_PACKAGE_STATES.has(value);
+}
+
+function deliveryEventsMatchActiveProposal({
+  events,
+  proposalId,
+  versionNo,
+}: {
+  events: ProposalDeliveryEventsData | null | undefined;
+  proposalId: string;
+  versionNo: number | null;
+}): boolean {
+  return Boolean(
+    versionNo !== null &&
+      events?.proposal?.proposal_id === proposalId &&
+      events.proposal.current_version_no === versionNo,
+  );
+}
+
+function resolveEventCount(
+  events: ProposalDeliveryEventsData | null | undefined,
+): number {
+  if (
+    typeof events?.event_count === "number" &&
+    Number.isSafeInteger(events.event_count) &&
+    events.event_count >= 0
+  ) {
+    return events.event_count;
+  }
+  return events?.events?.length ?? 0;
+}
+
+function isNonBlankString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 type NarrativeIdentity = {
@@ -233,9 +288,7 @@ function resolveNarrativeIdentity({
   if (
     presentHashes.length === 0 ||
     presentVersions.length === 0 ||
-    !presentHashes.every(
-      (hash) => typeof hash === "string" && hash.length > 0,
-    ) ||
+    !presentHashes.every(isNonBlankString) ||
     !presentVersions.every(
       (version) =>
         typeof version === "number" &&
@@ -331,23 +384,18 @@ export function confirmNarrativeReviewRefresh({
   const actionRecord = review.narrative_review;
   const refreshedRecord = refreshedReview?.narrative_review;
   if (
-    !actionRecord?.review_id ||
+    !isAdvisorReviewConfirmed(actionRecord) ||
+    !isAdvisorReviewConfirmed(refreshedRecord) ||
     actionRecord.review_id !== refreshedRecord?.review_id ||
     actionRecord.proposal_id !== proposalId ||
     refreshedRecord.proposal_id !== proposalId ||
     actionRecord.proposal_version_no !== versionNo ||
     refreshedRecord.proposal_version_no !== versionNo ||
-    !actionRecord.source_narrative_hash ||
-    actionRecord.source_narrative_hash !== refreshedRecord?.source_narrative_hash ||
+    actionRecord.source_narrative_hash !==
+      refreshedRecord.source_narrative_hash ||
     actionRecord.review_state !== refreshedRecord?.review_state ||
     actionRecord.reviewed_by !== refreshedRecord?.reviewed_by ||
-    !actionRecord.reviewed_at ||
-    actionRecord.reviewed_at !== refreshedRecord?.reviewed_at ||
-    !refreshedRecord.reviewed_at ||
-    !isAdvisorReviewConfirmed(
-      refreshedRecord.review_state,
-      refreshedRecord.source_narrative_hash ?? null,
-    )
+    actionRecord.reviewed_at !== refreshedRecord.reviewed_at
   ) {
     throw new Error(
       "Advisor review was recorded, but the refreshed proposal evidence did not confirm it.",
@@ -356,13 +404,17 @@ export function confirmNarrativeReviewRefresh({
 }
 
 export function confirmDiscussionPackRefresh({
+  proposalId,
   versionNo,
   report,
   summary,
+  events,
 }: {
+  proposalId: string;
   versionNo: number;
   report: ProposalReportRequestData;
   summary: ProposalDeliverySummaryData | undefined;
+  events: ProposalDeliveryEventsData | undefined;
 }): void {
   const actionIdentity = resolveNarrativeIdentity({
     hashes: [
@@ -384,13 +436,10 @@ export function confirmDiscussionPackRefresh({
       summary?.reporting_summary?.related_version_no,
     ],
   });
-  const refreshedPackageState = normalizeLabel(
-    summary?.reporting?.proposal_narrative_package?.package_status,
-    summary?.reporting?.include_reviewed_narrative ||
-      summary?.reporting_summary?.include_reviewed_narrative
-      ? "Requested"
-      : "Not Requested",
-  );
+  const actionPackageState =
+    report.explanation?.proposal_narrative_package?.package_status;
+  const refreshedPackageState =
+    summary?.reporting?.proposal_narrative_package?.package_status;
   const actionIncludesReviewedNarrative = allPresentBooleanMarkersAreTrue([
     report.explanation?.include_reviewed_narrative,
   ]);
@@ -401,6 +450,9 @@ export function confirmDiscussionPackRefresh({
   const actionRequestId = report.report_request_id?.trim();
   const refreshedRequestId = summary?.reporting?.report_request_id?.trim();
   if (
+    summary?.proposal?.proposal_id !== proposalId ||
+    summary.proposal.current_version_no !== versionNo ||
+    !deliveryEventsMatchActiveProposal({ events, proposalId, versionNo }) ||
     !narrativeIdentitiesMatch(actionIdentity, refreshedIdentity) ||
     actionIdentity?.versionNo !== versionNo ||
     refreshedIdentity?.versionNo !== versionNo ||
@@ -408,7 +460,12 @@ export function confirmDiscussionPackRefresh({
     !refreshedIncludesReviewedNarrative ||
     !actionRequestId ||
     actionRequestId !== refreshedRequestId ||
-    refreshedPackageState === "Not Requested"
+    report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
+    summary.reporting?.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
+    !isSupportedReportState(report.status) ||
+    !isSupportedReportState(summary.reporting?.status) ||
+    !isSupportedPackageState(actionPackageState) ||
+    !isSupportedPackageState(refreshedPackageState)
   ) {
     throw new Error(
       "The discussion-pack request completed, but refreshed preparation status for the reviewed proposal version was not available.",
