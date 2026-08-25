@@ -227,6 +227,12 @@ concurrency group.
   visible element at 1440/768/640/519 pixels. It writes reviewed desktop and compact images under
   `docs/evidence/issue-798-product-copy/narrative-review/`; the browser uses an isolated
   checkout-specific port and does not disturb the canonical runtime.
+- The focused Proposal Detail memo proof verifies explicit advisor identity, current-version memo
+  evidence, exact review and package prerequisites, source-aligned success, persistence and refresh
+  failure, optional non-authoritative commentary, stable canonical selectors, keyboard operation,
+  and 1440/768/640/519 zero-overflow reflow. It writes reviewed evidence under
+  `docs/evidence/issue-798-product-copy/memo-evidence-pack/`. Canonical automation performs only
+  source-admitted missing steps and records the actions actually confirmed after refreshed reads.
 - RFC-0025 Suitability review policy-queue proof must use the Gateway-backed advisory policy
   review queue, selected evaluation, sign-off package, workflow posture, and bounded
   request-more-evidence decision route. The live validator seeds this from the governed

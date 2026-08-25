@@ -6711,6 +6711,17 @@ wealth-platform sources before the comparison and handoff language was aligned:
     service-topology copy, a premature pack request, client-send controls, and success based only on
     an HTTP response. This #798 slice uses the shared Workbench status strip, Support details, and
     visible-overflow diagnostics without changing Gateway/Advise contracts or production auth.
+18. Present Proposal Detail memo work as **memo evidence → advisor review → discussion material →
+    record and audience**. This applies BlackRock Aladdin Wealth's connected proposal-to-client
+    workflow, FCA COBS 9A's evidence-led suitability boundary, and the existing governed-AI
+    human-review rule without copying competitor layouts or claiming unsupported authority. Keep
+    the source version read-only, require an explicit advisor reference, gate downstream material
+    on the exact retained memo hash, and confirm success only after the required Gateway-backed
+    views agree. Generated commentary remains an optional working aid. Reject invented actor
+    defaults, permissive unknown states, mutation-only success, raw source failures, client-send
+    controls, and any suggestion that a memo or commentary completes suitability, approval,
+    delivery, or execution. This #798 slice reuses the Workbench status strip, Support details,
+    evidence formatter, and responsive decision-workspace patterns.
 
 ### Delivery scope and deferred surfaces
 
@@ -6748,6 +6759,8 @@ positions, draft instructions, and next actions are not collapsed into cosmetic 
    client-ready, or execution-complete.
 9. Calling a generated workflow action `AI narrative` in the productive path, hiding AI provenance,
    or presenting generated commentary as source evidence or approved advice.
+10. Treating a prepared memo, requested discussion material, or generated commentary as client-ready
+    communication, suitability approval, delivery evidence, or proposal-lifecycle authority.
 
 ### Validation and publication decision
 
