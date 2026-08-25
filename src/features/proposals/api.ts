@@ -788,6 +788,14 @@ export async function getProposalNarrative(
   );
 }
 
+export async function getProposalNarrativeReviewEvidence(
+  proposalId: string,
+  versionNo: number,
+): Promise<ProposalNarrativeReviewData> {
+  const envelope = await getProposalNarrative(proposalId, versionNo);
+  return envelope.data as unknown as ProposalNarrativeReviewData;
+}
+
 export async function reviewProposalNarrative(
   proposalId: string,
   versionNo: number,

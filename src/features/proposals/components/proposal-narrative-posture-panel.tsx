@@ -8,6 +8,7 @@ import {
   createProposalReportRequest,
   getProposalDeliveryEvents,
   getProposalDeliverySummary,
+  getProposalNarrativeReviewEvidence,
   reviewProposalNarrative,
 } from "../api";
 import {
@@ -39,9 +40,6 @@ export default function ProposalNarrativePosturePanel({
   const versionNo = currentVersionNo ?? null;
   const [reviewedBy, setReviewedBy] = useState("");
   const [reviewReason, setReviewReason] = useState("");
-  const [reviewData, setReviewData] = useState<Awaited<
-    ReturnType<typeof reviewProposalNarrative>
-  > | null>(null);
   const [reportData, setReportData] = useState<Awaited<
     ReturnType<typeof createProposalReportRequest>
   > | null>(null);
@@ -59,16 +57,32 @@ export default function ProposalNarrativePosturePanel({
     queryFn: async () => await getProposalDeliveryEvents(proposalId),
     ...workbenchStrictQueryDefaults,
   });
+  const narrativeReviewQuery = useQuery({
+    queryKey: ["proposal-narrative-review-evidence", proposalId, versionNo],
+    queryFn: async () => {
+      if (versionNo === null) {
+        return null;
+      }
+      return await getProposalNarrativeReviewEvidence(proposalId, versionNo);
+    },
+    enabled: versionNo !== null,
+    ...workbenchStrictQueryDefaults,
+  });
 
   const posture = useMemo(
     () =>
       buildProposalNarrativePostureModel({
-        review: reviewData,
+        review: narrativeReviewQuery.data,
         report: reportData,
         summary: summaryQuery.data,
         events: eventsQuery.data,
       }),
-    [eventsQuery.data, reportData, reviewData, summaryQuery.data],
+    [
+      eventsQuery.data,
+      narrativeReviewQuery.data,
+      reportData,
+      summaryQuery.data,
+    ],
   );
 
   const canSubmit =
@@ -100,18 +114,18 @@ export default function ProposalNarrativePosturePanel({
         ),
       );
       reviewRecorded = true;
-      const [summaryResult, eventsResult] = await Promise.all([
+      const [narrativeResult, summaryResult, eventsResult] = await Promise.all([
+        narrativeReviewQuery.refetch(),
         summaryQuery.refetch(),
         eventsQuery.refetch(),
       ]);
-      if (summaryResult.error || eventsResult.error) {
+      if (narrativeResult.error || summaryResult.error || eventsResult.error) {
         throw new Error("REFRESH_UNAVAILABLE");
       }
       confirmNarrativeReviewRefresh({
         review: data,
-        summary: summaryResult.data,
+        refreshedReview: narrativeResult.data ?? undefined,
       });
-      setReviewData(data);
       setReviewReason("");
       setActionMessage(
         `Advisor review confirmed for proposal version ${versionNo}.`,
@@ -181,12 +195,12 @@ export default function ProposalNarrativePosturePanel({
       title="Narrative review and discussion pack"
       subtitle="Confirm the recommendation rationale, record advisor review, then request client-discussion material."
       actions={
-        <SemanticBadge tone={posture.sourceNarrativeHash ? "success" : "warn"}>
+        <SemanticBadge tone={posture.reviewTone}>
           {posture.reviewState}
         </SemanticBadge>
       }
     >
-      {summaryQuery.error || eventsQuery.error ? (
+      {summaryQuery.error || eventsQuery.error || narrativeReviewQuery.error ? (
         <Alert severity="warning">
           Current discussion-pack or delivery status is unavailable. Existing
           proposal evidence remains visible, but no new action will be confirmed

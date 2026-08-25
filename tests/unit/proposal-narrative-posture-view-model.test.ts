@@ -46,6 +46,7 @@ describe("proposal narrative posture view model", () => {
     });
 
     expect(model.reviewState).toBe("Approved For Advisor Use");
+    expect(model.reviewTone).toBe("success");
     expect(model.reportPackageState).toBe("Included Reviewed Narrative");
     expect(model.deliveryState).toBe("Ready");
     expect(model.sourceNarrativeHash).toBe("sha256:narrative-001");
@@ -90,6 +91,7 @@ describe("proposal narrative posture view model", () => {
     const model = buildProposalNarrativePostureModel({});
 
     expect(model.reviewState).toBe("Not Reviewed");
+    expect(model.reviewTone).toBe("warn");
     expect(model.reportPackageState).toBe("Not Requested");
     expect(model.deliveryState).toBe("No Report");
     expect(model.sourceNarrativeHash).toBeNull();
@@ -100,6 +102,20 @@ describe("proposal narrative posture view model", () => {
   });
 
   it("admits a discussion-pack request only after the source confirms advisor review", () => {
+    const model = buildProposalNarrativePostureModel({
+      review: {
+        narrative_review: {
+          review_state: "APPROVED_FOR_ADVISOR_USE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      },
+    });
+
+    expect(model.canRequestDiscussionPack).toBe(true);
+    expect(model.nextActionTitle).toBe("Request the discussion pack");
+  });
+
+  it("does not authorize a discussion-pack request from delivery-summary fields", () => {
     const model = buildProposalNarrativePostureModel({
       summary: {
         reporting: {
@@ -113,28 +129,33 @@ describe("proposal narrative posture view model", () => {
       },
     });
 
-    expect(model.canRequestDiscussionPack).toBe(true);
-    expect(model.nextActionTitle).toBe("Request the discussion pack");
+    expect(model.reviewState).toBe("Not Reviewed");
+    expect(model.reviewTone).toBe("warn");
+    expect(model.canRequestDiscussionPack).toBe(false);
+    expect(model.nextActionTitle).toBe("Record advisor review");
   });
 
   it("requires refreshed source evidence to match the recorded narrative review", () => {
     const review = {
       policy_version: "proposal-narrative-deterministic.v1",
       narrative_review: {
+        review_id: "review-001",
+        proposal_id: "pp_1",
+        proposal_version_no: 2,
+        narrative_id: "narrative-001",
         review_state: "APPROVED_FOR_ADVISOR_USE",
         source_narrative_hash: "sha256:narrative-001",
+        reviewed_by: "advisor_1",
+        reviewed_at: "2026-05-22T09:00:00Z",
       },
     };
 
     expect(() =>
       confirmNarrativeReviewRefresh({
         review,
-        summary: {
-          reporting: {
-            proposal_narrative_package: {
-              review_state: "APPROVED_FOR_ADVISOR_USE",
-              source_narrative_hash: "sha256:narrative-001",
-            },
+        refreshedReview: {
+          narrative_review: {
+            ...review.narrative_review,
           },
         },
       }),
@@ -142,12 +163,10 @@ describe("proposal narrative posture view model", () => {
     expect(() =>
       confirmNarrativeReviewRefresh({
         review,
-        summary: {
-          reporting: {
-            proposal_narrative_package: {
-              review_state: "APPROVED_FOR_ADVISOR_USE",
-              source_narrative_hash: "sha256:different",
-            },
+        refreshedReview: {
+          narrative_review: {
+            ...review.narrative_review,
+            source_narrative_hash: "sha256:different",
           },
         },
       }),

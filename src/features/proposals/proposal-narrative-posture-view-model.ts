@@ -9,6 +9,7 @@ import type {
 
 export type ProposalNarrativePostureModel = {
   canRequestDiscussionPack: boolean;
+  reviewTone: "success" | "warn";
   reviewState: string;
   reportPackageState: string;
   deliveryState: string;
@@ -55,9 +56,7 @@ export function buildProposalNarrativePostureModel({
     null;
 
   const reviewState = normalizeLabel(
-    reviewRecord?.review_state ??
-      summaryPackage?.review_state ??
-      reportPackage?.review_state,
+    reviewRecord?.review_state,
     "Not Reviewed",
   );
   const reportPackageState = normalizeLabel(
@@ -72,10 +71,8 @@ export function buildProposalNarrativePostureModel({
     "No Report",
   );
   const reviewConfirmed = isAdvisorReviewConfirmed(
-    reviewRecord?.review_state ??
-      summaryPackage?.review_state ??
-      reportPackage?.review_state,
-    sourceNarrativeHash,
+    reviewRecord?.review_state,
+    reviewRecord?.source_narrative_hash ?? null,
   );
   const discussionPackRequested = isDiscussionPackRequested({
     reportPackageState,
@@ -96,6 +93,7 @@ export function buildProposalNarrativePostureModel({
 
   return {
     canRequestDiscussionPack: reviewConfirmed && !discussionPackRequested,
+    reviewTone: reviewConfirmed ? "success" : "warn",
     reviewState,
     reportPackageState,
     deliveryState,
@@ -107,7 +105,8 @@ export function buildProposalNarrativePostureModel({
           nullDisplay: "Not reported",
         })
       : null,
-    policyVersion: review?.policy_version ?? null,
+    policyVersion:
+      review?.policy_version ?? review?.proposal_narrative?.policy_version ?? null,
     nextActionDetail: nextAction.detail,
     nextActionTitle: nextAction.title,
     workflowItems: [
@@ -222,17 +221,25 @@ function projectNarrativeNextAction({
 
 export function confirmNarrativeReviewRefresh({
   review,
-  summary,
+  refreshedReview,
 }: {
   review: ProposalNarrativeReviewData;
-  summary: ProposalDeliverySummaryData | undefined;
+  refreshedReview: ProposalNarrativeReviewData | undefined;
 }): void {
-  const actionModel = buildProposalNarrativePostureModel({ review });
-  const refreshedModel = buildProposalNarrativePostureModel({ summary });
+  const actionRecord = review.narrative_review;
+  const refreshedRecord = refreshedReview?.narrative_review;
   if (
-    !actionModel.sourceNarrativeHash ||
-    actionModel.sourceNarrativeHash !== refreshedModel.sourceNarrativeHash ||
-    refreshedModel.nextActionTitle === "Record advisor review"
+    !actionRecord?.review_id ||
+    actionRecord.review_id !== refreshedRecord?.review_id ||
+    !actionRecord.source_narrative_hash ||
+    actionRecord.source_narrative_hash !== refreshedRecord?.source_narrative_hash ||
+    actionRecord.review_state !== refreshedRecord?.review_state ||
+    actionRecord.reviewed_by !== refreshedRecord?.reviewed_by ||
+    !refreshedRecord.reviewed_at ||
+    !isAdvisorReviewConfirmed(
+      refreshedRecord.review_state,
+      refreshedRecord.source_narrative_hash ?? null,
+    )
   ) {
     throw new Error(
       "Advisor review was recorded, but the refreshed proposal evidence did not confirm it.",
