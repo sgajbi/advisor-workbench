@@ -652,6 +652,9 @@ function collectFunctionReturns(sourceFile, bindingGraph, moduleBindings) {
 }
 
 function functionReturnExpressions(functionNode) {
+  if (!functionNode.body) {
+    return [];
+  }
   if (ts.isArrowFunction(functionNode) && !ts.isBlock(functionNode.body)) {
     return [functionNode.body];
   }

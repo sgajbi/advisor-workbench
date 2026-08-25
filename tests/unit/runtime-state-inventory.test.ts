@@ -220,6 +220,16 @@ describe("runtime state inventory", () => {
     ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
   });
 
+  it("skips bodyless overload signatures and inspects their implementation", () => {
+    expect(
+      scanRuntimeStateSource({
+        source:
+          "const cache = createCache(); function getCache(key: string): object; function getCache(): object { return cache; } getCache().set('key', 'value');",
+        file: "src/features/example.ts",
+      }),
+    ).toContainEqual({ file: "src/features/example.ts", symbol: "cache" });
+  });
+
   it("discovers a mutated imported singleton binding", () => {
     expect(
       scanRuntimeStateSource({
