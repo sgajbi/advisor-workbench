@@ -28,7 +28,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
   PortfolioRecordScreenCopy
 > = {
   allocation: {
-    title: "Allocation",
+    title: PORTFOLIO_SCREEN_LABELS.allocation,
     subtitle: "Review portfolio exposures and trace each direct allocation to its contributing positions.",
   },
   positions: {
@@ -37,7 +37,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
       "Review the complete booked inventory, valuation, cost basis, portfolio weights, and recent position activity.",
   },
   transactions: {
-    title: "Transactions",
+    title: PORTFOLIO_SCREEN_LABELS.transactions,
     subtitle: "Review booked activity, settlement state, booking components, and source lineage.",
   },
   income: {

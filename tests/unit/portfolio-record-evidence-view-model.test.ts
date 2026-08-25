@@ -69,7 +69,7 @@ describe("portfolio record evidence view model", () => {
       ])
     );
     expect(viewModel.adjacentWorkflows.map((workflow) => workflow.label)).toEqual([
-      "Portfolio Review",
+      "Portfolio review",
       "Allocation",
       "Transactions",
       "Income and activity",

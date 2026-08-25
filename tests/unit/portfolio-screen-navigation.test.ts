@@ -141,11 +141,20 @@ describe("portfolio screen navigation", () => {
       portfolioId: "PB_SG_GLOBAL_BAL_001",
     });
 
+    expect(items.find((item) => item.key === "portfolio")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.portfolioReview,
+    );
+    expect(items.find((item) => item.key === "allocation")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.allocation,
+    );
     expect(items.find((item) => item.key === "positions")?.label).toBe(
       PORTFOLIO_SCREEN_LABELS.positions,
     );
     expect(items.find((item) => item.key === "income")?.label).toBe(
       PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
+    );
+    expect(items.find((item) => item.key === "transactions")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.transactions,
     );
     expect(items.find((item) => item.key === "cashflow")?.label).toBe(
       PORTFOLIO_SCREEN_LABELS.projectedCashFlow,

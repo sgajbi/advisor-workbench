@@ -149,10 +149,26 @@ function buildAdjacentWorkflows(
 ): PortfolioRecordAdjacentWorkflow[] {
   const encodedPortfolioId = encodeURIComponent(portfolioId);
   const workflows: PortfolioRecordWorkflowLink[] = [
-    { screen: "review", label: "Portfolio Review", href: `/portfolio?portfolioId=${encodedPortfolioId}` },
-    { screen: "positions", label: "Positions", href: `/positions?portfolioId=${encodedPortfolioId}` },
-    { screen: "allocation", label: "Allocation", href: `/allocation?portfolioId=${encodedPortfolioId}` },
-    { screen: "transactions", label: "Transactions", href: `/transactions?portfolioId=${encodedPortfolioId}` },
+    {
+      screen: "review",
+      label: PORTFOLIO_SCREEN_LABELS.portfolioReview,
+      href: `/portfolio?portfolioId=${encodedPortfolioId}`,
+    },
+    {
+      screen: "positions",
+      label: PORTFOLIO_SCREEN_LABELS.positions,
+      href: `/positions?portfolioId=${encodedPortfolioId}`,
+    },
+    {
+      screen: "allocation",
+      label: PORTFOLIO_SCREEN_LABELS.allocation,
+      href: `/allocation?portfolioId=${encodedPortfolioId}`,
+    },
+    {
+      screen: "transactions",
+      label: PORTFOLIO_SCREEN_LABELS.transactions,
+      href: `/transactions?portfolioId=${encodedPortfolioId}`,
+    },
     {
       screen: "income",
       label: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,

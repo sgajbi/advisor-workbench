@@ -18,11 +18,14 @@ describe("portfolio record screen view model", () => {
       title: PORTFOLIO_SCREEN_LABELS.positions,
     });
     expect(getPortfolioRecordScreenCopy("allocation")).toMatchObject({
-      title: "Allocation",
+      title: PORTFOLIO_SCREEN_LABELS.allocation,
       subtitle:
         "Review portfolio exposures and trace each direct allocation to its contributing positions.",
     });
-    expect(getPortfolioRecordScreenCopy("transactions").subtitle).toContain("source lineage");
+    expect(getPortfolioRecordScreenCopy("transactions")).toMatchObject({
+      title: PORTFOLIO_SCREEN_LABELS.transactions,
+      subtitle: expect.stringContaining("source lineage"),
+    });
     expect(getPortfolioRecordScreenCopy("income")).toMatchObject({
       title: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
       subtitle: expect.stringContaining("booked income"),

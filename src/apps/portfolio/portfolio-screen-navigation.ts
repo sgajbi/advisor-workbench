@@ -74,7 +74,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_GROUPS: ReadonlyArray<{
 const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   {
     key: "portfolio",
-    label: "Portfolio review",
+    label: PORTFOLIO_SCREEN_LABELS.portfolioReview,
     detail: "Mandate and decision context",
     href: "/portfolio",
     group: "portfolio-records",
@@ -82,7 +82,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "allocation",
-    label: "Allocation",
+    label: PORTFOLIO_SCREEN_LABELS.allocation,
     detail: "Composition and concentration",
     href: "/allocation",
     group: "portfolio-records",
@@ -98,7 +98,7 @@ const PORTFOLIO_SCREEN_NAVIGATION_ITEMS: PortfolioScreenNavigationItem[] = [
   },
   {
     key: "transactions",
-    label: "Transactions",
+    label: PORTFOLIO_SCREEN_LABELS.transactions,
     detail: "Booked activity and settlement",
     href: "/transactions",
     group: "portfolio-records",

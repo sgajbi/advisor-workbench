@@ -7,6 +7,9 @@ export const PORTFOLIO_VALUATION_DATE_LABEL = "Valuation date";
 export const PORTFOLIO_REVIEW_DATE_LABEL = "Review date";
 
 export const PORTFOLIO_SCREEN_LABELS = {
+  portfolioReview: "Portfolio review",
+  allocation: "Allocation",
+  transactions: "Transactions",
   incomeAndActivity: "Income and activity",
   positions: "Positions",
   projectedCashFlow: "Projected cash flow",
