@@ -874,26 +874,24 @@ export type ProposalDeliverySummaryData = {
   [key: string]: unknown;
 };
 
+export type ProposalDeliveryEvent = {
+  event_id?: string;
+  proposal_id?: string;
+  related_version_no?: number | null;
+  event_type?: string;
+  to_state?: string;
+  occurred_at?: string;
+  actor_id?: string;
+  reason?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 export type ProposalDeliveryEventsData = {
   proposal?: ProposalSummary;
   proposal_id?: string;
   event_count?: number;
-  latest_event?: {
-    event_id?: string;
-    event_type?: string;
-    to_state?: string;
-    occurred_at?: string;
-    [key: string]: unknown;
-  };
-  events?: Array<{
-    event_id?: string;
-    event_type?: string;
-    to_state?: string;
-    occurred_at?: string;
-    actor_id?: string;
-    reason?: Record<string, unknown>;
-    [key: string]: unknown;
-  }>;
+  latest_event?: ProposalDeliveryEvent;
+  events?: ProposalDeliveryEvent[];
   explanation?: Record<string, unknown>;
   [key: string]: unknown;
 };
