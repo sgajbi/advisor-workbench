@@ -131,8 +131,14 @@ async function mockProposalDetail(
         correlation_id: "corr-delivery",
         contract_version: "v1",
         data: {
+          proposal: {
+            proposal_id: "pp_1",
+            current_state: sourceState,
+            current_version_no: 2,
+          },
           reporting: {
             report_request_id: discussionPackRequested ? "report-001" : undefined,
+            report_type: "PORTFOLIO_REVIEW",
             related_version_no: 2,
             status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
             include_reviewed_narrative: discussionPackRequested,
@@ -154,13 +160,25 @@ async function mockProposalDetail(
         contract_version: "v1",
         data: discussionPackRequested
           ? {
+              proposal: {
+                proposal_id: "pp_1",
+                current_state: sourceState,
+                current_version_no: 2,
+              },
               event_count: 1,
               latest_event: {
                 event_type: "REPORT_REQUESTED",
                 occurred_at: "2026-05-24T10:02:00Z",
               },
             }
-          : { event_count: 0 },
+          : {
+              proposal: {
+                proposal_id: "pp_1",
+                current_state: sourceState,
+                current_version_no: 2,
+              },
+              event_count: 0,
+            },
       },
     });
   });
@@ -218,6 +236,7 @@ async function mockProposalDetail(
         contract_version: "v1",
         data: {
           report_request_id: "report-001",
+          report_type: "PORTFOLIO_REVIEW",
           status: "REQUESTED",
           explanation: {
             related_version_no: 2,
