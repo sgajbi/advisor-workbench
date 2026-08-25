@@ -125,6 +125,42 @@ export function scanProductCopySource({ filePath, sourceText }) {
   function inspectExpression(expression, context) {
     const resolvingDeclarations = new Set();
 
+    function resolveStaticExpression(node) {
+      const unwrapped = unwrapCopyExpression(node);
+      if (ts.isIdentifier(unwrapped)) {
+        const declaration = resolveLocalConstantInitializer(unwrapped);
+        if (!declaration || resolvingDeclarations.has(declaration)) {
+          return undefined;
+        }
+        resolvingDeclarations.add(declaration);
+        const resolved = resolveStaticExpression(declaration);
+        resolvingDeclarations.delete(declaration);
+        return resolved;
+      }
+      if (
+        ts.isPropertyAccessExpression(unwrapped)
+        || ts.isElementAccessExpression(unwrapped)
+      ) {
+        const propertyName = accessPropertyName(unwrapped);
+        const owner = resolveStaticExpression(unwrapped.expression);
+        if (!propertyName || !owner || !ts.isObjectLiteralExpression(owner)) {
+          return undefined;
+        }
+        const matches = owner.properties.filter((property) =>
+          (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property))
+          && propertyNameText(property.name, sourceFile) === propertyName,
+        );
+        if (matches.length !== 1) {
+          return undefined;
+        }
+        const match = matches[0];
+        return resolveStaticExpression(
+          ts.isPropertyAssignment(match) ? match.initializer : match.name,
+        );
+      }
+      return unwrapped;
+    }
+
     function visitResolvedCopyExpression(node) {
       if (
         ts.isStringLiteral(node) ||
@@ -134,12 +170,14 @@ export function scanProductCopySource({ filePath, sourceText }) {
         inspectLiteral(node, context);
         return;
       }
-      if (ts.isIdentifier(node)) {
-        const declaration = resolveLocalConstantInitializer(node);
-        if (declaration && !resolvingDeclarations.has(declaration)) {
-          resolvingDeclarations.add(declaration);
-          visitResolvedCopyExpression(declaration);
-          resolvingDeclarations.delete(declaration);
+      if (
+        ts.isIdentifier(node)
+        || ts.isPropertyAccessExpression(node)
+        || ts.isElementAccessExpression(node)
+      ) {
+        const resolved = resolveStaticExpression(node);
+        if (resolved && resolved !== node) {
+          visitResolvedCopyExpression(resolved);
         }
         return;
       }
@@ -187,6 +225,10 @@ export function scanProductCopySource({ filePath, sourceText }) {
         inspectLiteral(node, context);
         return;
       }
+      if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+        visitResolvedCopyExpression(node);
+        return;
+      }
       if (ts.isIdentifier(node) && isValueReferenceIdentifier(node)) {
         visitResolvedCopyExpression(node);
         return;
@@ -228,6 +270,30 @@ export function scanProductCopySource({ filePath, sourceText }) {
 
   visit(sourceFile);
   return findings;
+}
+
+function unwrapCopyExpression(node) {
+  let current = node;
+  while (
+    ts.isParenthesizedExpression(current)
+    || ts.isAsExpression(current)
+    || ts.isSatisfiesExpression(current)
+    || ts.isNonNullExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function accessPropertyName(node) {
+  if (ts.isPropertyAccessExpression(node)) {
+    return node.name.text;
+  }
+  const argument = node.argumentExpression;
+  return argument &&
+    (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))
+    ? argument.text
+    : null;
 }
 
 function collectLocalConstantScopes(sourceFile) {
