@@ -1,6 +1,7 @@
 import { projectBusinessState } from "@/copy/business-state-copy";
 
 import {
+  isCurrentVersionNoMemoEvidence,
   lineageItemIdentity,
   memoIdentitiesEqual,
   resolveMemoSourceIdentity,
@@ -76,6 +77,7 @@ export type ProposalMemoPostureModel = {
   reviewConfirmed: boolean;
   reviewPostureLabel: string;
   sourceEvidenceAligned: boolean;
+  sourceIdentityCurrent: boolean;
   statusLabel: string;
   supportabilityLabel: string;
   workflowItems: ProposalMemoWorkflowItem[];
@@ -188,6 +190,15 @@ export function buildProposalMemoPostureModel({
       && memoIdentitiesEqual(replayIdentity, memoIdentity)
       && lineageData?.lineage_complete === true,
   );
+  const sourceIdentityCurrent = sourceEvidenceAligned
+    || isCurrentVersionNoMemoEvidence({
+      lineageData,
+      memoData,
+      projectionData,
+      proposalId,
+      replayData,
+      versionNo,
+    });
   const reportStatus =
     firstString(
       memoIdentity ? memoData?.report_package_posture : undefined,
@@ -231,6 +242,7 @@ export function buildProposalMemoPostureModel({
     reportPackageRecorded,
     reviewConfirmed,
     sourceEvidenceAligned,
+    sourceIdentityCurrent,
   });
   const reviewPostureLabel = reviewConfirmed
     ? "Approved for advisor use"
@@ -280,6 +292,7 @@ export function buildProposalMemoPostureModel({
     reviewConfirmed,
     reviewPostureLabel,
     sourceEvidenceAligned,
+    sourceIdentityCurrent,
     statusLabel: sourceLabel(
       memoIdentity ? memoData?.memo_status : undefined,
       MEMO_STATUS_LABELS,
@@ -589,12 +602,22 @@ function projectMemoNextAction({
   reportPackageRecorded,
   reviewConfirmed,
   sourceEvidenceAligned,
+  sourceIdentityCurrent,
 }: {
   hasMemo: boolean;
   reportPackageRecorded: boolean;
   reviewConfirmed: boolean;
   sourceEvidenceAligned: boolean;
+  sourceIdentityCurrent: boolean;
 }): { detail: string; key: ProposalMemoNextAction; title: string } {
+  if (!sourceIdentityCurrent) {
+    return {
+      key: "track",
+      title: "Refresh the memo evidence",
+      detail:
+        "Current proposal, projection, lineage and replay evidence must identify this proposal version before the next advisor action.",
+    };
+  }
   if (!hasMemo) {
     return {
       key: "prepare",

@@ -629,7 +629,10 @@ test.describe("proposal memo posture", () => {
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
     await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
 
-    await expect(page.getByRole("heading", { name: "Prepare the advisor memo" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Refresh the memo evidence" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Prepare advisor memo" }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Request discussion material" }),
     ).toHaveCount(0);
@@ -646,7 +649,10 @@ test.describe("proposal memo posture", () => {
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
     await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
 
-    await expect(page.getByRole("heading", { name: "Prepare the advisor memo" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Refresh the memo evidence" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Prepare advisor memo" }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Request discussion material" }),
     ).toHaveCount(0);

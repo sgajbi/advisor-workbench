@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ProposalMemoPosturePanel from "../../src/features/proposals/components/proposal-memo-posture-panel";
@@ -208,6 +208,8 @@ function emptyEvidenceState(): EvidenceState {
       latest_memo_id: null,
       lineage_complete: true,
       memos: [],
+      proposal: proposalSummary(),
+      proposal_id: PROPOSAL_ID,
     },
     replay: { hashes: {}, audit_events: [] },
   };
@@ -245,6 +247,10 @@ function enterActor(reference = "advisor_9") {
   });
 }
 
+async function openMemoDetails() {
+  fireEvent.click(await screen.findByText("Memo record details"));
+}
+
 describe("ProposalMemoPosturePanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -259,6 +265,96 @@ describe("ProposalMemoPosturePanel", () => {
     vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
       async () => sourceState.replay,
     );
+  });
+
+  it("withholds lifecycle actions until every source view has settled", async () => {
+    let resolveSource!: (value: EvidenceState) => void;
+    const pendingSource = new Promise<EvidenceState>((resolve) => {
+      resolveSource = resolve;
+    });
+    vi.mocked(getProposalMemo).mockImplementation(
+      async () => (await pendingSource).memo,
+    );
+    vi.mocked(getProposalMemoProjection).mockImplementation(
+      async () => (await pendingSource).projection,
+    );
+    vi.mocked(getProposalMemoLineage).mockImplementation(
+      async () => (await pendingSource).lineage,
+    );
+    vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
+      async () => (await pendingSource).replay,
+    );
+
+    renderPanel();
+
+    expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "loading",
+    );
+    expect(
+      screen.getByText(/Checking the current memo, review and retained evidence/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Prepare advisor memo" }),
+    ).not.toBeInTheDocument();
+
+    await act(async () => resolveSource(emptyEvidenceState()));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+        "data-source-state",
+        "ready",
+      ),
+    );
+    expect(
+      screen.getByRole("button", { name: "Prepare advisor memo" }),
+    ).toBeDisabled();
+  });
+
+  it("permits current-version preparation when complete lineage retains only prior versions", async () => {
+    sourceState = emptyEvidenceState();
+    sourceState.lineage = {
+      ...sourceState.lineage,
+      latest_memo_id: "memo_previous",
+      memo_count: 1,
+      memos: [{
+        memo_hash: "sha256:previous",
+        memo_id: "memo_previous",
+        proposal_version_no: VERSION_NO - 1,
+      }],
+    };
+
+    renderPanel();
+
+    expect(
+      await screen.findByRole("button", { name: "Prepare advisor memo" }),
+    ).toBeDisabled();
+    expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "ready",
+    );
+  });
+
+  it("withholds mutation controls when a required source view is unavailable", async () => {
+    vi.mocked(getProposalMemo).mockRejectedValue(
+      new Error("upstream memo read unavailable"),
+    );
+
+    renderPanel();
+
+    expect(
+      await screen.findByText(/Current memo evidence is unavailable/),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "unavailable",
+    );
+    expect(screen.getByRole("button", { name: "Refresh record" })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", {
+        name: /advisor memo|advisor review|discussion material/i,
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders the business workflow with one next decision and progressive evidence detail", async () => {
@@ -283,7 +379,7 @@ describe("ProposalMemoPosturePanel", () => {
       "open",
     );
 
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     expect(screen.getByText("Current proposal version")).toBeInTheDocument();
     expect(screen.getByLabelText("Audience view")).toBeInTheDocument();
     expect(screen.getAllByText("1 archived item").length).toBeGreaterThan(0);
@@ -297,7 +393,7 @@ describe("ProposalMemoPosturePanel", () => {
       return sourceState.memo;
     });
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor(" advisor_9 ");
 
     const prepareButton = screen.getByRole("button", {
@@ -334,7 +430,7 @@ describe("ProposalMemoPosturePanel", () => {
       };
     });
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
     fireEvent.change(
       await screen.findByPlaceholderText(
@@ -389,7 +485,7 @@ describe("ProposalMemoPosturePanel", () => {
       };
     });
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
 
     fireEvent.click(
@@ -439,7 +535,7 @@ describe("ProposalMemoPosturePanel", () => {
       },
     );
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
 
     fireEvent.click(
@@ -486,7 +582,7 @@ describe("ProposalMemoPosturePanel", () => {
       replayed: false,
     });
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
 
     fireEvent.click(
@@ -518,7 +614,7 @@ describe("ProposalMemoPosturePanel", () => {
       replayed: false,
     });
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
     fireEvent.change(
       await screen.findByPlaceholderText(
@@ -547,7 +643,7 @@ describe("ProposalMemoPosturePanel", () => {
       new Error("upstream review unavailable"),
     );
     const { rerenderPanel } = renderPanel(VERSION_NO);
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
     enterActor();
     fireEvent.change(
       await screen.findByPlaceholderText(
@@ -581,7 +677,7 @@ describe("ProposalMemoPosturePanel", () => {
     ).toHaveValue("");
     const details = screen.getByText("Memo record details").closest("details");
     if (!details?.hasAttribute("open")) {
-      fireEvent.click(screen.getByText("Memo record details"));
+      await openMemoDetails();
     }
     expect(screen.getByLabelText("Advisor or reviewer reference")).toHaveValue(
       "",
@@ -629,7 +725,10 @@ describe("ProposalMemoPosturePanel", () => {
 
     renderPanel();
 
-    expect(await screen.findByText("Prepare the advisor memo")).toBeInTheDocument();
+    expect(await screen.findByText("Refresh the memo evidence")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Prepare advisor memo" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Request discussion material" }),
     ).not.toBeInTheDocument();
@@ -644,7 +743,7 @@ describe("ProposalMemoPosturePanel", () => {
       new Error("upstream 500: secret host"),
     );
     renderPanel();
-    fireEvent.click(screen.getByText("Memo record details"));
+    await openMemoDetails();
 
     expect(
       screen.getByRole("button", { name: "Prepare advisor memo" }),
@@ -676,6 +775,10 @@ describe("ProposalMemoPosturePanel", () => {
     expect(getProposalMemo).not.toHaveBeenCalled();
     expect(
       screen.queryByRole("button", { name: "Prepare advisor memo" }),
-    ).toBeDisabled();
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "unavailable",
+    );
   });
 });

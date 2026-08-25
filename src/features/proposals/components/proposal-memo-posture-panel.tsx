@@ -114,8 +114,9 @@ function ProposalMemoPosturePanelSession({
         proposalId,
         requireVersion(versionNo),
         audience,
-      ),
+    ),
     ...workbenchStrictQueryDefaults,
+    placeholderData: (previousData) => previousData,
     enabled: versionNo !== null,
   });
   const lineageQuery = useQuery({
@@ -170,6 +171,39 @@ function ProposalMemoPosturePanelSession({
       lineageQuery.isPending ||
       replayQuery.isPending),
   );
+  const sourceRefreshing = Boolean(
+    versionNo !== null &&
+    (memoQuery.isFetching ||
+      projectionQuery.isFetching ||
+      lineageQuery.isFetching ||
+      replayQuery.isFetching),
+  );
+  const sourceEvidenceAvailable = Boolean(
+    memoQuery.data &&
+      projectionQuery.data &&
+      lineageQuery.data &&
+      replayQuery.data,
+  );
+  const sourceEvidenceReadable = Boolean(
+    memoQuery.data ||
+      projectionQuery.data ||
+      lineageQuery.data ||
+      replayQuery.data,
+  );
+  const sourceReadable = Boolean(
+    versionNo !== null && !sourceLoading && sourceEvidenceReadable,
+  );
+  const sourceReady = Boolean(
+    sourceEvidenceAvailable
+      && posture.sourceIdentityCurrent
+      && !sourceUnavailable
+      && !sourceRefreshing,
+  );
+  const sourceState = sourceLoading || sourceRefreshing
+    ? "loading"
+    : sourceReady
+      ? "ready"
+      : "unavailable";
   const actorEntered = actorReference.trim().length > 0;
 
   async function refreshMemoState(): Promise<ProposalMemoRefreshEvidence> {
@@ -204,7 +238,12 @@ function ProposalMemoPosturePanelSession({
   }
 
   async function handleCreateMemo() {
-    if (versionNo === null || !actorEntered) {
+    if (
+      versionNo === null
+      || !actorEntered
+      || !posture.sourceIdentityCurrent
+      || posture.hasMemo
+    ) {
       return;
     }
     await runMemoAction("create", async (markSourceActionCompleted) => {
@@ -357,12 +396,30 @@ function ProposalMemoPosturePanelSession({
       subtitle="Prepare the working memo, record advisor review, then request material for the client discussion."
       actions={
         <SemanticBadge
-          tone={posture.sourceEvidenceAligned ? "success" : "warn"}
+          tone={sourceReady && posture.sourceEvidenceAligned ? "success" : "warn"}
         >
-          {posture.statusLabel}
+          {versionNo === null
+            ? "Version required"
+            : sourceLoading || sourceRefreshing
+              ? "Checking evidence"
+              : sourceUnavailable
+                ? "Evidence unavailable"
+                : posture.statusLabel}
         </SemanticBadge>
       }
     >
+      <div
+        data-testid="proposal-memo-source-state"
+        data-source-state={sourceState}
+        aria-busy={sourceLoading || sourceRefreshing}
+      >
+        {sourceLoading || sourceRefreshing ? (
+          <Alert severity="info">
+            Checking the current memo, review and retained evidence before showing
+            the next advisor action.
+          </Alert>
+        ) : null}
+      </div>
       {versionNo === null ? (
         <Alert severity="warning">
           A current proposal version is required before memo evidence can be
@@ -402,6 +459,8 @@ function ProposalMemoPosturePanelSession({
         </Alert>
       ) : null}
 
+      {sourceReadable ? (
+        <>
       <WorkbenchStatusStrip
         label="Advisor memo workflow"
         items={posture.workflowItems}
@@ -501,8 +560,11 @@ function ProposalMemoPosturePanelSession({
           </div>
         </dl>
       </SupportDetails>
+        </>
+      ) : null}
 
-      <div className={styles.actionArea}>
+      {sourceReady ? (
+        <div className={styles.actionArea}>
         <div className={styles.actionRow}>
           {posture.nextActionKey === "prepare" ? (
             <Button
@@ -578,7 +640,8 @@ function ProposalMemoPosturePanelSession({
           release, delivery, suitability approval and implementation are
           separate controlled steps.
         </Text>
-      </div>
+        </div>
+      ) : null}
     </SectionBlock>
   );
 }

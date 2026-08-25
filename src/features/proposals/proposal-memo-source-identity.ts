@@ -104,11 +104,19 @@ export function selectCurrentMemoLineageItem(
   ) {
     return undefined;
   }
-  const matchingMemo = memos.find((memo) =>
-    memoIdentitiesEqual(lineageItemIdentity(memo, proposalId), currentIdentity),
+  const identities = memos.map((memo) => lineageItemIdentity(memo, proposalId));
+  if (
+    identities.some((identity) => !identity)
+    || new Set(identities.map((identity) => identity?.memoId)).size !== memos.length
+  ) {
+    return undefined;
+  }
+  const matchingIndex = identities.findIndex((identity) =>
+    memoIdentitiesEqual(identity, currentIdentity),
   );
-  return matchingMemo?.memo_id === lineageData?.latest_memo_id
-    ? matchingMemo
+  return matchingIndex >= 0
+    && currentIdentity.memoId === lineageData?.latest_memo_id
+    ? memos[matchingIndex]
     : undefined;
 }
 
@@ -138,6 +146,109 @@ export function memoIdentitiesEqual(
   );
 }
 
+export function isCurrentVersionNoMemoEvidence({
+  lineageData,
+  memoData,
+  projectionData,
+  proposalId,
+  replayData,
+  versionNo,
+}: {
+  lineageData: ProposalMemoLineageData | null | undefined;
+  memoData: ProposalMemoData | null | undefined;
+  projectionData: ProposalMemoProjectionData | null | undefined;
+  proposalId: string;
+  replayData: ProposalMemoReplayEvidenceData | null | undefined;
+  versionNo: number | null;
+}): boolean {
+  if (
+    !activeProposalIdentityIsValid(proposalId, versionNo)
+    || lineageData?.proposal_id !== proposalId
+    || !proposalSummaryMatchesActiveVersion(
+      lineageData.proposal,
+      proposalId,
+      versionNo,
+    )
+    || !optionalProposalSummaryMatchesActiveVersion(
+      memoData?.proposal,
+      proposalId,
+      versionNo,
+    )
+    || !optionalProposalSummaryMatchesActiveVersion(
+      projectionData?.proposal,
+      proposalId,
+      versionNo,
+    )
+    || !optionalProposalSummaryMatchesActiveVersion(
+      lineageData?.proposal,
+      proposalId,
+      versionNo,
+    )
+    || !optionalExactValueMatches(memoData?.proposal_version_no, versionNo)
+    || !optionalExactValueMatches(
+      projectionData?.proposal_version_no,
+      versionNo,
+    )
+    || !optionalExactValueMatches(lineageData?.proposal_id, proposalId)
+    || !optionalExactValueMatches(replayData?.subject?.proposal_id, proposalId)
+    || !optionalExactValueMatches(
+      replayData?.subject?.proposal_version_no,
+      versionNo,
+    )
+  ) {
+    return false;
+  }
+
+  return Boolean(
+    identityMarkersAreEmpty(memoData, ["memo_id", "memo_hash"])
+      && identityMarkersAreEmpty(memoData?.memo, [
+        "memo_id",
+        "memo_hash",
+        "proposal_id",
+        "proposal_version_no",
+      ])
+      && identityMarkersAreEmpty(projectionData, ["memo_id", "memo_hash"])
+      && identityMarkersAreEmpty(replayData?.subject, ["memo_id"])
+      && identityMarkersAreEmpty(replayData?.hashes, ["memo_hash"])
+      && lineageProvesCurrentVersionHasNoMemo(
+        lineageData,
+        proposalId,
+        versionNo,
+      ),
+  );
+}
+
+function lineageProvesCurrentVersionHasNoMemo(
+  lineageData: ProposalMemoLineageData,
+  proposalId: string,
+  versionNo: number,
+): boolean {
+  const memos = lineageData.memos;
+  if (
+    lineageData.lineage_complete !== true
+    || !Array.isArray(memos)
+    || !isNonNegativeSafeInteger(lineageData.memo_count)
+    || lineageData.memo_count !== memos.length
+  ) {
+    return false;
+  }
+  const identities = memos.map((memo) => lineageItemIdentity(memo, proposalId));
+  if (
+    identities.some((identity) => !identity || identity.versionNo >= versionNo)
+    || new Set(identities.map((identity) => identity?.memoId)).size !== memos.length
+  ) {
+    return false;
+  }
+  if (memos.length === 0) {
+    return lineageData.latest_memo_id == null;
+  }
+  const latestMemoId = exactString(lineageData, "latest_memo_id");
+  return Boolean(
+    latestMemoId
+      && identities.some((identity) => identity?.memoId === latestMemoId),
+  );
+}
+
 function proposalSummaryMatchesActiveVersion(
   proposal: ProposalSummary | null | undefined,
   proposalId: string,
@@ -147,6 +258,32 @@ function proposalSummaryMatchesActiveVersion(
     proposal?.proposal_id === proposalId
       && proposal.current_version_no === versionNo,
   );
+}
+
+function optionalProposalSummaryMatchesActiveVersion(
+  proposal: ProposalSummary | null | undefined,
+  proposalId: string,
+  versionNo: number,
+): boolean {
+  return !proposal || proposalSummaryMatchesActiveVersion(
+    proposal,
+    proposalId,
+    versionNo,
+  );
+}
+
+function optionalExactValueMatches<T>(
+  value: T | null | undefined,
+  expected: T,
+): boolean {
+  return value == null || value === expected;
+}
+
+function identityMarkersAreEmpty(
+  source: Record<string, unknown> | null | undefined,
+  keys: readonly string[],
+): boolean {
+  return keys.every((key) => source?.[key] == null);
 }
 
 function activeProposalIdentityIsValid(
