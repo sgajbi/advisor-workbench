@@ -333,6 +333,41 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("confirms narrative review when independent delivery reads are unavailable", async () => {
+    vi.mocked(getProposalNarrativeReviewEvidence)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce(confirmedNarrativeReview);
+    vi.mocked(getProposalDeliverySummary)
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce(new Error("DELIVERY_SUMMARY_UNAVAILABLE"));
+    vi.mocked(getProposalDeliveryEvents)
+      .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
+        event_count: 0,
+        events: [],
+      })
+      .mockRejectedValueOnce(new Error("DELIVERY_EVENTS_UNAVAILABLE"));
+    renderPanel();
+
+    expect((await screen.findAllByText("Not Reviewed")).length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
+      target: { value: "advisor_1" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Advisor review rationale" }), {
+      target: { value: "Evidence supports advisor use." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record advisor review" }));
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Advisor review was recorded, but current proposal evidence could not confirm it. Refresh before retrying.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps action failure business-safe and does not expose source response text", async () => {
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({});
     vi.mocked(reviewProposalNarrative).mockRejectedValue(

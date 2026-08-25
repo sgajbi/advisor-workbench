@@ -331,15 +331,39 @@ function deliveryEventAggregateIsCoherent(
       allEventsAreGoverned &&
       eventIdsAreUnique &&
       eventsAreChronological &&
-      latestEvent.event_id === finalListedEvent.event_id &&
-      latestEvent.proposal_id === finalListedEvent.proposal_id &&
-      latestEvent.related_version_no === finalListedEvent.related_version_no &&
-      latestEvent.event_type === finalListedEvent.event_type &&
-      latestEvent.occurred_at === finalListedEvent.occurred_at &&
-      latestEvent.actor_id === finalListedEvent.actor_id &&
-      latestEvent.reason?.report_request_id ===
-        finalListedEvent.reason?.report_request_id &&
-      latestEvent.to_state === finalListedEvent.to_state,
+      jsonValuesAreEqual(latestEvent, finalListedEvent),
+  );
+}
+
+function jsonValuesAreEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (
+    left === null ||
+    right === null ||
+    typeof left !== "object" ||
+    typeof right !== "object"
+  ) {
+    return false;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => jsonValuesAreEqual(value, right[index]))
+    );
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftRecord).sort();
+  const rightKeys = Object.keys(rightRecord).sort();
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key, index) =>
+        key === rightKeys[index] &&
+        jsonValuesAreEqual(leftRecord[key], rightRecord[key]),
+    )
   );
 }
 

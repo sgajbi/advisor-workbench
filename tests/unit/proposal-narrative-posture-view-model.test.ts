@@ -437,6 +437,27 @@ describe("proposal narrative posture view model", () => {
         ],
       }),
     ],
+    [
+      "latest event reason disagrees with the final listed event",
+      activeEvents({
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_id: "delivery-event-002",
+          event_type: "EXECUTION_ACCEPTED",
+          occurred_at: "2026-05-22T09:01:00Z",
+          reason: { execution_request_id: "pex_other" },
+        }),
+        events: [
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
+            event_id: "delivery-event-002",
+            event_type: "EXECUTION_ACCEPTED",
+            occurred_at: "2026-05-22T09:01:00Z",
+            reason: { execution_request_id: "pex_current" },
+          }),
+        ],
+      }),
+    ],
   ])("rejects a contradictory delivery-event aggregate: %s", (_label, events) => {
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
