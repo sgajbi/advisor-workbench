@@ -80,11 +80,12 @@ describe("ProposalNarrativePosturePanel", () => {
         report_request_id: "report-001",
         report_type: "PORTFOLIO_REVIEW",
         related_version_no: 2,
-        status: "READY",
+        status: "ACCEPTED",
         report_reference_id: "report-document-001",
         generated_at: "2026-05-22T09:01:00Z",
         include_reviewed_narrative: true,
         proposal_narrative_package: {
+          proposal_version_no: 2,
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
           source_narrative_hash: "sha256:narrative-001",
         },
@@ -121,14 +122,14 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.mocked(createProposalReportRequest).mockResolvedValue({
       report_request_id: "report-001",
       report_type: "PORTFOLIO_REVIEW",
-      status: "REQUESTED",
+      status: "ACCEPTED",
       report_reference_id: "report-document-001",
       generated_at: "2026-05-22T09:01:00Z",
       explanation: {
         related_version_no: 2,
         include_reviewed_narrative: true,
         proposal_narrative_package: {
-          package_status: "REQUESTED",
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
           source_narrative_hash: "sha256:narrative-001",
         },
       },
@@ -142,7 +143,7 @@ describe("ProposalNarrativePosturePanel", () => {
       screen.getByRole("heading", { name: "Narrative review and discussion pack" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Narrative review workflow" })).toBeInTheDocument();
-    expect(await screen.findByText("Included Reviewed Narrative")).toBeInTheDocument();
+    expect(await screen.findByText("Reviewed rationale included")).toBeInTheDocument();
     expect(await screen.findByText("Discussion pack requested")).toBeInTheDocument();
     expect(await screen.findByText(/22 May 2026, 09:00 UTC/)).toBeInTheDocument();
     expect(screen.queryByText(/2026-05-22T09:00:00Z/)).not.toBeInTheDocument();
@@ -192,7 +193,7 @@ describe("ProposalNarrativePosturePanel", () => {
     });
     renderPanel();
 
-    expect(await screen.findByText("Not Requested")).toBeInTheDocument();
+    expect(await screen.findByText("Not requested")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
       target: { value: "advisor_1" },
     });
@@ -273,14 +274,14 @@ describe("ProposalNarrativePosturePanel", () => {
           report_request_id: "report-001",
           report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
-          status: "REQUESTED",
+          status: "ACCEPTED",
           report_reference_id: "report-document-001",
           generated_at: "2026-05-22T09:01:00Z",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
-            related_version_no: 2,
+            proposal_version_no: 2,
             review_state: "APPROVED_FOR_ADVISOR_USE",
-            package_status: "REQUESTED",
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
             source_narrative_hash: "sha256:narrative-001",
           },
         },
@@ -407,20 +408,20 @@ describe("ProposalNarrativePosturePanel", () => {
           report_request_id: "report-earlier",
           report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
-          status: "REQUESTED",
+          status: "ACCEPTED",
           report_reference_id: "report-document-001",
           generated_at: "2026-05-22T09:01:00Z",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
-            related_version_no: 2,
-            package_status: "REQUESTED",
+            proposal_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
             source_narrative_hash: "sha256:narrative-001",
           },
         },
       });
     renderPanel();
 
-    expect(await screen.findByText("Not Requested")).toBeInTheDocument();
+    expect(await screen.findByText("Not requested")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
       target: { value: "advisor_1" },
     });

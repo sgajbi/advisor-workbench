@@ -146,14 +146,16 @@ async function mockProposalDetail(
             report_request_id: discussionPackRequested ? "report-001" : undefined,
             report_type: "PORTFOLIO_REVIEW",
             related_version_no: 2,
-            status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
+            status: discussionPackRequested ? "ACCEPTED" : "NO_REPORT",
             report_reference_id: discussionPackRequested ? "report-document-001" : undefined,
             generated_at: discussionPackRequested ? "2026-05-24T10:02:00Z" : undefined,
             include_reviewed_narrative: discussionPackRequested,
             proposal_narrative_package: {
-              related_version_no: 2,
+              proposal_version_no: 2,
               review_state: narrativeReviewState,
-              package_status: discussionPackRequested ? "REQUESTED" : "NOT_REQUESTED",
+              package_status: discussionPackRequested
+                ? "INCLUDED_REVIEWED_NARRATIVE"
+                : "NOT_REQUESTED",
               ...(narrativeHash ? { source_narrative_hash: narrativeHash } : {}),
             },
           },
@@ -260,15 +262,14 @@ async function mockProposalDetail(
         data: {
           report_request_id: "report-001",
           report_type: "PORTFOLIO_REVIEW",
-          status: "REQUESTED",
+          status: "ACCEPTED",
           report_reference_id: "report-document-001",
           generated_at: "2026-05-24T10:02:00Z",
           explanation: {
             related_version_no: 2,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
-              related_version_no: 2,
-              package_status: "REQUESTED",
+              package_status: "INCLUDED_REVIEWED_NARRATIVE",
               source_narrative_hash: narrativeHash,
             },
           },

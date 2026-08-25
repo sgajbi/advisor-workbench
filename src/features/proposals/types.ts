@@ -837,6 +837,7 @@ export type ProposalReportRequestData = {
       review_state?: string;
       source_narrative_hash?: string | null;
       related_version_no?: number | null;
+      proposal_version_no?: number | null;
       [key: string]: unknown;
     };
     [key: string]: unknown;
@@ -860,6 +861,7 @@ export type ProposalDeliverySummaryData = {
       review_state?: string;
       source_narrative_hash?: string | null;
       related_version_no?: number | null;
+      proposal_version_no?: number | null;
       [key: string]: unknown;
     };
     [key: string]: unknown;
