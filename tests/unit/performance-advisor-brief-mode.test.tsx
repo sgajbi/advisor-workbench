@@ -288,6 +288,11 @@ describe("PerformanceAdvisorBriefMode", () => {
       "No material supportability exceptions are flagged"
     );
     expect(screen.getByLabelText("Source metrics")).toHaveTextContent("Active return");
+    expect(
+      within(screen.getByLabelText("Source metrics")).getByRole("heading", {
+        name: "Key source metrics",
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText("How this was prepared")).toBeInTheDocument();
     expect(screen.getByText("Partial output")).toBeInTheDocument();
     expect(screen.queryByText("foundation.explain.v1")).not.toBeInTheDocument();

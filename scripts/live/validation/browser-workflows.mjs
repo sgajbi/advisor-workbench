@@ -1315,7 +1315,7 @@ export async function validateAdvisorBriefPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Source metrics", exact: true }),
+    page.getByRole("heading", { name: "Key source metrics", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });

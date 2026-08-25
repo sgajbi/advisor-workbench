@@ -1291,7 +1291,7 @@ describe("canonical live validation script", () => {
     );
     for (const label of [
       "Adviser talking points",
-      "Source metrics",
+      "Key source metrics",
       "Mandate review",
       "Attention items",
       "Mandate health dimensions",
@@ -1300,6 +1300,9 @@ describe("canonical live validation script", () => {
         new RegExp(`name: "${label}",[\\s\\S]{0,40}exact: true`),
       );
     }
+    expect(browserWorkflowModule).toContain(
+      '.getByRole("region", { name: "Source metrics", exact: true })',
+    );
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Adviser brief human review");
     expect(browserWorkflowModule).toContain('selectOption("ACCEPT")');
