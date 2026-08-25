@@ -6636,6 +6636,17 @@ wealth-platform sources before the comparison and handoff language was aligned:
     remains a persisted source action but cannot upgrade generated material to client-approved
     communication. This bounded #798 copy slice and #605 guide use the existing Carbon, Microsoft
     HAX, NIST AI RMF, and FINRA research rather than introducing a competing AI presentation.
+16. Present Advisory Overview as a proposal-prioritisation worklist: name the proposal information,
+    decision and next action instead of transport, source-ownership or abstract posture. Adopt
+    BlackRock Advisor Center 360's unified portfolio-analysis and client-preparation principle,
+    SAP Fiori's recognise-diagnose-resolve message pattern, and WCAG 2.2 status-message semantics.
+    A completed refresh is announced as **Update complete** only after the proposal query succeeds;
+    earlier proposals remain explicitly available after a failed update. Preserve the exact
+    returned creator reference in selected proposal evidence rather than replacing it with the
+    unhelpful phrase **Recorded by source**. Reject toast-only confirmation, raw service names,
+    fallback proposals, invented freshness, and lifecycle-derived approval claims. This #798 slice
+    uses one typed Advisory Overview copy authority and leaves Gateway/Advise ownership in source
+    and support documentation.
 
 ### Delivery scope and deferred surfaces
 

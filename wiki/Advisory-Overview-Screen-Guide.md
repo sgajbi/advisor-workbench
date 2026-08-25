@@ -1,8 +1,8 @@
 # Advisory Overview
 
 Advisory Overview is the selected portfolio's proposal-prioritisation workspace. It brings the
-current source window, control-review handoffs, client-discussion posture, implementation follow-up,
-and next advisor action into one dense queue. It does not establish a complete advisor book,
+current proposal window, control-review handoffs, client-discussion readiness, implementation follow-up,
+and next adviser action into one dense queue. It does not establish a complete adviser book,
 calculate suitability, approve advice, publish client material, or authorize an order.
 
 ## Current Scope
@@ -11,7 +11,7 @@ calculate suitability, approve advice, publish client material, or authorize an 
 | --- | --- |
 | Canonical route | `/recommendations?portfolioId={portfolio_id}`; `mode=overview` is the explicit equivalent |
 | Navigation | **Advice** and **Overview** in the selected-portfolio rail; the global Advisory app entry remains capability-disabled |
-| Supported scope | One selected portfolio and one cursor-bounded Gateway proposal window at a time |
+| Supported scope | One selected portfolio and one cursor-bounded proposal window at a time |
 | Evidence posture | Focused component tests, optimized-browser 1440/1024/519 proof, and canonical browser coverage for `PB_SG_GLOBAL_BAL_001` |
 | Primary next action | Resolve the highest-priority visible control or client-discussion handoff, or open the proposal record that owns it |
 
@@ -20,16 +20,16 @@ entitlement, suitability, client-publication, or bank-readiness claim.
 
 ## Business Purpose
 
-The screen helps a client advisor or relationship manager answer five questions before moving a
+The screen helps a client adviser or relationship manager answer five questions before moving a
 recommendation forward:
 
 1. Which visible proposal requires attention first?
 2. Is the next handoff construction, control review, client discussion, or implementation follow-up?
 3. Does the current window contain every proposal returned for the selected portfolio?
 4. Which exact proposal record owns the next action and supporting evidence?
-5. Has the latest queue posture been confirmed through Gateway, or is earlier evidence retained?
+5. Were proposal priorities updated, or is the earlier worklist being retained after a failed update?
 
-The reading order is selected portfolio, advisor decision, source-window boundary, proposal
+The reading order is selected portfolio, adviser decision, proposal-window boundary, proposal
 worklist, and selected next action. Stage and readiness are combined into one business status per
 proposal, and the needs-action count appears once in the primary scan path. On tablets and compact
 layouts, the source-and-scope boundary remains available while the worklist and decision pane
@@ -45,17 +45,17 @@ through the Workbench BFF and Gateway portfolio-shell response and never turns t
 reference into visible source truth.
 
 The right rail therefore describes decision posture only; it does not repeat portfolio identity.
-If supporting portfolio context is unavailable, the source-owned advisory evidence may remain
+If supporting portfolio context is unavailable, previously loaded advisory evidence may remain
 usable, but the strip is explicitly unavailable and does not show the unconfirmed route value.
 
 ## Who Uses This Screen
 
-- **Client advisors and relationship managers** prioritise visible proposal work before a client
+- **Client advisers and relationship managers** prioritise visible proposal work before a client
   meeting, internal review, or implementation follow-up.
 - **Portfolio managers and investment specialists** use the lifecycle handoffs to open the source
   record that needs construction, review, or execution evidence.
-- **Risk, compliance, operations, and support teams** distinguish a source-confirmed queue from an
-  unavailable, retained-earlier, partial-window, empty, or permission-blocked posture.
+- **Risk, compliance, operations, and support teams** distinguish an updated worklist from an
+  unavailable, retained-earlier, partial-window, empty, or permission-blocked state.
 - **Product and demonstration teams** use deterministic browser proof to verify the Gateway-only
   workflow and its responsive recovery behavior.
 
@@ -74,9 +74,9 @@ These roles describe business use; they do not grant authority or replace source
    columns.
 5. Move to the next or previous source window before concluding the selected portfolio has no open
    proposal work.
-6. Use **Refresh advisory priorities** or **Retry advisory priorities** when the current source
-   posture needs confirmation.
-7. Continue to Proposal Builder only when a new advisor-use draft is appropriate.
+6. Use **Refresh advisory priorities** or **Retry advisory priorities** when the current proposal
+   information needs to be checked.
+7. Continue to Proposal Builder only when a new adviser-use draft is appropriate.
 
 ## Implemented Capabilities
 
@@ -90,10 +90,10 @@ These roles describe business use; they do not grant authority or replace source
   pane owns the next action and proposal-detail navigation.
 - Labels cursor-based result windows explicitly and keeps earlier/later navigation visible.
 - Withholds the queue on initial source failure and never substitutes fallback proposals.
-- Retains earlier proposals after a background refresh failure, labels them unconfirmed, and keeps
+- Retains earlier proposals after a background refresh failure, labels the failed update, and keeps
   an exact source retry available.
 - Keeps one shared source-refresh action mounted during retry, prevents duplicate activation,
-  preserves keyboard focus, and confirms success only after the Gateway response succeeds.
+  preserves keyboard focus, and announces **Update complete** only after the proposal query succeeds.
 - Keeps permission failure fail-closed without exposing proposal evidence or an inappropriate retry.
 - Uses the shared decision-first worklist with addressable row/detail association, Arrow-key row
   movement, Enter detail transfer, and responsive stacking without hiding exact proposal evidence.
@@ -106,12 +106,12 @@ These roles describe business use; they do not grant authority or replace source
 
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
-| Review a proposal | A visible Gateway-returned proposal summary | None; opens the source-backed record |
-| Move to the next source window | A Gateway cursor returned for the current window | None; requests another bounded queue window |
+| Review a proposal | A visible returned proposal summary | None; opens the proposal record |
+| Move to the next source window | A next-window cursor returned for the current window | None; requests another bounded proposal window |
 | Return to the previous source window | An earlier cursor remains in the local navigation history | None; reopens that source query identity |
-| Refresh advisory priorities | A non-restricted screen state | None; recontacts the same Gateway proposal-list query |
-| Retry an unavailable window | The source request failed and the user remains entitled | None unless Gateway returns a successful read |
-| Build a proposal | A selected portfolio and the supported Proposal Builder route | Opens an advisor-use draft workflow; Overview persists nothing |
+| Refresh advisory priorities | A non-restricted screen state | None; requests the current proposal window again |
+| Retry an unavailable window | The proposal request failed and the user remains entitled | None unless a successful response is returned |
+| Build a proposal | A selected portfolio and the supported Proposal Builder route | Opens an adviser-use draft workflow; Overview persists nothing |
 
 The screen does not acknowledge, approve, reject, waive, publish, order, execute, settle, or amend a
 proposal.
@@ -121,6 +121,7 @@ proposal.
 | Business fact or action | Workbench boundary | Source authority |
 | --- | --- | --- |
 | Proposal id, title, portfolio, and current state | Presented from the returned proposal summary | Advise proposal lifecycle composed by Gateway |
+| Creator reference and recorded time | Preserved exactly when present; missing evidence remains **Not reported** | Returned proposal summary |
 | Combined business status, next action, and visible-window order | Closed Workbench presentation mapping over source state | Workbench view model; no source state is changed |
 | Visible proposals needing action | Counted once inside the loaded cursor window | Workbench projection over Gateway-returned summaries |
 | Complete or partial source-window posture | Uses Gateway `next_cursor` plus the local previous-window history | Gateway cursor contract and Workbench navigation state |
@@ -134,22 +135,22 @@ Shared request families remain summarized in [API Surface](API-Surface), with ow
 
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
-| Loading | A shaped loading state under stable Adviser priorities context | Wait for Gateway; no fallback queue is shown |
-| Ready | Decision, worklist and window posture, selected evidence, and supported next action | Review the source record or refresh the window |
-| Complete empty | No open proposals in the complete source window | Review source-backed ideas or start a draft; this is not an approval all-clear |
+| Loading | A shaped loading state under stable Adviser priorities context | Wait; no substitute worklist is shown |
+| Ready | Decision, worklist and window boundary, selected evidence, and supported next action | Review the proposal record or refresh the window |
+| Complete empty | No open proposals in the complete window | Review available investment ideas or start a draft; this is not an approval all-clear |
 | Partial empty | No proposals in this window while another window remains | Review adjacent windows before concluding the portfolio is clear |
 | Background checking | Earlier worklist remains visible with a checking status | Wait or continue reading earlier evidence; duplicate refresh is suppressed |
-| Background refresh failed | Earlier proposals remain visible and explicitly unconfirmed | Use **Retry advisory priorities** before relying on the queue |
-| Initial source unavailable | No proposal, review, or implementation posture is substituted | Use **Retry advisory priorities**; persistent failure stays explicit |
+| Background refresh failed | Earlier proposals remain visible under **Proposal priorities could not be updated** | Use **Retry advisory priorities** before relying on the worklist |
+| Initial source unavailable | No substitute proposal, review, or implementation status is shown | Use **Retry advisory priorities**; persistent failure stays explicit |
 | Later window unavailable | The unavailable window is withheld | Retry that window or return to the previous proposals |
-| Source-confirmed recovery | Gateway-returned rows replace the failed or earlier evidence and a polite confirmation appears | Continue from the refreshed worklist; keyboard focus remains on the source control |
+| Updated recovery | Returned rows replace the failed or earlier evidence and **Update complete** is announced | Continue from the refreshed worklist; keyboard focus remains on the refresh control |
 | Permission blocked | Protected queue evidence is hidden | Use an entitled portfolio or the bank's access-support process; no retry is offered |
 
 ## Workbench Boundaries
 
 Advisory Overview deliberately does not:
 
-- claim a household, relationship, team, delegate, supervisor, or complete advisor-book queue,
+- claim a household, relationship, team, delegate, supervisor, or complete adviser-book worklist,
 - infer that a partial or empty window means all proposal work is clear,
 - calculate suitability, mandate compliance, client consent, risk approval, publication readiness,
   implementation completion, execution, settlement, or client contact authority,
@@ -164,10 +165,10 @@ calculations, or unsupported capability.
 
 ## Adjacent Handoffs
 
-- [Advisor Book](Advisor-Book-Workflow) owns source-backed own-book portfolio selection.
+- [Advisor Book](Advisor-Book-Workflow) owns own-book portfolio selection.
 - Proposal Detail owns record-specific lifecycle, evidence, approvals, narrative, and implementation
   posture.
-- Proposal Builder owns construction and source evaluation of an advisor-use draft.
+- Proposal Builder owns construction and source evaluation of an adviser-use draft.
 - Opportunities and Ideas owns Idea-sourced candidate review rather than Advise proposal state.
 - Risk Review and Performance own their source-calculated analytical evidence.
 - [Report Centre](Report-Centre-Screen-Guide) owns governed report requests and lifecycle tracking.
