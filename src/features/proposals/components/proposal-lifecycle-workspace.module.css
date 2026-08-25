@@ -128,10 +128,20 @@
   .selectedProposalFacts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .selectedProposalFacts > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
 @container selected-proposal (max-width: 18rem) {
   .selectedProposalFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container selected-proposal (max-width: 32rem) {
+  .supportFacts {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -347,6 +357,33 @@
   color: var(--text-muted);
   font-size: 0.75rem;
   line-height: 1.1rem;
+}
+
+.selectedProposalActionControls {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@container selected-proposal (max-width: 36rem) {
+  .selectedProposalActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@container selected-proposal (max-width: 24rem) {
+  .selectedProposalActionControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reviewProposalLink {
+    text-align: center;
+  }
 }
 
 .reviewProposalLink {

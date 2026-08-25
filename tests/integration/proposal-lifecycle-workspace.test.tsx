@@ -953,12 +953,13 @@ describe("ProposalLifecycleWorkspace", () => {
       name: "Rechecking proposal version…",
     });
     expect(pendingRecheck).toHaveAttribute("aria-disabled", "true");
+    const pendingStatus = screen.getByTestId("workbench-refresh-status");
+    expect(pendingStatus).toHaveAttribute("data-state", "pending");
     expect(
-      await screen.findByRole("heading", {
-        name: "Refreshing proposal evidence",
-      }),
+      within(pendingStatus).getByText("Checking the selected proposal"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Update in progress")).toBeInTheDocument();
+    expect(screen.queryByText("Decision posture")).not.toBeInTheDocument();
+    expect(screen.getByText("Proposal coverage")).toBeInTheDocument();
 
     await act(async () => {
       resolveRecoveredEvidence?.(implementationStatusFixture("PRP-READY", 5));

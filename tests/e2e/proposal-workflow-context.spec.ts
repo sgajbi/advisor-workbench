@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
@@ -14,6 +14,57 @@ const discussionPackEvidenceDirectory = path.resolve(
     path.join("output", "issue-798-product-copy"),
   "discussion-pack-review",
 );
+const implementationStatusEvidenceDirectory = path.resolve(
+  process.env.ISSUE_798_EVIDENCE_DIR ??
+    path.join("output", "issue-798-product-copy"),
+  "implementation-follow-up",
+);
+
+type OverflowDiagnostic = {
+  tag: string;
+  className: string;
+  text: string;
+  clientWidth: number;
+  scrollWidth: number;
+};
+
+async function collectHorizontalOverflow(
+  root: Locator,
+): Promise<OverflowDiagnostic[]> {
+  return root.evaluate((element) =>
+    [element, ...element.querySelectorAll<HTMLElement>("*")]
+      .filter(
+        (candidate) => {
+          const style = getComputedStyle(candidate);
+          const bounds = candidate.getBoundingClientRect();
+          const isVisuallyHidden =
+            style.position === "absolute" &&
+            bounds.width <= 1 &&
+            bounds.height <= 1 &&
+            (style.overflow === "hidden" ||
+              style.clip !== "auto" ||
+              style.clipPath !== "none");
+
+          return (
+            !isVisuallyHidden &&
+            candidate.clientWidth > 0 &&
+            candidate.scrollWidth > candidate.clientWidth + 1
+          );
+        },
+      )
+      .map((candidate) => ({
+        tag: candidate.tagName.toLowerCase(),
+        className:
+          typeof candidate.className === "string" ? candidate.className : "",
+        text: (candidate.textContent ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 120),
+        clientWidth: candidate.clientWidth,
+        scrollWidth: candidate.scrollWidth,
+      })),
+  );
+}
 
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
@@ -883,7 +934,19 @@ test("presents source-backed implementation handoff evidence without execution o
     selectedEvidence.getByText("Current version · Version 5"),
   ).toBeVisible();
   await expect(selectedEvidence).not.toContainText("Gateway");
+  await expect(page.getByText("Decision posture")).toHaveCount(0);
+  await expect(page.getByText("Proposal coverage")).toBeVisible();
+  await expect(page.getByText("Advisory implementation record")).toBeVisible();
   expect(requestedProposalIds).toEqual(["PRP-READY-001"]);
+
+  await mkdir(implementationStatusEvidenceDirectory, { recursive: true });
+  await page.screenshot({
+    path: path.join(
+      implementationStatusEvidenceDirectory,
+      "implementation-follow-up-desktop.png",
+    ),
+    fullPage: true,
+  });
 
   const supportDetails = selectedEvidence.locator("details", {
     hasText: "Implementation support details",
@@ -954,9 +1017,14 @@ test("presents source-backed implementation handoff evidence without execution o
       ),
     ).toBe(true);
     expect(
+      await collectHorizontalOverflow(selectedEvidence),
+      `implementation evidence must not overflow at ${viewport.width}px`,
+    ).toEqual([]);
+    expect(
       await workspace.evaluate(
         (element) => element.scrollWidth <= element.clientWidth,
       ),
+      `implementation workspace must not overflow at ${viewport.width}px`,
     ).toBe(true);
     const factColumnWidths = await selectedFacts.evaluate((element) =>
       getComputedStyle(element)
@@ -974,6 +1042,20 @@ test("presents source-backed implementation handoff evidence without execution o
   await testInfo.attach("implementation-status-workspace-mobile", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
+  });
+
+  await page.setViewportSize({ width: 519, height: 920 });
+  await selectedEvidence
+    .getByText("Implementation support details")
+    .click();
+  await expect(supportDetails).not.toHaveAttribute("open", "");
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  await page.screenshot({
+    path: path.join(
+      implementationStatusEvidenceDirectory,
+      "implementation-follow-up-compact.png",
+    ),
+    fullPage: true,
   });
   expect(browserErrors).toEqual([]);
 });
