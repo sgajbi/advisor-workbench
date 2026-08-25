@@ -1496,8 +1496,9 @@ Most relevant current governance:
     business-state projection fail-closed, preserve exact unknown values only for progressive
     support detail, and pair every degraded state with the unavailable business information, the
     information that remains trustworthy, and the next recovery action. `npm run
-    quality:product-copy` is a semantic TypeScript-AST ratchet: every fixing slice must lower its
-    checked-in maximum and must never raise the threshold or hide productive strings from analysis.
+    quality:product-copy` is a semantic TypeScript-AST ratchet: the measured inventory must exactly
+    equal its checked-in baseline, every fixing slice must lower both together, and a regression or
+    stale higher baseline fails CI. Never raise the baseline or hide productive strings from analysis.
 
 ## Context Maintenance Rule
 
