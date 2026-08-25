@@ -132,6 +132,7 @@ async function mockProposalDetail(
         contract_version: "v1",
         data: {
           reporting: {
+            related_version_no: 2,
             status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
             include_reviewed_narrative: discussionPackRequested,
             proposal_narrative_package: {
@@ -216,6 +217,7 @@ async function mockProposalDetail(
         data: {
           status: "REQUESTED",
           explanation: {
+            related_version_no: 2,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
               package_status: "REQUESTED",

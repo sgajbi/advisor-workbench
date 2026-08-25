@@ -54,6 +54,7 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.resetAllMocks();
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({
       reporting: {
+        related_version_no: 2,
         status: "READY",
         include_reviewed_narrative: true,
         proposal_narrative_package: {
@@ -78,6 +79,7 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.mocked(createProposalReportRequest).mockResolvedValue({
       status: "READY",
       explanation: {
+        related_version_no: 2,
         include_reviewed_narrative: true,
         proposal_narrative_package: {
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
@@ -108,6 +110,7 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue({});
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({
       reporting: {
+        related_version_no: 2,
         status: "READY",
         include_reviewed_narrative: true,
         proposal_narrative_package: {
@@ -126,6 +129,29 @@ describe("ProposalNarrativePosturePanel", () => {
     expect(
       screen.getByRole("button", { name: "Request discussion pack" }),
     ).toBeDisabled();
+  });
+
+  it("does not suppress the current action when an earlier version has the same hash", async () => {
+    vi.mocked(getProposalDeliverySummary).mockResolvedValue({
+      reporting: {
+        related_version_no: 1,
+        status: "READY",
+        include_reviewed_narrative: true,
+        proposal_narrative_package: {
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      },
+    });
+    renderPanel();
+
+    expect(await screen.findByText("Not Requested")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
+      target: { value: "advisor_1" },
+    });
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeEnabled();
   });
 
   it("confirms narrative review before admitting a discussion-pack request", async () => {
@@ -151,6 +177,7 @@ describe("ProposalNarrativePosturePanel", () => {
       })
       .mockResolvedValueOnce({
         reporting: {
+          related_version_no: 2,
           status: "REQUESTED",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
