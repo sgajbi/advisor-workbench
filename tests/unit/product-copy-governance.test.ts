@@ -19,6 +19,33 @@ function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
 }
 
+function runCliWithBaseline(sourceText: string, baseline: number) {
+  const temporaryRepository = mkdtempSync(
+    join(tmpdir(), "lotus-product-copy-"),
+  );
+  const sourceDirectory = join(temporaryRepository, "src");
+  mkdirSync(sourceDirectory);
+  writeFileSync(join(sourceDirectory, "example.tsx"), sourceText, "utf8");
+
+  try {
+    return spawnSync(
+      process.execPath,
+      [
+        join(
+          process.cwd(),
+          "scripts",
+          "quality",
+          "check-product-copy-governance.mjs",
+        ),
+        `--max=${baseline}`,
+      ],
+      { cwd: temporaryRepository, encoding: "utf8" },
+    );
+  } finally {
+    rmSync(temporaryRepository, { recursive: true, force: true });
+  }
+}
+
 describe("product-copy governance", () => {
   it("rejects transport and auditor language in productive JSX", () => {
     const findings = scan(`
@@ -77,41 +104,39 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
-  it("keeps the checked-in productive-copy inventory from growing", () => {
-    expect(scanProductCopyRepository().length).toBeLessThanOrEqual(346);
+  it("keeps the checked-in productive-copy inventory exact", () => {
+    expect(scanProductCopyRepository().length).toBe(346);
   });
 
   it("exits non-zero when the CLI ratchet is exceeded", () => {
-    const temporaryRepository = mkdtempSync(
-      join(tmpdir(), "lotus-product-copy-"),
-    );
-    const sourceDirectory = join(temporaryRepository, "src");
-    mkdirSync(sourceDirectory);
-    writeFileSync(
-      join(sourceDirectory, "example.tsx"),
+    const result = runCliWithBaseline(
       'export const Example = () => <Panel title="Gateway posture" />;',
-      "utf8",
+      0,
     );
 
-    try {
-      const result = spawnSync(
-        process.execPath,
-        [
-          join(
-            process.cwd(),
-            "scripts",
-            "quality",
-            "check-product-copy-governance.mjs",
-          ),
-          "--max=0",
-        ],
-        { cwd: temporaryRepository, encoding: "utf8" },
-      );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("exceeds the checked-in baseline of 0");
+  });
 
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain("exceeds the maximum of 0");
-    } finally {
-      rmSync(temporaryRepository, { recursive: true, force: true });
-    }
+  it("exits non-zero when the CLI baseline leaves regression headroom", () => {
+    const result = runCliWithBaseline(
+      'export const Example = () => <Panel title="Gateway status" />;',
+      2,
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Ratchet --max down to 1 in package.json");
+  });
+
+  it("passes only when the CLI baseline matches the measured inventory", () => {
+    const result = runCliWithBaseline(
+      'export const Example = () => <Panel title="Gateway status" />;',
+      1,
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(
+      "measured inventory matches the checked-in baseline at 1",
+    );
   });
 });

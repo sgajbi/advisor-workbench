@@ -230,7 +230,9 @@ if (invokedFile === currentFile) {
   const reportOnly = process.argv.includes("--report");
   const maximum = readMaximum(process.argv);
   const exceedsMaximum = findings.length > maximum;
-  if (findings.length > 0 && (reportOnly || exceedsMaximum)) {
+  const leavesHeadroom = findings.length < maximum;
+  const baselineMatches = findings.length === maximum;
+  if (findings.length > 0 && (reportOnly || !baselineMatches)) {
     console.error(
       `Product-copy governance found ${findings.length} user-facing violation(s):`,
     );
@@ -240,12 +242,17 @@ if (invokedFile === currentFile) {
   }
   if (!reportOnly && exceedsMaximum) {
     console.error(
-      `Product-copy governance failed: ${findings.length} exceeds the maximum of ${maximum}. Fix productive copy and lower the ratchet; do not raise the threshold.`,
+      `Product-copy governance failed: ${findings.length} exceeds the checked-in baseline of ${maximum}. Fix productive copy; do not raise the baseline.`,
+    );
+    process.exitCode = 1;
+  } else if (!reportOnly && leavesHeadroom) {
+    console.error(
+      `Product-copy governance failed: ${findings.length} is below the checked-in baseline of ${maximum}. Ratchet --max down to ${findings.length} in package.json so the improvement cannot be spent by a later regression.`,
     );
     process.exitCode = 1;
   } else if (!reportOnly) {
     console.log(
-      `Product-copy governance passed: ${findings.length}/${maximum} allowed violations.`,
+      `Product-copy governance passed: measured inventory matches the checked-in baseline at ${findings.length}.`,
     );
   }
 }
