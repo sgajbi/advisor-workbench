@@ -55,18 +55,26 @@ export function buildProposalNarrativePostureModel({
     null;
 
   const reviewState = normalizeLabel(
-    reviewRecord?.review_state ?? summaryPackage?.review_state ?? reportPackage?.review_state,
-    "Not Reviewed"
+    reviewRecord?.review_state ??
+      summaryPackage?.review_state ??
+      reportPackage?.review_state,
+    "Not Reviewed",
   );
   const reportPackageState = normalizeLabel(
     reportPackage?.package_status ?? summaryPackage?.package_status,
-    summaryReporting?.include_reviewed_narrative || reportingSummary?.include_reviewed_narrative
+    summaryReporting?.include_reviewed_narrative ||
+      reportingSummary?.include_reviewed_narrative
       ? "Requested"
-      : "Not Requested"
+      : "Not Requested",
   );
-  const deliveryState = normalizeLabel(summaryReporting?.status ?? report?.status, "No Report");
+  const deliveryState = normalizeLabel(
+    summaryReporting?.status ?? report?.status,
+    "No Report",
+  );
   const reviewConfirmed = isAdvisorReviewConfirmed(
-    reviewRecord?.review_state ?? summaryPackage?.review_state ?? reportPackage?.review_state,
+    reviewRecord?.review_state ??
+      summaryPackage?.review_state ??
+      reportPackage?.review_state,
     sourceNarrativeHash,
   );
   const discussionPackRequested = isDiscussionPackRequested({
@@ -81,7 +89,10 @@ export function buildProposalNarrativePostureModel({
     reviewConfirmed,
   });
   const eventCount = events?.event_count ?? events?.events?.length ?? 0;
-  const latestEventLabel = normalizeLabel(latestEvent?.event_type, "No delivery activity");
+  const latestEventLabel = normalizeLabel(
+    latestEvent?.event_type,
+    "No delivery activity",
+  );
 
   return {
     canRequestDiscussionPack: reviewConfirmed && !discussionPackRequested,
@@ -92,7 +103,9 @@ export function buildProposalNarrativePostureModel({
     eventCount,
     latestEventLabel,
     latestEventTime: latestEvent?.occurred_at
-      ? formatTimestampValue(latestEvent.occurred_at, { nullDisplay: "Not reported" })
+      ? formatTimestampValue(latestEvent.occurred_at, {
+          nullDisplay: "Not reported",
+        })
       : null,
     policyVersion: review?.policy_version ?? null,
     nextActionDetail: nextAction.detail,
@@ -125,15 +138,15 @@ export function buildProposalNarrativePostureModel({
       {
         label: "Delivery record",
         value: eventCount === 0 ? "No activity" : latestEventLabel,
-        support: eventCount === 0
-          ? "No downstream event has been recorded"
-          : `${eventCount} recorded event${eventCount === 1 ? "" : "s"}`,
+        support:
+          eventCount === 0
+            ? "No downstream event has been recorded"
+            : `${eventCount} recorded event${eventCount === 1 ? "" : "s"}`,
         tone: eventCount === 0 ? "default" : "success",
       },
     ],
   };
 }
-
 function isAdvisorReviewConfirmed(
   reviewState: string | null | undefined,
   sourceNarrativeHash: string | null,
@@ -163,10 +176,10 @@ function isDiscussionPackRequested({
   reportingSummary: ProposalDeliverySummaryData["reporting_summary"] | null;
 }): boolean {
   return Boolean(
-    report
-      || summaryReporting?.include_reviewed_narrative
-      || reportingSummary?.include_reviewed_narrative
-      || reportPackageState !== "Not Requested",
+    report ||
+    summaryReporting?.include_reviewed_narrative ||
+    reportingSummary?.include_reviewed_narrative ||
+    reportPackageState !== "Not Requested",
   );
 }
 
@@ -217,9 +230,9 @@ export function confirmNarrativeReviewRefresh({
   const actionModel = buildProposalNarrativePostureModel({ review });
   const refreshedModel = buildProposalNarrativePostureModel({ summary });
   if (
-    !actionModel.sourceNarrativeHash
-    || actionModel.sourceNarrativeHash !== refreshedModel.sourceNarrativeHash
-    || refreshedModel.nextActionTitle === "Record advisor review"
+    !actionModel.sourceNarrativeHash ||
+    actionModel.sourceNarrativeHash !== refreshedModel.sourceNarrativeHash ||
+    refreshedModel.nextActionTitle === "Record advisor review"
   ) {
     throw new Error(
       "Advisor review was recorded, but the refreshed proposal evidence did not confirm it.",
@@ -237,8 +250,8 @@ export function confirmDiscussionPackRefresh({
   const actionModel = buildProposalNarrativePostureModel({ report });
   const refreshedModel = buildProposalNarrativePostureModel({ summary });
   if (
-    actionModel.reportPackageState === "Not Requested"
-    || refreshedModel.reportPackageState === "Not Requested"
+    actionModel.reportPackageState === "Not Requested" ||
+    refreshedModel.reportPackageState === "Not Requested"
   ) {
     throw new Error(
       "The discussion-pack request completed, but refreshed preparation status was not available.",
@@ -246,7 +259,10 @@ export function confirmDiscussionPackRefresh({
   }
 }
 
-export function normalizeLabel(value: string | null | undefined, fallback: string): string {
+export function normalizeLabel(
+  value: string | null | undefined,
+  fallback: string,
+): string {
   const normalized = value?.trim();
   if (!normalized) {
     return fallback;
@@ -257,15 +273,4 @@ export function normalizeLabel(value: string | null | undefined, fallback: strin
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-export function formatEvidenceHash(value: string | null | undefined): string {
-  const normalized = value?.trim();
-  if (!normalized) {
-    return "Not available";
-  }
-  if (normalized.length <= 24) {
-    return normalized;
-  }
-  return `${normalized.slice(0, 16)}...${normalized.slice(-8)}`;
 }

@@ -14,8 +14,8 @@ import {
   buildProposalNarrativePostureModel,
   confirmDiscussionPackRefresh,
   confirmNarrativeReviewRefresh,
-  formatEvidenceHash,
 } from "../proposal-narrative-posture-view-model";
+import { formatProposalEvidenceHash } from "../proposal-evidence-formatters";
 import { buildProposalActionIdempotencyKey } from "../proposal-workflow-copy";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
@@ -39,10 +39,12 @@ export default function ProposalNarrativePosturePanel({
   const versionNo = currentVersionNo ?? null;
   const [reviewedBy, setReviewedBy] = useState("");
   const [reviewReason, setReviewReason] = useState("");
-  const [reviewData, setReviewData] =
-    useState<Awaited<ReturnType<typeof reviewProposalNarrative>> | null>(null);
-  const [reportData, setReportData] =
-    useState<Awaited<ReturnType<typeof createProposalReportRequest>> | null>(null);
+  const [reviewData, setReviewData] = useState<Awaited<
+    ReturnType<typeof reviewProposalNarrative>
+  > | null>(null);
+  const [reportData, setReportData] = useState<Awaited<
+    ReturnType<typeof createProposalReportRequest>
+  > | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -70,7 +72,9 @@ export default function ProposalNarrativePosturePanel({
   );
 
   const canSubmit =
-    versionNo !== null && reviewedBy.trim().length > 0 && reviewReason.trim().length > 0;
+    versionNo !== null &&
+    reviewedBy.trim().length > 0 &&
+    reviewReason.trim().length > 0;
 
   async function handleApproveNarrative() {
     if (!canSubmit) {
@@ -90,7 +94,10 @@ export default function ProposalNarrativePosturePanel({
           reason: reviewReason.trim(),
           client_ready_release_requested: false,
         },
-        buildProposalActionIdempotencyKey(proposalId, `narrative-review-${versionNo}`),
+        buildProposalActionIdempotencyKey(
+          proposalId,
+          `narrative-review-${versionNo}`,
+        ),
       );
       reviewRecorded = true;
       const [summaryResult, eventsResult] = await Promise.all([
@@ -100,10 +107,15 @@ export default function ProposalNarrativePosturePanel({
       if (summaryResult.error || eventsResult.error) {
         throw new Error("REFRESH_UNAVAILABLE");
       }
-      confirmNarrativeReviewRefresh({ review: data, summary: summaryResult.data });
+      confirmNarrativeReviewRefresh({
+        review: data,
+        summary: summaryResult.data,
+      });
       setReviewData(data);
       setReviewReason("");
-      setActionMessage(`Advisor review confirmed for proposal version ${versionNo}.`);
+      setActionMessage(
+        `Advisor review confirmed for proposal version ${versionNo}.`,
+      );
     } catch {
       setActionError(
         reviewRecorded
@@ -117,9 +129,9 @@ export default function ProposalNarrativePosturePanel({
 
   async function handleRequestReport() {
     if (
-      versionNo === null
-      || !posture.canRequestDiscussionPack
-      || reviewedBy.trim().length === 0
+      versionNo === null ||
+      !posture.canRequestDiscussionPack ||
+      reviewedBy.trim().length === 0
     ) {
       return;
     }
@@ -143,9 +155,14 @@ export default function ProposalNarrativePosturePanel({
       if (summaryResult.error || eventsResult.error) {
         throw new Error("REFRESH_UNAVAILABLE");
       }
-      confirmDiscussionPackRefresh({ report: data, summary: summaryResult.data });
+      confirmDiscussionPackRefresh({
+        report: data,
+        summary: summaryResult.data,
+      });
       setReportData(data);
-      setActionMessage(`Discussion-pack request confirmed for proposal version ${versionNo}.`);
+      setActionMessage(
+        `Discussion-pack request confirmed for proposal version ${versionNo}.`,
+      );
     } catch {
       setActionError(
         requestRecorded
@@ -170,8 +187,9 @@ export default function ProposalNarrativePosturePanel({
     >
       {summaryQuery.error || eventsQuery.error ? (
         <Alert severity="warning">
-          Current discussion-pack or delivery status is unavailable. Existing proposal evidence
-          remains visible, but no new action will be confirmed until the record refreshes.
+          Current discussion-pack or delivery status is unavailable. Existing
+          proposal evidence remains visible, but no new action will be confirmed
+          until the record refreshes.
         </Alert>
       ) : null}
       {actionError ? (
@@ -180,7 +198,11 @@ export default function ProposalNarrativePosturePanel({
         </Alert>
       ) : null}
       {actionMessage ? (
-        <Alert severity="success" role="status" data-testid="proposal-narrative-action-status">
+        <Alert
+          severity="success"
+          role="status"
+          data-testid="proposal-narrative-action-status"
+        >
           {actionMessage}
         </Alert>
       ) : null}
@@ -197,7 +219,10 @@ export default function ProposalNarrativePosturePanel({
         itemSupportClassName={styles.workflowSupport}
       />
 
-      <section className={styles.nextAction} aria-labelledby="narrative-next-action-title">
+      <section
+        className={styles.nextAction}
+        aria-labelledby="narrative-next-action-title"
+      >
         <Text variant="eyebrow">Next action</Text>
         <Text variant="cardTitle" as="h3" id="narrative-next-action-title">
           {posture.nextActionTitle}
@@ -239,7 +264,7 @@ export default function ProposalNarrativePosturePanel({
         <dl className={styles.supportFacts}>
           <div>
             <dt>Rationale evidence</dt>
-            <dd>{formatEvidenceHash(posture.sourceNarrativeHash)}</dd>
+            <dd>{formatProposalEvidenceHash(posture.sourceNarrativeHash)}</dd>
           </div>
           <div>
             <dt>Review policy</dt>
@@ -254,32 +279,36 @@ export default function ProposalNarrativePosturePanel({
 
       <div className={styles.actionArea}>
         <div className={styles.actionRow}>
-        <Button
-          type="button"
-          variant="contained"
-          disabled={!canSubmit || pendingAction !== null}
-          onClick={() => void handleApproveNarrative()}
-        >
-            {pendingAction === "review" ? "Recording review…" : "Record advisor review"}
-        </Button>
-        <Button
-          type="button"
-          variant="outlined"
+          <Button
+            type="button"
+            variant="contained"
+            disabled={!canSubmit || pendingAction !== null}
+            onClick={() => void handleApproveNarrative()}
+          >
+            {pendingAction === "review"
+              ? "Recording review…"
+              : "Record advisor review"}
+          </Button>
+          <Button
+            type="button"
+            variant="outlined"
             disabled={
-              pendingAction !== null
-              || !posture.canRequestDiscussionPack
-              || reviewedBy.trim().length === 0
-              || versionNo === null
+              pendingAction !== null ||
+              !posture.canRequestDiscussionPack ||
+              reviewedBy.trim().length === 0 ||
+              versionNo === null
             }
-          onClick={() => void handleRequestReport()}
-        >
-            {pendingAction === "report" ? "Requesting discussion pack…" : "Request discussion pack"}
-        </Button>
+            onClick={() => void handleRequestReport()}
+          >
+            {pendingAction === "report"
+              ? "Requesting discussion pack…"
+              : "Request discussion pack"}
+          </Button>
         </div>
         <Text variant="metadata" className={styles.actionSupport}>
-          A discussion pack becomes available only after this proposal version has confirmed
-          advisor-review evidence. Client release, document delivery and implementation remain
-          separate controlled steps.
+          A discussion pack becomes available only after this proposal version
+          has confirmed advisor-review evidence. Client release, document
+          delivery and implementation remain separate controlled steps.
         </Text>
       </div>
     </SectionBlock>
