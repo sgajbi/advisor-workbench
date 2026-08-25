@@ -1179,7 +1179,7 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
   );
 
   const refreshAction = selectedEvidence.getByRole("button", {
-    name: "Refresh source evidence",
+    name: "Refresh proposal evidence",
   });
   await refreshAction.click();
   await expect(refreshAction).toBeFocused();
@@ -1188,7 +1188,7 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
   );
   await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
   await expect(refreshStatus).toContainText(
-    "Selected proposal evidence confirmed",
+    "Selected proposal evidence is current",
   );
 
   await selectedEvidence.getByText("Evidence scope and lineage").click();

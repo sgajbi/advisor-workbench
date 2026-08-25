@@ -12,7 +12,7 @@ describe("proposal risk and impact view model", () => {
       stage: "Risk Review",
       version: "Version 3",
     });
-    expect(model.supportability.label).toBe("Source evidence ready");
+    expect(model.supportability.label).toBe("Evidence available");
     expect(model.decision.summary).toBe(
       "Review the proposed reduction in concentrated equity exposure.",
     );
@@ -45,7 +45,7 @@ describe("proposal risk and impact view model", () => {
     expect(model.decision.isAvailable).toBe(false);
     expect(model.decision.blockingCount).toBeNull();
     expect(model.decision.status).toBe("Decision not confirmed");
-    expect(model.decision.state.label).toBe("Source evidence unavailable");
+    expect(model.decision.state.label).toBe("Evidence unavailable");
   });
 
   it("formats proposal dates in UTC for deterministic banking records", () => {
@@ -93,7 +93,7 @@ describe("proposal risk and impact view model", () => {
 
     expect(model.allocation.isAvailable).toBe(false);
     expect(model.allocation.views).toEqual([]);
-    expect(model.supportability.label).toBe("Partial source evidence");
+    expect(model.supportability.label).toBe("Evidence incomplete");
   });
 
   it("withholds workflow conclusions when the gate is not ready", () => {
@@ -104,7 +104,7 @@ describe("proposal risk and impact view model", () => {
 
     expect(model.workflowGate.isAvailable).toBe(false);
     expect(model.workflowGate.gate).toBe("Gate not confirmed");
-    expect(model.workflowGate.nextStep).toBe("Source next step not confirmed");
+    expect(model.workflowGate.nextStep).toBe("Next step not confirmed");
     expect(model.workflowGate.reasons).toEqual([]);
   });
 
@@ -116,14 +116,14 @@ describe("proposal risk and impact view model", () => {
     const model = buildProposalRiskImpactModel(envelope);
 
     expect(model.workflowGate.isAvailable).toBe(false);
-    expect(model.workflowGate.state.label).toBe("Partial source evidence");
+    expect(model.workflowGate.state.label).toBe("Evidence incomplete");
     expect(model.workflowGate.gate).toBe("Gate not confirmed");
-    expect(model.workflowGate.nextStep).toBe("Source next step not confirmed");
+    expect(model.workflowGate.nextStep).toBe("Next step not confirmed");
     expect(model.workflowGate.reasons).toEqual([]);
     expect(
       model.capabilities.find(({ key }) => key === "workflow_gate"),
     ).toMatchObject({
-      status: "Partial source evidence",
+      status: "Evidence incomplete",
       tone: "warn",
     });
   });
@@ -137,12 +137,12 @@ describe("proposal risk and impact view model", () => {
     const model = buildProposalRiskImpactModel(envelope);
 
     expect(model.workflowGate.isAvailable).toBe(false);
-    expect(model.workflowGate.state.label).toBe("Source evidence unavailable");
+    expect(model.workflowGate.state.label).toBe("Evidence unavailable");
     expect(model.workflowGate.gate).toBe("Gate not confirmed");
     expect(
       model.capabilities.find(({ key }) => key === "workflow_gate"),
     ).toMatchObject({
-      status: "Source evidence unavailable",
+      status: "Evidence unavailable",
       tone: "danger",
     });
   });
@@ -156,7 +156,7 @@ describe("proposal risk and impact view model", () => {
     expect(model.risk.isAvailable).toBe(false);
     expect(model.risk.highlights).toEqual([]);
     expect(model.risk.summary).toBe(
-      "The source has not confirmed proposal risk evidence.",
+      "Risk evidence is not available for this proposal.",
     );
   });
 
@@ -166,17 +166,17 @@ describe("proposal risk and impact view model", () => {
 
     const model = buildProposalRiskImpactModel(envelope);
 
-    expect(model.supportability.label).toBe("Source evidence unavailable");
+    expect(model.supportability.label).toBe("Evidence unavailable");
     expect(model.decision.isAvailable).toBe(false);
-    expect(model.decision.state.label).toBe("Source evidence unavailable");
+    expect(model.decision.state.label).toBe("Evidence unavailable");
     expect(model.allocation.isAvailable).toBe(false);
-    expect(model.allocation.state.label).toBe("Source evidence unavailable");
+    expect(model.allocation.state.label).toBe("Evidence unavailable");
     expect(model.allocation.views).toEqual([]);
     expect(model.risk.isAvailable).toBe(false);
-    expect(model.risk.state.label).toBe("Source evidence unavailable");
+    expect(model.risk.state.label).toBe("Evidence unavailable");
     expect(model.risk.highlights).toEqual([]);
     expect(model.workflowGate.isAvailable).toBe(false);
-    expect(model.workflowGate.state.label).toBe("Source evidence unavailable");
+    expect(model.workflowGate.state.label).toBe("Evidence unavailable");
     expect(model.workflowGate.reasons).toEqual([]);
     expect(
       model.capabilities
@@ -189,7 +189,7 @@ describe("proposal risk and impact view model", () => {
           ].includes(key),
         )
         .map(({ status }) => status),
-    ).toEqual(Array(4).fill("Source evidence unavailable"));
+    ).toEqual(Array(4).fill("Evidence unavailable"));
   });
 
   it("names expected allocation dimensions that the source did not return", () => {
@@ -242,7 +242,7 @@ describe("proposal risk and impact view model", () => {
     ];
 
     const model = buildProposalRiskImpactModel(envelope);
-    expect(model.supportability.label).toBe("Partial source evidence");
+    expect(model.supportability.label).toBe("Evidence incomplete");
     expect(model.decision.blockingCount).toBe(2);
     expect(model.decision.missingEvidence[0]).toMatchObject({
       id: '["CLIENT_CONTEXT","CLIENT_CONTEXT_MISSING"]',
