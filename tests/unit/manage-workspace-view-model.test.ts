@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { formatBusinessOwner } from "../../src/features/workbench/manage-actor-presentation";
 import {
   buildManageExceptionRows,
   buildManageExceptionRowsResult,
@@ -9,7 +10,6 @@ import {
   formatBusinessBook,
   formatBusinessExceptionTitle,
   formatBusinessMandateType,
-  formatBusinessOwner,
   formatBusinessReason,
   getManageExceptionEvidencePosture,
   getManageExceptionNextCursor,

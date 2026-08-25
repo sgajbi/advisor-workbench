@@ -42,13 +42,22 @@ const launchHistoryRows: DpmCampaignLaunchHistoryRow[] = [
     correlationId: "corr-campaign-launch",
     idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:abc",
   },
+  {
+    key: "history-2",
+    waveId: "dwv_campaign_launch_002",
+    actor: "pm_sg_2",
+    launchedAt: "10 May 2026, 00:05 UTC",
+    requestedAsOfDate: "10 May 2026",
+    correlationId: "corr-campaign-launch-2",
+    idempotencyKey: "campaign-launch:campaign-holdings-202605:2026.05:def",
+  },
 ];
 
 const launchHistoryPage: DpmCampaignLaunchHistoryPage = {
   productName: "BulkReviewCampaignDefinitionLaunchHistory",
   campaignId: "campaign-holdings-202605",
   campaignVersion: "2026.05",
-  count: 1,
+  count: 2,
   totalCount: 21,
   limit: 10,
   offset: 10,
@@ -76,11 +85,12 @@ describe("DpmCampaignLaunchHistoryCard", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Campaign launch history" })).toBeInTheDocument();
-    expect(screen.getByText("Apple and Tesla holdings review version 2026.05 | 1 of 21 launch records")).toBeInTheDocument();
+    expect(screen.getByText("Apple and Tesla holdings review version 2026.05 | 2 of 21 launch records")).toBeInTheDocument();
     expect(screen.getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(screen.getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
-    expect(screen.getByText("10 May 2026")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Manager")).toBeInTheDocument();
+    expect(screen.getAllByText("10 May 2026")).toHaveLength(2);
+    expect(screen.getByText("Portfolio Manager · pm_sg_1")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Manager · pm_sg_2")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
 
     const boundaries = screen.getByLabelText("Campaign launch history boundaries");
@@ -89,7 +99,7 @@ describe("DpmCampaignLaunchHistoryCard", () => {
         "No maker-checker workflow, No trade approval, No order generation, No execution claim"
       )
     ).toBeInTheDocument();
-    expect(within(boundaries).getByText("11-11 of 21")).toBeInTheDocument();
+    expect(within(boundaries).getByText("11-12 of 21")).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Review Date" })).not.toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "As-of date" })).toBeInTheDocument();
 

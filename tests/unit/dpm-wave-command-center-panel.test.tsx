@@ -389,7 +389,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     expect(within(table).getByText("Launched")).toBeInTheDocument();
     expect(within(table).getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
     expect(within(table).queryByText("2026-05-14T09:30:00Z")).not.toBeInTheDocument();
-    expect(within(table).getByText("Portfolio Manager")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Manager · pm_sg_1")).toBeInTheDocument();
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
     expect(within(table).getByText("10 May 2026")).toBeInTheDocument();
     expect(within(table).getByText("campaign_definition_launched")).toBeInTheDocument();
@@ -423,7 +423,7 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     const table = await screen.findByRole("table", { name: "Rebalance campaign launch history" });
     expect(within(table).getByText("dwv_campaign_launch_001")).toBeInTheDocument();
-    expect(within(table).getByText("Portfolio Manager")).toBeInTheDocument();
+    expect(within(table).getByText("Portfolio Manager · pm_sg_1")).toBeInTheDocument();
     expect(within(table).getByText("10 May 2026, 00:00 UTC")).toBeInTheDocument();
     expect(within(table).queryByText("2026-05-10T00:00:00Z")).not.toBeInTheDocument();
     expect(within(table).getByText("corr-campaign-launch")).toBeInTheDocument();

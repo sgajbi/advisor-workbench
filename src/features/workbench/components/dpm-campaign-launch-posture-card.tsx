@@ -10,10 +10,10 @@ import type {
   DpmCampaignLaunchPosture,
   DpmCampaignPreviewReadinessPosture,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
+import { formatBusinessOwner } from "@/features/workbench/manage-actor-presentation";
 import {
   businessStateLabel,
   formatBusinessBoundary,
-  formatBusinessOwner,
   formatBusinessReason,
 } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
