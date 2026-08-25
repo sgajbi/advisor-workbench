@@ -76,8 +76,8 @@ export default function AdvisoryOpportunitiesWorkspace({
     return (
       <ScreenStatePanel
         kind="error"
-        title="Lotus Idea review is limited to the canonical portfolio"
-        body={`Lotus Idea opportunity triage is currently certified only for ${CANONICAL_IDEA_PORTFOLIO_ID}. Select that portfolio before requesting source-owned review data.`}
+        title="Advisory opportunity review is not available for this portfolio"
+        body="Select the supported demonstration portfolio before opening the opportunity queue."
         surface="default"
       />
     );

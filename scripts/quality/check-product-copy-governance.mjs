@@ -122,7 +122,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
   }
 
-  function inspectExpression(expression, context) {
+  function inspectExpression(expression, context, objectPropertyNames = null) {
     const resolvingDeclarations = new Set();
     const visitingResolvedExpressions = new Set();
     const STATIC_PROPERTY_ABSENT = Symbol("static-property-absent");
@@ -303,12 +303,15 @@ export function scanProductCopySource({ filePath, sourceText }) {
           }
           return;
         }
-        if (
-          ts.isStringLiteral(node) ||
-          ts.isNoSubstitutionTemplateLiteral(node) ||
-          ts.isTemplateExpression(node)
-        ) {
+        if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
           inspectLiteral(node, context);
+          return;
+        }
+        if (ts.isTemplateExpression(node)) {
+          inspectLiteral(node, context);
+          for (const span of node.templateSpans) {
+            visitResolvedCopyExpression(span.expression);
+          }
           return;
         }
         if (
@@ -363,10 +366,13 @@ export function scanProductCopySource({ filePath, sourceText }) {
       }
       if (
         ts.isStringLiteral(node) ||
-        ts.isNoSubstitutionTemplateLiteral(node) ||
-        ts.isTemplateExpression(node)
+        ts.isNoSubstitutionTemplateLiteral(node)
       ) {
         inspectLiteral(node, context);
+        return;
+      }
+      if (ts.isTemplateExpression(node)) {
+        visitResolvedCopyExpression(node);
         return;
       }
       if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
@@ -379,24 +385,111 @@ export function scanProductCopySource({ filePath, sourceText }) {
       }
       ts.forEachChild(node, visitExpression);
     }
+    if (objectPropertyNames) {
+      const propertyStates = new Map();
+      const owner = resolveStaticExpression(expression);
+      for (const propertyName of objectPropertyNames) {
+        if (!isStaticObjectLike(owner)) {
+          propertyStates.set(propertyName, "unknown");
+          continue;
+        }
+        const property = resolveObjectProperty(owner, propertyName);
+        if (property === STATIC_PROPERTY_ABSENT) {
+          propertyStates.set(propertyName, "absent");
+          continue;
+        }
+        if (property === STATIC_PROPERTY_UNKNOWN) {
+          propertyStates.set(propertyName, "unknown");
+          continue;
+        }
+        propertyStates.set(propertyName, {
+          state: "present",
+          value: resolveStaticExpression(property),
+        });
+      }
+      return propertyStates;
+    }
     visitExpression(expression);
+    return null;
+  }
+
+  function inspectJsxAttributes(attributes) {
+    const unresolvedPropertyNames = new Set(USER_FACING_PROPERTY_NAMES);
+    const selectedCopyValues = [];
+    for (let index = attributes.length - 1; index >= 0; index -= 1) {
+      const attribute = attributes[index];
+      if (ts.isJsxAttribute(attribute)) {
+        const propertyName = attribute.name.getText(sourceFile);
+        if (!unresolvedPropertyNames.has(propertyName)) {
+          continue;
+        }
+        unresolvedPropertyNames.delete(propertyName);
+        if (attribute.initializer && ts.isStringLiteral(attribute.initializer)) {
+          selectedCopyValues.push({
+            context: `JSX ${propertyName}`,
+            node: attribute.initializer,
+            sourceOrder: index,
+          });
+        } else if (
+          attribute.initializer
+          && ts.isJsxExpression(attribute.initializer)
+          && attribute.initializer.expression
+        ) {
+          selectedCopyValues.push({
+            context: `JSX ${propertyName}`,
+            node: attribute.initializer.expression,
+            sourceOrder: index,
+          });
+        }
+        continue;
+      }
+      if (!ts.isJsxSpreadAttribute(attribute)) {
+        continue;
+      }
+      const propertyStates = inspectExpression(
+        attribute.expression,
+        "JSX spread",
+        unresolvedPropertyNames,
+      );
+      for (const [propertyName, result] of propertyStates) {
+        const state = typeof result === "string" ? result : result.state;
+        if (state === "present" && result.value) {
+          selectedCopyValues.push({
+            context: "JSX spread",
+            node: result.value,
+            sourceOrder: index,
+          });
+        }
+        if (state !== "absent") {
+          unresolvedPropertyNames.delete(propertyName);
+        }
+      }
+      if (unresolvedPropertyNames.size === 0) {
+        break;
+      }
+    }
+    selectedCopyValues
+      .sort((left, right) =>
+        left.sourceOrder - right.sourceOrder
+        || left.node.getStart(sourceFile) - right.node.getStart(sourceFile),
+      )
+      .forEach(({ context, node }) => {
+        if (ts.isStringLiteral(node)) {
+          inspectLiteral(node, context);
+        } else {
+          inspectExpression(node, context);
+        }
+      });
   }
 
   function visit(node) {
-    if (ts.isJsxText(node)) {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      inspectJsxAttributes(node.attributes.properties);
+    } else if (ts.isJsxText(node)) {
       inspectLiteral(node, "JSX text");
     } else if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
       if (node.expression) {
         inspectExpression(node.expression, "JSX expression");
-      }
-    } else if (ts.isJsxAttribute(node)) {
-      const propertyName = node.name.getText(sourceFile);
-      if (USER_FACING_PROPERTY_NAMES.has(propertyName) && node.initializer) {
-        if (ts.isStringLiteral(node.initializer)) {
-          inspectLiteral(node.initializer, `JSX ${propertyName}`);
-        } else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) {
-          inspectExpression(node.initializer.expression, `JSX ${propertyName}`);
-        }
       }
     } else if (ts.isPropertyAssignment(node)) {
       const propertyName = propertyNameText(node.name, sourceFile);

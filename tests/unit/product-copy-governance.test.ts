@@ -151,6 +151,59 @@ describe("product-copy governance", () => {
     ]);
   });
 
+  it("resolves productive copy inside template interpolations", () => {
+    const findings = scan(`
+      const transport = "Gateway";
+      const copy = { support: "HTTP status unavailable" } as const;
+      export function Example() {
+        return <Panel
+          title={\`Status from \${transport}\`}
+          body={\`Evidence: \${copy.support}\`}
+        />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "transport-http-status",
+    ]);
+  });
+
+  it("fails safely for dynamic template interpolations", () => {
+    expect(
+      scan(`
+        const runtimeCopy = getRuntimeCopy();
+        export function Example() {
+          return <Panel title={\`Client review: \${runtimeCopy}\`} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("resolves shorthand props through JSX spreads with final override order", () => {
+    const findings = scan(`
+      const title = "Gateway posture";
+      const technicalProps = { title } as const;
+      const businessProps = { title: "Client review status" } as const;
+      export function Example() {
+        return <>
+          <Panel {...technicalProps} {...businessProps} />
+          <Panel {...businessProps} {...technicalProps} />
+          <Panel {...technicalProps} title="Client review status" />
+          <Panel {...technicalProps} {...getRuntimeProps()} />
+        </>;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+    ]);
+    expect(findings.every((finding) => finding.context === "JSX spread")).toBe(
+      true,
+    );
+  });
+
   it("resolves copy inherited through statically inspectable object spreads", () => {
     const findings = scan(`
       const baseCopy = { panelTitle: "Gateway posture" } as const;
@@ -653,7 +706,7 @@ describe("product-copy governance", () => {
   it(
     "keeps the checked-in productive-copy inventory exact",
     () => {
-      expect(scanProductCopyRepository().length).toBe(281);
+      expect(scanProductCopyRepository().length).toBe(280);
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
   );

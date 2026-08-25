@@ -153,7 +153,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     );
   });
 
-  it("limits Lotus Idea triage to the certified canonical portfolio", () => {
+  it("explains the supported opportunity-review scope in business language", () => {
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_UNCERTIFIED_001"
@@ -162,8 +162,16 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     );
 
     expect(
-      screen.getByText("Lotus Idea review is limited to the canonical portfolio"),
+      screen.getByText(
+        "Advisory opportunity review is not available for this portfolio",
+      ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Select the supported demonstration portfolio before opening the opportunity queue.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
     expect(getAdvisorIdeaReviewQueueMock).not.toHaveBeenCalled();
   });
 
