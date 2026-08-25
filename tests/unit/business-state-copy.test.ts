@@ -89,4 +89,16 @@ describe("business state copy", () => {
       expect.stringContaining("DEV_ONLY_UNKNOWN_REASON"),
     );
   });
+
+  it("bounds development warning cardinality for unknown source values", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    for (let index = 0; index < 200; index += 1) {
+      businessStateLabel(`FUTURE_STATE_${index}`);
+    }
+
+    expect(warn.mock.calls.length).toBeGreaterThan(0);
+    expect(warn.mock.calls.length).toBeLessThanOrEqual(128);
+  });
 });

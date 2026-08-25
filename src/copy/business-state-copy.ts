@@ -68,6 +68,7 @@ const BUSINESS_REASON_LABELS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 const warnedUnknownValues = new Set<string>();
+const UNKNOWN_WARNING_LIMIT = 128;
 
 export function projectBusinessState(
   value: string | number | null | undefined,
@@ -158,6 +159,9 @@ function warnUnknownBusinessCopy(
 
   const warningKey = `${family}:${sourceValue}`;
   if (warnedUnknownValues.has(warningKey)) {
+    return;
+  }
+  if (warnedUnknownValues.size >= UNKNOWN_WARNING_LIMIT) {
     return;
   }
 

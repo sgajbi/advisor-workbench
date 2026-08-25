@@ -68,6 +68,17 @@
       "sessionAuthority": false
     },
     {
+      "id": "business-copy-unknown-warning-dedupe",
+      "file": "src/copy/business-state-copy.ts",
+      "symbols": ["warnedUnknownValues"],
+      "classification": "instance_telemetry",
+      "purpose": "Deduplicate development diagnostics for source values that have no approved productive-copy mapping.",
+      "bounds": "At most 128 distinct warning keys per JavaScript realm; additional unknown values still fail closed in productive copy without expanding the diagnostic set.",
+      "replicaBehavior": "Each replica owns an independent bounded diagnostic set; it carries no business or session authority.",
+      "businessAuthority": false,
+      "sessionAuthority": false
+    },
+    {
       "id": "ag-grid-module-registration",
       "file": "src/design-system/utils/ag-grid-modules.ts",
       "symbols": ["agGridModulesRegistered"],
