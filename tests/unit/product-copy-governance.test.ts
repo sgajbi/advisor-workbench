@@ -337,6 +337,50 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
+  it("does not inspect defaults behind guaranteed-defined composite values", () => {
+    expect(
+      scan(`
+        const copy = {
+          panelTitle: ready ? "Client review status" : "Portfolio review status",
+          panelBody: "Client " + "review status",
+          summary: preferredTitle ?? "Client review status",
+          label: preferredTitle || "Client review status",
+        };
+        const {
+          panelTitle = "Gateway posture",
+          panelBody = "HTTP status unavailable",
+          summary = "Gateway status",
+          label = "Gateway response",
+        } = copy;
+        export function Example() {
+          return <Panel title={panelTitle} body={panelBody} summary={summary} label={label} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("inspects defaults behind undefined nullish and logical results", () => {
+    const findings = scan(`
+      const copy = {
+        panelTitle: null ?? undefined,
+        panelBody: false || undefined,
+      };
+      const {
+        panelTitle = "Gateway posture",
+        panelBody = "HTTP status unavailable",
+      } = copy;
+      export function Example() {
+        return <Panel title={panelTitle} body={panelBody} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
   it("resolves nested and object-rest destructured copy", () => {
     const findings = scan(`
       const copy = {

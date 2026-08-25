@@ -587,10 +587,36 @@ function isStaticAlternatives(value) {
 }
 
 function isProvablyDefinedStaticValue(value) {
-  if (!value || isStaticAlternatives(value)) {
+  if (!value) {
     return false;
   }
+  if (isStaticAlternatives(value)) {
+    return value.candidates.every(isProvablyDefinedStaticValue);
+  }
   const node = unwrapCopyExpression(value);
+  if (ts.isConditionalExpression(node)) {
+    return (
+      isProvablyDefinedStaticValue(node.whenTrue)
+      && isProvablyDefinedStaticValue(node.whenFalse)
+    );
+  }
+  if (ts.isBinaryExpression(node)) {
+    if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+      return true;
+    }
+    if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+      return (
+        isProvablyNonNullishStaticValue(node.left)
+        || isProvablyDefinedStaticValue(node.right)
+      );
+    }
+    if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+      return (
+        isProvablyTruthyStaticValue(node.left)
+        || isProvablyDefinedStaticValue(node.right)
+      );
+    }
+  }
   return (
     ts.isStringLiteral(node)
     || ts.isNoSubstitutionTemplateLiteral(node)
@@ -605,6 +631,73 @@ function isProvablyDefinedStaticValue(value) {
     || node.kind === ts.SyntaxKind.TrueKeyword
     || node.kind === ts.SyntaxKind.FalseKeyword
     || node.kind === ts.SyntaxKind.NullKeyword
+  );
+}
+
+function isProvablyNonNullishStaticValue(value) {
+  if (!value) {
+    return false;
+  }
+  if (isStaticAlternatives(value)) {
+    return value.candidates.every(isProvablyNonNullishStaticValue);
+  }
+  const node = unwrapCopyExpression(value);
+  if (node.kind === ts.SyntaxKind.NullKeyword) {
+    return false;
+  }
+  if (ts.isConditionalExpression(node)) {
+    return (
+      isProvablyNonNullishStaticValue(node.whenTrue)
+      && isProvablyNonNullishStaticValue(node.whenFalse)
+    );
+  }
+  if (ts.isBinaryExpression(node)) {
+    if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+      return true;
+    }
+    if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+      return (
+        isProvablyNonNullishStaticValue(node.left)
+        || isProvablyNonNullishStaticValue(node.right)
+      );
+    }
+    if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+      return (
+        isProvablyTruthyStaticValue(node.left)
+        || isProvablyNonNullishStaticValue(node.right)
+      );
+    }
+  }
+  return isProvablyDefinedStaticValue(node);
+}
+
+function isProvablyTruthyStaticValue(value) {
+  if (!value) {
+    return false;
+  }
+  if (isStaticAlternatives(value)) {
+    return value.candidates.every(isProvablyTruthyStaticValue);
+  }
+  const node = unwrapCopyExpression(value);
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text.length > 0;
+  }
+  if (ts.isNumericLiteral(node) || ts.isBigIntLiteral(node)) {
+    return Number(node.text.replace(/n$/, "")) !== 0;
+  }
+  if (ts.isConditionalExpression(node)) {
+    return (
+      isProvablyTruthyStaticValue(node.whenTrue)
+      && isProvablyTruthyStaticValue(node.whenFalse)
+    );
+  }
+  return (
+    ts.isObjectLiteralExpression(node)
+    || ts.isArrayLiteralExpression(node)
+    || ts.isFunctionExpression(node)
+    || ts.isArrowFunction(node)
+    || ts.isClassExpression(node)
+    || node.kind === ts.SyntaxKind.TrueKeyword
   );
 }
 
