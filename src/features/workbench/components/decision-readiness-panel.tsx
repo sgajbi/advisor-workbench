@@ -1,4 +1,16 @@
-import { ActionLink, MetricRow, SectionBlock, SemanticBadge, Text } from "@/design-system";
+import {
+  ActionLink,
+  MetricRow,
+  SectionBlock,
+  SemanticBadge,
+  Text,
+} from "@/design-system";
+import {
+  DECISION_READINESS_COPY,
+  decisionDataQualityStatus,
+  decisionReadinessStatus,
+  type DecisionReadinessStatus,
+} from "@/copy/decision-readiness-copy";
 
 type Props = {
   hasValuationData: boolean;
@@ -10,32 +22,51 @@ type Props = {
   riskWorkspaceHref: string;
 };
 
-function statusLabel(ready: boolean): string {
-  return ready ? "READY" : "PENDING";
-}
-
 export default function DecisionReadinessPanel(props: Props) {
-  const dataIntegrityReady = props.warningCount === 0 && props.failureCount === 0;
-  const readinessTone = (value: string) =>
-    value === "READY" || value === "LOW"
-      ? "success"
-      : value === "ATTENTION" || value === "MEDIUM" || value === "UNAVAILABLE"
-        ? "warn"
-        : "danger";
+  const readinessRows = [
+    {
+      label: DECISION_READINESS_COPY.valuationLabel,
+      status: decisionReadinessStatus(props.hasValuationData),
+    },
+    {
+      label: DECISION_READINESS_COPY.analyticsLabel,
+      status: decisionReadinessStatus(props.hasAnalytics),
+    },
+    {
+      label: DECISION_READINESS_COPY.reportingLabel,
+      status: decisionReadinessStatus(props.hasReporting),
+    },
+    {
+      label: DECISION_READINESS_COPY.scenarioLabel,
+      status: decisionReadinessStatus(props.hasActiveSandbox),
+    },
+    {
+      label: DECISION_READINESS_COPY.dataQualityLabel,
+      status: decisionDataQualityStatus(props.warningCount, props.failureCount),
+    },
+  ] satisfies Array<{ label: string; status: DecisionReadinessStatus }>;
 
   return (
-    <SectionBlock title="Decision Readiness">
+    <SectionBlock title={DECISION_READINESS_COPY.title}>
       <Text variant="secondary" className="muted">
-        Backend readiness checks for simulation, advisory review, and execution preparation.
+        {DECISION_READINESS_COPY.description}
       </Text>
-      <MetricRow label="Valuation Coverage" value={<SemanticBadge tone={readinessTone(statusLabel(props.hasValuationData))}>{statusLabel(props.hasValuationData)}</SemanticBadge>} />
-      <MetricRow label="Analytics Coverage" value={<SemanticBadge tone={readinessTone(statusLabel(props.hasAnalytics))}>{statusLabel(props.hasAnalytics)}</SemanticBadge>} />
-      <MetricRow label="Reporting Coverage" value={<SemanticBadge tone={readinessTone(statusLabel(props.hasReporting))}>{statusLabel(props.hasReporting)}</SemanticBadge>} />
-      <MetricRow label="Sandbox Session" value={<SemanticBadge tone={readinessTone(statusLabel(props.hasActiveSandbox))}>{statusLabel(props.hasActiveSandbox)}</SemanticBadge>} />
-      <MetricRow label="Data Integrity" value={<SemanticBadge tone={readinessTone(dataIntegrityReady ? "READY" : "ATTENTION")}>{dataIntegrityReady ? "READY" : "ATTENTION"}</SemanticBadge>} />
+      {readinessRows.map(({ label, status }) => (
+        <MetricRow
+          key={label}
+          label={label}
+          value={
+            <SemanticBadge tone={status.tone}>{status.label}</SemanticBadge>
+          }
+        />
+      ))}
       <MetricRow
-        label="Risk Workspace"
-        value={<ActionLink href={props.riskWorkspaceHref}>Open Risk</ActionLink>}
+        label="Risk review"
+        value={
+          <ActionLink href={props.riskWorkspaceHref}>
+            {DECISION_READINESS_COPY.riskAction}
+          </ActionLink>
+        }
       />
     </SectionBlock>
   );

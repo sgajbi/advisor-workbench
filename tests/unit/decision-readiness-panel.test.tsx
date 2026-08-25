@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import DecisionReadinessPanel from "../../src/features/workbench/components/decision-readiness-panel";
 
 describe("DecisionReadinessPanel", () => {
-  it("shows ready states when backend dependencies are available", () => {
+  it("shows ready business evidence when decision inputs are available", () => {
     render(
       <DecisionReadinessPanel
         hasValuationData
@@ -14,18 +14,23 @@ describe("DecisionReadinessPanel", () => {
         warningCount={0}
         failureCount={0}
         riskWorkspaceHref="/performance?portfolioId=PF_1001&mode=risk"
-      />
+      />,
     );
 
-    expect(screen.getByRole("heading", { name: /Decision Readiness/i })).toBeInTheDocument();
-    expect(screen.getAllByText("READY").length).toBeGreaterThanOrEqual(5);
-    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+    expect(
+      screen.getByRole("heading", { name: "Decision readiness" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Ready")).toHaveLength(5);
+    expect(screen.getByText("Valuation evidence")).toBeInTheDocument();
+    expect(screen.getByText("Scenario analysis")).toBeInTheDocument();
+    expect(screen.queryByText(/backend|sandbox/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review risk" })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PF_1001&mode=risk"
+      "/performance?portfolioId=PF_1001&mode=risk",
     );
   });
 
-  it("shows attention states when dependencies are missing", () => {
+  it("uses one explicit review state when decision inputs are missing", () => {
     render(
       <DecisionReadinessPanel
         hasValuationData={false}
@@ -35,14 +40,14 @@ describe("DecisionReadinessPanel", () => {
         warningCount={2}
         failureCount={1}
         riskWorkspaceHref="/performance?portfolioId=PF_2001&mode=risk"
-      />
+      />,
     );
 
-    expect(screen.getAllByText("PENDING").length).toBeGreaterThanOrEqual(4);
-    expect(screen.getByText("ATTENTION")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Risk" })).toHaveAttribute(
+    expect(screen.getAllByText("Review required")).toHaveLength(5);
+    expect(screen.queryByText(/pending|attention/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review risk" })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PF_2001&mode=risk"
+      "/performance?portfolioId=PF_2001&mode=risk",
     );
   });
 });
