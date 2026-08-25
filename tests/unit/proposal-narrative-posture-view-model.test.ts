@@ -4,8 +4,8 @@ import {
   buildProposalNarrativePostureModel,
   confirmDiscussionPackRefresh,
   confirmNarrativeReviewRefresh,
-  formatEvidenceHash,
 } from "../../src/features/proposals/proposal-narrative-posture-view-model";
+import { formatProposalEvidenceHash } from "../../src/features/proposals/proposal-evidence-formatters";
 
 describe("proposal narrative posture view model", () => {
   it("prioritizes reviewed narrative and report-package posture from advisory payloads", () => {
@@ -56,10 +56,19 @@ describe("proposal narrative posture view model", () => {
     expect(model.canRequestDiscussionPack).toBe(false);
     expect(model.nextActionTitle).toBe("Review the latest delivery activity");
     expect(model.workflowItems).toEqual([
-      expect.objectContaining({ label: "Recommendation rationale", value: "Available" }),
+      expect.objectContaining({
+        label: "Recommendation rationale",
+        value: "Available",
+      }),
       expect.objectContaining({ label: "Advisor review", tone: "success" }),
-      expect.objectContaining({ label: "Discussion pack", value: "Included Reviewed Narrative" }),
-      expect.objectContaining({ label: "Delivery record", value: "Report Requested" }),
+      expect.objectContaining({
+        label: "Discussion pack",
+        value: "Included Reviewed Narrative",
+      }),
+      expect.objectContaining({
+        label: "Delivery record",
+        value: "Report Requested",
+      }),
     ]);
   });
 
@@ -174,9 +183,9 @@ describe("proposal narrative posture view model", () => {
   });
 
   it("shortens long evidence hashes for dense UI display", () => {
-    expect(formatEvidenceHash("sha256:1234567890abcdef1234567890abcdef")).toBe(
-      "sha256:123456789...90abcdef"
-    );
-    expect(formatEvidenceHash(null)).toBe("Not available");
+    expect(
+      formatProposalEvidenceHash("sha256:1234567890abcdef1234567890abcdef"),
+    ).toBe("sha256:123456789...90abcdef");
+    expect(formatProposalEvidenceHash(null)).toBe("Not available");
   });
 });
