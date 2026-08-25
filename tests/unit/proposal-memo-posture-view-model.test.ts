@@ -36,6 +36,8 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
       memo_hash: MEMO_HASH,
       memo_status: "READY",
       memo: {
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_2",
         proposal_id: PROPOSAL_ID,
         proposal_version_no: VERSION_NO,
       },
@@ -139,6 +141,7 @@ describe("buildProposalMemoPostureModel", () => {
       lineageHashLabel: MEMO_HASH,
       lineageStatusLabel: "Evidence aligned",
       memoHash: MEMO_HASH,
+      memoId: "memo_2",
       nextActionKey: "track",
       nextActionTitle: "Review the evidence record",
       projectionAudienceLabel: "Compliance review",
@@ -228,6 +231,8 @@ describe("buildProposalMemoPostureModel", () => {
       proposal_version_no: staleVersion,
       memo: {
         ...evidence.memo?.memo,
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_2",
         proposal_id: PROPOSAL_ID,
         proposal_version_no: staleVersion,
       },
@@ -286,6 +291,8 @@ describe("buildProposalMemoPostureModel", () => {
       proposal: otherProposal,
       memo: {
         ...evidence.memo?.memo,
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_2",
         proposal_id: otherProposalId,
         proposal_version_no: VERSION_NO,
       },
@@ -365,6 +372,59 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.canRequestCommentary).toBe(false);
     expect(model.canRequestReportPackage).toBe(false);
   });
+
+  it("rejects a nested memo pack that conflicts with the outer memo identity", () => {
+    const evidence = alignedEvidence();
+    evidence.memo = {
+      ...evidence.memo,
+      memo: {
+        ...evidence.memo?.memo,
+        memo_hash: "sha256:stale-pack",
+        memo_id: "memo_stale",
+      },
+    };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: evidence.proposalId,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: evidence.versionNo,
+    });
+
+    expect(model).toMatchObject({
+      canRecordReview: false,
+      canRequestCommentary: false,
+      canRequestReportPackage: false,
+      hasMemo: false,
+      memoHash: null,
+      memoId: null,
+      sourceEvidenceAligned: false,
+    });
+  });
+
+  it.each([
+    ["memo id", { memo_id: " memo_2" }],
+    ["memo hash", { memo_hash: `${MEMO_HASH} ` }],
+  ])("rejects a padded %s instead of normalizing source identity", (_label, change) => {
+    const evidence = alignedEvidence();
+    evidence.memo = { ...evidence.memo, ...change };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: evidence.proposalId,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: evidence.versionNo,
+    });
+
+    expect(model.sourceEvidenceAligned).toBe(false);
+    expect(model.canRequestCommentary).toBe(false);
+  });
 });
 
 describe("proposal memo source-refresh confirmation", () => {
@@ -398,6 +458,8 @@ describe("proposal memo source-refresh confirmation", () => {
       proposal: { ...proposalSummary(), current_version_no: 1 },
       proposal_version_no: 1,
       memo: {
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_2",
         proposal_id: PROPOSAL_ID,
         proposal_version_no: 1,
       },
@@ -406,6 +468,62 @@ describe("proposal memo source-refresh confirmation", () => {
     expect(() =>
       confirmMemoCreateRefresh({ action: staleAction, refreshed: alignedEvidence() }),
     ).toThrow("Memo preparation completed, but refreshed source evidence did not confirm it.");
+  });
+
+  it("rejects every action response for another memo even when its hash matches", () => {
+    const staleMemo = {
+      ...alignedEvidence().memo!,
+      memo_id: "memo_stale",
+      memo: {
+        ...alignedEvidence().memo?.memo,
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_stale",
+      },
+    };
+    const refreshed = alignedEvidence();
+
+    expect(() =>
+      confirmMemoCreateRefresh({ action: staleMemo, refreshed }),
+    ).toThrow("Memo preparation completed, but refreshed source evidence did not confirm it.");
+    expect(() =>
+      confirmMemoReviewRefresh({
+        action: {
+          memo: staleMemo,
+          review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+        },
+        refreshed,
+      }),
+    ).toThrow("Advisor review was recorded, but refreshed memo evidence did not confirm it.");
+    expect(() =>
+      confirmMemoReportPackageRefresh({
+        action: {
+          memo: staleMemo,
+          report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+          report: { status: "ARCHIVED" },
+        },
+        refreshed,
+      }),
+    ).toThrow(
+      "Discussion material was requested, but refreshed memo evidence did not confirm it.",
+    );
+    expect(() =>
+      confirmMemoCommentaryRefresh({
+        action: {
+          memo: staleMemo,
+          ai_event: {
+            event_id: COMMENTARY_EVENT_ID,
+            event_type: "MEMO_AI_REFERENCE_RECORDED",
+          },
+          commentary: {
+            authoritative_for_memo_status: false,
+            status: "REVIEW_REQUIRED",
+          },
+        },
+        refreshed,
+      }),
+    ).toThrow(
+      "Advisor commentary was requested, but refreshed memo evidence did not confirm it.",
+    );
   });
 
   it("confirms review only from the review event and refreshed approved posture", () => {
