@@ -103,7 +103,7 @@ describe("ConstructionSelectedDetailCard", () => {
     expect(screen.getByText("Equity")).toBeInTheDocument();
     expect(screen.getByText("52% to 49%")).toBeInTheDocument();
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();
-    expect(screen.getByText("Asset Allocation Range")).toBeInTheDocument();
+    expect(screen.getByText("Asset allocation range")).toBeInTheDocument();
     expect(screen.getByText("Construction Authority Evidence")).toBeInTheDocument();
     expect(screen.getByText("ExternalHedgePolicy v1")).toBeInTheDocument();
 

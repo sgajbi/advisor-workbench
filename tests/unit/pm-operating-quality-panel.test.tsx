@@ -700,7 +700,7 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getAllByText(/protected class inference/i).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(
-        "PM Quality Fairness Spread Review Required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED)"
+        "Fairness review required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED)"
       ).length
     ).toBeGreaterThan(0);
   });

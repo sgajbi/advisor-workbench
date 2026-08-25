@@ -43,7 +43,7 @@ describe("PM operating quality panel helpers", () => {
         "PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED, SEGMENT_MINIMUM_SCORE_RUNS_NOT_MET"
       )
     ).toBe(
-      "PM Quality Fairness Spread Review Required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED), Segment Minimum Score Runs Not Met (SEGMENT_MINIMUM_SCORE_RUNS_NOT_MET)"
+      "Fairness review required (PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED), Insufficient segment evidence (SEGMENT_MINIMUM_SCORE_RUNS_NOT_MET)"
     );
   });
 });

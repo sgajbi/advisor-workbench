@@ -118,7 +118,7 @@ describe("OutcomeReviewPanel", () => {
     );
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
-    expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
+    expect(screen.getByText("Drift reduction")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
     expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole("link", { name: /Review mandate impact/ })).toHaveAttribute(

@@ -22,7 +22,7 @@ describe("OutcomeReviewDimensionTable", () => {
     );
 
     const table = screen.getByRole("table", { name: "Outcome review dimensions" });
-    expect(table).toHaveTextContent("Drift Reduction");
+    expect(table).toHaveTextContent("Drift reduction");
     expect(table).toHaveTextContent("1.2%");
     expect(table).toHaveTextContent("1.1%");
     expect(table).toHaveTextContent("-0.1%");

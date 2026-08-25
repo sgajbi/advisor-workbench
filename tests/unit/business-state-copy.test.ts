@@ -20,6 +20,9 @@ describe("business state copy", () => {
     );
     expect(businessStateLabel("PENDING")).toBe("In progress");
     expect(businessStateLabel("AWAITING_REVIEW")).toBe("Awaiting review");
+    expect(businessStateLabel("HEALTHY")).toBe("Healthy");
+    expect(businessStateLabel("FRESH")).toBe("Fresh");
+    expect(businessStateLabel("ACTION_REQUIRED")).toBe("Action required");
     expect(businessStateLabel("UNSUPPORTED")).toBe("Not supported");
   });
 
@@ -31,6 +34,21 @@ describe("business state copy", () => {
       "Allocation drift not assessed",
     );
     expect(formatBusinessReason("DRIFT_REDUCTION")).toBe("Drift reduction");
+    expect(formatBusinessReason("Asset allocation range")).toBe(
+      "Asset allocation range",
+    );
+    expect(formatBusinessReason("PROOF_PACK_READY")).toBe(
+      "Evidence pack ready",
+    );
+    expect(formatBusinessReason("PM_QUALITY_REVIEW_ACTION_READY")).toBe(
+      "Supervisory review ready",
+    );
+    expect(
+      formatBusinessReason("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED"),
+    ).toBe("Fairness review required");
+    expect(formatBusinessReason("CAMPAIGN_DEFINITION_ACTOR_NOT_ENTITLED")).toBe(
+      "Permission required",
+    );
     expect(formatBusinessReason("SIMULATE_REBALANCE")).toBe(
       "Simulate rebalance",
     );

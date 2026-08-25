@@ -27,7 +27,7 @@ describe("DpmWaveReadinessSummaryStrip", () => {
 
     const summary = screen.getByLabelText("Rebalance readiness");
     expect(within(summary).getByText("Rebalance Status")).toBeInTheDocument();
-    expect(within(summary).getByText("Simulation ready")).toBeInTheDocument();
+    expect(within(summary).getByText("Ready to simulate")).toBeInTheDocument();
     expect(within(summary).getByText("Approval Readiness")).toBeInTheDocument();
     expect(within(summary).getByText("Ready")).toBeInTheDocument();
     expect(within(summary).getByText("Proposed Changes")).toBeInTheDocument();

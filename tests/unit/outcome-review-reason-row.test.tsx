@@ -41,7 +41,7 @@ describe("OutcomeReviewReasonRow", () => {
       />,
     );
 
-    expect(screen.getByText("New Source Reason")).toBeInTheDocument();
+    expect(screen.getByText("Review required")).toBeInTheDocument();
   });
 
   it("does not introduce client communication or execution controls", () => {

@@ -125,6 +125,9 @@ export function formatMandateAction(value: string): string {
     return "Not provided by mandate monitoring";
   }
   const normalized = value.toUpperCase();
+  if (normalized.includes("BENCHMARK") && normalized.includes("MAPPING")) {
+    return "Review benchmark mapping";
+  }
   if (normalized.includes("REPAIR_SOURCE_DATA") || normalized.includes("REQUEST_SOURCE_REFRESH")) {
     return "Resolve data readiness";
   }
@@ -146,5 +149,5 @@ export function formatMandateAction(value: string): string {
   if (value.toLowerCase().includes("evidence")) {
     return "Review supporting evidence";
   }
-  return businessStateLabel(value);
+  return formatBusinessReason(value);
 }
