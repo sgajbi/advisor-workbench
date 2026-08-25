@@ -132,11 +132,33 @@ export function scanProductCopySource({ filePath, sourceText }) {
         return STATIC_PROPERTY_UNKNOWN;
       }
       resolvingObjects.add(owner);
+      if (isStaticObjectRestBinding(owner)) {
+        if (owner.excludedPropertyNames.includes(propertyName)) {
+          resolvingObjects.delete(owner);
+          return STATIC_PROPERTY_ABSENT;
+        }
+        const restOwner = resolveStaticExpression(owner.owner);
+        if (!isStaticObjectLike(restOwner)) {
+          resolvingObjects.delete(owner);
+          return STATIC_PROPERTY_UNKNOWN;
+        }
+        const restProperty = resolveObjectProperty(
+          restOwner,
+          propertyName,
+          resolvingObjects,
+        );
+        resolvingObjects.delete(owner);
+        return restProperty;
+      }
+      if (!ts.isObjectLiteralExpression(owner)) {
+        resolvingObjects.delete(owner);
+        return STATIC_PROPERTY_UNKNOWN;
+      }
       for (let index = owner.properties.length - 1; index >= 0; index -= 1) {
         const property = owner.properties[index];
         if (ts.isSpreadAssignment(property)) {
           const spreadOwner = resolveStaticExpression(property.expression);
-          if (!spreadOwner || !ts.isObjectLiteralExpression(spreadOwner)) {
+          if (!isStaticObjectLike(spreadOwner)) {
             resolvingObjects.delete(owner);
             return STATIC_PROPERTY_UNKNOWN;
           }
@@ -183,6 +205,12 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
 
     function resolveStaticExpression(node) {
+      if (isStaticObjectPropertyBinding(node)) {
+        return resolveStaticObjectPropertyBinding(node);
+      }
+      if (isStaticObjectRestBinding(node)) {
+        return node;
+      }
       const unwrapped = unwrapCopyExpression(node);
       if (ts.isIdentifier(unwrapped)) {
         const binding = resolveLocalConstantInitializer(unwrapped);
@@ -206,7 +234,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
       ) {
         const propertyName = accessPropertyName(unwrapped);
         const owner = resolveStaticExpression(unwrapped.expression);
-        if (!propertyName || !owner || !ts.isObjectLiteralExpression(owner)) {
+        if (!propertyName || !isStaticObjectLike(owner)) {
           return undefined;
         }
         const property = resolveObjectProperty(owner, propertyName);
@@ -223,14 +251,30 @@ export function scanProductCopySource({ filePath, sourceText }) {
 
     function resolveStaticObjectPropertyBinding(binding) {
       const owner = resolveStaticExpression(binding.owner);
-      if (!owner || !ts.isObjectLiteralExpression(owner)) {
-        return undefined;
+      if (!isStaticObjectLike(owner)) {
+        return resolveStaticFallback(binding);
       }
       const property = resolveObjectProperty(owner, binding.propertyName);
-      return property === STATIC_PROPERTY_ABSENT
+      if (
+        property === STATIC_PROPERTY_ABSENT
         || property === STATIC_PROPERTY_UNKNOWN
-        ? undefined
-        : resolveStaticExpression(property);
+      ) {
+        return resolveStaticFallback(binding);
+      }
+      return resolveStaticExpression(property) ?? resolveStaticFallback(binding);
+    }
+
+    function resolveStaticFallback(binding) {
+      return binding.fallback
+        ? resolveStaticExpression(binding.fallback)
+        : undefined;
+    }
+
+    function isStaticObjectLike(value) {
+      return Boolean(
+        value
+        && (ts.isObjectLiteralExpression(value) || isStaticObjectRestBinding(value)),
+      );
     }
 
     function visitResolvedCopyExpression(node) {
@@ -407,29 +451,52 @@ function collectLocalConstantScopes(sourceFile) {
       recordBinding(scope, name.text, initializer);
       return;
     }
-    if (!ts.isObjectBindingPattern(name)) {
-      recordBarrierBindings(scope, name);
+    if (ts.isObjectBindingPattern(name)) {
+      recordObjectBinding(scope, name, initializer);
       return;
     }
-    for (const element of name.elements) {
-      if (
-        element.dotDotDotToken
-        || element.initializer
-        || !ts.isIdentifier(element.name)
-      ) {
-        recordBarrierBindings(scope, element.name);
+    recordBarrierBindings(scope, name);
+  }
+
+  function recordObjectBinding(scope, pattern, owner) {
+    const excludedPropertyNames = [];
+    let hasUnknownExclusion = false;
+    for (const element of pattern.elements) {
+      if (element.dotDotDotToken) {
+        if (ts.isIdentifier(element.name) && !hasUnknownExclusion) {
+          recordBinding(
+            scope,
+            element.name.text,
+            staticObjectRestBinding(owner, excludedPropertyNames),
+          );
+        } else {
+          recordBarrierBindings(scope, element.name);
+        }
         continue;
       }
       const propertyName = element.propertyName
         ? staticObjectPropertyName(element.propertyName)
-        : element.name.text;
-      recordBinding(
-        scope,
-        element.name.text,
-        propertyName === null
-          ? null
-          : staticObjectPropertyBinding(initializer, propertyName),
+        : ts.isIdentifier(element.name)
+          ? element.name.text
+          : null;
+      if (propertyName === null) {
+        hasUnknownExclusion = true;
+        recordBarrierBindings(scope, element.name);
+        continue;
+      }
+      excludedPropertyNames.push(propertyName);
+      const propertyBinding = staticObjectPropertyBinding(
+        owner,
+        propertyName,
+        element.initializer,
       );
+      if (ts.isIdentifier(element.name)) {
+        recordBinding(scope, element.name.text, propertyBinding);
+      } else if (ts.isObjectBindingPattern(element.name)) {
+        recordObjectBinding(scope, element.name, propertyBinding);
+      } else {
+        recordBarrierBindings(scope, element.name);
+      }
     }
   }
 
@@ -465,6 +532,12 @@ function collectLocalConstantScopes(sourceFile) {
         recordBinding(scope, node.name.text, null);
       }
     }
+    if (
+      (ts.isFunctionExpression(node) || ts.isClassExpression(node))
+      && node.name
+    ) {
+      recordBinding(node, node.name.text, null);
+    }
     ts.forEachChild(node, visit);
   }
 
@@ -472,12 +545,24 @@ function collectLocalConstantScopes(sourceFile) {
   return scopes;
 }
 
-function staticObjectPropertyBinding(owner, propertyName) {
-  return { bindingKind: "object-property", owner, propertyName };
+function staticObjectPropertyBinding(owner, propertyName, fallback = undefined) {
+  return { bindingKind: "object-property", owner, propertyName, fallback };
 }
 
 function isStaticObjectPropertyBinding(value) {
   return value?.bindingKind === "object-property";
+}
+
+function staticObjectRestBinding(owner, excludedPropertyNames) {
+  return {
+    bindingKind: "object-rest",
+    owner,
+    excludedPropertyNames: [...excludedPropertyNames],
+  };
+}
+
+function isStaticObjectRestBinding(value) {
+  return value?.bindingKind === "object-rest";
 }
 
 function bindingIdentifiers(name) {
@@ -521,7 +606,8 @@ function findContainingLexicalScope(node) {
       ts.isForStatement(current) ||
       ts.isForInStatement(current) ||
       ts.isForOfStatement(current) ||
-      ts.isFunctionLike(current)
+      ts.isFunctionLike(current) ||
+      ts.isClassLike(current)
     ) {
       return current;
     }

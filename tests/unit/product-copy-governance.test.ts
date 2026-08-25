@@ -255,6 +255,72 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
+  it("treats named function and class expressions as self-binding barriers", () => {
+    expect(
+      scan(`
+        const copy = { panelTitle: "Gateway posture" } as const;
+        export const FunctionExample = function copy() {
+          return <Panel title={copy.panelTitle} />;
+        };
+        export const ClassExample = class copy {
+          render() {
+            return <Panel title={copy.panelTitle} />;
+          }
+        };
+      `),
+    ).toEqual([]);
+  });
+
+  it("resolves direct and aliased destructuring defaults", () => {
+    const findings = scan(`
+      const runtimeCopy = {} as const;
+      const {
+        panelTitle = "Gateway posture",
+        panelBody: body = "HTTP status unavailable",
+      } = runtimeCopy;
+      export function Example() {
+        return <Panel title={panelTitle} body={body} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
+  it("prefers a statically present property over its destructuring default", () => {
+    expect(
+      scan(`
+        const copy = { panelTitle: "Client review status" } as const;
+        const { panelTitle = "Gateway posture" } = copy;
+        export function Example() {
+          return <Panel title={panelTitle} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
+  it("resolves nested and object-rest destructured copy", () => {
+    const findings = scan(`
+      const copy = {
+        heading: { panelTitle: "Gateway posture" },
+        panelBody: "HTTP status unavailable",
+      } as const;
+      const { heading: { panelTitle }, ...remainingCopy } = copy;
+      export function Example() {
+        return <Panel title={panelTitle} body={remainingCopy.panelBody} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
   it("terminates safely when destructured bindings form a static cycle", () => {
     expect(
       scan(`
