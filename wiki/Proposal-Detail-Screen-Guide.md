@@ -82,6 +82,12 @@ These use cases do not substitute for authenticated production-role or portfolio
   remains downstream package posture, not review authority. Review and pack success are announced
   only after the action response and the action-specific refreshed reads agree; disagreement
   remains an explicit failure.
+- Treats delivery activity as current only when the complete returned history is chronological,
+  has unique record identities, belongs to the active proposal version, and agrees with the latest
+  source record. Discussion-pack success additionally requires the latest pack-request record to
+  carry the exact request identity returned by the action. The screen translates governed delivery
+  states into business language such as **Discussion pack requested**, **Implementation accepted**,
+  and **Implementation completed** rather than exposing source codes.
 - Presents memo work as **memo evidence → advisor review → discussion material → record and
   audience**. The advisor reference is always explicit, the active proposal version is read-only,
   and unknown source states fail closed rather than becoming a permissive browser default.

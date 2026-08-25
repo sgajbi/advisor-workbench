@@ -310,6 +310,11 @@ promote dormant labels into product ownership just because historical route file
   not-requested, no-report, and no-event states when Gateway has not materialized evidence. It does
   not generate narrative, infer client-ready release, render documents, archive artifacts, contact
   clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
+- Delivery history is admitted only when its count equals the complete returned list, event
+  identities are unique, timestamps are chronological, every record matches the active proposal
+  version, and `latest_event` matches the final record. Post-action discussion-pack confirmation
+  also requires the latest `REPORT_REQUESTED` record to carry the exact action
+  `reason.report_request_id`; a 2xx response or unrelated delivery activity is not success proof.
   Canonical validation creates a Gateway-backed proposal with an advisor-review
   `narrative_request`, records advisor-use review, requests reviewed report packaging, and captures
   `proposal-narrative-posture-live.png` under the governed Workbench proof bundle.
