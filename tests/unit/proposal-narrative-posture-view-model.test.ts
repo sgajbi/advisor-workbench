@@ -97,6 +97,8 @@ describe("proposal narrative posture view model", () => {
       review: confirmedReview,
       summary: discussionPackSummary({
         status: "READY",
+        report_reference_id: "report-document-001",
+        generated_at: "2026-05-22T09:01:00Z",
         proposal_narrative_package: {
           related_version_no: 2,
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
@@ -181,12 +183,71 @@ describe("proposal narrative posture view model", () => {
   });
 
   it.each([
+    ["blank proposal", " ", 2],
+    ["zero version", "pp_1", 0],
+    ["negative version", "pp_1", -1],
+    ["fractional version", "pp_1", 2.5],
+    ["runtime string version", "pp_1", "2" as unknown as number],
+  ])("rejects a malformed active identity: %s", (_label, proposalId, versionNo) => {
+    const model = buildProposalNarrativePostureModel({
+      proposalId,
+      versionNo,
+      review: {
+        ...confirmedReview,
+        narrative_review: {
+          ...confirmedReview.narrative_review,
+          proposal_id: proposalId,
+          proposal_version_no: versionNo,
+        },
+      },
+    });
+
+    expect(model.reviewState).toBe("Not Reviewed");
+    expect(model.canRequestDiscussionPack).toBe(false);
+  });
+
+  it.each([
     ["wrong proposal", discussionPackSummary({}, { ...activeProposalSummary, proposal_id: "pp_2" })],
     ["wrong version", discussionPackSummary({}, { ...activeProposalSummary, current_version_no: 1 })],
     ["missing request", discussionPackSummary({ report_request_id: undefined })],
     ["wrong type", discussionPackSummary({ report_type: "OTHER" })],
     ["failed report", discussionPackSummary({ status: "FAILED" })],
     ["missing report state", discussionPackSummary({ status: undefined })],
+    [
+      "rejected package review",
+      discussionPackSummary({
+        proposal_narrative_package: {
+          related_version_no: 2,
+          package_status: "REQUESTED",
+          review_state: "REJECTED",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      }),
+    ],
+    [
+      "ready package without reference",
+      discussionPackSummary({
+        status: "READY",
+        generated_at: "2026-05-22T09:01:00Z",
+        proposal_narrative_package: {
+          related_version_no: 2,
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      }),
+    ],
+    [
+      "ready package without generated time",
+      discussionPackSummary({
+        status: "READY",
+        report_reference_id: "report-document-001",
+        proposal_narrative_package: {
+          related_version_no: 2,
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      }),
+    ],
     [
       "failed package",
       discussionPackSummary({
@@ -243,7 +304,24 @@ describe("proposal narrative posture view model", () => {
       }),
     });
 
-    expect(model.latestEventTime).toBe("Not reported");
+    expect(model.eventCount).toBe(0);
+    expect(model.latestEventTime).toBeNull();
+  });
+
+  it.each([
+    ["positive count without event", activeEvents({ event_count: 1, latest_event: undefined, events: [] })],
+    ["zero count with latest event", activeEvents({ event_count: 0 })],
+    ["negative count", activeEvents({ event_count: -1 })],
+    ["fractional count", activeEvents({ event_count: 1.5 })],
+  ])("rejects a contradictory delivery-event aggregate: %s", (_label, events) => {
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      events,
+    });
+
+    expect(model.eventCount).toBe(0);
+    expect(model.latestEventLabel).toBe("No delivery activity");
+    expect(model.latestEventTime).toBeNull();
   });
 
   it("requires an exact complete refreshed review record", () => {
@@ -295,6 +373,40 @@ describe("proposal narrative posture view model", () => {
     ["wrong action type", discussionPackRequest({ report_type: "OTHER" }), discussionPackSummary(), activeEvents()],
     ["wrong summary type", discussionPackRequest(), discussionPackSummary({ report_type: "OTHER" }), activeEvents()],
     ["failed summary", discussionPackRequest(), discussionPackSummary({ status: "FAILED" }), activeEvents()],
+    [
+      "rejected action package review",
+      discussionPackRequest({
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "REQUESTED",
+            review_state: "REJECTED",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      }),
+      discussionPackSummary(),
+      activeEvents(),
+    ],
+    [
+      "incomplete ready action",
+      discussionPackRequest({
+        status: "READY",
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      }),
+      discussionPackSummary(),
+      activeEvents(),
+    ],
     ["stale request", discussionPackRequest(), discussionPackSummary({ report_request_id: "report-old" }), activeEvents()],
     ["wrong proposal", discussionPackRequest(), discussionPackSummary({}, { ...activeProposalSummary, proposal_id: "pp_2" }), activeEvents()],
     ["wrong events", discussionPackRequest(), discussionPackSummary(), activeEvents({ proposal: { ...activeProposalSummary, current_version_no: 1 } })],
