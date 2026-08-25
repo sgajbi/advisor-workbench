@@ -430,6 +430,28 @@ async function mockProposalApprovalEvidence(page: Page) {
     },
   );
   await page.route(
+    "**/api/bff/api/v1/proposals/PRP-READY-001/versions/5/narrative",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-narrative-PRP-READY-001",
+          contract_version: "v1",
+          data: {
+            policy_version: "proposal-narrative-deterministic.v1",
+            narrative_review: {
+              proposal_id: "PRP-READY-001",
+              proposal_version_no: 5,
+              narrative_id: "narrative-PRP-READY-001",
+              review_state: "NOT_REVIEWED",
+              source_narrative_hash: null,
+              client_ready_status: "NOT_REQUESTED",
+            },
+          },
+        },
+      });
+    },
+  );
+  await page.route(
     "**/api/bff/api/v1/proposals/PRP-READY-001/versions/5/memo",
     async (route) => {
       await route.fulfill({
