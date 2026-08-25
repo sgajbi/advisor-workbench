@@ -2,9 +2,7 @@ export { default as ActionLink } from "./components/action-link";
 export { default as AiAssistanceDisclosure } from "./components/ai-assistance-disclosure";
 export { classifyAiProviderPosture } from "./ai-provider-posture";
 export type { AiProviderPosture } from "./ai-provider-posture";
-export {
-  createAiAssistanceDisclosure,
-} from "./ai-assistance-model";
+export { createAiAssistanceDisclosure } from "./ai-assistance-model";
 export type {
   AiAssistanceDiagnostic,
   AiAssistanceDisclosure as AiAssistanceDisclosureModel,
@@ -35,6 +33,7 @@ export { default as DefinitionList } from "./components/definition-list";
 export type { DefinitionListItem } from "./components/definition-list";
 export { default as DetailCard } from "./components/detail-card";
 export { default as DisclosureToggleButton } from "./components/disclosure-toggle-button";
+export { default as SupportDetails } from "./components/support-details";
 export { default as WorkbenchDeferredSection } from "./components/workbench-deferred-section";
 export { default as WorkbenchChoiceGroup } from "./components/workbench-choice-group";
 export type { WorkbenchChoiceGroupOption } from "./components/workbench-choice-group";
@@ -88,7 +87,10 @@ export { default as MainWithSideRailLayout } from "./components/main-with-side-r
 export { default as ModeTabs } from "./components/mode-tabs";
 export { modePanelId, modeTabId } from "./components/mode-tabs";
 export { default as ScreenStatePanel } from "./components/screen-state-panel";
-export type { ScreenStateKind, ScreenStateSurface } from "./components/screen-state-panel";
+export type {
+  ScreenStateKind,
+  ScreenStateSurface,
+} from "./components/screen-state-panel";
 export { default as SourceRefreshAction } from "./components/source-refresh-action";
 export {
   useSourceRefreshAction,
@@ -100,7 +102,10 @@ export { default as SourceWindowNavigation } from "./components/source-window-na
 export { default as SectionHeader } from "./components/section-header";
 export { default as SectionBlock } from "./components/section-block";
 export { default as SemanticBadge } from "./components/semantic-badge";
-export type { SemanticBadgeTone, SemanticBadgeEmphasis } from "./components/semantic-badge";
+export type {
+  SemanticBadgeTone,
+  SemanticBadgeEmphasis,
+} from "./components/semantic-badge";
 export { default as ActionButton } from "./components/action-button";
 export type { ActionButtonPriority } from "./components/action-button";
 export { default as DetailDrawer } from "./components/detail-drawer";
