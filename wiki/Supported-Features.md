@@ -211,18 +211,20 @@ Implemented:
    through the Workbench BFF/Gateway boundary,
 3. records advisor-use narrative review against an explicit proposal version with an idempotency
    key,
-4. requests reviewed narrative report packaging through Gateway with
+4. confirms the persisted review identity, reviewer, time, state, and source hash from the
+   authoritative current-version narrative read; delivery summary remains separate package posture,
+5. requests reviewed narrative report packaging through Gateway with
    `include_reviewed_narrative=true`,
-5. displays review posture, report-package posture, delivery status, latest delivery event, policy
+6. displays review posture, report-package posture, delivery status, latest delivery event, policy
    version, and source narrative hash,
-6. participates in canonical Workbench proof as `proposal.narrative_posture` with a governed
+7. participates in canonical Workbench proof as `proposal.narrative_posture` with a governed
    screenshot after advisor-use review and reviewed report-package request pass,
-7. creates or replays advisor-use memo/evidence-pack posture, records advisor-use memo review,
+8. creates or replays advisor-use memo/evidence-pack posture, records advisor-use memo review,
    requests memo report-package posture, requests non-authoritative commentary, and displays memo
    lineage and replay hash visibility through Gateway-backed proposal memo endpoints,
-8. participates in canonical Workbench proof as `proposal.memo_evidence_pack` with a governed
+9. participates in canonical Workbench proof as `proposal.memo_evidence_pack` with a governed
    screenshot after advisor-use memo review and memo evidence-pack checks pass,
-9. renders missing evidence as explicit not-reviewed, not-requested, no-report, no-event,
+10. renders missing evidence as explicit not-reviewed, not-requested, no-report, no-event,
    memo-pending, no-lineage, or no-replay states
    rather than inferring client-ready status.
 

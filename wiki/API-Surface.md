@@ -302,8 +302,11 @@ promote dormant labels into product ownership just because historical route file
   Gateway proposal endpoints. Workbench records advisor-use narrative review with
   `POST /api/v1/proposals/{proposal_id}/versions/{version_no}/narrative/review`, requests reviewed
   narrative report packaging with `POST /api/v1/proposals/{proposal_id}/report-requests`, and
-  renders delivery posture from `GET /api/v1/proposals/{proposal_id}/delivery-summary` and
-  `GET /api/v1/proposals/{proposal_id}/delivery-events`. The panel displays explicit not-reviewed,
+  confirms persisted review identity, actor, time, state, and narrative hash from
+  `GET /api/v1/proposals/{proposal_id}/versions/{version_no}/narrative`. Delivery posture remains a
+  separate read from `GET /api/v1/proposals/{proposal_id}/delivery-summary` and
+  `GET /api/v1/proposals/{proposal_id}/delivery-events`; those delivery contracts are not treated
+  as narrative-review authority. The panel displays explicit not-reviewed,
   not-requested, no-report, and no-event states when Gateway has not materialized evidence. It does
   not generate narrative, infer client-ready release, render documents, archive artifacts, contact
   clients, or call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly.
