@@ -313,6 +313,26 @@ describe("proposal narrative posture view model", () => {
     ["zero count with latest event", activeEvents({ event_count: 0 })],
     ["negative count", activeEvents({ event_count: -1 })],
     ["fractional count", activeEvents({ event_count: 1.5 })],
+    [
+      "unknown event type",
+      activeEvents({
+        latest_event: {
+          event_type: "INTERNAL_TECH_CODE",
+          occurred_at: "2026-05-22T09:00:00Z",
+        },
+      }),
+    ],
+    [
+      "latest event disagrees with the first listed event",
+      activeEvents({
+        events: [
+          {
+            event_type: "REPORT_REQUESTED",
+            occurred_at: "2026-05-22T08:59:00Z",
+          },
+        ],
+      }),
+    ],
   ])("rejects a contradictory delivery-event aggregate: %s", (_label, events) => {
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
@@ -368,6 +388,26 @@ describe("proposal narrative posture view model", () => {
     ).not.toThrow();
   });
 
+  it("accepts a requested action that refreshes monotonically to a complete ready package", () => {
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        ...activeProposal,
+        report: discussionPackRequest(),
+        summary: discussionPackSummary({
+          status: "READY",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-22T09:01:00Z",
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        }),
+        events: activeEvents(),
+      }),
+    ).not.toThrow();
+  });
+
   it.each([
     ["failed action", discussionPackRequest({ status: "FAILED" }), discussionPackSummary(), activeEvents()],
     ["wrong action type", discussionPackRequest({ report_type: "OTHER" }), discussionPackSummary(), activeEvents()],
@@ -408,6 +448,89 @@ describe("proposal narrative posture view model", () => {
       activeEvents(),
     ],
     ["stale request", discussionPackRequest(), discussionPackSummary({ report_request_id: "report-old" }), activeEvents()],
+    ["padded action request", discussionPackRequest({ report_request_id: " report-001 " }), discussionPackSummary(), activeEvents()],
+    ["padded summary request", discussionPackRequest(), discussionPackSummary({ report_request_id: " report-001 " }), activeEvents()],
+    [
+      "requested action with malformed artifact timestamp",
+      discussionPackRequest({ generated_at: "not-a-time" }),
+      discussionPackSummary(),
+      activeEvents(),
+    ],
+    [
+      "ready action regresses to requested",
+      discussionPackRequest({
+        status: "READY",
+        report_reference_id: "report-document-001",
+        generated_at: "2026-05-22T09:01:00Z",
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      }),
+      discussionPackSummary(),
+      activeEvents(),
+    ],
+    [
+      "ready artifact reference changes",
+      discussionPackRequest({
+        status: "READY",
+        report_reference_id: "artifact-a",
+        generated_at: "2026-05-22T09:01:00Z",
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      }),
+      discussionPackSummary({
+        status: "READY",
+        report_reference_id: "artifact-b",
+        generated_at: "2026-05-22T09:01:00Z",
+        proposal_narrative_package: {
+          related_version_no: 2,
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      }),
+      activeEvents(),
+    ],
+    [
+      "ready artifact timestamp changes",
+      discussionPackRequest({
+        status: "READY",
+        report_reference_id: "artifact-a",
+        generated_at: "2026-05-22T09:01:00Z",
+        explanation: {
+          related_version_no: 2,
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            related_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      }),
+      discussionPackSummary({
+        status: "READY",
+        report_reference_id: "artifact-a",
+        generated_at: "2026-05-22T09:02:00Z",
+        proposal_narrative_package: {
+          related_version_no: 2,
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      }),
+      activeEvents(),
+    ],
     ["wrong proposal", discussionPackRequest(), discussionPackSummary({}, { ...activeProposalSummary, proposal_id: "pp_2" }), activeEvents()],
     ["wrong events", discussionPackRequest(), discussionPackSummary(), activeEvents({ proposal: { ...activeProposalSummary, current_version_no: 1 } })],
   ])("withholds confirmation for %s evidence", (_label, report, summary, events) => {
