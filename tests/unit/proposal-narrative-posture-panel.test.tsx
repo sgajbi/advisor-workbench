@@ -29,32 +29,56 @@ const confirmedNarrativeReview = {
     proposal_version_no: 2,
     narrative_id: "narrative-001",
     review_state: "APPROVED_FOR_ADVISOR_USE",
+    action: "APPROVE",
     source_narrative_hash: "sha256:narrative-001",
     reviewed_by: "advisor_1",
     reviewed_at: "2026-05-22T09:00:00Z",
   },
 };
 
-function renderPanel() {
+const activeProposalSummary = {
+  proposal_id: "pp_1",
+  current_state: "DRAFT",
+  current_version_no: 2,
+};
+
+function renderPanel(
+  props: { proposalId: string; currentVersionNo: number } = {
+    proposalId: "pp_1",
+    currentVersionNo: 2,
+  },
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
     },
   });
 
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
-      <ProposalNarrativePosturePanel proposalId="pp_1" currentVersionNo={2} />
+      <ProposalNarrativePosturePanel {...props} />
     </QueryClientProvider>,
   );
+  return {
+    ...view,
+    rerenderPanel(nextProps: { proposalId: string; currentVersionNo: number }) {
+      view.rerender(
+        <QueryClientProvider client={queryClient}>
+          <ProposalNarrativePosturePanel {...nextProps} />
+        </QueryClientProvider>,
+      );
+    },
+  };
 }
 
 describe("ProposalNarrativePosturePanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({
+      proposal: activeProposalSummary,
       reporting: {
         report_request_id: "report-001",
+        report_type: "PORTFOLIO_REVIEW",
         related_version_no: 2,
         status: "READY",
         include_reviewed_narrative: true,
@@ -65,6 +89,7 @@ describe("ProposalNarrativePosturePanel", () => {
       },
     });
     vi.mocked(getProposalDeliveryEvents).mockResolvedValue({
+      proposal: activeProposalSummary,
       event_count: 1,
       latest_event: {
         event_type: "REPORT_REQUESTED",
@@ -79,6 +104,7 @@ describe("ProposalNarrativePosturePanel", () => {
     );
     vi.mocked(createProposalReportRequest).mockResolvedValue({
       report_request_id: "report-001",
+      report_type: "PORTFOLIO_REVIEW",
       status: "READY",
       explanation: {
         related_version_no: 2,
@@ -187,24 +213,29 @@ describe("ProposalNarrativePosturePanel", () => {
       .mockResolvedValueOnce(confirmedNarrativeReview);
     vi.mocked(getProposalDeliverySummary)
       .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
         reporting: {
           status: "NO_REPORT",
           include_reviewed_narrative: false,
         },
       })
       .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
         reporting: {
           status: "NOT_REQUESTED",
           include_reviewed_narrative: false,
         },
       })
       .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
         reporting: {
           report_request_id: "report-001",
+          report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
           status: "REQUESTED",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
+            related_version_no: 2,
             review_state: "APPROVED_FOR_ADVISOR_USE",
             package_status: "REQUESTED",
             source_narrative_hash: "sha256:narrative-001",
@@ -286,18 +317,22 @@ describe("ProposalNarrativePosturePanel", () => {
   it("withholds discussion-pack success when refreshed request identity is stale", async () => {
     vi.mocked(getProposalDeliverySummary)
       .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
         reporting: {
           status: "NOT_REQUESTED",
           include_reviewed_narrative: false,
         },
       })
       .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
         reporting: {
           report_request_id: "report-earlier",
+          report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
           status: "REQUESTED",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
+            related_version_no: 2,
             package_status: "REQUESTED",
             source_narrative_hash: "sha256:narrative-001",
           },
@@ -372,5 +407,38 @@ describe("ProposalNarrativePosturePanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-narrative-action-status")).not.toBeInTheDocument();
+  });
+
+  it("resets transient action state when the active proposal version changes", async () => {
+    vi.mocked(reviewProposalNarrative).mockRejectedValueOnce(
+      new Error("SOURCE_UNAVAILABLE"),
+    );
+    const view = renderPanel();
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+
+    expect(
+      await screen.findByText(/Advisor review was not recorded/),
+    ).toBeInTheDocument();
+
+    view.rerenderPanel({ proposalId: "pp_2", currentVersionNo: 1 });
+
+    expect(screen.queryByText(/Advisor review was not recorded/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+    ).toHaveValue("");
+    expect(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+    ).toHaveValue("");
   });
 });
