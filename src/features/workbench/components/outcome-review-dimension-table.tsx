@@ -3,10 +3,10 @@
 import { AnalyticsTable, SemanticBadge } from "@/design-system";
 import {
   outcomeReviewBadgeTone,
+  outcomeReviewDimensionLabel,
   outcomeReviewDimensionStateLabel,
 } from "@/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewDimensionRow } from "@/features/workbench/outcome-review-view-model";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 
 type Props = {
@@ -29,7 +29,7 @@ export default function OutcomeReviewDimensionTable({ dimensions }: Props) {
       rows={dimensions.map((row) => ({
         key: row.key,
         cells: [
-          businessStateLabel(row.dimension),
+          outcomeReviewDimensionLabel(row.dimension),
           row.expected,
           row.realized,
           row.variance,

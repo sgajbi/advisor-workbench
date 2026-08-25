@@ -216,7 +216,9 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getAllByRole("heading", { name: "Construction Alternatives" })).toHaveLength(2);
-    expect(await screen.findByText("External OMS evidence is unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Order acknowledgement evidence unavailable"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "DPM Command Center" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Portfolio Memory" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Post-Trade Outcome Review" })).not.toBeInTheDocument();
@@ -383,7 +385,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getByText("Selected review detail")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
-    expect(screen.getByText("Drift Reduction")).toBeInTheDocument();
+    expect(screen.getByText("Drift reduction")).toBeInTheDocument();
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(([input]) =>

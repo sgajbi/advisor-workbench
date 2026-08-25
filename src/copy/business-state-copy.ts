@@ -19,6 +19,8 @@ const BUSINESS_STATE_LABELS: Readonly<Record<string, string>> = Object.freeze({
   HIGH: "High",
   LOW: "Low",
   MEDIUM: "Medium",
+  MISSING: "Missing",
+  NOT_GENERATED: "Not generated",
   NOT_REQUESTED: "Not requested",
   OPEN: "Open",
   PARTIAL: "Needs attention",
@@ -39,14 +41,30 @@ const BUSINESS_STATE_LABELS: Readonly<Record<string, string>> = Object.freeze({
 
 const BUSINESS_REASON_LABELS: Readonly<Record<string, string>> = Object.freeze({
   ALLOCATION_DRIFT_NOT_ASSESSED: "Allocation drift not assessed",
+  COUNTERPARTY_SELECTION: "Counterparty selection",
   DPM_SOURCE_STALE: "Mandate data requires refresh",
+  DRIFT_REDUCTION: "Drift reduction",
+  ELIGIBLE_INSTRUMENT_SELECTION: "Eligible instrument selection",
+  EXTERNAL_ELIGIBLE_HEDGE_INSTRUMENTS_FAIL_CLOSED:
+    "Eligible hedge instrument evidence unavailable",
+  EXTERNAL_HEDGE_POLICY: "External hedge policy",
+  EXTERNAL_HEDGE_POLICY_FAIL_CLOSED: "External hedge policy unavailable",
+  EXTERNAL_OMS_ORDER_EXECUTION_ACKNOWLEDGEMENT:
+    "External order acknowledgement",
+  EXTERNAL_ORDER_EXECUTION_ACKNOWLEDGEMENT_FAIL_CLOSED:
+    "Order acknowledgement evidence unavailable",
+  HEDGE_POLICY_APPROVAL: "Hedge policy approval",
+  OMS_ACKNOWLEDGEMENT: "Order-system acknowledgement",
+  ORDER_GENERATION: "Order generation",
   PERFORMANCE_WORKSPACE_SUMMARY_UNAVAILABLE: "Performance summary unavailable",
   PRICE_STALE: "Stale price",
+  PRODUCT_RECOMMENDATION: "Product recommendation",
   SIMULATE_REBALANCE: "Simulate rebalance",
   SOURCE_READY: "Ready",
   SOURCE_RISK_HEALTH_ATTENTION: "Risk posture requires review",
   SUSTAINABILITY_REVIEW_REQUIRED: "Sustainability review required",
   TAX_LOT_SOURCE_PARTIAL: "Tax-lot data is incomplete",
+  TREASURY_INSTRUCTION: "Treasury instruction",
 });
 
 export function projectBusinessState(

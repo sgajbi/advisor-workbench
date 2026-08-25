@@ -1,5 +1,11 @@
 import type { ExternalOrderExecutionAcknowledgementResponse } from "./types";
-import { formatBusinessReason } from "./manage-workspace-view-model";
+import {
+  EXECUTION_EVIDENCE_COPY,
+  executionEvidenceItemLabel,
+  executionEvidenceLineageLabel,
+  executionEvidenceReasonLabel,
+  executionEvidenceStateLabel,
+} from "@/copy/execution-evidence-copy";
 
 export type ExecutionAcknowledgementLineageRow = {
   key: string;
@@ -24,34 +30,75 @@ export function buildExecutionAcknowledgementSupportabilityModel(
   if (!response) {
     return {
       state: "Unavailable",
-      reason: "External OMS acknowledgement evidence has not loaded.",
+      reason: EXECUTION_EVIDENCE_COPY.notLoadedReason,
       acknowledgementCount: "0",
       missingDataFamilies: [],
       blockedCapabilities: [],
       lineageRows: [],
-      evidenceLabel: "ExternalOrderExecutionAcknowledgement v1",
-      dataQualityStatus: "Unknown",
+      evidenceLabel: EXECUTION_EVIDENCE_COPY.evidenceLabel,
+      dataQualityStatus: "Not available",
     };
   }
 
   return {
-    state: formatBusinessReason(response.supportability.state),
-    reason: formatBusinessReason(response.supportability.reason),
+    state: executionEvidenceStateLabel(response.supportability.state),
+    reason: executionEvidenceReasonLabel(response.supportability.reason),
     acknowledgementCount: String(response.supportability.acknowledgement_count),
-    missingDataFamilies: response.supportability.missing_data_families.map(formatBusinessReason),
-    blockedCapabilities: response.supportability.blocked_capabilities.map(formatBusinessReason),
-    lineageRows: buildLineageRows(response.lineage),
-    evidenceLabel: `${response.product_name} ${response.product_version}`,
-    dataQualityStatus: formatBusinessReason(response.data_quality_status ?? "UNKNOWN"),
+    missingDataFamilies: response.supportability.missing_data_families.map(
+      executionEvidenceItemLabel,
+    ),
+    blockedCapabilities: response.supportability.blocked_capabilities.map(
+      executionEvidenceItemLabel,
+    ),
+    lineageRows: buildSupportRows(response),
+    evidenceLabel: EXECUTION_EVIDENCE_COPY.evidenceLabel,
+    dataQualityStatus: executionEvidenceStateLabel(
+      response.data_quality_status ?? "UNKNOWN",
+    ),
   };
 }
 
-function buildLineageRows(lineage: Record<string, unknown>): ExecutionAcknowledgementLineageRow[] {
-  return Object.entries(lineage)
-    .filter(([, value]) => value !== null && value !== undefined && String(value).trim().length > 0)
+function buildSupportRows(
+  response: ExternalOrderExecutionAcknowledgementResponse,
+): ExecutionAcknowledgementLineageRow[] {
+  const contractRow = {
+    key: "evidence_contract",
+    label: "Evidence contract",
+    value: `${response.product_name} ${response.product_version}`,
+  };
+  const sourcePostureRows = [
+    {
+      key: "source_reason",
+      label: "Source reason",
+      value: response.supportability.reason,
+    },
+    {
+      key: "source_missing_data_families",
+      label: "Source missing-data families",
+      value:
+        response.supportability.missing_data_families.join(", ") ||
+        "None reported",
+    },
+    {
+      key: "source_blocked_capabilities",
+      label: "Source blocked capabilities",
+      value:
+        response.supportability.blocked_capabilities.join(", ") ||
+        "None reported",
+    },
+  ];
+  const lineageRows = Object.entries(response.lineage)
+    .filter(
+      ([, value]) =>
+        value !== null &&
+        value !== undefined &&
+        String(value).trim().length > 0,
+    )
     .map(([key, value]) => ({
       key,
-      label: formatBusinessReason(key),
+      label: executionEvidenceLineageLabel(key),
       value: String(value),
     }));
+
+  return [contractRow, ...sourcePostureRows, ...lineageRows];
 }

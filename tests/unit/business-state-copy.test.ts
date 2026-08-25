@@ -25,6 +25,7 @@ describe("business state copy", () => {
     expect(formatBusinessReason("ALLOCATION_DRIFT_NOT_ASSESSED")).toBe(
       "Allocation drift not assessed",
     );
+    expect(formatBusinessReason("DRIFT_REDUCTION")).toBe("Drift reduction");
     expect(formatBusinessReason("SIMULATE_REBALANCE")).toBe(
       "Simulate rebalance",
     );

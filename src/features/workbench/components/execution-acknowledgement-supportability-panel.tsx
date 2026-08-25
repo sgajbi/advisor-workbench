@@ -4,8 +4,10 @@ import {
   MetricRow,
   ScreenStatePanel,
   SemanticBadge,
+  SupportDetails,
   Text,
 } from "@/design-system";
+import { EXECUTION_EVIDENCE_COPY } from "@/copy/execution-evidence-copy";
 import type { ExternalOrderExecutionAcknowledgementResponse } from "@/features/workbench/types";
 import { buildExecutionAcknowledgementSupportabilityModel } from "@/features/workbench/execution-acknowledgement-view-model";
 
@@ -27,11 +29,9 @@ export default function ExecutionAcknowledgementSupportabilityPanel({
       <div className="execution-acknowledgement-header">
         <div>
           <Text as="h3" variant="subsectionTitle">
-            Execution Acknowledgement Supportability
+            {EXECUTION_EVIDENCE_COPY.title}
           </Text>
-          <Text variant="secondary">
-            External OMS acknowledgement evidence is displayed as audit posture only.
-          </Text>
+          <Text variant="secondary">{EXECUTION_EVIDENCE_COPY.description}</Text>
         </div>
         <SemanticBadge tone="danger">{model.state}</SemanticBadge>
       </div>
@@ -39,36 +39,39 @@ export default function ExecutionAcknowledgementSupportabilityPanel({
         <ScreenStatePanel
           kind="loading"
           surface="portfolio"
-          title="Checking external OMS evidence"
-          body="Loading source-owned acknowledgement supportability."
+          title={EXECUTION_EVIDENCE_COPY.loadingTitle}
+          body={EXECUTION_EVIDENCE_COPY.loadingBody}
         />
       ) : error ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
-          title="External OMS evidence is unavailable"
+          title={EXECUTION_EVIDENCE_COPY.unavailableTitle}
           body={error}
         />
       ) : null}
 
       <div className="execution-acknowledgement-summary">
-        <MetricRow label="Evidence Contract" value={model.evidenceLabel} />
+        <MetricRow label="Evidence" value={model.evidenceLabel} />
         <MetricRow label="Posture" value={model.state} />
-        <MetricRow label="Acknowledgements" value={model.acknowledgementCount} />
-        <MetricRow label="Data Quality" value={model.dataQualityStatus} />
+        <MetricRow
+          label="Acknowledgements"
+          value={model.acknowledgementCount}
+        />
+        <MetricRow label="Data quality" value={model.dataQualityStatus} />
       </div>
 
       <div className="execution-acknowledgement-message">
         <Text variant="secondary">
-          {model.reason}. Workbench does not treat this portfolio as OMS-acknowledged, filled,
-          settled, or execution-ready.
+          {model.reason}. Workbench does not treat this portfolio as
+          OMS-acknowledged, filled, settled, or execution-ready.
         </Text>
       </div>
 
       <div className="execution-acknowledgement-evidence-grid">
         <div>
           <Text as="h3" variant="subsectionTitle">
-            Blocked Capabilities
+            Blocked capabilities
           </Text>
           <div className="execution-acknowledgement-badge-list">
             {model.blockedCapabilities.length > 0 ? (
@@ -85,7 +88,7 @@ export default function ExecutionAcknowledgementSupportabilityPanel({
 
         <div>
           <Text as="h3" variant="subsectionTitle">
-            Missing Evidence
+            Missing evidence
           </Text>
           <div className="execution-acknowledgement-badge-list">
             {model.missingDataFamilies.length > 0 ? (
@@ -102,19 +105,21 @@ export default function ExecutionAcknowledgementSupportabilityPanel({
       </div>
 
       {model.lineageRows.length > 0 ? (
-        <div className="execution-acknowledgement-lineage">
-          <Text as="h3" variant="subsectionTitle">
-            Audit Lineage
-          </Text>
-          <dl>
-            {model.lineageRows.map((row) => (
-              <div key={row.key}>
-                <dt>{row.label}</dt>
-                <dd>{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        <SupportDetails context={EXECUTION_EVIDENCE_COPY.supportContext}>
+          <div className="execution-acknowledgement-lineage">
+            <Text as="h3" variant="subsectionTitle">
+              Source evidence
+            </Text>
+            <dl>
+              {model.lineageRows.map((row) => (
+                <div key={row.key}>
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </SupportDetails>
       ) : null}
     </section>
   );

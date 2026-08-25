@@ -8,6 +8,7 @@ import {
   outcomeReviewAvailabilityClass,
   outcomeReviewAvailabilityLabel,
   outcomeReviewBadgeTone,
+  outcomeReviewDimensionLabel,
   outcomeReviewSourceEvidenceStatus,
   shouldShowOutcomeReviewStatePanel,
 } from "../../src/features/workbench/outcome-review-panel-helpers";
@@ -58,6 +59,12 @@ describe("outcome review panel helpers", () => {
     expect(outcomeReviewBadgeTone("BLOCKED")).toBe("danger");
     expect(outcomeReviewBadgeTone("LIMIT_BREACH")).toBe("danger");
     expect(outcomeReviewBadgeTone("SOURCE_READY")).toBe("default");
+  });
+
+  it("maps outcome dimensions as business concepts rather than states", () => {
+    expect(outcomeReviewDimensionLabel("DRIFT_REDUCTION")).toBe(
+      "Drift reduction",
+    );
   });
 
   it("builds deterministic state-panel copy", () => {

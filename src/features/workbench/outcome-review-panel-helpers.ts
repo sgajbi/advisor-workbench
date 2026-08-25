@@ -146,6 +146,10 @@ export function outcomeReviewDimensionStateLabel(state: string): string {
   return knownLabels[state.toUpperCase()] ?? formatBusinessReason(state);
 }
 
+export function outcomeReviewDimensionLabel(dimension: string): string {
+  return formatBusinessReason(dimension);
+}
+
 export function outcomeReviewRequiredRecordLabel(value: string): string {
   if (/^ClientCommunicationRecord(?::v\d+)?$/i.test(value)) {
     return "Client communication record";
