@@ -128,6 +128,29 @@ describe("product-copy governance", () => {
     );
   });
 
+  it("resolves statically inspectable object property copy rendered through JSX", () => {
+    const findings = scan(`
+      const copy = {
+        panelTitle: "Gateway posture",
+        panelBody: "HTTP status unavailable",
+      } as const;
+      export function Example() {
+        return <Panel title={copy.panelTitle} body={copy["panelBody"]} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+    expect(findings.map((finding) => finding.context)).toEqual([
+      "JSX title",
+      "JSX title",
+      "JSX body",
+    ]);
+  });
+
   it("resolves chains of local constants without evaluating executable code", () => {
     const findings = scan(`
       const technicalCopy = "HTTP status unavailable";
@@ -289,7 +312,7 @@ describe("product-copy governance", () => {
   it(
     "keeps the checked-in productive-copy inventory exact",
     () => {
-      expect(scanProductCopyRepository().length).toBe(282);
+      expect(scanProductCopyRepository().length).toBe(281);
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
   );
