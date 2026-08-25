@@ -31,11 +31,15 @@ export type ProposalNarrativeWorkflowItem = {
 };
 
 export function buildProposalNarrativePostureModel({
+  proposalId,
+  versionNo,
   review,
   report,
   summary,
   events,
 }: {
+  proposalId: string;
+  versionNo: number | null;
   review?: ProposalNarrativeReviewData | null;
   report?: ProposalReportRequestData | null;
   summary?: ProposalDeliverySummaryData | null;
@@ -47,28 +51,59 @@ export function buildProposalNarrativePostureModel({
   const summaryReporting = summary?.reporting ?? null;
   const reportingSummary = summary?.reporting_summary ?? null;
   const latestEvent = events?.latest_event ?? events?.events?.[0] ?? null;
-  const reviewedNarrativeHash = reviewRecord?.source_narrative_hash ?? null;
-  const reviewedVersionNo = reviewRecord?.proposal_version_no ?? null;
-  const reportMatchesReviewedNarrative = narrativeIdentityMatches(
-    reviewedNarrativeHash,
-    reportPackage?.source_narrative_hash,
-    reviewedVersionNo,
-    report?.explanation?.related_version_no ?? reportPackage?.related_version_no,
+  const reviewMatchesActiveVersion = Boolean(
+    versionNo !== null &&
+      reviewRecord?.proposal_id === proposalId &&
+      reviewRecord.proposal_version_no === versionNo,
   );
-  const summaryMatchesReviewedNarrative = narrativeIdentityMatches(
-    reviewedNarrativeHash,
-    summaryPackage?.source_narrative_hash ??
-      reportingSummary?.source_narrative_hash,
-    reviewedVersionNo,
-    summaryReporting?.related_version_no ??
-      summaryPackage?.related_version_no ??
-      reportingSummary?.related_version_no,
-  );
+  const reviewedNarrativeHash = reviewMatchesActiveVersion
+    ? (reviewRecord?.source_narrative_hash ?? null)
+    : null;
+  const reviewedVersionNo = reviewMatchesActiveVersion
+    ? (reviewRecord?.proposal_version_no ?? null)
+    : null;
+  const reviewedNarrativeIdentity = resolveNarrativeIdentity({
+    hashes: [reviewedNarrativeHash],
+    versions: [reviewedVersionNo],
+  });
+  const reportMatchesReviewedNarrative =
+    narrativeIdentitiesMatch(
+      reviewedNarrativeIdentity,
+      resolveNarrativeIdentity({
+        hashes: [reportPackage?.source_narrative_hash],
+        versions: [
+          report?.explanation?.related_version_no,
+          reportPackage?.related_version_no,
+        ],
+      }),
+    ) &&
+    allPresentBooleanMarkersAreTrue([
+      report?.explanation?.include_reviewed_narrative,
+    ]);
+  const summaryMatchesReviewedNarrative =
+    narrativeIdentitiesMatch(
+      reviewedNarrativeIdentity,
+      resolveNarrativeIdentity({
+        hashes: [
+          summaryPackage?.source_narrative_hash,
+          reportingSummary?.source_narrative_hash,
+        ],
+        versions: [
+          summaryReporting?.related_version_no,
+          summaryPackage?.related_version_no,
+          reportingSummary?.related_version_no,
+        ],
+      }),
+    ) &&
+    allPresentBooleanMarkersAreTrue([
+      summaryReporting?.include_reviewed_narrative,
+      reportingSummary?.include_reviewed_narrative,
+    ]);
 
   const sourceNarrativeHash = reviewedNarrativeHash;
 
   const reviewState = normalizeLabel(
-    reviewRecord?.review_state,
+    reviewMatchesActiveVersion ? reviewRecord?.review_state : null,
     "Not Reviewed",
   );
   const reportPackageState = normalizeLabel(
@@ -87,10 +122,12 @@ export function buildProposalNarrativePostureModel({
       (reportMatchesReviewedNarrative ? report?.status : null),
     "No Report",
   );
-  const reviewConfirmed = isAdvisorReviewConfirmed(
-    reviewRecord?.review_state,
-    reviewRecord?.source_narrative_hash ?? null,
-  );
+  const reviewConfirmed =
+    reviewMatchesActiveVersion &&
+    isAdvisorReviewConfirmed(
+      reviewRecord?.review_state,
+      reviewRecord?.source_narrative_hash ?? null,
+    );
   const discussionPackRequested = reportPackageState !== "Not Requested";
   const nextAction = projectNarrativeNextAction({
     discussionPackRequested,
@@ -175,22 +212,59 @@ function isAdvisorReviewConfirmed(
   }
 }
 
-function narrativeIdentityMatches(
-  reviewedNarrativeHash: string | null | undefined,
-  packageNarrativeHash: string | null | undefined,
-  reviewedVersionNo: number | null | undefined,
-  packageVersionNo: number | null | undefined,
+type NarrativeIdentity = {
+  hash: string;
+  versionNo: number;
+};
+
+function resolveNarrativeIdentity({
+  hashes,
+  versions,
+}: {
+  hashes: readonly (string | null | undefined)[];
+  versions: readonly (number | null | undefined)[];
+}): NarrativeIdentity | null {
+  const presentHashes = hashes.filter(
+    (hash): hash is string => typeof hash === "string" && hash.length > 0,
+  );
+  const presentVersions = versions.filter(
+    (version): version is number =>
+      typeof version === "number" &&
+      Number.isSafeInteger(version) &&
+      version > 0,
+  );
+  const hash = presentHashes[0];
+  const versionNo = presentVersions[0];
+  if (
+    hash === undefined ||
+    versionNo === undefined ||
+    !presentHashes.every((candidate) => candidate === hash) ||
+    !presentVersions.every((candidate) => candidate === versionNo)
+  ) {
+    return null;
+  }
+  return { hash, versionNo };
+}
+
+function narrativeIdentitiesMatch(
+  expected: NarrativeIdentity | null,
+  candidate: NarrativeIdentity | null,
 ): boolean {
   return Boolean(
-    reviewedNarrativeHash &&
-      packageNarrativeHash &&
-      reviewedNarrativeHash === packageNarrativeHash &&
-      reviewedVersionNo !== null &&
-      reviewedVersionNo !== undefined &&
-      packageVersionNo !== null &&
-      packageVersionNo !== undefined &&
-      reviewedVersionNo === packageVersionNo,
+    expected &&
+      candidate &&
+      expected.hash === candidate.hash &&
+      expected.versionNo === candidate.versionNo,
   );
+}
+
+function allPresentBooleanMarkersAreTrue(
+  markers: readonly (boolean | null | undefined)[],
+): boolean {
+  const presentMarkers = markers.filter(
+    (marker): marker is boolean => typeof marker === "boolean",
+  );
+  return presentMarkers.length > 0 && presentMarkers.every(Boolean);
 }
 
 function projectNarrativeNextAction({
@@ -231,9 +305,13 @@ function projectNarrativeNextAction({
 }
 
 export function confirmNarrativeReviewRefresh({
+  proposalId,
+  versionNo,
   review,
   refreshedReview,
 }: {
+  proposalId: string;
+  versionNo: number;
   review: ProposalNarrativeReviewData;
   refreshedReview: ProposalNarrativeReviewData | undefined;
 }): void {
@@ -242,10 +320,16 @@ export function confirmNarrativeReviewRefresh({
   if (
     !actionRecord?.review_id ||
     actionRecord.review_id !== refreshedRecord?.review_id ||
+    actionRecord.proposal_id !== proposalId ||
+    refreshedRecord.proposal_id !== proposalId ||
+    actionRecord.proposal_version_no !== versionNo ||
+    refreshedRecord.proposal_version_no !== versionNo ||
     !actionRecord.source_narrative_hash ||
     actionRecord.source_narrative_hash !== refreshedRecord?.source_narrative_hash ||
     actionRecord.review_state !== refreshedRecord?.review_state ||
     actionRecord.reviewed_by !== refreshedRecord?.reviewed_by ||
+    !actionRecord.reviewed_at ||
+    actionRecord.reviewed_at !== refreshedRecord?.reviewed_at ||
     !refreshedRecord.reviewed_at ||
     !isAdvisorReviewConfirmed(
       refreshedRecord.review_state,
@@ -259,24 +343,34 @@ export function confirmNarrativeReviewRefresh({
 }
 
 export function confirmDiscussionPackRefresh({
+  versionNo,
   report,
   summary,
 }: {
+  versionNo: number;
   report: ProposalReportRequestData;
   summary: ProposalDeliverySummaryData | undefined;
 }): void {
-  const actionNarrativeHash =
-    report.explanation?.proposal_narrative_package?.source_narrative_hash;
-  const actionVersionNo =
-    report.explanation?.related_version_no ??
-    report.explanation?.proposal_narrative_package?.related_version_no;
-  const refreshedNarrativeHash =
-    summary?.reporting?.proposal_narrative_package?.source_narrative_hash ??
-    summary?.reporting_summary?.source_narrative_hash;
-  const refreshedVersionNo =
-    summary?.reporting?.related_version_no ??
-    summary?.reporting?.proposal_narrative_package?.related_version_no ??
-    summary?.reporting_summary?.related_version_no;
+  const actionIdentity = resolveNarrativeIdentity({
+    hashes: [
+      report.explanation?.proposal_narrative_package?.source_narrative_hash,
+    ],
+    versions: [
+      report.explanation?.related_version_no,
+      report.explanation?.proposal_narrative_package?.related_version_no,
+    ],
+  });
+  const refreshedIdentity = resolveNarrativeIdentity({
+    hashes: [
+      summary?.reporting?.proposal_narrative_package?.source_narrative_hash,
+      summary?.reporting_summary?.source_narrative_hash,
+    ],
+    versions: [
+      summary?.reporting?.related_version_no,
+      summary?.reporting?.proposal_narrative_package?.related_version_no,
+      summary?.reporting_summary?.related_version_no,
+    ],
+  });
   const refreshedPackageState = normalizeLabel(
     summary?.reporting?.proposal_narrative_package?.package_status,
     summary?.reporting?.include_reviewed_narrative ||
@@ -284,13 +378,23 @@ export function confirmDiscussionPackRefresh({
       ? "Requested"
       : "Not Requested",
   );
+  const actionIncludesReviewedNarrative = allPresentBooleanMarkersAreTrue([
+    report.explanation?.include_reviewed_narrative,
+  ]);
+  const refreshedIncludesReviewedNarrative = allPresentBooleanMarkersAreTrue([
+    summary?.reporting?.include_reviewed_narrative,
+    summary?.reporting_summary?.include_reviewed_narrative,
+  ]);
+  const actionRequestId = report.report_request_id?.trim();
+  const refreshedRequestId = summary?.reporting?.report_request_id?.trim();
   if (
-    !narrativeIdentityMatches(
-      actionNarrativeHash,
-      refreshedNarrativeHash,
-      actionVersionNo,
-      refreshedVersionNo,
-    ) ||
+    !narrativeIdentitiesMatch(actionIdentity, refreshedIdentity) ||
+    actionIdentity?.versionNo !== versionNo ||
+    refreshedIdentity?.versionNo !== versionNo ||
+    !actionIncludesReviewedNarrative ||
+    !refreshedIncludesReviewedNarrative ||
+    !actionRequestId ||
+    actionRequestId !== refreshedRequestId ||
     refreshedPackageState === "Not Requested"
   ) {
     throw new Error(
