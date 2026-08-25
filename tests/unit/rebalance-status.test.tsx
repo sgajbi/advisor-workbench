@@ -57,7 +57,7 @@ describe("RebalanceStatus", () => {
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("3");
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("Decisions");
     expect(scope.getByText("Latest assessment: 27 Mar 2026, 12:00 UTC")).toBeInTheDocument();
-    expect(scope.getByText("Action Register Current")).toBeInTheDocument();
+    expect(scope.getByText("Action register current")).toBeInTheDocument();
     const dashboard = scope.getByLabelText("Rebalance review activity");
     expect(dashboard).toHaveTextContent("2");
     expect(dashboard).toHaveTextContent("Recent runs");
@@ -65,10 +65,10 @@ describe("RebalanceStatus", () => {
     expect(dashboard).toHaveTextContent("Run issues");
     expect(dashboard).toHaveTextContent("Review 1");
     expect(dashboard).toHaveTextContent("27 Mar 2026, 12:00 UTC");
-    expect(dashboard).toHaveTextContent("PM Review Required");
+    expect(dashboard).toHaveTextContent("Portfolio manager review required");
     expect(dashboard).toHaveTextContent("Review 2");
     expect(dashboard).toHaveTextContent("26 Mar 2026, 12:00 UTC");
-    expect(dashboard).toHaveTextContent("Source Readiness Blocked");
+    expect(dashboard).toHaveTextContent("Data readiness blocked");
   });
 
   it("fails closed when rebalance audit instants do not carry source timezone evidence", () => {
@@ -119,11 +119,11 @@ describe("RebalanceStatus", () => {
     );
 
     const scope = within(getPanel(container));
-    expect(scope.getByText("Pending Review")).toBeInTheDocument();
-    expect(scope.getByText("Action Required")).toBeInTheDocument();
+    expect(scope.getByText("Pending review")).toBeInTheDocument();
+    expect(scope.getByText("Action required")).toBeInTheDocument();
     expect(scope.getByText("Stale")).toBeInTheDocument();
     expect(scope.getByText("Latest assessment: Not reported")).toBeInTheDocument();
-    expect(scope.getByText("Source Readiness Incomplete")).toBeInTheDocument();
+    expect(scope.getByText("Data readiness incomplete")).toBeInTheDocument();
     expect(scope.getByLabelText("Rebalance review activity")).toHaveTextContent(
       "No recent rebalance review activity is available for this portfolio."
     );
@@ -141,7 +141,7 @@ describe("RebalanceStatus", () => {
     );
 
     const scope = within(getPanel(container));
-    expect(scope.getAllByText("Not available").length).toBeGreaterThanOrEqual(2);
+    expect(scope.getAllByText("Review required").length).toBeGreaterThanOrEqual(2);
     expect(scope.getByLabelText("Rebalance decision evidence")).toHaveTextContent("N/A");
     expect(scope.getByLabelText("Rebalance decision evidence")).not.toHaveTextContent("0");
     expect(

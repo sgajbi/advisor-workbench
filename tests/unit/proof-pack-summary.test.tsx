@@ -69,7 +69,7 @@ describe("ProofPackSummary", () => {
     expect(screen.getByText("Approval Readiness")).toBeInTheDocument();
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
     expect(screen.getByText("Mandate Coverage")).toBeInTheDocument();
-    expect(screen.getByText("Proof Pack Ready")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack ready")).toBeInTheDocument();
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();

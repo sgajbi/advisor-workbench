@@ -327,7 +327,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     );
     expect(screen.queryByText("Discretionary Balanced")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Filter" })).not.toBeInTheDocument();
-    expect(screen.getAllByText("Simulation ready").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ready to simulate").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign administration" })).toBeInTheDocument();
@@ -553,9 +553,11 @@ describe("DpmWaveCommandCenterPanel", () => {
 
     await waitFor(() => expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
-    expect((await screen.findAllByText("Campaign Definition Actor Not Entitled")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Permission required")).length).toBeGreaterThan(0);
     expect(screen.getByText("Blocked")).toBeInTheDocument();
-    expect(await screen.findByText("Preview Wave, Create Wave")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Preview rebalance wave, Create rebalance wave"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Launch rebalance wave" })).toBeDisabled();
     expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
@@ -728,7 +730,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       name: "Operations handoff summary",
     });
     expect(operationsHeading).toHaveFocus();
-    expect(screen.getAllByText("Awaiting Review").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Awaiting review").length).toBeGreaterThanOrEqual(2);
   });
 
   it("never carries decision support from one rebalance wave into another", async () => {

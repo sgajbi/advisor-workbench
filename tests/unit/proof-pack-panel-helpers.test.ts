@@ -100,6 +100,6 @@ describe("proof pack panel helpers", () => {
   it("summarizes AI workflow-pack request status from source-owned review state", () => {
     expect(
       readProofPackAiWorkflowPackStatus(buildDpmAiWorkflowExecution("proof-pack-memo"))
-    ).toBe("Awaiting Review.");
+    ).toBe("Awaiting review.");
   });
 });

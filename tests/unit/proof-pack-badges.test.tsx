@@ -10,13 +10,13 @@ describe("proof-pack badges", () => {
   it("renders proof-pack states with business wording", () => {
     render(<ProofPackStateBadge state="PENDING_REVIEW" />);
 
-    expect(screen.getByText("Pending Review")).toBeInTheDocument();
+    expect(screen.getByText("Pending review")).toBeInTheDocument();
   });
 
   it("renders proof-pack reason codes as advisor-readable reasons", () => {
     render(<ProofPackStateBadge state="PROOF_PACK_READY" reason />);
 
-    expect(screen.getByText("Proof Pack Ready")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack ready")).toBeInTheDocument();
   });
 
   it("renders evidence availability from source-backed status labels", () => {

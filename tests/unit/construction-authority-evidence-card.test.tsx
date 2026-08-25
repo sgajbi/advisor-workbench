@@ -120,16 +120,16 @@ describe("ConstructionAuthorityEvidenceCard", () => {
         "Source id: sha256:external-order-execution-acknowledgement",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("External Hedge Policy")).toBeInTheDocument();
+    expect(screen.getByText("External hedge policy")).toBeInTheDocument();
     expect(
-      screen.getByText("External OMS Order Execution Acknowledgement"),
+      screen.getByText("External order acknowledgement"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Hedge Policy Approval")).toBeInTheDocument();
-    expect(screen.getByText("Order Generation")).toBeInTheDocument();
-    expect(screen.getByText("OMS Acknowledgement")).toBeInTheDocument();
-    expect(screen.getByText("External Hedge Policy Fail Closed")).toBeInTheDocument();
+    expect(screen.getByText("Hedge policy approval")).toBeInTheDocument();
+    expect(screen.getByText("Order generation")).toBeInTheDocument();
+    expect(screen.getByText("Order-system acknowledgement")).toBeInTheDocument();
+    expect(screen.getByText("External hedge policy unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText("External Order Execution Acknowledgement Fail Closed"),
+      screen.getByText("Order acknowledgement evidence unavailable"),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByText("Generate Order")).not.toBeInTheDocument();

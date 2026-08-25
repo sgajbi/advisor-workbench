@@ -41,7 +41,7 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(screen.getByText("Support Snapshot")).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Ready for advisor review")).toBeInTheDocument();
-    expect(screen.getByText("Outcome Review Ready")).toBeInTheDocument();
+    expect(screen.getByText("Outcome review ready")).toBeInTheDocument();
     expect(screen.getByText("Evidence pack")).toBeInTheDocument();
     expect(screen.getByText("Outcome review")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
@@ -96,7 +96,7 @@ describe("PortfolioMemorySelectedEventDetail", () => {
     expect(
       screen.getByText("A bounded PM operating quality supervisory review action is available.")
     ).toBeInTheDocument();
-    expect(screen.getByText("PM Quality Review Action Ready")).toBeInTheDocument();
+    expect(screen.getByText("Supervisory review ready")).toBeInTheDocument();
     expect(screen.queryByText(/raw rationale/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/raw score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/pm ranking/i)).not.toBeInTheDocument();

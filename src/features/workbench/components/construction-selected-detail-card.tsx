@@ -1,6 +1,9 @@
 "use client";
 
-import { businessStateLabel } from "@/copy/business-state-copy";
+import {
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/copy/business-state-copy";
 import {
   ActionButton,
   ScreenStatePanel,
@@ -116,7 +119,7 @@ export default function ConstructionSelectedDetailCard({
             <div className="construction-constraint-list">
               {model.constraints.map((constraint) => (
                 <div key={constraint.key}>
-                  <strong>{businessStateLabel(constraint.name)}</strong>
+                  <strong>{formatBusinessReason(constraint.name)}</strong>
                   <SemanticBadge tone={constructionBadgeTone(constraint.state)}>
                     {businessStateLabel(constraint.state)}
                   </SemanticBadge>

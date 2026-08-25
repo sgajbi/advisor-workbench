@@ -189,7 +189,7 @@ describe("DPM wave command-center panel helpers", () => {
         security: "Proposal item 2",
         action: "Review",
         estimatedValue: "Pending",
-        reason: "Mandate Attention Required",
+        reason: "Mandate review required",
         mandateImpact: "Review against mandate",
         status: "PENDING",
       }),

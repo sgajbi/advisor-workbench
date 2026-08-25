@@ -121,7 +121,7 @@ describe("PmOperatingQualityReviewActionsCard", () => {
     expect(screen.getAllByText("PMQ-RA-001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Score Run / pmq_run_001").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Supervisory Review").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Pending Review").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Pending review").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Bounded supervisory review of source-owned PM quality posture.")
     ).toBeInTheDocument();

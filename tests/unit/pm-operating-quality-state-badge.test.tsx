@@ -7,7 +7,7 @@ describe("PmOperatingQualityStateBadge", () => {
   it("renders private-banking state wording from the shared Manage state vocabulary", () => {
     render(<PmOperatingQualityStateBadge state="PENDING_REVIEW" />);
 
-    expect(screen.getByText("Pending Review")).toBeInTheDocument();
+    expect(screen.getByText("Pending review")).toBeInTheDocument();
   });
 
   it("supports bounded empty-detail labels without changing the upstream state tone", () => {
