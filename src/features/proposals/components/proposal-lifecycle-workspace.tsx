@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
 import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
+import { PROPOSAL_IMPLEMENTATION_COPY } from "@/copy/proposal-implementation-copy";
 import {
   ScreenStatePanel,
   SectionBlock,
@@ -1051,9 +1052,9 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Suitability decision desk"
             : mode === "discussion-pack"
-              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle
-              : mode === "implementation"
-                ? "Implementation follow-up desk"
+               ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle
+               : mode === "implementation"
+                 ? PROPOSAL_IMPLEMENTATION_COPY.workspaceTitle
                 : model.title
       }
       subtitle={
@@ -1062,9 +1063,9 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Select a suitability review, confirm its client and product constraints, and resolve the next evidence requirement."
             : mode === "discussion-pack"
-              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle
-              : mode === "implementation"
-                ? "Select a proposal to confirm handoff evidence, resolve exceptions, and continue to the governed record."
+               ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle
+               : mode === "implementation"
+                 ? PROPOSAL_IMPLEMENTATION_COPY.workspaceSubtitle
                 : model.subtitle
       }
       actions={

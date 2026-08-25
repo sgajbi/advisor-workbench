@@ -150,7 +150,7 @@ export type ProposalImplementationStatusEnvelope = {
 
 type StatusSemantics = {
   family: ProposalImplementationStatusFamily;
-  nextAction: ProposalImplementationNextAction;
+  nextActionCode: ProposalImplementationNextAction;
   attentionRequired: boolean;
   terminal: boolean;
   reasonCode: string;
@@ -163,7 +163,7 @@ const STATUS_SEMANTICS: Record<
 > = {
   NOT_REQUESTED: {
     family: "not_started",
-    nextAction: "REQUEST_HANDOFF",
+    nextActionCode: "REQUEST_HANDOFF",
     attentionRequired: false,
     terminal: false,
     reasonCode: "implementation_handoff_not_requested",
@@ -171,7 +171,7 @@ const STATUS_SEMANTICS: Record<
   },
   REQUESTED: {
     family: "pending",
-    nextAction: "MONITOR_HANDOFF",
+    nextActionCode: "MONITOR_HANDOFF",
     attentionRequired: false,
     terminal: false,
     reasonCode: "implementation_handoff_requested",
@@ -179,7 +179,7 @@ const STATUS_SEMANTICS: Record<
   },
   ACCEPTED: {
     family: "pending",
-    nextAction: "MONITOR_IMPLEMENTATION",
+    nextActionCode: "MONITOR_IMPLEMENTATION",
     attentionRequired: false,
     terminal: false,
     reasonCode: "implementation_handoff_accepted",
@@ -187,7 +187,7 @@ const STATUS_SEMANTICS: Record<
   },
   PARTIALLY_EXECUTED: {
     family: "attention",
-    nextAction: "REVIEW_PARTIAL_EXECUTION",
+    nextActionCode: "REVIEW_PARTIAL_EXECUTION",
     attentionRequired: true,
     terminal: false,
     reasonCode: "implementation_partially_executed",
@@ -195,7 +195,7 @@ const STATUS_SEMANTICS: Record<
   },
   EXECUTED: {
     family: "completed",
-    nextAction: "NO_ACTION",
+    nextActionCode: "NO_ACTION",
     attentionRequired: false,
     terminal: true,
     reasonCode: "implementation_executed",
@@ -203,7 +203,7 @@ const STATUS_SEMANTICS: Record<
   },
   REJECTED: {
     family: "attention",
-    nextAction: "INVESTIGATE_REJECTION",
+    nextActionCode: "INVESTIGATE_REJECTION",
     attentionRequired: true,
     terminal: true,
     reasonCode: "implementation_rejected",
@@ -211,7 +211,7 @@ const STATUS_SEMANTICS: Record<
   },
   CANCELLED: {
     family: "attention",
-    nextAction: "REVIEW_CANCELLATION",
+    nextActionCode: "REVIEW_CANCELLATION",
     attentionRequired: true,
     terminal: true,
     reasonCode: "implementation_cancelled",
@@ -219,7 +219,7 @@ const STATUS_SEMANTICS: Record<
   },
   EXPIRED: {
     family: "attention",
-    nextAction: "REVALIDATE_HANDOFF",
+    nextActionCode: "REVALIDATE_HANDOFF",
     attentionRequired: true,
     terminal: true,
     reasonCode: "implementation_handoff_expired",
@@ -468,7 +468,7 @@ function validateSemantics(data: ProposalImplementationStatusData): void {
   const semantics = STATUS_SEMANTICS[data.handoff_status];
   if (
     data.status_family !== semantics.family ||
-    data.next_action !== semantics.nextAction ||
+    data.next_action !== semantics.nextActionCode ||
     data.attention_required !== semantics.attentionRequired ||
     data.terminal !== semantics.terminal
   ) {

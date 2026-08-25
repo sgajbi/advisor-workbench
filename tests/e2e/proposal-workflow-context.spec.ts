@@ -869,7 +869,7 @@ test("presents source-backed implementation handoff evidence without execution o
     name: "Implementation follow-up proposals",
   });
   const selectedEvidence = page.getByRole("region", {
-    name: "Selected proposal implementation status",
+    name: "Selected proposal implementation review",
   });
   const selectedFacts = selectedEvidence.locator("dl").first();
   await expect(workspace).toBeVisible();
@@ -882,27 +882,27 @@ test("presents source-backed implementation handoff evidence without execution o
   await expect(
     selectedEvidence.getByText("Current version · Version 5"),
   ).toBeVisible();
-  await expect(
-    selectedEvidence.getByText(
-      "Advisory implementation handoff through Gateway",
-    ),
-  ).toBeVisible();
+  await expect(selectedEvidence).not.toContainText("Gateway");
   expect(requestedProposalIds).toEqual(["PRP-READY-001"]);
 
-  await selectedEvidence
-    .getByText("Source event and evidence boundary")
-    .click();
+  const supportDetails = selectedEvidence.locator("details", {
+    hasText: "Implementation support details",
+  });
+  await expect(supportDetails).not.toHaveAttribute("open", "");
+  await selectedEvidence.getByText("Implementation support details").click();
+  await expect(supportDetails).toHaveAttribute("open", "");
   await expect(
     selectedEvidence.getByText(
-      /Order, fill, allocation, settlement, custody-booking, and accounting detail are not supported/,
+      /advisory implementation handoff only.*settlement/s,
     ),
   ).toBeVisible();
+  await expect(selectedEvidence.getByText("lotus-advise")).toBeVisible();
   await expect(
     selectedEvidence.getByText("corr-implementation-1"),
   ).toBeVisible();
 
   const refresh = selectedEvidence.getByRole("button", {
-    name: "Refresh implementation evidence",
+    name: "Refresh implementation status",
   });
   await refresh.focus();
   await refresh.click();
@@ -911,7 +911,7 @@ test("presents source-backed implementation handoff evidence without execution o
   );
   await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
   await expect(refreshStatus).toContainText(
-    "Selected proposal handoff confirmed",
+    "Current handoff available",
   );
   await expect(refresh).toBeFocused();
   expect(requestedProposalIds).toEqual(["PRP-READY-001", "PRP-READY-001"]);

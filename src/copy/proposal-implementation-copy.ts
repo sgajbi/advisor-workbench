@@ -14,6 +14,15 @@ type ImplementationStatusCopy = Readonly<{
 }>;
 
 export const PROPOSAL_IMPLEMENTATION_COPY = Object.freeze({
+  workspaceTitle: "Implementation follow-up",
+  workspaceSubtitle:
+    "Select a proposal, review its current handoff, and resolve any material difficulty before returning to the proposal record.",
+  primaryDecision: "What requires implementation follow-up now?",
+  recommendedAction:
+    "Review the selected handoff, version relationship and latest update before taking the next action.",
+  emptyTitle: "No implementation follow-up in this view",
+  emptyBody:
+    "No proposals in the current worklist require handoff, completion or exception follow-up.",
   worklistAriaLabel: "Implementation follow-up proposals",
   defaultNextAction: "Select to review implementation status",
   selectedRegionAriaLabel: "Selected proposal implementation review",
