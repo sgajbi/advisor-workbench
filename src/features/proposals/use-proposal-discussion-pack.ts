@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
+import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
 
 import { getProposalDiscussionPack } from "./api";
 import { buildProposalDiscussionPackModel } from "./proposal-discussion-pack-view-model";
@@ -63,10 +64,10 @@ export function useProposalDiscussionPack({
     const pack = buildProposalDiscussionPackModel(query.data);
     return {
       proposalId: pack.identity.proposalId,
-      title: pack.posture.title,
-      summary: pack.posture.summary,
-      currentPosture: pack.posture.label,
-      nextAction: pack.posture.nextAction,
+      title: pack.status.title,
+      summary: pack.status.summary,
+      currentPosture: pack.status.label,
+      nextAction: pack.status.nextAction,
       blockers: [
         ...pack.controls
           .filter(({ tone }) => tone === "danger" || tone === "warn")
@@ -77,7 +78,7 @@ export function useProposalDiscussionPack({
         { label: "Proposal", value: pack.identity.proposalId },
         { label: "Version", value: pack.identity.version },
         {
-          label: "Advisor controls",
+          label: "Adviser controls",
           value: `${pack.controls.filter(({ tone }) => tone === "success").length} confirmed`,
         },
         {
@@ -87,12 +88,10 @@ export function useProposalDiscussionPack({
             "Not confirmed",
         },
       ],
-      sourceLabel:
-        "Gateway-backed proposal narrative, memo, package, consent, and release evidence",
-      boundaryNote:
-        "Advisor-use evidence, a report package, and client consent do not by themselves authorize client publication, delivery, or communication.",
+      sourceLabel: PROPOSAL_DISCUSSION_PACK_COPY.sourceLabel,
+      boundaryNote: PROPOSAL_DISCUSSION_PACK_COPY.boundaryNote,
       hasEvidenceGap:
-        pack.posture.label === "Evidence incomplete" ||
+        pack.status.label === "Information incomplete" ||
         pack.capabilities.some(
           ({ status }) => status === "Restricted" || status === "Unavailable",
         ),

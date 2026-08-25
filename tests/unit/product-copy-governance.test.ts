@@ -105,7 +105,7 @@ describe("product-copy governance", () => {
   });
 
   it("keeps the checked-in productive-copy inventory exact", () => {
-    expect(scanProductCopyRepository().length).toBe(327);
+    expect(scanProductCopyRepository().length).toBe(322);
   });
 
   it("exits non-zero when the CLI ratchet is exceeded", () => {

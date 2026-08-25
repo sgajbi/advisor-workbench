@@ -24,6 +24,25 @@ export const PROPOSAL_DISCUSSION_PACK_COPY = Object.freeze({
   controlsBoundary: "Internal approval does not permit client release.",
   narrativeLabel: "Meeting preparation",
   narrativeTitle: "Adviser conversation narrative",
+  narrativeEvidenceUnavailable:
+    "Conversation narrative and preparation details are unavailable for this proposal version.",
+  policyEvidenceUnavailable:
+    "Disclosure requirements are unavailable for this proposal version.",
+  generation: Object.freeze({
+    aiAssisted: "AI-assisted draft",
+    deterministic: "Template-prepared narrative",
+    notReported: "Preparation method not reported",
+  }),
+  controlSources: Object.freeze({
+    narrative: "Narrative review record",
+    memo: "Memo review record",
+    reportPackage: "Report production record",
+    consent: "Consent record",
+    release: "Client release control",
+    currentVersion: "Current proposal version",
+  }),
+  releaseSummary:
+    "Internal preparation does not authorise publication, delivery or client contact.",
   supportDetailsLabel: "Support details",
   supportReferenceLabel: "Support reference",
   responseVersionLabel: "Response version",

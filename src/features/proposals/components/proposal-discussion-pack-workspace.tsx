@@ -82,9 +82,9 @@ export default function ProposalDiscussionPackWorkspace({
         selectedPresentation={
           model
             ? {
-                label: model.posture.label,
-                tone: model.posture.tone,
-                nextAction: model.posture.nextAction,
+                label: model.status.label,
+                tone: model.status.tone,
+                nextAction: model.status.nextAction,
               }
             : undefined
         }
@@ -114,10 +114,10 @@ export default function ProposalDiscussionPackWorkspace({
             <Text variant="metadata">{selectedProposal.proposalId}</Text>
           </div>
           <SemanticBadge
-            tone={model?.posture.tone ?? selectedProposal.stageTone}
+            tone={model?.status.tone ?? selectedProposal.stageTone}
             emphasis="strong"
           >
-            {model?.posture.label ?? selectedProposal.stage}
+            {model?.status.label ?? selectedProposal.stage}
           </SemanticBadge>
         </div>
 
@@ -220,7 +220,7 @@ function DiscussionPackDecision({
               as="h4"
               id="discussion-decision-title"
             >
-              {model.posture.title}
+              {model.status.title}
             </Text>
           </div>
           <SourceRefreshAction
@@ -232,7 +232,7 @@ function DiscussionPackDecision({
             onRefresh={onRefresh}
           />
         </div>
-        <p className={styles.summary}>{model.posture.summary}</p>
+        <p className={styles.summary}>{model.status.summary}</p>
         <dl className={styles.identityStrip}>
           <div>
             <dt>Selected version</dt>
@@ -258,7 +258,7 @@ function DiscussionPackDecision({
         </dl>
         <div className={styles.nextAction}>
           <Text variant="microLabel">Next business action</Text>
-          <strong>{model.posture.nextAction}</strong>
+          <strong>{model.status.nextAction}</strong>
         </div>
       </section>
 

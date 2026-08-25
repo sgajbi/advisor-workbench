@@ -3427,10 +3427,10 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Conversation controls still need advisor attention",
+        name: "Resolve the remaining client-discussion controls",
       }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Approved for advisor use")).toHaveLength(2);
+    expect(screen.getAllByText("Approved for adviser use")).toHaveLength(2);
     expect(
       screen.getByText("No client consent is recorded for this version."),
     ).toBeInTheDocument();
