@@ -130,12 +130,13 @@ function ProposalNarrativePosturePanelSession({
         ),
       );
       reviewRecorded = true;
-      const [narrativeResult, summaryResult, eventsResult] = await Promise.all([
-        narrativeReviewQuery.refetch(),
+      const narrativeRefresh = narrativeReviewQuery.refetch();
+      void Promise.allSettled([
         summaryQuery.refetch(),
         eventsQuery.refetch(),
       ]);
-      if (narrativeResult.error || summaryResult.error || eventsResult.error) {
+      const narrativeResult = await narrativeRefresh;
+      if (narrativeResult.error) {
         throw new Error("REFRESH_UNAVAILABLE");
       }
       confirmNarrativeReviewRefresh({
