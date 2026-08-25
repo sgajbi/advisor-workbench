@@ -34,11 +34,6 @@ export type ProposalNarrativeWorkflowItem = {
 };
 
 const DISCUSSION_PACK_REPORT_TYPE = "PORTFOLIO_REVIEW";
-const SUPPORTED_REPORT_STATES = new Set(["REQUESTED", "READY"]);
-const SUPPORTED_PACKAGE_STATES = new Set([
-  "REQUESTED",
-  "INCLUDED_REVIEWED_NARRATIVE",
-]);
 
 export function buildProposalNarrativePostureModel({
   proposalId,
@@ -227,11 +222,11 @@ function isAdvisorReviewConfirmed(
 }
 
 function isSupportedReportState(value: unknown): value is string {
-  return typeof value === "string" && SUPPORTED_REPORT_STATES.has(value);
+  return value === "REQUESTED" || value === "READY";
 }
 
 function isSupportedPackageState(value: unknown): value is string {
-  return typeof value === "string" && SUPPORTED_PACKAGE_STATES.has(value);
+  return value === "REQUESTED" || value === "INCLUDED_REVIEWED_NARRATIVE";
 }
 
 function deliveryEventsMatchActiveProposal({
