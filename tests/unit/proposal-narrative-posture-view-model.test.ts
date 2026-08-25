@@ -359,6 +359,7 @@ describe("proposal narrative posture view model", () => {
     ["count exceeds the returned history", activeEvents({ event_count: 2 })],
     ["negative count", activeEvents({ event_count: -1 })],
     ["fractional count", activeEvents({ event_count: 1.5 })],
+    ["padded event identity", activeSingleEvent({ event_id: " delivery-event-001 " })],
     [
       "reverse chronological history",
       activeEvents({
@@ -580,6 +581,14 @@ describe("proposal narrative posture view model", () => {
     ["stale request", discussionPackRequest(), discussionPackSummary({ report_request_id: "report-old" }), activeEvents()],
     ["padded action request", discussionPackRequest({ report_request_id: " report-001 " }), discussionPackSummary(), activeEvents()],
     ["padded summary request", discussionPackRequest(), discussionPackSummary({ report_request_id: " report-001 " }), activeEvents()],
+    [
+      "consistently padded request identity",
+      discussionPackRequest({ report_request_id: " report-001 " }),
+      discussionPackSummary({ report_request_id: " report-001 " }),
+      activeSingleEvent({
+        reason: { report_request_id: " report-001 " },
+      }),
+    ],
     [
       "stale delivery request identity",
       discussionPackRequest(),
