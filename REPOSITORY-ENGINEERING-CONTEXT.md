@@ -1506,6 +1506,9 @@ Most relevant current governance:
     quality:product-copy` is a semantic TypeScript-AST ratchet: the measured inventory must exactly
     equal its checked-in baseline, every fixing slice must lower both together, and a regression or
     stale higher baseline fails CI. Never raise the baseline or hide productive strings from analysis.
+    Proposal review actions follow the same source-confirmation rule as lifecycle actions: bind to
+    the active source version, admit downstream packaging only after its prerequisite evidence is
+    confirmed, and announce success only when the action response and refreshed owning read agree.
 
 ## Context Maintenance Rule
 

@@ -220,6 +220,13 @@ concurrency group.
   1440/1280/1024/720/519/390 reflow. It generates reviewed desktop and compact images under
   `docs/evidence/issue-798-product-copy/implementation-follow-up/`. Canonical readiness still
   requires fresh source-backed runtime evidence; a screenshot alone is not contract proof.
+- The focused Proposal Detail narrative proof verifies that the current source version is fixed in
+  the review flow, reviewer reference and rationale are required, **Request discussion pack** stays
+  unavailable until refreshed advisor-review evidence agrees, success is withheld after persistence
+  or refresh failure, raw source errors remain hidden, and the selected workspace contains every
+  visible element at 1440/768/640/519 pixels. It writes reviewed desktop and compact images under
+  `docs/evidence/issue-798-product-copy/narrative-review/`; the browser uses an isolated
+  checkout-specific port and does not disturb the canonical runtime.
 - RFC-0025 Suitability review policy-queue proof must use the Gateway-backed advisory policy
   review queue, selected evaluation, sign-off package, workflow posture, and bounded
   request-more-evidence decision route. The live validator seeds this from the governed

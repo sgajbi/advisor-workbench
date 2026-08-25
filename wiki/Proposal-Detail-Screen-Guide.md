@@ -52,8 +52,9 @@ These use cases do not substitute for authenticated production-role or portfolio
    Review, or another supported proposal handoff.
 2. Confirm the proposal header and active version before reviewing supporting evidence.
 3. Review the decision-first change, impact, gate, approval, and lineage sections.
-4. Use **Narrative review** or **Memo & evidence pack** as peer advisor-review modes; neither mode
-   changes the proposal lifecycle merely by being opened.
+4. Use **Narrative review** or **Memo & evidence pack** as peer advisor-review modes; narrative
+   review follows recommendation rationale → advisor review → discussion pack → delivery record,
+   and neither mode changes the proposal lifecycle merely by being opened.
 5. Perform a lifecycle, narrative, memo, or package action only after its visible prerequisites are
    satisfied.
 6. Treat success as confirmed only after Gateway persistence and the owning source reads reconcile.
@@ -72,7 +73,13 @@ These use cases do not substitute for authenticated production-role or portfolio
   instants through the shared UTC authority. Calendar-semantic proposal dates remain separate;
   missing, malformed, or unzoned audit values are **Not reported**, never raw source text.
 - Provides peer **Narrative review** and **Memo & evidence pack** work areas with explicit
-  advisor-use, report-package, commentary, delivery, replay, and client-use boundaries.
+  advisor-use, discussion-pack, commentary, delivery, replay, and client-use boundaries.
+- Binds narrative review to the active proposal version rather than asking the advisor to edit the
+  version in the review flow. Reviewer reference, policy identity, rationale hash, and latest exact
+  delivery time remain in progressive **Review record details**.
+- Enables **Request discussion pack** only after the current source read confirms advisor-review
+  evidence. Review and pack success are announced only after the action response and refreshed
+  proposal evidence agree; refresh disagreement remains an explicit failure.
 - Creates a next proposal version only from the current source proposal's retained simulation
   request and refreshes the active record after source success.
 - Preserves a deterministic return to Approval Queue, Suitability, Risk and Impact, Discussion Pack,
@@ -87,8 +94,8 @@ These use cases do not substitute for authenticated production-role or portfolio
 | Approve risk or compliance review | Current lifecycle state admits that review and the complete action-evidence set agrees | Gateway records the approval transition and evidence |
 | Record client consent | Source lifecycle is awaiting client consent and the action-evidence set agrees | Gateway records the consent transition |
 | Create next version | Current version contains a usable retained simulation request and no conflicting action is active | Gateway creates a new proposal version |
-| Approve advisor narrative | Current version, source narrative hash, reviewer reference, and rationale are available | Gateway records advisor-use narrative review; it does not approve client release |
-| Request reviewed report | Narrative review posture admits packaging | Gateway records a report-package request; rendering, archive, and delivery remain downstream |
+| Record advisor review | Current version, reviewer reference, and rationale are available | Gateway records advisor-use narrative review; it does not approve client release |
+| Request discussion pack | Refreshed current-version evidence confirms advisor review and a reviewer reference is available | Gateway records a discussion-pack request; rendering, archive, and delivery remain downstream |
 | Prepare, review, or package a memo | Current version and the memo action's evidence fields are available | Gateway records the corresponding advisor-use memo event |
 | Request advisor commentary | Memo evidence admits the bounded request | Gateway records the request; generated commentary is not authoritative proposal evidence |
 
@@ -156,7 +163,11 @@ Proposal Detail deliberately does not:
   `tests/unit/proposal-memo-posture-panel.test.tsx` prove the two advisor-review modes and their
   fail-closed action posture.
 - `tests/e2e/proposal-memo-posture.spec.ts` provides optimized-production browser proof for proposal
-  detail, memo, review, package, recovery, keyboard, and narrow-screen behavior.
+  detail, memo, source-confirmed narrative review, discussion-pack gating, safe action failure,
+  refresh disagreement, keyboard, responsive container reflow, and exact visible-overflow behavior.
+- Reviewed Proposal Detail narrative screenshots are published under
+  `docs/evidence/issue-798-product-copy/narrative-review/`; they support visual review but do not
+  replace Gateway action and refreshed-read proof.
 - `tests/e2e/proposal-workflow-context.spec.ts` proves Approval Queue drill-in and deterministic
   return context in the optimized Workbench.
 - Canonical validation uses `PB_SG_GLOBAL_BAL_001`; screenshots are supporting evidence, not proof

@@ -6700,6 +6700,17 @@ wealth-platform sources before the comparison and handoff language was aligned:
     internal-use banner, workflow status and proposal-coverage boundary to the same business
     vocabulary. Gateway/Advise ownership remains in source and support documentation rather than
     productive page copy.
+17. Present Proposal Detail narrative work as **recommendation rationale → advisor review →
+    discussion pack → delivery record**. This adopts BlackRock Aladdin Wealth's visible
+    identify/construct/deliver/implement progression, FCA COBS 9A.2's evidence-led suitability
+    obligation, and SEC Regulation Best Interest's written recommendation disclosure boundary.
+    Bind review to the active source version, require a reviewer reference and rationale, and admit
+    discussion-pack preparation only after refreshed advisor-review evidence agrees with the action
+    response. Keep exact policy, hash, reviewer, and delivery-time references in progressive review
+    detail. Reject an editable version in the primary workflow, assumed production identity,
+    service-topology copy, a premature pack request, client-send controls, and success based only on
+    an HTTP response. This #798 slice uses the shared Workbench status strip, Support details, and
+    visible-overflow diagnostics without changing Gateway/Advise contracts or production auth.
 
 ### Delivery scope and deferred surfaces
 
@@ -6709,8 +6720,8 @@ review, Adviser priorities, and campaign audit-actor paths covered by focused se
 does not claim application-wide completion; #799 remains open until the remaining governed concepts
 are aligned and proven.
 
-The following observed literals are deferred, not approved exceptions: **Advisor Narrative And
-Delivery**, **Advisor Memo And Evidence Pack**, **Current Positions**, **Draft Order Blotter**,
+The following observed literals are deferred, not approved exceptions: **Advisor Memo And Evidence
+Pack**, **Current Positions**, **Draft Order Blotter**,
 **Review Posture**, **Recommended Actions**, and the evidence-rail handoff **Mandate Operations**.
 They remain candidate slices under #799, with the
 general copy-layer and banned-token enforcement owned by #798. A fixing slice must inspect each
