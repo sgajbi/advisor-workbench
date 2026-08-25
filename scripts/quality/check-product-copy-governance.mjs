@@ -81,6 +81,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
   const findings = [];
   const inspectedNodes = new Set();
   const localConstantScopes = collectLocalConstantScopes(sourceFile);
+  const jsxSpreadOwnedObjectLiterals = new Set();
 
   function resolveLocalConstantInitializer(identifier) {
     let scope = findContainingLexicalScope(identifier);
@@ -122,7 +123,12 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
   }
 
-  function inspectExpression(expression, context, objectPropertyNames = null) {
+  function inspectExpression(
+    expression,
+    context,
+    objectPropertyNames = null,
+    resolvedObjectLiterals = null,
+  ) {
     const resolvingDeclarations = new Set();
     const visitingResolvedExpressions = new Set();
     const STATIC_PROPERTY_ABSENT = Symbol("static-property-absent");
@@ -291,6 +297,29 @@ export function scanProductCopySource({ filePath, sourceText }) {
       );
     }
 
+    function collectResolvedObjectLiterals(owner, visitedOwners = new Set()) {
+      if (!isStaticObjectLike(owner) || visitedOwners.has(owner)) {
+        return;
+      }
+      visitedOwners.add(owner);
+      if (isStaticObjectRestBinding(owner)) {
+        collectResolvedObjectLiterals(
+          resolveStaticExpression(owner.owner),
+          visitedOwners,
+        );
+        return;
+      }
+      resolvedObjectLiterals.add(owner);
+      for (const property of owner.properties) {
+        if (ts.isSpreadAssignment(property)) {
+          collectResolvedObjectLiterals(
+            resolveStaticExpression(property.expression),
+            visitedOwners,
+          );
+        }
+      }
+    }
+
     function visitResolvedCopyExpression(node) {
       if (visitingResolvedExpressions.has(node)) {
         return;
@@ -388,6 +417,9 @@ export function scanProductCopySource({ filePath, sourceText }) {
     if (objectPropertyNames) {
       const propertyStates = new Map();
       const owner = resolveStaticExpression(expression);
+      if (resolvedObjectLiterals) {
+        collectResolvedObjectLiterals(owner);
+      }
       for (const propertyName of objectPropertyNames) {
         if (!isStaticObjectLike(owner)) {
           propertyStates.set(propertyName, "unknown");
@@ -411,6 +443,18 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
     visitExpression(expression);
     return null;
+  }
+
+  function collectJsxSpreadOwnership(node) {
+    if (ts.isJsxSpreadAttribute(node)) {
+      inspectExpression(
+        node.expression,
+        "JSX spread ownership",
+        new Set(),
+        jsxSpreadOwnedObjectLiterals,
+      );
+    }
+    ts.forEachChild(node, collectJsxSpreadOwnership);
   }
 
   function inspectJsxAttributes(attributes) {
@@ -491,7 +535,13 @@ export function scanProductCopySource({ filePath, sourceText }) {
       if (node.expression) {
         inspectExpression(node.expression, "JSX expression");
       }
-    } else if (ts.isPropertyAssignment(node)) {
+    } else if (
+      ts.isPropertyAssignment(node)
+      && !(
+        ts.isObjectLiteralExpression(node.parent)
+        && jsxSpreadOwnedObjectLiterals.has(node.parent)
+      )
+    ) {
       const propertyName = propertyNameText(node.name, sourceFile);
       if (
         propertyName &&
@@ -505,6 +555,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
     ts.forEachChild(node, visit);
   }
 
+  collectJsxSpreadOwnership(sourceFile);
   visit(sourceFile);
   return findings;
 }
