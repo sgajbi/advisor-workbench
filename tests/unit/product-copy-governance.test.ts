@@ -302,6 +302,41 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
+  it("inspects defaults when a present property may evaluate to undefined", () => {
+    const findings = scan(`
+      const copy = {
+        panelTitle: getMaybeTitle(),
+        panelBody: ready ? "Client review status" : undefined,
+      };
+      const {
+        panelTitle = "Gateway posture",
+        panelBody = "HTTP status unavailable",
+      } = copy;
+      export function Example() {
+        return <Panel title={panelTitle} body={panelBody} />;
+      }
+    `);
+
+    expect(findings.map((finding) => finding.ruleId)).toEqual([
+      "transport-gateway",
+      "auditor-posture",
+      "transport-http-status",
+    ]);
+  });
+
+  it("does not duplicate a default when a referenced property is statically defined", () => {
+    expect(
+      scan(`
+        const reviewedTitle = "Client review status";
+        const copy = { panelTitle: reviewedTitle } as const;
+        const { panelTitle = "Gateway posture" } = copy;
+        export function Example() {
+          return <Panel title={panelTitle} />;
+        }
+      `),
+    ).toEqual([]);
+  });
+
   it("resolves nested and object-rest destructured copy", () => {
     const findings = scan(`
       const copy = {
