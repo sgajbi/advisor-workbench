@@ -204,6 +204,54 @@ describe("product-copy governance", () => {
     );
   });
 
+  it("does not report JSX spread copy hidden by a later final value", () => {
+    const hiddenCopyExamples = [
+      `
+        const technicalProps = { title: "Gateway posture" } as const;
+        const businessProps = { title: "Client review status" } as const;
+        export function Example() {
+          return <Panel {...technicalProps} {...businessProps} />;
+        }
+      `,
+      `
+        const technicalProps = { title: "Gateway posture" } as const;
+        export function Example() {
+          return <Panel {...technicalProps} title="Client review status" />;
+        }
+      `,
+      `
+        const technicalProps = { title: "Gateway posture" } as const;
+        const businessProps = {
+          ...technicalProps,
+          title: "Client review status",
+        } as const;
+        export function Example() {
+          return <Panel {...businessProps} />;
+        }
+      `,
+      `
+        const technicalProps = { title: "Gateway posture" } as const;
+        export function Example() {
+          return <Panel {...technicalProps} {...getRuntimeProps()} />;
+        }
+      `,
+      `
+        const dynamicKey = getRuntimeKey();
+        const props = {
+          title: "Gateway posture",
+          [dynamicKey]: "Client review status",
+        };
+        export function Example() {
+          return <Panel {...props} />;
+        }
+      `,
+    ];
+
+    for (const source of hiddenCopyExamples) {
+      expect(scan(source)).toEqual([]);
+    }
+  });
+
   it("resolves copy inherited through statically inspectable object spreads", () => {
     const findings = scan(`
       const baseCopy = { panelTitle: "Gateway posture" } as const;
