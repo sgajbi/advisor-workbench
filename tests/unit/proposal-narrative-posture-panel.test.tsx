@@ -203,6 +203,29 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeDisabled();
   });
 
+  it.each(["APPROVED", "REVIEWED"])(
+    "does not treat the unsupported %s review alias as advisor-use approval",
+    async (reviewState) => {
+      vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue({
+        ...confirmedNarrativeReview,
+        narrative_review: {
+          ...confirmedNarrativeReview.narrative_review,
+          review_state: reviewState,
+        },
+      });
+      vi.mocked(getProposalDeliverySummary).mockResolvedValue({});
+      renderPanel();
+
+      const workflow = await screen.findByRole("region", {
+        name: "Narrative review workflow",
+      });
+      expect(within(workflow).getByText("Not Reviewed")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Request discussion pack" }),
+      ).toBeDisabled();
+    },
+  );
+
   it("confirms narrative review before admitting a discussion-pack request", async () => {
     vi.mocked(getProposalNarrativeReviewEvidence)
       .mockResolvedValueOnce({

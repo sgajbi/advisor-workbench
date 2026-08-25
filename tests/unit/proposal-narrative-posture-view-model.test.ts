@@ -143,6 +143,9 @@ describe("proposal narrative posture view model", () => {
     ["reviewed_by", ""],
     ["reviewed_at", "2026-05-22T09:00:00"],
     ["action", "REJECT"],
+    ["review_state", "APPROVED"],
+    ["review_state", "REVIEWED"],
+    ["review_state", "approved_for_advisor_use"],
   ])("fails closed when confirmed review %s is %s", (field, value) => {
     const review = {
       ...confirmedReview,
