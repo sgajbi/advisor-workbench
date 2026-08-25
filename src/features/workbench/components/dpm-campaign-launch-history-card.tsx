@@ -9,10 +9,8 @@ import type {
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
-import {
-  formatBusinessBoundary,
-  formatBusinessOwner,
-} from "@/features/workbench/manage-workspace-view-model";
+import { formatBusinessActorEvidence } from "@/features/workbench/manage-actor-presentation";
+import { formatBusinessBoundary } from "@/features/workbench/manage-workspace-view-model";
 
 export { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE };
 
@@ -74,7 +72,7 @@ export default function DpmCampaignLaunchHistoryCard({
           key: row.key,
           cells: [
             row.waveId,
-            formatBusinessOwner(row.actor),
+            formatBusinessActorEvidence(row.actor),
             row.launchedAt,
             row.requestedAsOfDate,
             row.correlationId,

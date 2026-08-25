@@ -7,7 +7,7 @@ import type {
   DpmCampaignLifecycleEventRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { MANAGE_REBALANCE_LABELS } from "@/features/workbench/manage-terminology";
-import { formatBusinessOwner } from "@/features/workbench/manage-workspace-view-model";
+import { formatBusinessActorEvidence } from "@/features/workbench/manage-actor-presentation";
 
 type Props = {
   rows: DpmCampaignLifecycleEventRow[];
@@ -65,7 +65,7 @@ export default function DpmCampaignLifecycleEvidenceCard({
           cells: [
             row.eventType,
             row.occurredAt,
-            formatBusinessOwner(row.actor),
+            formatBusinessActorEvidence(row.actor),
             row.waveId,
             row.requestedAsOfDate,
             <DpmWaveStateBadge key={`${row.key}-status`} state={row.status} />,

@@ -62,7 +62,7 @@ describe("DpmCampaignLifecycleEvidenceCard", () => {
     expect(screen.getByText("campaign_definition_launched")).toBeInTheDocument();
     expect(screen.getByText("14 May 2026, 09:30 UTC")).toBeInTheDocument();
     expect(screen.getByText("10 May 2026")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Manager")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Manager · pm_sg_1")).toBeInTheDocument();
     expect(screen.getByText("corr-campaign-launch")).toBeInTheDocument();
     expect(screen.getByText("campaign-launch:campaign-holdings-202605:2026.05:abc")).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Review Date" })).not.toBeInTheDocument();

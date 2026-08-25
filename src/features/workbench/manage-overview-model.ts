@@ -8,13 +8,13 @@ import {
 } from "@/features/workbench/manage-mandate-health-helpers";
 import { buildManageModeHref } from "@/features/workbench/manage-workspace-navigation";
 import { MANAGE_WORKFLOW_LABELS } from "@/features/workbench/manage-terminology";
+import { formatBusinessOwner } from "@/features/workbench/manage-actor-presentation";
 import {
   businessStateLabel,
   buildManageExceptionRows,
   filterManageExceptionRowsForMandate,
   firstNonEmpty,
   formatBusinessExceptionTitle,
-  formatBusinessOwner,
   formatBusinessSource,
   formatBusinessTrigger,
   getManageExceptionEvidencePosture,

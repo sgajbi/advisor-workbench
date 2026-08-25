@@ -374,26 +374,6 @@ export function formatBusinessTrigger(value: string | null | undefined): string 
   return businessStateLabel(value);
 }
 
-export function formatBusinessOwner(owner: string): string {
-  if (!owner || owner === "N/A" || owner === "Not assigned") {
-    return "Not assigned";
-  }
-  const normalized = owner.toLowerCase();
-  if (normalized.includes("pricing") || normalized.includes("data")) {
-    return "Data Operations";
-  }
-  if (normalized.includes("advisor")) {
-    return "Advisor";
-  }
-  if (normalized.includes("portfolio") || normalized.includes("pm")) {
-    return "Portfolio Manager";
-  }
-  if (normalized.includes("system") || normalized.includes("lotus") || normalized.includes("core")) {
-    return "Operations";
-  }
-  return owner;
-}
-
 export function formatBusinessExceptionTitle(title: string): string {
   const normalized = title.toLowerCase();
   if (
