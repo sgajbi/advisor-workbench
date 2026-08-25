@@ -24,7 +24,7 @@ delivery, order routing and implementation are not promoted from this screen.
 
 - `npm test -- tests/integration/proposal-detail-view.test.tsx tests/unit/proposal-narrative-posture-panel.test.tsx tests/unit/proposal-narrative-posture-view-model.test.ts`
 - `$env:PLAYWRIGHT_PORT='3219'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1`
-- `$env:PLAYWRIGHT_PORT='3222'; $env:ISSUE_798_EVIDENCE_DIR='docs/evidence/issue-798-product-copy'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1 --grep 'usable across supported widths'`
+- `$env:PLAYWRIGHT_PORT='32202'; $env:ISSUE_798_EVIDENCE_DIR='docs/evidence/issue-798-product-copy'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1 --grep 'supported widths'`
 - `npm run quality:product-copy`
 - `npm run quality:screen-docs`
 - `npm run typecheck`
