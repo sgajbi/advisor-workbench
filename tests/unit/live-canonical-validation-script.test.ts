@@ -1509,7 +1509,20 @@ describe("canonical live validation script", () => {
     );
     expect(browserWorkflowModule).toContain("advisory-risk-impact-live.png");
     expect(browserWorkflowModule).toContain("advisory-approval-queue-live.png");
-    expect(browserWorkflowModule).toContain("Discussion Pack Review");
+    expect(browserWorkflowModule).toContain("Discussion pack review");
+    expect(browserWorkflowModule).toContain("Client meeting preparation");
+    expect(browserWorkflowModule).toContain("Client-discussion checklist");
+    expect(browserWorkflowModule).toContain("Refresh discussion pack");
+    expect(browserWorkflowModule).toContain("Current version available");
+    expect(browserWorkflowModule).toContain(
+      "proposal-discussion-pack-review.v1",
+    );
+    expect(browserWorkflowModule).toContain(
+      "source-confirmed-empty-window",
+    );
+    expect(browserWorkflowModule).toContain(
+      "selected-current-version-through-gateway",
+    );
     expect(browserWorkflowModule).toContain(
       "advisory-client-discussion-pack-live.png",
     );

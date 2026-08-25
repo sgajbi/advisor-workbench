@@ -9,6 +9,8 @@ const {
   buildReportCentreProofPosture,
   classifyAttributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
+  classifyAdvisoryJourneyScreenshotState,
+  classifyDiscussionPackJourneyEvidence,
   classifyRegisteredPanelScreenshotState,
   createBrowserValidationHelpers,
   classifyAdvisorBriefAcceptProofPosture,
@@ -40,6 +42,13 @@ const {
   classifyPerformanceEvidenceScreenshotState: (
     assuranceState: string | null,
   ) => "demo_ready" | "truthfully_degraded";
+  classifyAdvisoryJourneyScreenshotState: (
+    state: string | null,
+  ) => "demo_ready" | "truthfully_degraded";
+  classifyDiscussionPackJourneyEvidence: (counts: {
+    selectedRecordCount: number;
+    emptyStateCount: number;
+  }) => "ready" | "empty";
   classifyRegisteredPanelScreenshotState: (
     panelState: string | null,
     requiredSupportState: string | null,
@@ -204,6 +213,38 @@ describe("live validation browser workflow helpers", () => {
     [null, "truthfully_degraded"],
   ] as const)("classifies %s evidence screenshot posture as %s", (state, expected) => {
     expect(classifyPerformanceEvidenceScreenshotState(state)).toBe(expected);
+  });
+
+  it.each([
+    ["ready", "demo_ready"],
+    ["empty", "truthfully_degraded"],
+    ["partial", "truthfully_degraded"],
+    [null, "truthfully_degraded"],
+  ] as const)(
+    "classifies %s advisory journey evidence as %s",
+    (state, expected) => {
+      expect(classifyAdvisoryJourneyScreenshotState(state)).toBe(expected);
+    },
+  );
+
+  it.each([
+    [{ selectedRecordCount: 1, emptyStateCount: 0 }, "ready"],
+    [{ selectedRecordCount: 0, emptyStateCount: 1 }, "empty"],
+  ] as const)(
+    "classifies discussion-pack source evidence as %s",
+    (counts, expected) => {
+      expect(classifyDiscussionPackJourneyEvidence(counts)).toBe(expected);
+    },
+  );
+
+  it.each([
+    { selectedRecordCount: 0, emptyStateCount: 0 },
+    { selectedRecordCount: 1, emptyStateCount: 1 },
+    { selectedRecordCount: 2, emptyStateCount: 0 },
+  ])("rejects ambiguous discussion-pack evidence %#", (counts) => {
+    expect(() => classifyDiscussionPackJourneyEvidence(counts)).toThrow(
+      "Discussion pack rendered an ambiguous source state",
+    );
   });
 
   it.each([

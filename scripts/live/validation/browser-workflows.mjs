@@ -344,6 +344,25 @@ function recordAdvisoryJourneyCheck(summary, payload) {
   });
 }
 
+export function classifyDiscussionPackJourneyEvidence({
+  selectedRecordCount,
+  emptyStateCount,
+}) {
+  if (selectedRecordCount === 1 && emptyStateCount === 0) {
+    return "ready";
+  }
+  if (selectedRecordCount === 0 && emptyStateCount === 1) {
+    return "empty";
+  }
+  throw new Error(
+    `Discussion pack rendered an ambiguous source state: selected=${selectedRecordCount}, empty=${emptyStateCount}.`,
+  );
+}
+
+export function classifyAdvisoryJourneyScreenshotState(state) {
+  return state === "ready" ? "demo_ready" : "truthfully_degraded";
+}
+
 async function validateAdvisoryJourneyRoute(
   page,
   {
@@ -367,12 +386,13 @@ async function validateAdvisoryJourneyRoute(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await validate();
+  const validation = (await validate()) ?? {};
+  const state = validation.state ?? "ready";
   const observedRoute = page.url().replace(workbenchBaseUrl, "");
   await screenshotAdvisoryJourney(page, screenshotName, {
     route: observedRoute,
     panel,
-    state: "demo_ready",
+    state: classifyAdvisoryJourneyScreenshotState(state),
   });
   recordAdvisoryJourneyCheck(summary, {
     key,
@@ -381,7 +401,90 @@ async function validateAdvisoryJourneyRoute(
     panel,
     owner,
     sourcePosture,
+    state,
+    ...(validation.evidencePosture
+      ? { evidencePosture: validation.evidencePosture }
+      : {}),
   });
+}
+
+async function validateDiscussionPackJourney(page, timeoutMs) {
+  await expect(
+    page.getByRole("heading", {
+      name: "Client meeting preparation",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
+
+  const selectedRecord = page.getByRole("region", {
+    name: "Selected discussion pack review",
+  });
+  const emptyState = page.getByRole("heading", {
+    name: "No discussion packs need review",
+    exact: true,
+  });
+  await expect(selectedRecord.or(emptyState)).toBeVisible({
+    timeout: timeoutMs,
+  });
+  const state = classifyDiscussionPackJourneyEvidence({
+    selectedRecordCount: await selectedRecord.count(),
+    emptyStateCount: await emptyState.count(),
+  });
+  if (state === "empty") {
+    await expect(
+      page.getByText(
+        "No proposals in this view are awaiting discussion-pack preparation.",
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: timeoutMs });
+    return {
+      state,
+      evidencePosture: "source-confirmed-empty-window",
+    };
+  }
+
+  await expect(
+    selectedRecord.getByText("Meeting decision", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    selectedRecord.getByRole("heading", {
+      name: "Client-discussion checklist",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    selectedRecord.getByText(
+      "Internal approval does not permit client release.",
+      { exact: true },
+    ),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    selectedRecord.getByRole("button", {
+      name: /^(Publish|Deliver|Contact client|Record consent)$/i,
+    }),
+  ).toHaveCount(0);
+
+  await selectedRecord
+    .getByRole("button", { name: "Refresh discussion pack", exact: true })
+    .click({ timeout: timeoutMs });
+  await expect(
+    selectedRecord.getByText("Current version available", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
+
+  const supportDetails = selectedRecord.getByText("Support details", {
+    exact: true,
+  });
+  await supportDetails.click({ timeout: timeoutMs });
+  await expect(
+    selectedRecord.getByText("proposal-discussion-pack-review.v1", {
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
+
+  return {
+    state,
+    evidencePosture: "selected-current-version-through-gateway",
+  };
 }
 
 export async function validateAdvisoryJourneyScreens(
@@ -820,10 +923,12 @@ export async function validateAdvisoryJourneyScreens(
     },
     {
       key: "discussion-pack",
-      title: "Discussion Pack Review",
+      title: "Discussion pack review",
       screenshotName: "advisory-client-discussion-pack-live.png",
       panel: "advisory.client_discussion_pack",
       sourcePosture: "discussion-pack-posture-through-gateway",
+      validateEvidence: async () =>
+        await validateDiscussionPackJourney(page, timeoutMs),
     },
     {
       key: "implementation",
@@ -854,6 +959,7 @@ export async function validateAdvisoryJourneyScreens(
         await expect(
           page.getByText("Adviser decision", { exact: true }),
         ).toBeVisible({ timeout: timeoutMs });
+        return await lifecycle.validateEvidence?.();
       },
     });
   }
