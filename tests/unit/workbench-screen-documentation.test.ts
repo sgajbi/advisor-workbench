@@ -362,25 +362,27 @@ describe("Workbench screen documentation governance", () => {
     expect(validate(registry).errors).toEqual([]);
   });
 
-  it("maps Discussion Pack Review to independent conversation and release controls", () => {
+  it("maps Discussion pack review to independent meeting and release controls", () => {
     const registry = loadRegistry();
     const discussionPack = registry.surfaces.find(
       (candidate: { id: string }) => candidate.id === "discussion-pack-review",
     );
 
     expect(discussionPack).toMatchObject({
-      businessName: "Discussion Pack Review",
+      businessName: "Discussion pack review",
       routePattern: "/proposals",
       mode: "discussion-pack",
       navigationPosture: "capability-disabled",
       wikiSlug: "Discussion-Pack-Review-Screen-Guide",
       sourceOwners: ["lotus-gateway", "lotus-advise", "lotus-report"],
       implementationEvidence: expect.arrayContaining([
+        "src/copy/proposal-discussion-pack-copy.ts",
         "src/features/proposals/proposal-discussion-pack-contract.ts",
         "src/features/proposals/components/proposal-discussion-pack-workspace.tsx",
       ]),
       runtimeEvidence: expect.arrayContaining([
         "tests/e2e/proposal-workflow-context.spec.ts",
+        "docs/evidence/issue-798-product-copy/discussion-pack-review/README.md",
       ]),
       coverageException: null,
     });
@@ -399,6 +401,9 @@ describe("Workbench screen documentation governance", () => {
       "never fans out discussion-pack reads across the\nworklist",
     );
     expect(guide).toContain("AI-assisted draft");
+    expect(guide).toContain("Client meeting preparation");
+    expect(guide).toContain("Client-discussion checklist");
+    expect(guide).toContain("Current version available");
     expect(guide).toContain(
       "There is no publish, release, deliver, contact-client",
     );

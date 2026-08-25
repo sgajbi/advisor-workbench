@@ -138,7 +138,7 @@ shell entry remains capability-disabled even where bounded direct routes are imp
 | [Approval Queue](Approval-Queue-Screen-Guide)                 | `/proposals?mode=approval-queue`  | Capability-disabled | Guide available | Gateway and Advise                    |
 | [Suitability review](Suitability-Review-Screen-Guide)         | `/proposals?mode=suitability`     | Capability-disabled | Guide available | Gateway and Advise                    |
 | [Risk and Impact](Risk-And-Impact-Screen-Guide)               | `/proposals?mode=risk-impact`     | Capability-disabled | Guide available | Gateway, Advise, Core, and Risk       |
-| [Discussion Pack Review](Discussion-Pack-Review-Screen-Guide) | `/proposals?mode=discussion-pack` | Capability-disabled | Guide available | Gateway, Advise, and Report           |
+| [Discussion pack review](Discussion-Pack-Review-Screen-Guide) | `/proposals?mode=discussion-pack` | Capability-disabled | Guide available | Gateway, Advise, and Report           |
 | [Implementation Status](Implementation-Status-Screen-Guide)   | `/proposals?mode=implementation`  | Capability-disabled | Guide available | Gateway and Advise                    |
 | [Proposal Detail](Proposal-Detail-Screen-Guide)               | `/proposals/{proposalId}`         | Capability-disabled | Guide available | Gateway, Advise, Report, and Lotus AI |
 

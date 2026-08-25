@@ -207,51 +207,71 @@ protected review, exact-main validation, wiki publication/parity, issue closure,
 restoration are required. No Gateway/API/OpenAPI, calculation, authentication, entitlement, or
 product-screen behavior changed.
 
-## Discussion Pack Review: source-backed conversation preparation
+## Discussion pack review: decision-led client meeting preparation
 
 ### Business job
 
-A client advisor must prepare one selected proposal conversation without confusing internal
-advisor-use content, report preparation, client consent, or lifecycle position with authority to
+A client adviser must prepare one selected proposal discussion without confusing internal
+adviser-use content, report production, client consent, or lifecycle position with authority to
 publish, deliver, or contact the client. The worklist must remain dense and keyboard-operable while
-the selected record gives the controls and evidence needed for the next governed decision.
+the selected record presents the meeting rationale, decision memo, disclosures, and client-use
+controls in the order needed for the next governed decision.
 
 ### Current-product and professional-standard research
 
-Research was reviewed on 2026-08-21 from official BlackRock Aladdin Wealth proposal-generation,
-Avaloq client-management, Temenos Wealth Management, and WCAG 2.2 sources. The common applicable
-pattern is a connected proposal-to-conversation journey with source-owned suitability, narrative,
-compliance, and document evidence; responsive reflow, visible focus, and programmatic status remain
-baseline requirements. The research informs workflow principles, not competitor imitation or a
-claim of bank approval.
+Research was refreshed on 2026-08-25 from official sources:
+
+1. [FCA COBS 4.2](https://handbook.fca.org.uk/handbook/COBS/4/2.html) requires client
+   communications and financial promotions to be fair, clear, and not misleading.
+2. [ESMA MiFID II suitability guidelines](https://www.esma.europa.eu/document/guidelines-certain-aspects-mifid-ii-suitability-requirements)
+   reinforce suitability governance across advice and portfolio-management workflows.
+3. [FINRA Regulatory Notice 24-09](https://www.finra.org/rules-guidance/notices/24-09) confirms
+   that existing supervision and communications obligations apply when firms use generative AI.
+4. [SAP Fiori messaging guidance](https://www.sap.com/design-system/fiori-design-web/v1-96/foundations/best-practices/global-patterns/messaging/messaging)
+   recommends messages that are local, state-specific, understandable, and actionable.
+5. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) governs reflow, status announcements, visible focus,
+   and operable targets.
+
+The common applicable pattern is a decision-led proposal-to-meeting journey with source-owned
+suitability, narrative, disclosure, and document evidence. The research informs workflow
+principles, not competitor imitation or a claim of bank approval.
 
 ### Adopted
 
+- Lead with proposal version, meeting decision, unresolved controls, and next action before
+  supporting narrative.
 - Keep a bounded worklist before one selected decision desk; request selected evidence only.
-- Separate advisor narrative, advisor memo, report package, client consent, and client
+- Separate adviser narrative, adviser memo, report package, client consent, and client
   release/delivery as five independent source controls.
 - Use a full-width selected desk inside the constrained three-rail Workbench canvas and the shared
   grid selector for dense identity-first scanning.
-- Put supporting narrative, disclosure, limitation, capability, and lineage detail behind a clear
-  business hierarchy while retaining exact source evidence.
+- Put exact support references, capability, and lineage behind progressive **Support details** while
+  keeping business decisions and recovery language primary.
 - Reconcile the refreshed worklist version with the selected source contract before announcing
   success; preserve explicit failure and focus continuity.
+- Use explicit, fail-closed mappings for known source states; preserve exact source values only in
+  bounded support evidence.
 
 ### Rejected
 
-- Decorative card dashboards, inferred conversation readiness, or client-release actions.
+- Decorative card dashboards, inferred meeting readiness, or client-release actions.
 - N+1 evidence reads across the proposal list; invented owner, SLA, priority, client, or whole-book
   totals; and direct browser calls to Advise or Report.
 - Treating AI-assisted text as advice, approval, suitability, or client-ready content.
 - A new UI framework, page-global CSS, or a one-off selector when a reusable Workbench pattern fits.
+- Lifecycle, report-package, or consent wording that could be read as external-use permission.
+- A page-local copy change that leaves shared navigation and proposal context with stale wording.
 
 ### Implementation and validation
 
-Workbench #749 consumes Gateway #559's `proposal-discussion-pack-review.v1` projection, validates
-identity and client-release boundaries, and delivers the selected-record workspace, strict states,
-context-preserving detail handoff, screen guide, focused tests, and optimized production-browser
-proof at 1440/1280/1024/720/390. Canonical populated proof remains separately governed and must not
-be inferred from mocked browser evidence.
+Workbench #749 consumes Gateway #559's `proposal-discussion-pack-review.v1` projection and owns the
+selected-record contract and release boundary. Workbench #798 adds one typed discussion-pack copy
+authority, explicit enum mappings, aligned shared navigation/context language, decision-first
+loading and recovery states, progressive support detail, and focused product-copy regressions.
+Optimized production-browser proof covers keyboard selection, truthful refresh settlement,
+unsupported-action absence, and zero horizontal overflow at 1440/1280/1024/720/519/390. Canonical
+populated proof remains separately governed and must not be inferred from fixture-backed browser
+evidence.
 
 ## Approval Queue: exception-led selected-record review
 
