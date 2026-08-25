@@ -25,7 +25,7 @@ client release, delivery, suitability approval, order routing, or execution.
 - `npm test -- --run tests/unit/live-canonical-validation-script.test.ts tests/unit/proposal-memo-posture-panel.test.tsx tests/unit/proposal-memo-posture-view-model.test.ts tests/unit/proposal-memo-action-payloads.test.ts tests/unit/proposals-api.test.ts` — 69 passed.
 - `$env:PLAYWRIGHT_PORT='32199'; $env:ISSUE_798_EVIDENCE_DIR='docs/evidence/issue-798-product-copy'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1` — 10 passed.
 - `$env:PLAYWRIGHT_PORT='32200'; npx playwright test tests/e2e/proposal-workflow-context.spec.ts --project=chromium --workers=1` — 20 passed.
-- `$env:PLAYWRIGHT_PORT='32201'; $env:ISSUE_798_EVIDENCE_DIR='docs/evidence/issue-798-product-copy'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1 --grep 'supported widths'` — 1 passed at 1440, 768, 640, and 519 pixels with zero visible horizontal overflow.
+- `$env:PLAYWRIGHT_PORT='32202'; $env:ISSUE_798_EVIDENCE_DIR='docs/evidence/issue-798-product-copy'; npx playwright test tests/e2e/proposal-memo-posture.spec.ts --project=chromium --workers=1 --grep 'supported widths'` — 1 passed at 1440, 768, 640, and 519 pixels with zero visible horizontal overflow.
 - `npm run typecheck` — passed.
 - Targeted ESLint for the changed component, browser workflow, and tests — passed.
 

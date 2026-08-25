@@ -42,10 +42,10 @@
 
 .workflowLabel {
   color: var(--portfolio-ui-muted, #64748b);
-  font-size: 0.67rem;
-  font-weight: 750;
+  font-size: var(--type-micro-label-size);
+  font-weight: var(--type-micro-label-weight);
   letter-spacing: 0.045em;
-  line-height: 0.95rem;
+  line-height: var(--type-micro-label-line-height);
   text-transform: uppercase;
 }
 
@@ -62,8 +62,8 @@
 
 .workflowSupport {
   color: var(--portfolio-ui-muted, #64748b);
-  font-size: 0.72rem;
-  line-height: 1rem;
+  font-size: var(--type-helper-text-size);
+  line-height: var(--type-helper-text-line-height);
   overflow-wrap: anywhere;
 }
 
@@ -90,7 +90,7 @@
   border-color: rgba(100, 116, 139, 0.34);
   border-radius: 6px;
   background: #fff;
-  font-size: 0.82rem;
+  font-size: var(--type-body-small-size);
 }
 
 .rationaleField :global(.textarea) {
@@ -153,27 +153,19 @@
 
 .supportFacts dt {
   color: var(--portfolio-ui-muted, #64748b);
-  font-size: 0.67rem;
-  font-weight: 750;
+  font-size: var(--type-micro-label-size);
+  font-weight: var(--type-micro-label-weight);
   letter-spacing: 0.04em;
-  line-height: 0.95rem;
+  line-height: var(--type-micro-label-line-height);
   text-transform: uppercase;
 }
 
 .supportFacts dd {
   margin: 0;
   color: var(--portfolio-ui-ink, #0f172a);
-  font-family: var(
-    --font-mono,
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    monospace
-  );
-  font-size: 0.72rem;
-  line-height: 1rem;
+  font-family: var(--font-mono);
+  font-size: var(--type-body-small-size);
+  line-height: var(--type-body-small-line-height);
   overflow-wrap: anywhere;
 }
 
