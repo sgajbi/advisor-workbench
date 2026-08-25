@@ -142,7 +142,7 @@ for (const viewport of viewports) {
     await expect(page.getByTestId("advisory-lifecycle-summary")).toHaveCount(0);
 
     const reviewContext = page.getByTestId("review-context-strip");
-    const sourceBoundary = page.getByText("Source and scope", { exact: true });
+    const sourceBoundary = page.getByText("Proposal coverage", { exact: true });
     await expect(reviewContext).toBeVisible();
     await expect(sourceBoundary).toBeVisible();
     await expect(
@@ -400,7 +400,7 @@ test("recovers Advisory Overview from the Gateway without losing focus", async (
 
   await expect(page.getByText("Recovered mandate risk review")).toBeVisible();
   await expect(
-    page.getByText("Latest advisory priorities confirmed through Gateway."),
+    page.getByText("Proposal priorities were updated."),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Refresh advisory priorities" }),

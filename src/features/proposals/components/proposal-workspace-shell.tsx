@@ -134,7 +134,7 @@ export default async function ProposalWorkspaceShell({
                 title={title}
                 subtitle={subtitle}
                 actions={
-                  <SemanticBadge tone="warn">Advisor use only</SemanticBadge>
+                  <SemanticBadge tone="warn">Internal adviser use</SemanticBadge>
                 }
               >
                 <WorkbenchSectionStack className="proposal-page-sections">

@@ -123,5 +123,10 @@ describe("advisory journey navigation", () => {
     expect(getAdvisoryJourneyDefinition("suitability").title).toBe(
       "Suitability review",
     );
+    expect(getAdvisoryJourneyDefinition("overview")).toMatchObject({
+      detail: "Adviser priorities",
+      description:
+        "Prioritise open proposals and continue the next permitted advisory action.",
+    });
   });
 });

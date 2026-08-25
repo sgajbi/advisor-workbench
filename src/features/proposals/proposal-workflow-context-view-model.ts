@@ -89,7 +89,7 @@ export function buildNeutralProposalWorkflowContext({
     state: "empty",
     title: "Select a source record",
     summary:
-      "Workflow posture appears here only when the active workspace supplies a proposal or policy record.",
+      "Workflow status appears here only when the active workspace supplies a proposal or policy record.",
     currentPosture: "No proposal workflow is selected",
     nextAction:
       "Choose a proposal or policy evaluation to review its current business action.",
@@ -224,17 +224,17 @@ export function buildProposalQueueWorkflowContext({
     permissionBlocked || hasRestrictedEvidence ? undefined : selectedEvidence;
   const facts = [
     { label: "Portfolio", value: portfolioId },
-    { label: "Queue", value: modeLabel },
+    { label: "Worklist", value: modeLabel },
     ...(visibleSelectedEvidence?.facts ?? []),
   ];
 
   if (isLoading) {
     return withStatePresentation({
       state: "loading",
-      title: "Loading proposal posture",
+      title: "Loading proposal information",
       summary:
         "Retrieving the current proposal queue from the approved advisory service.",
-      currentPosture: "Source refresh in progress",
+      currentPosture: "Update in progress",
       nextAction:
         "Wait for the source response before taking an advisory action.",
       blockers: [],
@@ -249,7 +249,7 @@ export function buildProposalQueueWorkflowContext({
   if (permissionBlocked) {
     return withStatePresentation({
       state: "permission_blocked",
-      title: "Proposal posture is restricted",
+      title: "Proposal information is restricted",
       summary:
         "Your current access does not permit this portfolio's advisory workflow to be viewed.",
       currentPosture: "Access required",
@@ -269,7 +269,7 @@ export function buildProposalQueueWorkflowContext({
   if (hasError) {
     return withStatePresentation({
       state: "error",
-      title: "Proposal posture is unavailable",
+      title: "Proposal information is unavailable",
       summary:
         "The advisory workflow could not be retrieved from the approved source.",
       currentPosture: "Source unavailable",
@@ -290,9 +290,9 @@ export function buildProposalQueueWorkflowContext({
       title: "Refreshing proposal evidence",
       summary:
         "The current proposal view remains available while the approved advisory source refreshes.",
-      currentPosture: "Source refresh in progress",
+      currentPosture: "Update in progress",
       nextAction:
-        "Wait for refreshed evidence before relying on the current workflow posture.",
+        "Wait for updated proposal evidence before relying on the current workflow status.",
       blockers: [],
       facts: [
         ...facts,
@@ -382,14 +382,14 @@ export function buildProposalQueueWorkflowContext({
         ? hasRestrictedEvidence
           ? "Retry the proposal view, then use an entitled role or request access to the required supporting decision evidence."
           : hasUnavailableEvidence || hasSupportingEvidenceRefreshFailure
-            ? "Retry the proposal view and restore supporting decision evidence before relying on the current workflow posture."
-            : "Retry the proposal view before relying on the current queue posture."
+            ? "Retry the proposal view and restore supporting decision evidence before relying on the current workflow status."
+            : "Retry the proposal view before relying on the current worklist."
         : hasRestrictedEvidence
           ? "Use an entitled role or request access to the required supporting decision evidence."
           : hasUnavailableEvidence
-            ? "Restore the unavailable decision-evidence source before relying on the current workflow posture."
+            ? "Restore the unavailable decision evidence before relying on the current workflow status."
             : hasSupportingEvidenceRefreshFailure
-              ? "Retry the supporting-evidence refresh before relying on the current workflow posture."
+              ? "Retry the supporting-evidence refresh before relying on the current workflow status."
               : totalCount === 0 && hasMoreResults
                 ? "Review the next proposals before concluding this queue is clear."
                 : totalCount === 0 && hasPreviousResults
@@ -419,7 +419,7 @@ export function buildProposalQueueWorkflowContext({
       boundaryNote:
         onlySelectedEvidenceGap && visibleSelectedEvidence
           ? visibleSelectedEvidence.boundaryNote
-          : "Counts apply only to proposals shown in this view. They do not establish complete queue posture while proposal or supporting evidence is partial.",
+          : "Counts apply only to proposals shown in this view. They do not represent the complete portfolio worklist while proposal or supporting evidence is incomplete.",
       responsivePriority,
     });
   }
@@ -468,7 +468,7 @@ export function buildProposalQueueWorkflowContext({
       visibleSelectedEvidence?.sourceLabel ?? "Advisory proposal lifecycle",
     boundaryNote:
       visibleSelectedEvidence?.boundaryNote ??
-      "This is queue-level posture. Open a proposal to inspect its record-specific workflow, evidence, and approvals.",
+      "This is a worklist summary. Open a proposal to inspect its record-specific status, evidence, and approvals.",
     responsivePriority,
   });
 }

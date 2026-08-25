@@ -55,7 +55,7 @@ describe("ProposalWorkspaceShell", () => {
     expect(screen.getByText("Decision posture")).toBeInTheDocument();
     const decisionSummary = screen.getByLabelText("Advisory decision summary");
     expect(within(decisionSummary).queryByText("Portfolio")).not.toBeInTheDocument();
-    expect(screen.getByText("Advisor use only")).toBeInTheDocument();
+    expect(screen.getByText("Internal adviser use")).toBeInTheDocument();
     expectReviewContextOwns({
       exclusiveFacts: [
         portfolioContext.portfolio.portfolio_id,

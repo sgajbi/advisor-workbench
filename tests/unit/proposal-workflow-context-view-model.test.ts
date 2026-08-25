@@ -206,17 +206,17 @@ describe("proposal workflow context view model", () => {
     {
       expectedState: "loading",
       input: { isLoading: true },
-      expectedTitle: "Loading proposal posture",
+      expectedTitle: "Loading proposal information",
     },
     {
       expectedState: "permission_blocked",
       input: { permissionBlocked: true },
-      expectedTitle: "Proposal posture is restricted",
+      expectedTitle: "Proposal information is restricted",
     },
     {
       expectedState: "error",
       input: { hasError: true },
-      expectedTitle: "Proposal posture is unavailable",
+      expectedTitle: "Proposal information is unavailable",
     },
     {
       expectedState: "empty",
@@ -247,7 +247,7 @@ describe("proposal workflow context view model", () => {
     },
   );
 
-  it("shows source counts and an explicit queue-level boundary", () => {
+  it("shows source counts and an explicit worklist boundary", () => {
     const model = buildProposalQueueWorkflowContext(baseQueueInput);
 
     expect(model.facts).toEqual(
@@ -257,7 +257,7 @@ describe("proposal workflow context view model", () => {
       ]),
     );
     expect(model.blockers).toEqual(["1 proposal needs adviser action."]);
-    expect(model.boundaryNote).toContain("queue-level posture");
+    expect(model.boundaryNote).toContain("worklist summary");
     expect(model.responsivePriority).toBe("persistent");
   });
 
@@ -285,7 +285,7 @@ describe("proposal workflow context view model", () => {
       "One or more supporting decision-evidence sources are unavailable.",
     ]);
     expect(model.boundaryNote).toContain(
-      "do not establish complete queue posture",
+      "do not represent the complete portfolio worklist",
     );
   });
 
