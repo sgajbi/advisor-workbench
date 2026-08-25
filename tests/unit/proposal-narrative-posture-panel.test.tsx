@@ -94,9 +94,17 @@ describe("ProposalNarrativePosturePanel", () => {
       proposal: activeProposalSummary,
       event_count: 1,
       latest_event: {
+        event_id: "delivery-event-001",
         event_type: "REPORT_REQUESTED",
         occurred_at: "2026-05-22T09:00:00Z",
       },
+      events: [
+        {
+          event_id: "delivery-event-001",
+          event_type: "REPORT_REQUESTED",
+          occurred_at: "2026-05-22T09:00:00Z",
+        },
+      ],
     });
     vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue(
       confirmedNarrativeReview,
@@ -108,6 +116,8 @@ describe("ProposalNarrativePosturePanel", () => {
       report_request_id: "report-001",
       report_type: "PORTFOLIO_REVIEW",
       status: "REQUESTED",
+      report_reference_id: "report-document-001",
+      generated_at: "2026-05-22T09:01:00Z",
       explanation: {
         related_version_no: 2,
         include_reviewed_narrative: true,
@@ -127,7 +137,7 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Narrative review workflow" })).toBeInTheDocument();
     expect(await screen.findByText("Included Reviewed Narrative")).toBeInTheDocument();
-    expect(await screen.findByText("Report Requested")).toBeInTheDocument();
+    expect(await screen.findByText("Discussion pack requested")).toBeInTheDocument();
     expect(await screen.findByText(/22 May 2026, 09:00 UTC/)).toBeInTheDocument();
     expect(screen.queryByText(/2026-05-22T09:00:00Z/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send to client/i })).not.toBeInTheDocument();
@@ -258,6 +268,8 @@ describe("ProposalNarrativePosturePanel", () => {
           report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
           status: "REQUESTED",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-22T09:01:00Z",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
             related_version_no: 2,
@@ -355,6 +367,8 @@ describe("ProposalNarrativePosturePanel", () => {
           report_type: "PORTFOLIO_REVIEW",
           related_version_no: 2,
           status: "REQUESTED",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-22T09:01:00Z",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
             related_version_no: 2,

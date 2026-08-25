@@ -141,6 +141,8 @@ async function mockProposalDetail(
             report_type: "PORTFOLIO_REVIEW",
             related_version_no: 2,
             status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
+            report_reference_id: discussionPackRequested ? "report-document-001" : undefined,
+            generated_at: discussionPackRequested ? "2026-05-24T10:02:00Z" : undefined,
             include_reviewed_narrative: discussionPackRequested,
             proposal_narrative_package: {
               related_version_no: 2,
@@ -167,9 +169,17 @@ async function mockProposalDetail(
               },
               event_count: 1,
               latest_event: {
+                event_id: "delivery-event-001",
                 event_type: "REPORT_REQUESTED",
                 occurred_at: "2026-05-24T10:02:00Z",
               },
+              events: [
+                {
+                  event_id: "delivery-event-001",
+                  event_type: "REPORT_REQUESTED",
+                  occurred_at: "2026-05-24T10:02:00Z",
+                },
+              ],
             }
           : {
               proposal: {
@@ -178,6 +188,7 @@ async function mockProposalDetail(
                 current_version_no: 2,
               },
               event_count: 0,
+              events: [],
             },
       },
     });
@@ -238,6 +249,8 @@ async function mockProposalDetail(
           report_request_id: "report-001",
           report_type: "PORTFOLIO_REVIEW",
           status: "REQUESTED",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-24T10:02:00Z",
           explanation: {
             related_version_no: 2,
             include_reviewed_narrative: true,

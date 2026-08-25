@@ -45,6 +45,8 @@ function discussionPackSummary(
       report_type: "PORTFOLIO_REVIEW",
       related_version_no: 2,
       status: "REQUESTED",
+      report_reference_id: "report-document-001",
+      generated_at: "2026-05-22T09:01:00Z",
       include_reviewed_narrative: true,
       proposal_narrative_package: {
         related_version_no: 2,
@@ -63,6 +65,8 @@ function discussionPackRequest(
     report_request_id: "report-001",
     report_type: "PORTFOLIO_REVIEW",
     status: "REQUESTED",
+    report_reference_id: "report-document-001",
+    generated_at: "2026-05-22T09:01:00Z",
     explanation: {
       related_version_no: 2,
       include_reviewed_narrative: true,
@@ -79,13 +83,16 @@ function discussionPackRequest(
 function activeEvents(
   overrides: Partial<ProposalDeliveryEventsData> = {},
 ): ProposalDeliveryEventsData {
+  const deliveryEvent = {
+    event_id: "delivery-event-001",
+    event_type: "REPORT_REQUESTED",
+    occurred_at: "2026-05-22T09:00:00Z",
+  };
   return {
     proposal: activeProposalSummary,
     event_count: 1,
-    latest_event: {
-      event_type: "REPORT_REQUESTED",
-      occurred_at: "2026-05-22T09:00:00Z",
-    },
+    latest_event: deliveryEvent,
+    events: [deliveryEvent],
     ...overrides,
   };
 }
@@ -105,7 +112,26 @@ describe("proposal narrative posture view model", () => {
           source_narrative_hash: "sha256:narrative-001",
         },
       }),
-      events: activeEvents({ event_count: 2 }),
+      events: activeEvents({
+        event_count: 2,
+        latest_event: {
+          event_id: "delivery-event-002",
+          event_type: "EXECUTION_REQUESTED",
+          occurred_at: "2026-05-22T09:02:00Z",
+        },
+        events: [
+          {
+            event_id: "delivery-event-001",
+            event_type: "REPORT_REQUESTED",
+            occurred_at: "2026-05-22T09:00:00Z",
+          },
+          {
+            event_id: "delivery-event-002",
+            event_type: "EXECUTION_REQUESTED",
+            occurred_at: "2026-05-22T09:02:00Z",
+          },
+        ],
+      }),
     });
 
     expect(model).toMatchObject({
@@ -115,8 +141,8 @@ describe("proposal narrative posture view model", () => {
       deliveryState: "Ready",
       sourceNarrativeHash: "sha256:narrative-001",
       eventCount: 2,
-      latestEventLabel: "Report Requested",
-      latestEventTime: "22 May 2026, 09:00 UTC",
+      latestEventLabel: "Implementation requested",
+      latestEventTime: "22 May 2026, 09:02 UTC",
       canRequestDiscussionPack: false,
       nextActionTitle: "Review the latest delivery activity",
     });
@@ -228,6 +254,7 @@ describe("proposal narrative posture view model", () => {
       "ready package without reference",
       discussionPackSummary({
         status: "READY",
+        report_reference_id: undefined,
         generated_at: "2026-05-22T09:01:00Z",
         proposal_narrative_package: {
           related_version_no: 2,
@@ -241,6 +268,7 @@ describe("proposal narrative posture view model", () => {
       discussionPackSummary({
         status: "READY",
         report_reference_id: "report-document-001",
+        generated_at: undefined,
         proposal_narrative_package: {
           related_version_no: 2,
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
@@ -294,13 +322,16 @@ describe("proposal narrative posture view model", () => {
   });
 
   it("fails closed when a current delivery event omits timezone evidence", () => {
+    const invalidEvent = {
+      event_id: "delivery-event-001",
+      event_type: "REPORT_REQUESTED",
+      occurred_at: "2026-05-22T09:00:00",
+    };
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
       events: activeEvents({
-        latest_event: {
-          event_type: "REPORT_REQUESTED",
-          occurred_at: "2026-05-22T09:00:00",
-        },
+        latest_event: invalidEvent,
+        events: [invalidEvent],
       }),
     });
 
@@ -311,24 +342,45 @@ describe("proposal narrative posture view model", () => {
   it.each([
     ["positive count without event", activeEvents({ event_count: 1, latest_event: undefined, events: [] })],
     ["zero count with latest event", activeEvents({ event_count: 0 })],
+    ["count exceeds the returned history", activeEvents({ event_count: 2 })],
     ["negative count", activeEvents({ event_count: -1 })],
     ["fractional count", activeEvents({ event_count: 1.5 })],
     [
       "unknown event type",
       activeEvents({
         latest_event: {
+          event_id: "delivery-event-001",
           event_type: "INTERNAL_TECH_CODE",
           occurred_at: "2026-05-22T09:00:00Z",
         },
+        events: [
+          {
+            event_id: "delivery-event-001",
+            event_type: "INTERNAL_TECH_CODE",
+            occurred_at: "2026-05-22T09:00:00Z",
+          },
+        ],
       }),
     ],
     [
-      "latest event disagrees with the first listed event",
+      "latest event disagrees with the final listed event",
       activeEvents({
+        event_count: 2,
+        latest_event: {
+          event_id: "delivery-event-001",
+          event_type: "REPORT_REQUESTED",
+          occurred_at: "2026-05-22T09:00:00Z",
+        },
         events: [
           {
+            event_id: "delivery-event-001",
             event_type: "REPORT_REQUESTED",
-            occurred_at: "2026-05-22T08:59:00Z",
+            occurred_at: "2026-05-22T09:00:00Z",
+          },
+          {
+            event_id: "delivery-event-002",
+            event_type: "EXECUTION_ACCEPTED",
+            occurred_at: "2026-05-22T09:01:00Z",
           },
         ],
       }),
@@ -342,6 +394,33 @@ describe("proposal narrative posture view model", () => {
     expect(model.eventCount).toBe(0);
     expect(model.latestEventLabel).toBe("No delivery activity");
     expect(model.latestEventTime).toBeNull();
+  });
+
+  it.each([
+    ["REPORT_REQUESTED", "Discussion pack requested"],
+    ["EXECUTION_REQUESTED", "Implementation requested"],
+    ["EXECUTION_ACCEPTED", "Implementation accepted"],
+    ["EXECUTION_PARTIALLY_EXECUTED", "Partially implemented"],
+    ["EXECUTION_REJECTED", "Implementation rejected"],
+    ["EXECUTION_CANCELLED", "Implementation cancelled"],
+    ["EXECUTION_EXPIRED", "Implementation request expired"],
+    ["EXECUTED", "Implementation completed"],
+  ])("renders the governed %s event as %s", (eventType, expectedLabel) => {
+    const deliveryEvent = {
+      event_id: "delivery-event-001",
+      event_type: eventType,
+      occurred_at: "2026-05-22T09:00:00Z",
+    };
+    const model = buildProposalNarrativePostureModel({
+      ...activeProposal,
+      events: activeEvents({
+        latest_event: deliveryEvent,
+        events: [deliveryEvent],
+      }),
+    });
+
+    expect(model.latestEventLabel).toBe(expectedLabel);
+    expect(model.eventCount).toBe(1);
   });
 
   it("requires an exact complete refreshed review record", () => {
@@ -434,6 +513,8 @@ describe("proposal narrative posture view model", () => {
       "incomplete ready action",
       discussionPackRequest({
         status: "READY",
+        report_reference_id: undefined,
+        generated_at: undefined,
         explanation: {
           related_version_no: 2,
           include_reviewed_narrative: true,
