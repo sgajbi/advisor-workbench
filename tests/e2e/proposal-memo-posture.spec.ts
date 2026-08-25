@@ -17,6 +17,7 @@ type ProposalMockOptions = {
   memoInitialState?: "unreviewed" | "reviewed" | "complete";
   memoCommentaryInitiallyRecorded?: boolean;
   memoCommentaryRefreshMismatch?: boolean;
+  memoNestedIdentityMismatch?: boolean;
   memoReviewFailure?: boolean;
   memoReviewRefreshMismatch?: boolean;
   memoSourceVersionNo?: number;
@@ -507,6 +508,10 @@ async function mockProposalDetail(
       memo_status: "READY",
       memo_hash: "sha256:memo-001",
       memo: {
+        memo_hash: options.memoNestedIdentityMismatch
+          ? "sha256:stale-pack"
+          : "sha256:memo-001",
+        memo_id: options.memoNestedIdentityMismatch ? "memo_stale" : "memo_1",
         proposal_id: "pp_1",
         proposal_version_no: memoSourceVersionNo,
       },
@@ -580,6 +585,23 @@ test.describe("proposal memo posture", () => {
     page,
   }) => {
     await mockProposalDetail(page, { memoSourceVersionNo: 1 });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+
+    await expect(page.getByRole("heading", { name: "Prepare the advisor memo" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Request discussion material" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /advisor commentary/i }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Evidence aligned")).toHaveCount(0);
+  });
+
+  test("does not authorize actions when the nested memo pack conflicts with its outer record", async ({
+    page,
+  }) => {
+    await mockProposalDetail(page, { memoNestedIdentityMismatch: true });
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
     await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
 

@@ -92,6 +92,8 @@ function evidenceState({
       memo_hash: MEMO_HASH,
       memo_status: "READY",
       memo: {
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_1",
         proposal_id: PROPOSAL_ID,
         proposal_version_no: VERSION_NO,
       },
@@ -498,6 +500,8 @@ describe("ProposalMemoPosturePanel", () => {
       proposal_version_no: 1,
       memo: {
         ...sourceState.memo.memo,
+        memo_hash: MEMO_HASH,
+        memo_id: "memo_1",
         proposal_id: PROPOSAL_ID,
         proposal_version_no: 1,
       },

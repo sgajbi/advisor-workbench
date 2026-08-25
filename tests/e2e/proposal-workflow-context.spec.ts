@@ -469,6 +469,8 @@ async function mockProposalApprovalEvidence(page: Page) {
             memo_status: "READY",
             memo_hash: "sha256:memo-PRP-READY-001",
             memo: {
+              memo_hash: "sha256:memo-PRP-READY-001",
+              memo_id: "memo-PRP-READY-001",
               proposal_id: "PRP-READY-001",
               proposal_version_no: 5,
             },
