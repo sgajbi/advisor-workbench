@@ -1267,6 +1267,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Return history");
     expect(browserWorkflowModule).toContain(
+      'name: "Report centre", exact: true',
+    );
+    expect(browserWorkflowModule).toContain(
       'name: "Time-weighted return path · Net of fees"',
     );
     expect(browserWorkflowModule).toContain(
