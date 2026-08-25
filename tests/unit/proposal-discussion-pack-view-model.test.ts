@@ -13,14 +13,14 @@ describe("proposal discussion pack view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           key: "narrative",
-          status: "Approved for advisor use",
+          status: "Approved for adviser use",
         }),
         expect.objectContaining({ key: "consent", status: "Not recorded" }),
         expect.objectContaining({ key: "release", status: "Blocked" }),
       ]),
     );
-    expect(model.posture.label).toBe("Review required");
-    expect(model.posture.title).not.toMatch(/client[- ]ready/i);
+    expect(model.status.label).toBe("Action required");
+    expect(model.status.title).not.toMatch(/client[- ]ready/i);
   });
 
   it("surfaces partial source support without inventing readiness", () => {
@@ -30,11 +30,11 @@ describe("proposal discussion pack view model", () => {
 
     const model = buildProposalDiscussionPackModel(envelope);
 
-    expect(model.posture.label).toBe("Evidence incomplete");
+    expect(model.status.label).toBe("Information incomplete");
     expect(model.controls[0]).toMatchObject({
       status: "Restricted",
       tone: "danger",
-      source: "Source not confirmed",
+      source: "Current proposal version",
     });
   });
 
@@ -57,6 +57,9 @@ describe("proposal discussion pack view model", () => {
       contractVersion: "proposal-discussion-pack-review.v1",
       proposalVersionId: "proposal-version-2",
     });
+    expect(model.support.clientReleaseExplanation).toBe(
+      "Advisor-use evidence is not authority to publish or deliver client material.",
+    );
     expect(model.narrative.aiDisclosure).toMatchObject({
       preparation: "deterministic",
       availability: "live",
@@ -85,7 +88,7 @@ describe("proposal discussion pack view model", () => {
 
     expect(report).toMatchObject({
       status: "Available",
-      source: "Lotus Report",
+      source: "Report production record",
     });
     expect(report?.summary).not.toMatch(/released|delivered/i);
   });
@@ -109,9 +112,9 @@ describe("proposal discussion pack view model", () => {
     const report = model.controls.find(({ key }) => key === "package");
 
     expect(report).toMatchObject({
-      status: "Partial",
+      status: "Incomplete",
       tone: "warn",
-      source: "Source not confirmed",
+      source: "Current proposal version",
     });
     expect(model.controls.filter(({ tone }) => tone === "success")).toHaveLength(2);
   });
@@ -134,9 +137,9 @@ describe("proposal discussion pack view model", () => {
     const report = model.controls.find(({ key }) => key === "package");
 
     expect(report).toMatchObject({
-      status: "Not available",
+      status: "Unavailable",
       tone: "default",
-      source: "Source not confirmed",
+      source: "Current proposal version",
     });
     expect(model.controls.filter(({ tone }) => tone === "success")).toHaveLength(2);
   });
@@ -164,7 +167,7 @@ describe("proposal discussion pack view model", () => {
       expect(control).toMatchObject({
         status: "Review evidence incomplete",
         tone: "warn",
-        summary: "The approval state has no complete source review record.",
+        summary: "The approval state has no complete review record.",
       });
     },
   );
@@ -185,10 +188,10 @@ describe("proposal discussion pack view model", () => {
     const consent = model.controls.find(({ key }) => key === "consent");
 
     expect(consent).toMatchObject({
-      status: "Source record incomplete",
+      status: "Record incomplete",
       tone: "warn",
       summary:
-        "The consent state has no complete source approval, actor, and occurrence record.",
+        "The consent state has no complete approval, actor and date record.",
     });
   });
 
@@ -200,7 +203,7 @@ describe("proposal discussion pack view model", () => {
 
     expect(model.narrative.isAiAssisted).toBe(true);
     expect(model.narrative.aiDisclosure).toMatchObject({
-      scopeLabel: "Advisor conversation narrative",
+      scopeLabel: "Adviser conversation narrative",
       preparation: "ai-assisted",
       availability: "live",
       clientUse: "blocked",
@@ -223,9 +226,9 @@ describe("proposal discussion pack view model", () => {
       status: "Review required",
       tone: "warn",
     });
-    expect(model.posture).toMatchObject({
-      label: "Review required",
-      title: "Conversation controls still need advisor attention",
+    expect(model.status).toMatchObject({
+      label: "Action required",
+      title: "Resolve the remaining client-discussion controls",
     });
   });
 
@@ -248,9 +251,9 @@ describe("proposal discussion pack view model", () => {
     expect(model.controls.find(({ key }) => key === "package")).toMatchObject({
       status: "Narrative review missing",
       tone: "warn",
-      source: "Lotus Report",
+      source: "Report production record",
     });
-    expect(model.posture.label).toBe("Review required");
+    expect(model.status.label).toBe("Action required");
   });
 
   it("does not present incomplete approved narrative as available or reviewed", () => {
@@ -283,7 +286,7 @@ describe("proposal discussion pack view model", () => {
 
       const model = buildProposalDiscussionPackModel(envelope);
 
-      expect(model.posture.label).toBe("Review required");
+      expect(model.status.label).toBe("Action required");
       if (key === "disclosure_policy") {
         const sourceBlocker = envelope.data.narrative.client_ready_blockers[0]!;
         const sourceLimitation = envelope.data.narrative.limitations[0]!.message;
@@ -294,7 +297,7 @@ describe("proposal discussion pack view model", () => {
         });
         expect(model.disclosures).toEqual([]);
         expect(model.blockers).toEqual([
-          "Policy disclosure evidence is not available for this proposal version.",
+          "Disclosure requirements are unavailable for this proposal version.",
         ]);
         expect(model.limitations).toEqual([]);
         expect(model.narrative.aiDisclosure.limitations).not.toContain(
@@ -351,7 +354,7 @@ describe("proposal discussion pack view model", () => {
       "occurredAt",
     );
     expect(model.blockers).toEqual([
-      "Narrative evidence and preparation provenance are not available for this proposal version.",
+      "Conversation narrative and preparation details are unavailable for this proposal version.",
     ]);
     expect(model.blockers).not.toContain(sourceBlocker);
     expect(model.limitations).toEqual([]);
@@ -388,7 +391,7 @@ describe("proposal discussion pack view model", () => {
 
       expect(model.memo).toMatchObject({
         isAvailable: true,
-        status: status === "PENDING_REVIEW" ? "Pending review" : "Blocked",
+        status: status === "PENDING_REVIEW" ? "Review required" : "Blocked",
         tone: "warn",
       });
     },

@@ -3,6 +3,17 @@ import {
   createAiAssistanceDisclosure,
   type SemanticBadgeTone,
 } from "@/design-system";
+import {
+  PROPOSAL_DISCUSSION_PACK_COPY,
+  proposalDiscussionCapabilityLabel,
+  proposalDiscussionCapabilityStateLabel,
+  proposalDiscussionLimitationAreaLabel,
+  proposalDiscussionMemoOwnerLabel,
+  proposalDiscussionMemoStatusLabel,
+  proposalDiscussionPackStatusCopy,
+  proposalDiscussionProductTypeLabel,
+  proposalDiscussionUsePurposeLabel,
+} from "@/copy/proposal-discussion-pack-copy";
 
 import type {
   ProposalDiscussionCapabilityState,
@@ -43,7 +54,7 @@ export function buildProposalDiscussionPackModel(
   const disclosurePolicyIsSupported =
     disclosurePolicyCapability.state === "supported";
   const policyBoundaryMessage =
-    "Policy disclosure evidence is not available for this proposal version.";
+    PROPOSAL_DISCUSSION_PACK_COPY.policyEvidenceUnavailable;
   const narrativeArtifactIsComplete = hasCompleteNarrativeArtifact(data.narrative);
   const narrativeIsAvailable =
     data.narrative.state === "supported" && narrativeArtifactIsComplete;
@@ -51,7 +62,7 @@ export function buildProposalDiscussionPackModel(
   const memoIsAvailable =
     data.memo.state === "supported" && memoArtifactIsComplete;
   const narrativeBoundaryMessage =
-    "Narrative evidence and preparation provenance are not available for this proposal version.";
+    PROPOSAL_DISCUSSION_PACK_COPY.narrativeEvidenceUnavailable;
   const narrativeControlPresentation = controls.find(
     ({ key }) => key === "narrative",
   )!;
@@ -80,7 +91,7 @@ export function buildProposalDiscussionPackModel(
       versionNo: data.version_no,
       recorded: formatDateValue(data.version_created_at),
     },
-    posture: overallPosture(envelope, controls),
+    status: overallStatus(envelope, controls),
     controls,
     narrative: {
       isAvailable: narrativeIsAvailable,
@@ -90,12 +101,12 @@ export function buildProposalDiscussionPackModel(
       generationLabel: !narrativeIsAvailable
         ? narrativeControlPresentation.status
         : data.narrative.generation_mode === "AI_ASSISTED_DRAFT"
-          ? "AI-assisted draft"
+          ? PROPOSAL_DISCUSSION_PACK_COPY.generation.aiAssisted
           : data.narrative.generation_mode === "DETERMINISTIC_TEMPLATE"
-            ? "Deterministic source narrative"
-            : "Generation method not reported",
+            ? PROPOSAL_DISCUSSION_PACK_COPY.generation.deterministic
+            : PROPOSAL_DISCUSSION_PACK_COPY.generation.notReported,
       aiDisclosure: createAiAssistanceDisclosure({
-        scopeLabel: "Advisor conversation narrative",
+        scopeLabel: PROPOSAL_DISCUSSION_PACK_COPY.narrativeTitle,
         preparation:
           !narrativeIsAvailable
             ? "unavailable"
@@ -153,7 +164,9 @@ export function buildProposalDiscussionPackModel(
     memo: {
       isAvailable: memoIsAvailable,
       status: memoIsAvailable
-        ? businessLabel(data.memo.memo_status ?? data.memo.state)
+        ? proposalDiscussionMemoStatusLabel(
+            data.memo.memo_status ?? data.memo.state,
+          )
         : memoControlPresentation.status,
       tone: memoControlPresentation.tone,
       reviewedBy: memoIsAvailable
@@ -166,21 +179,23 @@ export function buildProposalDiscussionPackModel(
         ? data.memo.sections.map((section) => ({
             key: section.section_id,
             title: section.title,
-            status: businessLabel(section.status),
+            status: proposalDiscussionMemoStatusLabel(section.status),
             tone:
               section.status === "READY"
                 ? ("success" as const)
                 : ("warn" as const),
             summary: section.summary,
-            owner: businessLabel(section.owner_role),
+            owner: proposalDiscussionMemoOwnerLabel(section.owner_role),
             reviewRequired: section.review_required,
           }))
         : [],
     },
     disclosurePolicy: {
       isSupported: disclosurePolicyIsSupported,
-      status: supportabilityLabel(disclosurePolicyCapability.state),
-      tone: supportabilityTone(disclosurePolicyCapability.state),
+      status: proposalDiscussionCapabilityStateLabel(
+        disclosurePolicyCapability.state,
+      ),
+      tone: capabilityTone(disclosurePolicyCapability.state),
     },
     disclosures:
       disclosurePolicyIsSupported
@@ -191,7 +206,9 @@ export function buildProposalDiscussionPackModel(
                 ? "Client-ready material"
                 : "Advisor review",
             jurisdiction: disclosure.jurisdiction,
-            productType: businessLabel(disclosure.product_type),
+            productType: proposalDiscussionProductTypeLabel(
+              disclosure.product_type,
+            ),
             text: disclosure.text,
             authority: disclosure.source_authority,
             policyVersion: disclosure.policy_version,
@@ -206,19 +223,26 @@ export function buildProposalDiscussionPackModel(
       narrativeIsAvailable && disclosurePolicyIsSupported
         ? data.narrative.limitations.map((limitation, index) => ({
             key: `${limitation.evidence_key}:${index}`,
-            area: businessLabel(limitation.evidence_key),
-            purpose: businessLabel(limitation.required_for),
+            area: proposalDiscussionLimitationAreaLabel(
+              limitation.evidence_key,
+            ),
+            purpose: proposalDiscussionUsePurposeLabel(
+              limitation.required_for,
+            ),
             message: limitation.message,
           }))
         : [],
     capabilities: data.capabilities.map((capability) => ({
       key: capability.key,
-      name: businessLabel(capability.key),
-      status: supportabilityLabel(capability.state),
-      tone: supportabilityTone(capability.state),
+      name: proposalDiscussionCapabilityLabel(capability.key),
+      status: proposalDiscussionCapabilityStateLabel(capability.state),
+      tone: capabilityTone(capability.state),
       source: capability.source_service ?? "Not exposed",
       reference: capability.support_reference,
     })),
+    support: {
+      clientReleaseExplanation: data.client_release.explanation,
+    },
     lineage: {
       correlationId: envelope.correlation_id,
       contractVersion: envelope.contract_version,
@@ -232,20 +256,15 @@ export function buildProposalDiscussionPackModel(
   };
 }
 
-function overallPosture(
+function overallStatus(
   envelope: ProposalDiscussionPackEnvelope,
   controls: ControlPresentation[],
 ) {
   const { data } = envelope;
   if (data.overall_state === "partial") {
     return {
-      label: "Evidence incomplete",
+      ...proposalDiscussionPackStatusCopy("incomplete"),
       tone: "warn" as const,
-      title: "Some conversation evidence cannot be confirmed",
-      summary:
-        "Use the supported advisor material only after reviewing every unavailable or restricted source. No client-release posture is inferred.",
-      nextAction:
-        "Resolve the unavailable evidence before relying on this pack in a client meeting.",
     };
   }
   const internalControlsConfirmed = controls
@@ -265,23 +284,13 @@ function overallPosture(
     !requiredCapabilitiesSupported
   ) {
     return {
-      label: "Review required",
+      ...proposalDiscussionPackStatusCopy("action-required"),
       tone: "warn" as const,
-      title: "Conversation controls still need advisor attention",
-      summary:
-        "Source evidence is available, but one or more review, package, consent, or release controls remain unresolved.",
-      nextAction:
-        "Review the control ledger and resolve the highlighted business action in the governed proposal record.",
     };
   }
   return {
-    label: "Advisor evidence reviewed",
+    ...proposalDiscussionPackStatusCopy("internal-ready"),
     tone: "success" as const,
-    title: "Advisor-use conversation evidence is confirmed",
-    summary:
-      "Narrative, memo, report-package, and consent evidence are source-confirmed for this version. Client release remains a separate governed boundary.",
-    nextAction:
-      "Use the material for internal preparation and verify the client-release boundary before any external use.",
   };
 }
 
@@ -292,9 +301,9 @@ function narrativeControl(
   if (narrative.state !== "supported") {
     return unsupportedControl(
       "narrative",
-      "Advisor narrative",
+      "Adviser narrative",
       narrative.state,
-      "Narrative evidence cannot be confirmed for this version.",
+      "The conversation narrative is unavailable for this proposal version.",
     );
   }
   const reviewIsRecorded = hasRecordedAudit({
@@ -316,21 +325,21 @@ function narrativeControl(
   );
   return {
     key: "narrative",
-    label: "Advisor narrative",
+    label: "Adviser narrative",
     status: approvalIsIncomplete
       ? "Review evidence incomplete"
       : approved
-      ? "Approved for advisor use"
+      ? "Approved for adviser use"
       : rejected
         ? "Revision required"
         : "Review required",
     tone: approved ? "success" : rejected ? "danger" : "warn",
     summary: approvalIsIncomplete
-      ? "The approval state has no complete source review record."
+      ? "The approval state has no complete review record."
       : approved
       ? `Reviewed ${formatDateValue(narrative.reviewed_at)}.`
-      : "An advisor-use review has not been confirmed for the selected version.",
-    source: "Lotus Advise",
+      : "An adviser-use review is still required for the selected version.",
+    source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.narrative,
   };
 }
 
@@ -341,9 +350,9 @@ function memoControl(
   if (memo.state !== "supported") {
     return unsupportedControl(
       "memo",
-      "Advisor decision memo",
+      "Adviser decision memo",
       memo.state,
-      "Memo evidence cannot be confirmed for this version.",
+      "The decision memo is unavailable for this proposal version.",
     );
   }
   const reviewIsRecorded = hasRecordedAudit({
@@ -371,21 +380,21 @@ function memoControl(
   );
   return {
     key: "memo",
-    label: "Advisor decision memo",
+    label: "Adviser decision memo",
     status: approvalIsIncomplete
       ? "Review evidence incomplete"
       : approved
-      ? "Approved for advisor use"
+      ? "Approved for adviser use"
       : rejected
         ? "Revision required"
         : "Review required",
     tone: approved ? "success" : rejected ? "danger" : "warn",
     summary: approvalIsIncomplete
-      ? "The approval state has no complete source review record."
+      ? "The approval state has no complete review record."
       : approved
       ? `Reviewed ${formatDateValue(memo.reviewed_at)}.`
-      : "A completed advisor-use memo review has not been confirmed.",
-    source: "Lotus Advise",
+      : "A completed adviser-use memo review is still required.",
+    source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.memo,
   };
 }
 
@@ -408,10 +417,10 @@ function packageControl(
       status: "Narrative review missing",
       tone: "warn",
       summary:
-        "The report package is available but does not include the reviewed advisor narrative.",
+        "The report package is available but does not include the reviewed adviser narrative.",
       source:
         evidence.source_service === "lotus-report"
-          ? "Lotus Report"
+          ? PROPOSAL_DISCUSSION_PACK_COPY.controlSources.reportPackage
           : "Not recorded",
     };
   }
@@ -445,7 +454,7 @@ function packageControl(
     summary: presentation[2],
     source:
       evidence.source_service === "lotus-report"
-        ? "Lotus Report"
+        ? PROPOSAL_DISCUSSION_PACK_COPY.controlSources.reportPackage
         : "Not recorded",
   };
 }
@@ -474,11 +483,11 @@ function consentControl(
     return {
       key: "consent",
       label: "Client consent record",
-      status: "Source record incomplete",
+      status: "Record incomplete",
       tone: "warn",
       summary:
-        "The consent state has no complete source approval, actor, and occurrence record.",
-      source: "Lotus Advise",
+        "The consent state has no complete approval, actor and date record.",
+      source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.consent,
     };
   }
   const presentation = {
@@ -504,7 +513,7 @@ function consentControl(
     status: presentation[0],
     tone: presentation[1],
     summary: presentation[2],
-    source: "Lotus Advise",
+    source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.consent,
   };
 }
 
@@ -517,8 +526,8 @@ function releaseControl(
     label: "Client release and delivery",
     status: release.state === "blocked" ? "Blocked" : "Not supported",
     tone: "warn",
-    summary: release.explanation,
-    source: "Governed platform boundary",
+    summary: PROPOSAL_DISCUSSION_PACK_COPY.releaseSummary,
+    source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.release,
   };
 }
 
@@ -570,36 +579,18 @@ function unsupportedControl(
   return {
     key,
     label,
-    status: supportabilityLabel(state),
-    tone: supportabilityTone(state),
+    status: proposalDiscussionCapabilityStateLabel(state),
+    tone: capabilityTone(state),
     summary,
-    source: "Source not confirmed",
+    source: PROPOSAL_DISCUSSION_PACK_COPY.controlSources.currentVersion,
   };
 }
 
-function supportabilityLabel(state: ProposalDiscussionCapabilityState) {
-  return {
-    supported: "Supported",
-    partial: "Partial",
-    restricted: "Restricted",
-    unavailable: "Unavailable",
-    not_available: "Not available",
-    not_supported: "Not supported",
-  }[state];
-}
-
-function supportabilityTone(
+function capabilityTone(
   state: ProposalDiscussionCapabilityState,
 ): SemanticBadgeTone {
   if (state === "supported") return "success";
   if (state === "restricted" || state === "unavailable") return "danger";
   if (state === "partial") return "warn";
   return "default";
-}
-
-function businessLabel(value: string): string {
-  return value
-    .toLowerCase()
-    .replaceAll("_", " ")
-    .replace(/^./, (character) => character.toUpperCase());
 }
