@@ -856,8 +856,12 @@
       "implementationEvidence": [
         "src/apps/recommendations/page.tsx",
         "src/copy/advisory-overview-copy.ts",
+        "src/features/proposals/advisory-journey-navigation.ts",
         "src/features/proposals/components/advisory-overview-workspace.tsx",
+        "src/features/proposals/components/proposal-workflow-context.tsx",
+        "src/features/proposals/components/proposal-workspace-shell.tsx",
         "src/features/proposals/advisory-overview-view-model.ts",
+        "src/features/proposals/proposal-workflow-context-view-model.ts",
         "src/design-system/components/workbench-worklist.tsx",
         "tests/integration/advisory-overview-workspace.test.tsx",
         "tests/unit/advisory-overview-copy.test.ts"

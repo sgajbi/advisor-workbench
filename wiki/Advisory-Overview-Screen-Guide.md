@@ -2,7 +2,7 @@
 
 Advisory Overview is the selected portfolio's proposal-prioritisation workspace. It brings the
 current proposal window, control-review handoffs, client-discussion readiness, implementation follow-up,
-and next adviser action into one dense queue. It does not establish a complete adviser book,
+and next adviser action into one dense worklist. It does not establish a complete adviser book,
 calculate suitability, approve advice, publish client material, or authorize an order.
 
 ## Current Scope
@@ -29,10 +29,11 @@ recommendation forward:
 4. Which exact proposal record owns the next action and supporting evidence?
 5. Were proposal priorities updated, or is the earlier worklist being retained after a failed update?
 
-The reading order is selected portfolio, adviser decision, proposal-window boundary, proposal
+The page header states **Prioritise open proposals and continue the next permitted advisory
+action**. The reading order is selected portfolio, adviser decision, proposal-window boundary, proposal
 worklist, and selected next action. Stage and readiness are combined into one business status per
 proposal, and the needs-action count appears once in the primary scan path. On tablets and compact
-layouts, the source-and-scope boundary remains available while the worklist and decision pane
+layouts, the **Proposal coverage** boundary remains available while the worklist and decision pane
 stack. This keeps routine triage fast without presenting a partial list as a complete portfolio or
 book.
 
@@ -44,7 +45,9 @@ centre, business date, and currency stay visible in the compact band. Advisory o
 through the Workbench BFF and Gateway portfolio-shell response and never turns the URL portfolio
 reference into visible source truth.
 
-The right rail therefore describes decision posture only; it does not repeat portfolio identity.
+The shared shell marks the workspace **Internal adviser use** without implying approval, client use,
+or publication readiness. The right rail therefore describes decision posture only; it does not
+repeat portfolio identity.
 If supporting portfolio context is unavailable, previously loaded advisory evidence may remain
 usable, but the strip is explicitly unavailable and does not show the unconfirmed route value.
 
@@ -99,8 +102,9 @@ These roles describe business use; they do not grant authority or replace source
   movement, Enter detail transfer, and responsive stacking without hiding exact proposal evidence.
 - States the visible needs-action count once, removes repeated metric and lifecycle summaries, and
   keeps the source-window boundary adjacent to the worklist.
-- Keeps only unique source-and-scope evidence from the former supplementary workflow context and
-  presents it inline so the selected decision retains the full operating width.
+- Keeps only unique proposal-coverage evidence from the former supplementary workflow context and
+  presents it inline under **Proposal coverage** so the selected decision retains the full operating
+  width.
 
 ## Decisions And Actions
 

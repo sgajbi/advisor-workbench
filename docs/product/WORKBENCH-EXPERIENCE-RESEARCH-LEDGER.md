@@ -6645,8 +6645,10 @@ wealth-platform sources before the comparison and handoff language was aligned:
     returned creator reference in selected proposal evidence rather than replacing it with the
     unhelpful phrase **Recorded by source**. Reject toast-only confirmation, raw service names,
     fallback proposals, invented freshness, and lifecycle-derived approval claims. This #798 slice
-    uses one typed Advisory Overview copy authority and leaves Gateway/Advise ownership in source
-    and support documentation.
+    uses one typed Advisory Overview copy authority and aligns the shared proposal navigation,
+    internal-use banner, workflow status and proposal-coverage boundary to the same business
+    vocabulary. Gateway/Advise ownership remains in source and support documentation rather than
+    productive page copy.
 
 ### Delivery scope and deferred surfaces
 
