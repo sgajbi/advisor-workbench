@@ -9,7 +9,7 @@ export function formatBusinessOwner(owner: string | null | undefined): string {
     return "Data Operations";
   }
   if (normalized.includes("advisor")) {
-    return "Advisor";
+    return "Adviser";
   }
   if (normalized.includes("portfolio") || normalized.includes("pm")) {
     return "Portfolio Manager";
