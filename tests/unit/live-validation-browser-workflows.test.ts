@@ -532,7 +532,7 @@ describe("live validation browser workflow helpers", () => {
     ).toThrow(/high-cash candidate/i);
   });
 
-  it("binds Advisor Book proof to portfolio context rather than its display label", () => {
+  it("binds Advisor Book proof to portfolio context and collapsed operating evidence", () => {
     const source = browserWorkflowModule.validateAdvisorBookPanel.toString();
 
     expect(source).toContain("navigateForBusinessProof");
@@ -540,7 +540,12 @@ describe("live validation browser workflow helpers", () => {
       'a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]',
     );
     expect(source).not.toContain("getByText(portfolioId");
-    expect(source).toContain('{ name: "Operational details" }');
+    expect(source).toContain('getByTestId("advisor-book-operating-evidence")');
+    expect(source).toContain('.not.toHaveAttribute("open", "")');
+    expect(source).toContain('.toHaveAttribute("open", "")');
+    expect(source).toContain('{ name: "Operating boundaries" }');
+    expect(source).toContain('{ name: "Support references" }');
+    expect(source).not.toContain('{ name: "Operational details" }');
     expect(source).not.toContain('{ name: "Support details" }');
   });
 
