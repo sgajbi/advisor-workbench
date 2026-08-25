@@ -338,18 +338,40 @@ export function confirmMemoCommentaryRefresh({
   refreshed: ProposalMemoRefreshEvidence;
 }): void {
   const actionHash = firstString(action.memo, ["memo_hash"]);
+  const actionEventId = firstString(action.ai_event, ["event_id"]);
   const refreshedModel = assertRefreshEvidence(refreshed);
   if (
     action.ai_event?.event_type !== "MEMO_AI_REFERENCE_RECORDED"
+    || !actionEventId
     || !action.commentary
     || action.commentary.authoritative_for_memo_status !== false
     || actionHash !== refreshedModel.memoHash
     || !refreshedModel.commentaryRecorded
+    || !hasRefreshedMemoAuditEvent(
+      refreshed,
+      actionEventId,
+      "MEMO_AI_REFERENCE_RECORDED",
+    )
   ) {
     throw new Error(
       "Advisor commentary was requested, but refreshed memo evidence did not confirm it.",
     );
   }
+}
+
+function hasRefreshedMemoAuditEvent(
+  refreshed: ProposalMemoRefreshEvidence,
+  eventId: string,
+  eventType: string,
+): boolean {
+  return [
+    ...(refreshed.memo?.audit_events ?? []),
+    ...(refreshed.replay?.audit_events ?? []),
+  ].some(
+    (event) =>
+      firstString(event, ["event_id"]) === eventId &&
+      firstString(event, ["event_type"]) === eventType,
+  );
 }
 
 export type ProposalMemoRefreshEvidence = {

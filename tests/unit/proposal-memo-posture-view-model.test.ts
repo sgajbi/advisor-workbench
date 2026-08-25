@@ -12,6 +12,7 @@ import {
 } from "../../src/features/proposals/proposal-memo-posture-view-model";
 
 const MEMO_HASH = "sha256:memo-001";
+const COMMENTARY_EVENT_ID = "memo-ai-event-001";
 
 function alignedEvidence(): ProposalMemoRefreshEvidence {
   return {
@@ -37,6 +38,12 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
         source_memo_hash: MEMO_HASH,
         authoritative_for_memo_status: false,
       },
+      audit_events: [
+        {
+          event_id: COMMENTARY_EVENT_ID,
+          event_type: "MEMO_AI_REFERENCE_RECORDED",
+        },
+      ],
     },
     projection: {
       memo_id: "memo_2",
@@ -65,7 +72,13 @@ function alignedEvidence(): ProposalMemoRefreshEvidence {
     },
     replay: {
       hashes: { memo_hash: MEMO_HASH },
-      audit_events: [{ event_type: "MEMO_DRAFT_CREATED" }],
+      audit_events: [
+        { event_type: "MEMO_DRAFT_CREATED" },
+        {
+          event_id: COMMENTARY_EVENT_ID,
+          event_type: "MEMO_AI_REFERENCE_RECORDED",
+        },
+      ],
       explanation: { client_ready_publication: "BLOCKED" },
     },
   };
@@ -230,13 +243,29 @@ describe("proposal memo source-refresh confirmation", () => {
   it("keeps commentary non-authoritative and requires refreshed source evidence", () => {
     const action = {
       memo: alignedEvidence().memo,
-      ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
+      ai_event: {
+        event_id: COMMENTARY_EVENT_ID,
+        event_type: "MEMO_AI_REFERENCE_RECORDED",
+      },
       commentary: { status: "REVIEW_REQUIRED", authoritative_for_memo_status: false },
       replayed: false,
     };
     expect(() =>
       confirmMemoCommentaryRefresh({ action, refreshed: alignedEvidence() }),
     ).not.toThrow();
+
+    expect(() =>
+      confirmMemoCommentaryRefresh({
+        action: {
+          ...action,
+          ai_event: {
+            event_id: "memo-ai-event-current",
+            event_type: "MEMO_AI_REFERENCE_RECORDED",
+          },
+        },
+        refreshed: alignedEvidence(),
+      }),
+    ).toThrow("Advisor commentary was requested, but refreshed memo evidence did not confirm it.");
 
     expect(() =>
       confirmMemoCommentaryRefresh({
