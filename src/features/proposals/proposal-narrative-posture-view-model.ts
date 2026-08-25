@@ -250,7 +250,10 @@ function isCoherentDiscussionPackRecord({
     return false;
   }
   if (status === "REQUESTED" && packageStatus === "REQUESTED") {
-    return true;
+    return (
+      (reportReferenceId === undefined || reportReferenceId === null) &&
+      (generatedAt === undefined || generatedAt === null)
+    );
   }
   return (
     status === "READY" &&
@@ -299,10 +302,17 @@ function deliveryEventAggregateIsCoherent(
     return false;
   }
   const latestEvent = events.latest_event ?? events.events?.[0];
+  const recordsAgree =
+    !events.latest_event ||
+    !events.events?.[0] ||
+    (events.latest_event.event_type === events.events[0].event_type &&
+      events.latest_event.occurred_at === events.events[0].occurred_at &&
+      events.latest_event.to_state === events.events[0].to_state);
   return Boolean(
     latestEvent &&
-      isNonBlankString(latestEvent.event_type) &&
-      isTimestampValue(latestEvent.occurred_at),
+      latestEvent.event_type === "REPORT_REQUESTED" &&
+      isTimestampValue(latestEvent.occurred_at) &&
+      recordsAgree,
   );
 }
 
@@ -505,8 +515,18 @@ export function confirmDiscussionPackRefresh({
     summary?.reporting?.include_reviewed_narrative,
     summary?.reporting_summary?.include_reviewed_narrative,
   ]);
-  const actionRequestId = report.report_request_id?.trim();
-  const refreshedRequestId = summary?.reporting?.report_request_id?.trim();
+  const actionRequestId = report.report_request_id;
+  const refreshedRequestId = summary?.reporting?.report_request_id;
+  const actionStatus = report.status;
+  const refreshedStatus = summary?.reporting?.status;
+  const lifecycleIsMonotonic =
+    (actionStatus === "REQUESTED" &&
+      (refreshedStatus === "REQUESTED" || refreshedStatus === "READY")) ||
+    (actionStatus === "READY" && refreshedStatus === "READY");
+  const readyArtifactsAgree =
+    actionStatus !== "READY" ||
+    (report.report_reference_id === summary?.reporting?.report_reference_id &&
+      report.generated_at === summary?.reporting?.generated_at);
   if (
     !isNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
@@ -518,8 +538,11 @@ export function confirmDiscussionPackRefresh({
     refreshedIdentity?.versionNo !== versionNo ||
     !actionIncludesReviewedNarrative ||
     !refreshedIncludesReviewedNarrative ||
-    !actionRequestId ||
+    !isNonBlankString(actionRequestId) ||
+    !isNonBlankString(refreshedRequestId) ||
     actionRequestId !== refreshedRequestId ||
+    !lifecycleIsMonotonic ||
+    !readyArtifactsAgree ||
     report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
     summary.reporting?.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
     !isCoherentDiscussionPackRecord({
