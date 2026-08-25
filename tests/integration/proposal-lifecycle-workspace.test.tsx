@@ -956,7 +956,7 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Refreshing proposal evidence",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Source refresh in progress")).toBeInTheDocument();
+    expect(screen.getByText("Update in progress")).toBeInTheDocument();
 
     await act(async () => {
       resolveRecoveredEvidence?.(implementationStatusFixture("PRP-READY", 5));
@@ -1627,7 +1627,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Restore the unavailable decision-evidence source before relying on the current workflow posture.",
+        "Restore the unavailable decision evidence before relying on the current workflow status.",
       ),
     ).toBeInTheDocument();
   });
@@ -1674,7 +1674,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("region", { name: "Proposals in this view" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "Proposal posture is restricted" }),
+      screen.queryByRole("heading", { name: "Proposal information is restricted" }),
     ).not.toBeInTheDocument();
   });
 
@@ -2815,7 +2815,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
     expect(
       await screen.findByRole("heading", {
-        name: "Proposal posture is unavailable",
+        name: "Proposal information is unavailable",
       }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous proposals" }));
@@ -2849,12 +2849,12 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Proposal posture is restricted",
+        name: "Proposal information is restricted",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Restricted")).toBeInTheDocument();
     expect(
-      screen.queryByText("Proposal posture is unavailable"),
+      screen.queryByText("Proposal information is unavailable"),
     ).not.toBeInTheDocument();
   });
 

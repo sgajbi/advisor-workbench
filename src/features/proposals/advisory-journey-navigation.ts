@@ -38,10 +38,10 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
   {
     key: "overview",
     label: "Overview",
-    detail: "Advisor priorities",
+    detail: "Adviser priorities",
     title: "Advisory Overview",
     description:
-      "Portfolio-scoped advisory priorities, open proposal posture, and next actions.",
+      "Prioritise open proposals and continue the next permitted advisory action.",
     primaryDecision: "Which client or portfolio action needs attention first?",
     nextAction: "Open the relevant opportunity, proposal, or approval item.",
     dataSources: ["lotus-gateway", "lotus-advise", "lotus-core"],

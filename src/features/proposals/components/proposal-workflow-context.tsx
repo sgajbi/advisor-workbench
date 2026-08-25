@@ -184,7 +184,7 @@ export function ProposalWorkflowBoundary({
       data-context-presentation={presentation}
     >
       <div>
-        <Text variant="microLabel">Source and scope</Text>
+        <Text variant="microLabel">Proposal coverage</Text>
         <strong>{model.sourceLabel}</strong>
       </div>
       <p>{model.boundaryNote}</p>

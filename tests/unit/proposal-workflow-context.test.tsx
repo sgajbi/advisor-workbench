@@ -43,7 +43,7 @@ describe("ProposalWorkflowContextRail", () => {
     });
     render(<ProposalWorkflowBoundary model={model} presentation="inline" />);
 
-    const boundary = screen.getByText("Source and scope").closest("article");
+    const boundary = screen.getByText("Proposal coverage").closest("article");
     expect(boundary).toHaveAttribute("data-context-presentation", "inline");
     expect(boundary).toHaveTextContent(
       "Advisor Cockpit source-owned action evidence",
@@ -102,7 +102,7 @@ describe("ProposalWorkflowContextRail", () => {
       </ProposalWorkflowContextProvider>
     );
 
-    const boundary = screen.getByText("Source and scope").closest("article");
+    const boundary = screen.getByText("Proposal coverage").closest("article");
     expect(boundary).toHaveAttribute("data-context-presentation", "inline");
     expect(await screen.findByText("Advisory proposal lifecycle")).toBeInTheDocument();
     expect(boundary).toHaveTextContent(
@@ -146,7 +146,7 @@ describe("ProposalWorkflowContextRail", () => {
     expect(screen.queryByText("Decision posture")).not.toBeInTheDocument();
     expect(screen.queryByText("2 need attention")).not.toBeInTheDocument();
     expect(screen.queryByText("PB_SG_GLOBAL_BAL_001")).not.toBeInTheDocument();
-    expect(screen.getByText("Source and scope")).toBeInTheDocument();
+    expect(screen.getByText("Proposal coverage")).toBeInTheDocument();
   });
 
   it("preserves repeated source blockers without duplicate-key warnings", () => {
