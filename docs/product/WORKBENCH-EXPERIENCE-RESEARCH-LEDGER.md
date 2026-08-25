@@ -6613,6 +6613,24 @@ wealth-platform sources before the comparison and handoff language was aligned:
     required, and keep it behind the source-returned action gate.
 11. Order Outcome reviews around comparison, mandate impact, source evidence, and the next permitted
     action; keep source lineage and support reasons as progressive detail.
+12. Align the Advisory overview worklist heading to **Adviser priorities** and make canonical
+    browser proof assert that exact accessible heading. This bounded correction is owned by #864;
+    it repairs a pre-existing product/validation mismatch without expanding the slice into a blind
+    application-wide rename.
+
+### Delivery scope and deferred surfaces
+
+This PR converts the vocabulary authority plus bounded Portfolio, Performance, Manage, Suitability,
+Report centre, Outcome review, and Advisory-priorities paths covered by focused semantic and
+rendered tests. It deliberately does not claim application-wide completion; #799 remains open until
+the remaining governed concepts are aligned and proven.
+
+The following observed literals are deferred, not approved exceptions: **Advisor Narrative And
+Delivery**, **Advisor Memo And Evidence Pack**, **Current Positions**, **Draft Order Blotter**,
+**Review Posture**, and **Recommended Actions**. They remain candidate slices under #799, with the
+general copy-layer and banned-token enforcement owned by #798. A fixing slice must inspect each
+literal in its business context before changing it so that review posture, proposal evidence,
+positions, draft instructions, and next actions are not collapsed into cosmetic synonyms.
 
 ### Rejected decisions
 
