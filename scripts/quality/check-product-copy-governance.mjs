@@ -124,6 +124,7 @@ export function scanProductCopySource({ filePath, sourceText }) {
 
   function inspectExpression(expression, context) {
     const resolvingDeclarations = new Set();
+    const visitingResolvedExpressions = new Set();
     const STATIC_PROPERTY_ABSENT = Symbol("static-property-absent");
     const STATIC_PROPERTY_UNKNOWN = Symbol("static-property-unknown");
 
@@ -291,55 +292,63 @@ export function scanProductCopySource({ filePath, sourceText }) {
     }
 
     function visitResolvedCopyExpression(node) {
-      if (isStaticAlternatives(node)) {
-        for (const candidate of node.candidates) {
-          visitResolvedCopyExpression(candidate);
+      if (visitingResolvedExpressions.has(node)) {
+        return;
+      }
+      visitingResolvedExpressions.add(node);
+      try {
+        if (isStaticAlternatives(node)) {
+          for (const candidate of node.candidates) {
+            visitResolvedCopyExpression(candidate);
+          }
+          return;
         }
-        return;
-      }
-      if (
-        ts.isStringLiteral(node) ||
-        ts.isNoSubstitutionTemplateLiteral(node) ||
-        ts.isTemplateExpression(node)
-      ) {
-        inspectLiteral(node, context);
-        return;
-      }
-      if (
-        ts.isIdentifier(node)
-        || ts.isPropertyAccessExpression(node)
-        || ts.isElementAccessExpression(node)
-      ) {
-        const resolved = resolveStaticExpression(node);
-        if (resolved && resolved !== node) {
-          visitResolvedCopyExpression(resolved);
+        if (
+          ts.isStringLiteral(node) ||
+          ts.isNoSubstitutionTemplateLiteral(node) ||
+          ts.isTemplateExpression(node)
+        ) {
+          inspectLiteral(node, context);
+          return;
         }
-        return;
-      }
-      if (ts.isConditionalExpression(node)) {
-        visitResolvedCopyExpression(node.whenTrue);
-        visitResolvedCopyExpression(node.whenFalse);
-        return;
-      }
-      if (
-        ts.isBinaryExpression(node) &&
-        [
-          ts.SyntaxKind.PlusToken,
-          ts.SyntaxKind.QuestionQuestionToken,
-          ts.SyntaxKind.BarBarToken,
-        ].includes(node.operatorToken.kind)
-      ) {
-        visitResolvedCopyExpression(node.left);
-        visitResolvedCopyExpression(node.right);
-        return;
-      }
-      if (
-        ts.isParenthesizedExpression(node) ||
-        ts.isAsExpression(node) ||
-        ts.isSatisfiesExpression(node) ||
-        ts.isNonNullExpression(node)
-      ) {
-        visitResolvedCopyExpression(node.expression);
+        if (
+          ts.isIdentifier(node)
+          || ts.isPropertyAccessExpression(node)
+          || ts.isElementAccessExpression(node)
+        ) {
+          const resolved = resolveStaticExpression(node);
+          if (resolved && resolved !== node) {
+            visitResolvedCopyExpression(resolved);
+          }
+          return;
+        }
+        if (ts.isConditionalExpression(node)) {
+          visitResolvedCopyExpression(node.whenTrue);
+          visitResolvedCopyExpression(node.whenFalse);
+          return;
+        }
+        if (
+          ts.isBinaryExpression(node) &&
+          [
+            ts.SyntaxKind.PlusToken,
+            ts.SyntaxKind.QuestionQuestionToken,
+            ts.SyntaxKind.BarBarToken,
+          ].includes(node.operatorToken.kind)
+        ) {
+          visitResolvedCopyExpression(node.left);
+          visitResolvedCopyExpression(node.right);
+          return;
+        }
+        if (
+          ts.isParenthesizedExpression(node) ||
+          ts.isAsExpression(node) ||
+          ts.isSatisfiesExpression(node) ||
+          ts.isNonNullExpression(node)
+        ) {
+          visitResolvedCopyExpression(node.expression);
+        }
+      } finally {
+        visitingResolvedExpressions.delete(node);
       }
     }
 
@@ -592,47 +601,189 @@ function isStaticAlternatives(value) {
   return value?.bindingKind === "alternatives";
 }
 
-function isProvablyDefinedStaticValue(value, resolveValue) {
-  if (!value) {
+function isProvablyDefinedStaticValue(
+  value,
+  resolveValue,
+  proofStack = new Set(),
+) {
+  if (!value || proofStack.has(value)) {
     return false;
   }
-  if (isStaticAlternatives(value)) {
-    return value.candidates.every((candidate) =>
-      isProvablyDefinedStaticValue(candidate, resolveValue),
-    );
+  proofStack.add(value);
+  try {
+    if (isStaticAlternatives(value)) {
+      return value.candidates.every((candidate) =>
+        isProvablyDefinedStaticValue(candidate, resolveValue, proofStack),
+      );
+    }
+    const node = unwrapCopyExpression(value);
+    if (isResolvableStaticReference(node)) {
+      const resolved = resolveValue(node);
+      return Boolean(
+        resolved
+        && resolved !== node
+        && isProvablyDefinedStaticValue(resolved, resolveValue, proofStack),
+      );
+    }
+    if (ts.isConditionalExpression(node)) {
+      return (
+        isProvablyDefinedStaticValue(node.whenTrue, resolveValue, proofStack)
+        && isProvablyDefinedStaticValue(
+          node.whenFalse,
+          resolveValue,
+          proofStack,
+        )
+      );
+    }
+    if (ts.isBinaryExpression(node)) {
+      if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+        return true;
+      }
+      if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+        return (
+          isProvablyNonNullishStaticValue(node.left, resolveValue, proofStack)
+          || isProvablyDefinedStaticValue(node.right, resolveValue, proofStack)
+        );
+      }
+      if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+        return (
+          isProvablyTruthyStaticValue(node.left, resolveValue, proofStack)
+          || isProvablyDefinedStaticValue(node.right, resolveValue, proofStack)
+        );
+      }
+    }
+    return isProvablyDefinedAtomicValue(node);
+  } finally {
+    proofStack.delete(value);
   }
-  const node = unwrapCopyExpression(value);
-  if (isResolvableStaticReference(node)) {
-    const resolved = resolveValue(node);
-    return Boolean(
-      resolved
-      && resolved !== node
-      && isProvablyDefinedStaticValue(resolved, resolveValue),
-    );
+}
+
+function isProvablyNonNullishStaticValue(
+  value,
+  resolveValue,
+  proofStack = new Set(),
+) {
+  if (!value || proofStack.has(value)) {
+    return false;
   }
-  if (ts.isConditionalExpression(node)) {
+  proofStack.add(value);
+  try {
+    if (isStaticAlternatives(value)) {
+      return value.candidates.every((candidate) =>
+        isProvablyNonNullishStaticValue(candidate, resolveValue, proofStack),
+      );
+    }
+    const node = unwrapCopyExpression(value);
+    if (isResolvableStaticReference(node)) {
+      const resolved = resolveValue(node);
+      return Boolean(
+        resolved
+        && resolved !== node
+        && isProvablyNonNullishStaticValue(resolved, resolveValue, proofStack),
+      );
+    }
+    if (node.kind === ts.SyntaxKind.NullKeyword) {
+      return false;
+    }
+    if (ts.isConditionalExpression(node)) {
+      return (
+        isProvablyNonNullishStaticValue(node.whenTrue, resolveValue, proofStack)
+        && isProvablyNonNullishStaticValue(
+          node.whenFalse,
+          resolveValue,
+          proofStack,
+        )
+      );
+    }
+    if (ts.isBinaryExpression(node)) {
+      if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+        return true;
+      }
+      if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+        return (
+          isProvablyNonNullishStaticValue(node.left, resolveValue, proofStack)
+          || isProvablyNonNullishStaticValue(
+            node.right,
+            resolveValue,
+            proofStack,
+          )
+        );
+      }
+      if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+        return (
+          isProvablyTruthyStaticValue(node.left, resolveValue, proofStack)
+          || isProvablyNonNullishStaticValue(
+            node.right,
+            resolveValue,
+            proofStack,
+          )
+        );
+      }
+    }
+    return isProvablyDefinedAtomicValue(node);
+  } finally {
+    proofStack.delete(value);
+  }
+}
+
+function isProvablyTruthyStaticValue(
+  value,
+  resolveValue,
+  proofStack = new Set(),
+) {
+  if (!value || proofStack.has(value)) {
+    return false;
+  }
+  proofStack.add(value);
+  try {
+    if (isStaticAlternatives(value)) {
+      return value.candidates.every((candidate) =>
+        isProvablyTruthyStaticValue(candidate, resolveValue, proofStack),
+      );
+    }
+    const node = unwrapCopyExpression(value);
+    if (isResolvableStaticReference(node)) {
+      const resolved = resolveValue(node);
+      return Boolean(
+        resolved
+        && resolved !== node
+        && isProvablyTruthyStaticValue(resolved, resolveValue, proofStack),
+      );
+    }
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      return node.text.length > 0;
+    }
+    if (ts.isNumericLiteral(node) || ts.isBigIntLiteral(node)) {
+      return Number(node.text.replace(/n$/, "")) !== 0;
+    }
+    if (ts.isConditionalExpression(node)) {
+      return (
+        isProvablyTruthyStaticValue(node.whenTrue, resolveValue, proofStack)
+        && isProvablyTruthyStaticValue(node.whenFalse, resolveValue, proofStack)
+      );
+    }
     return (
-      isProvablyDefinedStaticValue(node.whenTrue, resolveValue)
-      && isProvablyDefinedStaticValue(node.whenFalse, resolveValue)
+      ts.isObjectLiteralExpression(node)
+      || ts.isArrayLiteralExpression(node)
+      || ts.isFunctionExpression(node)
+      || ts.isArrowFunction(node)
+      || ts.isClassExpression(node)
+      || node.kind === ts.SyntaxKind.TrueKeyword
     );
+  } finally {
+    proofStack.delete(value);
   }
-  if (ts.isBinaryExpression(node)) {
-    if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-      return true;
-    }
-    if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
-      return (
-        isProvablyNonNullishStaticValue(node.left, resolveValue)
-        || isProvablyDefinedStaticValue(node.right, resolveValue)
-      );
-    }
-    if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
-      return (
-        isProvablyTruthyStaticValue(node.left, resolveValue)
-        || isProvablyDefinedStaticValue(node.right, resolveValue)
-      );
-    }
-  }
+}
+
+function isResolvableStaticReference(node) {
+  return (
+    ts.isIdentifier(node)
+    || ts.isPropertyAccessExpression(node)
+    || ts.isElementAccessExpression(node)
+  );
+}
+
+function isProvablyDefinedAtomicValue(node) {
   return (
     ts.isStringLiteral(node)
     || ts.isNoSubstitutionTemplateLiteral(node)
@@ -647,101 +798,6 @@ function isProvablyDefinedStaticValue(value, resolveValue) {
     || node.kind === ts.SyntaxKind.TrueKeyword
     || node.kind === ts.SyntaxKind.FalseKeyword
     || node.kind === ts.SyntaxKind.NullKeyword
-  );
-}
-
-function isProvablyNonNullishStaticValue(value, resolveValue) {
-  if (!value) {
-    return false;
-  }
-  if (isStaticAlternatives(value)) {
-    return value.candidates.every((candidate) =>
-      isProvablyNonNullishStaticValue(candidate, resolveValue),
-    );
-  }
-  const node = unwrapCopyExpression(value);
-  if (isResolvableStaticReference(node)) {
-    const resolved = resolveValue(node);
-    return Boolean(
-      resolved
-      && resolved !== node
-      && isProvablyNonNullishStaticValue(resolved, resolveValue),
-    );
-  }
-  if (node.kind === ts.SyntaxKind.NullKeyword) {
-    return false;
-  }
-  if (ts.isConditionalExpression(node)) {
-    return (
-      isProvablyNonNullishStaticValue(node.whenTrue, resolveValue)
-      && isProvablyNonNullishStaticValue(node.whenFalse, resolveValue)
-    );
-  }
-  if (ts.isBinaryExpression(node)) {
-    if (node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-      return true;
-    }
-    if (node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
-      return (
-        isProvablyNonNullishStaticValue(node.left, resolveValue)
-        || isProvablyNonNullishStaticValue(node.right, resolveValue)
-      );
-    }
-    if (node.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
-      return (
-        isProvablyTruthyStaticValue(node.left, resolveValue)
-        || isProvablyNonNullishStaticValue(node.right, resolveValue)
-      );
-    }
-  }
-  return isProvablyDefinedStaticValue(node, resolveValue);
-}
-
-function isProvablyTruthyStaticValue(value, resolveValue) {
-  if (!value) {
-    return false;
-  }
-  if (isStaticAlternatives(value)) {
-    return value.candidates.every((candidate) =>
-      isProvablyTruthyStaticValue(candidate, resolveValue),
-    );
-  }
-  const node = unwrapCopyExpression(value);
-  if (isResolvableStaticReference(node)) {
-    const resolved = resolveValue(node);
-    return Boolean(
-      resolved
-      && resolved !== node
-      && isProvablyTruthyStaticValue(resolved, resolveValue),
-    );
-  }
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
-    return node.text.length > 0;
-  }
-  if (ts.isNumericLiteral(node) || ts.isBigIntLiteral(node)) {
-    return Number(node.text.replace(/n$/, "")) !== 0;
-  }
-  if (ts.isConditionalExpression(node)) {
-    return (
-      isProvablyTruthyStaticValue(node.whenTrue, resolveValue)
-      && isProvablyTruthyStaticValue(node.whenFalse, resolveValue)
-    );
-  }
-  return (
-    ts.isObjectLiteralExpression(node)
-    || ts.isArrayLiteralExpression(node)
-    || ts.isFunctionExpression(node)
-    || ts.isArrowFunction(node)
-    || ts.isClassExpression(node)
-    || node.kind === ts.SyntaxKind.TrueKeyword
-  );
-}
-
-function isResolvableStaticReference(node) {
-  return (
-    ts.isIdentifier(node)
-    || ts.isPropertyAccessExpression(node)
-    || ts.isElementAccessExpression(node)
   );
 }
 
