@@ -182,8 +182,40 @@ describe("proposal narrative posture view model", () => {
 
     expect(model.reviewState).toBe("Not Reviewed");
     expect(model.reviewTone).toBe("warn");
+    expect(model.sourceNarrativeHash).toBeNull();
     expect(model.canRequestDiscussionPack).toBe(false);
     expect(model.nextActionTitle).toBe("Record advisor review");
+    expect(model.workflowItems).toContainEqual({
+      label: "Recommendation rationale",
+      value: "Awaiting review",
+      support: "Record the advisor rationale for this version",
+      tone: "warn",
+    });
+  });
+
+  it("does not present an earlier discussion pack as current rationale evidence", () => {
+    const model = buildProposalNarrativePostureModel({
+      summary: {
+        reporting: {
+          status: "READY",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-earlier",
+          },
+        },
+      },
+    });
+
+    expect(model.sourceNarrativeHash).toBeNull();
+    expect(model.reportPackageState).toBe("Not Requested");
+    expect(model.deliveryState).toBe("No Report");
+    expect(model.workflowItems[0]).toEqual({
+      label: "Recommendation rationale",
+      value: "Awaiting review",
+      support: "Record the advisor rationale for this version",
+      tone: "warn",
+    });
   });
 
   it("requires refreshed source evidence to match the recorded narrative review", () => {

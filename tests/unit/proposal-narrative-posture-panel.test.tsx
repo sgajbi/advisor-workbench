@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ProposalNarrativePosturePanel from "../../src/features/proposals/components/proposal-narrative-posture-panel";
@@ -102,6 +102,30 @@ describe("ProposalNarrativePosturePanel", () => {
     expect(screen.queryByRole("button", { name: /archive/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /render/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request discussion pack" })).toBeDisabled();
+  });
+
+  it("does not present an earlier discussion pack as current rationale evidence", async () => {
+    vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue({});
+    vi.mocked(getProposalDeliverySummary).mockResolvedValue({
+      reporting: {
+        status: "READY",
+        include_reviewed_narrative: true,
+        proposal_narrative_package: {
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-earlier",
+        },
+      },
+    });
+    renderPanel();
+
+    const workflow = await screen.findByRole("region", {
+      name: "Narrative review workflow",
+    });
+    expect(within(workflow).getByText("Awaiting review")).toBeInTheDocument();
+    expect(within(workflow).queryByText("Available")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
   });
 
   it("confirms narrative review before admitting a discussion-pack request", async () => {
