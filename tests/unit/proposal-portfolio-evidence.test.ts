@@ -85,6 +85,7 @@ describe("proposal portfolio evidence", () => {
       status: "ready",
       canEvaluateAndHandoff: true,
       title: "Portfolio evidence confirmed",
+      body: "Positions and cash match the selected portfolio, advisory date, and currency.",
       context: {
         requestedAsOfDate: "2026-04-10",
         effectiveAsOfDate: "2026-04-10",
@@ -171,7 +172,7 @@ describe("proposal portfolio evidence", () => {
     expect(["partial", "unavailable"]).toContain(evidence.status);
   });
 
-  it("keeps visible holdings non-authoritative when combined evidence is incomplete", () => {
+  it("keeps visible positions non-authoritative when combined evidence is incomplete", () => {
     const evidence = buildEvidence({
       bookQuery: readyQuery(
         portfolioBook({ summary: { cash_market_value_base: undefined } })
@@ -181,6 +182,7 @@ describe("proposal portfolio evidence", () => {
     expect(evidence).toMatchObject({
       status: "partial",
       canEvaluateAndHandoff: false,
+      body: "Available positions or cash remain visible, but the combined portfolio snapshot is incomplete.",
       positions: {
         status: "partial",
         items: [expect.objectContaining({ security_id: "AAPL" })],

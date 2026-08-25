@@ -262,13 +262,13 @@ function evidenceCopy(status: ProposalPortfolioEvidenceStatus): {
     case "ready":
       return {
         title: "Portfolio evidence confirmed",
-        body: "Holdings and cash match the selected portfolio, advisory date, and currency.",
+        body: "Positions and cash match the selected portfolio, advisory date, and currency.",
         hint: null,
       };
     case "partial":
       return {
         title: "Portfolio evidence is incomplete",
-        body: "Available holdings or cash remain visible, but the combined portfolio snapshot is incomplete.",
+        body: "Available positions or cash remain visible, but the combined portfolio snapshot is incomplete.",
         hint: "Refresh the portfolio evidence before evaluating or saving an advisor draft.",
       };
     case "context_mismatch":
