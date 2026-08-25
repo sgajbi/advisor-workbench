@@ -152,7 +152,7 @@ async function openIncomePortfolio(
     return { portfolioId, available: false };
   }
 
-  await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Income and activity', exact: true })).toBeVisible({
     timeout: 15000,
   });
   return { portfolioId, available: true };
@@ -367,7 +367,7 @@ test.describe('Portfolio workbench smoke', () => {
     const destinations = [
       { label: 'Allocation', route: '/allocation', heading: /^Allocation$/i },
       { label: 'Transactions', route: '/transactions', heading: /^Transactions$/i },
-      { label: 'Income', route: '/income', heading: /^Income & Activity$/i },
+      { label: 'Income', route: '/income', heading: /^Income and activity$/ },
       { label: 'Projected cash flow', route: '/cashflow', heading: /^Projected cash flow$/i },
       { label: 'Positions', route: '/positions', heading: /^Positions$/i },
     ];
@@ -398,7 +398,7 @@ test.describe('Portfolio workbench smoke', () => {
       { route: '/allocation', heading: /^Allocation$/i },
       { route: '/positions', heading: /^Positions$/i },
       { route: '/transactions', heading: /^Transactions$/i },
-      { route: '/income', heading: /^Income & Activity$/i },
+      { route: '/income', heading: /^Income and activity$/ },
       { route: '/cashflow', heading: /^Projected cash flow$/i },
     ];
 
@@ -807,7 +807,9 @@ test.describe('Portfolio workbench smoke', () => {
       { width: 519, height: 900, expectedMetricColumns: 2 },
     ]) {
       await page.setViewportSize(viewport);
-      await expect(page.getByRole('heading', { name: /^Income & Activity$/i })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Income and activity', exact: true }),
+      ).toBeVisible();
       await expect(page.getByRole('table', { name: 'Booked income by type' })).toBeVisible();
       await expect(page.getByRole('table', { name: 'Booked cash movements by type' })).toBeVisible();
       for (const metricStrip of [incomeSummary, movementSummary]) {

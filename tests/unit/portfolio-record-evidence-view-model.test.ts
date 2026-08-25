@@ -72,7 +72,7 @@ describe("portfolio record evidence view model", () => {
       "Portfolio Review",
       "Allocation",
       "Transactions",
-      "Income & Activity",
+      "Income and activity",
       "Projected cash flow",
       "Mandate Operations",
     ]);

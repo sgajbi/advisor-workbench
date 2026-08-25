@@ -41,7 +41,7 @@ export const PORTFOLIO_RECORD_SCREEN_COPY: Record<
     subtitle: "Review booked activity, settlement state, booking components, and source lineage.",
   },
   income: {
-    title: "Income and activity",
+    title: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
     subtitle: "Review booked income, deductions, and portfolio cash movements in reporting currency.",
   },
   cashflow: {

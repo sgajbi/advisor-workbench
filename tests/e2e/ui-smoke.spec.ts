@@ -152,7 +152,10 @@ test.describe('UI smoke checks', () => {
     });
 
     const navigation = page.getByRole('navigation', { name: 'Workbench screen navigation' });
-    const workspaceHeading = page.getByRole('heading', { name: /^Income & Activity$/i });
+    const workspaceHeading = page.getByRole('heading', {
+      name: 'Income and activity',
+      exact: true,
+    });
 
     await expect(workspaceHeading).toBeVisible({ timeout: 60000 });
     await expect(

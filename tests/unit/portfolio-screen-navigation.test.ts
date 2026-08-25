@@ -119,7 +119,7 @@ describe("portfolio screen navigation", () => {
     ]);
     expect(model.currentTask).toMatchObject({
       key: "income",
-      label: "Income and activity",
+      label: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
     });
     expect(
       model.directoryGroups.map((group) => ({
@@ -143,6 +143,9 @@ describe("portfolio screen navigation", () => {
 
     expect(items.find((item) => item.key === "positions")?.label).toBe(
       PORTFOLIO_SCREEN_LABELS.positions,
+    );
+    expect(items.find((item) => item.key === "income")?.label).toBe(
+      PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
     );
     expect(items.find((item) => item.key === "cashflow")?.label).toBe(
       PORTFOLIO_SCREEN_LABELS.projectedCashFlow,

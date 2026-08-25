@@ -153,7 +153,11 @@ function buildAdjacentWorkflows(
     { screen: "positions", label: "Positions", href: `/positions?portfolioId=${encodedPortfolioId}` },
     { screen: "allocation", label: "Allocation", href: `/allocation?portfolioId=${encodedPortfolioId}` },
     { screen: "transactions", label: "Transactions", href: `/transactions?portfolioId=${encodedPortfolioId}` },
-    { screen: "income", label: "Income & Activity", href: `/income?portfolioId=${encodedPortfolioId}` },
+    {
+      screen: "income",
+      label: PORTFOLIO_SCREEN_LABELS.incomeAndActivity,
+      href: `/income?portfolioId=${encodedPortfolioId}`,
+    },
     {
       screen: "cashflow",
       label: PORTFOLIO_SCREEN_LABELS.projectedCashFlow,

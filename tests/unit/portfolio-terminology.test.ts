@@ -80,6 +80,7 @@ describe("portfolio terminology", () => {
 
   it("owns the canonical portfolio screen and currency labels", () => {
     expect(PORTFOLIO_SCREEN_LABELS).toEqual({
+      incomeAndActivity: "Income and activity",
       positions: "Positions",
       projectedCashFlow: "Projected cash flow",
       reportCentre: "Report centre",
