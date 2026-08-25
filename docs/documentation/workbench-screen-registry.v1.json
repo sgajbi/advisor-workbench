@@ -1079,7 +1079,7 @@
     },
     {
       "id": "discussion-pack-review",
-      "businessName": "Discussion Pack Review",
+      "businessName": "Discussion pack review",
       "family": "proposal",
       "routePattern": "/proposals",
       "mode": "discussion-pack",
@@ -1089,6 +1089,7 @@
       "wikiSlug": "Discussion-Pack-Review-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise", "lotus-report"],
       "implementationEvidence": [
+        "src/copy/proposal-discussion-pack-copy.ts",
         "src/features/proposals/proposal-discussion-pack-contract.ts",
         "src/features/proposals/proposal-discussion-pack-view-model.ts",
         "src/features/proposals/use-proposal-discussion-pack.ts",
@@ -1097,7 +1098,8 @@
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",
-        "tests/e2e/proposal-workflow-context.spec.ts"
+        "tests/e2e/proposal-workflow-context.spec.ts",
+        "docs/evidence/issue-798-product-copy/discussion-pack-review/README.md"
       ],
       "supportOwner": "lotus-workbench",
       "coverageException": null
