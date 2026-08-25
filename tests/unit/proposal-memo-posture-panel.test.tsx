@@ -41,6 +41,7 @@ function renderPanel() {
 
 describe("ProposalMemoPosturePanel", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(getProposalMemo).mockResolvedValue({
       memo_id: "memo_1",
       memo_status: "APPROVED_FOR_ADVISOR_USE",
@@ -138,13 +139,16 @@ describe("ProposalMemoPosturePanel", () => {
   it("routes memo actions through Gateway APIs with source memo hash", async () => {
     renderPanel();
 
+    fireEvent.change(screen.getByLabelText("Advisor ID"), {
+      target: { value: " advisor_9 " },
+    });
     fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
     await waitFor(() => {
       expect(createProposalMemo).toHaveBeenCalledWith(
         "pp_1",
         2,
         expect.objectContaining({
-          created_by: "advisor_1",
+          created_by: "advisor_9",
           lifecycle_status: "DRAFT",
         }),
         expect.stringContaining("ui-memo-create-2-pp_1"),
@@ -221,6 +225,9 @@ describe("ProposalMemoPosturePanel", () => {
 
     renderPanel();
 
+    fireEvent.change(screen.getByLabelText("Advisor ID"), {
+      target: { value: "advisor_9" },
+    });
     fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
 
     expect(
@@ -229,5 +236,16 @@ describe("ProposalMemoPosturePanel", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Unknown memo/i)).not.toBeInTheDocument();
+  });
+
+  it("does not invent an advisor identity when the source actor is missing", async () => {
+    renderPanel();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Prepare Or Refresh Memo" }));
+
+    expect(
+      await screen.findByText("An advisor or reviewer reference is required."),
+    ).toBeInTheDocument();
+    expect(createProposalMemo).not.toHaveBeenCalled();
   });
 });
