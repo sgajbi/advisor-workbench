@@ -1,8 +1,6 @@
-const MISSING_ACTOR_VALUES = new Set(["", "n/a", "not assigned"]);
-
 export function formatBusinessOwner(owner: string | null | undefined): string {
   const sourceOwner = owner?.trim() ?? "";
-  if (MISSING_ACTOR_VALUES.has(sourceOwner.toLowerCase())) {
+  if (isMissingActorValue(sourceOwner)) {
     return "Not assigned";
   }
 
@@ -41,4 +39,9 @@ export function formatBusinessActorEvidence(
   }
 
   return `${businessRole} · ${sourceActor}`;
+}
+
+function isMissingActorValue(value: string): boolean {
+  const normalized = value.toLowerCase();
+  return normalized === "" || normalized === "n/a" || normalized === "not assigned";
 }
