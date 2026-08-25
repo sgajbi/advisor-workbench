@@ -480,7 +480,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByRole("heading", {
         level: 2,
-        name: "Implementation follow-up desk",
+        name: "Implementation follow-up",
       }),
     ).toBeInTheDocument();
     expect(getProposalExecutionStatusMock).toHaveBeenCalledTimes(1);
@@ -501,7 +501,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(screen.getByText("Current version · Version 5")).toBeInTheDocument();
     expect(screen.getAllByText("lotus-manage")).toHaveLength(2);
     expect(
-      screen.getByText(/Order, fill, allocation, settlement, custody-booking/),
+      screen.getByText(/advisory implementation handoff only/),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Open full proposal record" }),
@@ -611,7 +611,7 @@ describe("ProposalLifecycleWorkspace", () => {
       "REJECTED",
     );
     expect(
-      screen.getAllByText(/Investigate the rejection reason/),
+      screen.getAllByText(/Review the rejection with the implementation team/),
     ).toHaveLength(2);
   });
 
@@ -629,14 +629,14 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Implementation evidence is restricted",
+        name: "Implementation information is restricted",
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/No execution status is inferred from lifecycle state/),
+      screen.getByText(/no implementation status is shown/i),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Retry implementation evidence" }),
+      screen.queryByRole("button", { name: "Retry implementation status" }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Accepted for implementation" }),
@@ -663,14 +663,16 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Partial source evidence" }),
+      await screen.findByRole("heading", {
+        name: "Handoff information incomplete",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Accepted for implementation" }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Not reported").length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/Treat the posture as incomplete evidence/),
+      screen.getByText(/references are missing/),
     ).toBeInTheDocument();
   });
 
@@ -698,7 +700,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     await screen.findByRole("heading", { name: "Accepted for implementation" });
     const refresh = screen.getByRole("button", {
-      name: "Refresh implementation evidence",
+      name: "Refresh implementation status",
     });
     refresh.focus();
     fireEvent.click(refresh);
@@ -707,7 +709,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(status).toHaveAttribute("data-state", "pending"),
     );
     expect(
-      within(status).queryByText("Selected proposal handoff confirmed"),
+      within(status).queryByText("Current handoff available"),
     ).not.toBeInTheDocument();
 
     await act(async () => {
@@ -717,7 +719,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(status).toHaveAttribute("data-state", "confirmed"),
     );
     expect(
-      within(status).getByText("Selected proposal handoff confirmed"),
+      within(status).getByText("Current handoff available"),
     ).toBeInTheDocument();
     await waitFor(() => expect(refresh).toHaveFocus());
   });
@@ -768,7 +770,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     await screen.findByRole("heading", { name: "Accepted for implementation" });
     fireEvent.click(
-      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+      screen.getByRole("button", { name: "Refresh implementation status" }),
     );
 
     await waitFor(() =>
@@ -798,7 +800,7 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      await screen.findByText("Selected proposal handoff confirmed"),
+      await screen.findByText("Current handoff available"),
     ).toBeInTheDocument();
   });
 
@@ -861,7 +863,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     await screen.findByRole("heading", { name: "Accepted for implementation" });
     fireEvent.click(
-      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+      screen.getByRole("button", { name: "Refresh implementation status" }),
     );
     await waitFor(() => expect(firstProposalReads).toBe(2));
 
@@ -870,7 +872,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
     await screen.findByRole("heading", { name: "Accepted for implementation" });
     fireEvent.click(
-      screen.getByRole("button", { name: "Refresh implementation evidence" }),
+      screen.getByRole("button", { name: "Refresh implementation status" }),
     );
 
     expect(
@@ -965,7 +967,7 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       await within(
         screen.getByRole("region", {
-          name: "Selected proposal implementation status",
+          name: "Selected proposal implementation review",
         }),
       ).findByRole("heading", { name: "Accepted for implementation" }),
     ).toBeInTheDocument();
@@ -978,7 +980,7 @@ describe("ProposalLifecycleWorkspace", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: "Refresh implementation evidence",
+          name: "Refresh implementation status",
         }),
       ).toHaveFocus(),
     );

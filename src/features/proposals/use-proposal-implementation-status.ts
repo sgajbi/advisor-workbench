@@ -76,9 +76,9 @@ export function useProposalImplementationStatus({
         { label: "Proposal", value: implementation.identity.proposalId },
         { label: "Handoff", value: implementation.handoff.label },
         { label: "Version evidence", value: implementation.version.label },
-        { label: "Observed", value: implementation.lineage.freshness },
+        { label: "Last update", value: implementation.currentness.observedAt },
       ],
-      sourceLabel: "Gateway-backed advisory implementation handoff",
+      sourceLabel: "Advisory implementation record",
       boundaryNote: implementation.boundary,
       hasEvidenceGap:
         implementation.evidence.isPartial ||

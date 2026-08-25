@@ -1,4 +1,5 @@
 import { PROPOSAL_DISCUSSION_PACK_COPY } from "@/copy/proposal-discussion-pack-copy";
+import { PROPOSAL_IMPLEMENTATION_COPY } from "@/copy/proposal-implementation-copy";
 import { formatDateValue } from "@/design-system/utils/financial-formatters";
 import {
   buildReviewContextHref,
@@ -112,15 +113,11 @@ const MODE_DEFINITIONS: Record<ProposalLifecycleMode, ModeDefinition> = {
   },
   implementation: {
     title: "Implementation Status",
-    subtitle:
-      "Implementation handoff, provider response, exceptions, and proposal-version correlation.",
-    primaryDecision:
-      "What is the latest source-confirmed implementation posture?",
-    recommendedAction:
-      "Follow provider exceptions without inferring order, fill, or settlement progress.",
-    emptyTitle: "No implementation records in this source window",
-    emptyBody:
-      "There are no proposals currently in handoff, completion, or exception follow-up.",
+    subtitle: PROPOSAL_IMPLEMENTATION_COPY.workspaceSubtitle,
+    primaryDecision: PROPOSAL_IMPLEMENTATION_COPY.primaryDecision,
+    recommendedAction: PROPOSAL_IMPLEMENTATION_COPY.recommendedAction,
+    emptyTitle: PROPOSAL_IMPLEMENTATION_COPY.emptyTitle,
+    emptyBody: PROPOSAL_IMPLEMENTATION_COPY.emptyBody,
     includedStates: [
       "EXECUTION_READY",
       "EXECUTED",

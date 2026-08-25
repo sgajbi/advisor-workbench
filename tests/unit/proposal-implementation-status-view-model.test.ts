@@ -10,12 +10,15 @@ describe("proposal implementation status view model", () => {
     );
 
     expect(model.handoff.label).toBe("Accepted for implementation");
-    expect(model.handoff.summary).toContain("remains in progress");
-    expect(model.handoff.nextAction).toContain("Monitor source updates");
+    expect(model.handoff.summary).toContain("material difficulty");
+    expect(model.handoff.nextAction).toContain("Monitor for completion");
     expect(model.version.label).toBe("Current version");
-    expect(model.event?.type).toBe("Execution Accepted");
+    expect(model.event?.type).toBe("Implementation accepted");
     expect(model.event?.occurredAt).toBe("20 Aug 2026, 09:05 UTC");
-    expect(model.lineage.freshness).toBe("20 Aug 2026, 09:05 UTC");
+    expect(model.facts).toContainEqual({
+      label: "Last update",
+      value: "20 Aug 2026, 09:05 UTC",
+    });
     expect(model.boundary).toContain("settlement");
   });
 
@@ -27,7 +30,10 @@ describe("proposal implementation status view model", () => {
     const model = buildProposalImplementationStatusModel(envelope);
 
     expect(model.event?.occurredAt).toBe("20 Aug 2026, 09:05 UTC");
-    expect(model.lineage.freshness).toBe("20 Aug 2026, 09:05 UTC");
+    expect(model.facts).toContainEqual({
+      label: "Last update",
+      value: "20 Aug 2026, 09:05 UTC",
+    });
     expect(JSON.stringify(model)).not.toContain("2026-08-20T17:05:00+08:00");
   });
 
@@ -42,7 +48,7 @@ describe("proposal implementation status view model", () => {
 
     expect(model.version.label).toBe("Earlier version");
     expect(model.version.tone).toBe("warn");
-    expect(model.version.summary).toContain("Do not assume");
+    expect(model.version.summary).toContain("must not be treated");
   });
 
   it("surfaces partial evidence without hiding supported status", () => {
@@ -51,8 +57,28 @@ describe("proposal implementation status view model", () => {
 
     const model = buildProposalImplementationStatusModel(envelope);
 
-    expect(model.evidence.label).toBe("Partial source evidence");
+    expect(model.evidence.label).toBe("Handoff information incomplete");
     expect(model.evidence.tone).toBe("warn");
-    expect(model.evidence.summary).toContain("incomplete evidence");
+    expect(model.evidence.summary).toContain("references are missing");
+  });
+
+  it("keeps exact provider and contract values out of primary decision facts", () => {
+    const model = buildProposalImplementationStatusModel(
+      proposalImplementationStatusFixture(),
+    );
+
+    expect(model.facts.map((fact) => fact.label)).toEqual([
+      "Implementation requested",
+      "Last update",
+      "Update basis",
+    ]);
+    expect(model.supportDetails).toContainEqual({
+      label: "Source system",
+      value: "lotus-advise",
+    });
+    expect(model.supportDetails).toContainEqual({
+      label: "Handoff status code",
+      value: "ACCEPTED",
+    });
   });
 });

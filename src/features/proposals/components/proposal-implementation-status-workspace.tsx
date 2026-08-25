@@ -7,11 +7,13 @@ import {
   ScreenStatePanel,
   SemanticBadge,
   SourceRefreshAction,
+  SupportDetails,
   Text,
   WorkbenchRefreshStatus,
   useSourceRefreshAction,
   type SourceRefreshState,
 } from "@/design-system";
+import { PROPOSAL_IMPLEMENTATION_COPY } from "@/copy/proposal-implementation-copy";
 
 import type { ProposalImplementationStatusEnvelope } from "../proposal-implementation-status-contract";
 import {
@@ -75,10 +77,10 @@ export default function ProposalImplementationStatusWorkspace({
       data-testid="proposal-implementation-status-workspace"
     >
       <ProposalLifecycleWorklist
-        ariaLabel="Implementation follow-up proposals"
+        ariaLabel={PROPOSAL_IMPLEMENTATION_COPY.worklistAriaLabel}
         rows={rows}
         selectedProposalId={selectedProposal.proposalId}
-        defaultNextAction="Select to confirm handoff posture"
+        defaultNextAction={PROPOSAL_IMPLEMENTATION_COPY.defaultNextAction}
         selectedPresentation={
           model
             ? {
@@ -96,7 +98,7 @@ export default function ProposalImplementationStatusWorkspace({
 
       <section
         className={styles.selectedProposalPane}
-        aria-label="Selected proposal implementation status"
+        aria-label={PROPOSAL_IMPLEMENTATION_COPY.selectedRegionAriaLabel}
       >
         <p
           className="sr-only"
@@ -104,19 +106,19 @@ export default function ProposalImplementationStatusWorkspace({
           aria-live="polite"
           aria-atomic="true"
         >
-          Selected proposal: {selectedProposal.title}. Implementation evidence
-          is being checked for {selectedProposal.version}.
+          Selected proposal: {selectedProposal.title}.{" "}
+          {PROPOSAL_IMPLEMENTATION_COPY.selectionStatus}
         </p>
         <header className={styles.selectedProposalHeader}>
           <div>
             <Text variant="microLabel">
-              Selected proposal · implementation follow-up
+              {PROPOSAL_IMPLEMENTATION_COPY.selectedRecordLabel}
             </Text>
             <Text variant="subsectionTitle" as="h3">
               {selectedProposal.title}
             </Text>
             <Text variant="metadata">
-              {selectedProposal.proposalId} · {selectedProposal.version}
+              {selectedProposal.version}
             </Text>
           </div>
           <SemanticBadge tone={selectedProposal.stageTone} emphasis="strong">
@@ -136,8 +138,8 @@ export default function ProposalImplementationStatusWorkspace({
         {selectedProposal.versionNo === null ? (
           <ScreenStatePanel
             kind="partial"
-            title="Proposal version is not available"
-            body="Implementation evidence cannot be correlated safely because the proposal list did not identify the selected version."
+            title={PROPOSAL_IMPLEMENTATION_COPY.missingVersion.title}
+            body={PROPOSAL_IMPLEMENTATION_COPY.missingVersion.body}
             action={
               <SourceRefreshAction
                 ref={refreshActionRef}
@@ -153,15 +155,15 @@ export default function ProposalImplementationStatusWorkspace({
         ) : isPermissionBlocked ? (
           <ScreenStatePanel
             kind="permission_blocked"
-            title="Implementation evidence is restricted"
-            body="Your current role cannot view this proposal's implementation handoff evidence. No execution status is inferred from lifecycle state."
+            title={PROPOSAL_IMPLEMENTATION_COPY.restricted.title}
+            body={PROPOSAL_IMPLEMENTATION_COPY.restricted.body}
             surface="default"
           />
         ) : isLoading && !model ? (
           <ScreenStatePanel
             kind="loading"
-            title="Checking implementation handoff"
-            body="Confirming the selected proposal's current handoff status, source references, and version correlation through Gateway."
+            title={PROPOSAL_IMPLEMENTATION_COPY.loading.title}
+            body={PROPOSAL_IMPLEMENTATION_COPY.loading.body}
             rows={4}
             surface="default"
           />
@@ -211,14 +213,14 @@ function ImplementationUnavailable({
   return (
     <ScreenStatePanel
       kind="error"
-      title="Implementation evidence is unavailable"
-      body="The selected proposal could not be confirmed through Gateway. Do not infer handoff or execution progress from the proposal lifecycle stage."
+      title={PROPOSAL_IMPLEMENTATION_COPY.unavailable.title}
+      body={PROPOSAL_IMPLEMENTATION_COPY.unavailable.body}
       action={
         <SourceRefreshAction
           ref={refreshActionRef}
           refreshScope={`${portfolioId}:${proposalId}`}
-          idleLabel="Retry implementation evidence"
-          busyLabel="Retrying implementation evidence…"
+          idleLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.retryIdleLabel}
+          busyLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.retryBusyLabel}
           isRefreshing={isRefreshing}
           onRefresh={onRefresh}
         />
@@ -258,7 +260,9 @@ function ImplementationEvidence({
       >
         <div className={styles.approvalDecisionHeading}>
           <div>
-            <Text variant="microLabel">Source handoff posture</Text>
+            <Text variant="microLabel">
+              {PROPOSAL_IMPLEMENTATION_COPY.decisionLabel}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h4"
@@ -284,70 +288,24 @@ function ImplementationEvidence({
         </dl>
         <div className={styles.selectedProposalDecision}>
           <div>
-            <span>Version evidence</span>
+            <span>{PROPOSAL_IMPLEMENTATION_COPY.versionLabel}</span>
             <strong>
               {model.version.label} · {model.version.relatedVersion}
             </strong>
             <p className={styles.evidenceBoundary}>{model.version.summary}</p>
           </div>
           <div>
-            <span>Next business action</span>
+            <span>{PROPOSAL_IMPLEMENTATION_COPY.nextActionLabel}</span>
             <strong>{model.handoff.nextAction}</strong>
           </div>
         </div>
       </section>
 
-      <section
-        className={styles.approvalRegister}
-        aria-labelledby="implementation-lineage-title"
+      <SupportDetails
+        className={styles.workflowEvidence}
+        summary={PROPOSAL_IMPLEMENTATION_COPY.supportDetailsLabel}
+        context={model.event ? "Latest event available" : "No event reported"}
       >
-        <div className={styles.approvalSectionHeading}>
-          <div>
-            <Text variant="microLabel">Operational evidence</Text>
-            <Text
-              variant="subsectionTitle"
-              as="h4"
-              id="implementation-lineage-title"
-            >
-              Handoff source and currentness
-            </Text>
-          </div>
-          <SourceRefreshAction
-            ref={refreshActionRef}
-            refreshScope={`proposal-implementation:${model.identity.proposalId}`}
-            idleLabel="Refresh implementation evidence"
-            busyLabel="Refreshing implementation evidence…"
-            isRefreshing={isRefreshing}
-            onRefresh={onRefresh}
-          />
-        </div>
-        <dl className={styles.selectedProposalFacts}>
-          <div>
-            <dt>Observed</dt>
-            <dd>{model.lineage.freshness}</dd>
-          </div>
-          <div>
-            <dt>Observation basis</dt>
-            <dd>{model.lineage.freshnessBasis}</dd>
-          </div>
-          <div>
-            <dt>Evidence route</dt>
-            <dd>{model.lineage.source}</dd>
-          </div>
-          <div>
-            <dt>Proposal version</dt>
-            <dd>{model.identity.currentVersion}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <details className={styles.workflowEvidence}>
-        <summary>
-          Source event and evidence boundary
-          <span>
-            {model.event ? "Latest event available" : "No event reported"}
-          </span>
-        </summary>
         {model.event ? (
           <ol>
             <li>
@@ -362,19 +320,29 @@ function ImplementationEvidence({
             </li>
           </ol>
         ) : (
-          <p>No implementation event has been reported for this proposal.</p>
+          <p>{PROPOSAL_IMPLEMENTATION_COPY.noEvent}</p>
         )}
+        <dl className={styles.selectedProposalFacts}>
+          {model.supportDetails.map((detail) => (
+            <div key={detail.label}>
+              <dt>{detail.label}</dt>
+              <dd>{detail.value}</dd>
+            </div>
+          ))}
+        </dl>
         <p className={styles.evidenceBoundary}>{model.boundary}</p>
-        <p className={styles.evidenceBoundary}>
-          Evidence correlation: {model.lineage.correlationId}
-        </p>
-      </details>
+      </SupportDetails>
 
       <footer className={styles.selectedProposalActions}>
-        <p>
-          This workspace is read-only. Proposal decisions and governed handoff
-          actions remain in the full proposal record.
-        </p>
+        <p>{PROPOSAL_IMPLEMENTATION_COPY.footer}</p>
+        <SourceRefreshAction
+          ref={refreshActionRef}
+          refreshScope={`proposal-implementation:${model.identity.proposalId}`}
+          idleLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshIdleLabel}
+          busyLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshBusyLabel}
+          isRefreshing={isRefreshing}
+          onRefresh={onRefresh}
+        />
         <Link className={styles.reviewProposalLink} href={proposalHref}>
           Open full proposal record
         </Link>
@@ -398,12 +366,12 @@ function ImplementationRefreshStatus({
     return (
       <WorkbenchRefreshStatus
         kind="failed"
-        eyebrow="Implementation evidence not updated"
-        title="Source refresh failed"
+        eyebrow={PROPOSAL_IMPLEMENTATION_COPY.refresh.failedEyebrow}
+        title={PROPOSAL_IMPLEMENTATION_COPY.refresh.failedTitle}
         message={
           hasConfirmedEvidence
-            ? "Previously confirmed handoff evidence remains visible and is not relabelled as current."
-            : "No source-confirmed implementation evidence is available."
+            ? PROPOSAL_IMPLEMENTATION_COPY.refresh.failedWithEvidence
+            : PROPOSAL_IMPLEMENTATION_COPY.refresh.failedWithoutEvidence
         }
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
@@ -414,9 +382,9 @@ function ImplementationRefreshStatus({
     return (
       <WorkbenchRefreshStatus
         kind="pending"
-        eyebrow="Updating implementation evidence"
-        title="Reconfirming selected proposal"
-        message="Gateway is refreshing the worklist and selected proposal handoff evidence."
+        eyebrow={PROPOSAL_IMPLEMENTATION_COPY.refresh.pendingEyebrow}
+        title={PROPOSAL_IMPLEMENTATION_COPY.refresh.pendingTitle}
+        message={PROPOSAL_IMPLEMENTATION_COPY.refresh.pendingMessage}
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
       />
@@ -425,8 +393,8 @@ function ImplementationRefreshStatus({
   return (
     <WorkbenchRefreshStatus
       kind="confirmed"
-      eyebrow="Implementation evidence updated"
-      title="Selected proposal handoff confirmed"
+      eyebrow={PROPOSAL_IMPLEMENTATION_COPY.refresh.confirmedEyebrow}
+      title={PROPOSAL_IMPLEMENTATION_COPY.refresh.confirmedTitle}
       confirmedContext={confirmedContext}
     />
   );
