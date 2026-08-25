@@ -1,8 +1,9 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
+import { collectHorizontalOverflow } from "./support/horizontal-overflow";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
@@ -19,52 +20,6 @@ const implementationStatusEvidenceDirectory = path.resolve(
     path.join("output", "issue-798-product-copy"),
   "implementation-follow-up",
 );
-
-type OverflowDiagnostic = {
-  tag: string;
-  className: string;
-  text: string;
-  clientWidth: number;
-  scrollWidth: number;
-};
-
-async function collectHorizontalOverflow(
-  root: Locator,
-): Promise<OverflowDiagnostic[]> {
-  return root.evaluate((element) =>
-    [element, ...element.querySelectorAll<HTMLElement>("*")]
-      .filter(
-        (candidate) => {
-          const style = getComputedStyle(candidate);
-          const bounds = candidate.getBoundingClientRect();
-          const isVisuallyHidden =
-            style.position === "absolute" &&
-            bounds.width <= 1 &&
-            bounds.height <= 1 &&
-            (style.overflow === "hidden" ||
-              style.clip !== "auto" ||
-              style.clipPath !== "none");
-
-          return (
-            !isVisuallyHidden &&
-            candidate.clientWidth > 0 &&
-            candidate.scrollWidth > candidate.clientWidth + 1
-          );
-        },
-      )
-      .map((candidate) => ({
-        tag: candidate.tagName.toLowerCase(),
-        className:
-          typeof candidate.className === "string" ? candidate.className : "",
-        text: (candidate.textContent ?? "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 120),
-        clientWidth: candidate.clientWidth,
-        scrollWidth: candidate.scrollWidth,
-      })),
-  );
-}
 
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
