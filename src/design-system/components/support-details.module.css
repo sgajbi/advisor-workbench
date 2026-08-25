@@ -1,6 +1,7 @@
 .details {
   border-block: 1px solid var(--border);
   color: var(--text);
+  container-type: inline-size;
 }
 
 .summary {
@@ -30,6 +31,7 @@
 .summary small {
   color: var(--text-muted);
   font-size: 0.74rem;
+  min-width: 0;
   overflow: hidden;
   text-align: right;
   text-overflow: ellipsis;
@@ -42,7 +44,7 @@
   padding: 4px 2px 14px;
 }
 
-@media (max-width: 520px) {
+@container (max-width: 32.5rem) {
   .summary {
     align-items: flex-start;
     flex-direction: column;
@@ -52,6 +54,10 @@
 
   .summary small {
     max-width: 100%;
+    overflow: visible;
+    overflow-wrap: anywhere;
     text-align: left;
+    text-overflow: clip;
+    white-space: normal;
   }
 }
