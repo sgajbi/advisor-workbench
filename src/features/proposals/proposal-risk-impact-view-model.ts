@@ -1,5 +1,9 @@
 import type { SemanticBadgeTone } from "@/design-system";
 import { formatCalendarDateValue } from "@/design-system/utils/financial-formatters";
+import {
+  proposalEvidenceAvailabilityLabel,
+  PROPOSAL_RISK_IMPACT_COPY,
+} from "@/copy/proposal-risk-impact-copy";
 
 import {
   proposalRiskImpactMissingEvidenceIdentity,
@@ -86,10 +90,10 @@ export function buildProposalRiskImpactModel(
       tone: supportabilityTone(effectiveOverallState),
       explanation:
         effectiveOverallState === "ready"
-          ? "Source evidence is available for the current proposal version. This is not an approval decision."
+          ? PROPOSAL_RISK_IMPACT_COPY.evidenceAvailableExplanation
           : effectiveOverallState === "partial"
-            ? "Some proposal evidence is available, but the decision record has source gaps or fallback evidence."
-            : "The source does not provide enough evidence for a proposal risk decision.",
+            ? PROPOSAL_RISK_IMPACT_COPY.evidenceIncompleteExplanation
+            : PROPOSAL_RISK_IMPACT_COPY.evidenceUnavailableExplanation,
     },
     decision: {
       isAvailable: decisionIsAvailable,
@@ -101,11 +105,11 @@ export function buildProposalRiskImpactModel(
       summary:
         decisionIsAvailable && data.decision.primary_summary
           ? data.decision.primary_summary
-          : "The advisory source has not confirmed a decision record for this proposal version.",
+          : PROPOSAL_RISK_IMPACT_COPY.decisionUnavailableSummary,
       nextAction:
         decisionIsAvailable && data.decision.recommended_next_action
           ? businessLabel(data.decision.recommended_next_action)
-          : "Confirm the source evidence before progressing",
+          : PROPOSAL_RISK_IMPACT_COPY.decisionUnavailableNextAction,
       confidence:
         decisionIsAvailable && data.decision.confidence
           ? businessLabel(data.decision.confidence)
@@ -151,7 +155,7 @@ export function buildProposalRiskImpactModel(
       source: data.risk.source_service ?? "Source not reported",
       summary:
         (riskIsAvailable && data.risk.summary) ||
-        "The source has not confirmed proposal risk evidence.",
+        PROPOSAL_RISK_IMPACT_COPY.riskUnavailableSummary,
       highlights: riskIsAvailable ? data.risk.highlights : [],
     },
     allocation: {
@@ -192,7 +196,7 @@ export function buildProposalRiskImpactModel(
       nextStep:
         workflowGateIsAvailable && data.workflow_gate.recommended_next_step
           ? businessLabel(data.workflow_gate.recommended_next_step)
-          : "Source next step not confirmed",
+          : PROPOSAL_RISK_IMPACT_COPY.workflowNextStepUnavailable,
       reasons: (workflowGateIsAvailable ? data.workflow_gate.reasons : []).map(
         (reason) => ({
           id: proposalRiskImpactWorkflowGateReasonIdentity(reason),
@@ -319,16 +323,7 @@ function supportabilityLabel(
     | ProposalRiskImpactSectionState
     | ProposalRiskImpactEnvelope["data"]["overall_state"],
 ) {
-  switch (state) {
-    case "ready":
-      return "Source evidence ready";
-    case "partial":
-      return "Partial source evidence";
-    case "not_supported":
-      return "Not supported";
-    default:
-      return "Source evidence unavailable";
-  }
+  return proposalEvidenceAvailabilityLabel(state);
 }
 
 function supportabilityTone(

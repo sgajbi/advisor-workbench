@@ -1086,8 +1086,14 @@ describe("ProposalLifecycleWorkspace", () => {
         name: "Risk and impact evidence is unavailable",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Current risk and impact evidence could not be retrieved. The selected proposal remains visible, but it must not progress on earlier evidence. Retry before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Gateway unavailable")).not.toBeInTheDocument();
     expect(screen.queryByText("Requires Risk Review")).not.toBeInTheDocument();
-    const retry = screen.getByRole("button", { name: "Retry source evidence" });
+    const retry = screen.getByRole("button", { name: "Retry proposal evidence" });
     retry.focus();
     fireEvent.click(retry);
 
@@ -1100,11 +1106,11 @@ describe("ProposalLifecycleWorkspace", () => {
     const refreshStatus = screen.getByTestId("workbench-refresh-status");
     expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
     expect(
-      within(refreshStatus).getByText("Selected proposal evidence confirmed"),
+      within(refreshStatus).getByText("Selected proposal evidence is current"),
     ).toBeInTheDocument();
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Refresh source evidence" }),
+        screen.getByRole("button", { name: "Refresh proposal evidence" }),
       ).toHaveFocus();
     });
   });
@@ -1133,7 +1139,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     const refresh = await screen.findByRole("button", {
-      name: "Refresh source evidence",
+      name: "Refresh proposal evidence",
     });
     fireEvent.click(refresh);
 
@@ -1142,7 +1148,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(refreshStatus).toHaveAttribute("data-state", "failed");
     });
     expect(
-      within(refreshStatus).getByText("Source refresh failed"),
+      within(refreshStatus).getByText("Refresh failed"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
@@ -1157,7 +1163,7 @@ describe("ProposalLifecycleWorkspace", () => {
     });
     expect(
       within(refreshStatus).getByText(
-        "Reconfirming selected proposal evidence",
+        "Checking selected proposal evidence",
       ),
     ).toBeInTheDocument();
 
@@ -1182,7 +1188,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     const retry = await screen.findByRole("button", {
-      name: "Retry source evidence",
+      name: "Retry proposal evidence",
     });
     fireEvent.click(retry);
 
@@ -1191,7 +1197,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(refreshStatus).toHaveAttribute("data-state", "failed");
     });
     expect(
-      within(refreshStatus).getByText("Source refresh failed"),
+      within(refreshStatus).getByText("Refresh failed"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
@@ -1298,7 +1304,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     const refresh = await screen.findByRole("button", {
-      name: "Refresh source evidence",
+      name: "Refresh proposal evidence",
     });
     refresh.focus();
     fireEvent.click(refresh);
@@ -1379,7 +1385,7 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Refresh source evidence" }),
+      await screen.findByRole("button", { name: "Refresh proposal evidence" }),
     );
     fireEvent.click(
       screen.getByRole("option", { name: /Income allocation review/ }),
@@ -1392,7 +1398,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Refresh source evidence" }),
+      screen.getByRole("button", { name: "Refresh proposal evidence" }),
     );
     await act(async () => {
       settleSecondRefresh?.(proposalRiskImpactFixture());
@@ -1444,7 +1450,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Decision register is not confirmed",
+        name: "Decision register is not available",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Decision not confirmed")).toBeInTheDocument();
@@ -1491,18 +1497,18 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     const recordHeader = screen
-      .getByText("Partial source evidence")
+      .getByText("Evidence incomplete")
       .closest("header");
     expect(recordHeader).not.toBeNull();
     expect(
-      within(recordHeader!).queryByText("Source evidence ready"),
+      within(recordHeader!).queryByText("Evidence available"),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Risk evidence is not confirmed" }),
+      screen.getByRole("heading", { name: "Risk evidence is not available" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Workflow gate is not confirmed",
+        name: "Workflow requirements are not available",
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText("68%")).not.toBeInTheDocument();
@@ -1551,7 +1557,7 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The source expected Currency, Sector but did not return those comparisons. Available views remain visible; no missing allocation is inferred.",
+        "The comparison does not include Currency, Sector. Available allocation views remain visible. Review the full proposal record before relying on the missing view.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -1652,7 +1658,7 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Retry source evidence" }),
+      screen.queryByRole("button", { name: "Retry proposal evidence" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {

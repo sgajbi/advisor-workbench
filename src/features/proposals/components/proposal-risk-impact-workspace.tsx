@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useMemo, useState, type Ref } from "react";
 
 import {
+  missingAllocationViewsBody,
+  PROPOSAL_RISK_IMPACT_COPY,
+} from "@/copy/proposal-risk-impact-copy";
+import {
   ScreenStatePanel,
   SemanticBadge,
   SourceRefreshAction,
@@ -102,14 +106,14 @@ export default function ProposalRiskImpactWorkspace({
           {selectedProposal.versionNo === null ? (
             <ScreenStatePanel
               kind="partial"
-              title="Proposal version is not available"
-              body="The proposal list did not identify the selected version. Risk and impact evidence cannot be matched safely, so no decision posture is shown."
+              title={PROPOSAL_RISK_IMPACT_COPY.missingVersion.title}
+              body={PROPOSAL_RISK_IMPACT_COPY.missingVersion.body}
             />
           ) : isLoading ? (
             <ScreenStatePanel
               kind="loading"
-              title="Loading proposal evidence"
-              body="Confirming current and proposed allocation, risk, and decision evidence through Gateway."
+              title={PROPOSAL_RISK_IMPACT_COPY.loading.title}
+              body={PROPOSAL_RISK_IMPACT_COPY.loading.body}
               rows={5}
             />
           ) : isPermissionBlocked ? (
@@ -122,14 +126,18 @@ export default function ProposalRiskImpactWorkspace({
             <div className={styles.recoveryState}>
               <ScreenStatePanel
                 kind="error"
-                title="Risk and impact evidence is unavailable"
-                body="The selected proposal could not be confirmed through Gateway. Do not progress the proposal using previously seen evidence."
+                title={PROPOSAL_RISK_IMPACT_COPY.unavailable.title}
+                body={PROPOSAL_RISK_IMPACT_COPY.unavailable.body}
                 action={
                   <SourceRefreshAction
                     ref={refreshActionRef}
                     refreshScope={`${portfolioId}:${selectedProposal.proposalId}`}
-                    idleLabel="Retry source evidence"
-                    busyLabel="Retrying source evidence"
+                    idleLabel={
+                      PROPOSAL_RISK_IMPACT_COPY.refresh.retryIdleLabel
+                    }
+                    busyLabel={
+                      PROPOSAL_RISK_IMPACT_COPY.refresh.retryBusyLabel
+                    }
                     isRefreshing={isRefreshing}
                     onRefresh={refresh}
                   />
@@ -191,7 +199,9 @@ function RiskImpactEvidence({
     <div className={styles.evidence}>
       <header className={styles.recordHeader}>
         <div>
-          <Text variant="microLabel">Selected proposal · source-confirmed</Text>
+          <Text variant="microLabel">
+            {PROPOSAL_RISK_IMPACT_COPY.selectedProposalLabel}
+          </Text>
           <Text variant="subsectionTitle" as="h3">
             {model.identity.title}
           </Text>
@@ -208,8 +218,8 @@ function RiskImpactEvidence({
           <SourceRefreshAction
             ref={refreshActionRef}
             refreshScope={model.identity.proposalId}
-            idleLabel="Refresh source evidence"
-            busyLabel="Refreshing source evidence"
+            idleLabel={PROPOSAL_RISK_IMPACT_COPY.refresh.refreshIdleLabel}
+            busyLabel={PROPOSAL_RISK_IMPACT_COPY.refresh.refreshBusyLabel}
             isRefreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -231,7 +241,9 @@ function RiskImpactEvidence({
       >
         <div className={styles.decisionMarker} aria-hidden="true" />
         <div className={styles.decisionLead}>
-          <Text variant="microLabel">Decision posture</Text>
+          <Text variant="microLabel">
+            {PROPOSAL_RISK_IMPACT_COPY.decisionReadinessLabel}
+          </Text>
           <Text variant="subsectionTitle" as="h4" id="risk-decision-heading">
             {model.decision.status}
           </Text>
@@ -284,7 +296,9 @@ function RiskImpactEvidence({
               <ScreenStatePanel
                 kind="partial"
                 title="Some allocation views are unavailable"
-                body={`The source expected ${model.allocation.missingExpectedDimensions.join(", ")} but did not return those comparisons. Available views remain visible; no missing allocation is inferred.`}
+                body={missingAllocationViewsBody(
+                  model.allocation.missingExpectedDimensions,
+                )}
               />
             ) : null}
             <div className={styles.dimensionControl}>
@@ -362,8 +376,8 @@ function RiskImpactEvidence({
         ) : (
           <ScreenStatePanel
             kind="partial"
-            title="Allocation comparison is not available"
-            body="The proposal source did not provide a usable current and proposed allocation view. No comparison is inferred."
+            title={PROPOSAL_RISK_IMPACT_COPY.allocationUnavailable.title}
+            body={PROPOSAL_RISK_IMPACT_COPY.allocationUnavailable.body}
           />
         )}
       </section>
@@ -399,8 +413,8 @@ function RiskImpactEvidence({
           ) : (
             <ScreenStatePanel
               kind="partial"
-              title="Risk evidence is not confirmed"
-              body="The source did not return usable proposal risk evidence. No risk conclusion is inferred."
+              title={PROPOSAL_RISK_IMPACT_COPY.riskUnavailable.title}
+              body={PROPOSAL_RISK_IMPACT_COPY.riskUnavailable.body}
             />
           )}
           <p className={styles.sourceLine}>
@@ -449,8 +463,8 @@ function RiskImpactEvidence({
           ) : (
             <ScreenStatePanel
               kind="partial"
-              title="Workflow gate is not confirmed"
-              body="The source did not return a ready workflow gate. No gate or required next step is inferred."
+              title={PROPOSAL_RISK_IMPACT_COPY.workflowUnavailable.title}
+              body={PROPOSAL_RISK_IMPACT_COPY.workflowUnavailable.body}
             />
           )}
           <p className={styles.muted}>{model.workflowGate.disclaimer}</p>
@@ -521,8 +535,8 @@ function RiskImpactEvidence({
         ) : (
           <ScreenStatePanel
             kind="partial"
-            title="Decision register is not confirmed"
-            body="The proposal source did not return a ready decision record. Approval requirements, material changes, and missing evidence remain unknown; no zero-blocker posture is inferred."
+            title={PROPOSAL_RISK_IMPACT_COPY.decisionRegisterUnavailable.title}
+            body={PROPOSAL_RISK_IMPACT_COPY.decisionRegisterUnavailable.body}
           />
         )}
       </section>
@@ -605,10 +619,7 @@ function RiskImpactEvidence({
       <footer className={styles.actionBar}>
         <div>
           <strong>{model.decision.nextAction}</strong>
-          <span>
-            Continue in the governed proposal record to review or record
-            workflow actions.
-          </span>
+          <span>{PROPOSAL_RISK_IMPACT_COPY.continuePrompt}</span>
         </div>
         <Link className={styles.primaryAction} href={proposalHref}>
           Open proposal review
@@ -633,12 +644,12 @@ function RiskEvidenceRefreshStatus({
     return (
       <WorkbenchRefreshStatus
         kind="failed"
-        eyebrow="Source evidence not updated"
-        title="Source refresh failed"
+        eyebrow={PROPOSAL_RISK_IMPACT_COPY.refresh.failedEyebrow}
+        title={PROPOSAL_RISK_IMPACT_COPY.refresh.failedTitle}
         message={
           hasConfirmedEvidence
-            ? "Previously retrieved evidence remains visible and is not re-confirmed."
-            : "No source-confirmed evidence is available. The retry did not complete."
+            ? PROPOSAL_RISK_IMPACT_COPY.refresh.failedWithEvidence
+            : PROPOSAL_RISK_IMPACT_COPY.refresh.failedWithoutEvidence
         }
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
@@ -649,12 +660,12 @@ function RiskEvidenceRefreshStatus({
     return (
       <WorkbenchRefreshStatus
         kind="pending"
-        eyebrow="Updating source evidence"
-        title="Reconfirming selected proposal evidence"
+        eyebrow={PROPOSAL_RISK_IMPACT_COPY.refresh.pendingEyebrow}
+        title={PROPOSAL_RISK_IMPACT_COPY.refresh.pendingTitle}
         message={
           hasConfirmedEvidence
-            ? "The current source-confirmed evidence remains visible while Gateway refreshes."
-            : "Workbench is requesting source evidence through Gateway. No decision posture is shown until it succeeds."
+            ? PROPOSAL_RISK_IMPACT_COPY.refresh.pendingWithEvidence
+            : PROPOSAL_RISK_IMPACT_COPY.refresh.pendingWithoutEvidence
         }
         requestedContext={requestedContext}
         confirmedContext={confirmedContext}
@@ -664,8 +675,8 @@ function RiskEvidenceRefreshStatus({
   return (
     <WorkbenchRefreshStatus
       kind="confirmed"
-      eyebrow="Source evidence updated"
-      title="Selected proposal evidence confirmed"
+      eyebrow={PROPOSAL_RISK_IMPACT_COPY.refresh.confirmedEyebrow}
+      title={PROPOSAL_RISK_IMPACT_COPY.refresh.confirmedTitle}
       confirmedContext={confirmedContext}
     />
   );
