@@ -114,7 +114,7 @@ export function buildProposalNarrativePostureModel({
     ? events
     : null;
   const latestEvent =
-    currentEvents?.latest_event ?? currentEvents?.events?.[0] ?? null;
+    currentEvents?.latest_event ?? currentEvents?.events?.at(-1) ?? null;
   const eventCount = resolveEventCount(currentEvents);
 
   const sourceNarrativeHash = reviewConfirmed ? reviewedNarrativeHash : null;
@@ -138,7 +138,7 @@ export function buildProposalNarrativePostureModel({
     reviewConfirmed,
   });
   const latestEventLabel = normalizeLabel(
-    latestEvent?.event_type,
+    latestEvent ? formatDeliveryEventLabel(latestEvent.event_type) : null,
     "No delivery activity",
   );
 
@@ -249,15 +249,12 @@ function isCoherentDiscussionPackRecord({
   ) {
     return false;
   }
-  if (status === "REQUESTED" && packageStatus === "REQUESTED") {
-    return (
-      (reportReferenceId === undefined || reportReferenceId === null) &&
-      (generatedAt === undefined || generatedAt === null)
-    );
-  }
+  const statusAndPackageAgree =
+    (status === "REQUESTED" && packageStatus === "REQUESTED") ||
+    (status === "READY" &&
+      packageStatus === "INCLUDED_REVIEWED_NARRATIVE");
   return (
-    status === "READY" &&
-    packageStatus === "INCLUDED_REVIEWED_NARRATIVE" &&
+    statusAndPackageAgree &&
     isNonBlankString(reportReferenceId) &&
     typeof generatedAt === "string" &&
     isTimestampValue(generatedAt)
@@ -293,27 +290,73 @@ function deliveryEventAggregateIsCoherent(
   ) {
     return false;
   }
-  const listedCount = events.events?.length ?? 0;
+  if (!Array.isArray(events.events)) {
+    return false;
+  }
+  const listedCount = events.events.length;
   const hasLatestEvent = events.latest_event !== undefined;
   if (count === 0) {
     return listedCount === 0 && !hasLatestEvent;
   }
-  if (listedCount > count) {
+  if (listedCount !== count || !hasLatestEvent) {
     return false;
   }
-  const latestEvent = events.latest_event ?? events.events?.[0];
-  const recordsAgree =
-    !events.latest_event ||
-    !events.events?.[0] ||
-    (events.latest_event.event_type === events.events[0].event_type &&
-      events.latest_event.occurred_at === events.events[0].occurred_at &&
-      events.latest_event.to_state === events.events[0].to_state);
+  const latestEvent = events.latest_event;
+  const finalListedEvent = events.events.at(-1);
+  const allEventsAreGoverned = events.events.every(
+    (event) =>
+      isNonBlankString(event.event_id) &&
+      isSupportedDeliveryEventType(event.event_type) &&
+      isTimestampValue(event.occurred_at),
+  );
   return Boolean(
     latestEvent &&
-      latestEvent.event_type === "REPORT_REQUESTED" &&
-      isTimestampValue(latestEvent.occurred_at) &&
-      recordsAgree,
+      finalListedEvent &&
+      allEventsAreGoverned &&
+      latestEvent.event_id === finalListedEvent.event_id &&
+      latestEvent.event_type === finalListedEvent.event_type &&
+      latestEvent.occurred_at === finalListedEvent.occurred_at &&
+      latestEvent.to_state === finalListedEvent.to_state,
   );
+}
+
+function isSupportedDeliveryEventType(value: unknown): value is string {
+  switch (value) {
+    case "REPORT_REQUESTED":
+    case "EXECUTION_REQUESTED":
+    case "EXECUTION_ACCEPTED":
+    case "EXECUTION_PARTIALLY_EXECUTED":
+    case "EXECUTION_REJECTED":
+    case "EXECUTION_CANCELLED":
+    case "EXECUTION_EXPIRED":
+    case "EXECUTED":
+      return true;
+    default:
+      return false;
+  }
+}
+
+function formatDeliveryEventLabel(value: unknown): string | null {
+  switch (value) {
+    case "REPORT_REQUESTED":
+      return "Discussion pack requested";
+    case "EXECUTION_REQUESTED":
+      return "Implementation requested";
+    case "EXECUTION_ACCEPTED":
+      return "Implementation accepted";
+    case "EXECUTION_PARTIALLY_EXECUTED":
+      return "Partially implemented";
+    case "EXECUTION_REJECTED":
+      return "Implementation rejected";
+    case "EXECUTION_CANCELLED":
+      return "Implementation cancelled";
+    case "EXECUTION_EXPIRED":
+      return "Implementation request expired";
+    case "EXECUTED":
+      return "Implementation completed";
+    default:
+      return null;
+  }
 }
 
 function resolveEventCount(
@@ -523,10 +566,9 @@ export function confirmDiscussionPackRefresh({
     (actionStatus === "REQUESTED" &&
       (refreshedStatus === "REQUESTED" || refreshedStatus === "READY")) ||
     (actionStatus === "READY" && refreshedStatus === "READY");
-  const readyArtifactsAgree =
-    actionStatus !== "READY" ||
-    (report.report_reference_id === summary?.reporting?.report_reference_id &&
-      report.generated_at === summary?.reporting?.generated_at);
+  const artifactsAgree =
+    report.report_reference_id === summary?.reporting?.report_reference_id &&
+    report.generated_at === summary?.reporting?.generated_at;
   if (
     !isNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
@@ -542,7 +584,7 @@ export function confirmDiscussionPackRefresh({
     !isNonBlankString(refreshedRequestId) ||
     actionRequestId !== refreshedRequestId ||
     !lifecycleIsMonotonic ||
-    !readyArtifactsAgree ||
+    !artifactsAgree ||
     report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
     summary.reporting?.report_type !== DISCUSSION_PACK_REPORT_TYPE ||
     !isCoherentDiscussionPackRecord({

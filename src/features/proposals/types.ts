@@ -851,6 +851,7 @@ export type ProposalDeliverySummaryData = {
     report_request_id?: string;
     report_type?: string;
     report_reference_id?: string | null;
+    generated_at?: string | null;
     requested_by?: string | null;
     related_version_no?: number | null;
     include_reviewed_narrative?: boolean;
@@ -878,6 +879,7 @@ export type ProposalDeliveryEventsData = {
   proposal_id?: string;
   event_count?: number;
   latest_event?: {
+    event_id?: string;
     event_type?: string;
     to_state?: string;
     occurred_at?: string;
