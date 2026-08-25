@@ -82,7 +82,18 @@ describe("ProposalMemoPosturePanel", () => {
       supportability: { client_ready_publication: "BLOCKED" },
     });
     vi.mocked(createProposalMemo).mockResolvedValue({ memo_hash: "sha256:memo-001" });
-    vi.mocked(reviewProposalMemo).mockResolvedValue({ memo_hash: "sha256:memo-001" });
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        memo_hash: "sha256:memo-001",
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: "sha256:memo-001",
+        },
+      },
+      review_event: { event_type: "MEMO_REVIEW_RECORDED" },
+      replayed: false,
+    });
     vi.mocked(requestProposalMemoReportPackage).mockResolvedValue({
       report: { archive_refs: ["archive://memo/report/1"] },
     });

@@ -57,6 +57,7 @@ import {
   ProposalMemoReplayEvidenceData,
   ProposalMemoReportPackageData,
   ProposalMemoReportPackageRequest,
+  ProposalMemoReviewData,
   ProposalMemoReviewRequest,
   ProposalNarrativeReviewData,
   ProposalNarrativeReviewRequest,
@@ -944,13 +945,13 @@ export async function reviewProposalMemo(
   versionNo: number,
   payload: ProposalMemoReviewRequest,
   idempotencyKey?: string,
-): Promise<ProposalMemoData> {
+): Promise<ProposalMemoReviewData> {
   const envelope = await postJson(
     `/proposals/${proposalId}/versions/${versionNo}/memo/review`,
     payload,
     idempotencyKey,
   );
-  return envelope.data as unknown as ProposalMemoData;
+  return envelope.data as unknown as ProposalMemoReviewData;
 }
 
 export async function recordProposalMemoReportPackageEvent(
