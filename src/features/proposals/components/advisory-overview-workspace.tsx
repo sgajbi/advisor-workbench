@@ -20,6 +20,12 @@ import {
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import { projectQuerySourcePosture } from "@/features/platform-runtime/query-source-posture";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
+import {
+  ADVISORY_OVERVIEW_COPY,
+  ADVISORY_OVERVIEW_REFRESH_FAILURE_COPY,
+  advisoryOverviewLoadingCopy,
+  advisoryOverviewUnavailableCopy,
+} from "@/copy/advisory-overview-copy";
 
 import { listProposals } from "../api";
 import {
@@ -32,8 +38,6 @@ import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./advisory-overview-workspace.module.css";
 
 const ADVISORY_OVERVIEW_WINDOW_SIZE = 8;
-const ADVISER_PRIORITIES_HEADING = "Adviser priorities";
-
 type SourceRefreshOutcome = {
   queryIdentity: string;
   state: "pending" | "confirmed" | "failed";
@@ -189,24 +193,19 @@ export default function AdvisoryOverviewWorkspace({
   );
 
   if (sourcePosture.isInitialLoading) {
+    const loadingCopy = advisoryOverviewLoadingCopy(
+      refreshState === "pending" ? "retrying" : "initial",
+    );
     return (
       <SectionBlock
-        title={ADVISER_PRIORITIES_HEADING}
-        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+        title={ADVISORY_OVERVIEW_COPY.heading}
+        subtitle={ADVISORY_OVERVIEW_COPY.subtitle}
         actions={sectionActions}
       >
         <ScreenStatePanel
           kind="loading"
-          title={
-            refreshState === "pending"
-              ? "Checking advisory priorities"
-              : "Loading advisory priorities"
-          }
-          body={
-            refreshState === "pending"
-              ? "Recontacting the approved advisory workflow for this portfolio."
-              : "Retrieving the current proposal posture for this portfolio."
-          }
+          title={loadingCopy.title}
+          body={loadingCopy.body}
           surface="default"
           rows={5}
         />
@@ -217,8 +216,8 @@ export default function AdvisoryOverviewWorkspace({
   if (sourcePosture.isPermissionBlocked) {
     return (
       <SectionBlock
-        title={ADVISER_PRIORITIES_HEADING}
-        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+        title={ADVISORY_OVERVIEW_COPY.heading}
+        subtitle={ADVISORY_OVERVIEW_COPY.subtitle}
       >
         <ScreenStatePanel
           kind="permission_blocked"
@@ -232,32 +231,22 @@ export default function AdvisoryOverviewWorkspace({
   }
 
   if (sourcePosture.isUnavailable) {
+    const unavailableCopy = advisoryOverviewUnavailableCopy({
+      hasPreviousWindow: sourceWindow.hasPrevious,
+      retryFailed: refreshState === "failed",
+    });
     return (
       <SectionBlock
-        title={ADVISER_PRIORITIES_HEADING}
-        subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+        title={ADVISORY_OVERVIEW_COPY.heading}
+        subtitle={ADVISORY_OVERVIEW_COPY.subtitle}
         actions={sectionActions}
       >
         <div role="alert" aria-live="assertive" aria-atomic="true">
           <ScreenStatePanel
             kind="error"
-            title={
-              sourceWindow.hasPrevious
-                ? "This proposal window is unavailable"
-                : refreshState === "failed"
-                  ? "Advisory priorities remain unavailable"
-                  : "Advisory priorities are unavailable"
-            }
-            body={
-              sourceWindow.hasPrevious
-                ? "The next proposal window could not be loaded from the approved advisory workflow."
-                : "The proposal worklist could not be loaded from the approved advisory workflow."
-            }
-            hint={
-              sourceWindow.hasPrevious
-                ? "Retry this proposal window, or return to the previously loaded proposals."
-                : "Use Retry advisory priorities when the source is available. No fallback proposal, review, or implementation posture is shown."
-            }
+            title={unavailableCopy.title}
+            body={unavailableCopy.body}
+            hint={unavailableCopy.hint}
             action={
               sourceWindow.hasPrevious ? (
                 <ActionButton
@@ -277,8 +266,8 @@ export default function AdvisoryOverviewWorkspace({
 
   return (
     <SectionBlock
-      title={ADVISER_PRIORITIES_HEADING}
-      subtitle="Portfolio-scoped proposal posture, lifecycle handoffs, and next actions."
+      title={ADVISORY_OVERVIEW_COPY.heading}
+      subtitle={ADVISORY_OVERVIEW_COPY.subtitle}
       actions={sectionActions}
     >
       <div
@@ -289,8 +278,7 @@ export default function AdvisoryOverviewWorkspace({
           <div className={styles.sourceNotice} role="status" aria-live="polite">
             <SemanticBadge>Refreshing</SemanticBadge>
             <Text variant="secondary">
-              The current worklist remains visible while source-owned proposal
-              posture refreshes.
+              {ADVISORY_OVERVIEW_COPY.refreshingDetail}
             </Text>
           </div>
         ) : refreshState === "confirmed" && !sourcePosture.hasRefreshFailure ? (
@@ -300,18 +288,20 @@ export default function AdvisoryOverviewWorkspace({
             aria-live="polite"
             aria-atomic="true"
           >
-            <SemanticBadge tone="success">Source confirmed</SemanticBadge>
+            <SemanticBadge tone="success">
+              {ADVISORY_OVERVIEW_COPY.refreshConfirmedLabel}
+            </SemanticBadge>
             <Text variant="secondary">
-              Latest advisory priorities confirmed through Gateway.
+              {ADVISORY_OVERVIEW_COPY.refreshConfirmedDetail}
             </Text>
           </div>
         ) : null}
         {sourcePosture.hasRefreshFailure ? (
           <ScreenStatePanel
             kind="partial"
-            title="Latest proposal posture is not confirmed"
-            body="Previously retrieved proposals remain visible, but the latest source refresh did not complete."
-            hint="Retry before relying on this worklist for a client discussion or implementation decision."
+            title={ADVISORY_OVERVIEW_REFRESH_FAILURE_COPY.title}
+            body={ADVISORY_OVERVIEW_REFRESH_FAILURE_COPY.body}
+            hint={ADVISORY_OVERVIEW_REFRESH_FAILURE_COPY.hint}
             surface="default"
           />
         ) : null}
@@ -322,7 +312,9 @@ export default function AdvisoryOverviewWorkspace({
           data-testid="advisory-decision-brief"
         >
           <div>
-            <Text variant="microLabel">Advisor Decision</Text>
+            <Text variant="microLabel">
+              {ADVISORY_OVERVIEW_COPY.decisionEyebrow}
+            </Text>
             <Text
               variant="subsectionTitle"
               as="h2"
@@ -371,7 +363,7 @@ export default function AdvisoryOverviewWorkspace({
               body={
                 model.hasPartialWindow
                   ? "Review adjacent proposal windows before concluding this portfolio has no open advisory work."
-                  : "Review source-backed ideas or build a proposal when a client objective is ready."
+                  : ADVISORY_OVERVIEW_COPY.emptyDetail
               }
               action={
                 !model.hasPartialWindow ? (
@@ -382,7 +374,7 @@ export default function AdvisoryOverviewWorkspace({
                       "proposal-builder",
                     )}
                   >
-                    Build advisor-use draft
+                    {ADVISORY_OVERVIEW_COPY.buildDraftAction}
                   </Link>
                 ) : undefined
               }
@@ -392,7 +384,7 @@ export default function AdvisoryOverviewWorkspace({
             <WorkbenchWorklist
               ariaLabel="Advisory proposal decision worklist"
               relationshipIdBase="advisory-proposal-decision-worklist"
-              eyebrow="Advisor worklist"
+              eyebrow={ADVISORY_OVERVIEW_COPY.worklistEyebrow}
               title="Proposal decisions"
               description="Select a proposal to review its current business status and next permitted action."
               items={model.proposalRows.map((row) => ({
@@ -462,8 +454,8 @@ function SelectedProposalDecision({
           <dd>{proposal.proposalId}</dd>
         </div>
         <div>
-          <dt>Recorded by</dt>
-          <dd>{proposal.sourceOwner}</dd>
+          <dt>Created by</dt>
+          <dd>{proposal.createdBy}</dd>
         </div>
         <div>
           <dt>Recorded on</dt>
@@ -472,8 +464,7 @@ function SelectedProposalDecision({
       </dl>
       <footer className={styles.selectedDecisionFooter}>
         <Text variant="bodySmall">
-          Open the source-owned proposal record for evidence, approvals, and the
-          complete audit trail.
+          {ADVISORY_OVERVIEW_COPY.selectedProposalDetail}
         </Text>
         <ActionLink href={proposal.href} className={styles.actionLink}>
           Open proposal review

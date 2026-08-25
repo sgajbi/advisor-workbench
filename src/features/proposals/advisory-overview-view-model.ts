@@ -1,5 +1,6 @@
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import { buildReviewContextHref } from "@/shell/review-context";
+import { ADVISORY_OVERVIEW_COPY } from "@/copy/advisory-overview-copy";
 
 import type { AdvisoryJourneyReviewContext } from "./advisory-journey-navigation";
 import {
@@ -15,7 +16,7 @@ export type AdvisoryOverviewProposalRow = {
   status: string;
   statusTone: "default" | "warn" | "success";
   nextAction: string;
-  sourceOwner: string;
+  createdBy: string;
   recordedAt: string;
   href: string;
 };
@@ -57,7 +58,7 @@ function proposalDecisionStatus(state: string): string {
   if (state === "COMPLIANCE_REVIEW") return "Compliance review required";
   if (state === "AWAITING_CLIENT_CONSENT") return "Client decision pending";
   if (state === "EXECUTION_READY") return "Implementation ready";
-  if (state === "DRAFT") return "Advisor draft";
+  if (state === "DRAFT") return "Adviser draft";
   return proposalStageLabel(state);
 }
 
@@ -72,9 +73,9 @@ function recommendedAction(items: ProposalSummary[]): string {
     return "Follow implementation status and confirm execution handoff evidence.";
   }
   if (items.length > 0) {
-    return "Submit ready advisor drafts for risk or compliance review.";
+    return "Submit ready adviser drafts for risk or compliance review.";
   }
-  return "Review source-backed ideas or build a proposal when a client objective is ready.";
+  return ADVISORY_OVERVIEW_COPY.emptyDetail;
 }
 
 export function buildAdvisoryOverviewModel({
@@ -110,9 +111,7 @@ export function buildAdvisoryOverviewModel({
       status: proposalDecisionStatus(proposal.current_state),
       statusTone: proposalStageTone(proposal.current_state),
       nextAction: proposalNextAction(proposal.current_state),
-      sourceOwner: proposal.created_by?.trim()
-        ? "Recorded by source"
-        : "Not reported",
+      createdBy: proposal.created_by?.trim() || "Not reported",
       recordedAt: formatTimestampValue(proposal.created_at, {
         nullDisplay: "Not reported",
       }),

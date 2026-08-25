@@ -282,7 +282,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     await expectAdviserPrioritiesHeading();
     expect(
       screen.getByText(
-        /No fallback proposal, review, or implementation posture is shown/,
+        /No substitute proposal, review, or implementation status is shown/,
       ),
     ).toBeInTheDocument();
     expect(
@@ -359,7 +359,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       await screen.findByText("Portfolio B liquidity review"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Latest advisory priorities confirmed through Gateway."),
+      screen.getByText("Proposal priorities were updated."),
     ).toBeInTheDocument();
     expect(listProposalsMock).toHaveBeenCalledTimes(4);
 
@@ -370,7 +370,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          "Latest advisory priorities confirmed through Gateway.",
+          "Proposal priorities were updated.",
         ),
       ).toBeInTheDocument();
     });
@@ -410,7 +410,7 @@ describe("AdvisoryOverviewWorkspace", () => {
 
     expect(
       await screen.findByText(
-        "Latest advisory priorities confirmed through Gateway.",
+        "Proposal priorities were updated.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -479,7 +479,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     fireEvent.click(refresh);
 
     expect(
-      await screen.findByText("Latest proposal posture is not confirmed"),
+      await screen.findByText("Proposal priorities could not be updated"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Technology concentration trim"),
@@ -497,7 +497,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       screen.queryByText("Technology concentration trim"),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Latest advisory priorities confirmed through Gateway."),
+      screen.getByText("Proposal priorities were updated."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Refresh advisory priorities" }),
@@ -523,7 +523,7 @@ describe("AdvisoryOverviewWorkspace", () => {
     );
     expect(
       await screen.findByText(
-        "Latest advisory priorities confirmed through Gateway.",
+        "Proposal priorities were updated.",
       ),
     ).toBeInTheDocument();
 
@@ -533,11 +533,11 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
 
     expect(
-      await screen.findByText("Latest proposal posture is not confirmed"),
+      await screen.findByText("Proposal priorities could not be updated"),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(
-        "Latest advisory priorities confirmed through Gateway.",
+        "Proposal priorities were updated.",
       ),
     ).not.toBeInTheDocument();
     expect(
@@ -573,7 +573,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       }),
     );
     expect(
-      await screen.findByText("Latest proposal posture is not confirmed"),
+      await screen.findByText("Proposal priorities could not be updated"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Retry advisory priorities" }),
@@ -588,13 +588,13 @@ describe("AdvisoryOverviewWorkspace", () => {
       await screen.findByText("Automatically recovered client review"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Latest advisory priorities confirmed through Gateway."),
+      screen.getByText("Proposal priorities were updated."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Refresh advisory priorities" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("Latest proposal posture is not confirmed"),
+      screen.queryByText("Proposal priorities could not be updated"),
     ).not.toBeInTheDocument();
   });
 
