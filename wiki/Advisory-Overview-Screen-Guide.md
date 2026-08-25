@@ -194,6 +194,9 @@ calculations, or unsupported capability.
 - `docs/evidence/issue-811-decision-worklists/advisory-overview/` contains reviewed diagnostic
   desktop, intermediate, tablet, and compact evidence for the decision-first slice. It is not
   canonical runtime proof.
+- `docs/evidence/issue-798-product-copy/advisory-overview/` contains the final business-copy review
+  renders for this slice at desktop, intermediate, tablet, and compact widths. It is deterministic
+  diagnostic evidence, not canonical source proof.
 - `scripts/live/validation/browser-workflows.mjs` covers the canonical Advisory Overview panel in
   the governed front-office runtime.
 - `output/issue-731/` contains reviewed desktop, tablet, and compact hierarchy screenshots;
