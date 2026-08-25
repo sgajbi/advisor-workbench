@@ -890,13 +890,13 @@ export async function validatePortfolioPanels(
   await expect(
     reviewContext.getByText("Business date", { exact: true }),
   ).toBeVisible({ timeout: timeoutMs });
-  await expect(page.getByText("MTD Return")).toBeVisible({
+  await expect(page.getByText("MTD return", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText("QTD Return")).toBeVisible({
+  await expect(page.getByText("QTD return", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText("YTD Return")).toBeVisible({
+  await expect(page.getByText("YTD return", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   const decisionReview = page.getByRole("region", {
@@ -1305,22 +1305,22 @@ export async function validateAdvisorBriefPanel(
   );
   await assertRailModeActive(page, /^Adviser brief/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Performance adviser brief" }),
+    page.getByRole("heading", { name: "Performance adviser brief", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Adviser talking points" }),
+    page.getByRole("heading", { name: "Adviser talking points", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Source metrics" }),
+    page.getByRole("heading", { name: "Source metrics", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   const sourceMetricButtons = await page
-    .getByRole("region", { name: "Source metrics" })
+    .getByRole("region", { name: "Source metrics", exact: true })
     .getByRole("button")
     .count();
   if (sourceMetricButtons < 3) {
@@ -1336,9 +1336,10 @@ export async function validateAdvisorBriefPanel(
   await screenshotRegisteredPanel(page, "performance.advisor_brief");
 
   if (performAcceptReviewActionProof) {
-    let reviewRegion = page.getByLabel("Adviser brief human review");
+    let reviewRegion = page.getByLabel("Adviser brief human review", { exact: true });
     let supportabilityRegion = page.getByLabel(
       "Adviser brief supportability",
+      { exact: true },
     );
     await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
     await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
@@ -1359,8 +1360,10 @@ export async function validateAdvisorBriefPanel(
         timeout: timeoutMs,
       });
       await assertRailModeActive(page, /^Adviser brief/, timeoutMs);
-      reviewRegion = page.getByLabel("Adviser brief human review");
-      supportabilityRegion = page.getByLabel("Adviser brief supportability");
+      reviewRegion = page.getByLabel("Adviser brief human review", { exact: true });
+      supportabilityRegion = page.getByLabel("Adviser brief supportability", {
+        exact: true,
+      });
       await expect(reviewRegion).toBeVisible({ timeout: timeoutMs });
       await expect(supportabilityRegion).toBeVisible({ timeout: timeoutMs });
       reviewEvidence = await readAdvisorBriefReviewEvidence(
@@ -1929,7 +1932,7 @@ export async function validateDpmCommandCenterPanel(
   });
   const mandatePanel = workbenchPanelByClass(page, "manage-mandate-panel");
   await expect(
-    mandatePanel.getByRole("heading", { name: "Mandate review" }),
+    mandatePanel.getByRole("heading", { name: "Mandate review", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1940,12 +1943,12 @@ export async function validateDpmCommandCenterPanel(
     timeout: timeoutMs,
   });
   await expect(
-    mandatePanel.getByRole("heading", { name: "Attention items" }),
+    mandatePanel.getByRole("heading", { name: "Attention items", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    mandatePanel.getByRole("heading", { name: "Mandate health dimensions" }),
+    mandatePanel.getByRole("heading", { name: "Mandate health dimensions", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
