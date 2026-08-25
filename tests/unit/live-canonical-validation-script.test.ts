@@ -757,10 +757,14 @@ describe("canonical live validation script", () => {
     expect(script).toContain("advisory.advisory_copilot");
     expect(script).toContain("advisory.bank_demo_proof");
     expect(browserWorkflows).toContain(
-      'getByLabel("Status Approved For Advisor Use")',
+      'page.locator("#proposal-narrative-review")',
     );
+    expect(browserWorkflows).toContain(
+      'getByTestId("proposal-narrative-action-status")',
+    );
+    expect(browserWorkflows).toContain("source-confirmed-advisor-use");
     expect(browserWorkflows).not.toContain(
-      'getByText("Approved For Advisor Use")',
+      'locator("article.proposal-narrative-posture-panel")',
     );
     expect(calculationModule).toContain("calculationChecks");
     expect(calculationModule).toContain(
@@ -1543,8 +1547,12 @@ describe("canonical live validation script", () => {
     expect(runbook).toContain("they do not promote new backend capability");
     expect(runbook).toContain("records review-action, feedback, and bounded");
     expect(runbook).toContain("does not expose conversion-intent identifiers");
-    expect(browserWorkflowModule).toContain("Approve Advisor Narrative");
-    expect(browserWorkflowModule).toContain("Request Reviewed Report");
+    expect(browserWorkflowModule).toContain("Record advisor review");
+    expect(browserWorkflowModule).toContain("Request discussion pack");
+    expect(browserWorkflowModule).toContain("Advisor review confirmed");
+    expect(browserWorkflowModule).toContain(
+      "Discussion-pack request confirmed",
+    );
     expect(browserWorkflowModule).toContain("Prepare advisor memo");
     expect(browserWorkflowModule).toContain("Advisor memo confirmed");
     expect(browserWorkflowModule).toContain("Record advisor review");

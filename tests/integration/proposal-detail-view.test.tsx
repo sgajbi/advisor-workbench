@@ -328,6 +328,7 @@ describe("ProposalDetailView", () => {
     expect(screen.getByText("Client-ready publication is not promoted from this Workbench surface.")).toBeInTheDocument();
     expect(screen.getByTestId("proposal-evidence-disclosure")).not.toHaveAttribute("open");
     expect(screen.getByRole("tab", { name: "Narrative review" })).toHaveAttribute("aria-selected", "true");
+    expect(document.getElementById("proposal-narrative-review")).toBeVisible();
   });
 
   it("drops selectors from a different portfolio when returning to the source-owned worklist", async () => {

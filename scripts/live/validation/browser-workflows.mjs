@@ -1588,42 +1588,52 @@ export async function validateProposalNarrativePosturePanel(
     timeout: timeoutMs,
   });
 
-  const narrativePanel = workbenchPanelByClass(
-    page,
-    "proposal-narrative-posture-panel",
-  );
+  await page.getByRole("tab", { name: "Narrative review" }).click();
+  const narrativePanel = page.locator("#proposal-narrative-review");
   await expect(narrativePanel).toBeVisible({ timeout: timeoutMs });
   await expect(
-    narrativePanel.getByText("Advisor Narrative And Delivery"),
+    narrativePanel.getByRole("heading", {
+      name: "Narrative review and discussion pack",
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(narrativePanel.getByText("Review Posture")).toBeVisible({
+  await expect(narrativePanel.getByLabel("Narrative review workflow")).toBeVisible({
     timeout: timeoutMs,
   });
+  const reviewDetails = narrativePanel.locator("details").filter({
+    hasText: "Review record details",
+  });
+  if ((await reviewDetails.getAttribute("open")) === null) {
+    await reviewDetails.locator("summary").click();
+  }
   await narrativePanel
-    .getByLabel("Review rationale")
+    .getByRole("textbox", { name: "Reviewer reference" })
+    .fill("canonical_front_office_validator");
+  await narrativePanel
+    .getByRole("textbox", { name: "Advisor review rationale" })
     .fill(
       "Live canonical validator approved this advisor-use narrative from Gateway evidence.",
     );
   await narrativePanel
-    .getByRole("button", { name: "Approve Advisor Narrative" })
+    .getByRole("button", { name: "Record advisor review" })
     .click();
   await expect(
-    narrativePanel.getByLabel("Status Approved For Advisor Use"),
-  ).toBeVisible({
-    timeout: timeoutMs,
+    narrativePanel.getByTestId("proposal-narrative-action-status"),
+  ).toContainText("Advisor review confirmed", { timeout: timeoutMs });
+  const requestDiscussionPack = narrativePanel.getByRole("button", {
+    name: "Request discussion pack",
   });
-  await narrativePanel
-    .getByRole("button", { name: "Request Reviewed Report" })
-    .click();
+  let discussionPackState = "source-confirmed-existing-discussion-pack";
+  if (await requestDiscussionPack.isEnabled()) {
+    await requestDiscussionPack.click();
+    await expect(
+      narrativePanel.getByTestId("proposal-narrative-action-status"),
+    ).toContainText("Discussion-pack request confirmed", { timeout: timeoutMs });
+    discussionPackState = "source-confirmed-discussion-pack-request";
+  }
   await expect(
-    narrativePanel.getByText("Included Reviewed Narrative"),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(
-    narrativePanel.getByText(/Source narrative hash: sha256:/),
+    narrativePanel.getByText(/^sha256:/).first(),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1632,8 +1642,8 @@ export async function validateProposalNarrativePosturePanel(
     description: "Proposal narrative posture review and report package",
     kind: "proposal-narrative-posture",
     proposalId,
-    reviewState: "APPROVED_FOR_ADVISOR_USE",
-    reportPackageState: "INCLUDED_REVIEWED_NARRATIVE",
+    reviewState: "source-confirmed-advisor-use",
+    reportPackageState: discussionPackState,
   });
   await screenshotRegisteredPanel(page, "proposal.narrative_posture", {
     route: `/proposals/${proposalId}`,
