@@ -77,9 +77,11 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Binds narrative review to the active proposal version rather than asking the advisor to edit the
   version in the review flow. Reviewer reference, policy identity, rationale hash, and latest exact
   delivery time remain in progressive **Review record details**.
-- Enables **Request discussion pack** only after the current source read confirms advisor-review
-  evidence. Review and pack success are announced only after the action response and refreshed
-  proposal evidence agree; refresh disagreement remains an explicit failure.
+- Enables **Request discussion pack** only after the authoritative current-version narrative read
+  confirms the persisted review identity, actor, time, state, and narrative hash. Delivery summary
+  remains downstream package posture, not review authority. Review and pack success are announced
+  only after the action response and the action-specific refreshed reads agree; disagreement
+  remains an explicit failure.
 - Presents memo work as **memo evidence → advisor review → discussion material → record and
   audience**. The advisor reference is always explicit, the active proposal version is read-only,
   and unknown source states fail closed rather than becoming a permissive browser default.
@@ -120,7 +122,8 @@ success alone is not proof that the refreshed proposal posture agrees.
 | Workflow history and current workflow state | Retrieved independently and reconciled with detail | Gateway over Advise workflow |
 | Approval decisions | Retrieved independently; absence remains explicit | Gateway over Advise approval register |
 | Active-version lineage and hashes | Used to confirm that actions apply to the current version | Gateway over Advise lineage |
-| Advisor narrative review and package posture | Submitted and refreshed through proposal narrative endpoints | Gateway over Advise; Report owns downstream materialization |
+| Advisor narrative review | Submitted through the version review endpoint and confirmed from the authoritative current-version narrative read | Gateway over Advise review evidence |
+| Discussion-pack and delivery posture | Requested through proposal report endpoints and refreshed independently from delivery summary and events | Gateway over Advise; Report owns downstream materialization |
 | Memo, projection, replay, review, package, and commentary posture | Presented through proposal memo endpoints | Gateway over Advise, Report, and Lotus AI where the response identifies them |
 | Return portfolio | Source proposal portfolio after successful detail load; bounded route context otherwise | Gateway proposal identity, then Workbench route context |
 

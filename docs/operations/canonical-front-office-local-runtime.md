@@ -416,8 +416,10 @@ record on the visible **Human Review** row. Missing, duplicate, malformed, non-r
 wrong-reviewer records fail closed; the validator does not infer persistence from flattened panel
 text. Proposal
 narrative checks prove Gateway-backed proposal creation with an advisor-review narrative request,
-Workbench advisor-use narrative review, reviewed report-package request, source narrative hash
-visibility, and screenshot evidence for `proposal.narrative_posture`. Proposal memo checks prove
+Workbench advisor-use narrative review confirmed from the authoritative current-version narrative
+read, reviewed report-package request, source narrative hash visibility, and screenshot evidence
+for `proposal.narrative_posture`. Delivery summary is validated separately and is not used as
+narrative-review authority. Proposal memo checks prove
 the RFC-0024 memo/evidence-pack surface can create or replay an advisor-use memo, record advisor-use
 review, request memo report-package posture, request non-authoritative commentary, preserve replay
 hash visibility, and capture governed screenshot evidence for `proposal.memo_evidence_pack`.

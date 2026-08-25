@@ -547,8 +547,9 @@ Current repository posture:
     available decision evidence visible when an ancillary source is unavailable, presents
     Narrative and Memo as peer advisor-review modes, and keeps technical audit history under
     progressive disclosure. A proposal action is confirmed only after Gateway persistence succeeds
-    and the owning detail, workflow, approval, and lineage reads refresh coherently from source
-    truth. The route renders delivery-summary and delivery-event posture, and does not generate
+    and the action-specific authoritative reads refresh coherently from source truth. Narrative
+    review is confirmed from the current-version narrative read; delivery summary and events remain
+    independent downstream package posture and cannot authorize review. The route does not generate
     narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
