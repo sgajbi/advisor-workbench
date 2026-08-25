@@ -453,13 +453,16 @@
         "src/features/proposals/components/proposal-detail-view.tsx",
         "src/features/proposals/components/proposal-detail-domain-panels.tsx",
         "src/features/proposals/components/proposal-narrative-posture-panel.tsx",
+        "src/features/proposals/components/proposal-review-panel.module.css",
         "src/features/proposals/components/proposal-memo-posture-panel.tsx",
+        "src/features/proposals/proposal-narrative-posture-view-model.ts",
         "src/features/proposals/proposal-action-evidence.ts"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",
         "tests/e2e/proposal-workflow-context.spec.ts",
-        "tests/e2e/proposal-memo-posture.spec.ts"
+        "tests/e2e/proposal-memo-posture.spec.ts",
+        "docs/evidence/issue-798-product-copy/narrative-review/README.md"
       ],
       "supportOwner": "lotus-workbench",
       "coverageException": null
