@@ -187,7 +187,7 @@ export default function AdvisorCockpitWorkspace({
   const recommendedAction =
     evidencePresentation.recommendedAction ??
     (actionWorklistUnavailable
-      ? "Restore Advisor Cockpit worklist access before relying on action posture for client discussion."
+      ? "Restore the Advisor Cockpit worklist before deciding whether client follow-up is required."
       : model.recommendedAction);
   const acknowledgementTransaction: AdvisorCockpitAcknowledgementTransaction = {
     actionItemId: acknowledgementMutation.variables?.actionItemId ?? null,
