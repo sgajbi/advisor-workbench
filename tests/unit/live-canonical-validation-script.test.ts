@@ -1267,7 +1267,19 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Return history");
     expect(browserWorkflowModule).toContain(
-      'outcomeReviewPanel.getByText("Selected Review Detail")',
+      'name: "Time-weighted return path · Net of fees"',
+    );
+    expect(browserWorkflowModule).toContain(
+      'name: "Outcome comparison"',
+    );
+    expect(browserWorkflowModule).toContain(
+      'name: "Selected review detail"',
+    );
+    expect(browserWorkflowModule).toContain(
+      'outcomeReviewPanel.getByText("Evidence availability", { exact: true })',
+    );
+    expect(browserWorkflowModule).toContain(
+      'name: /Prepare AI-assisted review summary/',
     );
     expect(browserWorkflowModule).toContain("performAcceptReviewActionProof");
     expect(browserWorkflowModule).toContain("Adviser brief human review");

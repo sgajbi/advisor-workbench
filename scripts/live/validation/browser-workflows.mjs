@@ -1098,7 +1098,10 @@ export async function validatePerformanceSummaryPanel(
   });
   await assertRailModeActive(page, /^Performance overview/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Net Return Path" }),
+    page.getByRole("heading", {
+      name: "Time-weighted return path · Net of fees",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1857,7 +1860,10 @@ export async function validateOutcomeReviewPanel(
     "outcome-review-panel",
   );
   await expect(
-    outcomeReviewPanel.getByRole("heading", { name: "Outcome Reviews" }),
+    outcomeReviewPanel.getByRole("heading", {
+      name: "Outcome comparison",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1875,12 +1881,15 @@ export async function validateOutcomeReviewPanel(
     "Outcome review dimensions",
   );
   await expect(
-    outcomeReviewPanel.getByText("Selected Review Detail"),
+    outcomeReviewPanel.getByRole("heading", {
+      name: "Selected review detail",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    outcomeReviewPanel.getByText("Evidence Availability"),
+    outcomeReviewPanel.getByText("Evidence availability", { exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1891,8 +1900,7 @@ export async function validateOutcomeReviewPanel(
   });
   await expect(
     outcomeReviewPanel.getByRole("button", {
-      name: "Request advisor memo",
-      exact: true,
+      name: /Prepare AI-assisted review summary/,
     }),
   ).toBeVisible({
     timeout: timeoutMs,
