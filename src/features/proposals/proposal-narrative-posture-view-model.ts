@@ -47,6 +47,16 @@ export function buildProposalNarrativePostureModel({
   const summaryReporting = summary?.reporting ?? null;
   const reportingSummary = summary?.reporting_summary ?? null;
   const latestEvent = events?.latest_event ?? events?.events?.[0] ?? null;
+  const reviewedNarrativeHash = reviewRecord?.source_narrative_hash ?? null;
+  const reportMatchesReviewedNarrative = narrativeHashMatches(
+    reviewedNarrativeHash,
+    reportPackage?.source_narrative_hash,
+  );
+  const summaryMatchesReviewedNarrative = narrativeHashMatches(
+    reviewedNarrativeHash,
+    summaryPackage?.source_narrative_hash ??
+      reportingSummary?.source_narrative_hash,
+  );
 
   const sourceNarrativeHash =
     reviewRecord?.source_narrative_hash ??
@@ -60,26 +70,26 @@ export function buildProposalNarrativePostureModel({
     "Not Reviewed",
   );
   const reportPackageState = normalizeLabel(
-    reportPackage?.package_status ?? summaryPackage?.package_status,
-    summaryReporting?.include_reviewed_narrative ||
-      reportingSummary?.include_reviewed_narrative
+    (reportMatchesReviewedNarrative ? reportPackage?.package_status : null) ??
+      (summaryMatchesReviewedNarrative ? summaryPackage?.package_status : null),
+    (reportMatchesReviewedNarrative &&
+      report?.explanation?.include_reviewed_narrative) ||
+      (summaryMatchesReviewedNarrative &&
+        (summaryReporting?.include_reviewed_narrative ||
+          reportingSummary?.include_reviewed_narrative))
       ? "Requested"
       : "Not Requested",
   );
   const deliveryState = normalizeLabel(
-    summaryReporting?.status ?? report?.status,
+    (summaryMatchesReviewedNarrative ? summaryReporting?.status : null) ??
+      (reportMatchesReviewedNarrative ? report?.status : null),
     "No Report",
   );
   const reviewConfirmed = isAdvisorReviewConfirmed(
     reviewRecord?.review_state,
     reviewRecord?.source_narrative_hash ?? null,
   );
-  const discussionPackRequested = isDiscussionPackRequested({
-    reportPackageState,
-    report,
-    summaryReporting,
-    reportingSummary,
-  });
+  const discussionPackRequested = reportPackageState !== "Not Requested";
   const nextAction = projectNarrativeNextAction({
     discussionPackRequested,
     eventCount: events?.event_count ?? events?.events?.length ?? 0,
@@ -163,22 +173,14 @@ function isAdvisorReviewConfirmed(
   }
 }
 
-function isDiscussionPackRequested({
-  reportPackageState,
-  report,
-  summaryReporting,
-  reportingSummary,
-}: {
-  reportPackageState: string;
-  report?: ProposalReportRequestData | null;
-  summaryReporting: ProposalDeliverySummaryData["reporting"] | null;
-  reportingSummary: ProposalDeliverySummaryData["reporting_summary"] | null;
-}): boolean {
+function narrativeHashMatches(
+  reviewedNarrativeHash: string | null | undefined,
+  packageNarrativeHash: string | null | undefined,
+): boolean {
   return Boolean(
-    report ||
-    summaryReporting?.include_reviewed_narrative ||
-    reportingSummary?.include_reviewed_narrative ||
-    reportPackageState !== "Not Requested",
+    reviewedNarrativeHash &&
+      packageNarrativeHash &&
+      reviewedNarrativeHash === packageNarrativeHash,
   );
 }
 
@@ -254,14 +256,24 @@ export function confirmDiscussionPackRefresh({
   report: ProposalReportRequestData;
   summary: ProposalDeliverySummaryData | undefined;
 }): void {
-  const actionModel = buildProposalNarrativePostureModel({ report });
-  const refreshedModel = buildProposalNarrativePostureModel({ summary });
+  const actionNarrativeHash =
+    report.explanation?.proposal_narrative_package?.source_narrative_hash;
+  const refreshedNarrativeHash =
+    summary?.reporting?.proposal_narrative_package?.source_narrative_hash ??
+    summary?.reporting_summary?.source_narrative_hash;
+  const refreshedPackageState = normalizeLabel(
+    summary?.reporting?.proposal_narrative_package?.package_status,
+    summary?.reporting?.include_reviewed_narrative ||
+      summary?.reporting_summary?.include_reviewed_narrative
+      ? "Requested"
+      : "Not Requested",
+  );
   if (
-    actionModel.reportPackageState === "Not Requested" ||
-    refreshedModel.reportPackageState === "Not Requested"
+    !narrativeHashMatches(actionNarrativeHash, refreshedNarrativeHash) ||
+    refreshedPackageState === "Not Requested"
   ) {
     throw new Error(
-      "The discussion-pack request completed, but refreshed preparation status was not available.",
+      "The discussion-pack request completed, but refreshed preparation status for the reviewed proposal version was not available.",
     );
   }
 }
