@@ -39,6 +39,7 @@ import {
   getProposalMemoProjection,
   getProposalMemoReplayEvidence,
   getProposalNarrative,
+  getProposalNarrativeReviewEvidence,
   getProposalOperation,
   getProposalOperationByCorrelation,
   getProposalOperationReplayEvidence,
@@ -1215,6 +1216,13 @@ describe("proposal api", () => {
       body: { requested_by: "advisor_1" },
     });
     await getProposalNarrative("pp_1", 2);
+    const narrativeReviewEvidence = await getProposalNarrativeReviewEvidence(
+      "pp_1",
+      2,
+    );
+    expect(narrativeReviewEvidence.narrative_review?.review_state).toBe(
+      "APPROVED_FOR_ADVISOR_USE",
+    );
     await createProposalReportRequest("pp_1", {
       report_type: "PORTFOLIO_REVIEW",
       requested_by: "advisor_1",

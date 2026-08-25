@@ -802,12 +802,20 @@ export type ProposalReportRequest = {
 
 export type ProposalNarrativeReviewData = {
   narrative_review?: {
+    review_id?: string;
+    proposal_id?: string;
+    proposal_version_no?: number;
+    narrative_id?: string;
     review_state?: string;
     action?: string;
     source_narrative_hash?: string | null;
     reviewed_by?: string | null;
     reviewed_at?: string | null;
     client_ready_status?: string | null;
+    [key: string]: unknown;
+  };
+  proposal_narrative?: {
+    policy_version?: string | null;
     [key: string]: unknown;
   };
   policy_version?: string | null;
