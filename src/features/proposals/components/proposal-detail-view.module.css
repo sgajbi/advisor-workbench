@@ -208,6 +208,8 @@
 .page :global(.proposal-review-field .input),
 .page :global(.proposal-review-field .textarea),
 .versionControls :global(.input) {
+  box-sizing: border-box;
+  width: 100%;
   min-height: 38px;
   border-radius: 6px;
   border-color: rgba(100, 116, 139, 0.34);
