@@ -65,7 +65,10 @@ concurrency group.
   platform technology policy remains report-only.
 - `npm run quality:product-copy`
   parses productive TypeScript and JSX, rejects transport and engineering language in business
-  copy, and requires the measured violation inventory to equal the checked-in baseline exactly.
+  copy, resolves statically inspectable local `const` references that feed rendered copy, and
+  requires the measured violation inventory to equal the checked-in baseline exactly. Resolution
+  is lexical-scope aware and deliberately does not execute code or treat control-state enums as
+  display copy.
   Both regression and unused improvement headroom fail. Legitimate wealth-management terms or
   identifiers may be admitted only through the exact, review-backed entries in
   `config/product-copy-exceptions.v1.json`; stale, duplicated, broadened, unknown-rule, or

@@ -1506,7 +1506,10 @@ Most relevant current governance:
     information that remains trustworthy, and the next recovery action. `npm run
     quality:product-copy` is a semantic TypeScript-AST ratchet: the measured inventory must exactly
     equal its checked-in baseline, every fixing slice must lower both together, and a regression or
-    stale higher baseline fails CI. Never raise the baseline or hide productive strings from analysis.
+    stale higher baseline fails CI. It follows statically inspectable local `const` references from
+    rendered JSX and copy properties with lexical-scope and cycle safety; do not introduce aliases
+    to hide productive copy or broaden the scanner into executable evaluation. Never raise the
+    baseline or hide productive strings from analysis.
     Some flagged terms are legitimate wealth-management language or identifiers in a specific
     reviewed context. Admit those only through `config/product-copy-exceptions.v1.json`, keyed by
     productive file, rule, rendered context, exact copy, and exact expected match count, with a
@@ -1520,7 +1523,9 @@ Most relevant current governance:
     source-owned proposal version as read-only context, and fail closed on unknown source states.
     Confirm compound success only when every source view required by that action agrees; never let a
     mutation response, toast, generated commentary, or browser projection stand in for refreshed
-    source evidence.
+    source evidence. Correlate versioned package evidence to the active reviewed narrative hash.
+    For repeatable actions whose aggregate posture may already be recorded, require the exact event
+    id returned by the mutation to appear in the refreshed owning audit or replay evidence.
 
 ## Context Maintenance Rule
 
