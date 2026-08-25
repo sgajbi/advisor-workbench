@@ -6622,13 +6622,14 @@ wealth-platform sources before the comparison and handoff language was aligned:
 
 This PR converts the vocabulary authority plus bounded Portfolio review, Positions, Income and
 activity, Projected cash flow, Performance, Manage, Suitability review, Report centre, Outcome
-review, and Adviser-priorities paths covered by focused semantic and rendered tests. It deliberately
+review, and Adviser priorities paths covered by focused semantic and rendered tests. It deliberately
 does not claim application-wide completion; #799 remains open until the remaining governed concepts
 are aligned and proven.
 
 The following observed literals are deferred, not approved exceptions: **Advisor Narrative And
 Delivery**, **Advisor Memo And Evidence Pack**, **Current Positions**, **Draft Order Blotter**,
-**Review Posture**, and **Recommended Actions**. They remain candidate slices under #799, with the
+**Review Posture**, **Recommended Actions**, and the evidence-rail handoff **Mandate Operations**.
+They remain candidate slices under #799, with the
 general copy-layer and banned-token enforcement owned by #798. A fixing slice must inspect each
 literal in its business context before changing it so that review posture, proposal evidence,
 positions, draft instructions, and next actions are not collapsed into cosmetic synonyms.
