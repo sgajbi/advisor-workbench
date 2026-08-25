@@ -1,0 +1,218 @@
+.panel {
+  border: 0;
+  border-radius: 0;
+  background: var(--portfolio-ui-surface-container-lowest, #fff);
+  box-shadow: none;
+}
+
+.panel > :global(.section-header) {
+  align-items: flex-start;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--portfolio-ui-border, #d7dde7);
+  background: var(--portfolio-ui-surface-container-low, #f8fafc);
+}
+
+.panel > :global(.section-block-body) {
+  display: grid;
+  gap: 14px;
+  padding: 14px 16px 16px;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--portfolio-ui-border, #d7dde7);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.workflowItem {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px 11px;
+  border-right: 1px solid var(--portfolio-ui-border, #d7dde7);
+  background: var(--portfolio-ui-surface-container-lowest, #fff);
+}
+
+.workflowItem:last-child {
+  border-right: 0;
+}
+
+.workflowLabel {
+  color: var(--portfolio-ui-muted, #64748b);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+  line-height: 0.95rem;
+  text-transform: uppercase;
+}
+
+.workflowBody {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.workflowChip {
+  justify-self: start;
+  max-width: 100%;
+}
+
+.workflowSupport {
+  color: var(--portfolio-ui-muted, #64748b);
+  font-size: 0.72rem;
+  line-height: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.nextAction {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--brand-accent, #57799d);
+  background: color-mix(in srgb, var(--brand-accent, #57799d) 7%, #fff);
+}
+
+.rationaleField,
+.reviewerField {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rationaleField :global(.textarea),
+.reviewerField :global(.input) {
+  width: 100%;
+  min-width: 0;
+  border-color: rgba(100, 116, 139, 0.34);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.82rem;
+}
+
+.rationaleField :global(.textarea) {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.reviewerField :global(.input) {
+  min-height: 40px;
+}
+
+.recordGrid {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.45fr) minmax(240px, 1fr);
+  gap: 12px;
+}
+
+.readOnlyRecord {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid var(--portfolio-ui-border, #d7dde7);
+  border-radius: 6px;
+  background: var(--portfolio-ui-surface-container-low, #f8fafc);
+}
+
+.supportFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--portfolio-ui-border, #d7dde7);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.supportFacts > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-right: 1px solid var(--portfolio-ui-border, #d7dde7);
+}
+
+.supportFacts > div:last-child {
+  border-right: 0;
+}
+
+.supportFacts dt {
+  color: var(--portfolio-ui-muted, #64748b);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  line-height: 0.95rem;
+  text-transform: uppercase;
+}
+
+.supportFacts dd {
+  margin: 0;
+  color: var(--portfolio-ui-ink, #0f172a);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.72rem;
+  line-height: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.actionArea {
+  display: grid;
+  gap: 7px;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actionSupport {
+  max-width: 76ch;
+}
+
+@container (max-width: 760px) {
+  .workflowGrid,
+  .supportFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workflowItem:nth-child(2),
+  .supportFacts > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .workflowItem:nth-child(-n + 2),
+  .supportFacts > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--portfolio-ui-border, #d7dde7);
+  }
+
+  .recordGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container (max-width: 460px) {
+  .workflowGrid,
+  .supportFacts {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowItem,
+  .workflowItem:nth-child(2),
+  .supportFacts > div,
+  .supportFacts > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .workflowItem:not(:last-child),
+  .supportFacts > div:not(:last-child) {
+    border-bottom: 1px solid var(--portfolio-ui-border, #d7dde7);
+  }
+
+  .actionRow {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

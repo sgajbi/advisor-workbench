@@ -63,6 +63,7 @@
 }
 
 .reviewWorkspace {
+  container-type: inline-size;
   display: grid;
   gap: 0;
   min-width: 0;
@@ -167,7 +168,6 @@
   background: var(--portfolio-ui-surface-container-lowest, #ffffff);
 }
 
-.page :global(.proposal-narrative-posture-panel),
 .page :global(.proposal-memo-posture-panel) {
   border: 0;
   border-radius: 0;
@@ -175,7 +175,6 @@
   box-shadow: none;
 }
 
-.page :global(.proposal-narrative-posture-panel > .section-header),
 .page :global(.proposal-memo-posture-panel > .section-header) {
   align-items: flex-start;
   padding: 14px 16px 12px;
@@ -183,12 +182,10 @@
   background: var(--portfolio-ui-surface-container-low, #f8fafc);
 }
 
-.page :global(.proposal-narrative-posture-panel > .section-block-body),
 .page :global(.proposal-memo-posture-panel > .section-block-body) {
   padding: 14px 16px;
 }
 
-.page :global(.proposal-narrative-posture-panel .analytics-stat),
 .page :global(.proposal-memo-posture-panel .analytics-stat) {
   min-width: 0;
   padding: 10px 12px;
@@ -197,7 +194,6 @@
   background: #ffffff;
 }
 
-.page :global(.proposal-narrative-posture-panel .analytics-stat .ui-text-metric-value-compact),
 .page :global(.proposal-memo-posture-panel .analytics-stat .ui-text-metric-value-compact) {
   display: block;
   margin-top: 3px;
@@ -223,8 +219,7 @@
   min-height: 82px;
 }
 
-.page :global(.proposal-memo-posture-panel .MuiStack-root:last-of-type),
-.page :global(.proposal-narrative-posture-panel .MuiStack-root:last-of-type) {
+.page :global(.proposal-memo-posture-panel .MuiStack-root:last-of-type) {
   align-items: center;
 }
 
