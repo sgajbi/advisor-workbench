@@ -99,7 +99,7 @@ export default function ProposalDiscussionPackWorkspace({
 
       <section
         className={`${lifecycleStyles.selectedProposalPane} ${styles.selectedPane}`}
-        aria-label="Selected proposal conversation review"
+        aria-label={PROPOSAL_DISCUSSION_PACK_COPY.selectedRegionAriaLabel}
       >
         <p
           className="sr-only"

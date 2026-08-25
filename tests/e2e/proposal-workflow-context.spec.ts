@@ -1,3 +1,6 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test, type Page } from "@playwright/test";
 import { buildPlatformCapabilitiesFixture } from "./platform-capabilities-fixture";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
@@ -6,6 +9,11 @@ import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-p
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const advisoryAsOfDate = "2026-04-10";
+const discussionPackEvidenceDirectory = path.resolve(
+  process.env.ISSUE_798_EVIDENCE_DIR ??
+    path.join("output", "issue-798-product-copy"),
+  "discussion-pack-review",
+);
 
 function buildProposalBuilderUrl({
   includeAdvisoryDate = true,
@@ -970,7 +978,7 @@ test("presents source-backed implementation handoff evidence without execution o
   expect(browserErrors).toEqual([]);
 });
 
-test("presents an advisor-grade discussion review without client-release overclaim", async ({
+test("presents an adviser-grade discussion review without client-release overclaim", async ({
   page,
 }, testInfo) => {
   const browserErrors: string[] = [];
@@ -990,21 +998,24 @@ test("presents an advisor-grade discussion review without client-release overcla
 
   const workspace = page.getByTestId("proposal-discussion-pack-workspace");
   const worklist = page.getByRole("listbox", {
-    name: "Discussion Pack Review proposals",
+    name: "Discussion pack proposals",
   });
   const selectedEvidence = page.getByRole("region", {
-    name: "Selected proposal conversation review",
+    name: "Selected discussion pack review",
   });
   await expect(workspace).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Client meeting preparation" }),
+  ).toBeVisible();
   await expect(worklist.getByRole("option")).toHaveCount(2);
   await expect(
     selectedEvidence.getByRole("heading", {
-      name: "Conversation controls still need advisor attention",
+      name: "Resolve the remaining client-discussion controls",
     }),
   ).toBeVisible();
   await expect(
     selectedEvidence.getByRole("heading", {
-      name: "Conversation control ledger",
+      name: "Client-discussion checklist",
     }),
   ).toBeVisible();
   await expect(selectedEvidence.getByText("AI-assisted draft")).toBeVisible();
@@ -1042,7 +1053,7 @@ test("presents an advisor-grade discussion review without client-release overcla
   expect(requestedProposalIds).toEqual(["proposal-1", "proposal-2"]);
 
   const refresh = selectedEvidence.getByRole("button", {
-    name: "Refresh evidence",
+    name: "Refresh discussion pack",
   });
   await refresh.focus();
   await refresh.click();
@@ -1051,11 +1062,11 @@ test("presents an advisor-grade discussion review without client-release overcla
   );
   await expect(refreshStatus).toHaveAttribute("data-state", "confirmed");
   await expect(refreshStatus).toContainText(
-    "Selected proposal evidence confirmed",
+    "Current version available",
   );
   await expect(refresh).toBeFocused();
 
-  await selectedEvidence.getByText("Evidence capability and lineage").click();
+  await selectedEvidence.getByText("Support details").click();
   await expect(
     selectedEvidence.getByText("proposal-discussion-pack-review.v1"),
   ).toBeVisible();
@@ -1065,12 +1076,14 @@ test("presents an advisor-grade discussion review without client-release overcla
     contentType: "image/png",
   });
 
+  await mkdir(discussionPackEvidenceDirectory, { recursive: true });
   for (const viewport of [
-    { width: 1440, height: 1100 },
-    { width: 1280, height: 1100 },
-    { width: 1024, height: 1200 },
-    { width: 720, height: 1100 },
-    { width: 390, height: 844 },
+    { name: "desktop", width: 1440, height: 1100, capture: true },
+    { name: "intermediate", width: 1280, height: 1100, capture: false },
+    { name: "tablet", width: 1024, height: 1200, capture: true },
+    { name: "narrow", width: 720, height: 1100, capture: false },
+    { name: "compact", width: 519, height: 920, capture: true },
+    { name: "mobile", width: 390, height: 844, capture: false },
   ] as const) {
     await page.setViewportSize(viewport);
     const [worklistBox, selectedBox] = await Promise.all([
@@ -1101,6 +1114,17 @@ test("presents an advisor-grade discussion review without client-release overcla
         (element) => element.scrollWidth <= element.clientWidth,
       ),
     ).toBe(true);
+    if (viewport.capture) {
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
+      await page.screenshot({
+        path: path.join(
+          discussionPackEvidenceDirectory,
+          `discussion-pack-review-${viewport.name}.png`,
+        ),
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
   }
 
   await testInfo.attach("discussion-pack-review-workspace-mobile", {
