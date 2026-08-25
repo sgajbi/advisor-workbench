@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import {
   ActionButton,
   ScreenStatePanel,
@@ -11,7 +12,6 @@ import type {
   ConstructionPanelModel,
 } from "@/features/workbench/construction-alternatives-view-model";
 import { constructionBadgeTone } from "@/features/workbench/construction-alternatives-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   model: ConstructionPanelModel;

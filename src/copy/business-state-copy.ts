@@ -67,6 +67,8 @@ const BUSINESS_REASON_LABELS: Readonly<Record<string, string>> = Object.freeze({
   TREASURY_INSTRUCTION: "Treasury instruction",
 });
 
+const warnedUnknownValues = new Set<string>();
+
 export function projectBusinessState(
   value: string | number | null | undefined,
 ): BusinessCopyProjection {
@@ -76,9 +78,12 @@ export function projectBusinessState(
   }
 
   const label = BUSINESS_STATE_LABELS[sourceValue.toUpperCase()];
-  return label
-    ? { label, sourceValue, known: true }
-    : { label: "Review required", sourceValue, known: false };
+  if (label) {
+    return { label, sourceValue, known: true };
+  }
+
+  warnUnknownBusinessCopy("state", sourceValue);
+  return { label: "Review required", sourceValue, known: false };
 }
 
 export function businessStateLabel(
@@ -110,10 +115,13 @@ export function projectBusinessReason(
     return { label: patternLabel, sourceValue, known: true };
   }
 
-  const stateProjection = projectBusinessState(sourceValue);
-  return stateProjection.known
-    ? stateProjection
-    : { label: "Review required", sourceValue, known: false };
+  const stateLabel = BUSINESS_STATE_LABELS[normalized];
+  if (stateLabel) {
+    return { label: stateLabel, sourceValue, known: true };
+  }
+
+  warnUnknownBusinessCopy("reason", sourceValue);
+  return { label: "Review required", sourceValue, known: false };
 }
 
 export function formatBusinessReason(value: string | null | undefined): string {
@@ -138,4 +146,23 @@ function normalizeSourceValue(
 ): string | null {
   const normalized = String(value ?? "").trim();
   return normalized.length > 0 ? normalized : null;
+}
+
+function warnUnknownBusinessCopy(
+  family: "reason" | "state",
+  sourceValue: string,
+): void {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
+  const warningKey = `${family}:${sourceValue}`;
+  if (warnedUnknownValues.has(warningKey)) {
+    return;
+  }
+
+  warnedUnknownValues.add(warningKey);
+  console.warn(
+    `[business-copy] Unmapped ${family} value rendered as Review required: ${sourceValue}`,
+  );
 }

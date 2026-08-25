@@ -1,8 +1,8 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import { SemanticBadge } from "@/design-system";
 import { dpmWaveBadgeTone } from "@/features/workbench/dpm-wave-command-center-panel-helpers";
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   state: string;

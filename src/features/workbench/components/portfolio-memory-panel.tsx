@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { useMemo, useState } from "react";
 
 import {
@@ -19,10 +20,7 @@ import {
   resolveSelectedPortfolioMemoryEvent,
   shouldShowPortfolioMemoryStatePanel,
 } from "@/features/workbench/portfolio-memory-panel-helpers";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
+
 import PortfolioMemoryRecommendedActionsRail from "@/features/workbench/components/portfolio-memory-recommended-actions-rail";
 import PortfolioMemorySelectedEventDetail from "@/features/workbench/components/portfolio-memory-selected-event-detail";
 import PortfolioMemoryTimelineCard from "@/features/workbench/components/portfolio-memory-timeline-card";

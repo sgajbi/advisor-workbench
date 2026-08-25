@@ -1,4 +1,5 @@
-import { formatBusinessReason } from "@/features/workbench/manage-workspace-view-model";
+import { formatBusinessReason } from "@/copy/business-state-copy";
+
 import type { PmOperatingQualityPanelState } from "@/features/workbench/pm-operating-quality-view-model";
 
 export type PmOperatingQualityStatePanelCopy = {

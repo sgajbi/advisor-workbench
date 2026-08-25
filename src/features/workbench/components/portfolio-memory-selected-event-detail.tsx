@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import { SemanticBadge, Text } from "@/design-system";
 import {
   buildPortfolioMemoryFallbackSnapshotRows,
@@ -7,10 +8,6 @@ import {
   portfolioMemoryReviewPosture,
 } from "@/features/workbench/portfolio-memory-panel-helpers";
 import type { PortfolioMemoryEventRow } from "@/features/workbench/portfolio-memory-view-model";
-import {
-  businessStateLabel,
-  formatBusinessReason,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   event: PortfolioMemoryEventRow | null;

@@ -1,3 +1,4 @@
+import { formatBusinessReason } from "@/copy/business-state-copy";
 import { describe, expect, it } from "vitest";
 
 import { formatBusinessOwner } from "../../src/features/workbench/manage-actor-presentation";
@@ -10,7 +11,6 @@ import {
   formatBusinessBook,
   formatBusinessExceptionTitle,
   formatBusinessMandateType,
-  formatBusinessReason,
   getManageExceptionEvidencePosture,
   getManageExceptionNextCursor,
   toneForState,

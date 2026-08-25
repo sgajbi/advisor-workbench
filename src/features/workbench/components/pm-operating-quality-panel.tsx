@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel, formatBusinessReason } from "@/copy/business-state-copy";
 import {
   MetricRow,
   ScreenStatePanel,
@@ -21,8 +22,6 @@ import type {
   DpmPmOperatingQualityGatewayResponse,
 } from "@/features/workbench/types";
 import {
-  businessStateLabel,
-  formatBusinessReason,
   toneForState,
 } from "@/features/workbench/manage-workspace-view-model";
 import { usePmOperatingQualityActions } from "@/features/workbench/use-pm-operating-quality-actions";

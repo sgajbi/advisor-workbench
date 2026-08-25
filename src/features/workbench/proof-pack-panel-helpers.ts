@@ -1,4 +1,5 @@
-import { businessStateLabel } from "@/features/workbench/manage-workspace-view-model";
+import { businessStateLabel } from "@/copy/business-state-copy";
+
 import type { DpmAiWorkflowExecution } from "@/features/workbench/dpm-ai-workflow-contract";
 import type { ProofPackPanelState } from "@/features/workbench/proof-pack-view-model";
 import type { DpmProofPackGatewayResponse } from "@/features/workbench/types";

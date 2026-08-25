@@ -1,5 +1,6 @@
 "use client";
 
+import { businessStateLabel } from "@/copy/business-state-copy";
 import DpmWaveSummaryCell from "@/features/workbench/components/dpm-wave-summary-cell";
 import {
   dpmWaveBadgeTone,
@@ -8,9 +9,6 @@ import {
 import type {
   DpmWaveMetricRow,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import {
-  businessStateLabel,
-} from "@/features/workbench/manage-workspace-view-model";
 
 type Props = {
   selectedWaveState: string;

@@ -1,3 +1,4 @@
+import { formatBusinessReason } from "@/copy/business-state-copy";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import type {
   DpmWaveItemRow,
@@ -6,7 +7,6 @@ import type {
 } from "./dpm-wave-command-center-view-model";
 import {
   formatBusinessMandateType,
-  formatBusinessReason,
   isBusinessValueAvailable,
 } from "./manage-workspace-view-model";
 
