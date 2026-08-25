@@ -32,6 +32,7 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 const MEMO_HASH = "sha256:memo-001";
+const COMMENTARY_EVENT_ID = "memo-ai-event-001";
 
 type EvidenceState = {
   lineage: ProposalMemoLineageData;
@@ -86,6 +87,14 @@ function evidenceState({
       review_posture: reviewPosture,
       report_package_posture: reportPosture,
       ai_commentary_posture: commentaryPosture,
+      audit_events: commentaryRecorded
+        ? [
+            {
+              event_id: COMMENTARY_EVENT_ID,
+              event_type: "MEMO_AI_REFERENCE_RECORDED",
+            },
+          ]
+        : [],
     },
     projection: {
       memo_id: "memo_1",
@@ -113,7 +122,17 @@ function evidenceState({
     },
     replay: {
       hashes: { memo_hash: MEMO_HASH },
-      audit_events: [{ event_type: "MEMO_DRAFT_CREATED" }],
+      audit_events: [
+        { event_type: "MEMO_DRAFT_CREATED" },
+        ...(commentaryRecorded
+          ? [
+              {
+                event_id: COMMENTARY_EVENT_ID,
+                event_type: "MEMO_AI_REFERENCE_RECORDED",
+              },
+            ]
+          : []),
+      ],
       explanation: { client_ready_publication: "BLOCKED" },
     },
   };
@@ -331,7 +350,10 @@ describe("ProposalMemoPosturePanel", () => {
         });
         return {
           memo: sourceState.memo,
-          ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
+          ai_event: {
+            event_id: COMMENTARY_EVENT_ID,
+            event_type: "MEMO_AI_REFERENCE_RECORDED",
+          },
           commentary: {
             status: "REVIEW_REQUIRED",
             authoritative_for_memo_status: false,
@@ -367,6 +389,42 @@ describe("ProposalMemoPosturePanel", () => {
       expect.stringContaining("ui-memo-advisor-commentary-2-pp_1"),
     );
     expect(screen.getByText("Review aid only")).toBeInTheDocument();
+  });
+
+  it("does not confirm repeated commentary from stale aggregate posture", async () => {
+    sourceState = evidenceState({
+      reviewed: true,
+      reportRecorded: true,
+      commentaryRecorded: true,
+    });
+    vi.mocked(requestProposalMemoAdvisorCommentary).mockResolvedValue({
+      memo: sourceState.memo,
+      ai_event: {
+        event_id: "memo-ai-event-current",
+        event_type: "MEMO_AI_REFERENCE_RECORDED",
+      },
+      commentary: {
+        status: "REVIEW_REQUIRED",
+        authoritative_for_memo_status: false,
+      },
+      replayed: false,
+    });
+    renderPanel();
+    fireEvent.click(screen.getByText("Memo record details"));
+    enterActor();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Refresh advisor commentary" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "The commentary request was submitted, but the current memo record could not confirm it. Refresh before retrying.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("proposal-memo-action-status"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not show success when refreshed source evidence remains stale", async () => {
