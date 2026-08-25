@@ -58,12 +58,7 @@ export function buildProposalNarrativePostureModel({
       reportingSummary?.source_narrative_hash,
   );
 
-  const sourceNarrativeHash =
-    reviewRecord?.source_narrative_hash ??
-    reportPackage?.source_narrative_hash ??
-    summaryPackage?.source_narrative_hash ??
-    reportingSummary?.source_narrative_hash ??
-    null;
+  const sourceNarrativeHash = reviewedNarrativeHash;
 
   const reviewState = normalizeLabel(
     reviewRecord?.review_state,
