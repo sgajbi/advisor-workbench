@@ -95,14 +95,20 @@ describe("ProposalNarrativePosturePanel", () => {
       event_count: 1,
       latest_event: {
         event_id: "delivery-event-001",
+        proposal_id: "pp_1",
+        related_version_no: 2,
         event_type: "REPORT_REQUESTED",
         occurred_at: "2026-05-22T09:00:00Z",
+        reason: { report_request_id: "report-001" },
       },
       events: [
         {
           event_id: "delivery-event-001",
+          proposal_id: "pp_1",
+          related_version_no: 2,
           event_type: "REPORT_REQUESTED",
           occurred_at: "2026-05-22T09:00:00Z",
+          reason: { report_request_id: "report-001" },
         },
       ],
     });

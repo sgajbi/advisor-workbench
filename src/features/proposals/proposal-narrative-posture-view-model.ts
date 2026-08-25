@@ -275,12 +275,14 @@ function deliveryEventsMatchActiveProposal({
       isPositiveSafeInteger(versionNo) &&
       events?.proposal?.proposal_id === proposalId &&
       events.proposal.current_version_no === versionNo &&
-      deliveryEventAggregateIsCoherent(events),
+      deliveryEventAggregateIsCoherent(events, proposalId, versionNo),
   );
 }
 
 function deliveryEventAggregateIsCoherent(
   events: ProposalDeliveryEventsData,
+  proposalId: string,
+  versionNo: number,
 ): boolean {
   const count = events.event_count;
   if (
@@ -293,7 +295,8 @@ function deliveryEventAggregateIsCoherent(
   if (!Array.isArray(events.events)) {
     return false;
   }
-  const listedCount = events.events.length;
+  const eventHistory = events.events;
+  const listedCount = eventHistory.length;
   const hasLatestEvent = events.latest_event !== undefined;
   if (count === 0) {
     return listedCount === 0 && !hasLatestEvent;
@@ -302,22 +305,57 @@ function deliveryEventAggregateIsCoherent(
     return false;
   }
   const latestEvent = events.latest_event;
-  const finalListedEvent = events.events.at(-1);
-  const allEventsAreGoverned = events.events.every(
+  const finalListedEvent = eventHistory.at(-1);
+  const eventIds = eventHistory.map((event) => event.event_id);
+  const allEventsAreGoverned = eventHistory.every(
     (event) =>
       isNonBlankString(event.event_id) &&
+      event.proposal_id === proposalId &&
+      event.related_version_no === versionNo &&
       isSupportedDeliveryEventType(event.event_type) &&
       isTimestampValue(event.occurred_at),
   );
+  const eventIdsAreUnique = new Set(eventIds).size === eventIds.length;
+  const eventsAreChronological = eventHistory.every((event, index) => {
+    if (index === 0) return true;
+    const previousTime = eventHistory[index - 1]?.occurred_at;
+    return (
+      typeof previousTime === "string" &&
+      typeof event.occurred_at === "string" &&
+      Date.parse(event.occurred_at) >= Date.parse(previousTime)
+    );
+  });
   return Boolean(
     latestEvent &&
       finalListedEvent &&
       allEventsAreGoverned &&
+      eventIdsAreUnique &&
+      eventsAreChronological &&
       latestEvent.event_id === finalListedEvent.event_id &&
+      latestEvent.proposal_id === finalListedEvent.proposal_id &&
+      latestEvent.related_version_no === finalListedEvent.related_version_no &&
       latestEvent.event_type === finalListedEvent.event_type &&
       latestEvent.occurred_at === finalListedEvent.occurred_at &&
+      latestEvent.actor_id === finalListedEvent.actor_id &&
+      latestEvent.reason?.report_request_id ===
+        finalListedEvent.reason?.report_request_id &&
       latestEvent.to_state === finalListedEvent.to_state,
   );
+}
+
+function deliveryHistoryConfirmsReportRequest(
+  events: ProposalDeliveryEventsData | undefined,
+  reportRequestId: string,
+): boolean {
+  const eventHistory = events?.events;
+  if (!eventHistory) return false;
+  for (let index = eventHistory.length - 1; index >= 0; index -= 1) {
+    const event = eventHistory[index];
+    if (event?.event_type === "REPORT_REQUESTED") {
+      return event.reason?.report_request_id === reportRequestId;
+    }
+  }
+  return false;
 }
 
 function isSupportedDeliveryEventType(value: unknown): value is string {
@@ -583,6 +621,7 @@ export function confirmDiscussionPackRefresh({
     !isNonBlankString(actionRequestId) ||
     !isNonBlankString(refreshedRequestId) ||
     actionRequestId !== refreshedRequestId ||
+    !deliveryHistoryConfirmsReportRequest(events, actionRequestId) ||
     !lifecycleIsMonotonic ||
     !artifactsAgree ||
     report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||

@@ -7,6 +7,7 @@ import {
 } from "../../src/features/proposals/proposal-narrative-posture-view-model";
 import { formatProposalEvidenceHash } from "../../src/features/proposals/proposal-evidence-formatters";
 import type {
+  ProposalDeliveryEvent,
   ProposalDeliveryEventsData,
   ProposalDeliverySummaryData,
   ProposalNarrativeReviewData,
@@ -83,18 +84,35 @@ function discussionPackRequest(
 function activeEvents(
   overrides: Partial<ProposalDeliveryEventsData> = {},
 ): ProposalDeliveryEventsData {
-  const deliveryEvent = {
-    event_id: "delivery-event-001",
-    event_type: "REPORT_REQUESTED",
-    occurred_at: "2026-05-22T09:00:00Z",
-  };
+  const event = buildDeliveryEvent();
   return {
     proposal: activeProposalSummary,
     event_count: 1,
-    latest_event: deliveryEvent,
-    events: [deliveryEvent],
+    latest_event: event,
+    events: [event],
     ...overrides,
   };
+}
+
+function buildDeliveryEvent(
+  overrides: Partial<ProposalDeliveryEvent> = {},
+): ProposalDeliveryEvent {
+  return {
+    event_id: "delivery-event-001",
+    proposal_id: "pp_1",
+    related_version_no: 2,
+    event_type: "REPORT_REQUESTED",
+    occurred_at: "2026-05-22T09:00:00Z",
+    reason: { report_request_id: "report-001" },
+    ...overrides,
+  };
+}
+
+function activeSingleEvent(
+  overrides: Partial<ProposalDeliveryEvent> = {},
+): ProposalDeliveryEventsData {
+  const event = buildDeliveryEvent(overrides);
+  return activeEvents({ latest_event: event, events: [event] });
 }
 
 describe("proposal narrative posture view model", () => {
@@ -114,22 +132,20 @@ describe("proposal narrative posture view model", () => {
       }),
       events: activeEvents({
         event_count: 2,
-        latest_event: {
+        latest_event: buildDeliveryEvent({
           event_id: "delivery-event-002",
           event_type: "EXECUTION_REQUESTED",
           occurred_at: "2026-05-22T09:02:00Z",
-        },
+          reason: {},
+        }),
         events: [
-          {
-            event_id: "delivery-event-001",
-            event_type: "REPORT_REQUESTED",
-            occurred_at: "2026-05-22T09:00:00Z",
-          },
-          {
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
             event_id: "delivery-event-002",
             event_type: "EXECUTION_REQUESTED",
             occurred_at: "2026-05-22T09:02:00Z",
-          },
+            reason: {},
+          }),
         ],
       }),
     });
@@ -322,11 +338,9 @@ describe("proposal narrative posture view model", () => {
   });
 
   it("fails closed when a current delivery event omits timezone evidence", () => {
-    const invalidEvent = {
-      event_id: "delivery-event-001",
-      event_type: "REPORT_REQUESTED",
+    const invalidEvent = buildDeliveryEvent({
       occurred_at: "2026-05-22T09:00:00",
-    };
+    });
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
       events: activeEvents({
@@ -346,19 +360,63 @@ describe("proposal narrative posture view model", () => {
     ["negative count", activeEvents({ event_count: -1 })],
     ["fractional count", activeEvents({ event_count: 1.5 })],
     [
+      "reverse chronological history",
+      activeEvents({
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_id: "delivery-event-002",
+          event_type: "EXECUTION_ACCEPTED",
+          occurred_at: "2026-05-22T09:00:00Z",
+          reason: {},
+        }),
+        events: [
+          buildDeliveryEvent({ occurred_at: "2026-05-22T09:01:00Z" }),
+          buildDeliveryEvent({
+            event_id: "delivery-event-002",
+            event_type: "EXECUTION_ACCEPTED",
+            occurred_at: "2026-05-22T09:00:00Z",
+            reason: {},
+          }),
+        ],
+      }),
+    ],
+    [
+      "duplicate event identity",
+      activeEvents({
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_type: "EXECUTION_ACCEPTED",
+          occurred_at: "2026-05-22T09:01:00Z",
+          reason: {},
+        }),
+        events: [
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
+            event_type: "EXECUTION_ACCEPTED",
+            occurred_at: "2026-05-22T09:01:00Z",
+            reason: {},
+          }),
+        ],
+      }),
+    ],
+    [
+      "event from another proposal",
+      activeSingleEvent({ proposal_id: "pp_2" }),
+    ],
+    [
+      "event from another proposal version",
+      activeSingleEvent({ related_version_no: 1 }),
+    ],
+    [
       "unknown event type",
       activeEvents({
-        latest_event: {
-          event_id: "delivery-event-001",
+        latest_event: buildDeliveryEvent({
           event_type: "INTERNAL_TECH_CODE",
-          occurred_at: "2026-05-22T09:00:00Z",
-        },
+        }),
         events: [
-          {
-            event_id: "delivery-event-001",
+          buildDeliveryEvent({
             event_type: "INTERNAL_TECH_CODE",
-            occurred_at: "2026-05-22T09:00:00Z",
-          },
+          }),
         ],
       }),
     ],
@@ -366,22 +424,15 @@ describe("proposal narrative posture view model", () => {
       "latest event disagrees with the final listed event",
       activeEvents({
         event_count: 2,
-        latest_event: {
-          event_id: "delivery-event-001",
-          event_type: "REPORT_REQUESTED",
-          occurred_at: "2026-05-22T09:00:00Z",
-        },
+        latest_event: buildDeliveryEvent(),
         events: [
-          {
-            event_id: "delivery-event-001",
-            event_type: "REPORT_REQUESTED",
-            occurred_at: "2026-05-22T09:00:00Z",
-          },
-          {
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
             event_id: "delivery-event-002",
             event_type: "EXECUTION_ACCEPTED",
             occurred_at: "2026-05-22T09:01:00Z",
-          },
+            reason: {},
+          }),
         ],
       }),
     ],
@@ -406,11 +457,9 @@ describe("proposal narrative posture view model", () => {
     ["EXECUTION_EXPIRED", "Implementation request expired"],
     ["EXECUTED", "Implementation completed"],
   ])("renders the governed %s event as %s", (eventType, expectedLabel) => {
-    const deliveryEvent = {
-      event_id: "delivery-event-001",
+    const deliveryEvent = buildDeliveryEvent({
       event_type: eventType,
-      occurred_at: "2026-05-22T09:00:00Z",
-    };
+    });
     const model = buildProposalNarrativePostureModel({
       ...activeProposal,
       events: activeEvents({
@@ -531,6 +580,12 @@ describe("proposal narrative posture view model", () => {
     ["stale request", discussionPackRequest(), discussionPackSummary({ report_request_id: "report-old" }), activeEvents()],
     ["padded action request", discussionPackRequest({ report_request_id: " report-001 " }), discussionPackSummary(), activeEvents()],
     ["padded summary request", discussionPackRequest(), discussionPackSummary({ report_request_id: " report-001 " }), activeEvents()],
+    [
+      "stale delivery request identity",
+      discussionPackRequest(),
+      discussionPackSummary(),
+      activeSingleEvent({ reason: { report_request_id: "report-old" } }),
+    ],
     [
       "requested action with malformed artifact timestamp",
       discussionPackRequest({ generated_at: "not-a-time" }),
