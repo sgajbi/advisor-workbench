@@ -1680,6 +1680,11 @@ export async function validateProposalMemoEvidencePackPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(memoPanel.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+    "data-source-state",
+    "ready",
+    { timeout: timeoutMs },
+  );
   await expect(memoPanel.getByLabel("Advisor memo workflow")).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1689,7 +1694,9 @@ export async function validateProposalMemoEvidencePackPanel(
   }
   if (proposalVersionNo) {
     await expect(
-      memoPanel.getByText("Current proposal version").locator(".."),
+      memoDetails
+        .getByText("Current proposal version", { exact: true })
+        .locator(".."),
     ).toContainText(String(proposalVersionNo), { timeout: timeoutMs });
   }
   await memoPanel

@@ -209,7 +209,18 @@ describe("buildProposalMemoPostureModel", () => {
 
   it("shows a truthful preparation action when no memo exists", () => {
     const model = buildProposalMemoPostureModel({
+      lineageData: {
+        lineage_complete: true,
+        latest_memo_id: null,
+        memo_count: 0,
+        memos: [],
+        proposal: proposalSummary(),
+        proposal_id: PROPOSAL_ID,
+      },
+      memoData: {},
       proposalId: PROPOSAL_ID,
+      projectionData: { audience: "CLIENT_DRAFT", sections: [] },
+      replayData: { audit_events: [], hashes: {} },
       selectedAudience: "CLIENT_DRAFT",
       versionNo: VERSION_NO,
     });
@@ -217,9 +228,47 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.hasMemo).toBe(false);
     expect(model.statusLabel).toBe("Memo not prepared");
     expect(model.reviewPostureLabel).toBe("Review required");
+    expect(model.sourceIdentityCurrent).toBe(true);
     expect(model.nextActionKey).toBe("prepare");
     expect(model.clientDraftPublicationLabel).toBe("Unavailable");
     expect(model.reportPackageStatusLabel).toBe("Not requested");
+
+    const historicalLineageModel = buildProposalMemoPostureModel({
+      lineageData: {
+        lineage_complete: true,
+        latest_memo_id: "memo_previous",
+        memo_count: 1,
+        memos: [{
+          memo_hash: "sha256:previous",
+          memo_id: "memo_previous",
+          proposal_version_no: VERSION_NO - 1,
+        }],
+        proposal: proposalSummary(),
+        proposal_id: PROPOSAL_ID,
+      },
+      memoData: {},
+      proposalId: PROPOSAL_ID,
+      projectionData: { audience: "CLIENT_DRAFT", sections: [] },
+      replayData: { audit_events: [], hashes: {} },
+      selectedAudience: "CLIENT_DRAFT",
+      versionNo: VERSION_NO,
+    });
+
+    expect(historicalLineageModel.sourceIdentityCurrent).toBe(true);
+    expect(historicalLineageModel.nextActionKey).toBe("prepare");
+  });
+
+  it("withholds preparation when a current-version empty record is not proven", () => {
+    const model = buildProposalMemoPostureModel({
+      proposalId: PROPOSAL_ID,
+      selectedAudience: "ADVISOR",
+      versionNo: VERSION_NO,
+    });
+
+    expect(model.hasMemo).toBe(false);
+    expect(model.sourceIdentityCurrent).toBe(false);
+    expect(model.nextActionKey).toBe("track");
+    expect(model.nextActionTitle).toBe("Refresh the memo evidence");
   });
 
   it("summarizes archive evidence without exposing storage references", () => {
@@ -284,6 +333,41 @@ describe("buildProposalMemoPostureModel", () => {
       hasMemo: false,
       memoHash: null,
       sourceEvidenceAligned: false,
+    });
+  });
+
+  it("rejects aligned evidence when complete lineage repeats a memo identity", () => {
+    const evidence = alignedEvidence();
+    evidence.lineage = {
+      ...evidence.lineage,
+      memo_count: 2,
+      memos: [
+        ...(evidence.lineage?.memos ?? []),
+        {
+          memo_hash: "sha256:conflicting",
+          memo_id: "memo_2",
+          proposal_version_no: VERSION_NO - 1,
+        },
+      ],
+    };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: PROPOSAL_ID,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: VERSION_NO,
+    });
+
+    expect(model).toMatchObject({
+      canRecordReview: false,
+      canRequestCommentary: false,
+      canRequestReportPackage: false,
+      hasMemo: true,
+      sourceEvidenceAligned: false,
+      sourceIdentityCurrent: false,
     });
   });
 
