@@ -95,6 +95,7 @@ describe("proposal memo source identity", () => {
   it("selects lineage only when the latest item has the complete current identity", () => {
     const lineage: ProposalMemoLineageData = {
       proposal: proposalSummary(),
+      memo_count: 1,
       latest_memo_id: MEMO_ID,
       lineage_complete: true,
       memos: [
@@ -117,6 +118,76 @@ describe("proposal memo source identity", () => {
     expect(
       selectCurrentMemoLineageItem(
         { ...lineage, latest_memo_id: "memo_stale" },
+        identity,
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toBeUndefined();
+  });
+
+  it.each([
+    ["reported count differs from the list", 2],
+    ["reported count is negative", -1],
+    ["reported count is fractional", 1.5],
+    ["reported count is unsafe", Number.MAX_SAFE_INTEGER + 1],
+  ])("rejects lineage when the %s", (_label, memoCount) => {
+    const identity = resolveMemoSourceIdentity(
+      memoSource(),
+      PROPOSAL_ID,
+      VERSION_NO,
+    );
+    const lineage: ProposalMemoLineageData = {
+      proposal: proposalSummary(),
+      memo_count: memoCount,
+      latest_memo_id: MEMO_ID,
+      memos: [
+        {
+          memo_id: MEMO_ID,
+          memo_hash: MEMO_HASH,
+          proposal_version_no: VERSION_NO,
+        },
+      ],
+    };
+
+    expect(
+      selectCurrentMemoLineageItem(lineage, identity, PROPOSAL_ID, VERSION_NO),
+    ).toBeUndefined();
+  });
+
+  it("validates an optional lineage proposal marker without requiring it", () => {
+    const identity = resolveMemoSourceIdentity(
+      memoSource(),
+      PROPOSAL_ID,
+      VERSION_NO,
+    );
+    const lineage: ProposalMemoLineageData = {
+      proposal: proposalSummary(),
+      proposal_id: PROPOSAL_ID,
+      memo_count: 1,
+      latest_memo_id: MEMO_ID,
+      memos: [
+        {
+          memo_id: MEMO_ID,
+          memo_hash: MEMO_HASH,
+          proposal_version_no: VERSION_NO,
+        },
+      ],
+    };
+
+    expect(
+      selectCurrentMemoLineageItem(lineage, identity, PROPOSAL_ID, VERSION_NO),
+    ).toEqual(lineage.memos?.[0]);
+    expect(
+      selectCurrentMemoLineageItem(
+        { ...lineage, proposal_id: "pp_other" },
+        identity,
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toBeUndefined();
+    expect(
+      selectCurrentMemoLineageItem(
+        { ...lineage, proposal_id: ` ${PROPOSAL_ID}` },
         identity,
         PROPOSAL_ID,
         VERSION_NO,

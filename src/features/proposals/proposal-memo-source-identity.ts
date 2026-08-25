@@ -88,14 +88,23 @@ export function selectCurrentMemoLineageItem(
   proposalId: string,
   versionNo: number | null,
 ): ProposalMemoLineageItem | undefined {
+  const memos = lineageData?.memos;
+  const memoCount = lineageData?.memo_count;
+  const lineageProposalId = lineageData?.proposal_id;
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
     || !proposalSummaryMatchesActiveVersion(lineageData?.proposal, proposalId, versionNo)
     || !currentIdentity
+    || !Array.isArray(memos)
+    || !isNonNegativeSafeInteger(memoCount)
+    || memoCount !== memos.length
+    || (lineageProposalId !== undefined
+      && (!isExactNonBlankString(lineageProposalId)
+        || lineageProposalId !== proposalId))
   ) {
     return undefined;
   }
-  const matchingMemo = (lineageData?.memos ?? []).find((memo) =>
+  const matchingMemo = memos.find((memo) =>
     memoIdentitiesEqual(lineageItemIdentity(memo, proposalId), currentIdentity),
   );
   return matchingMemo?.memo_id === lineageData?.latest_memo_id
@@ -153,6 +162,10 @@ function isExactNonBlankString(value: unknown): value is string {
 
 function isPositiveSafeInteger(value: unknown): value is number {
   return Number.isSafeInteger(value) && Number(value) > 0;
+}
+
+function isNonNegativeSafeInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && Number(value) >= 0;
 }
 
 function exactString(
