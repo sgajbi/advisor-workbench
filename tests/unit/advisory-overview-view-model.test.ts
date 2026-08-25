@@ -99,10 +99,10 @@ describe("buildAdvisoryOverviewModel", () => {
       ],
     });
 
-    expect(model.recommendedAction).toMatch(/Submit ready advisor drafts/);
+    expect(model.recommendedAction).toMatch(/Submit ready adviser drafts/);
     expect(model.proposalRows[0]).toMatchObject({
       href: "/proposals/PRP-DRAFT?asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
-      status: "Advisor draft",
+      status: "Adviser draft",
     });
   });
 
@@ -129,7 +129,7 @@ describe("buildAdvisoryOverviewModel", () => {
     expect(buildRow(undefined).recordedAt).toBe("Not reported");
   });
 
-  it("fails closed when proposal owner evidence is blank", () => {
+  it("preserves the exact proposal creator reference and fails closed when it is blank", () => {
     const buildRow = (createdBy: string | undefined) =>
       buildAdvisoryOverviewModel({
         reviewContext: { portfolioId: "PB_SG_GLOBAL_BAL_001" },
@@ -144,9 +144,9 @@ describe("buildAdvisoryOverviewModel", () => {
         ],
       }).proposalRows[0];
 
-    expect(buildRow("advisor_sg_01").sourceOwner).toBe("Recorded by source");
-    expect(buildRow("   ").sourceOwner).toBe("Not reported");
-    expect(buildRow(undefined).sourceOwner).toBe("Not reported");
+    expect(buildRow("advisor_sg_01").createdBy).toBe("advisor_sg_01");
+    expect(buildRow("   ").createdBy).toBe("Not reported");
+    expect(buildRow(undefined).createdBy).toBe("Not reported");
   });
 
   it("discloses that metrics and ranking cover a partial source window", () => {
