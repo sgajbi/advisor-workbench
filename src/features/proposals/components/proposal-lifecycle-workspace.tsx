@@ -773,6 +773,8 @@ export default function ProposalLifecycleWorkspace({
         selectedApprovalWorkflowContext ??
         selectedDiscussionWorkflowContext ??
         selectedImplementationWorkflowContext,
+      responsivePriority:
+        mode === "implementation" ? "supplementary" : undefined,
     });
   }, [
     data?.next_cursor,

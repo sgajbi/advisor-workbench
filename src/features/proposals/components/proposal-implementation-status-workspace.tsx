@@ -322,7 +322,9 @@ function ImplementationEvidence({
         ) : (
           <p>{PROPOSAL_IMPLEMENTATION_COPY.noEvent}</p>
         )}
-        <dl className={styles.selectedProposalFacts}>
+        <dl
+          className={`${styles.selectedProposalFacts} ${styles.supportFacts}`}
+        >
           {model.supportDetails.map((detail) => (
             <div key={detail.label}>
               <dt>{detail.label}</dt>
@@ -335,17 +337,19 @@ function ImplementationEvidence({
 
       <footer className={styles.selectedProposalActions}>
         <p>{PROPOSAL_IMPLEMENTATION_COPY.footer}</p>
-        <SourceRefreshAction
-          ref={refreshActionRef}
-          refreshScope={`proposal-implementation:${model.identity.proposalId}`}
-          idleLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshIdleLabel}
-          busyLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshBusyLabel}
-          isRefreshing={isRefreshing}
-          onRefresh={onRefresh}
-        />
-        <Link className={styles.reviewProposalLink} href={proposalHref}>
-          Open full proposal record
-        </Link>
+        <div className={styles.selectedProposalActionControls}>
+          <SourceRefreshAction
+            ref={refreshActionRef}
+            refreshScope={`proposal-implementation:${model.identity.proposalId}`}
+            idleLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshIdleLabel}
+            busyLabel={PROPOSAL_IMPLEMENTATION_COPY.refresh.refreshBusyLabel}
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh}
+          />
+          <Link className={styles.reviewProposalLink} href={proposalHref}>
+            Open full proposal record
+          </Link>
+        </div>
       </footer>
     </>
   );
