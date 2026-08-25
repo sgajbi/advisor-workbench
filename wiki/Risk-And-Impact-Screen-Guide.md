@@ -83,6 +83,10 @@ decision, clear a gate, approve suitability, or create an order.
   the available comparisons.
 - Presents risk observations, workflow gates, exceptions, limitations, capability posture, and
   lineage without promoting them into browser-authored conclusions.
+- Resolves evidence availability, degraded states, and refresh feedback through the typed
+  `src/copy/proposal-risk-impact-copy.ts` authority. Primary copy names the unavailable business
+  evidence, the information that remains usable, and the recovery action; transport and service
+  vocabulary remains outside the decision path.
 - Preserves selection identity, refresh focus, and proposal-detail route context.
 - Uses container-aware, worklist-first reflow without a second horizontal workflow axis.
 
@@ -120,9 +124,9 @@ conclusion.
 | State | What the user sees | Recovery posture |
 | --- | --- | --- |
 | Loading | Selected proposal evidence is being retrieved | Wait; no fallback figures or conclusions are shown |
-| Ready | Exact allocation comparison, risk observations, gates, and source posture | Review exceptions and continue to Proposal Detail when appropriate |
-| Partial | Available evidence remains visible beside explicit missing or unsupported capability statements | Resolve the named source limitation before relying on the missing decision dimension |
-| Decision unavailable | Decision status, blocker count, and exception-register completeness remain explicitly unconfirmed | Restore the source decision record; do not interpret an empty array as zero blockers |
+| Evidence available | Exact allocation comparison, risk observations, and workflow requirements | Review exceptions and continue to Proposal Detail when appropriate |
+| Evidence incomplete | Available evidence remains visible beside explicit missing or unsupported capability statements | Resolve the named evidence gap before relying on the missing decision dimension |
+| Decision register unavailable | Decision status, blocker count, and exception-register completeness remain explicitly unavailable | Refresh the selected proposal; do not interpret an empty array as zero blockers |
 | Empty evidence | Source confirms no usable allocation or risk evidence for the selected record | Open Proposal Detail or engage the named source owner; do not infer no impact |
 | Refreshing | Earlier evidence remains readable and is clearly awaiting source confirmation | Wait; duplicate refresh is fenced |
 | Refresh failed | Earlier evidence remains with an explicit unconfirmed warning | Retry the same selected proposal; focus remains on the refresh control |
@@ -137,8 +141,8 @@ shown as a limitation. It is never silently replaced with a local assumption.
 - The worklist is a labelled single-selection control with visible focus and selected state.
 - Up/Down keys move between proposals; Home and End move to the first and last enabled proposal.
 - Selection is announced without moving focus into the evidence pane.
-- Refresh and retry keep a stable control target and announce pending, failure, and source-confirmed
-  replacement states.
+- **Refresh proposal evidence** and **Retry proposal evidence** keep a stable control target and
+  announce checking, failure, and current-record states.
 - At wide desktop widths the worklist and evidence pane are simultaneous; at tablet, compact, and
   200%-zoom-equivalent widths the evidence follows the worklist in DOM and keyboard order.
 - Container-aware reflow responds to the actual centre workspace and selected evidence pane beside
@@ -189,6 +193,8 @@ approval or competitor superiority.
   vocabulary, capability-registry, and contract-version parsing.
 - `tests/unit/proposal-risk-impact-view-model.test.ts` proves business copy, exact-value formatting,
   current/proposed alignment, exception posture, and source boundaries.
+- `tests/unit/proposal-risk-impact-copy.test.ts` proves stable availability labels, three-part
+  recovery copy, and missing-allocation wording without implementation jargon.
 - `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only retrieval, no N+1
   fan-out, keyboard selection, identity fencing, refresh/retry, permission, failure, and business
   evidence rendering.

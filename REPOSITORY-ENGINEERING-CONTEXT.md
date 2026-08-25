@@ -1492,6 +1492,12 @@ Most relevant current governance:
     domain modules rather than a design-system or giant global-copy registry. Contract identifiers
     remain at adapter and progressive support boundaries. Workbench #798 owns the general copy and
     jargon-enforcement mechanism; do not create a competing framework while applying this vocabulary.
+    Productive runtime copy shared by a workflow belongs in a typed module under `src/copy/`; keep
+    business-state projection fail-closed, preserve exact unknown values only for progressive
+    support detail, and pair every degraded state with the unavailable business information, the
+    information that remains trustworthy, and the next recovery action. `npm run
+    quality:product-copy` is a semantic TypeScript-AST ratchet: every fixing slice must lower its
+    checked-in maximum and must never raise the threshold or hide productive strings from analysis.
 
 ## Context Maintenance Rule
 

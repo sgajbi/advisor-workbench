@@ -6621,6 +6621,13 @@ wealth-platform sources before the comparison and handoff language was aligned:
     reference** in append-only campaign launch and lifecycle evidence. Unknown actors remain exact
     and missing actors remain explicit; Workbench must not infer an unavailable role. This review
     correction is owned by #866.
+14. Present Risk and Impact as **proposal evidence**, **decision readiness**, **Evidence
+    available**, **Evidence incomplete**, or **Evidence unavailable**. Degraded states name the
+    missing allocation, risk, workflow, or decision-register evidence, retain independently usable
+    proposal information, and state the recovery action. Gateway topology, `source-confirmed`,
+    auditor posture, and non-inference disclaimers remain in engineering or progressive support
+    evidence rather than the adviser decision path. This #798 slice preserves the source-returned
+    workflow gate and does not promote evidence availability into approval or client readiness.
 
 ### Delivery scope and deferred surfaces
 
