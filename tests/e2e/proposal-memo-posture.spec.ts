@@ -2,12 +2,17 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
+import { collectHorizontalOverflow } from "./support/horizontal-overflow";
 
-const evidenceDirectory = path.resolve("output", "issue-593");
+const evidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_798_EVIDENCE_DIR, "narrative-review")
+  : null;
 
 type ProposalMockOptions = {
   actionFailure?: boolean;
   blocked?: boolean;
+  narrativeReviewFailure?: boolean;
+  narrativeRefreshMismatch?: boolean;
   workflowFailure?: boolean;
 };
 
@@ -16,6 +21,9 @@ async function mockProposalDetail(
   options: ProposalMockOptions = {},
 ) {
   let sourceState = "DRAFT";
+  let narrativeReviewState = "NOT_REVIEWED";
+  let narrativeHash: string | null = null;
+  let discussionPackRequested = false;
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
     await route.fulfill({
       json: {
@@ -102,12 +110,87 @@ async function mockProposalDetail(
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/delivery-summary", async (route) => {
     await route.fulfill({
-      json: { correlation_id: "corr-delivery", contract_version: "v1", data: {} },
+      json: {
+        correlation_id: "corr-delivery",
+        contract_version: "v1",
+        data: {
+          reporting: {
+            status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
+            include_reviewed_narrative: discussionPackRequested,
+            proposal_narrative_package: {
+              review_state: narrativeReviewState,
+              package_status: discussionPackRequested ? "REQUESTED" : "NOT_REQUESTED",
+              ...(narrativeHash ? { source_narrative_hash: narrativeHash } : {}),
+            },
+          },
+        },
+      },
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/delivery-events", async (route) => {
     await route.fulfill({
-      json: { correlation_id: "corr-events", contract_version: "v1", data: { event_count: 0 } },
+      json: {
+        correlation_id: "corr-events",
+        contract_version: "v1",
+        data: discussionPackRequested
+          ? {
+              event_count: 1,
+              latest_event: {
+                event_type: "REPORT_REQUESTED",
+                occurred_at: "2026-05-24T10:02:00Z",
+              },
+            }
+          : { event_count: 0 },
+      },
+    });
+  });
+  await page.route(
+    "**/api/bff/api/v1/proposals/pp_1/versions/2/narrative/review",
+    async (route) => {
+      if (options.narrativeReviewFailure) {
+        await route.fulfill({ status: 500, body: "INTERNAL_NARRATIVE_FAILURE" });
+        return;
+      }
+      narrativeReviewState = "APPROVED_FOR_ADVISOR_USE";
+      narrativeHash = options.narrativeRefreshMismatch
+        ? "sha256:mismatched-narrative"
+        : "sha256:narrative-001";
+      await route.fulfill({
+        json: {
+          correlation_id: "corr-narrative-review",
+          contract_version: "v1",
+          data: {
+            policy_version: "proposal-narrative-deterministic.v1",
+            narrative_review: {
+              review_state: "APPROVED_FOR_ADVISOR_USE",
+              source_narrative_hash: "sha256:narrative-001",
+            },
+          },
+        },
+      });
+    },
+  );
+  await page.route("**/api/bff/api/v1/proposals/pp_1/report-requests", async (route) => {
+    if (!narrativeHash || narrativeReviewState !== "APPROVED_FOR_ADVISOR_USE") {
+      await route.fulfill({ status: 409, body: "NARRATIVE_REVIEW_REQUIRED" });
+      return;
+    }
+    discussionPackRequested = true;
+    await route.fulfill({
+      json: {
+        correlation_id: "corr-report-request",
+        contract_version: "v1",
+        data: {
+          status: "REQUESTED",
+          explanation: {
+            include_reviewed_narrative: true,
+            proposal_narrative_package: {
+              package_status: "REQUESTED",
+              source_narrative_hash: narrativeHash,
+            },
+          },
+        },
+      },
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo", async (route) => {
@@ -279,11 +362,73 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByTestId("proposal-action-status")).toHaveCount(0);
   });
 
+  test("confirms narrative review before admitting the discussion-pack request", async ({ page }) => {
+    await mockProposalDetail(page);
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+
+    const requestButton = page.getByRole("button", { name: "Request discussion pack" });
+    await expect(requestButton).toBeDisabled();
+    await page.getByText("Review record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Reviewer reference" }).fill("advisor_1");
+    await page
+      .getByRole("textbox", { name: "Advisor review rationale" })
+      .fill("The recommendation is appropriate for advisor use and supported by the proposal evidence.");
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+
+    await expect(page.getByTestId("proposal-narrative-action-status")).toContainText(
+      "Advisor review confirmed for proposal version 2.",
+    );
+    await expect(requestButton).toBeEnabled();
+    await requestButton.click();
+    await expect(page.getByTestId("proposal-narrative-action-status")).toContainText(
+      "Discussion-pack request confirmed for proposal version 2.",
+    );
+    await expect(page.getByRole("heading", { name: "Review the latest delivery activity" })).toBeVisible();
+  });
+
+  test("does not claim narrative success when source persistence or refresh proof fails", async ({ page }) => {
+    await mockProposalDetail(page, { narrativeReviewFailure: true });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByText("Review record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Reviewer reference" }).fill("advisor_1");
+    await page
+      .getByRole("textbox", { name: "Advisor review rationale" })
+      .fill("Evidence supports advisor use.");
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+
+    await expect(
+      page.getByText(
+        "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByText("INTERNAL_NARRATIVE_FAILURE")).toHaveCount(0);
+    await expect(page.getByTestId("proposal-narrative-action-status")).toHaveCount(0);
+
+    await page.unrouteAll({ behavior: "wait" });
+    await mockProposalDetail(page, { narrativeRefreshMismatch: true });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.getByText("Review record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Reviewer reference" }).fill("advisor_1");
+    await page
+      .getByRole("textbox", { name: "Advisor review rationale" })
+      .fill("Evidence supports advisor use.");
+    await page.getByRole("button", { name: "Record advisor review" }).click();
+
+    await expect(
+      page.getByText(
+        "The review was submitted, but current proposal evidence could not confirm it. Refresh before taking another action.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByTestId("proposal-narrative-action-status")).toHaveCount(0);
+  });
+
   test("keeps proposal decisions, review modes, and actions usable across supported widths", async ({
     page,
   }) => {
     await mockProposalDetail(page);
-    await mkdir(evidenceDirectory, { recursive: true });
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+    }
     await page.emulateMedia({ reducedMotion: "reduce" });
 
     for (const viewport of [
@@ -298,6 +443,9 @@ test.describe("proposal memo posture", () => {
 
       await expect(page.getByRole("heading", { level: 1, name: "Proposal pp_1" })).toBeVisible();
       await expect(page.getByLabel("Proposal decision summary")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Narrative review and discussion pack" }),
+      ).toBeVisible();
       await expect(page.getByRole("tab", { name: "Narrative review" })).toHaveAttribute(
         "aria-selected",
         "true",
@@ -313,10 +461,17 @@ test.describe("proposal memo posture", () => {
       await memoTab.press("ArrowLeft");
       await expect(narrativeTab).toBeFocused();
       await expect(narrativeTab).toHaveAttribute("aria-selected", "true");
-      await page.screenshot({
-        path: path.join(evidenceDirectory, `proposal-review-${viewport.name}.png`),
-        fullPage: true,
-      });
+      if (evidenceDirectory && ["desktop", "compact"].includes(viewport.name)) {
+        // Keyboard checks intentionally move focus into the lower review workspace. Reset the
+        // document before a full-page capture so the sticky shell is recorded at its true top
+        // position rather than composited over evidence that Playwright scrolled into view.
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
+        await expect(page.getByRole("heading", { level: 1, name: "Proposal pp_1" })).toBeInViewport();
+        await page.screenshot({
+          path: path.join(evidenceDirectory, `narrative-review-${viewport.name}.png`),
+          fullPage: true,
+        });
+      }
 
       const action = page.getByRole("button", { name: "Submit for risk review" });
       await action.scrollIntoViewIfNeeded();
@@ -338,11 +493,7 @@ test.describe("proposal memo posture", () => {
       await expect(evidence).toHaveAttribute("open", "");
       await expect(page.getByText("Lineage and audit")).toBeVisible();
 
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-        ),
-      ).toBeFalsy();
+      expect(await collectHorizontalOverflow(page.locator("main"))).toEqual([]);
     }
   });
 });

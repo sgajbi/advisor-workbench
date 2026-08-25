@@ -23,9 +23,26 @@ export async function collectHorizontalOverflow(
           && (style.overflow === "hidden"
             || style.clip !== "auto"
             || style.clipPath !== "none");
+        const intentionallyClipsOverflow =
+          style.overflowX === "hidden" || style.overflowX === "clip";
+        let ancestor = candidate.parentElement;
+        let clippedByAncestor = false;
+        while (ancestor && ancestor !== element.parentElement) {
+          const ancestorStyle = getComputedStyle(ancestor);
+          if (
+            ancestorStyle.overflowX === "hidden"
+            || ancestorStyle.overflowX === "clip"
+          ) {
+            clippedByAncestor = true;
+            break;
+          }
+          ancestor = ancestor.parentElement;
+        }
 
         return (
           !isVisuallyHidden
+          && !intentionallyClipsOverflow
+          && !clippedByAncestor
           && candidate.clientWidth > 0
           && candidate.scrollWidth > candidate.clientWidth + 1
         );
