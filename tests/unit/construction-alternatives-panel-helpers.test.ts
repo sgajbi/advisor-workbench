@@ -6,6 +6,7 @@ import {
   canSelectConstructionAlternative,
   constructionBadgeTone,
   resolveConstructionAlternativeLabel,
+  shouldShowConstructionAttentionReasons,
   shouldShowConstructionStatePanel,
 } from "../../src/features/workbench/construction-alternatives-panel-helpers";
 import type {
@@ -80,6 +81,23 @@ describe("construction alternatives panel helpers", () => {
     expect(shouldShowConstructionStatePanel("ready", "Gateway failed")).toBe(
       true,
     );
+  });
+
+  it("shows reason badges only when the construction state needs attention", () => {
+    expect(
+      shouldShowConstructionAttentionReasons("idle", [
+        "CONSTRUCTION_ALTERNATIVES_NOT_REQUESTED",
+      ]),
+    ).toBe(false);
+    expect(
+      shouldShowConstructionAttentionReasons("ready", [
+        "REGIME_SCENARIO_PACK_READY",
+      ]),
+    ).toBe(false);
+    expect(
+      shouldShowConstructionAttentionReasons("partial", ["PRICE_STALE"]),
+    ).toBe(true);
+    expect(shouldShowConstructionAttentionReasons("blocked", [])).toBe(false);
   });
 
   it("deduplicates authority evidence posture from source-owned diagnostics", () => {

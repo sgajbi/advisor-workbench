@@ -95,6 +95,13 @@ export function shouldShowConstructionStatePanel(
   );
 }
 
+export function shouldShowConstructionAttentionReasons(
+  state: ConstructionPanelState,
+  reasons: readonly string[],
+): boolean {
+  return state !== "idle" && state !== "ready" && reasons.length > 0;
+}
+
 export function buildConstructionAuthorityEvidenceSummary(
   model: Pick<
     ConstructionPanelModel,
