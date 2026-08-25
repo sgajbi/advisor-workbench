@@ -14,7 +14,7 @@ describe("Manage actor presentation", () => {
       "Portfolio Manager · pm_sg_2",
     );
     expect(formatBusinessActorEvidence("advisor_sg_001")).toBe(
-      "Advisor · advisor_sg_001",
+      "Adviser · advisor_sg_001",
     );
   });
 
