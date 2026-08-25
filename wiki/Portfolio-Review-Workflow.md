@@ -13,8 +13,8 @@ flowchart LR
   Allocation[Allocation<br/>exposure and concentration]
   Positions[Positions<br/>booked inventory and valuation]
   Transactions[Transactions<br/>booked activity and settlement posture]
-  Income[Income & Activity<br/>gross-to-net income and cash movement]
-  Cashflow[Cashflow<br/>expected inflows and outflows]
+  Income[Income and activity<br/>gross-to-net income and cash movement]
+  Cashflow[Projected cash flow<br/>expected inflows and outflows]
 
   Review --> Allocation
   Allocation --> Positions
@@ -35,8 +35,8 @@ may enter directly at the relevant exception screen.
 | Allocation (`/allocation`) | Where is the portfolio exposed, and which booked positions contribute to a direct exposure? | Source allocation views, exposure weights, concentration context, cash balances, and contributing booked positions | Expanded look-through contributors, targets, drift, suitability, and rebalance advice are not inferred locally. |
 | Positions (`/positions`) | What does the portfolio currently own? | Complete booked securities and cash inventory, valuation, cost basis, portfolio weight, P&L, and recent holding-activity lineage | Recent activity is not the full ledger; tax lots, restrictions, recommendations, and execution are outside this screen. |
 | Transactions (`/transactions`) | What activity was booked, and what needs settlement review? | Transaction-currency gross amount, portfolio-currency net cost and realized P&L, booking components, settlement posture, source coverage, and related-event review | Workbench does not book, amend, approve, execute, settle, or reconcile transactions. |
-| Income & Activity (`/income`) | How do booked income and deductions reconcile, and how did source-classified activity move cash? | Gross income, withholding, other deductions, net income, and source-defined inflow, outflow, fee, and tax buckets | The screen does not forecast income, provide tax advice, or turn activity into a recommendation. |
-| Cashflow (`/cashflow`) | What inflows and outflows are expected over the selected horizon? | Explicit 10-, 30-, or 90-day horizon, projection as-of and through dates, net movement, dated movements, projection basis, limitations, and support reference | Figures show projected movement, not opening cash, ending cash, liquidity sufficiency, or funding capacity. |
+| Income and activity (`/income`) | How do booked income and deductions reconcile, and how did source-classified activity move cash? | Gross income, withholding, other deductions, net income, and source-defined inflow, outflow, fee, and tax buckets | The screen does not forecast income, provide tax advice, or turn activity into a recommendation. |
+| Projected cash flow (`/cashflow`) | What inflows and outflows are expected over the selected horizon? | Explicit 10-, 30-, or 90-day horizon, projection as-of and through dates, net movement, dated movements, projection basis, limitations, and support reference | Figures show projected movement, not opening cash, ending cash, liquidity sufficiency, or funding capacity. |
 
 ## How to use the information
 
@@ -44,9 +44,9 @@ may enter directly at the relevant exception screen.
    figures.
 2. Use Allocation to identify an exposure worth explaining, then Positions to inspect its booked
    contributors and valuation evidence.
-3. Use Transactions for ledger and settlement review; use Income & Activity for gross-to-net income
+3. Use Transactions for ledger and settlement review; use Income and activity for gross-to-net income
    and source-classified movement. Do not combine these into a locally invented net-flow figure.
-4. Use Cashflow only for the selected forward horizon. Keep projected movement separate from booked
+4. Use Projected cash flow only for the selected forward horizon. Keep projected movement separate from booked
    transactions and historical activity.
 5. Treat warnings, partial failures, unavailable detail, stale source posture, and support references
    as part of the business result. Do not interpret missing detail as zero activity or an all-clear.

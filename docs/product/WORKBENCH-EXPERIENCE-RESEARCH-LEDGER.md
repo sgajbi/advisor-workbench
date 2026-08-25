@@ -1126,11 +1126,11 @@ No repo wiki change is required for this slice. It improves the composition and 
 already supported Transactions screen without changing an operator command, Gateway integration
 contract, supported-feature claim, or canonical runtime flow.
 
-## Income & Activity Review
+## Income and activity review
 
 ### Business job
 
-A client advisor or portfolio manager opens Income & Activity Review to understand income that
+A client adviser or portfolio manager opens Income and activity to understand income that
 was booked in the selected reporting window, reconcile gross income to withholding and other
 deductions, and distinguish subscriptions from withdrawals, fees, and taxes. The screen supports
 book review and meeting preparation; it does not forecast income, project liquidity, provide tax
@@ -1167,7 +1167,7 @@ visual identity, calculations, forecasts, or unsupported capabilities.
 
 ### Adopted decisions
 
-1. Treat Income & Activity as a booked-record review and keep forward-looking cashflow in the
+1. Treat Income and activity as a booked-record review and keep forward-looking cash flow in the
    separate Cashflow workspace.
 2. Reconcile gross income to withholding, other deductions, and net income rather than showing a
    single unexplained amount.
@@ -1464,7 +1464,7 @@ Research was reviewed on 2026-07-19 from primary design and accessibility source
 2. Full `make check` passed 294 test files and 1,311 tests at 90.77% statement coverage, followed by
    clean lint, TypeScript validation, and production build.
 3. Production Playwright proof passed at 519 px, 1024 px, and 1366 px. At 519 px, the closed rail
-   kept Income & Activity inside the initial 900 px viewport; the route list was hidden until
+   kept Income and activity inside the initial 900 px viewport; the route list was hidden until
    requested; Escape restored focus; desktop restored the persistent list.
 4. Playwright CLI visual review confirmed a compact selected-view panel and an intentional dense
    on-demand route list. Screenshots remain diagnostic local evidence, not canonical demo proof.
@@ -2000,7 +2000,7 @@ facts.
    without calling the retained output current.
 5. Fail unknown source statuses closed as unavailable business posture rather than displaying a
    raw technical value.
-6. Apply the same pure builder to Allocation, Positions, Transactions, Income & Activity, and
+6. Apply the same pure builder to Allocation, Positions, Transactions, Income and activity, and
    Cashflow evidence rails.
 
 ### Rejected decisions
@@ -2009,7 +2009,7 @@ facts.
 2. Do not treat non-zero `row_count` as proof that reporting output was generated.
 3. Do not place a generated/ready snapshot badge beside a missing generation timestamp.
 4. Do not invent stale-age thresholds because this contract publishes no governed freshness policy.
-5. Do not add a one-off correction to Income & Activity; the evidence rail is a shared Portfolio
+5. Do not add a one-off correction to Income and activity; the evidence rail is a shared Portfolio
    pattern.
 
 ### Validation record
@@ -6620,10 +6620,11 @@ wealth-platform sources before the comparison and handoff language was aligned:
 
 ### Delivery scope and deferred surfaces
 
-This PR converts the vocabulary authority plus bounded Portfolio, Performance, Manage, Suitability,
-Report centre, Outcome review, and Advisory-priorities paths covered by focused semantic and
-rendered tests. It deliberately does not claim application-wide completion; #799 remains open until
-the remaining governed concepts are aligned and proven.
+This PR converts the vocabulary authority plus bounded Portfolio review, Positions, Income and
+activity, Projected cash flow, Performance, Manage, Suitability review, Report centre, Outcome
+review, and Adviser-priorities paths covered by focused semantic and rendered tests. It deliberately
+does not claim application-wide completion; #799 remains open until the remaining governed concepts
+are aligned and proven.
 
 The following observed literals are deferred, not approved exceptions: **Advisor Narrative And
 Delivery**, **Advisor Memo And Evidence Pack**, **Current Positions**, **Draft Order Blotter**,

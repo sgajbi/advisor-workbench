@@ -32,7 +32,7 @@ inspects those assets for the AG Grid module marker.
 | Positions | 4.50 MB | Required |
 | Transactions | 4.50 MB | Required |
 | Cashflow | 3.35 MB | Forbidden |
-| Income & Activity | 3.35 MB | Forbidden |
+| Income and activity | 3.35 MB | Forbidden |
 
 The budgets retain bounded build variance while preventing Cashflow and Income from returning to
 the 4.16 MB to 4.18 MB grid-task range. They are not compressed transfer-size claims.
