@@ -123,19 +123,23 @@ describe("outcome review panel helpers", () => {
         "Review request Completed.",
       ),
     ).toEqual(["Report request Accepted.", "Review request Completed."]);
-    expect(buildOutcomeReviewHandoffMessages(null, "Review request Submitted.")).toEqual([
-      "Review request Submitted.",
-    ]);
+    expect(
+      buildOutcomeReviewHandoffMessages(null, "Review request Submitted."),
+    ).toEqual(["Review request Submitted."]);
   });
 
   it("describes governed narrative workflow-pack run posture", () => {
     expect(
-      describeOutcomeNarrativeRun(buildDpmAiWorkflowExecution("outcome-narrative")),
-    ).toBe("Review request Awaiting Review.");
+      describeOutcomeNarrativeRun(
+        buildDpmAiWorkflowExecution("outcome-narrative"),
+      ),
+    ).toBe("Review request Awaiting review.");
     expect(
       describeOutcomeNarrativeRun(
-        buildDpmAiWorkflowExecution("outcome-narrative", { reviewState: "ACCEPTED" })
-      )
+        buildDpmAiWorkflowExecution("outcome-narrative", {
+          reviewState: "ACCEPTED",
+        }),
+      ),
     ).toBe("Review request Accepted.");
   });
 });

@@ -1,13 +1,19 @@
 import type { ReviewContextStripModel } from "@/design-system";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
-import type { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
-  formatBusinessBookingCenter,
-  preserveBusinessAcronyms,
-} from "@/features/workbench/business-label-formatters";
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/copy/business-state-copy";
+import type { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
+import { formatBusinessBookingCenter } from "@/features/workbench/business-label-formatters";
 import { buildReviewContextStripModel } from "@/shell/review-context-strip-view-model";
 
 import type { ManageWorkspaceData } from "./manage-workspace-data";
+
+export {
+  businessStateLabel,
+  formatBusinessReason,
+} from "@/copy/business-state-copy";
 
 export type BadgeTone = "default" | "success" | "warn" | "danger";
 
@@ -47,7 +53,8 @@ export type ManageExceptionRowsResult = {
   rejectedRowCount: number;
 };
 
-export type ManageExceptionEvidencePosture = "complete" | "partial" | "unavailable";
+export type ManageExceptionEvidencePosture =
+  "complete" | "partial" | "unavailable";
 
 type CommandCenterModel = ReturnType<typeof buildDpmCommandCenterPanelModel>;
 
@@ -63,30 +70,37 @@ export function buildManageReviewContextStrip(
   const bookingCenter = formatBusinessBookingCenter(
     portfolio.booking_center_code,
   );
-  return buildReviewContextStripModel({
-    portfolioName:
-      readString(asRecord(portfolio), "display_name") ?? portfolio.portfolio_id,
-    portfolioId: portfolio.portfolio_id,
-    clientId: portfolio.client_id,
-    mandateType,
-    bookingCenter,
-    businessDate:
-      formatBusinessDateValue(data.portfolio.as_of_date, { nullDisplay: "" }) ||
-      null,
-    baseCurrency: portfolio.base_currency,
-  }, notice);
+  return buildReviewContextStripModel(
+    {
+      portfolioName:
+        readString(asRecord(portfolio), "display_name") ??
+        portfolio.portfolio_id,
+      portfolioId: portfolio.portfolio_id,
+      clientId: portfolio.client_id,
+      mandateType,
+      bookingCenter,
+      businessDate:
+        formatBusinessDateValue(data.portfolio.as_of_date, {
+          nullDisplay: "",
+        }) || null,
+      baseCurrency: portfolio.base_currency,
+    },
+    notice,
+  );
 }
 
 export function buildManageExceptionRows(
-  exceptions: ManageWorkspaceData["commandCenterExceptions"]
+  exceptions: ManageWorkspaceData["commandCenterExceptions"],
 ): ManageExceptionRow[] {
   return buildManageExceptionRowsResult(exceptions).rows;
 }
 
 export function buildManageExceptionRowsResult(
-  exceptions: ManageWorkspaceData["commandCenterExceptions"]
+  exceptions: ManageWorkspaceData["commandCenterExceptions"],
 ): ManageExceptionRowsResult {
-  const records = extractRecords(asRecord(exceptions?.data).items ?? asRecord(exceptions?.data).exceptions);
+  const records = extractRecords(
+    asRecord(exceptions?.data).items ?? asRecord(exceptions?.data).exceptions,
+  );
   const rows: ManageExceptionRow[] = [];
   let rejectedRowCount = 0;
 
@@ -104,9 +118,13 @@ export function buildManageExceptionRowsResult(
       monitoringRunId: readString(record, "monitoring_run_id") || "N/A",
       sourceRunId: readString(record, "source_run_id") || "N/A",
       correlationId:
-        readString(record, "correlation_id") || exceptions?.correlation_id || "N/A",
+        readString(record, "correlation_id") ||
+        exceptions?.correlation_id ||
+        "N/A",
       authority:
-        readString(record, "authority") || exceptions?.supportability.authority || "N/A",
+        readString(record, "authority") ||
+        exceptions?.supportability.authority ||
+        "N/A",
       severity: readString(record, "severity") || "UNKNOWN",
       title:
         readString(record, "title") ||
@@ -123,7 +141,8 @@ export function buildManageExceptionRowsResult(
         readString(record, "remediation_owner") ||
         "Not assigned",
       age: formatAge(record.age_hours ?? record.age_days),
-      state: readString(record, "state") || readString(record, "status") || "ACTIVE",
+      state:
+        readString(record, "state") || readString(record, "status") || "ACTIVE",
       nextAction:
         readString(record, "next_action") ||
         readString(record, "recommended_action") ||
@@ -136,7 +155,7 @@ export function buildManageExceptionRowsResult(
 
 export function filterManageExceptionRowsForMandate(
   rows: ManageExceptionRow[],
-  mandateId: string | null | undefined
+  mandateId: string | null | undefined,
 ): ManageExceptionRow[] {
   const normalizedMandateId = mandateId?.trim();
   if (!normalizedMandateId || normalizedMandateId === "N/A") {
@@ -145,23 +164,31 @@ export function filterManageExceptionRowsForMandate(
   return rows.filter((row) => row.mandateId === normalizedMandateId);
 }
 
-export function isManageExceptionEvidenceComplete(data: ManageWorkspaceData): boolean {
-  return getManageExceptionEvidencePosture(
-    data.commandCenterExceptions,
-    data.commandCenterExceptionsError
-  ) === "complete";
+export function isManageExceptionEvidenceComplete(
+  data: ManageWorkspaceData,
+): boolean {
+  return (
+    getManageExceptionEvidencePosture(
+      data.commandCenterExceptions,
+      data.commandCenterExceptionsError,
+    ) === "complete"
+  );
 }
 
-export function isManageExceptionEvidenceAvailable(data: ManageWorkspaceData): boolean {
-  return getManageExceptionEvidencePosture(
-    data.commandCenterExceptions,
-    data.commandCenterExceptionsError
-  ) !== "unavailable";
+export function isManageExceptionEvidenceAvailable(
+  data: ManageWorkspaceData,
+): boolean {
+  return (
+    getManageExceptionEvidencePosture(
+      data.commandCenterExceptions,
+      data.commandCenterExceptionsError,
+    ) !== "unavailable"
+  );
 }
 
 export function getManageExceptionEvidencePosture(
   exceptions: ManageWorkspaceData["commandCenterExceptions"],
-  error: string | null
+  error: string | null,
 ): ManageExceptionEvidencePosture {
   if (error || !exceptions) {
     return "unavailable";
@@ -175,7 +202,10 @@ export function getManageExceptionEvidencePosture(
   const responseData = asRecord(exceptions.data);
   const hasExceptionRows =
     Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
-  if (!hasExceptionRows || !Object.prototype.hasOwnProperty.call(responseData, "next_cursor")) {
+  if (
+    !hasExceptionRows ||
+    !Object.prototype.hasOwnProperty.call(responseData, "next_cursor")
+  ) {
     return "unavailable";
   }
   if (responseData.next_cursor === null) {
@@ -183,21 +213,24 @@ export function getManageExceptionEvidencePosture(
       ? "partial"
       : "complete";
   }
-  return typeof responseData.next_cursor === "string" && responseData.next_cursor.trim()
+  return typeof responseData.next_cursor === "string" &&
+    responseData.next_cursor.trim()
     ? "partial"
     : "unavailable";
 }
 
 export function getManageExceptionNextCursor(
-  exceptions: ManageWorkspaceData["commandCenterExceptions"]
+  exceptions: ManageWorkspaceData["commandCenterExceptions"],
 ): string | null {
   const nextCursor = asRecord(exceptions?.data).next_cursor;
-  return typeof nextCursor === "string" && nextCursor.trim() ? nextCursor : null;
+  return typeof nextCursor === "string" && nextCursor.trim()
+    ? nextCursor
+    : null;
 }
 
 export function buildMandateSourceReadinessRows(
   data: ManageWorkspaceData,
-  commandModel: CommandCenterModel
+  commandModel: CommandCenterModel,
 ): MandateSourceReadinessRow[] {
   const commandData = asRecord(data.commandCenter?.data);
   const nestedSummary = asRecord(commandData.summary);
@@ -219,7 +252,10 @@ export function buildMandateSourceReadinessRows(
       return {
         key: `${source}-${index}`,
         source,
-        state: readString(record, "state") || readString(record, "status") || "UNKNOWN",
+        state:
+          readString(record, "state") ||
+          readString(record, "status") ||
+          "UNKNOWN",
         reasonCode:
           readString(record, "reason_code") ||
           readString(record, "reason") ||
@@ -241,14 +277,14 @@ export function buildMandateSourceReadinessRows(
 }
 
 export function buildMandateHealthDimensionRows(
-  commandModel: CommandCenterModel
+  commandModel: CommandCenterModel,
 ): MandateHealthRow[] {
   return commandModel.mandateHealthDimensions;
 }
 
 export function readStringFromResponse(
   response: ManageWorkspaceData["mandate"],
-  key: string
+  key: string,
 ): string | null {
   const data = asRecord(response?.data);
   const nestedMandate = asRecord(data.mandate);
@@ -292,7 +328,9 @@ export function toneForState(value: string): BadgeTone {
   return "default";
 }
 
-export function firstNonEmpty(...values: Array<string | null | undefined>): string {
+export function firstNonEmpty(
+  ...values: Array<string | null | undefined>
+): string {
   return values.find((value) => value && value.trim().length > 0) ?? "N/A";
 }
 
@@ -321,54 +359,37 @@ export function isBusinessValueAvailable(
   ].includes(normalized);
 }
 
-export function businessStateLabel(value: string | number | null | undefined): string {
-  const normalized = String(value ?? "").trim();
-  if (!normalized || normalized === "N/A") {
-    return "Not available";
-  }
-  const upper = normalized.toUpperCase();
-  const labels: Record<string, string> = {
-    ACTIVE: "Open",
-    AVAILABLE: "Available",
-    DEGRADED: "Needs attention",
-    EMPTY: "Not available",
-    ERROR: "Error",
-    HIGH: "High",
-    LOW: "Low",
-    MEDIUM: "Medium",
-    NOT_REQUESTED: "Not requested",
-    OPEN: "Open",
-    PARTIAL: "Needs attention",
-    PM_REVIEW_REQUIRED: "PM Review Required",
-    READY: "Ready",
-    SIMULATION_READY: "Simulation ready",
-    SOURCE_CHECKED: "Data checked",
-    SUPPORTED: "Supported",
-    UNKNOWN: "Not available",
-  };
-  return labels[upper] ?? toTitleCase(normalized.replaceAll("_", " "));
-}
-
-export function formatBusinessMandateType(value: string | null | undefined): string {
+export function formatBusinessMandateType(
+  value: string | null | undefined,
+): string {
   if (!value) {
     return "Not available";
   }
-  return toTitleCase(value.replace(/^DPM[-_\s]*/i, "Discretionary ").replaceAll("_", " "));
+  return toTitleCase(
+    value.replace(/^DPM[-_\s]*/i, "Discretionary ").replaceAll("_", " "),
+  );
 }
 
 export function formatBusinessBook(value: string | null | undefined): string {
   if (!value) {
     return "Not available";
   }
-  return toTitleCase(value.replace(/^PM[_-\s]BOOK[_-\s]*/i, "").replaceAll("_", " "));
+  return toTitleCase(
+    value.replace(/^PM[_-\s]BOOK[_-\s]*/i, "").replaceAll("_", " "),
+  );
 }
 
-export function formatBusinessTrigger(value: string | null | undefined): string {
+export function formatBusinessTrigger(
+  value: string | null | undefined,
+): string {
   if (!value || value === "N/A") {
     return "Scheduled rebalance";
   }
   const normalized = value.toUpperCase();
-  if (normalized.includes("PORTFOLIO_LIST") || normalized.includes("SCHEDULED")) {
+  if (
+    normalized.includes("PORTFOLIO_LIST") ||
+    normalized.includes("SCHEDULED")
+  ) {
     return "Scheduled rebalance";
   }
   return businessStateLabel(value);
@@ -382,10 +403,16 @@ export function formatBusinessExceptionTitle(title: string): string {
   ) {
     return "Risk posture requires review";
   }
-  if (normalized.includes("dpm_source_stale") || normalized.includes("source stale")) {
+  if (
+    normalized.includes("dpm_source_stale") ||
+    normalized.includes("source stale")
+  ) {
     return "Mandate data requires refresh";
   }
-  if (normalized.includes("tax_lot_source_partial") || normalized.includes("tax lot")) {
+  if (
+    normalized.includes("tax_lot_source_partial") ||
+    normalized.includes("tax lot")
+  ) {
     return "Tax-lot data is incomplete";
   }
   if (normalized.includes("benchmark") || normalized.includes("mapping")) {
@@ -417,41 +444,10 @@ export function formatBusinessSource(value: string | null | undefined): string {
   return toTitleCase(value.replace(/^lotus[-_\s]*/i, "").replaceAll("_", " "));
 }
 
-export function formatBusinessReason(value: string | null | undefined): string {
-  if (!value || value === "-" || value === "N/A") {
-    return "-";
-  }
-  const normalized = value.toUpperCase();
-  if (normalized.includes("SOURCE_RISK_HEALTH_ATTENTION")) {
-    return "Risk posture requires review";
-  }
-  if (normalized.includes("DPM_SOURCE_STALE")) {
-    return "Mandate data requires refresh";
-  }
-  if (normalized.includes("TAX_LOT_SOURCE_PARTIAL")) {
-    return "Tax-lot data is incomplete";
-  }
-  if (normalized.includes("PRICE_STALE")) {
-    return "Stale price";
-  }
-  if (normalized.includes("SOURCE_READY")) {
-    return "Ready";
-  }
-  if (normalized.includes("UNAVAILABLE")) {
-    return "Unavailable";
-  }
-  if (normalized.includes("MAPPING")) {
-    return "Mapping review";
-  }
-  if (normalized.includes("CASH")) {
-    return "Cash range";
-  }
-  return preserveBusinessAcronyms(businessStateLabel(value));
-}
-
 export function formatBusinessBoundary(value: string): string {
   const labels: Record<string, string> = {
-    NO_CAMPAIGN_MEMBERSHIP_CALCULATION: "Campaign membership remains source-owned",
+    NO_CAMPAIGN_MEMBERSHIP_CALCULATION:
+      "Campaign membership remains source-owned",
     NO_CLIENT_CONTACT_WORKFLOW: "No client-contact workflow",
     NO_LOCAL_COHORT_CALCULATION: "Cohort membership remains source-owned",
     NO_MAKER_CHECKER_WORKFLOW: "No maker-checker workflow",
@@ -473,7 +469,10 @@ export function asRecord(value: unknown): Record<string, unknown> {
   return isRecord(value) ? value : {};
 }
 
-export function readString(record: Record<string, unknown>, key: string): string | null {
+export function readString(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
   const value = record[key];
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
@@ -495,20 +494,27 @@ function extractRecords(value: unknown): Array<Record<string, unknown>> {
   return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
-function extractRecordsFromUnknownMap(value: unknown, keyName: string): Array<Record<string, unknown>> {
+function extractRecordsFromUnknownMap(
+  value: unknown,
+  keyName: string,
+): Array<Record<string, unknown>> {
   const arrayRecords = extractRecords(value);
   if (arrayRecords.length > 0) {
     return arrayRecords;
   }
   const record = asRecord(value);
   return Object.entries(record).map(([key, item]) =>
-    isRecord(item) ? { [keyName]: key, ...item } : { [keyName]: key, state: item }
+    isRecord(item)
+      ? { [keyName]: key, ...item }
+      : { [keyName]: key, state: item },
   );
 }
 
 function extractStringArrayFromUnknown(value: unknown): string[] {
   return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string" && item.length > 0)
+    ? value.filter(
+        (item): item is string => typeof item === "string" && item.length > 0,
+      )
     : [];
 }
 

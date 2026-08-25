@@ -14,6 +14,8 @@ describe("business state copy", () => {
       "Portfolio manager review required",
     );
     expect(businessStateLabel("PENDING")).toBe("In progress");
+    expect(businessStateLabel("AWAITING_REVIEW")).toBe("Awaiting review");
+    expect(businessStateLabel("UNSUPPORTED")).toBe("Not supported");
   });
 
   it("maps representative Manage actions and reasons explicitly", () => {

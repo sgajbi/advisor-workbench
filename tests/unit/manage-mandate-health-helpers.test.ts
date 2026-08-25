@@ -51,14 +51,18 @@ const exceptionRow: ManageExceptionRow = {
 
 describe("manage mandate health helpers", () => {
   it("finds source-owned health rows without recalculating mandate state", () => {
-    expect(findMandateHealthRow(healthRows, ["source", "market"])).toBe(healthRows[0]);
+    expect(findMandateHealthRow(healthRows, ["source", "market"])).toBe(
+      healthRows[0],
+    );
     expect(findMandateHealthRow(healthRows, ["benchmark"])).toBeUndefined();
   });
 
   it("does not fabricate summary labels or meter values", () => {
     expect(mandateHealthSummaryStateLabel(undefined)).toBe("Not available");
     expect(mandateHealthSummaryStateLabel(healthRows[1])).toBe("Ready");
-    expect(mandateHealthSummaryStateLabel(healthRows[0])).toBe("Pending Review");
+    expect(mandateHealthSummaryStateLabel(healthRows[0])).toBe(
+      "Pending review",
+    );
     expect(mandateHealthScoreToPercent("0.82")).toBe(82);
     expect(mandateHealthScoreToPercent("98%")).toBe(98);
     expect(mandateHealthScoreToPercent("not-a-score")).toBeNull();
@@ -68,22 +72,40 @@ describe("manage mandate health helpers", () => {
   });
 
   it("formats mandate context and dimension labels for display", () => {
-    expect(formatMandateHealthDisplayDate("2026-05-18T00:00:00Z")).toBe("18 May 2026");
-    expect(formatMandateHealthDisplayDate("2026-05-18T23:30:00-05:00")).toBe("19 May 2026");
-    expect(formatMandateHealthDisplayDate("2026-05-18T00:00:00")).toBe("Not confirmed");
+    expect(formatMandateHealthDisplayDate("2026-05-18T00:00:00Z")).toBe(
+      "18 May 2026",
+    );
+    expect(formatMandateHealthDisplayDate("2026-05-18T23:30:00-05:00")).toBe(
+      "19 May 2026",
+    );
+    expect(formatMandateHealthDisplayDate("2026-05-18T00:00:00")).toBe(
+      "Not confirmed",
+    );
     expect(formatMandateHealthDisplayDate("13 May 2026")).toBe("Not confirmed");
-    expect(formatMandateHealthDimensionLabel("source_readiness")).toBe("Data availability");
-    expect(formatMandateHealthDimensionLabel("allocation_drift")).toBe("Allocation drift");
-    expect(formatMandateHealthDimensionLabel("mandate_constraints")).toBe("Mandate constraints");
+    expect(formatMandateHealthDimensionLabel("source_readiness")).toBe(
+      "Data availability",
+    );
+    expect(formatMandateHealthDimensionLabel("allocation_drift")).toBe(
+      "Allocation drift",
+    );
+    expect(formatMandateHealthDimensionLabel("mandate_constraints")).toBe(
+      "Mandate constraints",
+    );
   });
 
   it("formats attention observations and recommended actions from source reason codes", () => {
     expect(formatMandateAttentionObservation(exceptionRow)).toBe(
-      "Sustainability preferences require review"
+      "Sustainability preferences require review",
     );
-    expect(formatMandateAction("SIMULATE_REBALANCE")).toBe("Review rebalance simulation");
-    expect(formatMandateAction("REVIEW_WORKFLOW")).toBe("Review mandate workflow");
-    expect(formatMandateAction("REPAIR_SOURCE_DATA")).toBe("Resolve data readiness");
+    expect(formatMandateAction("SIMULATE_REBALANCE")).toBe(
+      "Review rebalance simulation",
+    );
+    expect(formatMandateAction("REVIEW_WORKFLOW")).toBe(
+      "Review mandate workflow",
+    );
+    expect(formatMandateAction("REPAIR_SOURCE_DATA")).toBe(
+      "Resolve data readiness",
+    );
     expect(formatMandateAction("-")).toBe("Not provided by mandate monitoring");
     expect(
       formatMandateAttentionObservation({
@@ -95,7 +117,9 @@ describe("manage mandate health helpers", () => {
   });
 
   it("formats health observations without inventing backend decisions", () => {
-    expect(formatMandateHealthObservation("ALLOCATION_DRIFT")).toBe("Allocation drift review");
+    expect(formatMandateHealthObservation("ALLOCATION_DRIFT")).toBe(
+      "Allocation drift review",
+    );
     expect(formatMandateHealthObservation("READY")).toBe("No action required");
     expect(formatMandateHealthObservation("TAX_LOT_SOURCE_PARTIAL")).toBe(
       "Tax-lot data is incomplete",
