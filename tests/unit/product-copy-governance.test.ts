@@ -15,6 +15,11 @@ import {
   scanProductCopySource,
 } from "../../scripts/quality/check-product-copy-governance.mjs";
 
+// The exact repository scan parses every productive TypeScript source file. Keep
+// a finite allowance for whole-suite worker contention without relaxing the
+// measured inventory or its zero-headroom ratchet.
+const REPOSITORY_SCAN_TIMEOUT_MS = 15_000;
+
 function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
 }
@@ -104,9 +109,13 @@ describe("product-copy governance", () => {
     ).toEqual([]);
   });
 
-  it("keeps the checked-in productive-copy inventory exact", () => {
-    expect(scanProductCopyRepository().length).toBe(307);
-  });
+  it(
+    "keeps the checked-in productive-copy inventory exact",
+    () => {
+      expect(scanProductCopyRepository().length).toBe(307);
+    },
+    REPOSITORY_SCAN_TIMEOUT_MS,
+  );
 
   it("exits non-zero when the CLI ratchet is exceeded", () => {
     const result = runCliWithBaseline(
