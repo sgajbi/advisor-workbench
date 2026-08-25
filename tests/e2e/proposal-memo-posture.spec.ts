@@ -132,10 +132,12 @@ async function mockProposalDetail(
         contract_version: "v1",
         data: {
           reporting: {
+            report_request_id: discussionPackRequested ? "report-001" : undefined,
             related_version_no: 2,
             status: discussionPackRequested ? "REQUESTED" : "NO_REPORT",
             include_reviewed_narrative: discussionPackRequested,
             proposal_narrative_package: {
+              related_version_no: 2,
               review_state: narrativeReviewState,
               package_status: discussionPackRequested ? "REQUESTED" : "NOT_REQUESTED",
               ...(narrativeHash ? { source_narrative_hash: narrativeHash } : {}),
@@ -215,11 +217,13 @@ async function mockProposalDetail(
         correlation_id: "corr-report-request",
         contract_version: "v1",
         data: {
+          report_request_id: "report-001",
           status: "REQUESTED",
           explanation: {
             related_version_no: 2,
             include_reviewed_narrative: true,
             proposal_narrative_package: {
+              related_version_no: 2,
               package_status: "REQUESTED",
               source_narrative_hash: narrativeHash,
             },

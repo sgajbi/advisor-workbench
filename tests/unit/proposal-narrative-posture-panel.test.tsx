@@ -54,6 +54,7 @@ describe("ProposalNarrativePosturePanel", () => {
     vi.resetAllMocks();
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({
       reporting: {
+        report_request_id: "report-001",
         related_version_no: 2,
         status: "READY",
         include_reviewed_narrative: true,
@@ -77,6 +78,7 @@ describe("ProposalNarrativePosturePanel", () => {
       confirmedNarrativeReview,
     );
     vi.mocked(createProposalReportRequest).mockResolvedValue({
+      report_request_id: "report-001",
       status: "READY",
       explanation: {
         related_version_no: 2,
@@ -131,13 +133,14 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeDisabled();
   });
 
-  it("does not suppress the current action when an earlier version has the same hash", async () => {
+  it("does not suppress the current action when package version fields conflict", async () => {
     vi.mocked(getProposalDeliverySummary).mockResolvedValue({
       reporting: {
-        related_version_no: 1,
+        related_version_no: 2,
         status: "READY",
         include_reviewed_narrative: true,
         proposal_narrative_package: {
+          related_version_no: 1,
           package_status: "INCLUDED_REVIEWED_NARRATIVE",
           source_narrative_hash: "sha256:narrative-001",
         },
@@ -152,6 +155,26 @@ describe("ProposalNarrativePosturePanel", () => {
     expect(
       screen.getByRole("button", { name: "Request discussion pack" }),
     ).toBeEnabled();
+  });
+
+  it("does not admit an advisor review returned for another proposal version", async () => {
+    vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue({
+      ...confirmedNarrativeReview,
+      narrative_review: {
+        ...confirmedNarrativeReview.narrative_review,
+        proposal_version_no: 1,
+      },
+    });
+    vi.mocked(getProposalDeliverySummary).mockResolvedValue({});
+    renderPanel();
+
+    const workflow = await screen.findByRole("region", {
+      name: "Narrative review workflow",
+    });
+    expect(within(workflow).getByText("Not Reviewed")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
   });
 
   it("confirms narrative review before admitting a discussion-pack request", async () => {
@@ -177,6 +200,7 @@ describe("ProposalNarrativePosturePanel", () => {
       })
       .mockResolvedValueOnce({
         reporting: {
+          report_request_id: "report-001",
           related_version_no: 2,
           status: "REQUESTED",
           include_reviewed_narrative: true,
@@ -257,6 +281,44 @@ describe("ProposalNarrativePosturePanel", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/INTERNAL_SOURCE_DETAIL/)).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-narrative-action-status")).not.toBeInTheDocument();
+  });
+
+  it("withholds discussion-pack success when refreshed request identity is stale", async () => {
+    vi.mocked(getProposalDeliverySummary)
+      .mockResolvedValueOnce({
+        reporting: {
+          status: "NOT_REQUESTED",
+          include_reviewed_narrative: false,
+        },
+      })
+      .mockResolvedValueOnce({
+        reporting: {
+          report_request_id: "report-earlier",
+          related_version_no: 2,
+          status: "REQUESTED",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            package_status: "REQUESTED",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      });
+    renderPanel();
+
+    expect(await screen.findByText("Not Requested")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
+      target: { value: "advisor_1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Request discussion pack" }));
+
+    expect(
+      await screen.findByText(
+        "The discussion-pack request was submitted, but current preparation status could not confirm it. Refresh before retrying.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Discussion-pack request confirmed for proposal version 2."),
+    ).not.toBeInTheDocument();
   });
 
   it("does not claim review success when refreshed source evidence disagrees", async () => {
