@@ -1657,61 +1657,74 @@ export async function validateProposalMemoEvidencePackPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  const memoPanel = workbenchPanelByClass(page, "proposal-memo-posture-panel");
+  await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+  const memoPanel = page.locator("#proposal-memo-evidence-pack");
   await expect(memoPanel).toBeVisible({ timeout: timeoutMs });
   await expect(
-    memoPanel.getByText("Advisor Memo And Evidence Pack"),
+    memoPanel.getByRole("heading", { name: "Advisor memo and evidence pack" }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(memoPanel.getByText("Review Posture")).toBeVisible({
+  await expect(memoPanel.getByLabel("Advisor memo workflow")).toBeVisible({
     timeout: timeoutMs,
   });
+  const memoDetails = memoPanel.locator("details").first();
+  if ((await memoDetails.getAttribute("open")) === null) {
+    await memoDetails.locator("summary").click();
+  }
   if (proposalVersionNo) {
-    await expect(memoPanel.getByLabel("Version")).toHaveValue(
-      String(proposalVersionNo),
-      {
-        timeout: timeoutMs,
-      },
-    );
+    await expect(
+      memoPanel.getByText("Current proposal version").locator(".."),
+    ).toContainText(String(proposalVersionNo), { timeout: timeoutMs });
   }
   await memoPanel
-    .getByRole("button", { name: "Prepare Or Refresh Memo" })
-    .click();
-  await expect(memoPanel.getByText(/Memo evidence: sha256:/)).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await memoPanel
-    .getByLabel("Review rationale")
-    .fill(
-      "Live canonical validator requested advisor-use memo review from source evidence.",
+    .getByRole("textbox", { name: "Advisor or reviewer reference" })
+    .fill("canonical_front_office_validator");
+
+  const actionsPerformed = [];
+  const prepareMemo = memoPanel.getByRole("button", { name: "Prepare advisor memo" });
+  if ((await prepareMemo.count()) > 0) {
+    await prepareMemo.click();
+    await expect(memoPanel.getByTestId("proposal-memo-action-status")).toContainText(
+      "Advisor memo confirmed",
+      { timeout: timeoutMs },
     );
-  await memoPanel
-    .getByRole("button", { name: "Approve Memo For Advisor Use" })
-    .click();
-  await expect(memoPanel.getByText("Review Posture")).toBeVisible({
+    actionsPerformed.push("memo-prepared");
+  }
+  const recordReview = memoPanel.getByRole("button", { name: "Record advisor review" });
+  if ((await recordReview.count()) > 0) {
+    await memoPanel.getByRole("textbox", { name: "Advisor review rationale" }).fill(
+      "Canonical front-office validation confirmed the retained memo evidence for advisor use.",
+    );
+    await recordReview.click();
+    await expect(memoPanel.getByTestId("proposal-memo-action-status")).toContainText(
+      "Advisor review confirmed",
+      { timeout: timeoutMs },
+    );
+    actionsPerformed.push("advisor-review-confirmed");
+  }
+  const requestMaterial = memoPanel.getByRole("button", { name: "Request discussion material" });
+  if ((await requestMaterial.count()) > 0) {
+    await requestMaterial.click();
+    await expect(memoPanel.getByTestId("proposal-memo-action-status")).toContainText(
+      "Discussion material confirmed",
+      { timeout: timeoutMs },
+    );
+    actionsPerformed.push("discussion-material-confirmed");
+  }
+  const requestCommentary = memoPanel.getByRole("button", { name: "Request advisor commentary" });
+  if ((await requestCommentary.count()) > 0) {
+    await requestCommentary.click();
+    await expect(memoPanel.getByTestId("proposal-memo-action-status")).toContainText(
+      "Advisor commentary confirmed",
+      { timeout: timeoutMs },
+    );
+    actionsPerformed.push("advisor-commentary-confirmed");
+  }
+  await expect(memoPanel.getByText("Evidence aligned").first()).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(memoPanel.getByText("Pending")).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await memoPanel
-    .getByRole("button", { name: "Prepare Report Package" })
-    .click();
-  await expect(
-    memoPanel.getByRole("button", { name: "Prepare Report Package" }),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await memoPanel
-    .getByRole("button", { name: "Request Advisor Commentary" })
-    .click();
-  await expect(
-    memoPanel.getByRole("button", { name: "Request Advisor Commentary" }),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(memoPanel.getByText(/Replay evidence: sha256:/)).toBeVisible({
+  await expect(memoPanel.getByText(/^sha256:/).first()).toBeVisible({
     timeout: timeoutMs,
   });
 
@@ -1721,7 +1734,8 @@ export async function validateProposalMemoEvidencePackPanel(
     kind: "proposal-memo-evidence-pack",
     proposalId,
     versionNo: proposalVersionNo,
-    reviewState: "review-requested-source-posture-preserved",
+    reviewState: "source-confirmed-advisor-use",
+    actionsPerformed,
     clientReadyRelease: "not-requested",
   });
   await screenshotRegisteredPanel(page, "proposal.memo_evidence_pack", {

@@ -438,18 +438,15 @@ async function mockProposalApprovalEvidence(page: Page) {
           contract_version: "v1",
           data: {
             memo_id: "memo-PRP-READY-001",
-            memo_status: "APPROVED_FOR_ADVISOR_USE",
+            memo_status: "READY",
             memo_hash: "sha256:memo-PRP-READY-001",
-            review_posture: { advisor_use: "APPROVED_FOR_ADVISOR_USE" },
-            report_package_posture: {
-              status: "NOT_REQUESTED",
-              archive_refs: [],
+            review_posture: {
+              status: "RECORDED",
+              review_action: "APPROVE_FOR_ADVISOR_USE",
+              source_memo_hash: "sha256:memo-PRP-READY-001",
             },
-            ai_commentary_posture: {
-              status: "NOT_REQUESTED",
-              authority: "NON_AUTHORITATIVE",
-            },
-            read_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+            report_package_posture: { status: "NOT_RECORDED" },
+            ai_commentary_posture: { status: "NOT_RECORDED" },
           },
         },
       });
@@ -463,11 +460,12 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-projection-PRP-READY-001",
           contract_version: "v1",
           data: {
-            projection: {
-              audience: "ADVISOR",
-              client_ready_publication: "BLOCKED",
-            },
-            projection_posture: { supportability: "SUPPORTED_ADVISOR_USE" },
+            memo_id: "memo-PRP-READY-001",
+            memo_hash: "sha256:memo-PRP-READY-001",
+            audience: "ADVISOR",
+            projection: { client_ready_publication: "BLOCKED" },
+            sections: [{ section_id: "SUMMARY", audience_visibility: ["ADVISOR"] }],
+            projection_posture: { client_ready_publication: "BLOCKED" },
           },
         },
       });
@@ -481,10 +479,16 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-memo-lineage-PRP-READY-001",
           contract_version: "v1",
           data: {
+            memo_count: 1,
+            latest_memo_id: "memo-PRP-READY-001",
+            lineage_complete: true,
             memos: [
               {
+                memo_id: "memo-PRP-READY-001",
                 memo_hash: "sha256:memo-PRP-READY-001",
-                memo_status: "APPROVED_FOR_ADVISOR_USE",
+                memo_status: "READY",
+                event_count: 2,
+                archive_refs: [],
               },
             ],
           },
@@ -500,8 +504,13 @@ async function mockProposalApprovalEvidence(page: Page) {
           correlation_id: "corr-replay-PRP-READY-001",
           contract_version: "v1",
           data: {
+            subject: { memo_id: "memo-PRP-READY-001", proposal_version_no: 5 },
             hashes: { memo_hash: "sha256:memo-PRP-READY-001" },
-            supportability: { client_ready_publication: "BLOCKED" },
+            audit_events: [
+              { event_type: "MEMO_DRAFT_CREATED" },
+              { event_type: "MEMO_REVIEW_RECORDED" },
+            ],
+            explanation: { client_ready_publication: "BLOCKED" },
           },
         },
       });
