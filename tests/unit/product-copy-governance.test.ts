@@ -24,13 +24,39 @@ function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
 }
 
-function runCliWithBaseline(sourceText: string, baseline: number) {
+type ProductCopyException = {
+  id: string;
+  filePath: string;
+  ruleId: string;
+  context: string;
+  exactText: string;
+  expectedMatches: number;
+  reason: string;
+  reviewUrl: string;
+};
+
+function runCliWithBaseline(
+  sourceText: string,
+  baseline: number,
+  entries: ProductCopyException[] = [],
+) {
   const temporaryRepository = mkdtempSync(
     join(tmpdir(), "lotus-product-copy-"),
   );
   const sourceDirectory = join(temporaryRepository, "src");
+  const configDirectory = join(temporaryRepository, "config");
   mkdirSync(sourceDirectory);
+  mkdirSync(configDirectory);
   writeFileSync(join(sourceDirectory, "example.tsx"), sourceText, "utf8");
+  writeFileSync(
+    join(configDirectory, "product-copy-exceptions.v1.json"),
+    JSON.stringify({
+      schemaVersion: "product-copy-exceptions.v1",
+      governingIssue: "https://github.com/sgajbi/lotus-workbench/issues/798",
+      entries,
+    }),
+    "utf8",
+  );
 
   try {
     return spawnSync(
@@ -107,6 +133,103 @@ describe("product-copy governance", () => {
         }
       `),
     ).toEqual([]);
+  });
+
+  it("accepts one exact reviewed use of legitimate wealth-management language", () => {
+    const result = runCliWithBaseline(
+      'export const Example = () => <Panel title="Defensive posture reduces equity exposure to 30%." />;',
+      0,
+      [
+        {
+          id: "copy-exception-defensive-posture",
+          filePath: "src/example.tsx",
+          ruleId: "auditor-posture",
+          context: "JSX title",
+          exactText: "Defensive posture reduces equity exposure to 30%.",
+          expectedMatches: 1,
+          reason:
+            "Posture is the precise portfolio-construction term in this reviewed advisor context.",
+          reviewUrl: "https://github.com/sgajbi/lotus-workbench/pull/867",
+        },
+      ],
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("1 reviewed exact exception(s)");
+  });
+
+  it("rejects a stale exception when the reviewed copy is no longer present", () => {
+    const result = runCliWithBaseline(
+      'export const Example = () => <Panel title="Defensive allocation" />;',
+      0,
+      [
+        {
+          id: "copy-exception-defensive-posture",
+          filePath: "src/example.tsx",
+          ruleId: "auditor-posture",
+          context: "JSX title",
+          exactText: "Defensive posture reduces equity exposure to 30%.",
+          expectedMatches: 1,
+          reason:
+            "Posture is the precise portfolio-construction term in this reviewed advisor context.",
+          reviewUrl: "https://github.com/sgajbi/lotus-workbench/pull/867",
+        },
+      ],
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("expected 1 exact match(es) but found 0");
+  });
+
+  it("rejects an exception when duplicate copy broadens its approved scope", () => {
+    const result = runCliWithBaseline(
+      `
+        export const First = () => <Panel title="Structured note XS_2043 matured on 12 March." />;
+        export const Second = () => <Panel title="Structured note XS_2043 matured on 12 March." />;
+      `,
+      0,
+      [
+        {
+          id: "copy-exception-structured-note-identifier",
+          filePath: "src/example.tsx",
+          ruleId: "raw-enum",
+          context: "JSX title",
+          exactText: "Structured note XS_2043 matured on 12 March.",
+          expectedMatches: 1,
+          reason:
+            "XS_2043 is the reviewed instrument identifier required to distinguish the holding.",
+          reviewUrl: "https://github.com/sgajbi/lotus-workbench/pull/867",
+        },
+      ],
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("expected 1 exact match(es) but found 2");
+  });
+
+  it("rejects exception metadata without durable Workbench review evidence", () => {
+    const result = runCliWithBaseline(
+      'export const Example = () => <Panel title="This account is governed by a discretionary mandate." />;',
+      0,
+      [
+        {
+          id: "copy-exception-discretionary-mandate",
+          filePath: "src/example.tsx",
+          ruleId: "engineering-governed",
+          context: "JSX title",
+          exactText: "This account is governed by a discretionary mandate.",
+          expectedMatches: 1,
+          reason:
+            "Governed describes the legal relationship between the account and its mandate.",
+          reviewUrl: "https://example.com/not-durable-review",
+        },
+      ],
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "reviewUrl must be a Workbench GitHub issue or PR URL",
+    );
   });
 
   it(

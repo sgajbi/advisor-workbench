@@ -1,0 +1,5 @@
+{
+  "schemaVersion": "product-copy-exceptions.v1",
+  "governingIssue": "https://github.com/sgajbi/lotus-workbench/issues/798",
+  "entries": []
+}
