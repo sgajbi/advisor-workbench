@@ -18,6 +18,8 @@ describe("governed E2E fixture scenario runner", () => {
     expect(source).toContain("e2e-scenario-reporter.mjs");
     expect(source).toContain("WORKBENCH_E2E_SCENARIO_EXPECTED_TESTS");
     expect(source).toContain("WORKBENCH_E2E_SCENARIO_RESULT_PATH");
+    expect(source).toContain("rmSync(resultPath, { force: true })");
+    expect(source).toContain("...environmentOverrides");
     expect(source).toContain("WORKBENCH_E2E_FIXTURE_GATEWAY: family.fixture_owner");
     expect(source).toContain("shell: false");
     expect(source).toContain("child.kill(signal)");

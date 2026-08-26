@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
 import {
@@ -9,7 +9,13 @@ import {
   loadScenarioRegistry,
 } from "./e2e-scenario-registry.mjs";
 
-export function runFixtureScenario({ familyName, scenarioName, arguments_ = [] }) {
+export async function runFixtureScenario({
+  familyName,
+  scenarioName,
+  arguments_ = [],
+  resultDirectory: configuredResultDirectory,
+  environmentOverrides = {},
+}) {
   const projectRoot = process.cwd();
   const registry = loadScenarioRegistry({ root: projectRoot });
   const { family, scenario } = getScenarioDefinition(
@@ -38,7 +44,8 @@ export function runFixtureScenario({ familyName, scenarioName, arguments_ = [] }
 
   const resultDirectory = resolve(
     projectRoot,
-    process.env.WORKBENCH_E2E_SCENARIO_RESULT_DIR ??
+    configuredResultDirectory ??
+      process.env.WORKBENCH_E2E_SCENARIO_RESULT_DIR ??
       "output/e2e-scenario-results",
   );
   const resultFileName = `${familyName}-${scenarioName}${focusName ? `-${focusName}` : ""}.json`;
@@ -50,6 +57,7 @@ export function runFixtureScenario({ familyName, scenarioName, arguments_ = [] }
   );
   mkdirSync(resultDirectory, { recursive: true });
   mkdirSync(evidenceDirectory, { recursive: true });
+  rmSync(resultPath, { force: true });
 
   const environment = {
     ...process.env,
@@ -65,6 +73,7 @@ export function runFixtureScenario({ familyName, scenarioName, arguments_ = [] }
     [family.fixture_environment]: scenario.fixture_value,
     [family.fixture_port_environment]: String(fixturePort),
     [family.workbench_port_environment]: String(workbenchPort),
+    ...environmentOverrides,
   };
   if (family.proof_environment) {
     environment[family.proof_environment] = scenarioName;
@@ -109,20 +118,30 @@ export function runFixtureScenario({ familyName, scenarioName, arguments_ = [] }
       child.kill(signal);
     }
   };
-  process.once("SIGINT", () => stop("SIGINT"));
-  process.once("SIGTERM", () => stop("SIGTERM"));
-  child.once("error", (error) => {
-    throw error;
-  });
-  child.once("exit", (code, signal) => {
-    if (signal) {
-      process.kill(process.pid, signal);
-      return;
-    }
-    process.exitCode = code ?? 1;
-  });
+  const stopForInterrupt = () => stop("SIGINT");
+  const stopForTermination = () => stop("SIGTERM");
+  process.once("SIGINT", stopForInterrupt);
+  process.once("SIGTERM", stopForTermination);
 
-  return child;
+  try {
+    return await new Promise((resolveChild, rejectChild) => {
+      child.once("error", rejectChild);
+      child.once("exit", (code, signal) => {
+        if (signal === "SIGINT") {
+          resolveChild(130);
+          return;
+        }
+        if (signal === "SIGTERM") {
+          resolveChild(143);
+          return;
+        }
+        resolveChild(code ?? 1);
+      });
+    });
+  } finally {
+    process.removeListener("SIGINT", stopForInterrupt);
+    process.removeListener("SIGTERM", stopForTermination);
+  }
 }
 
 export function parseRunnerArguments(arguments_) {
