@@ -63,7 +63,8 @@ describe("risk mandate comparison view model", () => {
             },
             headroom: -0.0107,
             state: "breach",
-            reason: "Largest issuer exposure exceeds the approved mandate limit.",
+            reason:
+              "Largest issuer exposure exceeds the approved mandate limit.",
           },
           {
             key: "tracking_error",
@@ -92,7 +93,8 @@ describe("risk mandate comparison view model", () => {
             measure: null,
             headroom: null,
             state: "measure_unavailable",
-            reason: "The source measure is not available for the selected date.",
+            reason:
+              "The source measure is not available for the selected date.",
           },
         ],
       }),
@@ -129,6 +131,18 @@ describe("risk mandate comparison view model", () => {
       limit: "2.00%–10.00%",
       headroom: "Not reported",
     });
+    expect(model).toMatchObject({
+      availability: "partially_supplied",
+      availabilityLabel: "Partly supplied",
+    });
+    expect(model.sources[1]).toMatchObject({
+      key: "concentration",
+      availability: "not_supplied",
+      supportability: "not_supplied",
+      supportabilityLabel: "Not supplied",
+      constraints: [],
+    });
+    expect(model.contextNotice).toBeNull();
   });
 
   it.each([
@@ -136,28 +150,31 @@ describe("risk mandate comparison view model", () => {
     ["overdue", "Review overdue", "danger"],
     ["scheduled", "Review scheduled", "default"],
     ["not_defined", "Review cadence not defined", "warn"],
-  ] as const)("maps the source review policy state %s", (state, label, tone) => {
-    const model = buildRiskMandateComparisonViewModel({
-      portfolioRisk: buildMandateComparisonFixture({
-        review_policy: {
-          review_frequency: "QUARTERLY",
-          last_review_date: "2025-12-31",
-          next_review_due_date: "2026-03-31",
-          state,
-        },
-      }),
-      concentrationRisk: null,
-    });
+  ] as const)(
+    "maps the source review policy state %s",
+    (state, label, tone) => {
+      const model = buildRiskMandateComparisonViewModel({
+        portfolioRisk: buildMandateComparisonFixture({
+          review_policy: {
+            review_frequency: "QUARTERLY",
+            last_review_date: "2025-12-31",
+            next_review_due_date: "2026-03-31",
+            state,
+          },
+        }),
+        concentrationRisk: null,
+      });
 
-    expect(model.sources[0].reviewPolicy).toMatchObject({
-      frequency: "Quarterly",
-      state,
-      stateLabel: label,
-      tone,
-      lastReviewDate: "31 Dec 2025",
-      nextReviewDueDate: "31 Mar 2026",
-    });
-  });
+      expect(model.sources[0].reviewPolicy).toMatchObject({
+        frequency: "Quarterly",
+        state,
+        stateLabel: label,
+        tone,
+        lastReviewDate: "31 Dec 2025",
+        nextReviewDueDate: "31 Mar 2026",
+      });
+    },
+  );
 
   it("preserves unavailable and mismatched source posture with lineage", () => {
     const model = buildRiskMandateComparisonViewModel({
@@ -165,7 +182,8 @@ describe("risk mandate comparison view model", () => {
         date_alignment_state: "mismatch",
         supportability: {
           state: "unavailable",
-          reason: "Mandate health is dated after the selected risk review date.",
+          reason:
+            "Mandate health is dated after the selected risk review date.",
           source_service: "lotus-manage",
         },
       }),
@@ -175,7 +193,8 @@ describe("risk mandate comparison view model", () => {
     expect(model.sources[0]).toMatchObject({
       supportabilityLabel: "Evidence unavailable",
       supportabilityTone: "danger",
-      supportabilityReason: "Mandate health is dated after the selected risk review date.",
+      supportabilityReason:
+        "Mandate health is dated after the selected risk review date.",
       dateAlignmentLabel: "Dates differ",
       dateAlignmentTone: "warn",
       lineage: [
@@ -202,5 +221,20 @@ describe("risk mandate comparison view model", () => {
     expect(model.sources).toHaveLength(2);
     expect(model.sources[0].mandateVersion).toBe("3");
     expect(model.sources[1].mandateVersion).toBe("4");
+  });
+
+  it("preserves a missing portfolio comparison beside supplied concentration evidence", () => {
+    const model = buildRiskMandateComparisonViewModel({
+      portfolioRisk: undefined,
+      concentrationRisk: buildMandateComparisonFixture(),
+    });
+
+    expect(model.availability).toBe("partially_supplied");
+    expect(
+      model.sources.map((source) => [source.key, source.availability]),
+    ).toEqual([
+      ["summary", "not_supplied"],
+      ["concentration", "supplied"],
+    ]);
   });
 });
