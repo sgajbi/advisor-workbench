@@ -10,7 +10,8 @@ import {
 
 import { formatLabel } from "./formatters";
 
-export type RiskMandateComparisonTone = "default" | "success" | "warn" | "danger";
+export type RiskMandateComparisonTone =
+  "default" | "success" | "warn" | "danger";
 
 export type RiskMandateConstraintViewModel = {
   key: string;
@@ -30,7 +31,8 @@ export type RiskMandateConstraintViewModel = {
 export type RiskMandateComparisonSourceViewModel = {
   key: "summary" | "concentration";
   label: string;
-  supportability: "ready" | "partial" | "unavailable";
+  availability: "supplied" | "not_supplied";
+  supportability: "ready" | "partial" | "unavailable" | "not_supplied";
   supportabilityLabel: string;
   supportabilityTone: RiskMandateComparisonTone;
   supportabilityReason: string | null;
@@ -63,7 +65,7 @@ export type RiskMandateComparisonSourceViewModel = {
 };
 
 export type RiskMandateComparisonViewModel = {
-  availability: "not_supplied" | "supplied";
+  availability: "not_supplied" | "partially_supplied" | "supplied";
   availabilityLabel: string;
   availabilityTone: RiskMandateComparisonTone;
   summary: string;
@@ -78,14 +80,10 @@ export function buildRiskMandateComparisonViewModel({
   portfolioRisk: WorkbenchMandateComparison | null | undefined;
   concentrationRisk: WorkbenchMandateComparison | null | undefined;
 }): RiskMandateComparisonViewModel {
-  const sources = [
-    portfolioRisk ? mapSource("summary", "Portfolio risk constraints", portfolioRisk) : null,
-    concentrationRisk
-      ? mapSource("concentration", "Concentration constraints", concentrationRisk)
-      : null,
-  ].filter((source): source is RiskMandateComparisonSourceViewModel => source !== null);
+  const suppliedSourceCount =
+    Number(Boolean(portfolioRisk)) + Number(Boolean(concentrationRisk));
 
-  if (sources.length === 0) {
+  if (suppliedSourceCount === 0) {
     return {
       availability: "not_supplied",
       availabilityLabel: "Not supplied",
@@ -97,12 +95,29 @@ export function buildRiskMandateComparisonViewModel({
     };
   }
 
+  const sources = [
+    portfolioRisk
+      ? mapSource("summary", "Portfolio risk constraints", portfolioRisk)
+      : mapMissingSource("summary", "Portfolio risk constraints"),
+    concentrationRisk
+      ? mapSource(
+          "concentration",
+          "Concentration constraints",
+          concentrationRisk,
+        )
+      : mapMissingSource("concentration", "Concentration constraints"),
+  ];
+  const partiallySupplied = suppliedSourceCount === 1;
+
   return {
-    availability: "supplied",
-    availabilityLabel: "Source evidence supplied",
-    availabilityTone: "default",
-    summary:
-      "Compare each measure with its approved mandate limit. States, limits, headroom, review timing, and dates are shown exactly as received.",
+    availability: partiallySupplied ? "partially_supplied" : "supplied",
+    availabilityLabel: partiallySupplied
+      ? "Partly supplied"
+      : "Source evidence supplied",
+    availabilityTone: partiallySupplied ? "warn" : "default",
+    summary: partiallySupplied
+      ? "Mandate comparison is available for only one Risk view. Review the missing source family before treating the evidence as complete."
+      : "Compare each measure with its approved mandate limit. States, limits, headroom, review timing, and dates are shown exactly as received.",
     contextNotice: contextsConflict(sources)
       ? "Gateway returned different mandate contexts across portfolio risk and concentration. Review the source evidence before use."
       : null,
@@ -118,6 +133,7 @@ function mapSource(
   return {
     key,
     label,
+    availability: "supplied",
     supportability: comparison.supportability.state,
     supportabilityLabel: supportabilityLabel(comparison.supportability.state),
     supportabilityTone: supportabilityTone(comparison.supportability.state),
@@ -133,24 +149,35 @@ function mapSource(
     mandateAsOf: formatBusinessDateValue(comparison.mandate_as_of_date, {
       nullDisplay: "Not reported",
     }),
-    mandateHealthAsOf: formatBusinessDateValue(comparison.mandate_health_as_of_date, {
-      nullDisplay: "Not reported",
-    }),
+    mandateHealthAsOf: formatBusinessDateValue(
+      comparison.mandate_health_as_of_date,
+      {
+        nullDisplay: "Not reported",
+      },
+    ),
     dateAlignment: comparison.date_alignment_state,
     dateAlignmentLabel: dateAlignmentLabel(comparison.date_alignment_state),
     dateAlignmentTone: dateAlignmentTone(comparison.date_alignment_state),
     constraints: comparison.constraints
       .map(mapConstraint)
-      .sort((left, right) => constraintPriority(left.state) - constraintPriority(right.state)),
+      .sort(
+        (left, right) =>
+          constraintPriority(left.state) - constraintPriority(right.state),
+      ),
     reviewPolicy: comparison.review_policy
       ? {
-          frequency: formatSourceCodeLabel(comparison.review_policy.review_frequency),
+          frequency: formatSourceCodeLabel(
+            comparison.review_policy.review_frequency,
+          ),
           state: comparison.review_policy.state,
           stateLabel: reviewPolicyLabel(comparison.review_policy.state),
           tone: reviewPolicyTone(comparison.review_policy.state),
-          lastReviewDate: formatBusinessDateValue(comparison.review_policy.last_review_date, {
-            nullDisplay: "Not reported",
-          }),
+          lastReviewDate: formatBusinessDateValue(
+            comparison.review_policy.last_review_date,
+            {
+              nullDisplay: "Not reported",
+            },
+          ),
           nextReviewDueDate: formatBusinessDateValue(
             comparison.review_policy.next_review_due_date,
             { nullDisplay: "Not reported" },
@@ -172,10 +199,39 @@ function mapSource(
   };
 }
 
+function mapMissingSource(
+  key: RiskMandateComparisonSourceViewModel["key"],
+  label: string,
+): RiskMandateComparisonSourceViewModel {
+  return {
+    key,
+    label,
+    availability: "not_supplied",
+    supportability: "not_supplied",
+    supportabilityLabel: "Not supplied",
+    supportabilityTone: "warn",
+    supportabilityReason: null,
+    mandateReference: "Not reported",
+    mandateVersion: "Not reported",
+    riskProfile: "Not reported",
+    comparisonAsOf: "Not reported",
+    mandateAsOf: "Not reported",
+    mandateHealthAsOf: "Not reported",
+    dateAlignment: "unavailable",
+    dateAlignmentLabel: "Date alignment unavailable",
+    dateAlignmentTone: "danger",
+    constraints: [],
+    reviewPolicy: null,
+    lineage: [],
+  };
+}
+
 function mapConstraint(
   constraint: WorkbenchMandateComparison["constraints"][number],
 ): RiskMandateConstraintViewModel {
-  const state = isConstraintState(constraint.state) ? constraint.state : "unavailable";
+  const state = isConstraintState(constraint.state)
+    ? constraint.state
+    : "unavailable";
   const measure = finite(constraint.measure?.value);
   const minimum = finite(constraint.limit?.minimum);
   const maximum = finite(constraint.limit?.maximum);
@@ -194,7 +250,8 @@ function mapConstraint(
     asOf: formatBusinessDateValue(constraint.measure?.as_of_date, {
       nullDisplay: "Not reported",
     }),
-    reason: nonBlank(constraint.reason) ?? "No source explanation was supplied.",
+    reason:
+      nonBlank(constraint.reason) ?? "No source explanation was supplied.",
     evidence: [
       { label: "Constraint key", value: constraint.key },
       {
@@ -244,7 +301,9 @@ function formatHeadroom(value: number | null): string {
   if (value === null) {
     return "Not reported";
   }
-  const magnitude = formatPercent(Math.abs(value) * 100, { minimumFractionDigits: 2 });
+  const magnitude = formatPercent(Math.abs(value) * 100, {
+    minimumFractionDigits: 2,
+  });
   return `${value > 0 ? "+" : value < 0 ? "−" : ""}${magnitude.replace("%", " pp")}`;
 }
 
@@ -258,8 +317,12 @@ function formatMeasureBasis(value: string | null | undefined): string {
   return formatSourceCodeLabel(value);
 }
 
-function isConstraintState(value: string): value is WorkbenchMandateConstraintState {
-  return ["within", "breach", "not_defined", "measure_unavailable"].includes(value);
+function isConstraintState(
+  value: string,
+): value is WorkbenchMandateConstraintState {
+  return ["within", "breach", "not_defined", "measure_unavailable"].includes(
+    value,
+  );
 }
 
 function constraintStateLabel(
@@ -291,7 +354,9 @@ function constraintStateTone(
   return "default";
 }
 
-function constraintPriority(state: RiskMandateConstraintViewModel["state"]): number {
+function constraintPriority(
+  state: RiskMandateConstraintViewModel["state"],
+): number {
   return {
     breach: 0,
     measure_unavailable: 1,
@@ -314,7 +379,11 @@ function supportabilityLabel(
 function supportabilityTone(
   state: RiskMandateComparisonSourceViewModel["supportability"],
 ): RiskMandateComparisonTone {
-  return state === "ready" ? "default" : state === "partial" ? "warn" : "danger";
+  return state === "ready"
+    ? "default"
+    : state === "partial"
+      ? "warn"
+      : "danger";
 }
 
 function dateAlignmentLabel(
@@ -330,11 +399,17 @@ function dateAlignmentLabel(
 function dateAlignmentTone(
   state: RiskMandateComparisonSourceViewModel["dateAlignment"],
 ): RiskMandateComparisonTone {
-  return state === "aligned" ? "default" : state === "mismatch" ? "warn" : "danger";
+  return state === "aligned"
+    ? "default"
+    : state === "mismatch"
+      ? "warn"
+      : "danger";
 }
 
 function reviewPolicyLabel(
-  state: NonNullable<RiskMandateComparisonSourceViewModel["reviewPolicy"]>["state"],
+  state: NonNullable<
+    RiskMandateComparisonSourceViewModel["reviewPolicy"]
+  >["state"],
 ): string {
   return {
     due: "Review due",
@@ -345,16 +420,27 @@ function reviewPolicyLabel(
 }
 
 function reviewPolicyTone(
-  state: NonNullable<RiskMandateComparisonSourceViewModel["reviewPolicy"]>["state"],
+  state: NonNullable<
+    RiskMandateComparisonSourceViewModel["reviewPolicy"]
+  >["state"],
 ): RiskMandateComparisonTone {
-  return state === "overdue" ? "danger" : state === "due" || state === "not_defined" ? "warn" : "default";
+  return state === "overdue"
+    ? "danger"
+    : state === "due" || state === "not_defined"
+      ? "warn"
+      : "default";
 }
 
-function contextsConflict(sources: RiskMandateComparisonSourceViewModel[]): boolean {
-  if (sources.length < 2) {
+function contextsConflict(
+  sources: RiskMandateComparisonSourceViewModel[],
+): boolean {
+  const suppliedSources = sources.filter(
+    (source) => source.availability === "supplied",
+  );
+  if (suppliedSources.length < 2) {
     return false;
   }
-  const [first, ...rest] = sources;
+  const [first, ...rest] = suppliedSources;
   return rest.some(
     (source) =>
       source.mandateReference !== first.mandateReference ||

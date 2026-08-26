@@ -61,6 +61,7 @@ function MandateComparisonSource({
     <section
       className={styles.source}
       aria-labelledby={`mandate-comparison-${source.key}`}
+      data-mandate-source-availability={source.availability}
       data-mandate-supportability={source.supportability}
       data-date-alignment={source.dateAlignment}
     >
@@ -89,37 +90,51 @@ function MandateComparisonSource({
         </div>
       </div>
 
-      <div className={styles.contextStrip}>
-        <ContextFact label="Mandate" value={source.mandateReference} />
-        <ContextFact label="Version" value={source.mandateVersion} />
-        <ContextFact label="Risk profile" value={source.riskProfile} />
-        <ContextFact label="Comparison date" value={source.comparisonAsOf} />
-        {source.reviewPolicy ? (
-          <div className={styles.reviewPolicy}>
-            <span className={styles.factLabel}>Review policy</span>
-            <span className={styles.reviewPolicyValue}>
-              <SemanticBadge tone={source.reviewPolicy.tone}>
-                {source.reviewPolicy.stateLabel}
-              </SemanticBadge>
-              <span>
-                {source.reviewPolicy.frequency} · next {source.reviewPolicy.nextReviewDueDate}
-              </span>
-            </span>
-          </div>
-        ) : (
-          <ContextFact label="Review policy" value="Not supplied" />
-        )}
-      </div>
-
-      {source.constraints.length ? (
-        <ConstraintTable source={source} />
-      ) : (
+      {source.availability === "not_supplied" ? (
         <p className={styles.empty} role="status">
-          No source constraint comparisons were supplied for this view.
+          Mandate comparison was not supplied for this view. Confirm the
+          approved mandate before deciding whether a limit applies. No breach or
+          within-mandate conclusion is shown.
         </p>
-      )}
+      ) : (
+        <>
+          <div className={styles.contextStrip}>
+            <ContextFact label="Mandate" value={source.mandateReference} />
+            <ContextFact label="Version" value={source.mandateVersion} />
+            <ContextFact label="Risk profile" value={source.riskProfile} />
+            <ContextFact
+              label="Comparison date"
+              value={source.comparisonAsOf}
+            />
+            {source.reviewPolicy ? (
+              <div className={styles.reviewPolicy}>
+                <span className={styles.factLabel}>Review policy</span>
+                <span className={styles.reviewPolicyValue}>
+                  <SemanticBadge tone={source.reviewPolicy.tone}>
+                    {source.reviewPolicy.stateLabel}
+                  </SemanticBadge>
+                  <span>
+                    {source.reviewPolicy.frequency} · next{" "}
+                    {source.reviewPolicy.nextReviewDueDate}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <ContextFact label="Review policy" value="Not supplied" />
+            )}
+          </div>
 
-      <SourceEvidence source={source} />
+          {source.constraints.length ? (
+            <ConstraintTable source={source} />
+          ) : (
+            <p className={styles.empty} role="status">
+              No source constraint comparisons were supplied for this view.
+            </p>
+          )}
+
+          <SourceEvidence source={source} />
+        </>
+      )}
     </section>
   );
 }
@@ -133,7 +148,11 @@ function ContextFact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConstraintTable({ source }: { source: RiskMandateComparisonSourceViewModel }) {
+function ConstraintTable({
+  source,
+}: {
+  source: RiskMandateComparisonSourceViewModel;
+}) {
   return (
     <div
       className={styles.table}
@@ -158,7 +177,11 @@ function ConstraintTable({ source }: { source: RiskMandateComparisonSourceViewMo
       </div>
       <div role="rowgroup">
         {source.constraints.map((constraint, index) => (
-          <ConstraintRow key={constraint.key} constraint={constraint} rowIndex={index + 2} />
+          <ConstraintRow
+            key={constraint.key}
+            constraint={constraint}
+            rowIndex={index + 2}
+          />
         ))}
       </div>
     </div>
@@ -186,7 +209,9 @@ function ConstraintRow({
       </div>
       <div className={styles.cell} role="cell">
         <span className={styles.mobileLabel}>Source state</span>
-        <SemanticBadge tone={constraint.tone}>{constraint.stateLabel}</SemanticBadge>
+        <SemanticBadge tone={constraint.tone}>
+          {constraint.stateLabel}
+        </SemanticBadge>
       </div>
       <DataCell label="Measure" value={constraint.measure} />
       <DataCell label="Mandate limit" value={constraint.limit} />
@@ -209,7 +234,11 @@ function DataCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewModel }) {
+function SourceEvidence({
+  source,
+}: {
+  source: RiskMandateComparisonSourceViewModel;
+}) {
   return (
     <SupportDetails
       className={styles.supportDetails}
@@ -218,7 +247,10 @@ function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewMod
     >
       <dl className={styles.evidenceGrid}>
         <EvidenceFact label="Mandate date" value={source.mandateAsOf} />
-        <EvidenceFact label="Mandate health date" value={source.mandateHealthAsOf} />
+        <EvidenceFact
+          label="Mandate health date"
+          value={source.mandateHealthAsOf}
+        />
         <EvidenceFact
           label="Last mandate review"
           value={source.reviewPolicy?.lastReviewDate ?? "Not supplied"}
@@ -236,7 +268,11 @@ function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewMod
           </Text>
           <dl className={styles.evidenceGrid}>
             {constraint.evidence.map((item) => (
-              <EvidenceFact key={item.label} term={item.label} value={item.value} />
+              <EvidenceFact
+                key={item.label}
+                term={item.label}
+                value={item.value}
+              />
             ))}
           </dl>
         </section>
@@ -250,10 +286,19 @@ function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewMod
           {source.lineage.map((lineage) => (
             <dl key={lineage.key} className={styles.evidenceGrid}>
               <EvidenceFact label="Product" value={lineage.product} />
-              <EvidenceFact label="Source system" value={lineage.sourceSystem} />
-              <EvidenceFact label="Source record" value={lineage.sourceRecord} />
+              <EvidenceFact
+                label="Source system"
+                value={lineage.sourceSystem}
+              />
+              <EvidenceFact
+                label="Source record"
+                value={lineage.sourceRecord}
+              />
               <EvidenceFact label="Data quality" value={lineage.dataQuality} />
-              <EvidenceFact label="Latest evidence" value={lineage.latestEvidence} />
+              <EvidenceFact
+                label="Latest evidence"
+                value={lineage.latestEvidence}
+              />
             </dl>
           ))}
         </section>

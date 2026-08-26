@@ -17,7 +17,10 @@ describe("RiskMandateComparison", () => {
     );
 
     const surface = screen.getByRole("region", { name: "Mandate comparison" });
-    expect(surface).toHaveAttribute("data-mandate-availability", "not_supplied");
+    expect(surface).toHaveAttribute(
+      "data-mandate-availability",
+      "not_supplied",
+    );
     expect(surface).toHaveTextContent("Not supplied");
     expect(surface).toHaveTextContent("no breach or all-clear is shown");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
@@ -94,7 +97,8 @@ describe("RiskMandateComparison", () => {
                 },
                 headroom: -0.0107,
                 state: "breach",
-                reason: "Largest issuer exposure exceeds the approved mandate limit.",
+                reason:
+                  "Largest issuer exposure exceeds the approved mandate limit.",
               },
               {
                 key: "single_position_max_weight",
@@ -107,7 +111,8 @@ describe("RiskMandateComparison", () => {
                 measure: null,
                 headroom: null,
                 state: "measure_unavailable",
-                reason: "The position measure is not available for the selected date.",
+                reason:
+                  "The position measure is not available for the selected date.",
               },
             ],
           }),
@@ -167,12 +172,58 @@ describe("RiskMandateComparison", () => {
       />,
     );
 
-    const source = screen.getByRole("region", { name: "Portfolio risk constraints" });
-    expect(source).toHaveAttribute("data-mandate-supportability", "unavailable");
+    const source = screen.getByRole("region", {
+      name: "Portfolio risk constraints",
+    });
+    expect(source).toHaveAttribute(
+      "data-mandate-supportability",
+      "unavailable",
+    );
     expect(source).toHaveAttribute("data-date-alignment", "unavailable");
     expect(source).toHaveTextContent("Evidence unavailable");
     expect(source).toHaveTextContent("Date alignment unavailable");
-    expect(source).toHaveTextContent("Mandate evidence is not available for this portfolio.");
-    expect(source).toHaveTextContent("No source constraint comparisons were supplied");
+    expect(source).toHaveTextContent(
+      "Mandate evidence is not available for this portfolio.",
+    );
+    expect(source).toHaveTextContent(
+      "No source constraint comparisons were supplied",
+    );
+  });
+
+  it("renders a missing constraint family beside supplied mandate evidence", () => {
+    render(
+      <RiskMandateComparison
+        comparison={buildRiskMandateComparisonViewModel({
+          portfolioRisk: buildMandateComparisonFixture(),
+          concentrationRisk: null,
+        })}
+      />,
+    );
+
+    const surface = screen.getByTestId("risk-mandate-comparison");
+    expect(surface).toHaveAttribute(
+      "data-mandate-availability",
+      "partially_supplied",
+    );
+    expect(surface).toHaveTextContent("Partly supplied");
+
+    const missingSource = screen.getByRole("region", {
+      name: "Concentration constraints",
+    });
+    expect(missingSource).toHaveAttribute(
+      "data-mandate-source-availability",
+      "not_supplied",
+    );
+    expect(missingSource).toHaveAttribute(
+      "data-mandate-supportability",
+      "not_supplied",
+    );
+    expect(missingSource).toHaveTextContent(
+      "Mandate comparison was not supplied for this view",
+    );
+    expect(within(missingSource).queryByRole("table")).not.toBeInTheDocument();
+    expect(
+      within(missingSource).queryByText("Source evidence and lineage"),
+    ).not.toBeInTheDocument();
   });
 });

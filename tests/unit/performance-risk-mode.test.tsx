@@ -27,6 +27,7 @@ import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildSupportedPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
+import { buildSummaryMandateComparisonFixture } from "../fixtures/risk-mandate-comparison-fixtures";
 
 vi.mock("../../src/features/workbench/api", () => ({
   getWorkbenchRiskSummaryClient: vi.fn(),
@@ -99,10 +100,14 @@ describe("PerformanceRiskMode", () => {
     const { container } = renderRiskMode(scenario);
 
     expect(
-      document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
+      document.querySelectorAll(
+        "[data-performance-analysis-control-bar='true']",
+      ),
     ).toHaveLength(1);
     expect(
-      screen.getByRole("group", { name: "Risk analysis source selection controls" }),
+      screen.getByRole("group", {
+        name: "Risk analysis source selection controls",
+      }),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Frequency")).not.toBeInTheDocument();
     expect(
@@ -133,7 +138,9 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Mandate comparison")).toHaveTextContent(
       "Mandate comparison is not available for this Risk review",
     );
-    expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk concentration scale"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByLabelText("Risk executive overview"),
     ).not.toHaveTextContent("What matters now");
@@ -238,6 +245,44 @@ describe("PerformanceRiskMode", () => {
       reportingCurrency: "USD",
       includeTimeSeries: false,
     });
+  });
+
+  it("keeps a missing concentration mandate family visible beside supplied portfolio evidence", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue({
+      ...buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      mandate_comparison: buildSummaryMandateComparisonFixture(),
+    });
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    );
+
+    renderRiskMode(scenario);
+
+    const comparison = await screen.findByTestId("risk-mandate-comparison");
+    expect(comparison).toHaveAttribute(
+      "data-mandate-availability",
+      "partially_supplied",
+    );
+    const missingSource = within(comparison).getByRole("region", {
+      name: "Concentration constraints",
+    });
+    expect(missingSource).toHaveAttribute(
+      "data-mandate-source-availability",
+      "not_supplied",
+    );
+    expect(missingSource).toHaveTextContent(
+      "No breach or within-mandate conclusion is shown",
+    );
   });
 
   it("uses the report end date as the risk as-of date for canonical historical analytics", async () => {
@@ -506,7 +551,9 @@ describe("PerformanceRiskMode", () => {
       "title",
       "Herfindahl-Hirschman Index for the current portfolio. Higher values indicate exposure concentrated in fewer holdings.",
     );
-    expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk concentration scale"),
+    ).not.toBeInTheDocument();
     expect(concentrationMetricStrip).toHaveTextContent("1,260");
     expect(concentrationMetricStrip).toHaveTextContent("18.40%");
     expect(concentrationMetricStrip).not.toHaveTextContent(
@@ -815,7 +862,9 @@ describe("PerformanceRiskMode", () => {
             scenario.workspace,
             params.period ?? "YTD",
             params.detailBasis ?? "NET",
-            { includeUnderwaterSeries: Boolean(params.includeUnderwaterSeries) },
+            {
+              includeUnderwaterSeries: Boolean(params.includeUnderwaterSeries),
+            },
           ),
         ),
     );
@@ -940,7 +989,7 @@ describe("PerformanceRiskMode", () => {
     await waitFor(() => {
       expect(screen.getByRole("radio", { name: "Issuer" })).toHaveAttribute(
         "aria-disabled",
-        "true"
+        "true",
       );
     });
   });
