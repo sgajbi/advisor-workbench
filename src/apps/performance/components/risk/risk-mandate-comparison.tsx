@@ -79,7 +79,7 @@ function MandateComparisonSource({
             </Text>
           ) : null}
         </div>
-        <div className={styles.badges} aria-label={`${source.label} evidence posture`}>
+        <div className={styles.badges} aria-label="Mandate evidence status">
           <SemanticBadge tone={source.supportabilityTone}>
             {source.supportabilityLabel}
           </SemanticBadge>
@@ -89,7 +89,7 @@ function MandateComparisonSource({
         </div>
       </div>
 
-      <div className={styles.contextStrip} aria-label={`${source.label} context`}>
+      <div className={styles.contextStrip}>
         <ContextFact label="Mandate" value={source.mandateReference} />
         <ContextFact label="Version" value={source.mandateVersion} />
         <ContextFact label="Risk profile" value={source.riskProfile} />
@@ -138,7 +138,7 @@ function ConstraintTable({ source }: { source: RiskMandateComparisonSourceViewMo
     <div
       className={styles.table}
       role="table"
-      aria-label={`${source.label} comparison`}
+      aria-labelledby={`mandate-comparison-${source.key}`}
       aria-rowcount={source.constraints.length + 1}
       aria-colcount={6}
     >
@@ -181,7 +181,7 @@ function ConstraintRow({
     >
       <div className={styles.constraintCell} role="cell">
         <span className={styles.mobileLabel}>Constraint</span>
-        <strong>{constraint.label}</strong>
+        <strong>{constraint.name}</strong>
         <span className={styles.reason}>{constraint.reason}</span>
       </div>
       <div className={styles.cell} role="cell">
@@ -232,11 +232,11 @@ function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewMod
       {source.constraints.map((constraint) => (
         <section key={constraint.key} className={styles.evidenceSection}>
           <Text variant="subsectionTitle" as="h4">
-            {constraint.label}
+            {constraint.name}
           </Text>
           <dl className={styles.evidenceGrid}>
             {constraint.evidence.map((item) => (
-              <EvidenceFact key={item.label} label={item.label} value={item.value} />
+              <EvidenceFact key={item.label} term={item.label} value={item.value} />
             ))}
           </dl>
         </section>
@@ -264,10 +264,18 @@ function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewMod
   );
 }
 
-function EvidenceFact({ label, value }: { label: string; value: string }) {
+function EvidenceFact({
+  label,
+  term,
+  value,
+}: {
+  label?: string;
+  term?: string;
+  value: string;
+}) {
   return (
     <div className={styles.evidenceFact}>
-      <dt>{label}</dt>
+      <dt>{term ?? label}</dt>
       <dd>{value}</dd>
     </div>
   );

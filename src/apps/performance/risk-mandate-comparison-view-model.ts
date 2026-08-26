@@ -14,7 +14,7 @@ export type RiskMandateComparisonTone = "default" | "success" | "warn" | "danger
 
 export type RiskMandateConstraintViewModel = {
   key: string;
-  label: string;
+  name: string;
   state: WorkbenchMandateConstraintState | "unavailable";
   stateLabel: string;
   tone: RiskMandateComparisonTone;
@@ -72,16 +72,16 @@ export type RiskMandateComparisonViewModel = {
 };
 
 export function buildRiskMandateComparisonViewModel({
-  summary,
-  concentration,
+  portfolioRisk,
+  concentrationRisk,
 }: {
-  summary: WorkbenchMandateComparison | null | undefined;
-  concentration: WorkbenchMandateComparison | null | undefined;
+  portfolioRisk: WorkbenchMandateComparison | null | undefined;
+  concentrationRisk: WorkbenchMandateComparison | null | undefined;
 }): RiskMandateComparisonViewModel {
   const sources = [
-    summary ? mapSource("summary", "Portfolio risk constraints", summary) : null,
-    concentration
-      ? mapSource("concentration", "Concentration constraints", concentration)
+    portfolioRisk ? mapSource("summary", "Portfolio risk constraints", portfolioRisk) : null,
+    concentrationRisk
+      ? mapSource("concentration", "Concentration constraints", concentrationRisk)
       : null,
   ].filter((source): source is RiskMandateComparisonSourceViewModel => source !== null);
 
@@ -91,7 +91,7 @@ export function buildRiskMandateComparisonViewModel({
       availabilityLabel: "Not supplied",
       availabilityTone: "default",
       summary:
-        "Gateway did not supply mandate comparison evidence for this Risk review. Workbench has not inferred a limit, breach, or all-clear.",
+        "Mandate comparison is not available for this Risk review. Confirm the approved mandate before deciding whether a limit applies; no breach or all-clear is shown.",
       contextNotice: null,
       sources: [],
     };
@@ -102,7 +102,7 @@ export function buildRiskMandateComparisonViewModel({
     availabilityLabel: "Source evidence supplied",
     availabilityTone: "default",
     summary:
-      "Compare each source measure with its approved mandate limit. States, limits, headroom, review timing, and dates are shown as supplied by Gateway.",
+      "Compare each measure with its approved mandate limit. States, limits, headroom, review timing, and dates are shown exactly as received.",
     contextNotice: contextsConflict(sources)
       ? "Gateway returned different mandate contexts across portfolio risk and concentration. Review the source evidence before use."
       : null,
@@ -183,7 +183,7 @@ function mapConstraint(
 
   return {
     key: constraint.key,
-    label: nonBlank(constraint.label) ?? "Mandate constraint",
+    name: nonBlank(constraint.label) ?? "Mandate constraint",
     state,
     stateLabel: constraintStateLabel(state),
     tone: constraintStateTone(state),

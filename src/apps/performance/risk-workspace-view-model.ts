@@ -309,8 +309,8 @@ export function buildPerformanceRiskViewModel({
       supportability,
     }),
     mandateComparison: buildRiskMandateComparisonViewModel({
-      summary: summary.mandate_comparison,
-      concentration: concentration.mandate_comparison,
+      portfolioRisk: summary.mandate_comparison,
+      concentrationRisk: concentration.mandate_comparison,
     }),
     snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
     snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
@@ -1255,8 +1255,8 @@ function buildStateViewModel(
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     workspaceOverview: [],
     mandateComparison: buildRiskMandateComparisonViewModel({
-      summary: null,
-      concentration: null,
+      portfolioRisk: null,
+      concentrationRisk: null,
     }),
     snapshotHeadlineMetrics: [],
     snapshotSupportingMetrics: [],
