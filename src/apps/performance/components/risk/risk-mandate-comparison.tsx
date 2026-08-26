@@ -1,0 +1,274 @@
+import { SemanticBadge, SupportDetails, Text } from "@/design-system";
+
+import type {
+  RiskMandateComparisonSourceViewModel,
+  RiskMandateComparisonViewModel,
+  RiskMandateConstraintViewModel,
+} from "../../risk-mandate-comparison-view-model";
+
+import styles from "./risk-mandate-comparison.module.css";
+
+export default function RiskMandateComparison({
+  comparison,
+}: {
+  comparison: RiskMandateComparisonViewModel;
+}) {
+  return (
+    <section
+      className={styles.surface}
+      aria-label="Mandate comparison"
+      data-testid="risk-mandate-comparison"
+      data-mandate-availability={comparison.availability}
+    >
+      <header className={styles.header}>
+        <div className={styles.heading}>
+          <Text variant="eyebrow">Mandate control</Text>
+          <Text variant="sectionTitle" as="h2">
+            Mandate comparison
+          </Text>
+          <Text variant="bodySmall" className={styles.summary}>
+            {comparison.summary}
+          </Text>
+        </div>
+        <SemanticBadge tone={comparison.availabilityTone}>
+          {comparison.availabilityLabel}
+        </SemanticBadge>
+      </header>
+
+      {comparison.contextNotice ? (
+        <p className={styles.contextNotice} role="status">
+          {comparison.contextNotice}
+        </p>
+      ) : null}
+
+      {comparison.sources.length ? (
+        <div className={styles.sourceList}>
+          {comparison.sources.map((source) => (
+            <MandateComparisonSource key={source.key} source={source} />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function MandateComparisonSource({
+  source,
+}: {
+  source: RiskMandateComparisonSourceViewModel;
+}) {
+  return (
+    <section
+      className={styles.source}
+      aria-labelledby={`mandate-comparison-${source.key}`}
+      data-mandate-supportability={source.supportability}
+      data-date-alignment={source.dateAlignment}
+    >
+      <div className={styles.sourceHeader}>
+        <div>
+          <Text
+            variant="panelTitle"
+            as="h3"
+            id={`mandate-comparison-${source.key}`}
+          >
+            {source.label}
+          </Text>
+          {source.supportabilityReason ? (
+            <Text variant="bodySmall" className={styles.sourceReason}>
+              {source.supportabilityReason}
+            </Text>
+          ) : null}
+        </div>
+        <div className={styles.badges} aria-label={`${source.label} evidence posture`}>
+          <SemanticBadge tone={source.supportabilityTone}>
+            {source.supportabilityLabel}
+          </SemanticBadge>
+          <SemanticBadge tone={source.dateAlignmentTone}>
+            {source.dateAlignmentLabel}
+          </SemanticBadge>
+        </div>
+      </div>
+
+      <div className={styles.contextStrip} aria-label={`${source.label} context`}>
+        <ContextFact label="Mandate" value={source.mandateReference} />
+        <ContextFact label="Version" value={source.mandateVersion} />
+        <ContextFact label="Risk profile" value={source.riskProfile} />
+        <ContextFact label="Comparison date" value={source.comparisonAsOf} />
+        {source.reviewPolicy ? (
+          <div className={styles.reviewPolicy}>
+            <span className={styles.factLabel}>Review policy</span>
+            <span className={styles.reviewPolicyValue}>
+              <SemanticBadge tone={source.reviewPolicy.tone}>
+                {source.reviewPolicy.stateLabel}
+              </SemanticBadge>
+              <span>
+                {source.reviewPolicy.frequency} · next {source.reviewPolicy.nextReviewDueDate}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <ContextFact label="Review policy" value="Not supplied" />
+        )}
+      </div>
+
+      {source.constraints.length ? (
+        <ConstraintTable source={source} />
+      ) : (
+        <p className={styles.empty} role="status">
+          No source constraint comparisons were supplied for this view.
+        </p>
+      )}
+
+      <SourceEvidence source={source} />
+    </section>
+  );
+}
+
+function ContextFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.contextFact}>
+      <span className={styles.factLabel}>{label}</span>
+      <span className={styles.factValue}>{value}</span>
+    </div>
+  );
+}
+
+function ConstraintTable({ source }: { source: RiskMandateComparisonSourceViewModel }) {
+  return (
+    <div
+      className={styles.table}
+      role="table"
+      aria-label={`${source.label} comparison`}
+      aria-rowcount={source.constraints.length + 1}
+      aria-colcount={6}
+    >
+      <div className={styles.tableHeader} role="row">
+        {[
+          "Constraint",
+          "Source state",
+          "Measure",
+          "Mandate limit",
+          "Source headroom",
+          "Basis and date",
+        ].map((label) => (
+          <span key={label} role="columnheader">
+            {label}
+          </span>
+        ))}
+      </div>
+      <div role="rowgroup">
+        {source.constraints.map((constraint, index) => (
+          <ConstraintRow key={constraint.key} constraint={constraint} rowIndex={index + 2} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConstraintRow({
+  constraint,
+  rowIndex,
+}: {
+  constraint: RiskMandateConstraintViewModel;
+  rowIndex: number;
+}) {
+  return (
+    <div
+      className={styles.tableRow}
+      role="row"
+      aria-rowindex={rowIndex}
+      data-mandate-state={constraint.state}
+    >
+      <div className={styles.constraintCell} role="cell">
+        <span className={styles.mobileLabel}>Constraint</span>
+        <strong>{constraint.label}</strong>
+        <span className={styles.reason}>{constraint.reason}</span>
+      </div>
+      <div className={styles.cell} role="cell">
+        <span className={styles.mobileLabel}>Source state</span>
+        <SemanticBadge tone={constraint.tone}>{constraint.stateLabel}</SemanticBadge>
+      </div>
+      <DataCell label="Measure" value={constraint.measure} />
+      <DataCell label="Mandate limit" value={constraint.limit} />
+      <DataCell label="Source headroom" value={constraint.headroom} />
+      <div className={styles.cell} role="cell">
+        <span className={styles.mobileLabel}>Basis and date</span>
+        <span>{constraint.basis}</span>
+        <span className={styles.secondary}>{constraint.asOf}</span>
+      </div>
+    </div>
+  );
+}
+
+function DataCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={`${styles.cell} ${styles.numeric}`} role="cell">
+      <span className={styles.mobileLabel}>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function SourceEvidence({ source }: { source: RiskMandateComparisonSourceViewModel }) {
+  return (
+    <SupportDetails
+      className={styles.supportDetails}
+      summary="Source evidence and lineage"
+      context={`${source.lineage.length} lineage ${source.lineage.length === 1 ? "record" : "records"}`}
+    >
+      <dl className={styles.evidenceGrid}>
+        <EvidenceFact label="Mandate date" value={source.mandateAsOf} />
+        <EvidenceFact label="Mandate health date" value={source.mandateHealthAsOf} />
+        <EvidenceFact
+          label="Last mandate review"
+          value={source.reviewPolicy?.lastReviewDate ?? "Not supplied"}
+        />
+        <EvidenceFact
+          label="Next mandate review"
+          value={source.reviewPolicy?.nextReviewDueDate ?? "Not supplied"}
+        />
+      </dl>
+
+      {source.constraints.map((constraint) => (
+        <section key={constraint.key} className={styles.evidenceSection}>
+          <Text variant="subsectionTitle" as="h4">
+            {constraint.label}
+          </Text>
+          <dl className={styles.evidenceGrid}>
+            {constraint.evidence.map((item) => (
+              <EvidenceFact key={item.label} label={item.label} value={item.value} />
+            ))}
+          </dl>
+        </section>
+      ))}
+
+      {source.lineage.length ? (
+        <section className={styles.evidenceSection}>
+          <Text variant="subsectionTitle" as="h4">
+            Lineage
+          </Text>
+          {source.lineage.map((lineage) => (
+            <dl key={lineage.key} className={styles.evidenceGrid}>
+              <EvidenceFact label="Product" value={lineage.product} />
+              <EvidenceFact label="Source system" value={lineage.sourceSystem} />
+              <EvidenceFact label="Source record" value={lineage.sourceRecord} />
+              <EvidenceFact label="Data quality" value={lineage.dataQuality} />
+              <EvidenceFact label="Latest evidence" value={lineage.latestEvidence} />
+            </dl>
+          ))}
+        </section>
+      ) : (
+        <p className={styles.empty}>No source lineage records were supplied.</p>
+      )}
+    </SupportDetails>
+  );
+}
+
+function EvidenceFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.evidenceFact}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
