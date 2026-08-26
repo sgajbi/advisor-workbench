@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import {
   mkdtempSync,
   mkdirSync,
@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { promisify } from "node:util";
 
 import { describe, expect, it } from "vitest";
 
@@ -17,12 +18,19 @@ import {
   scanProductCopySource,
 } from "../../scripts/quality/check-product-copy-governance.mjs";
 
-// The exact repository scan parses every productive TypeScript source file. Keep
-// a finite allowance for instrumented whole-suite worker contention without
-// relaxing the measured inventory, scanner semantics, or zero-headroom ratchet.
-// Standalone scanner execution remains a separate required lint gate.
+// The exact repository scan parses every productive TypeScript source file. Run
+// it asynchronously outside the Vitest worker so the CPU-bound census cannot
+// starve Vitest's control channel under whole-suite coverage. The child and test
+// retain finite ceilings without relaxing inventory or zero-headroom semantics.
 const REPOSITORY_SCAN_TIMEOUT_MS = 180_000;
 const STATIC_CLI_TEST_TIMEOUT_MS = 15_000;
+const execFileAsync = promisify(execFile);
+const productCopyChecker = join(
+  process.cwd(),
+  "scripts",
+  "quality",
+  "check-product-copy-governance.mjs",
+);
 
 function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
@@ -104,12 +112,7 @@ function runCliWithBaseline(
     return spawnSync(
       process.execPath,
       [
-        join(
-          process.cwd(),
-          "scripts",
-          "quality",
-          "check-product-copy-governance.mjs",
-        ),
+        productCopyChecker,
         `--max=${baseline}`,
         `--max-unresolved=${unresolvedBaseline}`,
         `--unresolved-digest=${unresolvedDigest}`,
@@ -4362,11 +4365,27 @@ describe("product-copy governance", () => {
 
   it(
     "keeps the checked-in productive-copy and unresolved inventories exact",
-    () => {
-      const evaluation = evaluateProductCopyRepository();
-      expect(evaluation.findings).toHaveLength(266);
-      expect(evaluation.unresolvedExpressions).toHaveLength(1721);
-      expect(productCopyUnresolvedDigest(evaluation.unresolvedExpressions)).toBe(
+    async () => {
+      const { stdout, stderr } = await execFileAsync(
+        process.execPath,
+        [
+          productCopyChecker,
+          "--max=266",
+          "--max-unresolved=1721",
+          "--unresolved-digest=b39d96026fd1d47d1b77f0d920584ba57a780b90c4b96d8fb7294dab1a9335c7",
+        ],
+        {
+          cwd: process.cwd(),
+          encoding: "utf8",
+          timeout: REPOSITORY_SCAN_TIMEOUT_MS - 5_000,
+        },
+      );
+
+      expect(stderr).toBe("");
+      expect(stdout).toContain(
+        "measured inventory matches the checked-in baselines at 266 finding(s) and 1721 unresolved expression(s)",
+      );
+      expect(stdout).toContain(
         "b39d96026fd1d47d1b77f0d920584ba57a780b90c4b96d8fb7294dab1a9335c7",
       );
     },
