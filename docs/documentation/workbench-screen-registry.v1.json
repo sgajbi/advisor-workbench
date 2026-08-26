@@ -554,12 +554,21 @@
       "surfaceClassification": "active-mode",
       "navigationPosture": "runtime-capability-gated",
       "wikiSlug": "Risk-Review-Screen-Guide",
-      "sourceOwners": ["lotus-gateway", "lotus-performance", "lotus-risk"],
+      "sourceOwners": [
+        "lotus-gateway",
+        "lotus-core",
+        "lotus-performance",
+        "lotus-risk",
+        "lotus-manage"
+      ],
       "implementationEvidence": [
         "src/apps/performance/performance-workspace-modes.ts",
         "src/apps/performance/components/performance-risk-mode.tsx",
         "src/apps/performance/risk-workspace-view-model.ts",
-        "src/apps/performance/components/risk/risk-policy-boundary.tsx"
+        "src/apps/performance/risk-mandate-comparison-view-model.ts",
+        "src/apps/performance/components/risk/risk-mandate-comparison.tsx",
+        "tests/unit/risk-mandate-comparison.test.tsx",
+        "tests/e2e/performance-workbench.smoke.spec.ts"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",

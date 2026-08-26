@@ -73,7 +73,7 @@ single Performance Advisor Brief surface and guide.
 | [Performance Summary](Performance-Summary-Screen-Guide)             | `/performance?mode=summary`  | Active        | Guide available | Gateway, Core, and Performance                   |
 | [Performance Analysis](Performance-Analysis-Screen-Guide)           | `/performance?mode=analysis` | Runtime-gated | Guide available | Gateway and Performance                          |
 | [Performance Advisor Brief](Performance-Advisor-Brief-Screen-Guide) | `/performance?mode=advisor`  | Active        | Guide available | Gateway, Core, Performance, Advise, and Lotus AI |
-| [Risk Review](Risk-Review-Screen-Guide)                             | `/performance?mode=risk`     | Runtime-gated | Guide available | Gateway, Performance, and Risk                   |
+| [Risk Review](Risk-Review-Screen-Guide)                             | `/performance?mode=risk`     | Runtime-gated | Guide available | Gateway, Core, Performance, Risk, and Manage     |
 | [Performance Evidence](Performance-Evidence-Screen-Guide)           | `/performance?mode=evidence` | Runtime-gated | Guide available | Gateway and Performance                          |
 
 Performance Summary and Performance Analysis share one source-selection surface for horizon,
@@ -82,9 +82,10 @@ Summary, while attribution and contribution segment controls remain local to Ana
 Evidence reviews the current source-confirmed context; it does not own a second selection or
 approval workflow.
 
-Risk Review separates exact source measures from mandate and house-policy judgement. It preserves
-benchmark, as-of-date, supportability, partial, unavailable, and access-restricted posture without
-inventing a breach, all-clear, or universal severity band in the browser.
+Risk Review compares exact source measures with Gateway-owned mandate evidence while keeping
+suitability and house-policy judgement outside the browser. It preserves benchmark, as-of-date,
+supportability, partial, unavailable, undefined-limit, measure-unavailable, and access-restricted
+posture without inventing a limit, headroom, breach, all-clear, or universal severity band.
 
 ## Portfolio Management
 

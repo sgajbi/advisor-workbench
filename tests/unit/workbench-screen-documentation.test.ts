@@ -1011,11 +1011,20 @@ describe("Workbench screen documentation governance", () => {
       routePattern: "/performance",
       mode: "risk",
       wikiSlug: "Risk-Review-Screen-Guide",
-      sourceOwners: ["lotus-gateway", "lotus-performance", "lotus-risk"],
+      sourceOwners: [
+        "lotus-gateway",
+        "lotus-core",
+        "lotus-performance",
+        "lotus-risk",
+        "lotus-manage",
+      ],
       implementationEvidence: expect.arrayContaining([
         "src/apps/performance/components/performance-risk-mode.tsx",
         "src/apps/performance/risk-workspace-view-model.ts",
-        "src/apps/performance/components/risk/risk-policy-boundary.tsx",
+        "src/apps/performance/risk-mandate-comparison-view-model.ts",
+        "src/apps/performance/components/risk/risk-mandate-comparison.tsx",
+        "tests/unit/risk-mandate-comparison.test.tsx",
+        "tests/e2e/performance-workbench.smoke.spec.ts",
       ]),
       runtimeEvidence: ["scripts/live/validation/browser-workflows.mjs"],
       coverageException: null,
@@ -1026,10 +1035,9 @@ describe("Workbench screen documentation governance", () => {
         "utf8",
       )
       .replaceAll("\r\n", "\n");
-    expect(guide).toContain(
-      "Exact source measures are\nevidence, not a mandate conclusion",
-    );
-    expect(guide).toContain("No approved client mandate or house risk limit");
+    expect(guide).toContain("Compare source measures with\napproved mandate constraints");
+    expect(guide).toContain("Gateway-owned `mandate_comparison`");
+    expect(guide).toContain("Workbench does not calculate a missing limit or headroom");
     expect(guide).toContain("does not:\n\n- classify risk as contained");
     expect(guide).toContain(
       "not a claim of\nbank approval or competitor superiority",

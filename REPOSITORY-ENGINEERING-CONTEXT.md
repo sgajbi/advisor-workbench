@@ -49,11 +49,13 @@ does not certify production identity; Workbench #436 remains the authenticated-p
 ### Risk Review source-authority rule
 
 Risk Review presents exact Gateway/Lotus Risk measures, factual lifecycle and recovery state,
-source supportability, coverage, and methodology. Workbench must not derive universal severity,
-concentration, mandate-compliance, breach, or all-clear classifications from browser-owned numeric
-thresholds. Warning and blocked treatment may reflect source state or source-published policy only.
-Until a governed contract supplies an approved client mandate or house limit comparison, keep that
-absence explicit and retain every risk workflow as read-only evidence review.
+source supportability, coverage, and methodology. Its additive `mandate_comparison` is a
+Gateway-owned projection of Manage-owned limits, review policy and lineage against exact Core or
+Risk measures. Workbench renders source states, values, headroom, dates and reasons without deriving
+universal severity, concentration, limit compliance, breach, or all-clear classifications from
+browser-owned thresholds. When the comparison is absent, unavailable, partially supported,
+date-misaligned, undefined, or missing a measure, keep that exact boundary visible. Never add a
+local threshold, calculated headroom, traffic light, severity scale, or reassuring fallback.
 
 Shared proposal and advisory shells must remain neutral unless the owning workspace publishes a
 typed source-backed workflow-context model. Queue-level context may summarize current source counts,
