@@ -9,6 +9,7 @@
       "workbench_port_environment": "PORTFOLIO_E2E_WORKBENCH_PORT",
       "default_fixture_port": 18120,
       "default_workbench_port": 31020,
+      "evidence_directory_environment": "PORTFOLIO_E2E_EVIDENCE_DIR",
       "scenarios": {
         "cashflow": {
           "fixture_value": "cashflow",
@@ -207,6 +208,12 @@
       "workbench_port_environment": "REPORT_CENTRE_E2E_WORKBENCH_PORT",
       "default_fixture_port": 18101,
       "default_workbench_port": 31060,
+      "additional_environment": {
+        "LOTUS_ENVIRONMENT": "dev",
+        "WORKBENCH_REPORTING_AUTH_MODE": "development_configured",
+        "WORKBENCH_REPORTING_CALLER_ROLE": "client_advisor",
+        "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS": "PB_REPORT_READY_001,PB_REPORT_RECOVERY_001,PB_REPORT_RESTRICTED_001,PB_REPORT_EMPTY_001"
+      },
       "scenarios": {
         "state-matrix": {
           "fixture_value": "state-matrix",
