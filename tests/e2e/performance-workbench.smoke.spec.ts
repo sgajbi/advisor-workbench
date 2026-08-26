@@ -1297,6 +1297,37 @@ test.describe('Performance workbench smoke', () => {
         await expect(mandateComparison).toContainText('cash_weight');
       }
 
+      const mandateLedgerGeometry = await mandateComparison
+        .locator('[role="table"]')
+        .first()
+        .evaluate((table) => {
+          const tableRect = table.getBoundingClientRect();
+          const tolerance = 1;
+          const clippedCells = Array.from(table.querySelectorAll('[role="cell"]'))
+            .filter((cell) => {
+              const cellRect = cell.getBoundingClientRect();
+              return (
+                cellRect.left < tableRect.left - tolerance ||
+                cellRect.right > tableRect.right + tolerance
+              );
+            })
+            .map((cell) => cell.textContent?.trim() ?? 'unnamed cell');
+
+          return {
+            clientWidth: table.clientWidth,
+            scrollWidth: table.scrollWidth,
+            clippedCells,
+          };
+        });
+      expect(
+        mandateLedgerGeometry.scrollWidth - mandateLedgerGeometry.clientWidth,
+        `${viewport.name} mandate ledger overflow`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        mandateLedgerGeometry.clippedCells,
+        `${viewport.name} mandate evidence clipped by its pane`,
+      ).toEqual([]);
+
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
