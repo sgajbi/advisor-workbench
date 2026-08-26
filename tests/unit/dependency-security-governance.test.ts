@@ -330,8 +330,9 @@ describe("dependency security governance", () => {
 
       expect(workflow.match(new RegExp(trivyActionCommit, "g"))).toHaveLength(3);
       expect(workflow).toContain(
-        "nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
+        "docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .",
       );
+      expect(workflow).toContain("image-ref: lotus-workbench-scale-balancer:ci-test");
       expect(workflow).toContain(
         "Two-replica replacement and capacity regression proof",
       );

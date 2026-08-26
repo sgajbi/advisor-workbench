@@ -18,6 +18,9 @@ import { resolveScaleProofDeploymentId } from "./scale-proof-configuration.mjs";
 const composeFile = "docker-compose.scale-proof.yml";
 const baseUrl = "http://127.0.0.1:3090";
 const image = process.env.WORKBENCH_SCALE_IMAGE ?? "lotus-workbench:scale-proof";
+const scaleBalancerImage =
+  process.env.WORKBENCH_SCALE_BALANCER_IMAGE ??
+  "lotus-workbench-scale-balancer:scale-proof";
 const skipBuild = process.env.SCALE_PROOF_SKIP_BUILD === "1";
 const keepStack = process.env.SCALE_PROOF_KEEP_STACK === "1";
 const deploymentId = resolveScaleProofDeploymentId({
@@ -44,6 +47,14 @@ try {
       image,
       ".",
     ]);
+    run("docker", [
+      "build",
+      "--file",
+      "scripts/scale/Dockerfile.balancer",
+      "--tag",
+      scaleBalancerImage,
+      ".",
+    ]);
   }
   compose(["up", "-d", "--no-build"]);
   await waitForHttp(`${baseUrl}/api/health/ready`, 120_000);
@@ -52,6 +63,7 @@ try {
   if (imageIdentity.a !== imageIdentity.b) {
     throw new Error("Workbench replicas do not use the same immutable image identity.");
   }
+  const scaleBalancerImageIdentity = inspectServiceImageIdentity("scale-balancer");
 
   const actionId = `scale-proof-${Date.now()}`;
   const persisted = await requestJson("/api/bff/api/v1/scale-proof/actions", {
@@ -98,9 +110,9 @@ try {
     topology: {
       workbench_replicas: 2,
       session_affinity: false,
-      load_balancer: "nginx-1.30.3-stable-alpine-slim",
-      load_balancer_digest:
-        "sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
+      load_balancer: "nginx-1.30.3-stable-alpine-slim-patched",
+      load_balancer_image: scaleBalancerImage,
+      load_balancer_image_identity: scaleBalancerImageIdentity,
       gateway: "bounded-source-owned-fixture",
       workbench_image: image,
       workbench_image_identity: imageIdentity.a,
@@ -306,6 +318,15 @@ function inspectContainerId(service) {
   return compose(["ps", "-q", service], { capture: true }).trim();
 }
 
+function inspectServiceImageIdentity(service) {
+  const containerId = inspectContainerId(service);
+  return run(
+    "docker",
+    ["inspect", "--format", "{{.Image}}", containerId],
+    { capture: true },
+  ).trim();
+}
+
 async function startContainerResourceMonitor() {
   const containerIds = compose(["ps", "-q"], { capture: true })
     .split(/\r?\n/)
@@ -464,6 +485,7 @@ function run(command, args, { allowFailure = false, capture = false } = {}) {
       ...process.env,
       WORKBENCH_DEPLOYMENT_ID: deploymentId,
       WORKBENCH_SCALE_IMAGE: image,
+      WORKBENCH_SCALE_BALANCER_IMAGE: scaleBalancerImage,
     },
     encoding: "utf8",
     stdio: capture ? "pipe" : "inherit",

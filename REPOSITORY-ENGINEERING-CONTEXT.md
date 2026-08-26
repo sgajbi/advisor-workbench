@@ -860,15 +860,20 @@ Container runtime rules:
    SBOM evidence, and
 6. Trivy execution remains pinned to the vendor-declared safe 0.69.3 binary and the full immutable
    trivy-action 0.35.0 commit because mutable Trivy ecosystem references were compromised in March 2026. Any scanner refresh requires explicit supply-chain review and issue traceability, and
-7. Dockerized local Vitest parity uses an explicit two-worker ceiling so it remains deterministic
+7. the validation-only NGINX scale balancer is built from the immutable official base declared in
+   `scripts/scale/Dockerfile.balancer`, applies exact vendor-fixed security package versions, runs
+   unprivileged, and is scanned as a distinct image in both protected Docker lanes. Keep the build,
+   Compose image input, scale runner, evidence identity, workflows, and governance tests aligned;
+   never replace a failed scan with a mutable tag, ignored fixable finding, or unscanned substitute,
+8. Dockerized local Vitest parity uses an explicit two-worker ceiling so it remains deterministic
    while the canonical Lotus stack is running, and masks workstation `.env.local` with the tracked
    empty CI fixture. Do not replace these controls with per-test timeout inflation, disabled
    assertions, `passWithNoTests`, global serialization, or developer-local environment values.
-8. runtime health is owned by the production image through the dependency-free Node probe copied
+9. runtime health is owned by the production image through the dependency-free Node probe copied
    from `scripts/runtime/workbench-healthcheck.mjs`. Compose must inherit that image health contract;
    do not install `wget`, `curl`, a package manager, or another diagnostic tool solely to make a
    Compose-only probe pass.
-9. `docs/architecture/workbench-runtime-support-policy.v1.json` is the executable runtime and
+10. `docs/architecture/workbench-runtime-support-policy.v1.json` is the executable runtime and
    browser-support boundary. `npm run quality:runtime-support` reconciles exact CI/container Node,
    bundled npm, package and lockfile engines, immutable install paths, exact Playwright, explicit
    Chromium projects, framework versions, container provenance, and review expiry. Workflow

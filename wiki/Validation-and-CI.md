@@ -179,9 +179,11 @@ concurrency group.
   are prohibited because the Trivy ecosystem was compromised in March 2026
 - GitHub Actions JavaScript action runtime posture, using Node 24-capable action majors for
   checkout, setup-node, and artifact upload so CI warnings do not hide product-surface failures
-- the exact Workbench production image and digest-pinned validation-only NGINX image are separately
-  scanned for fixable high/critical findings before the protected Docker lane runs the scale proof;
-  the resulting machine-readable proof is retained as a PR or exact-main artifact
+- the exact Workbench production image and the validation-only NGINX image built from its
+  digest-pinned official base plus exact vendor-fixed security packages are separately scanned for
+  fixable high/critical findings before the protected Docker lane runs the scale proof; the
+  resulting local image identities and machine-readable proof are retained as PR or exact-main
+  evidence
 
 ## Evidence posture
 
