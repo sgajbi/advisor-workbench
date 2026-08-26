@@ -22,6 +22,7 @@ import {
 // relaxing the measured inventory, scanner semantics, or zero-headroom ratchet.
 // Standalone scanner execution remains a separate required lint gate.
 const REPOSITORY_SCAN_TIMEOUT_MS = 180_000;
+const STATIC_CLI_TEST_TIMEOUT_MS = 15_000;
 
 function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
@@ -4503,7 +4504,7 @@ describe("product-copy governance", () => {
     expect(namedScopeMove.stderr).toContain(
       "unresolved-expression identity set changed while the count remained 1",
     );
-  });
+  }, STATIC_CLI_TEST_TIMEOUT_MS);
 
   it("passes only when both measured baselines match", () => {
     const result = runCliWithBaseline(

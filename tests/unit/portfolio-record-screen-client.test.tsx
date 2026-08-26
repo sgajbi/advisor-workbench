@@ -509,7 +509,10 @@ describe("PortfolioRecordScreenClient positions flow", () => {
         "Cash-balance detail and recent position activity are temporarily unavailable. Available source records remain visible.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { name: "Positions" })).toHaveLength(2);
+    expect(screen.getByRole("heading", { name: "Positions", level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Booked portfolio inventory", level: 2 }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review USD Operating Cash" })).not.toBeInTheDocument();
 
     fireEvent.click(
