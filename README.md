@@ -345,6 +345,10 @@ http://workbench.dev.lotus/data-products
   Vitest coverage-backed unit and integration gate
 - `make test-e2e`
   Playwright smoke validation
+- `make test-e2e-fixtures`
+  deterministic fixture-backed browser validation for every registered Portfolio, Performance,
+  Manage, and Reports scenario; missing, unexpected, duplicate, failed, or skipped tests fail the
+  gate
 - `make check`
   local feature-lane parity: lint, typecheck, coverage, build
 - `make ci-local-docker`
@@ -380,6 +384,8 @@ Repo-native gate mapping:
   lint, typecheck, coverage-backed tests, build
 - `make test-e2e`
   Playwright smoke
+- `make test-e2e-fixtures`
+  exact fixture-scenario family proof with machine-readable family summaries
 - `make ci-local-docker`
   Docker parity
 - `npm run scale:proof`

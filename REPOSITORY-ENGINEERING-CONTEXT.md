@@ -992,32 +992,40 @@ Important validation expectations:
    `npm run test:next-artifact-isolation` to prove the development page and every published client
    asset remain available through a clean production build. Do not substitute `next start` for a
    repository configured with `output: standalone`,
-5. Docker and build validation remain part of the merge gate,
-6. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
+5. deterministic fixture-backed browser journeys are governed by
+   `scripts/testing/e2e-scenario-registry.json` and run with `make test-e2e-fixtures`. Protected PR
+   and main lanes execute every registered family independently. A family fails closed when an
+   expected test is missing, an unregistered test runs, a test is duplicated, skipped, failed,
+   timed out, or interrupted, or the family executes zero tests. Add or rename an exact test only
+   with the registry and focused governance tests in the same slice; do not reintroduce raw
+   package-script `--grep` selectors. These deterministic fixtures prove Workbench behavior and
+   presentation contracts, not canonical source integration or bank-ready production support,
+6. Docker and build validation remain part of the merge gate,
+7. protected PR and main Docker lanes scan both the exact Workbench image and the pinned
    validation-only NGINX image, run the two-replica scale proof against that same Workbench image,
    and upload the machine-readable evidence,
-7. canonical live validation matters when a change affects integrated product flows,
-8. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
+8. canonical live validation matters when a change affects integrated product flows,
+9. `-RequireMainlineSources` is required for mainline/RFC certification: ordinary canonical and
    `-LocalApps` runs are useful branch-local development evidence, not certification evidence.
    When another agent owns the shared Workbench checkout, platform automation may supply an
    isolated Workbench mainline checkout to the source-provenance preflight. That override is valid
    only when the path is a clean `lotus-workbench` Git origin at exact `origin/main`; a clean path
    to another Lotus repository must fail closed as a repository-identity mismatch.
-9. canonical startup must use the reusable, fail-closed Compose project/path ownership predicate
+10. canonical startup must use the reusable, fail-closed Compose project/path ownership predicate
    for Docker port owners. `npm run live:stack:preflight` audits an existing stack without mutation,
    and `npm run test:runtime-ownership` executes the equivalent/foreign path matrix in feature, PR,
    and main lanes. Core portfolio seeding must use the repo-local `portfolio_common` library on
    `PYTHONPATH`; do not bypass source-readiness blockers with Workbench-local state,
-10. README and wiki updates should keep active product-surface truth explicit, especially when
+11. README and wiki updates should keep active product-surface truth explicit, especially when
     legacy compatibility routes still exist beside the supported Portfolio and Performance paths,
-11. product docs should distinguish active shell navigation from disabled or compatibility-only
+12. product docs should distinguish active shell navigation from disabled or compatibility-only
     routes when the shell bootstrap contract does not treat every historical route as supported,
-12. route-file existence alone is not enough for documentation truth; use shell registry,
+13. route-file existence alone is not enough for documentation truth; use shell registry,
     capabilities tests, redirect behavior, and canonical runtime guidance before describing a surface
     as supported. Keep the Workbench screen registry aligned with source route and mode definitions,
     use separate implementation and navigation-posture fields, and remove a `coverageException` only
     after the mapped business guide satisfies the complete heading and evidence standard.
-13. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
+14. RFC-0108 analytics UI observability for supported Workbench Portfolio, Performance, Risk, and
     Reporting operator reads is centralized in
     `src/features/analytics-observability/metrics.ts`; keep the explicit observed-surface registry
     in sync when adding or retiring portfolio, performance, risk, or reporting operator panels, and

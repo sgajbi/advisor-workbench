@@ -13,6 +13,7 @@ while integrated product support requires canonical runtime evidence and green r
 | --- | --- | --- |
 | Local route or serializer | Focused behavioral test plus lint/typecheck | Does not certify an upstream or whole-product contract |
 | Product UI behavior | Unit/integration coverage, build, and relevant browser smoke | Must remain Gateway-backed and capability-truthful |
+| Deterministic fixture business journeys | All registered families through `make test-e2e-fixtures`; exact test identity and zero skips | Proves Workbench behavior against governed fixtures, not canonical source integration |
 | Canonical front-office support | `live:validate` evidence for the governed seed and affected panels | Screenshots alone cannot promote support |
 | Stateless multi-replica regression | `npm run scale:proof` against the exact production image | Engineering evidence only; does not certify production HA, DR, or bank capacity |
 | Merge readiness | Feature Lane and PR Merge Gate | Mainline is not proven until Main Releasability passes |
@@ -118,6 +119,14 @@ concurrency group.
   belongs to a shared stack or another worktree, set `PLAYWRIGHT_PORT=<free-port>`. An explicit port
   binds the production server, readiness probe, and browser base URL to that listener and disables
   existing-server reuse, so the proof cannot silently exercise a stale Workbench build.
+- `make test-e2e-fixtures`
+  executes every registered Portfolio, Performance, Manage, and Reports fixture scenario against
+  an isolated optimized Workbench and fixture Gateway. The registry owns exact scenario and test
+  identity; missing, unexpected, duplicate, failed, timed-out, interrupted, skipped, and zero-test
+  outcomes fail closed. Protected PR and main lanes run the same four-family matrix and always
+  retain JSON and Markdown family summaries. Use
+  `node scripts/testing/run-e2e-fixture-family.mjs --family <family>` for a focused local family.
+  This evidence does not replace canonical live validation.
 - `npm run test:next-artifact-isolation`
   starts a branch-owned development host and proves its page plus every rendered client asset stay
   available while a clean production build regenerates `.next-build`. Development owns
@@ -191,6 +200,7 @@ concurrency group.
   Playwright, explicit Chromium projects, and the mandatory review date
 - real app-surface coverage across the active product paths
 - browser smoke for supported front-office flows
+- exact, zero-skip deterministic browser coverage for every registered fixture scenario family
 - Docker parity for production-like runtime assumptions
 - executable canonical Compose ownership and reused-stack safety
 - canonical seeded-data validation for integrated product proof
