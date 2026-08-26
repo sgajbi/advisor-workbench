@@ -2153,27 +2153,31 @@ test.describe('Performance workbench smoke', () => {
     }
   });
 
-  test('evidence mode fails closed on an unfamiliar source-confirmed period', async ({ page, request }) => {
+  test('unfamiliar source-confirmed period fails closed before analytical detail', async ({ page, request }) => {
     test.skip(
       process.env.PERFORMANCE_E2E_FIXTURE !== 'unknown-period',
       'Unknown-period proof requires the owned malformed-period fixture.',
     );
     test.setTimeout(60000);
     await page.setViewportSize({ width: 1280, height: 900 });
-    const session = await openPerformanceWorkbench(page, request);
-    expect(session.available).toBe(true);
+    const portfolioId = await resolveSmokePortfolioId(request);
+    expect(portfolioId).toBeTruthy();
+    await page.goto(buildPerformanceSmokePagePath(portfolioId!), {
+      waitUntil: 'domcontentloaded',
+    });
 
-    const evidenceTab = await openPerformanceWorkflowStep(page, /^Evidence/i);
-    await expect(evidenceTab).toBeEnabled();
-    await evidenceTab.click();
-
-    const assurance = page.getByTestId('performance-evidence-assurance');
-    await expect(assurance).toBeVisible({ timeout: 15000 });
-    await expect(assurance).toHaveAttribute('data-assurance-state', 'attention');
-    await expect(assurance.getByText('Review period not supported', { exact: true })).toBeVisible();
     await expect(
-      assurance.getByText('Selected review period not supported', { exact: true })
+      page.getByRole('heading', { name: 'Review context needs attention', exact: true })
+    ).toBeVisible({ timeout: 30000 });
+    await expect(
+      page.getByText(
+        'The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested.',
+        { exact: true }
+      )
     ).toBeVisible();
-    await expect(assurance.getByText('Ready for internal review', { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel('Performance surface navigation')).toHaveCount(0);
+    await expect(page.getByTestId('performance-evidence-assurance')).toHaveCount(0);
+    expect(fixtureGateway?.requests.summary).toBeGreaterThan(0);
+    expect(fixtureGateway?.requests.details).toBe(0);
   });
 });
