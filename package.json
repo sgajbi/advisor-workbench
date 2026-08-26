@@ -33,7 +33,7 @@
     "quality:bff-header-boundary": "node scripts/quality/check-bff-header-boundary.mjs",
     "quality:dependency-risk": "node scripts/quality/check-dependency-risk-inventory.mjs",
     "quality:font-assets": "node scripts/quality/check-font-asset-governance.mjs",
-    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=266 --max-unresolved=1721 --unresolved-digest=02313a75cc4944eebfb7fea2f216d404080b3d32c08a9494f5363d4277b06832",
+    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=266 --max-unresolved=1721 --unresolved-digest=70c03361893d4950da4dc5c9893702db8f4547da699f4a58560e41699ba3019c",
     "quality:portfolio-record-bundles": "node scripts/quality/check-portfolio-record-bundles.mjs",
     "scale:proof": "node scripts/scale/run-workbench-scale-proof.mjs",
     "scale:proof:down": "docker compose -f docker-compose.scale-proof.yml down -v --remove-orphans",

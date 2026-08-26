@@ -10,8 +10,8 @@ describe("RiskMandateComparison", () => {
     render(
       <RiskMandateComparison
         comparison={buildRiskMandateComparisonViewModel({
-          summary: null,
-          concentration: undefined,
+          portfolioRisk: null,
+          concentrationRisk: undefined,
         })}
       />,
     );
@@ -19,7 +19,7 @@ describe("RiskMandateComparison", () => {
     const surface = screen.getByRole("region", { name: "Mandate comparison" });
     expect(surface).toHaveAttribute("data-mandate-availability", "not_supplied");
     expect(surface).toHaveTextContent("Not supplied");
-    expect(surface).toHaveTextContent("has not inferred a limit, breach, or all-clear");
+    expect(surface).toHaveTextContent("no breach or all-clear is shown");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
@@ -27,7 +27,7 @@ describe("RiskMandateComparison", () => {
     render(
       <RiskMandateComparison
         comparison={buildRiskMandateComparisonViewModel({
-          summary: buildMandateComparisonFixture({
+          portfolioRisk: buildMandateComparisonFixture({
             review_policy: {
               review_frequency: "QUARTERLY",
               last_review_date: "2025-12-31",
@@ -74,7 +74,7 @@ describe("RiskMandateComparison", () => {
               },
             ],
           }),
-          concentration: buildMandateComparisonFixture({
+          concentrationRisk: buildMandateComparisonFixture({
             constraints: [
               {
                 key: "issuer_max_weight",
@@ -122,7 +122,7 @@ describe("RiskMandateComparison", () => {
     expect(surface).toHaveTextContent("Review overdue");
 
     const portfolioTable = screen.getByRole("table", {
-      name: "Portfolio risk constraints comparison",
+      name: "Portfolio risk constraints",
     });
     expect(portfolioTable).toHaveTextContent("Within mandate");
     expect(portfolioTable).toHaveTextContent("Limit not defined");
@@ -131,7 +131,7 @@ describe("RiskMandateComparison", () => {
     expect(portfolioTable).toHaveTextContent("+1.41 pp");
 
     const concentrationTable = screen.getByRole("table", {
-      name: "Concentration constraints comparison",
+      name: "Concentration constraints",
     });
     expect(concentrationTable).toHaveTextContent("Outside mandate");
     expect(concentrationTable).toHaveTextContent("Measure unavailable");
@@ -153,7 +153,7 @@ describe("RiskMandateComparison", () => {
     render(
       <RiskMandateComparison
         comparison={buildRiskMandateComparisonViewModel({
-          summary: buildMandateComparisonFixture({
+          portfolioRisk: buildMandateComparisonFixture({
             constraints: [],
             date_alignment_state: "unavailable",
             supportability: {
@@ -162,7 +162,7 @@ describe("RiskMandateComparison", () => {
               source_service: "lotus-manage",
             },
           }),
-          concentration: null,
+          concentrationRisk: null,
         })}
       />,
     );

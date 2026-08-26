@@ -6,8 +6,8 @@ import { buildMandateComparisonFixture } from "../fixtures/risk-mandate-comparis
 describe("risk mandate comparison view model", () => {
   it("keeps an absent additive contract explicitly not supplied", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: undefined,
-      concentration: null,
+      portfolioRisk: undefined,
+      concentrationRisk: null,
     });
 
     expect(model).toMatchObject({
@@ -15,12 +15,12 @@ describe("risk mandate comparison view model", () => {
       availabilityLabel: "Not supplied",
       sources: [],
     });
-    expect(model.summary).toContain("has not inferred a limit, breach, or all-clear");
+    expect(model.summary).toContain("no breach or all-clear is shown");
   });
 
   it("renders and prioritises every source constraint state without calculating missing headroom", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: buildMandateComparisonFixture({
+      portfolioRisk: buildMandateComparisonFixture({
         constraints: [
           {
             key: "cash_band",
@@ -96,7 +96,7 @@ describe("risk mandate comparison view model", () => {
           },
         ],
       }),
-      concentration: null,
+      concentrationRisk: null,
     });
 
     const rows = model.sources[0].constraints;
@@ -138,7 +138,7 @@ describe("risk mandate comparison view model", () => {
     ["not_defined", "Review cadence not defined", "warn"],
   ] as const)("maps the source review policy state %s", (state, label, tone) => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: buildMandateComparisonFixture({
+      portfolioRisk: buildMandateComparisonFixture({
         review_policy: {
           review_frequency: "QUARTERLY",
           last_review_date: "2025-12-31",
@@ -146,7 +146,7 @@ describe("risk mandate comparison view model", () => {
           state,
         },
       }),
-      concentration: null,
+      concentrationRisk: null,
     });
 
     expect(model.sources[0].reviewPolicy).toMatchObject({
@@ -161,7 +161,7 @@ describe("risk mandate comparison view model", () => {
 
   it("preserves unavailable and mismatched source posture with lineage", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: buildMandateComparisonFixture({
+      portfolioRisk: buildMandateComparisonFixture({
         date_alignment_state: "mismatch",
         supportability: {
           state: "unavailable",
@@ -169,7 +169,7 @@ describe("risk mandate comparison view model", () => {
           source_service: "lotus-manage",
         },
       }),
-      concentration: null,
+      concentrationRisk: null,
     });
 
     expect(model.sources[0]).toMatchObject({
@@ -191,8 +191,8 @@ describe("risk mandate comparison view model", () => {
 
   it("flags differing Gateway contexts instead of silently merging them", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: buildMandateComparisonFixture(),
-      concentration: buildMandateComparisonFixture({
+      portfolioRisk: buildMandateComparisonFixture(),
+      concentrationRisk: buildMandateComparisonFixture({
         mandate_version: "4",
         comparison_as_of_date: "2026-03-01",
       }),
