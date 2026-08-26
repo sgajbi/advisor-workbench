@@ -118,12 +118,12 @@ jobs:
           scanners: vuln
           vuln-type: os,library
           severity: HIGH,CRITICAL
-      - name: Pull pinned scale-proof load balancer
-        run: docker pull nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a
+      - name: Build patched scale-proof load balancer
+        run: docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .
       - name: Reject fixable high and critical load-balancer vulnerabilities
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
-          image-ref: nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a
+          image-ref: lotus-workbench-scale-balancer:ci-test
           version: v0.69.3
           skip-setup-trivy: true
           format: table
@@ -137,6 +137,7 @@ jobs:
           SCALE_PROOF_SKIP_BUILD: "1"
           WORKBENCH_DEPLOYMENT_ID: ${{ github.event.pull_request.head.sha || github.sha }}
           WORKBENCH_SCALE_IMAGE: lotus-workbench:ci-test
+          WORKBENCH_SCALE_BALANCER_IMAGE: lotus-workbench-scale-balancer:ci-test
         run: node scripts/scale/run-workbench-scale-proof.mjs
       - name: Upload scale-proof evidence
         if: always()

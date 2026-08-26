@@ -117,8 +117,10 @@ operation while one replica is stopped and removed; changed container identity a
 replacement; and distribution after recovery. It records latency, errors, upstream distribution,
 image identity, replacement-container identity, concurrent per-phase container CPU and memory, and
 the host Node load generator's per-phase CPU and RSS under `output/scale-proof/`.
-Protected PR and main lanes run the proof against the same image they scan and upload its
-machine-readable evidence.
+Protected PR and main lanes run the proof against the same Workbench image they scan. They also
+build and separately scan the validation-only NGINX balancer from an immutable official base with
+exact vendor-fixed security packages, record the resulting local image identity, and upload the
+machine-readable proof.
 
 This is an engineering regression, not capacity or availability certification. Workbench does not
 claim production load or soak capacity, high availability, disaster recovery, multi-region

@@ -26,10 +26,18 @@ describe("Workbench scale-proof governance", () => {
 
   it("pins mature official images and isolates the non-certifying source fixture", () => {
     const compose = read("docker-compose.scale-proof.yml");
+    const balancerDockerfile = read("scripts", "scale", "Dockerfile.balancer");
     const fixture = read("scripts", "scale", "gateway-fixture.mjs");
 
-    expect(compose).toContain(
+    expect(balancerDockerfile).toContain(
       "nginx:1.30.3-alpine3.23-slim@sha256:d5b51cfc7d55fc7a7bcf4d1d577b9c3738331df56d68f0b1d8ac9795b9470a5a",
+    );
+    expect(balancerDockerfile).toContain('"libcrypto3=3.5.8-r0"');
+    expect(balancerDockerfile).toContain('"libssl3=3.5.8-r0"');
+    expect(balancerDockerfile).toContain("USER 101:101");
+    expect(balancerDockerfile).not.toContain("3.5.7-r0");
+    expect(compose).toContain(
+      "image: ${WORKBENCH_SCALE_BALANCER_IMAGE:-lotus-workbench-scale-balancer:scale-proof}",
     );
     expect(compose).toContain(
       "node:22.23.1-bookworm-slim@sha256:6c74791e557ce11fc957704f6d4fe134a7bc8d6f5ca4403205b2966bd488f6b3",
@@ -67,6 +75,9 @@ describe("Workbench scale-proof governance", () => {
     expect(runner).toContain("resolveSuccessfulTerminalUpstream");
     expect(runner).toContain("successfulResults");
     expect(runner).toContain("resolveScaleProofDeploymentId");
+    expect(runner).toContain('"scripts/scale/Dockerfile.balancer"');
+    expect(runner).toContain("WORKBENCH_SCALE_BALANCER_IMAGE: scaleBalancerImage");
+    expect(runner).toContain("load_balancer_image_identity: scaleBalancerImageIdentity");
 
     for (const workflow of [
       read(".github", "workflows", "pr-merge-gate.yml"),
@@ -74,6 +85,12 @@ describe("Workbench scale-proof governance", () => {
     ]) {
       expect(workflow).toContain("SCALE_PROOF_SKIP_BUILD: \"1\"");
       expect(workflow).toContain("WORKBENCH_DEPLOYMENT_ID: ${{ github.");
+      expect(workflow).toContain(
+        "docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .",
+      );
+      expect(workflow).toContain(
+        "WORKBENCH_SCALE_BALANCER_IMAGE: lotus-workbench-scale-balancer:ci-test",
+      );
     }
   });
 
