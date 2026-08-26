@@ -423,25 +423,37 @@ export function validateRuntimeSupportPolicy({
           normalizeInstruction(step.run)
         )
     );
-    const browserSmokeSteps = collectWorkflowStepEntries(workflow).filter(
+    const browserProofSteps = collectWorkflowStepEntries(workflow).filter(
       ({ step }) =>
         typeof step.run === "string" &&
-        normalizeInstruction(step.run) === "make test-e2e"
+        ["make test-e2e", "npm run test:e2e:fixtures"].includes(
+          normalizeInstruction(step.run)
+        )
     );
-    if (
-      browserInstallSteps.length !== 1 ||
-      browserSmokeSteps.length !== 1 ||
-      normalizeInstruction(browserInstallSteps[0]?.step.run ?? "") !==
-        "node node_modules/playwright/cli.js install chromium" ||
-      !isUnconditionalWorkflowStep(browserInstallSteps[0]) ||
-      !isUnconditionalWorkflowStep(browserSmokeSteps[0]) ||
-      !usesGovernedExecutingShell(browserInstallSteps[0]) ||
-      !usesGovernedExecutingShell(browserSmokeSteps[0]) ||
-      browserInstallSteps[0].job !== browserSmokeSteps[0].job ||
-      browserInstallSteps[0].stepIndex >= browserSmokeSteps[0].stepIndex
-    ) {
+    const browserProofJobs = [...new Set(browserProofSteps.map(({ job }) => job))];
+    const hasInvalidBrowserJob = browserProofJobs.some((job) => {
+      const jobInstallSteps = browserInstallSteps.filter((entry) => entry.job === job);
+      const jobProofSteps = browserProofSteps.filter((entry) => entry.job === job);
+      return (
+        jobInstallSteps.length !== 1 ||
+        normalizeInstruction(jobInstallSteps[0]?.step.run ?? "") !==
+          "node node_modules/playwright/cli.js install chromium" ||
+        !isUnconditionalWorkflowStep(jobInstallSteps[0]) ||
+        !usesGovernedExecutingShell(jobInstallSteps[0]) ||
+        jobProofSteps.some(
+          (entry) =>
+            !isUnconditionalWorkflowStep(entry) ||
+            !usesGovernedExecutingShell(entry) ||
+            jobInstallSteps[0].stepIndex >= entry.stepIndex
+        )
+      );
+    });
+    const hasOrphanBrowserInstall = browserInstallSteps.some(
+      ({ job }) => !browserProofJobs.includes(job)
+    );
+    if (browserProofJobs.length === 0 || hasInvalidBrowserJob || hasOrphanBrowserInstall) {
       failures.push(
-        `${path} must install Chromium exactly once through the repository-locked CLI before smoke runs in the same unconditional job under a governed executing shell.`
+        `${path} must install Chromium exactly once through the repository-locked CLI before browser proof runs in each same unconditional job under a governed executing shell.`
       );
     }
   }
