@@ -1825,6 +1825,7 @@ export async function validateBankDemoProofPanel(
 export async function validateRiskPanel(
   page,
   {
+    summary,
     workbenchBaseUrl,
     portfolioId,
     benchmarkCode,
@@ -1888,16 +1889,38 @@ export async function validateRiskPanel(
       timeout: timeoutMs,
     });
   }
-  const policyBoundary = page.getByRole("note", {
-    name: "Risk mandate comparison boundary",
-  });
-  await expect(policyBoundary).toContainText("Not supplied by source", {
-    timeout: timeoutMs,
-  });
-  await expect(policyBoundary).toContainText(
-    "does not infer a breach or an all-clear",
+  const mandateComparison = page.getByTestId("risk-mandate-comparison");
+  await expect(mandateComparison).toBeVisible({ timeout: timeoutMs });
+  await expect(mandateComparison).toHaveAttribute(
+    "data-mandate-availability",
+    "supplied",
     { timeout: timeoutMs },
   );
+  await expect(mandateComparison.getByText("Source evidence supplied", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(mandateComparison.getByText("Cash allocation", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(mandateComparison.getByText("Largest issuer exposure", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  const mandateStates = await mandateComparison
+    .locator("[data-mandate-state]")
+    .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-mandate-state")));
+  for (const expectedState of ["within", "breach", "not_defined"]) {
+    if (!mandateStates.includes(expectedState)) {
+      throw new Error(`Risk mandate comparison did not render source state ${expectedState}.`);
+    }
+  }
+  summary.uiChecks.push({
+    description: "Gateway-owned Risk mandate comparison",
+    kind: "risk-mandate-comparison",
+    portfolioId,
+    availability: "supplied",
+    sourceStates: [...new Set(mandateStates)].sort(),
+    browserPolicyCalculation: "none",
+  });
   for (const retiredClassification of [
     "Contained",
     "Moderate",
@@ -1916,7 +1939,7 @@ export async function validateRiskPanel(
   for (const width of [1440, 1024, 519]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect(executiveEvidence).toBeVisible({ timeout: timeoutMs });
-    await expect(policyBoundary).toBeVisible({ timeout: timeoutMs });
+    await expect(mandateComparison).toBeVisible({ timeout: timeoutMs });
     const pageReflows = await page.evaluate(
       () =>
         globalThis.document.documentElement.scrollWidth <=

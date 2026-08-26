@@ -25,6 +25,10 @@ import {
   GOVERNED_REVIEW_PORTFOLIO_ID,
   handleGovernedReviewPortfolioRequest,
 } from './governed-review-context-fixture';
+import {
+  buildConcentrationMandateComparisonFixture,
+  buildSummaryMandateComparisonFixture,
+} from '../fixtures/risk-mandate-comparison-fixtures';
 
 export type PerformanceFixtureGatewayScenario =
   | 'populated'
@@ -205,25 +209,25 @@ export async function startPerformanceFixtureGateway({
     }
     if (requestUrl.pathname.endsWith('/risk/summary')) {
       const workspace = buildRiskFixtureWorkspace(portfolioId);
-      sendJson(
-        response,
-        buildFixtureRiskSummary(
+      sendJson(response, {
+        ...buildFixtureRiskSummary(
           workspace,
           requestUrl.searchParams.get('period') ?? 'YTD',
           requestUrl.searchParams.get('detail_basis') ?? 'NET',
         ),
-      );
+        mandate_comparison: buildSummaryMandateComparisonFixture(),
+      });
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/concentration')) {
       const workspace = buildRiskFixtureWorkspace(portfolioId);
-      sendJson(
-        response,
-        buildFixtureRiskConcentration(
+      sendJson(response, {
+        ...buildFixtureRiskConcentration(
           workspace,
           requestUrl.searchParams.get('period') ?? 'YTD',
         ),
-      );
+        mandate_comparison: buildConcentrationMandateComparisonFixture(),
+      });
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/drawdown')) {

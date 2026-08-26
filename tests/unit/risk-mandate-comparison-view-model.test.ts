@@ -1,44 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildRiskMandateComparisonViewModel } from "../../src/apps/performance/risk-mandate-comparison-view-model";
-import type { WorkbenchMandateComparison } from "../../src/features/workbench/types";
-
-function comparison(
-  overrides: Partial<WorkbenchMandateComparison> = {},
-): WorkbenchMandateComparison {
-  return {
-    mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
-    mandate_version: "3",
-    mandate_as_of_date: "2026-02-24",
-    risk_profile: "BALANCED",
-    comparison_as_of_date: "2026-02-24",
-    mandate_health_as_of_date: "2026-02-24",
-    date_alignment_state: "aligned",
-    constraints: [],
-    review_policy: {
-      review_frequency: "QUARTERLY",
-      last_review_date: "2025-12-31",
-      next_review_due_date: "2026-03-31",
-      state: "scheduled",
-    },
-    source_lineage: [
-      {
-        product_name: "DiscretionaryMandateBinding",
-        product_version: "v1",
-        source_system: "lotus-core",
-        source_record_id: "DiscretionaryMandateBinding:v1",
-        data_quality_status: "COMPLETE",
-        latest_evidence_timestamp: "2026-02-24T01:00:00Z",
-      },
-    ],
-    supportability: {
-      state: "ready",
-      reason: null,
-      source_service: "lotus-manage",
-    },
-    ...overrides,
-  };
-}
+import { buildMandateComparisonFixture } from "../fixtures/risk-mandate-comparison-fixtures";
 
 describe("risk mandate comparison view model", () => {
   it("keeps an absent additive contract explicitly not supplied", () => {
@@ -57,7 +20,7 @@ describe("risk mandate comparison view model", () => {
 
   it("renders and prioritises every source constraint state without calculating missing headroom", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: comparison({
+      summary: buildMandateComparisonFixture({
         constraints: [
           {
             key: "cash_band",
@@ -175,7 +138,7 @@ describe("risk mandate comparison view model", () => {
     ["not_defined", "Review cadence not defined", "warn"],
   ] as const)("maps the source review policy state %s", (state, label, tone) => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: comparison({
+      summary: buildMandateComparisonFixture({
         review_policy: {
           review_frequency: "QUARTERLY",
           last_review_date: "2025-12-31",
@@ -198,7 +161,7 @@ describe("risk mandate comparison view model", () => {
 
   it("preserves unavailable and mismatched source posture with lineage", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: comparison({
+      summary: buildMandateComparisonFixture({
         date_alignment_state: "mismatch",
         supportability: {
           state: "unavailable",
@@ -228,8 +191,8 @@ describe("risk mandate comparison view model", () => {
 
   it("flags differing Gateway contexts instead of silently merging them", () => {
     const model = buildRiskMandateComparisonViewModel({
-      summary: comparison(),
-      concentration: comparison({
+      summary: buildMandateComparisonFixture(),
+      concentration: buildMandateComparisonFixture({
         mandate_version: "4",
         comparison_as_of_date: "2026-03-01",
       }),

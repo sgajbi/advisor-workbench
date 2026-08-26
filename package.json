@@ -54,7 +54,7 @@
     "test:e2e:performance:horizon-integrity": "node scripts/testing/run-performance-smoke-scenario.mjs horizon-integrity --grep \"horizon comparison failure\"",
     "test:e2e:performance:analysis-controls": "node scripts/testing/run-performance-smoke-scenario.mjs analysis-controls --grep \"Analysis source controls\"",
     "test:e2e:performance:return-path-density": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"single-observation Return Path\"",
-    "test:e2e:performance:risk-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"Risk Review keeps exact evidence\"",
+    "test:e2e:performance:risk-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"Risk Review renders Gateway mandate evidence\"",
     "test:e2e:performance:advisor-brief-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"Advisor Brief review transaction\"",
     "test:e2e:performance:evidence-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs populated --grep \"exception-first calculation assurance\"",
     "test:e2e:performance:evidence-period-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs unknown-period --grep \"fails closed on an unfamiliar source-confirmed period\"",
