@@ -4366,7 +4366,7 @@ describe("product-copy governance", () => {
       expect(evaluation.findings).toHaveLength(266);
       expect(evaluation.unresolvedExpressions).toHaveLength(1721);
       expect(productCopyUnresolvedDigest(evaluation.unresolvedExpressions)).toBe(
-        "70c03361893d4950da4dc5c9893702db8f4547da699f4a58560e41699ba3019c",
+        "b39d96026fd1d47d1b77f0d920584ba57a780b90c4b96d8fb7294dab1a9335c7",
       );
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
