@@ -396,7 +396,7 @@ describe("runtime support policy", () => {
     );
   });
 
-  it("binds the browser install to the smoke job and execution order", () => {
+  it("binds each browser install to its proof job and execution order", () => {
     const lateInstall = loadEvidence();
     lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"] =
       lateInstall.workflowSources[".github/workflows/pr-merge-gate.yml"]
@@ -430,7 +430,7 @@ describe("runtime support policy", () => {
       );
 
     expect(validateRuntimeSupportPolicy(lateInstall)).toEqual(
-      expect.arrayContaining([expect.stringContaining("before smoke runs")])
+      expect.arrayContaining([expect.stringContaining("before browser proof runs")])
     );
     expect(validateRuntimeSupportPolicy(wrongJob)).toEqual(
       expect.arrayContaining([expect.stringContaining("same unconditional job")])
