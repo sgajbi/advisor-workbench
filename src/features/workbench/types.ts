@@ -827,6 +827,64 @@ export type WorkbenchRiskMetric = {
   details?: Record<string, unknown> | null;
 };
 
+export type WorkbenchMandateConstraintState =
+  | "within"
+  | "breach"
+  | "not_defined"
+  | "measure_unavailable";
+
+export type WorkbenchMandateComparison = {
+  mandate_id?: string | null;
+  mandate_version?: string | null;
+  mandate_as_of_date?: string | null;
+  risk_profile?: string | null;
+  comparison_as_of_date: string;
+  mandate_health_as_of_date?: string | null;
+  date_alignment_state: "aligned" | "mismatch" | "unavailable";
+  constraints: Array<{
+    key: string;
+    label: string;
+    limit?: {
+      minimum?: number | null;
+      maximum?: number | null;
+      unit: "ratio";
+      source_service: string;
+    } | null;
+    measure?: {
+      value?: number | null;
+      unit: "ratio";
+      basis?: string | null;
+      as_of_date?: string | null;
+      source_service: string;
+      source_metric: string;
+    } | null;
+    headroom?: number | null;
+    state: WorkbenchMandateConstraintState;
+    reason: string;
+    source_state?: string | null;
+    source_reason_code?: string | null;
+  }>;
+  review_policy?: {
+    review_frequency: string;
+    last_review_date?: string | null;
+    next_review_due_date?: string | null;
+    state: "due" | "overdue" | "scheduled" | "not_defined";
+  } | null;
+  source_lineage: Array<{
+    product_name: string;
+    product_version: string;
+    source_system: string;
+    source_record_id?: string | null;
+    data_quality_status?: string | null;
+    latest_evidence_timestamp?: string | null;
+  }>;
+  supportability: {
+    state: "ready" | "partial" | "unavailable";
+    reason?: string | null;
+    source_service: string;
+  };
+};
+
 export type WorkbenchRiskSummaryResponse = {
   correlation_id: string;
   contract_version: "risk-workspace.v1";
@@ -836,6 +894,7 @@ export type WorkbenchRiskSummaryResponse = {
   benchmark_code?: string | null;
   source_service: "lotus-risk";
   state: WorkbenchRiskModuleState;
+  mandate_comparison?: WorkbenchMandateComparison | null;
   payload: {
     periods: Array<{
       key: string;
@@ -876,6 +935,7 @@ export type WorkbenchRiskConcentrationResponse = {
   benchmark_code?: string | null;
   source_service: "lotus-risk";
   state: WorkbenchRiskModuleState;
+  mandate_comparison?: WorkbenchMandateComparison | null;
   payload: {
     portfolio_concentration: {
       hhi_current: number;
