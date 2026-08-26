@@ -126,7 +126,9 @@ concurrency group.
   outcomes fail closed. Protected PR and main lanes run the same four-family matrix and always
   retain JSON and Markdown family summaries. Use
   `node scripts/testing/run-e2e-fixture-family.mjs --family <family>` for a focused local family.
-  This evidence does not replace canonical live validation.
+  The existing required `PR Merge Gate / Playwright Smoke` context is an always-running aggregate:
+  it fails unless fixture-free smoke and every matrix family succeed. This evidence does not
+  replace canonical live validation.
 - `npm run test:next-artifact-isolation`
   starts a branch-owned development host and proves its page plus every rendered client asset stay
   available while a clean production build regenerates `.next-build`. Development owns
