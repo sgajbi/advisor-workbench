@@ -1628,7 +1628,9 @@ test.describe('Performance workbench smoke', () => {
     await expect.poll(() => new URL(page.url()).searchParams.get('benchmark')).toBe(
       'BMK_PRIVATE_BANK',
     );
-    await expect(page.getByText('Private Bank Composite', { exact: true })).toBeVisible();
+    await expect(benchmark.locator('option:checked')).toHaveText(
+      'Private Bank Composite • USD • Composite'
+    );
     await expect(analysisTab).toHaveAttribute('aria-current', 'page');
 
     for (const width of [1800, 1280, 1024, 768, 519]) {
