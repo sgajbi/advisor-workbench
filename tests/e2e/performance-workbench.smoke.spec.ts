@@ -1644,14 +1644,26 @@ test.describe('Performance workbench smoke', () => {
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
 
+    const customWindow = sourceSelection.locator(
+      'details[data-performance-window-control="true"]'
+    );
+    const customWindowSummary = customWindow.locator('summary');
     for (const [name, touchTarget] of [
       ['3Y horizon', threeYearHorizon],
       ['Benchmark', benchmark],
-      ['Apply', sourceSelection.getByRole('button', { name: 'Apply' })],
+      ['Custom window', customWindowSummary],
     ] as const) {
       const bounds = await touchTarget.boundingBox();
       expect(bounds?.height, `${name} touch target height`).toBeGreaterThanOrEqual(44);
     }
+    await expect(customWindow).not.toHaveAttribute('open');
+    await customWindowSummary.click();
+    await expect(customWindow).toHaveAttribute('open');
+    const applyButton = sourceSelection.getByRole('button', { name: 'Apply' });
+    await expect(applyButton).toBeVisible();
+    expect((await applyButton.boundingBox())?.height, 'Apply touch target height').toBeGreaterThanOrEqual(
+      44
+    );
 
     await page.screenshot({
       path: 'output/playwright/issue-681-performance-analysis-controls-narrow.png',
