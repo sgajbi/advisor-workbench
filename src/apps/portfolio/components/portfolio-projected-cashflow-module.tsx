@@ -11,7 +11,7 @@ import {
 } from "@/design-system";
 
 import { formatCurrency, formatDate } from "../formatters";
-import { PORTFOLIO_SCREEN_LABELS } from "../portfolio-terminology";
+import { PORTFOLIO_MODULE_LABELS } from "../portfolio-terminology";
 import {
   CASHFLOW_HORIZON_OPTIONS,
   buildCashflowExportFilename,
@@ -122,7 +122,7 @@ export function PortfolioProjectedCashflowModuleView({
   return (
     <AnalyticsModule>
       <SectionHeader
-        title={PORTFOLIO_SCREEN_LABELS.projectedCashFlow}
+        title={PORTFOLIO_MODULE_LABELS.projectedMovementDetail}
         subtitle={subtitle}
         actions={
           <>
