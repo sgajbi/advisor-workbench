@@ -25,7 +25,8 @@ The runner starts an isolated fixture Gateway and optimized Workbench, then writ
 Markdown evidence under `output/e2e-scenario-results/<family>/`. It fails when an expected test is
 missing, an unregistered or duplicate test runs, any test is skipped or non-passing, or a scenario
 executes no tests. Protected PR and main lanes run all four families as an explicit matrix and
-retain their evidence even on failure.
+retain their evidence even on failure. The protected `PR Merge Gate / Playwright Smoke` context is
+an always-running aggregate and succeeds only when fixture-free smoke and every matrix family pass.
 
 For a focused local family, call the registry-owned runner directly, for example:
 
