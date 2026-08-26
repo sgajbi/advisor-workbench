@@ -28,13 +28,27 @@ describe("Risk Review interpretation authority", () => {
     expect(viewModel).not.toContain("PerformanceRiskConcentrationScale");
   });
 
-  it("keeps the absent mandate boundary visible and prevents the retired scale returning", () => {
-    const boundary = readSource(
-      "src/apps/performance/components/risk/risk-policy-boundary.tsx",
+  it("renders source-owned mandate states and prevents retired browser policy returning", () => {
+    const comparison = readSource(
+      "src/apps/performance/components/risk/risk-mandate-comparison.tsx",
+    );
+    const projection = readSource(
+      "src/apps/performance/risk-mandate-comparison-view-model.ts",
     );
 
-    expect(boundary).toContain("No approved client mandate or house risk");
-    expect(boundary).toContain("does not infer a breach or an all-clear");
+    expect(comparison).toContain('data-testid="risk-mandate-comparison"');
+    expect(comparison).toContain("data-mandate-state");
+    expect(projection).toContain("constraint.headroom");
+    expect(projection).toContain("constraint.state");
+    expect(projection).not.toMatch(/limit\.(maximum|minimum)\s*[-+]\s*measure\.value/);
+    expect(
+      existsSync(
+        resolve(
+          process.cwd(),
+          "src/apps/performance/components/risk/risk-policy-boundary.tsx",
+        ),
+      ),
+    ).toBe(false);
     expect(
       existsSync(
         resolve(
@@ -45,13 +59,16 @@ describe("Risk Review interpretation authority", () => {
     ).toBe(false);
   });
 
-  it("keeps canonical browser proof on exact evidence, mandate boundary, and reflow", () => {
+  it("keeps canonical browser proof on exact source states, stable evidence, and reflow", () => {
     const browserWorkflow = readSource(
       "scripts/live/validation/browser-workflows.mjs",
     );
 
     expect(browserWorkflow).toContain('name: "Risk executive overview"');
-    expect(browserWorkflow).toContain('name: "Risk mandate comparison boundary"');
+    expect(browserWorkflow).toContain('getByTestId("risk-mandate-comparison")');
+    expect(browserWorkflow).toContain('"data-mandate-availability"');
+    expect(browserWorkflow).toContain('"risk-mandate-comparison"');
+    expect(browserWorkflow).toContain('for (const expectedState of ["within", "breach", "not_defined"])');
     expect(browserWorkflow).toContain('"Realised volatility"');
     expect(browserWorkflow).toContain('"Source coverage"');
     expect(browserWorkflow).toContain("for (const width of [1440, 1024, 519])");
@@ -62,5 +79,6 @@ describe("Risk Review interpretation authority", () => {
     );
     expect(fixtureGateway).toContain("(?:performance|risk)");
     expect(fixtureGateway).toContain("buildFixtureRiskSummary");
+    expect(fixtureGateway).toContain("buildSummaryMandateComparisonFixture");
   });
 });

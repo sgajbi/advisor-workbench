@@ -1215,7 +1215,7 @@ test.describe('Performance workbench smoke', () => {
     expect(runtime.snapshot()).toEqual([]);
   });
 
-  test('Risk Review keeps exact evidence primary and mandate judgement explicit', async ({
+  test('Risk Review renders Gateway mandate evidence without browser-owned policy', async ({
     page,
     request,
   }) => {
@@ -1261,13 +1261,21 @@ test.describe('Performance workbench smoke', () => {
       await expect(executiveEvidence).toContainText('PIMCO GIS Income Fund');
       await expect(executiveEvidence).toContainText('Source coverage');
 
-      const policyBoundary = page.getByRole('note', {
-        name: 'Risk mandate comparison boundary',
-      });
-      await expect(policyBoundary).toContainText('Not supplied by source');
-      await expect(policyBoundary).toContainText(
-        'does not infer a breach or an all-clear',
-      );
+      const mandateComparison = page.getByTestId('risk-mandate-comparison');
+      await expect(mandateComparison).toHaveAttribute('data-mandate-availability', 'supplied');
+      await expect(mandateComparison).toContainText('MANDATE_PB_SG_GLOBAL_BAL_001');
+      await expect(mandateComparison).toContainText('Source evidence supplied');
+      await expect(mandateComparison).toContainText('Cash allocation');
+      await expect(mandateComparison).toContainText('Within mandate');
+      await expect(mandateComparison).toContainText('Tracking error');
+      await expect(mandateComparison).toContainText('Limit not defined');
+      await expect(mandateComparison).toContainText('Largest issuer exposure');
+      await expect(mandateComparison).toContainText('Outside mandate');
+      await expect(mandateComparison).toContainText('21.07%');
+      await expect(mandateComparison).toContainText('Maximum 20.00%');
+      await expect(mandateComparison).toContainText('−1.07 pp');
+      const breachRow = mandateComparison.locator('[data-mandate-state="breach"]');
+      await expect(breachRow).toContainText('Largest issuer exposure');
       await expect(
         executiveEvidence.getByText(
           /^(Contained|Moderate|Elevated|High|Severe|Acceptable|Diversified)$/,
@@ -1277,13 +1285,25 @@ test.describe('Performance workbench smoke', () => {
         page.getByRole('heading', { name: 'Concentration', exact: true }),
       ).toBeVisible();
 
+      if (viewport.name === 'desktop') {
+        const sourceEvidence = mandateComparison
+          .locator('summary')
+          .filter({ hasText: 'Source evidence and lineage' })
+          .first();
+        await sourceEvidence.focus();
+        await expect(sourceEvidence).toBeFocused();
+        await sourceEvidence.press('Enter');
+        await expect(mandateComparison).toContainText('DiscretionaryMandateBinding v1');
+        await expect(mandateComparison).toContainText('cash_weight');
+      }
+
       const layout = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
       await page.screenshot({
-        path: `output/playwright/issue-723-risk-review-${viewport.name}.png`,
+        path: `output/playwright/issue-875-mandate-comparison-${viewport.name}.png`,
         fullPage: false,
         animations: 'disabled',
       });

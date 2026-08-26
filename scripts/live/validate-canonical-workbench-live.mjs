@@ -2084,6 +2084,7 @@ async function run() {
       assertTableHasRows: browserHelpers.assertTableHasRows,
     });
     await validateRiskPanel(page, {
+      summary,
       workbenchBaseUrl,
       portfolioId,
       benchmarkCode,

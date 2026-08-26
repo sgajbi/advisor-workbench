@@ -3,44 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import RiskMandateComparison from "../../src/apps/performance/components/risk/risk-mandate-comparison";
 import { buildRiskMandateComparisonViewModel } from "../../src/apps/performance/risk-mandate-comparison-view-model";
-import type { WorkbenchMandateComparison } from "../../src/features/workbench/types";
-
-function comparison(
-  overrides: Partial<WorkbenchMandateComparison> = {},
-): WorkbenchMandateComparison {
-  return {
-    mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
-    mandate_version: "3",
-    mandate_as_of_date: "2026-02-24",
-    risk_profile: "BALANCED",
-    comparison_as_of_date: "2026-02-24",
-    mandate_health_as_of_date: "2026-02-24",
-    date_alignment_state: "aligned",
-    constraints: [],
-    review_policy: {
-      review_frequency: "QUARTERLY",
-      last_review_date: "2025-12-31",
-      next_review_due_date: "2026-03-31",
-      state: "scheduled",
-    },
-    source_lineage: [
-      {
-        product_name: "DiscretionaryMandateBinding",
-        product_version: "v1",
-        source_system: "lotus-core",
-        source_record_id: "DiscretionaryMandateBinding:v1",
-        data_quality_status: "COMPLETE",
-        latest_evidence_timestamp: "2026-02-24T01:00:00Z",
-      },
-    ],
-    supportability: {
-      state: "ready",
-      reason: null,
-      source_service: "lotus-manage",
-    },
-    ...overrides,
-  };
-}
+import { buildMandateComparisonFixture } from "../fixtures/risk-mandate-comparison-fixtures";
 
 describe("RiskMandateComparison", () => {
   it("renders additive-field absence as an explicit unavailable boundary", () => {
@@ -64,7 +27,7 @@ describe("RiskMandateComparison", () => {
     render(
       <RiskMandateComparison
         comparison={buildRiskMandateComparisonViewModel({
-          summary: comparison({
+          summary: buildMandateComparisonFixture({
             review_policy: {
               review_frequency: "QUARTERLY",
               last_review_date: "2025-12-31",
@@ -111,7 +74,7 @@ describe("RiskMandateComparison", () => {
               },
             ],
           }),
-          concentration: comparison({
+          concentration: buildMandateComparisonFixture({
             constraints: [
               {
                 key: "issuer_max_weight",
@@ -190,7 +153,7 @@ describe("RiskMandateComparison", () => {
     render(
       <RiskMandateComparison
         comparison={buildRiskMandateComparisonViewModel({
-          summary: comparison({
+          summary: buildMandateComparisonFixture({
             constraints: [],
             date_alignment_state: "unavailable",
             supportability: {
