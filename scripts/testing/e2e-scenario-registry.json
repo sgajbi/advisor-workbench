@@ -211,6 +211,7 @@
         "state-matrix": {
           "fixture_value": "state-matrix",
           "spec": "tests/e2e/report-centre-state.smoke.spec.ts",
+          "generated_test_title_prefix": "respects the shared rail content capacity at ",
           "expected_tests": [
             "recovers both Report Centre regions from a source failure",
             "keeps restricted state coherent at tablet width",
