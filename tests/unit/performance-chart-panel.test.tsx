@@ -100,8 +100,11 @@ describe("PerformanceChartPanel", () => {
       document.querySelectorAll("[data-performance-analysis-control-bar='true']"),
     ).toHaveLength(1);
     expect(
-      screen.getByRole("group", { name: "Performance source selection controls" }),
+      screen.getByRole("group", { name: "Performance return controls" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("group", { name: /Performance source selection/ }),
+    ).toHaveLength(1);
     let series: ChartSeriesProbe[] = Array.isArray(lastChartOption?.series)
       ? (lastChartOption.series as ChartSeriesProbe[])
       : [];

@@ -16,10 +16,12 @@ type PerformanceReturnViewSelection = {
 
 export type PerformanceAnalysisControlBarProps =
   PerformanceSourceSelectionControlsProps & {
+    controlBarAriaLabel: string;
     returnView?: PerformanceReturnViewSelection;
   };
 
 export default function PerformanceAnalysisControlBar({
+  controlBarAriaLabel,
   returnView,
   ...sourceSelection
 }: PerformanceAnalysisControlBarProps) {
@@ -27,7 +29,7 @@ export default function PerformanceAnalysisControlBar({
     <section
       className={styles.bar}
       role="group"
-      aria-label={`${sourceSelection.ariaLabel} controls`}
+      aria-label={controlBarAriaLabel}
       data-performance-analysis-control-bar="true"
     >
       <PerformanceSourceSelectionControls
