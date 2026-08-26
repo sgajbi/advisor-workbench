@@ -1056,7 +1056,7 @@ test.describe('Portfolio workbench smoke', () => {
     await firstDirectExposure.focus();
     await firstDirectExposure.press('Enter');
 
-    await expect(page.getByRole('heading', { name: /^Contributing holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Contributing positions$/i })).toBeVisible();
     await expect(page.locator('.portfolio-grid-toolbar-copy')).toBeVisible();
     await expect(page.getByRole('button', { name: /^Clear filter$/i })).toBeVisible();
 
@@ -1133,7 +1133,7 @@ test.describe('Portfolio workbench smoke', () => {
     const firstDirectExposure = page.locator('.portfolio-allocation-ranked-row').first();
     await firstDirectExposure.focus();
     await firstDirectExposure.press('Enter');
-    await expect(page.getByRole('heading', { name: /^Contributing holdings$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Contributing positions$/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Clear filter$/i })).toBeVisible();
     await page.getByRole('button', { name: /^Clear filter$/i }).click();
 
