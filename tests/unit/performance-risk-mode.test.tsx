@@ -131,7 +131,7 @@ describe("PerformanceRiskMode", () => {
       "Largest position",
     );
     expect(screen.getByLabelText("Mandate comparison")).toHaveTextContent(
-      "Gateway did not supply mandate comparison evidence",
+      "Mandate comparison is not available for this Risk review",
     );
     expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
     expect(
