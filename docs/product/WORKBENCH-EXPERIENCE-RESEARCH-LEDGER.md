@@ -445,13 +445,13 @@ capability-disabled; the guide does not promote broader product availability.
 A client advisor or portfolio manager uses Risk Review to understand measured downside,
 concentration, rolling behavior, and risk contributors for one selected portfolio before deciding
 whether a professional or policy review is required. The screen must let the user identify the
-measure, period, driver, coverage, methodology, and source limitation quickly without mistaking a
-generic browser label for the client's approved mandate or house risk policy.
+measure, period, driver, coverage, methodology, approved constraint, comparison state, and source
+limitation quickly without mistaking a browser calculation for mandate or house-policy authority.
 
 The reading order is:
 
 1. exact realized volatility, max drawdown, largest position, and source coverage,
-2. the explicit absence of a source-owned mandate/house-limit comparison,
+2. source-reported mandate exceptions, unavailable measures, undefined limits, and evidence gaps,
 3. snapshot and drawdown evidence,
 4. position and issuer concentration with coverage and methodology,
 5. rolling-risk and historical-attribution detail on demand,
@@ -459,7 +459,7 @@ The reading order is:
 
 ### Current-product and professional-standard research
 
-Research was reviewed on 2026-08-20 from official sources:
+Research was reviewed on 2026-08-20 and refreshed on 2026-08-27 from official sources:
 
 1. [BlackRock Aladdin Risk](https://www.blackrock.com/aladdin/platforms/products/aladdin-risk)
    emphasizes context-appropriate models and factors, risk decomposition, and source analytics.
@@ -469,12 +469,21 @@ Research was reviewed on 2026-08-20 from official sources:
 3. [CFA Institute Standard III(C)](https://www.cfainstitute.org/standards/professionals/code-ethics-standards/standards-of-practice-iii-c)
    requires suitability and portfolio-risk judgement to consider written objectives, mandate,
    risk tolerance, constraints, and the total portfolio.
+4. [Avaloq Investment Management](https://www.avaloq.com/solutions/investment-management)
+   emphasizes a connected front-to-back investment process with monitoring and constraint control.
+5. [MSCI Wealth Manager](https://www.msci.com/our-solutions/analytics/wealth-manager)
+   presents portfolio risk, exposure and proposal analysis as one decision workflow.
+6. [W3C WCAG status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+   requires important state changes to remain programmatically determinable without forcing focus.
 
 ### Adopted
 
 - Lead with exact source measures and factual recovered/open and source-coverage evidence.
 - Preserve module-level ready, partial, unavailable, and blocked posture from source contracts.
-- Keep mandate and house-policy comparison visibly unavailable until a governed source supplies it.
+- Lead with source-declared exception and evidence-gap states, then show within-mandate rows.
+- Render the Gateway comparison as a compact ledger with aligned measures, limits, source headroom,
+  dates and reasons; put lineage behind keyboard-accessible progressive disclosure.
+- Preserve absent, unavailable, date-misaligned, undefined-limit, and unavailable-measure states.
 - Use dense progressive disclosure for methodology, episodes, series, and attribution detail.
 - Validate keyboard semantics, accessible evidence labels, and 1440/1024/519-pixel reflow.
 
@@ -482,17 +491,20 @@ Research was reviewed on 2026-08-20 from official sources:
 
 - Workbench-authored volatility, drawdown, HHI, position, issuer, or top-N severity thresholds.
 - A green all-clear, red breach, or universal acceptable/diversified band without source policy.
+- Browser-owned limit, ratio, headroom, breach, review-due, or portfolio all-clear calculations.
+- Repeated KPI cards for facts that compare more quickly in one aligned constraint ledger.
 - Merely adding a disclaimer while retaining the fabricated scale or accessible classification.
 - Copying competitor layout, wording, visual identity, thresholds, or unsupported capability.
 
 ### Implementation and validation
 
-Workbench issue #723 replaces executive classifications with exact source evidence, removes the
-fabricated concentration scale, adds a compact visible mandate-comparison boundary, retains exact
-concentration and methodology evidence, and prohibits retired helpers/selectors from returning.
-Focused model/component and source-authority tests plus canonical browser validation own the proof.
-Synthetic Risk fixture ownership remains separately tracked under issue #724; it is not live source
-authority.
+Workbench issue #723 replaced executive classifications with exact source evidence and removed the
+fabricated concentration scale. Issue #875 consumes Gateway's additive mandate-comparison contract
+through the existing BFF, projects source facts without arithmetic or policy, and replaces the old
+placeholder with an exception-first, responsive constraint ledger. Focused transport, projection,
+component, source-authority, keyboard, responsive Playwright, and canonical machine-readable proof
+own the implementation. Deterministic fixtures reproduce Gateway's published example contract;
+they are regression evidence, not live source authority.
 
 ## Portfolio Review
 

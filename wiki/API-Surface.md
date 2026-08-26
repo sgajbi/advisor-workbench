@@ -112,8 +112,10 @@ promote dormant labels into product ownership just because historical route file
 - Risk Review consumes Gateway
   `/api/v1/workbench/{portfolio_id}/risk/{summary,concentration,drawdown,rolling,attribution}`
   through the browser's `/api/bff/api/v1/...` boundary. Lotus Risk owns measures, module state,
-  supportability, coverage, methodology, and source controls; Workbench formats that evidence and
-  does not author mandate limits, universal severity bands, breach, or all-clear posture.
+  supportability, coverage, methodology, and source controls. Summary and concentration can include
+  additive Gateway-owned `mandate_comparison` evidence composed from Manage-owned constraints,
+  review policy and lineage plus exact Core/Risk measures. Workbench formats those facts and does
+  not calculate limits, headroom, universal severity bands, breach, or all-clear posture.
 - Data Product Catalogue is served through `/data-products` and independently consumes Gateway
   `/api/v1/domain-products/catalog`, `/dependency-graph`, and `/trust-certification` through the
   internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;

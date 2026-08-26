@@ -73,11 +73,12 @@ first scan leads with realized volatility, max drawdown and factual recovery pos
 position and source driver, and source coverage. It does not turn those values into universal
 contained, moderate, elevated, high, severe, acceptable, or diversified classifications.
 
-No approved client mandate or house risk limit is present in the current Workbench risk contracts.
-The screen therefore states that boundary visibly and does not infer a breach or an all-clear.
-Ready, partial, unavailable, access-restricted, warning, coverage, and methodology posture continue
-to come from the source contract. Workbench does not calculate risk, suitability, limit compliance,
-remediation, advice, a proposal, or an order.
+Gateway summary and concentration contracts can include an additive `mandate_comparison` built from
+Manage-owned limits, health, review policy and lineage plus exact Core/Risk measures. The screen
+renders source-supplied measure, limit, headroom, basis, date, review due state and reason,
+distinguishing within, breach, undefined limit, unavailable measure, unavailable evidence, and an
+absent additive field. Workbench does not calculate risk, limits, headroom, suitability, limit
+compliance, remediation, advice, a proposal, or an order.
 
 ## Performance Calculation Assurance
 
