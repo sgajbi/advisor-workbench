@@ -19,6 +19,8 @@ const prWorkflowPath = resolve(
   ".github/workflows/pr-merge-gate.yml",
 );
 const temporaryDirectories: string[] = [];
+const GOVERNANCE_PROCESS_TIMEOUT_MS = 12_000;
+const GOVERNANCE_TEST_TIMEOUT_MS = 15_000;
 
 interface MutableRegistry {
   families: {
@@ -44,7 +46,7 @@ describe("E2E scenario governance gate", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("20 scenarios");
     expect(result.stdout).toContain("59 registered executions");
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a registered test no longer exists", () => {
     const registry = readRegistry();
@@ -54,7 +56,7 @@ describe("E2E scenario governance gate", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("registered test is absent");
     expect(result.stderr).toContain("deleted cashflow proof");
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a fixture-gated test falls outside every registered scenario", () => {
     const registry = readRegistry();
@@ -70,7 +72,7 @@ describe("E2E scenario governance gate", () => {
     expect(result.stderr).toContain(
       "source-confirmed historical review replaces dated evidence atomically",
     );
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails closed when the source root has no registry", () => {
     const emptyRoot = mkdtempSync(resolve(tmpdir(), "workbench-empty-scenario-root-"));
@@ -78,7 +80,7 @@ describe("E2E scenario governance gate", () => {
     const result = runChecker({ root: emptyRoot });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Registry does not exist");
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a scenario alias bypasses the registry with a raw grep", () => {
     const packageManifest = JSON.parse(readFileSync(packagePath, "utf8")) as {
@@ -90,7 +92,7 @@ describe("E2E scenario governance gate", () => {
     });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("bypasses registry selection with --grep");
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a protected workflow drops a registered family", () => {
     const workflow = readFileSync(prWorkflowPath, "utf8").replace(
@@ -100,7 +102,7 @@ describe("E2E scenario governance gate", () => {
     const result = runChecker({ prWorkflow: writeTemporaryText("workflow.yml", workflow) });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("fixture matrix must cover every registry family exactly once");
-  });
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 });
 
 function readRegistry(): MutableRegistry {
@@ -151,5 +153,6 @@ function runChecker({
   return spawnSync(process.execPath, arguments_, {
     cwd: process.cwd(),
     encoding: "utf8",
+    timeout: GOVERNANCE_PROCESS_TIMEOUT_MS,
   });
 }
