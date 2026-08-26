@@ -13,6 +13,11 @@ const registryPath = resolve(
   process.cwd(),
   "scripts/testing/e2e-scenario-registry.json",
 );
+const packagePath = resolve(process.cwd(), "package.json");
+const prWorkflowPath = resolve(
+  process.cwd(),
+  ".github/workflows/pr-merge-gate.yml",
+);
 const temporaryDirectories: string[] = [];
 
 interface MutableRegistry {
@@ -74,6 +79,28 @@ describe("E2E scenario governance gate", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Registry does not exist");
   });
+
+  it("fails when a scenario alias bypasses the registry with a raw grep", () => {
+    const packageManifest = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    packageManifest.scripts["test:e2e:portfolio:cashflow"] += " --grep cashflow";
+    const result = runChecker({
+      packagePath: writeTemporaryFile("package.json", packageManifest),
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("bypasses registry selection with --grep");
+  });
+
+  it("fails when a protected workflow drops a registered family", () => {
+    const workflow = readFileSync(prWorkflowPath, "utf8").replace(
+      "family: [portfolio, performance, manage, reports]",
+      "family: [portfolio, performance, manage]",
+    );
+    const result = runChecker({ prWorkflow: writeTemporaryText("workflow.yml", workflow) });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("fixture matrix must cover every registry family exactly once");
+  });
 });
 
 function readRegistry(): MutableRegistry {
@@ -88,13 +115,38 @@ function writeTemporaryRegistry(registry: unknown): string {
   return path;
 }
 
+function writeTemporaryFile(name: string, value: unknown): string {
+  return writeTemporaryText(name, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeTemporaryText(name: string, value: string): string {
+  const directory = mkdtempSync(resolve(tmpdir(), "workbench-scenario-governance-"));
+  temporaryDirectories.push(directory);
+  const path = resolve(directory, name);
+  writeFileSync(path, value, "utf8");
+  return path;
+}
+
 function runChecker({
   root = process.cwd(),
   registry,
-}: { root?: string; registry?: string } = {}) {
+  packagePath,
+  prWorkflow,
+}: {
+  root?: string;
+  registry?: string;
+  packagePath?: string;
+  prWorkflow?: string;
+} = {}) {
   const arguments_ = [checker, "--root", root];
   if (registry) {
     arguments_.push("--registry", registry);
+  }
+  if (packagePath) {
+    arguments_.push("--package", packagePath);
+  }
+  if (prWorkflow) {
+    arguments_.push("--pr-workflow", prWorkflow);
   }
   return spawnSync(process.execPath, arguments_, {
     cwd: process.cwd(),
