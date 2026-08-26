@@ -158,7 +158,7 @@
           "fixture_value": "unknown-period",
           "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
           "expected_tests": [
-            "evidence mode fails closed on an unfamiliar source-confirmed period"
+            "unfamiliar source-confirmed period fails closed before analytical detail"
           ]
         }
       }

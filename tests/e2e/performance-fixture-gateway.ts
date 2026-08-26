@@ -42,6 +42,10 @@ export type PerformanceFixtureGatewayScenario =
 export type PerformanceFixtureGateway = {
   close: () => Promise<void>;
   port: number;
+  requests: {
+    summary: number;
+    details: number;
+  };
 };
 
 export async function startPerformanceFixtureGateway({
@@ -55,6 +59,7 @@ export async function startPerformanceFixtureGateway({
   let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let trendRefreshFailuresRemaining = scenario === 'trend-integrity' ? 1 : 0;
   let horizonRefreshFailuresRemaining = scenario === 'horizon-integrity' ? 1 : 0;
+  const requests = { summary: 0, details: 0 };
   const reviewedAdvisorBriefs = new Map<string, WorkbenchPerformanceAdvisorBrief>();
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
@@ -101,6 +106,7 @@ export async function startPerformanceFixtureGateway({
     }
 
     if (requestUrl.pathname.endsWith('/performance/summary')) {
+      requests.summary += 1;
       if (requestUrl.searchParams.get('period') === '3Y' && summaryRefreshFailuresRemaining > 0) {
         summaryRefreshFailuresRemaining -= 1;
         sendJson(response, { code: 'performance_summary_temporarily_unavailable' }, 503);
@@ -122,6 +128,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/details')) {
+      requests.details += 1;
       if (
         requestUrl.searchParams.get('contribution_dimension') === 'sector' &&
         detailsRefreshFailuresRemaining > 0
@@ -307,6 +314,7 @@ export async function startPerformanceFixtureGateway({
   await listen(server, port);
   return {
     port,
+    requests,
     close: () => close(server),
   };
 }
