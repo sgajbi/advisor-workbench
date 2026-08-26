@@ -130,8 +130,8 @@ describe("PerformanceRiskMode", () => {
     expect(screen.getByLabelText("Risk executive overview")).toHaveTextContent(
       "Largest position",
     );
-    expect(screen.getByLabelText("Risk mandate comparison boundary")).toHaveTextContent(
-      "No approved client mandate or house risk limit is available",
+    expect(screen.getByLabelText("Mandate comparison")).toHaveTextContent(
+      "Gateway did not supply mandate comparison evidence",
     );
     expect(screen.queryByLabelText("Risk concentration scale")).not.toBeInTheDocument();
     expect(
