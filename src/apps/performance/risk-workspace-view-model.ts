@@ -16,6 +16,11 @@ import {
 } from "@/design-system/utils/financial-formatters";
 import { PORTFOLIO_CURRENCY_LABELS } from "@/apps/portfolio/portfolio-terminology";
 
+import {
+  buildRiskMandateComparisonViewModel,
+  type RiskMandateComparisonViewModel,
+} from "./risk-mandate-comparison-view-model";
+
 export type PerformanceRiskState =
   | "loading"
   | "ready"
@@ -103,6 +108,7 @@ export type PerformanceRiskViewModel = {
   synopsis: string;
   contextItems: Array<{ label: string; value: string }>;
   workspaceOverview: PerformanceRiskOverviewItem[];
+  mandateComparison: RiskMandateComparisonViewModel;
   snapshotHeadlineMetrics: PerformanceRiskMetricCard[];
   snapshotSupportingMetrics: PerformanceRiskMetricCard[];
   snapshotContextRows: PerformanceRiskContextRow[];
@@ -301,6 +307,10 @@ export function buildPerformanceRiskViewModel({
       rolling,
       attribution,
       supportability,
+    }),
+    mandateComparison: buildRiskMandateComparisonViewModel({
+      summary: summary.mandate_comparison,
+      concentration: concentration.mandate_comparison,
     }),
     snapshotHeadlineMetrics: mapSnapshotHeadlineMetrics(summary),
     snapshotSupportingMetrics: mapSnapshotSupportingMetrics(summary),
@@ -1244,6 +1254,10 @@ function buildStateViewModel(
         : "Risk is not available for the selected portfolio context.",
     contextItems: buildContextItems(workspace, period, detailBasis, asOfDate),
     workspaceOverview: [],
+    mandateComparison: buildRiskMandateComparisonViewModel({
+      summary: null,
+      concentration: null,
+    }),
     snapshotHeadlineMetrics: [],
     snapshotSupportingMetrics: [],
     snapshotContextRows: [],
