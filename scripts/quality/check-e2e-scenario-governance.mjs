@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import ts from "typescript";
+import YAML from "yaml";
 
 import {
   DEFAULT_REGISTRY_PATH,
@@ -12,7 +13,15 @@ const argumentsByName = parseArguments(process.argv.slice(2));
 const root = resolve(argumentsByName.root ?? process.cwd());
 const registryPath = argumentsByName.registry ?? DEFAULT_REGISTRY_PATH;
 
-const result = validateScenarioGovernance({ root, registryPath });
+const result = validateScenarioGovernance({
+  root,
+  registryPath,
+  packagePath: argumentsByName.package ?? "package.json",
+  workflowPaths: [
+    argumentsByName["pr-workflow"] ?? ".github/workflows/pr-merge-gate.yml",
+    argumentsByName["main-workflow"] ?? ".github/workflows/main-releasability.yml",
+  ],
+});
 if (argumentsByName.json === "true") {
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 } else if (result.findings.length === 0) {
@@ -29,7 +38,15 @@ if (result.findings.length > 0) {
   process.exitCode = 1;
 }
 
-export function validateScenarioGovernance({ root, registryPath }) {
+export function validateScenarioGovernance({
+  root,
+  registryPath,
+  packagePath = "package.json",
+  workflowPaths = [
+    ".github/workflows/pr-merge-gate.yml",
+    ".github/workflows/main-releasability.yml",
+  ],
+}) {
   const findings = [];
   const absoluteRegistryPath = resolve(root, registryPath);
   if (!existsSync(absoluteRegistryPath)) {
@@ -163,6 +180,17 @@ export function validateScenarioGovernance({ root, registryPath }) {
     findings.push("Scenario governance inspected zero scenarios or zero expected tests.");
   }
 
+  findings.push(
+    ...validatePackageScripts({ root, packagePath }),
+    ...workflowPaths.flatMap((workflowPath) =>
+      validateProtectedWorkflow({
+        root,
+        workflowPath,
+        expectedFamilies: families.map(([familyName]) => familyName),
+      }),
+    ),
+  );
+
   return {
     schemaVersion: registry.schema_version ?? null,
     inspectedFamilies: families.length,
@@ -171,6 +199,94 @@ export function validateScenarioGovernance({ root, registryPath }) {
     inspectedFixtureGuards,
     findings,
   };
+}
+
+function validatePackageScripts({ root, packagePath }) {
+  const absolutePath = resolve(root, packagePath);
+  if (!existsSync(absolutePath)) {
+    return [`Package manifest does not exist: ${absolutePath}`];
+  }
+  let packageManifest;
+  try {
+    packageManifest = JSON.parse(readFileSync(absolutePath, "utf8"));
+  } catch (error) {
+    return [`Package manifest cannot be parsed: ${error.message}`];
+  }
+  const scripts = packageManifest.scripts ?? {};
+  const findings = [];
+  if (
+    scripts["quality:e2e-scenarios"] !==
+    "node scripts/quality/check-e2e-scenario-governance.mjs"
+  ) {
+    findings.push("package.json must expose the exact quality:e2e-scenarios gate.");
+  }
+  if (!scripts.lint?.includes("npm run quality:e2e-scenarios")) {
+    findings.push("The lint gate must invoke quality:e2e-scenarios.");
+  }
+  if (
+    scripts["test:e2e:fixtures"] !==
+    "node scripts/testing/run-e2e-fixture-family.mjs"
+  ) {
+    findings.push("package.json must expose the governed test:e2e:fixtures runner.");
+  }
+  for (const [name, command] of Object.entries(scripts)) {
+    if (
+      /^test:e2e:(portfolio|performance|manage|reports):/.test(name) &&
+      /(?:^|\s)--grep(?:=|\s)/.test(command)
+    ) {
+      findings.push(`${name} bypasses registry selection with --grep.`);
+    }
+  }
+  return findings;
+}
+
+function validateProtectedWorkflow({ root, workflowPath, expectedFamilies }) {
+  const absolutePath = resolve(root, workflowPath);
+  if (!existsSync(absolutePath)) {
+    return [`Protected workflow does not exist: ${absolutePath}`];
+  }
+  let workflow;
+  try {
+    workflow = YAML.parse(readFileSync(absolutePath, "utf8"));
+  } catch (error) {
+    return [`Protected workflow cannot be parsed (${workflowPath}): ${error.message}`];
+  }
+  const job = workflow.jobs?.["e2e-fixture-scenarios"];
+  if (!job) {
+    return [`${workflowPath}: e2e-fixture-scenarios job is missing.`];
+  }
+  const findings = [];
+  const families = job.strategy?.matrix?.family ?? [];
+  if (
+    !Array.isArray(families) ||
+    families.length !== expectedFamilies.length ||
+    expectedFamilies.some((family) => !families.includes(family))
+  ) {
+    findings.push(`${workflowPath}: fixture matrix must cover every registry family exactly once.`);
+  }
+  const dependencies = Array.isArray(job.needs) ? job.needs : [job.needs];
+  if (!dependencies.includes("quality-gate")) {
+    findings.push(`${workflowPath}: fixture scenarios must depend on quality-gate.`);
+  }
+  if (job["continue-on-error"] === true) {
+    findings.push(`${workflowPath}: fixture scenarios cannot continue on error.`);
+  }
+  const steps = job.steps ?? [];
+  const runStep = steps.find((step) =>
+    step.run?.includes("npm run test:e2e:fixtures -- --family"),
+  );
+  if (!runStep) {
+    findings.push(`${workflowPath}: fixture family execution step is missing.`);
+  }
+  const uploadStep = steps.find(
+    (step) =>
+      step.uses?.startsWith("actions/upload-artifact@") &&
+      step.with?.path?.includes("output/e2e-scenario-results/"),
+  );
+  if (!uploadStep || uploadStep.if !== "always()") {
+    findings.push(`${workflowPath}: fixture evidence must upload on every outcome.`);
+  }
+  return findings;
 }
 
 function extractFixtureGuards({ sourceText, spec, fixtureEnvironments }) {
