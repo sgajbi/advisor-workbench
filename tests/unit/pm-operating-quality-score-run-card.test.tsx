@@ -154,11 +154,11 @@ describe("PmOperatingQualityScoreRunCard", () => {
     expect(screen.getByLabelText("PM operating quality command readiness")).toHaveTextContent(
       "Ready for policy pmq_sg_dpm / 2026.05"
     );
-    expect(screen.getByLabelText("PM operating quality Gateway operation evidence")).toHaveTextContent("corr-score");
+    expect(screen.getByLabelText("PM operating quality operation evidence")).toHaveTextContent("corr-score");
     expect(screen.getByLabelText("PM operating quality persisted fairness create evidence")).toHaveTextContent(
       "pmq_fair_002"
     );
-    expect(screen.getByLabelText("PM operating quality support summary posture")).toHaveTextContent("Not requested");
+    expect(screen.getByLabelText("PM operating quality support summary status")).toHaveTextContent("Not requested");
 
     expect(
       screen.queryByRole("table", { name: "PM operating quality score runs" })
@@ -208,6 +208,6 @@ describe("PmOperatingQualityScoreRunCard", () => {
     expect(screen.getByRole("button", { name: "Request Support Summary" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Persist Fairness" })).toBeDisabled();
-    expect(screen.getByLabelText("PM operating quality action error posture")).toHaveTextContent("blocked");
+    expect(screen.getByLabelText("PM operating quality action error status")).toHaveTextContent("blocked");
   });
 });

@@ -16,7 +16,7 @@ describe("OutcomeReviewStatusStrip", () => {
 
     const strip = screen.getByLabelText("Outcome review status summary");
 
-    expect(strip).toHaveTextContent("Review postureReady for adviser review");
+    expect(strip).toHaveTextContent("Review statusReady for adviser review");
     expect(strip).toHaveTextContent("Comparison outcomeWithin expected tolerance");
     expect(strip).toHaveTextContent("Drift improvement72.4%");
     expect(strip).toHaveTextContent("Evidence packAvailable");
@@ -35,7 +35,7 @@ describe("OutcomeReviewStatusStrip", () => {
 
     const strip = screen.getByLabelText("Outcome review status summary");
 
-    expect(strip).toHaveTextContent("Review postureN/A");
+    expect(strip).toHaveTextContent("Review statusN/A");
     expect(strip).toHaveTextContent("Comparison outcomeN/A");
     expect(strip).toHaveTextContent("Drift improvementN/A");
     expect(strip).toHaveTextContent("Evidence packUnavailable");

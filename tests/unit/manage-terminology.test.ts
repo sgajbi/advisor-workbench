@@ -62,7 +62,7 @@ describe("manage terminology", () => {
       panelTitle: "Outcome comparison",
       screenDescription:
         "Compare expected and realised outcomes, review mandate impact, and confirm evidence readiness.",
-      reviewPosture: "Review posture",
+      reviewPosture: "Review status",
       comparisonOutcome: "Comparison outcome",
       driftImprovement: "Drift improvement",
       evidencePack: "Evidence pack",

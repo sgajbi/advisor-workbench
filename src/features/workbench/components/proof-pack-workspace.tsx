@@ -126,7 +126,7 @@ export default function ProofPackWorkspace({
         <section className="proof-pack-rationale-card">
           <h3>Advisor Rationale</h3>
           <p>{model.advisorRationale}</p>
-          <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff posture">
+          <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff status">
             <ProofPackAvailabilityBadge label="Summary" available={model.markdownAvailable} />
             <ProofPackAvailabilityBadge label="Report" available={model.reportInputAvailable} />
             <ProofPackAvailabilityBadge label="Memo" available={model.aiEvidenceInputAvailable} />

@@ -327,7 +327,7 @@ function deliveryEventsMatchActiveProposal({
 function deliveryEventAggregateIsCoherent(
   events: ProposalDeliveryEventsData,
   proposalId: string,
-  versionNo: number,
+  versionNo?: number,
 ): boolean {
   const count = events.event_count;
   if (
@@ -356,7 +356,10 @@ function deliveryEventAggregateIsCoherent(
     (event) =>
       isExactNonBlankString(event.event_id) &&
       event.proposal_id === proposalId &&
-      event.related_version_no === versionNo &&
+      isPositiveSafeInteger(event.related_version_no) &&
+      isPositiveSafeInteger(events.proposal?.current_version_no) &&
+      event.related_version_no <= events.proposal.current_version_no &&
+      (versionNo === undefined || event.related_version_no === versionNo) &&
       isSupportedDeliveryEventType(event.event_type) &&
       isTimestampValue(event.occurred_at),
   );
@@ -414,17 +417,38 @@ function jsonValuesAreEqual(left: unknown, right: unknown): boolean {
 
 function deliveryHistoryConfirmsReportRequest(
   events: ProposalDeliveryEventsData | undefined,
+  proposalId: string,
+  versionNo: number,
   reportRequestId: string,
 ): boolean {
   const eventHistory = events?.events;
-  if (!eventHistory) return false;
-  for (let index = eventHistory.length - 1; index >= 0; index -= 1) {
-    const event = eventHistory[index];
-    if (event?.event_type === "REPORT_REQUESTED") {
-      return event.reason?.report_request_id === reportRequestId;
-    }
+  const currentVersionNo = events?.proposal?.current_version_no;
+  if (
+    !events ||
+    !eventHistory ||
+    events.proposal?.proposal_id !== proposalId ||
+    !isPositiveSafeInteger(currentVersionNo) ||
+    currentVersionNo < versionNo ||
+    !deliveryEventAggregateIsCoherent(events, proposalId)
+  ) {
+    return false;
   }
-  return false;
+  const requestEvents = eventHistory.filter(
+    (event) =>
+      event.event_type === "REPORT_REQUESTED" &&
+      event.reason?.report_request_id === reportRequestId,
+  );
+  const versionRequestEvents = eventHistory.filter(
+    (event) =>
+      event.event_type === "REPORT_REQUESTED" &&
+      event.related_version_no === versionNo,
+  );
+  const latestVersionRequest = versionRequestEvents.at(-1);
+  return (
+    requestEvents.length === 1 &&
+    requestEvents[0]?.related_version_no === versionNo &&
+    latestVersionRequest?.event_id === requestEvents[0]?.event_id
+  );
 }
 
 function isSupportedDeliveryEventType(value: unknown): value is string {
@@ -686,8 +710,8 @@ export function confirmDiscussionPackRefresh({
     !isExactNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
     summary?.proposal?.proposal_id !== proposalId ||
-    summary.proposal.current_version_no !== versionNo ||
-    !deliveryEventsMatchActiveProposal({ events, proposalId, versionNo }) ||
+    !isPositiveSafeInteger(summary.proposal.current_version_no) ||
+    summary.proposal.current_version_no < versionNo ||
     !narrativeIdentitiesMatch(actionIdentity, refreshedIdentity) ||
     actionIdentity?.versionNo !== versionNo ||
     refreshedIdentity?.versionNo !== versionNo ||
@@ -696,7 +720,12 @@ export function confirmDiscussionPackRefresh({
     !isExactNonBlankString(actionRequestId) ||
     !isExactNonBlankString(refreshedRequestId) ||
     actionRequestId !== refreshedRequestId ||
-    !deliveryHistoryConfirmsReportRequest(events, actionRequestId) ||
+    !deliveryHistoryConfirmsReportRequest(
+      events,
+      proposalId,
+      versionNo,
+      actionRequestId,
+    ) ||
     !lifecycleIsMonotonic ||
     !artifactsAgree ||
     report.report_type !== DISCUSSION_PACK_REPORT_TYPE ||

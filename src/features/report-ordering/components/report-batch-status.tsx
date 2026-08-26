@@ -60,7 +60,7 @@ export function ReportBatchStatusPanel({
         />
       ) : null}
       {supportPosture ? (
-        <div aria-label="Portfolio bundle support posture">
+        <div aria-label="Portfolio bundle availability">
           <ScreenStatePanel
             kind={supportPosture.kind}
             title={supportPosture.title}

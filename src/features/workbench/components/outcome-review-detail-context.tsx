@@ -12,7 +12,7 @@ export default function OutcomeReviewDetailContext({
   sourceReferenceCount,
 }: Props) {
   return (
-    <div className="outcome-review-detail-context" aria-label="Selected review source posture">
+    <div className="outcome-review-detail-context" aria-label="Selected review evidence status">
       <span>Updated {updatedAt}</span>
       <span>Retained until {retentionUntil}</span>
       <span>{sourceReferenceCount} source references</span>

@@ -26,7 +26,7 @@ export default function PmOperatingQualityFairnessEvidenceCard({ model }: Props)
         </div>
         <div
           className="pm-quality-fairness-preview-posture"
-          aria-label="PM operating quality fairness analysis posture"
+          aria-label="PM operating quality fairness analysis status"
         >
           <MetricRow
             label="Gateway Read State"

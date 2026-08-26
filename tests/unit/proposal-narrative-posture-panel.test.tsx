@@ -42,6 +42,27 @@ const activeProposalSummary = {
   current_version_no: 2,
 };
 
+function proposalSummaryAt(currentVersionNo: number) {
+  return { ...activeProposalSummary, current_version_no: currentVersionNo };
+}
+
+function deliveryEventsAt(currentVersionNo: number) {
+  const reportRequestedEvent = {
+    event_id: "delivery-event-001",
+    proposal_id: "pp_1",
+    related_version_no: 2,
+    event_type: "REPORT_REQUESTED",
+    occurred_at: "2026-05-22T09:00:00Z",
+    reason: { report_request_id: "report-001" },
+  } as const;
+  return {
+    proposal: proposalSummaryAt(currentVersionNo),
+    event_count: 1,
+    latest_event: reportRequestedEvent,
+    events: [reportRequestedEvent],
+  };
+}
+
 function renderPanel(
   props: { proposalId: string; currentVersionNo: number } = {
     proposalId: "pp_1",
@@ -71,6 +92,16 @@ function renderPanel(
   };
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, reject, resolve };
+}
+
 describe("ProposalNarrativePosturePanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -91,28 +122,9 @@ describe("ProposalNarrativePosturePanel", () => {
         },
       },
     });
-    vi.mocked(getProposalDeliveryEvents).mockResolvedValue({
-      proposal: activeProposalSummary,
-      event_count: 1,
-      latest_event: {
-        event_id: "delivery-event-001",
-        proposal_id: "pp_1",
-        related_version_no: 2,
-        event_type: "REPORT_REQUESTED",
-        occurred_at: "2026-05-22T09:00:00Z",
-        reason: { report_request_id: "report-001" },
-      },
-      events: [
-        {
-          event_id: "delivery-event-001",
-          proposal_id: "pp_1",
-          related_version_no: 2,
-          event_type: "REPORT_REQUESTED",
-          occurred_at: "2026-05-22T09:00:00Z",
-          reason: { report_request_id: "report-001" },
-        },
-      ],
-    });
+    vi.mocked(getProposalDeliveryEvents).mockResolvedValue(
+      deliveryEventsAt(2),
+    );
     vi.mocked(getProposalNarrativeReviewEvidence).mockResolvedValue(
       confirmedNarrativeReview,
     );
@@ -269,7 +281,7 @@ describe("ProposalNarrativePosturePanel", () => {
         },
       })
       .mockResolvedValueOnce({
-        proposal: activeProposalSummary,
+        proposal: proposalSummaryAt(3),
         reporting: {
           report_request_id: "report-001",
           report_type: "PORTFOLIO_REVIEW",
@@ -432,9 +444,18 @@ describe("ProposalNarrativePosturePanel", () => {
         "The discussion-pack request was submitted, but current preparation status could not confirm it. Refresh before retrying.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Request discussion pack" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Record advisor review" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
     expect(
-      screen.queryByText("Discussion-pack request confirmed for proposal version 2."),
-    ).not.toBeInTheDocument();
+      await screen.findByText("Discussion-pack request confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh record" })).not.toBeInTheDocument();
+    expect(createProposalReportRequest).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
   });
 
   it("does not claim review success when refreshed source evidence disagrees", async () => {
@@ -464,7 +485,54 @@ describe("ProposalNarrativePosturePanel", () => {
         "The review was submitted, but current proposal evidence could not confirm it. Refresh before taking another action.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Record advisor review" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Request discussion pack" })).toBeDisabled();
     expect(screen.queryByTestId("proposal-narrative-action-status")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh record" })).not.toBeInTheDocument();
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps narrative actions locked when confirmation refresh still fails", async () => {
+    vi.mocked(getProposalNarrativeReviewEvidence)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        ...confirmedNarrativeReview,
+        narrative_review: {
+          ...confirmedNarrativeReview.narrative_review,
+          review_id: "review-different",
+          source_narrative_hash: "sha256:different",
+        },
+      })
+      .mockRejectedValue(new Error("NARRATIVE_READ_UNAVAILABLE"));
+    renderPanel();
+
+    expect((await screen.findAllByText("Not Reviewed")).length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByRole("textbox", { name: "Reviewer reference" }), {
+      target: { value: "advisor_1" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Advisor review rationale" }), {
+      target: { value: "Evidence supports advisor use." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record advisor review" }));
+
+    await screen.findByRole("button", { name: "Refresh record" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText(
+        "The review was submitted, but current proposal evidence could not confirm it. Refresh before taking another action.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh record" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record advisor review" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Request discussion pack" })).toBeDisabled();
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
   });
 
   it("withholds success when the authoritative narrative read cannot refresh", async () => {
@@ -490,7 +558,407 @@ describe("ProposalNarrativePosturePanel", () => {
     expect(screen.queryByTestId("proposal-narrative-action-status")).not.toBeInTheDocument();
   });
 
-  it("resets transient action state when the active proposal version changes", async () => {
+  it("preserves a submitted review across a version remount and confirms its original version", async () => {
+    vi.mocked(getProposalNarrativeReviewEvidence)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        ...confirmedNarrativeReview,
+        narrative_review: {
+          ...confirmedNarrativeReview.narrative_review,
+          review_id: "review-different",
+          source_narrative_hash: "sha256:different",
+        },
+      })
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce(confirmedNarrativeReview);
+    const view = renderPanel();
+
+    expect((await screen.findAllByText("Not Reviewed")).length).toBeGreaterThan(0);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+
+    await screen.findByRole("button", { name: "Refresh record" });
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+
+    expect(
+      await screen.findByRole("button", { name: "Refresh record" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(getProposalNarrativeReviewEvidence).toHaveBeenLastCalledWith(
+      "pp_1",
+      2,
+    );
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an in-flight advisor review fenced across a version remount", async () => {
+    const reviewRequest = createDeferred<
+      Awaited<ReturnType<typeof reviewProposalNarrative>>
+    >();
+    vi.mocked(reviewProposalNarrative).mockReturnValue(reviewRequest.promise);
+    const view = renderPanel();
+
+    await screen.findByRole("button", { name: "Record advisor review" });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Recording review…" }),
+    ).toBeDisabled();
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_2" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "New-version rationale." } },
+    );
+    const remountedReview = screen.getByRole("button", {
+      name: "Recording review…",
+    });
+    expect(remountedReview).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
+    fireEvent.click(remountedReview);
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
+
+    reviewRequest.reject(new Error("SOURCE_UNAVAILABLE"));
+    expect(
+      await screen.findByText(/Advisor review was not recorded/),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Record advisor review" }),
+      ).toBeEnabled(),
+    );
+  });
+
+  it("delivers an in-flight advisor review confirmation to the remounted version session", async () => {
+    const reviewRequest = createDeferred<
+      Awaited<ReturnType<typeof reviewProposalNarrative>>
+    >();
+    vi.mocked(reviewProposalNarrative).mockReturnValue(reviewRequest.promise);
+    const view = renderPanel();
+
+    await screen.findByRole("button", { name: "Record advisor review" });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Recording review…" });
+
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+    reviewRequest.resolve(confirmedNarrativeReview);
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+  });
+
+  it("delivers an in-flight recovery confirmation to the remounted version session", async () => {
+    const refreshRequest = createDeferred<
+      Awaited<ReturnType<typeof getProposalNarrativeReviewEvidence>>
+    >();
+    vi.mocked(getProposalNarrativeReviewEvidence)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({
+        ...confirmedNarrativeReview,
+        narrative_review: {
+          ...confirmedNarrativeReview.narrative_review,
+          review_id: "review-different",
+          source_narrative_hash: "sha256:different",
+        },
+      })
+      .mockImplementationOnce(() => refreshRequest.promise)
+      .mockResolvedValue(confirmedNarrativeReview);
+    const view = renderPanel();
+
+    expect((await screen.findAllByText("Not Reviewed")).length).toBeGreaterThan(0);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Advisor review rationale" }),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Refresh record" });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+    await screen.findByRole("button", { name: "Refreshing…" });
+
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+    expect(
+      screen.getByRole("button", { name: "Refreshing…" }),
+    ).toBeDisabled();
+    refreshRequest.resolve(confirmedNarrativeReview);
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refresh record" })).not.toBeInTheDocument();
+    expect(reviewProposalNarrative).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves a submitted discussion-pack request across a version remount", async () => {
+    vi.mocked(getProposalDeliveryEvents)
+      .mockResolvedValueOnce(deliveryEventsAt(2))
+      .mockResolvedValueOnce(deliveryEventsAt(2))
+      .mockResolvedValue(deliveryEventsAt(3));
+    vi.mocked(getProposalDeliverySummary)
+      .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
+        reporting: {
+          status: "NOT_REQUESTED",
+          include_reviewed_narrative: false,
+        },
+      })
+      .mockResolvedValueOnce({
+        proposal: proposalSummaryAt(3),
+        reporting: {
+          report_request_id: "report-earlier",
+          report_type: "PORTFOLIO_REVIEW",
+          related_version_no: 2,
+          status: "ACCEPTED",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            proposal_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
+        reporting: {
+          report_request_id: "report-001",
+          report_type: "PORTFOLIO_REVIEW",
+          related_version_no: 2,
+          status: "ACCEPTED",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-22T09:01:00Z",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            proposal_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      });
+    const view = renderPanel();
+
+    expect(await screen.findByText("Not requested")).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    );
+
+    await screen.findByRole("button", { name: "Refresh record" });
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+
+    expect(
+      await screen.findByRole("button", { name: "Refresh record" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText(
+        "Discussion-pack request confirmed for proposal version 2.",
+      ),
+    ).toBeInTheDocument();
+    expect(createProposalReportRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an in-flight discussion-pack request fenced across a version remount", async () => {
+    vi.mocked(getProposalDeliverySummary).mockResolvedValue({
+      proposal: activeProposalSummary,
+      reporting: {
+        status: "NOT_REQUESTED",
+        include_reviewed_narrative: false,
+      },
+    });
+    const reportRequest = createDeferred<
+      Awaited<ReturnType<typeof createProposalReportRequest>>
+    >();
+    vi.mocked(createProposalReportRequest).mockReturnValue(
+      reportRequest.promise,
+    );
+    const view = renderPanel();
+
+    expect(await screen.findByText("Not requested")).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    );
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Requesting discussion pack…",
+      }),
+    ).toBeDisabled();
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_2" } },
+    );
+    const remountedRequest = screen.getByRole("button", {
+      name: "Requesting discussion pack…",
+    });
+    expect(remountedRequest).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    fireEvent.click(remountedRequest);
+    expect(createProposalReportRequest).toHaveBeenCalledTimes(1);
+
+    reportRequest.reject(new Error("SOURCE_UNAVAILABLE"));
+    expect(
+      await screen.findByText(/discussion-pack request was not recorded/),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", {
+          name: "Requesting discussion pack…",
+        }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("delivers an in-flight discussion-pack confirmation to the remounted version session", async () => {
+    vi.mocked(getProposalDeliveryEvents).mockResolvedValue(
+      deliveryEventsAt(3),
+    );
+    vi.mocked(getProposalDeliverySummary)
+      .mockResolvedValueOnce({
+        proposal: activeProposalSummary,
+        reporting: {
+          status: "NOT_REQUESTED",
+          include_reviewed_narrative: false,
+        },
+      })
+      .mockResolvedValue({
+        proposal: proposalSummaryAt(3),
+        reporting: {
+          report_request_id: "report-001",
+          report_type: "PORTFOLIO_REVIEW",
+          related_version_no: 2,
+          status: "ACCEPTED",
+          report_reference_id: "report-document-001",
+          generated_at: "2026-05-22T09:01:00Z",
+          include_reviewed_narrative: true,
+          proposal_narrative_package: {
+            proposal_version_no: 2,
+            package_status: "INCLUDED_REVIEWED_NARRATIVE",
+            source_narrative_hash: "sha256:narrative-001",
+          },
+        },
+      });
+    const reportRequest = createDeferred<
+      Awaited<ReturnType<typeof createProposalReportRequest>>
+    >();
+    vi.mocked(createProposalReportRequest).mockReturnValue(
+      reportRequest.promise,
+    );
+    const view = renderPanel();
+
+    expect(await screen.findByText("Not requested")).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Reviewer reference" }),
+      { target: { value: "advisor_1" } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    );
+    await screen.findByRole("button", {
+      name: "Requesting discussion pack…",
+    });
+
+    view.rerenderPanel({ proposalId: "pp_1", currentVersionNo: 3 });
+    reportRequest.resolve({
+      report_request_id: "report-001",
+      report_type: "PORTFOLIO_REVIEW",
+      status: "ACCEPTED",
+      report_reference_id: "report-document-001",
+      generated_at: "2026-05-22T09:01:00Z",
+      explanation: {
+        related_version_no: 2,
+        include_reviewed_narrative: true,
+        proposal_narrative_package: {
+          package_status: "INCLUDED_REVIEWED_NARRATIVE",
+          source_narrative_hash: "sha256:narrative-001",
+        },
+      },
+    });
+
+    expect(
+      await screen.findByText(
+        "Discussion-pack request confirmed for proposal version 2.",
+      ),
+    ).toBeInTheDocument();
+    expect(createProposalReportRequest).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Request discussion pack" }),
+    ).toBeDisabled();
+  });
+
+  it("resets transient action state when the active proposal changes", async () => {
     vi.mocked(reviewProposalNarrative).mockRejectedValueOnce(
       new Error("SOURCE_UNAVAILABLE"),
     );

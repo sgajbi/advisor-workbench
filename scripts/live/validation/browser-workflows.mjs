@@ -606,7 +606,7 @@ export async function validateAdvisoryJourneyScreens(
       await expect(page.getByLabel("Idea candidates")).toBeVisible({
         timeout: timeoutMs,
       });
-      const queueProofPosture = page.getByLabel("Idea queue proof posture");
+      const queueProofPosture = page.getByLabel("Idea worklist evidence status");
       await expect(queueProofPosture).toContainText(
         "Policy: idea-deterministic-ranking-v1",
         { timeout: timeoutMs },
@@ -2417,7 +2417,7 @@ export async function validatePmOperatingQualityPanel(
     });
   }
   await expect(
-    page.getByLabel("PM operating quality summary-invocation posture"),
+    page.getByLabel("PM operating quality summary generation status"),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -2457,7 +2457,7 @@ export async function validateDpmCopilotWorkspace(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByLabel("PM copilot posture")).toBeVisible({
+  await expect(page.getByLabel("Portfolio manager copilot status")).toBeVisible({
     timeout: timeoutMs,
   });
   for (const label of [

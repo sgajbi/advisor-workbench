@@ -128,7 +128,7 @@ export default function AdvisoryOpportunitiesWorkspace({
         </div>
       </div>
 
-      <div className={styles.proofStrip} aria-label="Idea queue proof posture">
+      <div className={styles.proofStrip} aria-label="Idea worklist evidence status">
         <span>Policy: {model.policyVersion}</span>
         <span>Evaluated: {model.evaluatedAtUtc}</span>
         <span>

@@ -13,7 +13,7 @@ describe("OutcomeReviewReasonRow", () => {
       />,
     );
 
-    const reasonRow = screen.getByLabelText("Outcome review supportability reasons");
+    const reasonRow = screen.getByLabelText("Outcome review availability reasons");
     expect(reasonRow).toHaveTextContent("Report preparation ready");
     expect(reasonRow).toHaveTextContent("Report preparation blocked");
     expect(reasonRow).toHaveTextContent("AI-assisted review summary blocked");
@@ -29,7 +29,7 @@ describe("OutcomeReviewReasonRow", () => {
       />,
     );
 
-    expect(screen.queryByLabelText("Outcome review supportability reasons")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Outcome review availability reasons")).not.toBeInTheDocument();
   });
 
   it("preserves an unknown source reason as a readable fail-safe label", () => {

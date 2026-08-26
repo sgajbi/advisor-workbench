@@ -268,7 +268,7 @@ describe("WorkbenchPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality fairness segments")).toBeInTheDocument();
-    expect(screen.getByLabelText("PM operating quality summary-invocation posture")).toBeInTheDocument();
+    expect(screen.getByLabelText("PM operating quality summary generation status")).toBeInTheDocument();
     expect(screen.getByLabelText("PM operating quality summary invocations")).toBeInTheDocument();
     expect(screen.getAllByText("PMQ-SUMMARY-001").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Preview Fairness" })).toBeEnabled();

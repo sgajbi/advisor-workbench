@@ -128,7 +128,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     expect(screen.getByLabelText("Idea candidates")).toHaveTextContent(
       /1\s*Idea candidates/,
     );
-    expect(screen.getByLabelText("Idea queue proof posture")).toHaveTextContent(
+    expect(screen.getByLabelText("Idea worklist evidence status")).toHaveTextContent(
       "Policy: idea-deterministic-ranking-v1",
     );
     expect(

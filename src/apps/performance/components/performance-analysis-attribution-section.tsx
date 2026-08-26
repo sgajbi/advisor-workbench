@@ -59,7 +59,7 @@ export default function PerformanceAnalysisAttributionSection({
         state: "partial" as const,
         reason:
           attributionSourcePosture.reason ??
-          "lotus-performance returned attribution with source supportability qualifications.",
+          "Attribution is available with data-quality qualifications for this selection.",
       }
     : attributionSourcePosture?.state === "unavailable"
     ? {
@@ -67,7 +67,7 @@ export default function PerformanceAnalysisAttributionSection({
         state: "unavailable" as const,
         reason:
           attributionSourcePosture.reason ??
-          "lotus-performance marked attribution unavailable for this selection.",
+          "Attribution is unavailable for this selection.",
       }
     : capabilities.attributionDetail;
   const attributionMethodologyRows = getAttributionMethodologyRows(

@@ -810,7 +810,7 @@ describe("ReportOrderingWorkspace", () => {
     await waitFor(() => expect(unavailableOutputSubmit).toBeEnabled());
     fireEvent.click(unavailableOutputSubmit);
 
-    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    const supportPosture = await screen.findByLabelText("Portfolio bundle availability");
     expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
     expect(supportPosture).toHaveTextContent("nothing has been archived or delivered");
     expect(screen.getByText("Report data complete")).toBeInTheDocument();
@@ -864,7 +864,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(
       await screen.findByRole("heading", { name: "Current outcomes unavailable" }),
     ).toBeInTheDocument();
-    const supportPosture = screen.getByLabelText("Portfolio bundle support posture");
+    const supportPosture = screen.getByLabelText("Portfolio bundle availability");
     expect(within(supportPosture).getByText("Requested output unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("table", { name: "Portfolio report bundle outcomes" })).not.toBeInTheDocument();
 
@@ -872,7 +872,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(
       await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle availability")).not.toBeInTheDocument();
   });
 
   it("retains accepted-handle limitations when status omits nullable support posture", async () => {
@@ -894,7 +894,7 @@ describe("ReportOrderingWorkspace", () => {
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);
 
-    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    const supportPosture = await screen.findByLabelText("Portfolio bundle availability");
     expect(within(supportPosture).getByText("Requested output has limitations")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
   });
@@ -924,7 +924,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(
       await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle availability")).not.toBeInTheDocument();
   });
 
   it("does not mislabel structured data from acceptance-time document limitations", async () => {
@@ -942,7 +942,7 @@ describe("ReportOrderingWorkspace", () => {
     expect(
       await screen.findByRole("table", { name: "Portfolio report bundle outcomes" }),
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Portfolio bundle support posture")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Portfolio bundle availability")).not.toBeInTheDocument();
   });
 
   it("shows degraded source reporting support without hiding portfolio outcomes", async () => {
@@ -970,7 +970,7 @@ describe("ReportOrderingWorkspace", () => {
     await waitFor(() => expect(degradedSupportSubmit).toBeEnabled());
     fireEvent.click(degradedSupportSubmit);
 
-    const supportPosture = await screen.findByLabelText("Portfolio bundle support posture");
+    const supportPosture = await screen.findByLabelText("Portfolio bundle availability");
     expect(within(supportPosture).getByText("Reporting support has limitations")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Portfolio report bundle outcomes" })).toBeInTheDocument();
   });

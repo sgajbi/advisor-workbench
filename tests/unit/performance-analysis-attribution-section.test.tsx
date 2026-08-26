@@ -137,6 +137,56 @@ describe("PerformanceAnalysisAttributionSection", () => {
     ).toBeTruthy();
   });
 
+  it("describes source-qualified attribution in business language", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const workspace = {
+      ...scenario.workspace,
+      attribution: {
+        ...scenario.workspace.attribution!,
+        status: "partial",
+        reasons: [],
+      },
+    };
+
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({ workspace })}
+      />
+    );
+
+    expect(screen.getByText("Attribution detail is partial")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Attribution is available with data-quality qualifications for this selection."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/lotus-performance/i)).not.toBeInTheDocument();
+  });
+
+  it("describes unavailable attribution without exposing a service name", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const workspace = {
+      ...scenario.workspace,
+      attribution: {
+        ...scenario.workspace.attribution!,
+        status: "unavailable",
+        reasons: [],
+      },
+    };
+
+    render(
+      <PerformanceAnalysisAttributionSection
+        {...buildProps({ workspace })}
+      />
+    );
+
+    expect(screen.getByText("Attribution detail unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Attribution is unavailable for this selection.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/lotus-performance/i)).not.toBeInTheDocument();
+  });
+
   it("suppresses summary fallback when the requested attribution segment has a benchmark classification gap", () => {
     const scenario = buildPartialAttributionPerformanceScenario();
     scenario.workspace.partial_failures = [

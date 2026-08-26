@@ -13,7 +13,7 @@ describe("OutcomeReviewDetailContext", () => {
       />,
     );
 
-    const context = screen.getByLabelText("Selected review source posture");
+    const context = screen.getByLabelText("Selected review evidence status");
 
     expect(context).toHaveTextContent("Updated 13 May 2026, 09:35 UTC");
     expect(context).toHaveTextContent("Retained until 31 Dec 2026");
