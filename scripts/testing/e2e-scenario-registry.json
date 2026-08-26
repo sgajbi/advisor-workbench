@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.0.0",
+  "families": {
+    "portfolio": {
+      "fixture_owner": "portfolio",
+      "fixture_environment": "PORTFOLIO_E2E_FIXTURE",
+      "proof_environment": "PORTFOLIO_E2E_PROOF_SCENARIO",
+      "fixture_port_environment": "PORTFOLIO_E2E_FIXTURE_PORT",
+      "workbench_port_environment": "PORTFOLIO_E2E_WORKBENCH_PORT",
+      "default_fixture_port": 18120,
+      "default_workbench_port": 31020,
+      "scenarios": {
+        "cashflow": {
+          "fixture_value": "cashflow",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "cashflow route keeps projection identity and movement semantics explicit",
+            "portfolio record routes hydrate without browser runtime errors",
+            "record recovery preserves confirmed portfolio context while withholding unsupported controls",
+            "unconfirmed historical review keeps the source-confirmed context active",
+            "source-confirmed historical review replaces dated evidence atomically"
+          ]
+        },
+        "allocation-recovery": {
+          "fixture_value": "allocation-recovery",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "allocation keeps direct evidence usable and recovers expanded exposure coverage"
+          ]
+        },
+        "income-activity": {
+          "fixture_value": "income-activity",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "income and activity keeps booked cash evidence truthful across governed viewports"
+          ]
+        },
+        "review-context-states": {
+          "fixture_value": "review-context-states",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "review context keeps productive typography across source states"
+          ]
+        },
+        "shell-unavailable": {
+          "fixture_value": "shell-unavailable",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "selected shell failure reaches one truthful terminal recovery state"
+          ]
+        },
+        "review-matrix": {
+          "fixture_value": "cashflow",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "portfolio review stays decision-focused and keeps detail work on dedicated screens"
+          ]
+        },
+        "positions-status": {
+          "fixture_value": "positions-status",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "positions keep source status truthful across screen, export, and evidence"
+          ]
+        },
+        "transactions-status": {
+          "fixture_value": "transactions-status",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "transactions keep settlement applicability truthful across screen, detail, export, and evidence"
+          ]
+        }
+      }
+    },
+    "performance": {
+      "fixture_owner": "performance",
+      "fixture_environment": "PERFORMANCE_E2E_FIXTURE",
+      "fixture_port_environment": "PERFORMANCE_E2E_FIXTURE_PORT",
+      "workbench_port_environment": "PERFORMANCE_E2E_WORKBENCH_PORT",
+      "default_fixture_port": 18100,
+      "default_workbench_port": 31030,
+      "scenarios": {
+        "populated": {
+          "fixture_value": "populated",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "summary renders the source supportability posture truthfully",
+            "populated summary preserves its metric and layout contract",
+            "performance review uses one governed control bar and a decision-first return table",
+            "single-observation Return Path stays compact, semantic, and responsive",
+            "task-aware navigation keeps Performance work available without catalogue overload",
+            "review context and focus survive Performance mode Back and Forward navigation",
+            "governed review context survives Portfolio to Performance and browser Back",
+            "Risk Review renders Gateway mandate evidence without browser-owned policy",
+            "analysis mode renders live attribution analytics",
+            "advisor brief discloses AI, evidence, review, and client-use posture accessibly",
+            "Advisor Brief review transaction requires confirmation and renders source-recorded proof",
+            "analysis contribution module renders live position detail cleanly",
+            "evidence mode proves exception-first calculation assurance"
+          ],
+          "focuses": {
+            "return-path-density": [
+              "single-observation Return Path stays compact, semantic, and responsive"
+            ],
+            "risk-review": [
+              "Risk Review renders Gateway mandate evidence without browser-owned policy"
+            ],
+            "advisor-brief-review": [
+              "Advisor Brief review transaction requires confirmation and renders source-recorded proof"
+            ],
+            "evidence-assurance": [
+              "evidence mode proves exception-first calculation assurance"
+            ]
+          }
+        },
+        "unavailable": {
+          "fixture_value": "unavailable",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "summary renders the source supportability posture truthfully",
+            "capability-restricted workflow navigation keeps availability claims truthful",
+            "analysis mode renders live attribution analytics",
+            "advisor brief discloses AI, evidence, review, and client-use posture accessibly",
+            "analysis contribution module renders live position detail cleanly",
+            "evidence mode proves exception-first calculation assurance"
+          ]
+        },
+        "refresh-integrity": {
+          "fixture_value": "refresh-integrity",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "refresh failure keeps source-confirmed performance context and recovers without stale labels"
+          ]
+        },
+        "trend-integrity": {
+          "fixture_value": "trend-integrity",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "attribution history failure remains explicit until source retry succeeds"
+          ]
+        },
+        "horizon-integrity": {
+          "fixture_value": "horizon-integrity",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "horizon comparison failure remains explicit until exact source retry succeeds"
+          ]
+        },
+        "analysis-controls": {
+          "fixture_value": "analysis-controls",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "Analysis source controls confirm horizon and benchmark without a mode change"
+          ]
+        },
+        "unknown-period": {
+          "fixture_value": "unknown-period",
+          "spec": "tests/e2e/performance-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "evidence mode fails closed on an unfamiliar source-confirmed period"
+          ]
+        }
+      }
+    },
+    "manage": {
+      "fixture_owner": "manage",
+      "fixture_environment": "MANAGE_E2E_FIXTURE",
+      "fixture_port_environment": "MANAGE_E2E_FIXTURE_PORT",
+      "workbench_port_environment": "MANAGE_E2E_WORKBENCH_PORT",
+      "default_fixture_port": 18150,
+      "default_workbench_port": 31050,
+      "scenarios": {
+        "overview": {
+          "fixture_value": "overview",
+          "spec": "tests/e2e/manage-overview-workspace.spec.ts",
+          "expected_tests": [
+            "Manage Overview keeps the portfolio decision first without repeated destinations"
+          ]
+        },
+        "mandate-health": {
+          "fixture_value": "mandate-health",
+          "spec": "tests/e2e/manage-mandate-health-workspace.spec.ts",
+          "expected_tests": [
+            "Mandate Health preserves source truth across partial and complete attention views"
+          ]
+        },
+        "outcome-reviews": {
+          "fixture_value": "outcome-reviews",
+          "spec": "tests/e2e/manage-outcome-reviews-workspace.spec.ts",
+          "expected_tests": [
+            "Outcome reviews keeps comparison truth, evidence, and next actions distinct"
+          ]
+        },
+        "rebalance-waves": {
+          "fixture_value": "rebalance-waves",
+          "spec": "tests/e2e/manage-rebalance-workspace.spec.ts",
+          "expected_tests": [
+            "Rebalance Waves keeps source context and the portfolio decision first"
+          ]
+        }
+      }
+    },
+    "reports": {
+      "fixture_owner": "report-centre",
+      "fixture_environment": "REPORT_CENTRE_E2E_FIXTURE",
+      "fixture_port_environment": "REPORT_CENTRE_E2E_FIXTURE_PORT",
+      "workbench_port_environment": "REPORT_CENTRE_E2E_WORKBENCH_PORT",
+      "default_fixture_port": 18101,
+      "default_workbench_port": 31060,
+      "scenarios": {
+        "state-matrix": {
+          "fixture_value": "state-matrix",
+          "spec": "tests/e2e/report-centre-state.smoke.spec.ts",
+          "expected_tests": [
+            "recovers both Report Centre regions from a source failure",
+            "keeps restricted state coherent at tablet width",
+            "renders a genuine empty catalogue without dead-end actions",
+            "orders a reviewed portfolio bundle and renders source-owned outcomes",
+            "tracks an accepted request and deliberately starts a second at constrained width",
+            "keeps report lifecycle and support discoverable across content-width changes",
+            "keeps Report centre task-aware while every specialist workspace remains reachable",
+            "respects the shared rail content capacity at 721px",
+            "respects the shared rail content capacity at 720px",
+            "respects the shared rail content capacity at 673px",
+            "respects the shared rail content capacity at 672px",
+            "respects the shared rail content capacity at 664px",
+            "respects the shared rail content capacity at 641px",
+            "respects the shared rail content capacity at 640px",
+            "respects the shared rail content capacity at 620px",
+            "respects the shared rail content capacity at 600px",
+            "respects the shared rail content capacity at 580px",
+            "respects the shared rail content capacity at 561px",
+            "keeps portfolio context and navigation compact and keyboard-complete on mobile"
+          ]
+        }
+      }
+    }
+  }
+}
