@@ -986,6 +986,95 @@ describe("workbench api", () => {
     );
   });
 
+  it("preserves Gateway-owned mandate comparison evidence on risk reads", async () => {
+    const mandateComparison = {
+      mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001",
+      mandate_version: "3",
+      mandate_as_of_date: "2026-02-24",
+      risk_profile: "BALANCED",
+      comparison_as_of_date: "2026-02-24",
+      mandate_health_as_of_date: "2026-02-24",
+      date_alignment_state: "aligned",
+      constraints: [
+        {
+          key: "cash_band",
+          label: "Cash allocation",
+          limit: {
+            minimum: 0.02,
+            maximum: 0.1,
+            unit: "ratio",
+            source_service: "lotus-manage",
+          },
+          measure: {
+            value: 0.0859,
+            unit: "ratio",
+            basis: "total_market_value_base",
+            as_of_date: "2026-02-24",
+            source_service: "lotus-core",
+            source_metric: "cash_weight",
+          },
+          headroom: 0.0141,
+          state: "within",
+          reason: "Cash allocation is within the approved mandate band.",
+          source_state: "READY",
+          source_reason_code: "CASH_LIQUIDITY_READY",
+        },
+      ],
+      review_policy: {
+        review_frequency: "QUARTERLY",
+        last_review_date: "2025-12-31",
+        next_review_due_date: "2026-03-31",
+        state: "scheduled",
+      },
+      source_lineage: [],
+      supportability: {
+        state: "ready",
+        reason: null,
+        source_service: "lotus-manage",
+      },
+    } as const;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-risk-mandate",
+            contract_version: "risk-workspace.v1",
+            portfolio_id: "PF_1001",
+            period: "YTD",
+            as_of_date: "2026-02-24",
+            source_service: "lotus-risk",
+            state: "ready",
+            mandate_comparison: mandateComparison,
+            payload: { periods: [] },
+            supportability: [],
+            warnings: [],
+            partial_failures: [],
+            metadata: {
+              generated_at: "2026-02-24T01:00:00Z",
+              input_mode: "stateful",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+
+    const response = await getWorkbenchRiskSummaryClient("PF_1001", {
+      period: "YTD",
+      detailBasis: "NET",
+      asOfDate: "2026-02-24",
+    });
+
+    expect(response.mandate_comparison).toEqual(mandateComparison);
+    expect(response.mandate_comparison?.constraints[0]).toMatchObject({
+      state: "within",
+      headroom: 0.0141,
+      measure: { value: 0.0859 },
+      limit: { minimum: 0.02, maximum: 0.1 },
+    });
+  });
+
   it("keeps canonical trailing periods in client-side risk summary requests", async () => {
     vi.stubGlobal(
       "fetch",
