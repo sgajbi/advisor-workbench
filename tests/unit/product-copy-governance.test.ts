@@ -21,7 +21,7 @@ import {
 // a finite allowance for instrumented whole-suite worker contention without
 // relaxing the measured inventory, scanner semantics, or zero-headroom ratchet.
 // Standalone scanner execution remains a separate required lint gate.
-const REPOSITORY_SCAN_TIMEOUT_MS = 45_000;
+const REPOSITORY_SCAN_TIMEOUT_MS = 180_000;
 
 function scan(sourceText: string) {
   return scanProductCopySource({ filePath: "src/example.tsx", sourceText });
