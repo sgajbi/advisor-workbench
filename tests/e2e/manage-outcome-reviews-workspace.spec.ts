@@ -73,7 +73,7 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
     );
 
     const statusSummary = page.getByLabel("Outcome review status summary");
-    await expect(statusSummary).toContainText("Review posture");
+    await expect(statusSummary).toContainText("Review status");
     await expect(statusSummary).toContainText("Ready for adviser review");
     await expect(statusSummary).toContainText("Comparison outcome");
     await expect(statusSummary).toContainText("Within expected tolerance");

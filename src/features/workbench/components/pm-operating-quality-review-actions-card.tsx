@@ -68,7 +68,10 @@ export default function PmOperatingQualityReviewActionsCard({
               label={hasDetail ? undefined : "No detail"}
             />
           </div>
-          <div aria-label="PM operating quality supervisory review-action posture">
+          <div
+            className="pm-quality-review-action-status"
+            aria-label="PM operating quality supervisory review action status"
+          >
             <MetricRow
               label="Gateway Read State"
               value={

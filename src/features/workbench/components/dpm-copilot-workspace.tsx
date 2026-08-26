@@ -129,7 +129,7 @@ export default function DpmCopilotWorkspace({
       subtitle="Prepare internal decision-support material from governed portfolio evidence, with review and use boundaries kept explicit."
       className="dpm-copilot-workspace"
       actions={
-        <div className="dpm-copilot-badge-row" aria-label="PM copilot posture">
+        <div className="dpm-copilot-badge-row" aria-label="Portfolio manager copilot status">
           <SemanticBadge tone={readyCount > 0 ? "success" : "warn"}>
             {readyCount} workflows available
           </SemanticBadge>

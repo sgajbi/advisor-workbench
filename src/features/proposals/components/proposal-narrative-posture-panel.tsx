@@ -33,29 +33,98 @@ type Props = {
   currentVersionNo?: number | null;
 };
 
+type PendingAction = {
+  kind: "refresh" | "report" | "review";
+  versionNo: number;
+};
+
+type PendingConfirmation =
+  | {
+      kind: "review";
+      result: Awaited<ReturnType<typeof reviewProposalNarrative>>;
+      versionNo: number;
+    }
+  | {
+      kind: "report";
+      result: Awaited<ReturnType<typeof createProposalReportRequest>>;
+      versionNo: number;
+    };
+
+type DiscussionPackRefreshInput = Parameters<
+  typeof confirmDiscussionPackRefresh
+>[0];
+
+const REVIEW_CONFIRMATION_RECOVERY =
+  "The review was submitted, but current proposal evidence could not confirm it. Refresh before taking another action.";
+const REPORT_CONFIRMATION_RECOVERY =
+  "The discussion-pack request was submitted, but current preparation status could not confirm it. Refresh before retrying.";
+
 export default function ProposalNarrativePosturePanel({
   proposalId,
   currentVersionNo,
 }: Props) {
   return (
-    <ProposalNarrativePosturePanelSession
-      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+    <ProposalNarrativePosturePanelProposalScope
+      key={proposalId}
       proposalId={proposalId}
       currentVersionNo={currentVersionNo}
     />
   );
 }
 
-function ProposalNarrativePosturePanelSession({
+function ProposalNarrativePosturePanelProposalScope({
   proposalId,
   currentVersionNo,
 }: Props) {
+  const [pendingConfirmation, setPendingConfirmation] =
+    useState<PendingConfirmation | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  return (
+    <ProposalNarrativePosturePanelSession
+      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+      proposalId={proposalId}
+      currentVersionNo={currentVersionNo}
+      actionError={actionError}
+      actionMessage={actionMessage}
+      pendingAction={pendingAction}
+      pendingConfirmation={pendingConfirmation}
+      onActionErrorChange={setActionError}
+      onActionMessageChange={setActionMessage}
+      onPendingActionChange={setPendingAction}
+      onPendingConfirmationChange={setPendingConfirmation}
+    />
+  );
+}
+
+type SessionProps = Props & {
+  actionError: string | null;
+  actionMessage: string | null;
+  pendingAction: PendingAction | null;
+  pendingConfirmation: PendingConfirmation | null;
+  onActionErrorChange: (value: string | null) => void;
+  onActionMessageChange: (value: string | null) => void;
+  onPendingActionChange: (value: PendingAction | null) => void;
+  onPendingConfirmationChange: (value: PendingConfirmation | null) => void;
+};
+
+function ProposalNarrativePosturePanelSession({
+  proposalId,
+  currentVersionNo,
+  actionError,
+  actionMessage,
+  pendingAction,
+  pendingConfirmation,
+  onActionErrorChange: setActionError,
+  onActionMessageChange: setActionMessage,
+  onPendingActionChange,
+  onPendingConfirmationChange,
+}: SessionProps) {
   const versionNo = currentVersionNo ?? null;
   const [reviewedBy, setReviewedBy] = useState("");
   const [reviewReason, setReviewReason] = useState("");
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const summaryQuery = useQuery({
     queryKey: ["proposal-delivery-summary", proposalId],
@@ -102,6 +171,21 @@ function ProposalNarrativePosturePanelSession({
     reviewedBy.trim().length > 0 &&
     reviewReason.trim().length > 0;
 
+  function confirmCurrentDiscussionPack(
+    report: DiscussionPackRefreshInput["report"],
+    confirmationVersionNo: number,
+    summary: DiscussionPackRefreshInput["summary"],
+    events: DiscussionPackRefreshInput["events"],
+  ) {
+    confirmDiscussionPackRefresh({
+      proposalId,
+      versionNo: confirmationVersionNo,
+      report,
+      summary,
+      events,
+    });
+  }
+
   async function handleApproveNarrative() {
     if (
       versionNo === null ||
@@ -110,7 +194,7 @@ function ProposalNarrativePosturePanelSession({
     ) {
       return;
     }
-    setPendingAction("review");
+    onPendingActionChange({ kind: "review", versionNo });
     setActionError(null);
     setActionMessage(null);
     let reviewRecorded = false;
@@ -130,6 +214,7 @@ function ProposalNarrativePosturePanelSession({
         ),
       );
       reviewRecorded = true;
+      onPendingConfirmationChange({ kind: "review", result: data, versionNo });
       const narrativeRefresh = narrativeReviewQuery.refetch();
       void Promise.allSettled([
         summaryQuery.refetch(),
@@ -145,6 +230,7 @@ function ProposalNarrativePosturePanelSession({
         review: data,
         refreshedReview: narrativeResult.data ?? undefined,
       });
+      onPendingConfirmationChange(null);
       setReviewReason("");
       setActionMessage(
         `Advisor review confirmed for proposal version ${versionNo}.`,
@@ -152,11 +238,11 @@ function ProposalNarrativePosturePanelSession({
     } catch {
       setActionError(
         reviewRecorded
-          ? "The review was submitted, but current proposal evidence could not confirm it. Refresh before taking another action."
+          ? REVIEW_CONFIRMATION_RECOVERY
           : "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
       );
     } finally {
-      setPendingAction(null);
+      onPendingActionChange(null);
     }
   }
 
@@ -168,7 +254,7 @@ function ProposalNarrativePosturePanelSession({
     ) {
       return;
     }
-    setPendingAction("report");
+    onPendingActionChange({ kind: "report", versionNo });
     setActionError(null);
     setActionMessage(null);
     let requestRecorded = false;
@@ -181,6 +267,7 @@ function ProposalNarrativePosturePanelSession({
         include_reviewed_narrative: true,
       });
       requestRecorded = true;
+      onPendingConfirmationChange({ kind: "report", result: data, versionNo });
       const [summaryResult, eventsResult] = await Promise.all([
         summaryQuery.refetch(),
         eventsQuery.refetch(),
@@ -188,24 +275,93 @@ function ProposalNarrativePosturePanelSession({
       if (summaryResult.error || eventsResult.error) {
         throw new Error("REFRESH_UNAVAILABLE");
       }
-      confirmDiscussionPackRefresh({
-        proposalId,
+      confirmCurrentDiscussionPack(
+        data,
         versionNo,
-        report: data,
-        summary: summaryResult.data,
-        events: eventsResult.data,
-      });
+        summaryResult.data,
+        eventsResult.data,
+      );
+      onPendingConfirmationChange(null);
       setActionMessage(
         `Discussion-pack request confirmed for proposal version ${versionNo}.`,
       );
     } catch {
       setActionError(
         requestRecorded
-          ? "The discussion-pack request was submitted, but current preparation status could not confirm it. Refresh before retrying."
+          ? REPORT_CONFIRMATION_RECOVERY
           : "The discussion-pack request was not recorded. Confirm the reviewed rationale and reviewer reference, then try again.",
       );
     } finally {
-      setPendingAction(null);
+      onPendingActionChange(null);
+    }
+  }
+
+  async function handleRefreshConfirmation() {
+    if (pendingConfirmation === null) {
+      return;
+    }
+
+    onPendingActionChange({
+      kind: "refresh",
+      versionNo: pendingConfirmation.versionNo,
+    });
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      if (pendingConfirmation.kind === "review") {
+        const refreshedReview =
+          pendingConfirmation.versionNo === versionNo
+            ? await narrativeReviewQuery.refetch().then((result) => {
+                if (result.error) {
+                  throw new Error("REFRESH_UNAVAILABLE");
+                }
+                return result.data;
+              })
+            : await getProposalNarrativeReviewEvidence(
+                proposalId,
+                pendingConfirmation.versionNo,
+              );
+        confirmNarrativeReviewRefresh({
+          proposalId,
+          versionNo: pendingConfirmation.versionNo,
+          review: pendingConfirmation.result,
+          refreshedReview: refreshedReview ?? undefined,
+        });
+        void Promise.allSettled([
+          summaryQuery.refetch(),
+          eventsQuery.refetch(),
+        ]);
+        setReviewReason("");
+        setActionMessage(
+          `Advisor review confirmed for proposal version ${pendingConfirmation.versionNo}.`,
+        );
+      } else {
+        const [summaryResult, eventsResult] = await Promise.all([
+          summaryQuery.refetch(),
+          eventsQuery.refetch(),
+        ]);
+        if (summaryResult.error || eventsResult.error) {
+          throw new Error("REFRESH_UNAVAILABLE");
+        }
+        confirmCurrentDiscussionPack(
+          pendingConfirmation.result,
+          pendingConfirmation.versionNo,
+          summaryResult.data,
+          eventsResult.data,
+        );
+        setActionMessage(
+          `Discussion-pack request confirmed for proposal version ${pendingConfirmation.versionNo}.`,
+        );
+      }
+      onPendingConfirmationChange(null);
+    } catch {
+      setActionError(
+        pendingConfirmation.kind === "review"
+          ? REVIEW_CONFIRMATION_RECOVERY
+          : REPORT_CONFIRMATION_RECOVERY,
+      );
+    } finally {
+      onPendingActionChange(null);
     }
   }
 
@@ -228,9 +384,31 @@ function ProposalNarrativePosturePanelSession({
           until the record refreshes.
         </Alert>
       ) : null}
-      {actionError ? (
-        <Alert severity="warning" role="alert">
-          {actionError}
+      {actionError ||
+      (pendingConfirmation !== null &&
+        (pendingAction === null || pendingAction.kind === "refresh")) ? (
+        <Alert
+          severity="warning"
+          role="alert"
+          action={
+            pendingConfirmation ? (
+              <Button
+                color="inherit"
+                size="small"
+                disabled={pendingAction !== null}
+                onClick={() => void handleRefreshConfirmation()}
+              >
+                {pendingAction?.kind === "refresh"
+                  ? "Refreshing…"
+                  : "Refresh record"}
+              </Button>
+            ) : undefined
+          }
+        >
+          {actionError ??
+            (pendingConfirmation?.kind === "review"
+              ? REVIEW_CONFIRMATION_RECOVERY
+              : REPORT_CONFIRMATION_RECOVERY)}
         </Alert>
       ) : null}
       {actionMessage ? (
@@ -318,10 +496,14 @@ function ProposalNarrativePosturePanelSession({
           <Button
             type="button"
             variant="contained"
-            disabled={!canSubmit || pendingAction !== null}
+            disabled={
+              !canSubmit ||
+              pendingAction !== null ||
+              pendingConfirmation !== null
+            }
             onClick={() => void handleApproveNarrative()}
           >
-            {pendingAction === "review"
+            {pendingAction?.kind === "review"
               ? "Recording review…"
               : "Record advisor review"}
           </Button>
@@ -330,13 +512,14 @@ function ProposalNarrativePosturePanelSession({
             variant="outlined"
             disabled={
               pendingAction !== null ||
+              pendingConfirmation !== null ||
               !posture.canRequestDiscussionPack ||
               reviewedBy.trim().length === 0 ||
               versionNo === null
             }
             onClick={() => void handleRequestReport()}
           >
-            {pendingAction === "report"
+            {pendingAction?.kind === "report"
               ? "Requesting discussion pack…"
               : "Request discussion pack"}
           </Button>

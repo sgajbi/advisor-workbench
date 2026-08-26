@@ -22,7 +22,7 @@ type ProposalMockOptions = {
   memoReviewRefreshMismatch?: boolean;
   memoSourceVersionNo?: number;
   narrativeReviewFailure?: boolean;
-  narrativeRefreshMismatch?: boolean;
+  narrativeInitialRefreshMismatch?: boolean;
   workflowFailure?: boolean;
 };
 
@@ -35,6 +35,7 @@ async function mockProposalDetail(
   let narrativeHash: string | null = null;
   let narrativeReviewedBy: string | null = null;
   let narrativeReviewedAt: string | null = null;
+  let narrativeConfirmationReadCount = 0;
   let discussionPackRequested = false;
   const memoHash = "sha256:memo-001";
   const memoReportEventId = "memo-report-event-001";
@@ -215,9 +216,7 @@ async function mockProposalDetail(
         return;
       }
       narrativeReviewState = "APPROVED_FOR_ADVISOR_USE";
-      narrativeHash = options.narrativeRefreshMismatch
-        ? "sha256:mismatched-narrative"
-        : "sha256:narrative-001";
+      narrativeHash = "sha256:narrative-001";
       narrativeReviewedBy = "advisor_1";
       narrativeReviewedAt = "2026-05-24T10:01:30Z";
       await route.fulfill({
@@ -237,13 +236,23 @@ async function mockProposalDetail(
   await page.route(
     "**/api/bff/api/v1/proposals/pp_1/versions/2/narrative",
     async (route) => {
+      const confirmationRead = narrativeReviewState === "APPROVED_FOR_ADVISOR_USE";
+      const sourceNarrativeHash =
+        options.narrativeInitialRefreshMismatch &&
+        confirmationRead &&
+        narrativeConfirmationReadCount === 0
+          ? "sha256:mismatched-narrative"
+          : narrativeHash;
+      if (confirmationRead) {
+        narrativeConfirmationReadCount += 1;
+      }
       await route.fulfill({
         json: {
           correlation_id: "corr-narrative",
           contract_version: "v1",
           data: {
             policy_version: "proposal-narrative-deterministic.v1",
-            narrative_review: narrativeReviewRecord(),
+            narrative_review: narrativeReviewRecord({ sourceNarrativeHash }),
           },
         },
       });
@@ -802,7 +811,7 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByTestId("proposal-narrative-action-status")).toHaveCount(0);
 
     await page.unrouteAll({ behavior: "wait" });
-    await mockProposalDetail(page, { narrativeRefreshMismatch: true });
+    await mockProposalDetail(page, { narrativeInitialRefreshMismatch: true });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.getByText("Review record details", { exact: true }).click();
     await page.getByRole("textbox", { name: "Reviewer reference" }).fill("advisor_1");
@@ -817,6 +826,16 @@ test.describe("proposal memo posture", () => {
       ),
     ).toBeVisible();
     await expect(page.getByTestId("proposal-narrative-action-status")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Record advisor review" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Request discussion pack" })).toBeDisabled();
+
+    await page.getByRole("button", { name: "Refresh record" }).click();
+
+    await expect(page.getByTestId("proposal-narrative-action-status")).toContainText(
+      "Advisor review confirmed for proposal version 2.",
+    );
+    await expect(page.getByRole("button", { name: "Refresh record" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Request discussion pack" })).toBeEnabled();
   });
 
   test("does not confirm repeated commentary from a prior audit event", async ({

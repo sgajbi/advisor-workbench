@@ -297,7 +297,7 @@ export default function AdvisoryCopilotWorkspace({
             </ul>
           ) : null}
           {model.guardrailResults.length > 0 ? (
-            <ul className={styles.guardrailList} aria-label="Guardrail posture">
+            <ul className={styles.guardrailList} aria-label="Guardrail status">
               {model.guardrailResults.map((item) => (
                 <li key={item}>{item}</li>
               ))}

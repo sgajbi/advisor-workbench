@@ -45,7 +45,7 @@ export function PortfolioEvidenceModule({
           </div>
         ))}
       </div>
-      <div className="portfolio-workflow-entry-list" aria-label="Adjacent governed workflows">
+      <div className="portfolio-workflow-entry-list" aria-label="Related portfolio workflows">
         <ActionLink href={buildPortfolioModeHref(workspace, "summary")}>Performance</ActionLink>
         <ActionLink href={buildPortfolioModeHref(workspace, "risk")}>Risk</ActionLink>
         <ActionLink href={buildPortfolioModeHref(workspace, "advisor")}>Advisor Brief</ActionLink>

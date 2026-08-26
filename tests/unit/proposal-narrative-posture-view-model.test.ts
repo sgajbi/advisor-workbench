@@ -538,6 +538,42 @@ describe("proposal narrative posture view model", () => {
     ).not.toThrow();
   });
 
+  it("confirms the original discussion-pack request after the proposal advances", () => {
+    const advancedProposal = {
+      ...activeProposalSummary,
+      current_version_no: 3,
+    };
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        ...activeProposal,
+        report: discussionPackRequest(),
+        summary: discussionPackSummary({}, advancedProposal),
+        events: activeEvents({ proposal: advancedProposal }),
+      }),
+    ).not.toThrow();
+  });
+
+  it("keeps the original request confirmable after later non-report activity", () => {
+    const implementationEvent = buildDeliveryEvent({
+      event_id: "delivery-event-002",
+      event_type: "EXECUTION_REQUESTED",
+      occurred_at: "2026-05-22T09:02:00Z",
+      reason: {},
+    });
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        ...activeProposal,
+        report: discussionPackRequest(),
+        summary: discussionPackSummary(),
+        events: activeEvents({
+          event_count: 2,
+          latest_event: implementationEvent,
+          events: [buildDeliveryEvent(), implementationEvent],
+        }),
+      }),
+    ).not.toThrow();
+  });
+
   it("accepts an async accepted action that refreshes monotonically to a ready package", () => {
     expect(() =>
       confirmDiscussionPackRefresh({
@@ -719,7 +755,79 @@ describe("proposal narrative posture view model", () => {
       activeEvents(),
     ],
     ["wrong proposal", discussionPackRequest(), discussionPackSummary({}, { ...activeProposalSummary, proposal_id: "pp_2" }), activeEvents()],
+    ["summary snapshot predates the action", discussionPackRequest(), discussionPackSummary({}, { ...activeProposalSummary, current_version_no: 1 }), activeEvents()],
     ["wrong events", discussionPackRequest(), discussionPackSummary(), activeEvents({ proposal: { ...activeProposalSummary, current_version_no: 1 } })],
+    [
+      "matching request on another version",
+      discussionPackRequest(),
+      discussionPackSummary({}, { ...activeProposalSummary, current_version_no: 3 }),
+      activeSingleEvent({
+        related_version_no: 3,
+        reason: { report_request_id: "report-001" },
+      }),
+    ],
+    [
+      "request identity reused on a later version",
+      discussionPackRequest(),
+      discussionPackSummary({}, { ...activeProposalSummary, current_version_no: 3 }),
+      activeEvents({
+        proposal: { ...activeProposalSummary, current_version_no: 3 },
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_id: "delivery-event-002",
+          related_version_no: 3,
+          occurred_at: "2026-05-22T09:02:00Z",
+        }),
+        events: [
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
+            event_id: "delivery-event-002",
+            related_version_no: 3,
+            occurred_at: "2026-05-22T09:02:00Z",
+          }),
+        ],
+      }),
+    ],
+    [
+      "duplicate canonical request event",
+      discussionPackRequest(),
+      discussionPackSummary(),
+      activeEvents({
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_id: "delivery-event-002",
+          occurred_at: "2026-05-22T09:02:00Z",
+        }),
+        events: [
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
+            event_id: "delivery-event-002",
+            occurred_at: "2026-05-22T09:02:00Z",
+          }),
+        ],
+      }),
+    ],
+    [
+      "later request supersedes the original on the same version",
+      discussionPackRequest(),
+      discussionPackSummary(),
+      activeEvents({
+        event_count: 2,
+        latest_event: buildDeliveryEvent({
+          event_id: "delivery-event-002",
+          occurred_at: "2026-05-22T09:02:00Z",
+          reason: { report_request_id: "report-002" },
+        }),
+        events: [
+          buildDeliveryEvent(),
+          buildDeliveryEvent({
+            event_id: "delivery-event-002",
+            occurred_at: "2026-05-22T09:02:00Z",
+            reason: { report_request_id: "report-002" },
+          }),
+        ],
+      }),
+    ],
   ])("withholds confirmation for %s evidence", (_label, report, summary, events) => {
     expect(() =>
       confirmDiscussionPackRefresh({

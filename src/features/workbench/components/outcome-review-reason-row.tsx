@@ -27,7 +27,7 @@ export default function OutcomeReviewReasonRow({
   return (
     <div
       className="outcome-review-reason-row"
-      aria-label="Outcome review supportability reasons"
+      aria-label="Outcome review availability reasons"
     >
       {reasons.map((reason) => (
         <SemanticBadge

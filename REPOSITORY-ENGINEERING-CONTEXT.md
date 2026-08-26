@@ -1508,12 +1508,40 @@ Most relevant current governance:
     business-state projection fail-closed, preserve exact unknown values only for progressive
     support detail, and pair every degraded state with the unavailable business information, the
     information that remains trustworthy, and the next recovery action. `npm run
-    quality:product-copy` is a semantic TypeScript-AST ratchet: the measured inventory must exactly
-    equal its checked-in baseline, every fixing slice must lower both together, and a regression or
-    stale higher baseline fails CI. It follows statically inspectable local `const` references from
-    rendered JSX and copy properties with lexical-scope and cycle safety; do not introduce aliases
-    to hide productive copy or broaden the scanner into executable evaluation. Never raise the
-    baseline or hide productive strings from analysis.
+    quality:product-copy` is a semantic TypeScript-AST ratchet: both the measured violation inventory
+    and the unresolved user-facing expression inventory must exactly equal their checked-in
+    baselines. The unresolved inventory is also bound to a stable SHA-256 digest of structural
+    paths and enclosing declaration identities, so identical expressions in different named or
+    positional scopes remain distinct and one
+    newly opaque expression cannot replace a resolved path at the same count. Every fixing slice
+    must lower the applicable measurement and update its identity digest together; a regression,
+    identity substitution, or stale higher baseline fails CI. It follows statically inspectable local `const`
+    references from rendered JSX and copy properties with lexical-scope and cycle safety. Repository
+    mutation analysis must retain bounded conditional/logical owners, declaration and assignment-form
+    destructuring, and standard mutation APIs reached through statically inspectable object members.
+    A standard-mutation member's conservative authority must survive local alias, renamed member
+    wrapping (including shorthand object wrappers), and declaration, assignment-form, renamed, or
+    nested destructuring capture. Resolve shorthand, renamed property-value, bounded conditional or
+    logical property-value, transparent-wrapper, comma-expression right operand, direct array,
+    variable-initializer, and ordinary assignment-RHS captures through their value symbol and exact
+    value-expression program point rather than the
+    wrapper-property symbol or a later call site. Comma-expression traversal never treats a
+    side-effecting left operand as the captured value, but applies its ordered assignments before
+    resolving the rightmost value. A simple assignment expression contributes its right-hand value
+    after its nested writes. Nested writes replay in JavaScript evaluation order—contained RHS writes
+    before their enclosing assignment, not AST pre-order—while `&&=`, `||=`, and `??=` snapshot the
+    left-hand authority before evaluating a reachable RHS. A short-circuited RHS never changes
+    mutation authority; a conditionally reachable RHS remains conservative. Statically named
+    computed properties use the same rule, including const and aliased-const keys. Property,
+    computed-property, renamed-destructured, member, and assignment-form
+    intermediate aliases must retain the same captured owner path. Candidate-cycle identity is the
+    symbol plus program point: a definite alias round trip may revisit the same symbol at an earlier
+    capture position, while a repeated identical state becomes conservative unknown. Dynamic getter
+    returns remain unresolved rather than silently clean. An opaque
+    value at a named user-facing property or native `aria-label` is measured rather than silently
+    treated as clean. Do not
+    introduce aliases to hide productive copy, raise either baseline, or broaden the scanner into
+    executable evaluation.
     Some flagged terms are legitimate wealth-management language or identifiers in a specific
     reviewed context. Admit those only through `config/product-copy-exceptions.v1.json`, keyed by
     productive file, rule, rendered context, exact copy, and exact expected match count, with a
@@ -1523,6 +1551,23 @@ Most relevant current governance:
     Proposal review actions follow the same source-confirmation rule as lifecycle actions: bind to
     the active source version, admit downstream packaging only after its prerequisite evidence is
     confirmed, and announce success only when the action response and refreshed owning read agree.
+    If a narrative review or discussion-pack mutation persists but immediate confirmation fails,
+    retain that exact mutation response as pending confirmation, expose a bounded source refresh,
+    and fence both submission actions until the refreshed owning read confirms the original action.
+    Own the in-flight lock, pending confirmation, and terminal success or failure outcome at proposal
+    scope from submission start—not only after persistence—so an active-version remount cannot
+    discard the transaction or deliver its outcome to an obsolete session. Refresh the original
+    persisted version rather than substituting the newly active version. Release the in-flight lock
+    only when the source request fails or exact source confirmation succeeds, retain the truthful
+    terminal outcome on the current screen, and reset the full scope when the proposal identity
+    changes. Never create a new idempotency key while the earlier action is in flight or persisted
+    but unconfirmed.
+    Proposal-wide delivery summary and event envelopes may identify a newer active proposal version
+    while still carrying the exact older-version report record. Confirm that original request from
+    its report-request id, narrative version/hash, monotonic package state, and matching
+    latest same-version `REPORT_REQUESTED` event id/version. Require the envelope version to be at least the original
+    version; do not require it to remain equal, substitute a newer version, or accept a matching
+    request id from another version or duplicate canonical request events.
     Memo and generated-working-aid workflows must require an explicit actor reference, preserve the
     source-owned proposal version as read-only context, and fail closed on unknown source states.
     Confirm compound success only when every source view required by that action agrees; never let a

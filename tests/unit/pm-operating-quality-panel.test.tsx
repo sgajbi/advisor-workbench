@@ -374,22 +374,22 @@ describe("PmOperatingQualityPanel", () => {
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality Gateway operation evidence")
+      screen.getByLabelText("PM operating quality operation evidence")
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("PM operating quality command readiness")
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality support summary posture")
+      screen.getByLabelText("PM operating quality support summary status")
     ).toBeInTheDocument();
     expect(screen.getByText("Score Preview Command")).toBeInTheDocument();
     expect(screen.getByText("Summary Request")).toBeInTheDocument();
     expect(screen.getByText("Fairness Preview Command")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality fairness analysis posture")
+      screen.getByLabelText("PM operating quality fairness analysis status")
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality supervisory review-action posture")
+      screen.getByLabelText("PM operating quality supervisory review action status")
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("PM operating quality score-run selection")
@@ -398,7 +398,7 @@ describe("PmOperatingQualityPanel", () => {
       screen.getByLabelText("PM operating quality review-action selection")
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText("PM operating quality summary-invocation posture")
+      screen.getByLabelText("PM operating quality summary generation status")
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("PM operating quality summary invocations")
@@ -521,7 +521,7 @@ describe("PmOperatingQualityPanel", () => {
       });
     });
     expect(
-      screen.getByLabelText("PM operating quality action error posture")
+      screen.getByLabelText("PM operating quality action error status")
     ).toBeInTheDocument();
     expect(screen.getByText("business blocked")).toBeInTheDocument();
     expect(screen.getByText("409")).toBeInTheDocument();

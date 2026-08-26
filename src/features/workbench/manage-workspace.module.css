@@ -1164,7 +1164,7 @@
   background: #ffffff;
 }
 
-.manageScope :global(.pm-quality-review-action-detail [aria-label="PM operating quality supervisory review-action posture"]) {
+.manageScope :global(.pm-quality-review-action-status) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

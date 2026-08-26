@@ -89,13 +89,13 @@ export default function PmOperatingQualityScoreRunCard({
         />
       </div>
       {actionError ? (
-        <div className="pm-quality-action-error" aria-label="PM operating quality action error posture">
+        <div className="pm-quality-action-error" aria-label="PM operating quality action error status">
           <MetricRow label="Status Class" value={actionError.statusClass} />
           <MetricRow label="Gateway Status" value={actionError.status} />
           <MetricRow label="Error Source" value={actionError.source} />
         </div>
       ) : null}
-      <div className="pm-quality-operation-evidence" aria-label="PM operating quality Gateway operation evidence">
+      <div className="pm-quality-operation-evidence" aria-label="PM operating quality operation evidence">
         <MetricRow label="Operation" value={model.operationEvidence.operation} />
         <MetricRow label="Correlation" value={model.operationEvidence.correlationId} />
         <MetricRow label="Contract" value={model.operationEvidence.contractVersion} />
@@ -113,7 +113,7 @@ export default function PmOperatingQualityScoreRunCard({
           <MetricRow label="Create Upstream Status" value={fairnessCreateEvidence.upstreamStatus} />
         </div>
       ) : null}
-      <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary posture">
+      <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary status">
         <MetricRow label="Summary Status" value={model.summaryPosture.status} />
         <MetricRow label="Review Posture" value={model.summaryPosture.reviewState} />
         <MetricRow label="Workflow Authority" value={model.summaryPosture.workflowAuthority} />

@@ -1138,7 +1138,7 @@ describe("canonical live validation script", () => {
       'screenshotRegisteredPanel(page, "dpm.construction_alternatives")',
     );
     expect(browserWorkflowModule).toContain(
-      "PM operating quality summary-invocation posture",
+      "PM operating quality summary generation status",
     );
     expect(browserWorkflowModule).toContain(
       'qualityPanel.locator(".pm-quality-status-strip")',
@@ -1155,7 +1155,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'screenshotRegisteredPanel(page, "dpm.pm_operating_quality")',
     );
-    expect(browserWorkflowModule).toContain("PM copilot posture");
+    expect(browserWorkflowModule).toContain("Portfolio manager copilot status");
     expect(browserWorkflowModule).toContain(
       'screenshotRegisteredPanel(page, "dpm.copilot_workspace")',
     );

@@ -66,10 +66,30 @@ concurrency group.
 - `npm run quality:product-copy`
   parses productive TypeScript and JSX, rejects transport and engineering language in business
   copy, resolves statically inspectable local `const` references that feed rendered copy, and
-  requires the measured violation inventory to equal the checked-in baseline exactly. Resolution
-  is lexical-scope aware and deliberately does not execute code or treat control-state enums as
-  display copy.
-  Both regression and unused improvement headroom fail. Legitimate wealth-management terms or
+  requires both the measured violation inventory and unresolved user-facing expression inventory
+  to equal their checked-in baselines exactly. A stable digest of structural paths and enclosing
+  declaration identities distinguishes identical copy in different named or positional scopes and prevents one newly opaque path
+  replacing a resolved path at the same count. Native `aria-label`
+  copy is governed alongside visible copy. Resolution is lexical-scope aware and deliberately
+  does not execute code or treat control-state enums as display copy. Standard mutation APIs reached
+  through object members retain conservative authority through local aliases, renamed member
+  wrappers (including shorthand, renamed, bounded conditional/logical, transparent property-value,
+  comma-expression right operand, direct array, variable-initializer, ordinary assignment-RHS, and
+  statically named computed captures resolved through their value symbols at the exact value-expression
+  program point), and declaration, assignment-form,
+  renamed, or nested destructuring. Sequence traversal follows only the value-producing right operand
+  while applying earlier in-expression assignments in JavaScript evaluation order. Simple assignment
+  expressions contribute their right-hand value. Contained RHS writes precede their enclosing
+  assignment, while logical assignments retain the pre-RHS authority used by `&&=`, `||=`, or `??=`
+  to decide whether that RHS runs; skipped writes stay excluded and uncertain writes stay conservative.
+  Intermediate property,
+  computed-property, renamed, member, and assignment-form
+  aliases retain the captured owner path. Cycle detection keys authority by symbol and program point,
+  allowing proven earlier captures to be revisited while repeated identical states become conservative
+  unknowns; dynamic getter returns remain unresolved.
+  Opaque values at named user-facing
+  properties are measured rather than silently treated as clean.
+  Regression, identity substitution, and unused improvement headroom in either inventory fail. Legitimate wealth-management terms or
   identifiers may be admitted only through the exact, review-backed entries in
   `config/product-copy-exceptions.v1.json`; stale, duplicated, broadened, unknown-rule, or
   undocumented exceptions fail the same gate. A broad vocabulary allowlist is not supported.

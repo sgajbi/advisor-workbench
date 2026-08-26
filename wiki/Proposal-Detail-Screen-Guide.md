@@ -81,7 +81,17 @@ These use cases do not substitute for authenticated production-role or portfolio
   confirms the persisted review identity, actor, time, state, and narrative hash. Delivery summary
   remains downstream package posture, not review authority. Review and pack success are announced
   only after the action response and the action-specific refreshed reads agree; disagreement
-  remains an explicit failure.
+  remains an explicit failure. When persistence succeeds but confirmation does not, the screen
+  retains the exact action response, locks both narrative submission controls, and offers
+  **Refresh record** until source-owned evidence confirms that original action. The lock begins
+  when the source request starts and survives a newer active version, preventing a second review or
+  discussion-pack request while the original transaction is still in flight. Its success or failure
+  is delivered to the current proposal screen even if the active version changes before the source
+  request or confirmation refresh completes.
+- When the proposal has advanced, confirmation uses the original report-request identity, reviewed
+  narrative version, and latest same-version delivery-request event. The proposal-wide envelope may report
+  the newer active version; it cannot substitute that version, reuse the request identity on another
+  version, or present duplicate canonical request events as proof.
 - Treats delivery activity as current only when the complete returned history is chronological,
   has unique record identities, belongs to the active proposal version, and agrees with the latest
   source record. Discussion-pack success additionally requires the latest pack-request record to
@@ -144,8 +154,8 @@ and [Integrations](Integrations).
 | Ready | Decision-first proposal record with supporting evidence and source-admitted actions | Review before acting |
 | Supporting evidence checking | Primary detail remains visible while workflow, approvals, or lineage settle | Actions remain unavailable until the complete evidence set agrees |
 | Partial supporting evidence | Available proposal evidence remains visible and the missing source family is named | Restore the missing evidence before a lifecycle action |
-| Action pending | The initiating action remains fenced and conflicting controls are unavailable | Wait for persistence and coherent refresh |
-| Action confirmation failed | No success is shown; prior evidence remains under its prior context | Review current posture and retry deliberately |
+| Action pending | The initiating action remains fenced across same-proposal version changes and conflicting controls are unavailable | Wait for persistence and coherent refresh |
+| Action confirmation failed | No success is shown; prior evidence remains under its original proposal version and duplicate narrative or discussion-pack submission is fenced, including when a newer version becomes active | Use **Refresh record** to reconcile the original persisted action before taking another action |
 | Restricted | Proposal review is withheld with no inferred approval posture | Return to the originating worklist and use the bank's access process |
 | Unavailable | Source proposal record is unavailable | Return to the originating worklist and retry after Gateway recovers |
 | Not found or invalid id | No proposal evidence is shown | Return to the originating worklist or create a new draft where appropriate |
