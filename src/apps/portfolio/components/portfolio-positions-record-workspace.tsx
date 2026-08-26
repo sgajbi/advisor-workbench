@@ -10,7 +10,7 @@ import {
   buildPositionsReviewAvailability,
   filterRecentTransactionsForHolding,
 } from "../portfolio-booked-holdings-view-model";
-import { PORTFOLIO_SCREEN_LABELS } from "../portfolio-terminology";
+import { PORTFOLIO_MODULE_LABELS } from "../portfolio-terminology";
 import type { PortfolioWorkspace } from "../types";
 import type { PortfolioTimeWindow } from "../view-model";
 import { buildHoldingDrawer } from "./portfolio-detail-drawer-builders";
@@ -127,8 +127,8 @@ export default function PortfolioPositionsRecordWorkspace({
         positions={bookedHoldings}
         baseCurrency={workspace.portfolio.base_currency}
         columnMode="expanded"
-        kicker="Position inventory"
-        title={PORTFOLIO_SCREEN_LABELS.positions}
+        kicker="Booked records"
+        title={PORTFOLIO_MODULE_LABELS.bookedPortfolioInventory}
         description={
           availability.inventoryComplete
             ? `Complete securities and cash inventory as of ${formatDate(asOfDate)} in ` +

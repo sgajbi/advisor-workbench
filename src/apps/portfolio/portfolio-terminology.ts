@@ -16,6 +16,11 @@ export const PORTFOLIO_SCREEN_LABELS = {
   reportCentre: "Report centre",
 } as const;
 
+export const PORTFOLIO_MODULE_LABELS = {
+  projectedMovementDetail: "Projection detail",
+  bookedPortfolioInventory: "Booked portfolio inventory",
+} as const;
+
 export const PORTFOLIO_CURRENCY_LABELS = {
   base: "Base currency",
   reporting: "Reporting currency",

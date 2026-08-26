@@ -8,6 +8,7 @@ import {
   PORTFOLIO_REVIEW_DATE_LABEL,
   PORTFOLIO_CURRENCY_LABELS,
   PORTFOLIO_EVIDENCE_LABELS,
+  PORTFOLIO_MODULE_LABELS,
   PORTFOLIO_SCREEN_LABELS,
   PORTFOLIO_VALUATION_DATE_LABEL,
   PORTFOLIO_VALUE_LABEL,
@@ -99,6 +100,19 @@ describe("portfolio terminology", () => {
       evidenceCoverage: "Evidence coverage",
       activeLimitations: "Active limitations",
     });
+  });
+
+  it("keeps subordinate record modules distinct from their route task headings", () => {
+    expect(PORTFOLIO_MODULE_LABELS).toEqual({
+      projectedMovementDetail: "Projection detail",
+      bookedPortfolioInventory: "Booked portfolio inventory",
+    });
+    expect(PORTFOLIO_MODULE_LABELS.projectedMovementDetail).not.toBe(
+      PORTFOLIO_SCREEN_LABELS.projectedCashFlow,
+    );
+    expect(PORTFOLIO_MODULE_LABELS.bookedPortfolioInventory).not.toBe(
+      PORTFOLIO_SCREEN_LABELS.positions,
+    );
   });
 
   it.each([
