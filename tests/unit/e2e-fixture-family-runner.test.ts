@@ -26,6 +26,12 @@ describe("governed E2E fixture family runner", () => {
     });
   });
 
+  it("rejects positional values so package-manager flag stripping cannot widen proof", () => {
+    expect(() => parseFamilyArguments(["portfolio"])).toThrow(
+      /Unexpected positional argument portfolio/,
+    );
+  });
+
   it("fails closed when a registered scenario is missing its proof artifact", () => {
     const proof = buildFamilyProof({
       familyName: "portfolio",

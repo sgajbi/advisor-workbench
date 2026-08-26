@@ -271,9 +271,12 @@ function validateProtectedWorkflow({ root, workflowPath, expectedFamilies }) {
   if (job["continue-on-error"] === true) {
     findings.push(`${workflowPath}: fixture scenarios cannot continue on error.`);
   }
+  if (!job.env?.WORKBENCH_E2E_FIXTURE_FAMILY?.includes("matrix.family")) {
+    findings.push(`${workflowPath}: fixture family must be selected from the matrix environment.`);
+  }
   const steps = job.steps ?? [];
   const runStep = steps.find((step) =>
-    step.run?.includes("npm run test:e2e:fixtures -- --family"),
+    step.run?.includes("npm run test:e2e:fixtures"),
   );
   if (!runStep) {
     findings.push(`${workflowPath}: fixture family execution step is missing.`);

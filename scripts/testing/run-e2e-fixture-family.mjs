@@ -25,6 +25,11 @@ export function parseFamilyArguments(arguments_) {
       familyName = argument.slice("--family=".length);
       continue;
     }
+    if (!argument.startsWith("--")) {
+      throw new Error(
+        `Unexpected positional argument ${argument}; select a family with --family or WORKBENCH_E2E_FIXTURE_FAMILY.`,
+      );
+    }
     forwardedArguments.push(argument);
   }
   return { familyName, forwardedArguments };
@@ -91,7 +96,10 @@ export function buildFamilyProof({ familyName, scenarioOutcomes }) {
 export async function runFixtureFamilies(arguments_ = process.argv.slice(2)) {
   const projectRoot = process.cwd();
   const registry = loadScenarioRegistry({ root: projectRoot });
-  const { familyName, forwardedArguments } = parseFamilyArguments(arguments_);
+  const parsedArguments = parseFamilyArguments(arguments_);
+  const familyName =
+    parsedArguments.familyName ?? process.env.WORKBENCH_E2E_FIXTURE_FAMILY ?? null;
+  const { forwardedArguments } = parsedArguments;
   const familyNames = familyName ? [familyName] : Object.keys(registry.families);
 
   for (const selectedFamily of familyNames) {

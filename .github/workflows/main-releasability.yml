@@ -95,6 +95,7 @@ jobs:
         family: [portfolio, performance, manage, reports]
     env:
       WORKBENCH_DEPLOYMENT_ID: ${{ github.sha }}
+      WORKBENCH_E2E_FIXTURE_FAMILY: ${{ matrix.family }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -106,7 +107,7 @@ jobs:
       - name: Install Playwright Browsers
         run: node node_modules/playwright/cli.js install chromium
       - name: Run Exact Fixture Scenario Family
-        run: npm run test:e2e:fixtures -- --family "${{ matrix.family }}"
+        run: npm run test:e2e:fixtures
       - name: Upload Fixture Scenario Evidence
         if: always()
         uses: actions/upload-artifact@v7
