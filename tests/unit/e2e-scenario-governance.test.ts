@@ -103,6 +103,16 @@ describe("E2E scenario governance gate", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("fixture matrix must cover every registry family exactly once");
   }, GOVERNANCE_TEST_TIMEOUT_MS);
+
+  it("fails when the required browser proof no longer depends on fixture scenarios", () => {
+    const workflow = readFileSync(prWorkflowPath, "utf8").replace(
+      "needs: [e2e-smoke, e2e-fixture-scenarios]",
+      "needs: [e2e-smoke]",
+    );
+    const result = runChecker({ prWorkflow: writeTemporaryText("workflow.yml", workflow) });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("always-running browser proof gate");
+  }, GOVERNANCE_TEST_TIMEOUT_MS);
 });
 
 function readRegistry(): MutableRegistry {

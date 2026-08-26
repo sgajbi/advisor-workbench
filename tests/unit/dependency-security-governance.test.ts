@@ -9,7 +9,7 @@ const governedTimeoutsByJob = new Map([
   [
     "e2e-smoke",
     {
-      nameSuffix: "Playwright Smoke",
+      nameSuffix: "Fixture-Free Playwright Smoke",
       timeout: 30,
     },
   ],
