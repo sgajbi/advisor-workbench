@@ -19,28 +19,14 @@ describe("Performance smoke scenario launcher", () => {
     );
   });
 
-  it("binds the BFF to the owned loopback fixture and directly owns Playwright", () => {
-    expect(source).toContain('"trend-integrity"');
-    expect(source).toContain("BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`");
-    expect(source).not.toContain("BFF_BASE_URL: `http://gateway.dev.lotus:${fixturePort}`");
-    expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "performance"');
-    expect(source).toContain("PLAYWRIGHT_PORT: String(workbenchPort)");
-    expect(source).toContain(
-      'process.env.PERFORMANCE_E2E_WORKBENCH_PORT ?? process.env.PLAYWRIGHT_PORT ?? "31030"',
-    );
-    expect(source).toContain("spawn(");
-    expect(source).toContain('shell: false');
-    expect(source).toContain('child.kill(signal)');
+  it("delegates Performance selection to the shared governed runner", () => {
+    expect(source).toContain('familyName: "performance"');
+    expect(source).toContain("scenarioName: process.argv[2]");
+    expect(source).toContain("arguments_: process.argv.slice(3)");
+    expect(source).not.toContain("--grep");
   });
 
   it("admits the deterministic source-integrity scenarios", () => {
-    expect(source).toContain('"refresh-integrity"');
-    expect(source).toContain('"horizon-integrity"');
-    expect(source).toContain('"analysis-controls"');
-    expect(source).toContain('"unknown-period"');
-    expect(source).toContain(
-      'Performance smoke scenario must be populated, unavailable, refresh-integrity, trend-integrity, horizon-integrity, analysis-controls, or unknown-period.',
-    );
     expect(packageJson.scripts["test:e2e:performance:horizon-integrity"]).toContain(
       "run-performance-smoke-scenario.mjs horizon-integrity",
     );

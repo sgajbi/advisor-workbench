@@ -10,18 +10,34 @@ describe("Report Centre smoke scenario runner", () => {
     resolve(process.cwd(), "scripts/testing/run-report-centre-smoke-scenario.mjs"),
     "utf8",
   );
+  const registry = JSON.parse(
+    readFileSync(
+      resolve(process.cwd(), "scripts/testing/e2e-scenario-registry.json"),
+      "utf8",
+    ),
+  ) as {
+    families: {
+      reports: {
+        additional_environment: Record<string, string>;
+        scenarios: Record<string, { spec: string }>;
+      };
+    };
+  };
 
   it("owns an exact bounded loopback fixture and reporting authority", () => {
-    expect(source).toContain('WORKBENCH_E2E_FIXTURE_GATEWAY: "report-centre"');
-    expect(source).toContain('REPORT_CENTRE_E2E_FIXTURE: "state-matrix"');
-    expect(source).toContain('WORKBENCH_REPORTING_AUTH_MODE: "development_configured"');
-    expect(source).toContain('WORKBENCH_REPORTING_CALLER_ROLE: "client_advisor"');
-    expect(source).toContain("WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS");
+    expect(source).toContain('familyName: "reports"');
+    expect(source).toContain('scenarioName: "state-matrix"');
+    expect(registry.families.reports.additional_environment).toMatchObject({
+      WORKBENCH_REPORTING_AUTH_MODE: "development_configured",
+      WORKBENCH_REPORTING_CALLER_ROLE: "client_advisor",
+    });
   });
 
   it("runs only the governed Report Centre browser spec", () => {
-    expect(source).toContain('"tests/e2e/report-centre-state.smoke.spec.ts"');
-    expect(source).toContain("REPORT_CENTRE_E2E_FIXTURE_PORT must be an unprivileged TCP port");
+    expect(
+      registry.families.reports.scenarios["state-matrix"].spec,
+    ).toBe("tests/e2e/report-centre-state.smoke.spec.ts");
+    expect(source).not.toContain("--grep");
   });
 });
 
