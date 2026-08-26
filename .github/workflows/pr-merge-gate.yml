@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: error
 
   e2e-smoke:
-    name: PR Merge Gate / Playwright Smoke
+    name: PR Merge Gate / Fixture-Free Playwright Smoke
     needs: [quality-gate]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -124,6 +124,24 @@ jobs:
           name: fixture-scenario-${{ matrix.family }}
           path: output/e2e-scenario-results/${{ matrix.family }}
           if-no-files-found: error
+
+  browser-proof-gate:
+    name: PR Merge Gate / Playwright Smoke
+    needs: [e2e-smoke, e2e-fixture-scenarios]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FIXTURE_RESULT: ${{ needs.e2e-fixture-scenarios.result }}
+      SMOKE_RESULT: ${{ needs.e2e-smoke.result }}
+    steps:
+      - name: Enforce Complete Browser Proof
+        run: |
+          if [ "$SMOKE_RESULT" != "success" ] || [ "$FIXTURE_RESULT" != "success" ]; then
+            echo "Fixture-free smoke: $SMOKE_RESULT"
+            echo "Exact fixture scenarios: $FIXTURE_RESULT"
+            exit 1
+          fi
 
   docker-build:
     name: PR Merge Gate / Docker Build And Security

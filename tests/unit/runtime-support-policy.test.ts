@@ -365,11 +365,11 @@ describe("runtime support policy", () => {
     const conditionalJobEvidence = loadEvidence();
     conditionalJobEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"] =
       conditionalJobEvidence.workflowSources[".github/workflows/pr-merge-gate.yml"].replace(
-        /  e2e-smoke:\r?\n    name: PR Merge Gate \/ Playwright Smoke/,
+        /  e2e-smoke:\r?\n    name: PR Merge Gate \/ Fixture-Free Playwright Smoke/,
         [
           "  e2e-smoke:",
           "    if: false",
-          "    name: PR Merge Gate / Playwright Smoke",
+          "    name: PR Merge Gate / Fixture-Free Playwright Smoke",
         ].join("\n")
       );
     const ignoredFailure = loadEvidence();
@@ -448,7 +448,7 @@ describe("runtime support policy", () => {
     ],
     [
       "job",
-      /(  e2e-smoke:\r?\n    name: PR Merge Gate \/ Playwright Smoke\r?\n    needs: \[quality-gate\]\r?\n    runs-on: ubuntu-latest\r?\n    timeout-minutes: 30)/,
+      /(  e2e-smoke:\r?\n    name: PR Merge Gate \/ Fixture-Free Playwright Smoke\r?\n    needs: \[quality-gate\]\r?\n    runs-on: ubuntu-latest\r?\n    timeout-minutes: 30)/,
       [
         "$1",
         "    defaults:",

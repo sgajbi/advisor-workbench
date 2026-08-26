@@ -289,6 +289,28 @@ function validateProtectedWorkflow({ root, workflowPath, expectedFamilies }) {
   if (!uploadStep || uploadStep.if !== "always()") {
     findings.push(`${workflowPath}: fixture evidence must upload on every outcome.`);
   }
+  const browserProofGate = workflow.jobs?.["browser-proof-gate"];
+  const browserProofDependencies = Array.isArray(browserProofGate?.needs)
+    ? browserProofGate.needs
+    : [browserProofGate?.needs];
+  const browserProofStep = browserProofGate?.steps?.find((step) =>
+    step.run?.includes('"$SMOKE_RESULT" != "success"')
+    && step.run?.includes('"$FIXTURE_RESULT" != "success"')
+  );
+  if (
+    !browserProofGate
+    || browserProofGate.if !== "${{ always() }}"
+    || !browserProofDependencies.includes("e2e-smoke")
+    || !browserProofDependencies.includes("e2e-fixture-scenarios")
+    || browserProofGate.env?.SMOKE_RESULT !== "${{ needs.e2e-smoke.result }}"
+    || browserProofGate.env?.FIXTURE_RESULT
+      !== "${{ needs.e2e-fixture-scenarios.result }}"
+    || !browserProofStep
+  ) {
+    findings.push(
+      `${workflowPath}: the always-running browser proof gate must fail unless fixture-free smoke and every fixture family succeed.`,
+    );
+  }
   return findings;
 }
 
