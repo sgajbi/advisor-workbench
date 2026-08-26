@@ -121,6 +121,7 @@ export default function PerformanceRiskMode({
       modeIntro={modeIntro}
       controlBar={
         <PerformanceAnalysisControlBar
+          controlBarAriaLabel="Risk analysis controls"
           portfolioId={workspace.portfolio.portfolio_id}
           period={period}
           detailBasis={detailBasis}

@@ -106,9 +106,12 @@ describe("PerformanceRiskMode", () => {
     ).toHaveLength(1);
     expect(
       screen.getByRole("group", {
-        name: "Risk analysis source selection controls",
+        name: "Risk analysis controls",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("group", { name: /Risk analysis source selection/ }),
+    ).toHaveLength(1);
     expect(screen.queryByLabelText("Frequency")).not.toBeInTheDocument();
     expect(
       screen.getByRole("group", { name: "Risk analysis source selection" }),

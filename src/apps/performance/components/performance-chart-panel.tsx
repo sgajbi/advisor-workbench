@@ -203,6 +203,7 @@ function PerformanceChartPanelBody({
       contextRow={topContext}
       toolbar={
         <PerformanceAnalysisControlBar
+          controlBarAriaLabel="Performance return controls"
           portfolioId={portfolioId}
           period={period}
           detailBasis={detailBasis}

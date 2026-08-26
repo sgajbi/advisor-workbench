@@ -25,6 +25,7 @@ export default function PerformanceAnalysisMode({
       shellClassName="performance-analysis-shell"
     >
       <PerformanceAnalysisControlBar
+        controlBarAriaLabel="Performance analysis controls"
         portfolioId={workspace.portfolio.portfolio_id}
         period={period}
         detailBasis={detailBasis}
