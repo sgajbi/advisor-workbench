@@ -56,7 +56,7 @@ test("Mandate Health preserves source truth across partial and complete attentio
     });
 
     await expect(
-      page.getByRole("heading", { name: "Mandate review workflow" }),
+      page.getByRole("heading", { name: "Mandate review", exact: true }),
     ).toBeVisible({ timeout: 60_000 });
 
     const queue = page
