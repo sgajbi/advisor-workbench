@@ -1401,7 +1401,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByRole('heading', { name: /^Positions$/i })).toBeVisible();
     const compactNavigation = page
       .getByTestId('portfolio-screen-rail')
-      .getByRole('button', { name: /Current view Holdings/i });
+      .getByRole('button', { name: /Current view Positions/i });
     await compactNavigation.focus();
     await expect(compactNavigation).toBeFocused();
 
@@ -1416,7 +1416,7 @@ test.describe('Portfolio workbench smoke', () => {
             portfolioId: session.portfolioId,
             routes: ['/positions'],
             viewport: { width: 390, height: 844 },
-            keyboardTarget: 'Current view Holdings',
+            keyboardTarget: 'Current view Positions',
             browserRuntimeFailures,
           },
           null,
