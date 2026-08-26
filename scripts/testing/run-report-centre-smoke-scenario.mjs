@@ -1,6 +1,6 @@
 import { runFixtureScenario } from "./run-e2e-fixture-scenario.mjs";
 
-runFixtureScenario({
+process.exitCode = await runFixtureScenario({
   familyName: "reports",
   scenarioName: "state-matrix",
   arguments_: process.argv.slice(2),

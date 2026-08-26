@@ -1,10 +1,10 @@
-import type { ChildProcess } from "node:child_process";
-
 export function runFixtureScenario(input: {
   familyName: string;
   scenarioName: string;
   arguments_?: string[];
-}): ChildProcess;
+  resultDirectory?: string;
+  environmentOverrides?: NodeJS.ProcessEnv;
+}): Promise<number>;
 
 export function parseRunnerArguments(arguments_: string[]): {
   focusName: string | null;

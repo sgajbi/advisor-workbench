@@ -33,14 +33,23 @@ describe("Performance smoke scenario launcher", () => {
     expect(packageJson.scripts["test:e2e:performance:analysis-controls"]).toContain(
       "run-performance-smoke-scenario.mjs analysis-controls",
     );
-    expect(packageJson.scripts["test:e2e:performance:evidence-period-assurance"]).toContain(
-      'run-performance-smoke-scenario.mjs unknown-period --grep "fails closed on an unfamiliar source-confirmed period"',
+    expect(packageJson.scripts["test:e2e:performance:evidence-period-assurance"]).toBe(
+      "node scripts/testing/run-performance-smoke-scenario.mjs unknown-period",
     );
   });
 
   it("publishes deterministic attribution-history integrity proof", () => {
-    expect(packageJson.scripts["test:e2e:performance:trend-integrity"]).toContain(
-      'trend-integrity --grep "attribution history failure"',
+    expect(packageJson.scripts["test:e2e:performance:trend-integrity"]).toBe(
+      "node scripts/testing/run-performance-smoke-scenario.mjs trend-integrity",
+    );
+  });
+
+  it("uses registered focus names instead of mutable grep expressions", () => {
+    expect(packageJson.scripts["test:e2e:performance:risk-review"]).toContain(
+      "populated --focus risk-review",
+    );
+    expect(packageJson.scripts["test:e2e:performance:return-path-density"]).toContain(
+      "populated --focus return-path-density",
     );
   });
 });
