@@ -1923,7 +1923,10 @@ test("keeps proposal decisions unavailable when source returns an impossible adv
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await mockProposalPortfolioEvidence(page, { effectiveDate: "2026-04-31" });
+  await mockProposalPortfolioEvidence(page, {
+    effectiveDate: "2026-04-31",
+    sourceCurrencies: ["SGD"],
+  });
   await page.goto(buildProposalBuilderUrl(), {
     waitUntil: "domcontentloaded",
   });
@@ -1938,6 +1941,7 @@ test("keeps proposal decisions unavailable when source returns an impossible adv
     "data-effective-as-of-date",
     "2026-04-31",
   );
+  await expect(evidence).toHaveAttribute("data-evidence-currency", "SGD");
   await expect(
     page.getByRole("heading", { name: "Portfolio evidence date is unavailable" }),
   ).toBeVisible();
@@ -1958,15 +1962,17 @@ test("keeps proposal decisions unavailable when source returns an impossible adv
   await expect(
     page.getByRole("button", { name: "Refresh Portfolio Evidence" }),
   ).toBeEnabled();
-  await expect(page.getByLabel("Currency")).toHaveValue("");
-  await expect(page.getByLabel("Price Currency")).toHaveValue("");
+  await expect(
+    page.getByRole("textbox", { name: "Currency", exact: true }),
+  ).toHaveValue("USD");
+  await expect(page.getByRole("textbox", { name: "Price Currency" })).toHaveValue("USD");
   await testInfo.attach("proposal-invalid-source-date", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
 });
 
-test("does not replace an invalid carried advisory date with an undated portfolio read", async ({
+test("rejects an invalid carried advisory date before any portfolio read", async ({
   page,
 }) => {
   const requestedDates: string[] = [];
@@ -1976,18 +1982,14 @@ test("does not replace an invalid carried advisory date with an undated portfoli
     { waitUntil: "domcontentloaded" },
   );
 
-  const evidence = page.getByTestId("proposal-portfolio-evidence");
-  await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
-  await expect(evidence).toHaveAttribute(
-    "data-evidence-date-issue",
-    "invalid_requested_date",
-  );
   await expect(
-    page.getByRole("heading", { name: "Advisory date needs correction" }),
+    page.getByRole("heading", { name: "Review context needs attention" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Refresh Portfolio Evidence" }),
-  ).toBeDisabled();
+    page.getByText(
+      "The proposal address contains repeated or unsupported review context. No portfolio was substituted and no proposal draft was opened.",
+    ),
+  ).toBeVisible();
   await page.waitForLoadState("networkidle");
   expect(requestedDates).toEqual([]);
 });
