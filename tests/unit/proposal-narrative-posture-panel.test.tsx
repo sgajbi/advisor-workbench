@@ -264,7 +264,13 @@ describe("ProposalNarrativePosturePanel", () => {
           policy_version: "proposal-narrative-deterministic.v1",
         },
       })
-      .mockResolvedValueOnce(confirmedNarrativeReview);
+      .mockResolvedValueOnce({
+        ...confirmedNarrativeReview,
+        narrative_review: {
+          ...confirmedNarrativeReview.narrative_review,
+          reviewed_at: "2026-05-22T17:00:00+08:00",
+        },
+      });
     vi.mocked(getProposalDeliverySummary)
       .mockResolvedValueOnce({
         proposal: activeProposalSummary,

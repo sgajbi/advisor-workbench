@@ -642,7 +642,10 @@ export function confirmNarrativeReviewRefresh({
       refreshedRecord.source_narrative_hash ||
     actionRecord.review_state !== refreshedRecord?.review_state ||
     actionRecord.reviewed_by !== refreshedRecord?.reviewed_by ||
-    actionRecord.reviewed_at !== refreshedRecord.reviewed_at
+    !timestampsRepresentSameInstant(
+      actionRecord.reviewed_at,
+      refreshedRecord.reviewed_at,
+    )
   ) {
     throw new Error(
       "Advisor review was recorded, but the refreshed proposal evidence did not confirm it.",
