@@ -12,6 +12,7 @@ import {
   isBusinessDateValue,
   isTimestampValue,
   parseBusinessDateValue,
+  timestampsRepresentSameInstant,
 } from "@/design-system/utils/financial-formatters";
 
 describe("financial-formatters", () => {
@@ -88,5 +89,26 @@ describe("financial-formatters", () => {
     expect(formatTimestampValue("2026-01-01T08:60:00Z")).toBe("N/A");
     expect(formatTimestampValue("2026-01-01T08:32:60Z")).toBe("N/A");
     expect(formatTimestampValue("2026-01-01T08:32:00+24:00")).toBe("N/A");
+  });
+
+  it("compares zoned timestamps by their exact represented instant", () => {
+    expect(
+      timestampsRepresentSameInstant(
+        "2026-08-27T15:02:35.41829Z",
+        "2026-08-27T23:02:35.418290+08:00",
+      ),
+    ).toBe(true);
+    expect(
+      timestampsRepresentSameInstant(
+        "2026-08-27T15:02:35.1234Z",
+        "2026-08-27T15:02:35.1235Z",
+      ),
+    ).toBe(false);
+    expect(
+      timestampsRepresentSameInstant(
+        "2026-08-27T15:02:35Z",
+        "2026-08-27T15:02:35",
+      ),
+    ).toBe(false);
   });
 });

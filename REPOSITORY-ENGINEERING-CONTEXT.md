@@ -559,7 +559,10 @@ Current repository posture:
     independent downstream package posture and cannot authorize review. Delivery history must be
     complete, chronological, uniquely identified, bound event-by-event to the active proposal
     version, and consistent with its final/latest record. A discussion-pack action is confirmed only
-    when the latest report-request event carries the exact returned request identity. The route does
+    when the latest report-request event carries the exact returned request identity. Compare
+    source timestamps as strict zoned instants rather than raw strings: equivalent UTC and offset
+    representations may confirm the same event, while invalid, zone-less, or fractionally distinct
+    timestamps must remain unconfirmed. The route does
     not generate
     narrative, infer
     client-ready release, render reports, archive artifacts, contact clients, route orders, or call

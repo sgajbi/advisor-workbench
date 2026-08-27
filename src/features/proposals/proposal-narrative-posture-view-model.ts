@@ -1,6 +1,7 @@
 import {
   formatTimestampValue,
   isTimestampValue,
+  timestampsRepresentSameInstant,
 } from "@/design-system/utils/financial-formatters";
 
 import type {
@@ -705,7 +706,10 @@ export function confirmDiscussionPackRefresh({
   );
   const artifactsAgree =
     report.report_reference_id === summary?.reporting?.report_reference_id &&
-    report.generated_at === summary?.reporting?.generated_at;
+    timestampsRepresentSameInstant(
+      report.generated_at,
+      summary?.reporting?.generated_at,
+    );
   if (
     !isExactNonBlankString(proposalId) ||
     !isPositiveSafeInteger(versionNo) ||
