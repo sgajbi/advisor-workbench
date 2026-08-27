@@ -682,6 +682,7 @@ test.describe('Performance workbench smoke', () => {
       { name: 'tablet', width: 768, height: 1100 },
       { name: 'compact-tablet', width: 561, height: 1000 },
       { name: 'compact', width: 519, height: 1000 },
+      { name: 'phone', width: 390, height: 844 },
     ]) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       const session = await openPerformanceWorkbench(page, request);
@@ -759,7 +760,7 @@ test.describe('Performance workbench smoke', () => {
           `${viewport.name} ${label} right edge`,
         ).toBeLessThanOrEqual(viewport.width + 1);
       }
-      if (viewport.width <= 640) {
+      if (viewport.width <= 420) {
         const dialogBounds = await customWindowDialog.boundingBox();
         expect(dialogBounds?.x ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
         expect(dialogBounds?.width ?? 0).toBeGreaterThanOrEqual(viewport.width - 2);

@@ -41,7 +41,7 @@ export default function PerformanceCustomWindowDialog({
   onApply: (window: PerformanceCustomWindow) => void;
   onExited: () => void;
 }) {
-  const fullScreen = useMediaQuery("(max-width: 640px)");
+  const fullScreen = useMediaQuery("(max-width: 420px)");
   const [draft, setDraft] = useState(confirmedWindow);
   const [errors, setErrors] = useState<PerformanceCustomWindowErrors>({});
 
@@ -100,7 +100,7 @@ export default function PerformanceCustomWindowDialog({
         },
       }}
     >
-      <form className={styles.form} onSubmit={submitWindow} noValidate>
+      <form onSubmit={submitWindow} noValidate>
         <DialogTitle id="performance-custom-window-title" className={styles.title}>
           Choose a custom review window
         </DialogTitle>
