@@ -17,7 +17,8 @@ const memoRecoveryEvidenceDirectory = process.env.ISSUE_877_EVIDENCE_DIR
 type ProposalMockOptions = {
   actionFailure?: boolean;
   blocked?: boolean;
-  memoInitialState?: "unreviewed" | "reviewed" | "complete";
+  memoCreateFailure?: boolean;
+  memoInitialState?: "not-prepared" | "unreviewed" | "reviewed" | "complete";
   memoCommentaryInitiallyRecorded?: boolean;
   memoCommentaryRefreshMismatch?: boolean;
   memoNestedIdentityMismatch?: boolean;
@@ -45,7 +46,8 @@ async function mockProposalDetail(
   const memoReviewEventId = "memo-review-event-001";
   const initialMemoState = options.memoInitialState ?? "complete";
   const memoSourceVersionNo = options.memoSourceVersionNo ?? 2;
-  let memoReviewed = initialMemoState !== "unreviewed";
+  let memoCreated = initialMemoState !== "not-prepared";
+  let memoReviewed = initialMemoState === "reviewed" || initialMemoState === "complete";
   let memoReviewRequestCount = 0;
   let memoReportRecorded = initialMemoState === "complete";
   let memoCommentaryRecorded = options.memoCommentaryInitiallyRecorded ?? false;
@@ -292,6 +294,11 @@ async function mockProposalDetail(
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo", async (route) => {
     if (route.request().method() === "POST") {
+      if (options.memoCreateFailure) {
+        await route.fulfill({ status: 500, body: "INTERNAL_MEMO_CREATE_FAILURE" });
+        return;
+      }
+      memoCreated = true;
       await route.fulfill({
         json: { correlation_id: "corr-memo-create", contract_version: "v1", data: memoResponse() },
       });
@@ -299,6 +306,10 @@ async function mockProposalDetail(
     }
     if (options.blocked && route.request().method() === "GET") {
       await route.fulfill({ status: 409, body: "MEMO_BLOCKED_BY_SOURCE_EVIDENCE" });
+      return;
+    }
+    if (!memoCreated) {
+      await route.fulfill({ status: 404, body: "MEMO_NOT_FOUND" });
       return;
     }
     await route.fulfill({
@@ -381,6 +392,10 @@ async function mockProposalDetail(
     },
   );
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo/projection**", async (route) => {
+    if (!memoCreated) {
+      await route.fulfill({ status: 404, body: "MEMO_NOT_FOUND" });
+      return;
+    }
     const requestUrl = new URL(route.request().url());
     const audience = requestUrl.searchParams.get("audience") ?? "ADVISOR";
     await route.fulfill({
@@ -413,15 +428,16 @@ async function mockProposalDetail(
         correlation_id: "corr-memo-lineage",
         contract_version: "v1",
         data: {
+          proposal_id: "pp_1",
           proposal: {
             proposal_id: "pp_1",
             current_state: sourceState,
             current_version_no: memoSourceVersionNo,
           },
-          memo_count: 1,
-          latest_memo_id: "memo_1",
+          memo_count: memoCreated ? 1 : 0,
+          latest_memo_id: memoCreated ? "memo_1" : null,
           lineage_complete: true,
-          memos: [{
+          memos: memoCreated ? [{
             memo_id: "memo_1",
             proposal_version_no: memoSourceVersionNo,
             memo_hash: "sha256:memo-001",
@@ -430,12 +446,16 @@ async function mockProposalDetail(
             report_package_posture: reportPosture(),
             ai_commentary_posture: commentaryPosture(),
             archive_refs: memoReportRecorded ? [{ document_id: "doc_memo_001" }] : [],
-          }],
+          }] : [],
         },
       },
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/versions/2/memo/replay-evidence", async (route) => {
+    if (!memoCreated) {
+      await route.fulfill({ status: 404, body: "MEMO_NOT_FOUND" });
+      return;
+    }
     await route.fulfill({
       json: {
         correlation_id: "corr-replay",
@@ -596,6 +616,51 @@ async function mockProposalDetail(
 }
 
 test.describe("proposal memo posture", () => {
+  test("starts the memo workflow from source-confirmed absence", async ({ page }) => {
+    await mockProposalDetail(page, { memoInitialState: "not-prepared" });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+
+    await expect(page.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "not-prepared",
+    );
+    await expect(page.getByText("Memo not prepared").first()).toBeVisible();
+    await expect(page.getByText(/Current memo evidence is unavailable/)).toHaveCount(0);
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Advisor or reviewer reference" }).fill("advisor_9");
+    await page.getByRole("button", { name: "Prepare advisor memo" }).click();
+
+    await expect(
+      page.getByText("Advisor memo confirmed for proposal version 2."),
+    ).toBeVisible();
+    await expect(page.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "ready",
+    );
+    await expect(page.getByRole("button", { name: "Record advisor review" })).toBeVisible();
+  });
+
+  test("keeps failed preparation explicit without fabricating a memo", async ({ page }) => {
+    await mockProposalDetail(page, {
+      memoCreateFailure: true,
+      memoInitialState: "not-prepared",
+    });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+    await page.getByRole("tab", { name: "Memo & evidence pack" }).click();
+    await page.getByText("Memo record details", { exact: true }).click();
+    await page.getByRole("textbox", { name: "Advisor or reviewer reference" }).fill("advisor_9");
+    await page.getByRole("button", { name: "Prepare advisor memo" }).click();
+
+    await expect(page.getByText(/The advisor memo was not prepared/)).toBeVisible();
+    await expect(page.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+      "data-source-state",
+      "not-prepared",
+    );
+    await expect(page.getByRole("button", { name: "Prepare advisor memo" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Record advisor review" })).toHaveCount(0);
+  });
+
   test("renders advisor memo audiences and blocked client draft posture", async ({ page }) => {
     await mockProposalDetail(page);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });

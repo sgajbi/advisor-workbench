@@ -33,6 +33,10 @@ import {
   type ProposalMemoProjectionAudience,
   type ProposalMemoRefreshEvidence,
 } from "../proposal-memo-posture-view-model";
+import {
+  isProposalMemoSourceConfirmedAbsent,
+  resolveProposalMemoSourceState,
+} from "../proposal-memo-source-state";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
   SectionBlock,
@@ -261,6 +265,29 @@ function ProposalMemoPosturePanelSession({
     enabled: versionNo !== null,
   });
 
+  const sourceLoading = Boolean(
+    versionNo !== null
+    && (memoQuery.isPending
+      || projectionQuery.isPending
+      || lineageQuery.isPending
+      || replayQuery.isPending),
+  );
+  const sourceRefreshing = Boolean(
+    versionNo !== null
+    && (memoQuery.isFetching
+      || projectionQuery.isFetching
+      || lineageQuery.isFetching
+      || replayQuery.isFetching),
+  );
+  const sourceConfirmsMemoAbsent = isProposalMemoSourceConfirmedAbsent({
+    lineageData: lineageQuery.data,
+    lineageError: lineageQuery.error,
+    memoError: memoQuery.error,
+    projectionError: projectionQuery.error,
+    proposalId,
+    replayError: replayQuery.error,
+    versionNo,
+  });
   const posture = useMemo(
     () =>
       buildProposalMemoPostureModel({
@@ -270,6 +297,7 @@ function ProposalMemoPosturePanelSession({
         projectionData: projectionQuery.data,
         replayData: replayQuery.data,
         selectedAudience: audience,
+        sourceConfirmsMemoAbsent,
         versionNo,
       }),
     [
@@ -279,35 +307,9 @@ function ProposalMemoPosturePanelSession({
       proposalId,
       projectionQuery.data,
       replayQuery.data,
+      sourceConfirmsMemoAbsent,
       versionNo,
     ],
-  );
-
-  const sourceUnavailable = Boolean(
-    memoQuery.error ||
-    projectionQuery.error ||
-    lineageQuery.error ||
-    replayQuery.error,
-  );
-  const sourceLoading = Boolean(
-    versionNo !== null &&
-    (memoQuery.isPending ||
-      projectionQuery.isPending ||
-      lineageQuery.isPending ||
-      replayQuery.isPending),
-  );
-  const sourceRefreshing = Boolean(
-    versionNo !== null &&
-    (memoQuery.isFetching ||
-      projectionQuery.isFetching ||
-      lineageQuery.isFetching ||
-      replayQuery.isFetching),
-  );
-  const sourceEvidenceAvailable = Boolean(
-    memoQuery.data &&
-      projectionQuery.data &&
-      lineageQuery.data &&
-      replayQuery.data,
   );
   const sourceEvidenceReadable = Boolean(
     memoQuery.data ||
@@ -318,17 +320,22 @@ function ProposalMemoPosturePanelSession({
   const sourceReadable = Boolean(
     versionNo !== null && !sourceLoading && sourceEvidenceReadable,
   );
-  const sourceReady = Boolean(
-    sourceEvidenceAvailable
-      && posture.sourceIdentityCurrent
-      && !sourceUnavailable
-      && !sourceRefreshing,
-  );
-  const sourceState = sourceLoading || sourceRefreshing
-    ? "loading"
-    : sourceReady
-      ? "ready"
-      : "unavailable";
+  const sourceState = resolveProposalMemoSourceState({
+    isChecking: sourceLoading || sourceRefreshing,
+    lineageData: lineageQuery.data,
+    lineageError: lineageQuery.error,
+    memoData: memoQuery.data,
+    memoError: memoQuery.error,
+    projectionData: projectionQuery.data,
+    projectionError: projectionQuery.error,
+    proposalId,
+    replayData: replayQuery.data,
+    replayError: replayQuery.error,
+    sourceIdentityCurrent: posture.sourceIdentityCurrent,
+    versionNo,
+  });
+  const sourceUnavailable = sourceState === "unavailable";
+  const sourceReady = sourceState === "ready" || sourceState === "not-prepared";
   const actorEntered = actorReference.trim().length > 0;
 
   async function refreshMemoState(
