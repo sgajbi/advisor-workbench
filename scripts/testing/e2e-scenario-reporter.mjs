@@ -44,11 +44,10 @@ export default class GovernedScenarioReporter {
   }
 
   async onEnd(fullResult) {
-    const finalAttempts = finalAttemptByTitle(this.attempts);
     const proof = evaluateScenarioProof({
       expectedTests: this.expectedTests,
       plannedTests: this.plannedTests,
-      results: finalAttempts,
+      results: this.attempts,
       initialFindings: this.bootstrapFindings,
     });
     const artifact = {
@@ -114,15 +113,21 @@ export function evaluateScenarioProof({
   const findings = [...initialFindings];
   const duplicateExpected = duplicates(expectedTests);
   const duplicatePlanned = duplicates(plannedTests);
+  const duplicateResults = duplicates(results.map((result) => result.title));
   const expected = new Set(expectedTests);
   const planned = new Set(plannedTests);
-  const resultsByTitle = new Map(results.map((result) => [result.title, result]));
+  const resultsByTitle = new Map(
+    results.map((result) => [result.title, result]),
+  );
 
   for (const title of duplicateExpected) {
     findings.push(`Expected test identity is duplicated: ${JSON.stringify(title)}.`);
   }
   for (const title of duplicatePlanned) {
     findings.push(`Selected test identity is duplicated: ${JSON.stringify(title)}.`);
+  }
+  for (const title of duplicateResults) {
+    findings.push(`Test execution is duplicated: ${JSON.stringify(title)}.`);
   }
   for (const title of expected) {
     if (!planned.has(title)) {
@@ -137,6 +142,13 @@ export function evaluateScenarioProof({
     if (result.status !== "passed") {
       findings.push(
         `Expected test ${JSON.stringify(title)} finished with ${result.status}.`,
+      );
+    }
+  }
+  for (const result of results) {
+    if (result.status !== "passed") {
+      findings.push(
+        `Test attempt ${JSON.stringify(result.title)} finished with ${result.status}.`,
       );
     }
   }
@@ -179,17 +191,6 @@ function parseExpectedTests(value) {
   } catch {
     return [];
   }
-}
-
-function finalAttemptByTitle(attempts) {
-  const final = new Map();
-  for (const attempt of attempts) {
-    const current = final.get(attempt.title);
-    if (!current || attempt.retry >= current.retry) {
-      final.set(attempt.title, attempt);
-    }
-  }
-  return [...final.values()];
 }
 
 function duplicates(values) {
