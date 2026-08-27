@@ -215,24 +215,30 @@ function emptyEvidenceState(): EvidenceState {
   };
 }
 
-function renderPanel(currentVersionNo: number | null = 2) {
+function renderPanel(
+  currentVersionNo: number | null = 2,
+  proposalId = PROPOSAL_ID,
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   const view = render(
     <QueryClientProvider client={queryClient}>
       <ProposalMemoPosturePanel
-        proposalId="pp_1"
+        proposalId={proposalId}
         currentVersionNo={currentVersionNo}
       />
     </QueryClientProvider>,
   );
   return {
-    rerenderPanel(nextVersionNo: number | null) {
+    rerenderPanel(
+      nextVersionNo: number | null,
+      nextProposalId = proposalId,
+    ) {
       view.rerender(
         <QueryClientProvider client={queryClient}>
           <ProposalMemoPosturePanel
-            proposalId={PROPOSAL_ID}
+            proposalId={nextProposalId}
             currentVersionNo={nextVersionNo}
           />
         </QueryClientProvider>,
@@ -634,6 +640,187 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByTestId("proposal-memo-action-status"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toHaveAttribute("data-confirmation-state", "awaiting-source");
+    expect(screen.getByText("Awaiting confirmation")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh record" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    expect(screen.getByLabelText("Advisor or reviewer reference")).toBeDisabled();
+
+    sourceState = evidenceState({ reviewed: true });
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("proposal-memo-confirmation-recovery"),
+    ).not.toBeInTheDocument();
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Request discussion material" }),
+    ).toBeEnabled();
+  });
+
+  it("keeps the same recovery path after a confirmation refresh fails", async () => {
+    sourceState = evidenceState();
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        ...sourceState.memo,
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: MEMO_HASH,
+        },
+      },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+      replayed: false,
+    });
+    renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Refresh record" });
+
+    vi.mocked(getProposalMemo).mockRejectedValue(
+      new Error("current memo read unavailable"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText(
+        "The review was submitted, but the current memo evidence could not confirm it. Refresh before taking another action.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refresh record" })).toBeEnabled();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toHaveAttribute("data-confirmation-state", "awaiting-source");
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains a persisted confirmation across a same-proposal version remount", async () => {
+    let originalState = evidenceState();
+    const currentState = evidenceState({}, VERSION_NO + 1);
+    let lineageState = originalState;
+    vi.mocked(getProposalMemo).mockImplementation(async (_proposalId, versionNo) =>
+      versionNo === VERSION_NO ? originalState.memo : currentState.memo,
+    );
+    vi.mocked(getProposalMemoProjection).mockImplementation(
+      async (_proposalId, versionNo) =>
+        versionNo === VERSION_NO
+          ? originalState.projection
+          : currentState.projection,
+    );
+    vi.mocked(getProposalMemoLineage).mockImplementation(
+      async () => lineageState.lineage,
+    );
+    vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
+      async (_proposalId, versionNo) =>
+        versionNo === VERSION_NO ? originalState.replay : currentState.replay,
+    );
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        ...originalState.memo,
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: MEMO_HASH,
+        },
+      },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+      replayed: false,
+    });
+    const { rerenderPanel } = renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Refresh record" });
+
+    lineageState = currentState;
+    rerenderPanel(VERSION_NO + 1);
+
+    expect(
+      await screen.findByRole("button", { name: "Refresh record" }),
+    ).toBeEnabled();
+    expect(
+      await screen.findByText("Awaiting confirmation"),
+    ).toBeInTheDocument();
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+
+    originalState = evidenceState({ reviewed: true });
+    lineageState = originalState;
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText("Advisor review confirmed for proposal version 2."),
+    ).toBeInTheDocument();
+    expect(getProposalMemo).toHaveBeenLastCalledWith(PROPOSAL_ID, VERSION_NO);
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByTestId("proposal-memo-confirmation-recovery"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("resets an unresolved confirmation when proposal identity changes", async () => {
+    sourceState = evidenceState();
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        ...sourceState.memo,
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: MEMO_HASH,
+        },
+      },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+      replayed: false,
+    });
+    const { rerenderPanel } = renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Refresh record" });
+
+    rerenderPanel(VERSION_NO, "pp_2");
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("proposal-memo-confirmation-recovery"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText(
+        "The review was submitted, but the current memo evidence could not confirm it. Refresh before taking another action.",
+      ),
     ).not.toBeInTheDocument();
   });
 

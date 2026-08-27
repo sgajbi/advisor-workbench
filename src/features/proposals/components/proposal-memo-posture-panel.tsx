@@ -50,6 +50,33 @@ type Props = {
 
 type PendingMemoAction = "create" | "review" | "report" | "commentary";
 
+type PendingMemoActionState = {
+  kind: PendingMemoAction | "refresh";
+  versionNo: number;
+};
+
+type PendingMemoConfirmation = (
+  | {
+      kind: "create";
+      result: Awaited<ReturnType<typeof createProposalMemo>>;
+    }
+  | {
+      kind: "review";
+      result: Awaited<ReturnType<typeof reviewProposalMemo>>;
+    }
+  | {
+      kind: "report";
+      result: Awaited<ReturnType<typeof requestProposalMemoReportPackage>>;
+    }
+  | {
+      kind: "commentary";
+      result: Awaited<ReturnType<typeof requestProposalMemoAdvisorCommentary>>;
+    }
+) & {
+  selectedAudience: ProposalMemoProjectionAudience;
+  versionNo: number;
+};
+
 const ACTION_FAILURE_COPY: Record<PendingMemoAction, string> = {
   create:
     "The advisor memo was not prepared. Recheck the advisor reference and try again.",
@@ -72,33 +99,117 @@ const REFRESH_FAILURE_COPY: Record<PendingMemoAction, string> = {
     "The commentary request was submitted, but the current memo record could not confirm it. Refresh before retrying.",
 };
 
+const ACTION_SUCCESS_COPY: Record<
+  PendingMemoAction,
+  (versionNo: number) => string
+> = {
+  create: (versionNo) =>
+    `Advisor memo confirmed for proposal version ${versionNo}.`,
+  review: (versionNo) =>
+    `Advisor review confirmed for proposal version ${versionNo}.`,
+  report: (versionNo) =>
+    `Discussion material confirmed for proposal version ${versionNo}.`,
+  commentary: (versionNo) =>
+    `Advisor commentary confirmed for proposal version ${versionNo}.`,
+};
+
+function confirmPendingMemoRefresh(
+  confirmation: PendingMemoConfirmation,
+  refreshed: ProposalMemoRefreshEvidence,
+): void {
+  switch (confirmation.kind) {
+    case "create":
+      confirmMemoCreateRefresh({ action: confirmation.result, refreshed });
+      return;
+    case "review":
+      confirmMemoReviewRefresh({ action: confirmation.result, refreshed });
+      return;
+    case "report":
+      confirmMemoReportPackageRefresh({
+        action: confirmation.result,
+        refreshed,
+      });
+      return;
+    case "commentary":
+      confirmMemoCommentaryRefresh({
+        action: confirmation.result,
+        refreshed,
+      });
+  }
+}
+
 export default function ProposalMemoPosturePanel({
   proposalId,
   currentVersionNo,
 }: Props) {
   return (
-    <ProposalMemoPosturePanelSession
-      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+    <ProposalMemoPosturePanelProposalScope
+      key={proposalId}
       proposalId={proposalId}
       currentVersionNo={currentVersionNo}
     />
   );
 }
 
-function ProposalMemoPosturePanelSession({
+function ProposalMemoPosturePanelProposalScope({
   proposalId,
   currentVersionNo,
 }: Props) {
+  const [pendingAction, setPendingAction] =
+    useState<PendingMemoActionState | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] =
+    useState<PendingMemoConfirmation | null>(null);
+  const [confirmationError, setConfirmationError] = useState<string | null>(
+    null,
+  );
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  return (
+    <ProposalMemoPosturePanelSession
+      key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
+      proposalId={proposalId}
+      currentVersionNo={currentVersionNo}
+      confirmationError={confirmationError}
+      actionMessage={actionMessage}
+      pendingAction={pendingAction}
+      pendingConfirmation={pendingConfirmation}
+      onConfirmationErrorChange={setConfirmationError}
+      onActionMessageChange={setActionMessage}
+      onPendingActionChange={setPendingAction}
+      onPendingConfirmationChange={setPendingConfirmation}
+    />
+  );
+}
+
+type SessionProps = Props & {
+  confirmationError: string | null;
+  actionMessage: string | null;
+  pendingAction: PendingMemoActionState | null;
+  pendingConfirmation: PendingMemoConfirmation | null;
+  onConfirmationErrorChange: (value: string | null) => void;
+  onActionMessageChange: (value: string | null) => void;
+  onPendingActionChange: (value: PendingMemoActionState | null) => void;
+  onPendingConfirmationChange: (value: PendingMemoConfirmation | null) => void;
+};
+
+function ProposalMemoPosturePanelSession({
+  proposalId,
+  currentVersionNo,
+  confirmationError,
+  actionMessage,
+  pendingAction,
+  pendingConfirmation,
+  onConfirmationErrorChange: setConfirmationError,
+  onActionMessageChange: setActionMessage,
+  onPendingActionChange,
+  onPendingConfirmationChange,
+}: SessionProps) {
   const versionNo = currentVersionNo ?? null;
   const [actorReference, setActorReference] = useState("");
   const [reviewRationale, setReviewRationale] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [audience, setAudience] =
     useState<ProposalMemoProjectionAudience>("ADVISOR");
-  const [pendingAction, setPendingAction] = useState<PendingMemoAction | null>(
-    null,
-  );
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const memoQuery = useQuery({
     queryKey: ["proposal-memo", proposalId, versionNo],
@@ -206,7 +317,28 @@ function ProposalMemoPosturePanelSession({
       : "unavailable";
   const actorEntered = actorReference.trim().length > 0;
 
-  async function refreshMemoState(): Promise<ProposalMemoRefreshEvidence> {
+  async function refreshMemoState(
+    targetVersionNo: number,
+    targetAudience: ProposalMemoProjectionAudience,
+  ): Promise<ProposalMemoRefreshEvidence> {
+    if (targetVersionNo !== versionNo || targetAudience !== audience) {
+      const [memo, projection, lineage, replay] = await Promise.all([
+        getProposalMemo(proposalId, targetVersionNo),
+        getProposalMemoProjection(proposalId, targetVersionNo, targetAudience),
+        getProposalMemoLineage(proposalId),
+        getProposalMemoReplayEvidence(proposalId, targetVersionNo),
+      ]);
+      return {
+        memo,
+        proposalId,
+        projection,
+        lineage,
+        replay,
+        selectedAudience: targetAudience,
+        versionNo: targetVersionNo,
+      };
+    }
+
     const [memoResult, projectionResult, lineageResult, replayResult] =
       await Promise.all([
         memoQuery.refetch(),
@@ -232,8 +364,8 @@ function ProposalMemoPosturePanelSession({
       projection: projectionResult.data,
       lineage: lineageResult.data,
       replay: replayResult.data,
-      selectedAudience: audience,
-      versionNo: requireVersion(versionNo),
+      selectedAudience: targetAudience,
+      versionNo: targetVersionNo,
     };
   }
 
@@ -243,11 +375,14 @@ function ProposalMemoPosturePanelSession({
       || !actorEntered
       || !posture.sourceIdentityCurrent
       || posture.hasMemo
+      || pendingAction !== null
+      || pendingConfirmation !== null
     ) {
       return;
     }
-    await runMemoAction("create", async (markSourceActionCompleted) => {
-      const action = await createProposalMemo(
+    await runMemoAction("create", versionNo, async () => ({
+      kind: "create",
+      result: await createProposalMemo(
         proposalId,
         versionNo,
         buildCreateMemoPayload(actorReference),
@@ -256,14 +391,10 @@ function ProposalMemoPosturePanelSession({
           versionNo,
           operation: "create",
         }),
-      );
-      markSourceActionCompleted();
-      const refreshed = await refreshMemoState();
-      confirmMemoCreateRefresh({ action, refreshed });
-      setActionMessage(
-        `Advisor memo confirmed for proposal version ${versionNo}.`,
-      );
-    });
+      ),
+      selectedAudience: audience,
+      versionNo,
+    }));
   }
 
   async function handleReviewMemo() {
@@ -272,33 +403,36 @@ function ProposalMemoPosturePanelSession({
       !actorEntered ||
       !posture.canRecordReview ||
       !posture.memoHash ||
-      !reviewRationale.trim()
+      !reviewRationale.trim() ||
+      pendingAction !== null ||
+      pendingConfirmation !== null
     ) {
       return;
     }
-    await runMemoAction("review", async (markSourceActionCompleted) => {
-      const action = await reviewProposalMemo(
-        proposalId,
-        versionNo,
-        buildApproveMemoPayload({
-          advisorId: actorReference,
-          memoHash: posture.memoHash!,
-          reviewReason: reviewRationale,
-        }),
-        buildMemoActionIdempotencyKey({
+    await runMemoAction(
+      "review",
+      versionNo,
+      async () => ({
+        kind: "review",
+        result: await reviewProposalMemo(
           proposalId,
           versionNo,
-          operation: "review",
-        }),
-      );
-      markSourceActionCompleted();
-      const refreshed = await refreshMemoState();
-      confirmMemoReviewRefresh({ action, refreshed });
-      setReviewRationale("");
-      setActionMessage(
-        `Advisor review confirmed for proposal version ${versionNo}.`,
-      );
-    });
+          buildApproveMemoPayload({
+            advisorId: actorReference,
+            memoHash: posture.memoHash!,
+            reviewReason: reviewRationale,
+          }),
+          buildMemoActionIdempotencyKey({
+            proposalId,
+            versionNo,
+            operation: "review",
+          }),
+        ),
+        selectedAudience: audience,
+        versionNo,
+      }),
+      () => setReviewRationale(""),
+    );
   }
 
   async function handleRequestDiscussionMaterial() {
@@ -306,12 +440,15 @@ function ProposalMemoPosturePanelSession({
       versionNo === null ||
       !actorEntered ||
       !posture.canRequestReportPackage ||
-      !posture.memoHash
+      !posture.memoHash ||
+      pendingAction !== null ||
+      pendingConfirmation !== null
     ) {
       return;
     }
-    await runMemoAction("report", async (markSourceActionCompleted) => {
-      const action = await requestProposalMemoReportPackage(
+    await runMemoAction("report", versionNo, async () => ({
+      kind: "report",
+      result: await requestProposalMemoReportPackage(
         proposalId,
         versionNo,
         buildMemoReportPackagePayload({
@@ -323,14 +460,10 @@ function ProposalMemoPosturePanelSession({
           versionNo,
           operation: "report-package",
         }),
-      );
-      markSourceActionCompleted();
-      const refreshed = await refreshMemoState();
-      confirmMemoReportPackageRefresh({ action, refreshed });
-      setActionMessage(
-        `Discussion material confirmed for proposal version ${versionNo}.`,
-      );
-    });
+      ),
+      selectedAudience: audience,
+      versionNo,
+    }));
   }
 
   async function handleRequestCommentary() {
@@ -338,12 +471,15 @@ function ProposalMemoPosturePanelSession({
       versionNo === null ||
       !actorEntered ||
       !posture.canRequestCommentary ||
-      !posture.memoHash
+      !posture.memoHash ||
+      pendingAction !== null ||
+      pendingConfirmation !== null
     ) {
       return;
     }
-    await runMemoAction("commentary", async (markSourceActionCompleted) => {
-      const action = await requestProposalMemoAdvisorCommentary(
+    await runMemoAction("commentary", versionNo, async () => ({
+      kind: "commentary",
+      result: await requestProposalMemoAdvisorCommentary(
         proposalId,
         versionNo,
         buildAdvisorCommentaryPayload({
@@ -355,36 +491,75 @@ function ProposalMemoPosturePanelSession({
           versionNo,
           operation: "advisor-commentary",
         }),
-      );
-      markSourceActionCompleted();
-      const refreshed = await refreshMemoState();
-      confirmMemoCommentaryRefresh({ action, refreshed });
-      setActionMessage(
-        `Advisor commentary confirmed for proposal version ${versionNo}.`,
-      );
-    });
+      ),
+      selectedAudience: audience,
+      versionNo,
+    }));
   }
 
   async function runMemoAction(
     action: PendingMemoAction,
-    operation: (markSourceActionCompleted: () => void) => Promise<void>,
+    actionVersionNo: number,
+    operation: () => Promise<PendingMemoConfirmation>,
+    onConfirmed?: () => void,
   ) {
-    setPendingAction(action);
+    onPendingActionChange({ kind: action, versionNo: actionVersionNo });
     setActionError(null);
+    setConfirmationError(null);
     setActionMessage(null);
-    let sourceActionCompleted = false;
+    let confirmation: PendingMemoConfirmation | null = null;
     try {
-      await operation(() => {
-        sourceActionCompleted = true;
-      });
-    } catch {
-      setActionError(
-        sourceActionCompleted
-          ? REFRESH_FAILURE_COPY[action]
-          : ACTION_FAILURE_COPY[action],
+      confirmation = await operation();
+      onPendingConfirmationChange(confirmation);
+      const refreshed = await refreshMemoState(
+        confirmation.versionNo,
+        confirmation.selectedAudience,
       );
+      confirmPendingMemoRefresh(confirmation, refreshed);
+      onPendingConfirmationChange(null);
+      onConfirmed?.();
+      setActionMessage(ACTION_SUCCESS_COPY[action](actionVersionNo));
+    } catch {
+      if (confirmation) {
+        setConfirmationError(REFRESH_FAILURE_COPY[action]);
+      } else {
+        setActionError(ACTION_FAILURE_COPY[action]);
+      }
     } finally {
-      setPendingAction(null);
+      onPendingActionChange(null);
+    }
+  }
+
+  async function handleRefreshConfirmation() {
+    if (pendingConfirmation === null || pendingAction !== null) {
+      return;
+    }
+
+    onPendingActionChange({
+      kind: "refresh",
+      versionNo: pendingConfirmation.versionNo,
+    });
+    setConfirmationError(null);
+    setActionMessage(null);
+    try {
+      const refreshed = await refreshMemoState(
+        pendingConfirmation.versionNo,
+        pendingConfirmation.selectedAudience,
+      );
+      confirmPendingMemoRefresh(pendingConfirmation, refreshed);
+      if (pendingConfirmation.kind === "review") {
+        setReviewRationale("");
+      }
+      setActionMessage(
+        ACTION_SUCCESS_COPY[pendingConfirmation.kind](
+          pendingConfirmation.versionNo,
+        ),
+      );
+      onPendingConfirmationChange(null);
+    } catch {
+      setConfirmationError(REFRESH_FAILURE_COPY[pendingConfirmation.kind]);
+    } finally {
+      onPendingActionChange(null);
     }
   }
 
@@ -396,15 +571,25 @@ function ProposalMemoPosturePanelSession({
       subtitle="Prepare the working memo, record advisor review, then request material for the client discussion."
       actions={
         <SemanticBadge
-          tone={sourceReady && posture.sourceEvidenceAligned ? "success" : "warn"}
+          tone={
+            pendingConfirmation === null
+            && sourceReady
+            && posture.sourceEvidenceAligned
+              ? "success"
+              : "warn"
+          }
         >
           {versionNo === null
             ? "Version required"
-            : sourceLoading || sourceRefreshing
-              ? "Checking evidence"
-              : sourceUnavailable
-                ? "Evidence unavailable"
-                : posture.statusLabel}
+            : pendingConfirmation !== null
+              ? pendingAction?.kind === "refresh" || sourceRefreshing
+                ? "Checking record"
+                : "Awaiting confirmation"
+              : sourceLoading || sourceRefreshing
+                ? "Checking evidence"
+                : sourceUnavailable
+                  ? "Evidence unavailable"
+                  : posture.statusLabel}
         </SemanticBadge>
       }
     >
@@ -426,14 +611,19 @@ function ProposalMemoPosturePanelSession({
           prepared or reviewed.
         </Alert>
       ) : null}
-      {sourceUnavailable ? (
+      {sourceUnavailable && pendingConfirmation === null ? (
         <Alert
           severity="warning"
           action={
             <Button
               color="inherit"
               size="small"
-              onClick={() => void refreshMemoState().catch(() => undefined)}
+              onClick={() =>
+                void refreshMemoState(
+                  requireVersion(versionNo),
+                  audience,
+                ).catch(() => undefined)
+              }
             >
               Refresh record
             </Button>
@@ -444,7 +634,32 @@ function ProposalMemoPosturePanelSession({
           refreshes.
         </Alert>
       ) : null}
-      {actionError ? (
+      {pendingConfirmation !== null
+      && (pendingAction === null || pendingAction.kind === "refresh") ? (
+        <Alert
+          severity="warning"
+          role="alert"
+          data-testid="proposal-memo-confirmation-recovery"
+          data-confirmation-state={
+            pendingAction?.kind === "refresh" ? "refreshing" : "awaiting-source"
+          }
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              disabled={pendingAction !== null}
+              onClick={() => void handleRefreshConfirmation()}
+            >
+              {pendingAction?.kind === "refresh"
+                ? "Refreshing…"
+                : "Refresh record"}
+            </Button>
+          }
+        >
+          {confirmationError ?? REFRESH_FAILURE_COPY[pendingConfirmation.kind]}
+        </Alert>
+      ) : null}
+      {actionError && pendingConfirmation === null ? (
         <Alert severity="warning" role="alert">
           {actionError}
         </Alert>
@@ -492,6 +707,7 @@ function ProposalMemoPosturePanelSession({
             rows={3}
             value={reviewRationale}
             onChange={(event) => setReviewRationale(event.target.value)}
+            disabled={pendingAction !== null || pendingConfirmation !== null}
             placeholder="Explain why the memo evidence is appropriate for advisor use."
           />
         </label>
@@ -514,9 +730,10 @@ function ProposalMemoPosturePanelSession({
             <Text variant="label">Advisor or reviewer reference</Text>
             <input
               className="input"
-              value={actorReference}
-              onChange={(event) => setActorReference(event.target.value)}
-              placeholder="Enter the advisor or reviewer reference"
+                value={actorReference}
+                onChange={(event) => setActorReference(event.target.value)}
+                disabled={pendingAction !== null || pendingConfirmation !== null}
+                placeholder="Enter the advisor or reviewer reference"
               autoComplete="off"
             />
           </label>
@@ -525,6 +742,7 @@ function ProposalMemoPosturePanelSession({
             <select
               className="input"
               value={audience}
+              disabled={pendingAction !== null || pendingConfirmation !== null}
               onChange={(event) =>
                 setAudience(
                   event.target.value as ProposalMemoProjectionAudience,
@@ -572,13 +790,14 @@ function ProposalMemoPosturePanelSession({
               variant="contained"
               disabled={
                 !actorEntered ||
-                versionNo === null ||
-                sourceLoading ||
-                pendingAction !== null
-              }
+                 versionNo === null ||
+                 sourceLoading ||
+                 pendingAction !== null ||
+                 pendingConfirmation !== null
+               }
               onClick={() => void handleCreateMemo()}
             >
-              {pendingAction === "create"
+              {pendingAction?.kind === "create"
                 ? "Preparing memo…"
                 : "Prepare advisor memo"}
             </Button>
@@ -590,13 +809,14 @@ function ProposalMemoPosturePanelSession({
               disabled={
                 !actorEntered ||
                 !reviewRationale.trim() ||
-                !posture.canRecordReview ||
-                sourceLoading ||
-                pendingAction !== null
-              }
+                 !posture.canRecordReview ||
+                 sourceLoading ||
+                 pendingAction !== null ||
+                 pendingConfirmation !== null
+               }
               onClick={() => void handleReviewMemo()}
             >
-              {pendingAction === "review"
+              {pendingAction?.kind === "review"
                 ? "Recording review…"
                 : "Record advisor review"}
             </Button>
@@ -607,13 +827,14 @@ function ProposalMemoPosturePanelSession({
               variant="contained"
               disabled={
                 !actorEntered ||
-                !posture.canRequestReportPackage ||
-                sourceLoading ||
-                pendingAction !== null
-              }
+                 !posture.canRequestReportPackage ||
+                 sourceLoading ||
+                 pendingAction !== null ||
+                 pendingConfirmation !== null
+               }
               onClick={() => void handleRequestDiscussionMaterial()}
             >
-              {pendingAction === "report"
+              {pendingAction?.kind === "report"
                 ? "Requesting material…"
                 : "Request discussion material"}
             </Button>
@@ -623,11 +844,14 @@ function ProposalMemoPosturePanelSession({
               type="button"
               variant="outlined"
               disabled={
-                !actorEntered || sourceLoading || pendingAction !== null
+                !actorEntered ||
+                sourceLoading ||
+                pendingAction !== null ||
+                pendingConfirmation !== null
               }
               onClick={() => void handleRequestCommentary()}
             >
-              {pendingAction === "commentary"
+              {pendingAction?.kind === "commentary"
                 ? "Requesting review aid…"
                 : posture.commentaryRecorded
                   ? "Refresh advisor commentary"
