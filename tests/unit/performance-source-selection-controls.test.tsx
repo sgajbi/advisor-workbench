@@ -95,20 +95,24 @@ describe("PerformanceSourceSelectionControls", () => {
 
   it("submits an explicit review window through the same complete request path", async () => {
     const onRequestChange = vi.fn();
-    render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
+    const { rerender } = render(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
 
     await screen.findByRole("group", { name: "Performance Analysis source selection" });
-    const customWindowSummary = screen.getByText("Custom window").closest("summary");
-    const customWindow = customWindowSummary?.closest("details");
-    expect(customWindowSummary).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
-    expect(customWindow).not.toHaveAttribute("open");
-    fireEvent.click(customWindowSummary!);
-    expect(customWindow).toHaveAttribute("open");
-    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-02-01" } });
-    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-03-31" } });
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    const windowTrigger = screen.getByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    expect(windowTrigger).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(windowTrigger);
+    expect(await screen.findByRole("dialog", { name: "Choose a custom review window" })).toBeVisible();
+    expect(windowTrigger).toHaveAttribute("aria-expanded", "true");
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2026-02-01" } });
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-03-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
 
-    expect(onRequestChange).toHaveBeenCalledWith(
+    expect(onRequestChange).toHaveBeenCalledTimes(1);
+    expect(onRequestChange).toHaveBeenLastCalledWith(
       {
         portfolioId: "PB_SG_GLOBAL_BAL_001",
         period: "EXPLICIT",
@@ -122,6 +126,119 @@ describe("PerformanceSourceSelectionControls", () => {
       },
       { kind: "action", actionLabel: "Apply" },
     );
+    expect(windowTrigger).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
+    expect(screen.getByRole("button", { name: "Applying…" })).toBeDisabled();
+
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        isUpdating
+        onRequestChange={onRequestChange}
+      />,
+    );
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        period="EXPLICIT"
+        reportStartDate="2026-02-01"
+        reportEndDate="2026-03-31"
+        onRequestChange={onRequestChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).toBeNull();
+      expect(
+        screen.getByRole("button", { name: "Review window 01 Feb 2026 – 31 Mar 2026" }),
+      ).toHaveFocus();
+    });
+  });
+
+  it("discards dialog drafts on Cancel and Escape without requesting a source refresh", async () => {
+    const onRequestChange = vi.fn();
+    render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
+
+    const windowTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    fireEvent.click(windowTrigger);
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2026-02-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(windowTrigger).toHaveFocus();
+    });
+    expect(onRequestChange).not.toHaveBeenCalled();
+
+    fireEvent.click(windowTrigger);
+    expect(screen.getByLabelText(/^From/)).toHaveValue("2026-01-01");
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-03-31" } });
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(windowTrigger).toHaveFocus();
+    });
+    expect(onRequestChange).not.toHaveBeenCalled();
+  });
+
+  it("rejects incomplete, out-of-order, and out-of-bounds drafts before transport", async () => {
+    const onRequestChange = vi.fn();
+    render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Review window 01 Jan 2026 – 14 Apr 2026",
+      }),
+    );
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2026-04-10" } });
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-03-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
+
+    expect(screen.getByText("The first day must be on or before the last day.")).toBeVisible();
+    expect(screen.getByText("The last day must be on or after the first day.")).toBeVisible();
+    expect(onRequestChange).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2022-12-31" } });
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-04-15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
+
+    expect(screen.getByText("Performance history begins 01 Jan 2023.")).toBeVisible();
+    expect(screen.getByText("Performance history is available through 14 Apr 2026.")).toBeVisible();
+    expect(onRequestChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the last confirmed window after a rejected source refresh", async () => {
+    const onRequestChange = vi.fn();
+    const { rerender } = render(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+    const windowTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    fireEvent.click(windowTrigger);
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2026-02-01" } });
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-03-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
+
+    rerender(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        isUpdating
+        onRequestChange={onRequestChange}
+      />,
+    );
+    rerender(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(windowTrigger).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
+      expect(windowTrigger).toHaveFocus();
+    });
+    expect(onRequestChange).toHaveBeenCalledTimes(1);
   });
 
   it("preserves the source-published date range after confirming a shorter explicit window", async () => {
@@ -142,10 +259,16 @@ describe("PerformanceSourceSelectionControls", () => {
       />,
     );
 
-    const fromDate = await screen.findByLabelText("From");
-    const toDate = screen.getByLabelText("To");
+    const initialTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    fireEvent.click(initialTrigger);
+    const fromDate = screen.getByLabelText(/^From/);
+    const toDate = screen.getByLabelText(/^To/);
     expect(fromDate).toHaveAttribute("min", "2023-01-01");
     expect(toDate).toHaveAttribute("max", "2026-04-14");
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
     rerender(
       <PerformanceSourceSelectionControls
@@ -157,9 +280,14 @@ describe("PerformanceSourceSelectionControls", () => {
       />,
     );
 
-    expect(screen.getByLabelText("To")).toHaveAttribute("max", "2026-04-14");
-    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-04-10" } });
-    expect(screen.getByLabelText("To")).toHaveValue("2026-04-10");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Review window 01 Feb 2026 – 31 Mar 2026" }),
+    );
+    expect(screen.getByLabelText(/^From/)).toHaveValue("2026-02-01");
+    expect(screen.getByLabelText(/^To/)).toHaveValue("2026-03-31");
+    expect(screen.getByLabelText(/^To/)).toHaveAttribute("max", "2026-04-14");
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-04-10" } });
+    expect(screen.getByLabelText(/^To/)).toHaveValue("2026-04-10");
   });
 
   it("disables unsupported frequencies from the source capability contract", async () => {
@@ -199,7 +327,9 @@ describe("PerformanceSourceSelectionControls", () => {
     }
     expect(screen.getByLabelText("Frequency")).toBeDisabled();
     expect(screen.getByLabelText("Benchmark")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Updating..." })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Review window 01 Jan 2026 – 14 Apr 2026" }),
+    ).toBeDisabled();
   });
 
   it("restores source-select focus after confirmation when the user has not moved", async () => {
@@ -230,24 +360,33 @@ describe("PerformanceSourceSelectionControls", () => {
   it("does not steal focus when the user moves during source confirmation", async () => {
     const onRequestChange = vi.fn();
     const { rerender } = render(
-      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+      <>
+        <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />
+        <button type="button">Continue review</button>
+      </>,
     );
     const benchmark = await screen.findByLabelText("Benchmark");
     fireEvent.change(benchmark, { target: { value: "BMK_PRIVATE_BANK" } });
 
     rerender(
-      <PerformanceSourceSelectionControls
-        {...baseProps}
-        isUpdating
-        onRequestChange={onRequestChange}
-      />,
+      <>
+        <PerformanceSourceSelectionControls
+          {...baseProps}
+          isUpdating
+          onRequestChange={onRequestChange}
+        />
+        <button type="button">Continue review</button>
+      </>,
     );
-    const fromDate = screen.getByLabelText("From");
-    act(() => fromDate.focus());
+    const continueReview = screen.getByRole("button", { name: "Continue review" });
+    act(() => continueReview.focus());
     rerender(
-      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
+      <>
+        <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />
+        <button type="button">Continue review</button>
+      </>,
     );
 
-    await waitFor(() => expect(fromDate).toHaveFocus());
+    await waitFor(() => expect(continueReview).toHaveFocus());
   });
 });

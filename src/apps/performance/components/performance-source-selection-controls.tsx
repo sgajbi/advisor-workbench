@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TextField } from "@mui/material";
 
-import { ActionButton, FieldLabel, Text, WorkbenchChoiceGroup } from "@/design-system";
+import { FieldLabel, Text, WorkbenchChoiceGroup } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { lotusThemeTokens } from "@/design-system/theme/tokens";
 import type { PerformanceBenchmarkOptionView } from "@/features/workbench/types";
@@ -17,6 +17,9 @@ import {
   type PerformanceControlPatch,
 } from "./performance-chart-panel-helpers";
 import { isCapabilityOptionSupported } from "./performance-capability-options";
+import PerformanceCustomWindowDialog, {
+  type PerformanceCustomWindow,
+} from "./performance-custom-window-dialog";
 import { getPerformanceBenchmarkOptionLabel } from "./performance-summary-context-helpers";
 import choiceStyles from "./performance-choice-groups.module.css";
 import styles from "./performance-source-selection-controls.module.css";
@@ -44,13 +47,6 @@ export type PerformanceSourceSelectionControlsProps = {
   ) => void;
 };
 
-type ExplicitDateDraft = {
-  sourceStartDate: string;
-  sourceEndDate: string;
-  fromDate: string;
-  toDate: string;
-};
-
 export default function PerformanceSourceSelectionControls({
   portfolioId,
   period,
@@ -73,21 +69,10 @@ export default function PerformanceSourceSelectionControls({
   const selectionFocusTargetRef = useRef<HTMLElement | null>(null);
   const focusRestoreFrameRef = useRef<number | null>(null);
   const wasUpdatingRef = useRef(isUpdating);
-  const [dateDraft, setDateDraft] = useState<ExplicitDateDraft>({
-    sourceStartDate: reportStartDate,
-    sourceEndDate: reportEndDate,
-    fromDate: reportStartDate,
-    toDate: reportEndDate,
-  });
-  const activeDateDraft =
-    dateDraft.sourceStartDate === reportStartDate && dateDraft.sourceEndDate === reportEndDate
-      ? dateDraft
-      : {
-          sourceStartDate: reportStartDate,
-          sourceEndDate: reportEndDate,
-          fromDate: reportStartDate,
-          toDate: reportEndDate,
-        };
+  const windowTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const windowRequestWasUpdatingRef = useRef(false);
+  const [windowDialogOpen, setWindowDialogOpen] = useState(false);
+  const [submittedWindow, setSubmittedWindow] = useState<PerformanceCustomWindow | null>(null);
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
   const availableStartDate = capabilities.returnPath.earliestAvailableDate;
   const availableEndDate = capabilities.returnPath.latestAvailableDate;
@@ -127,6 +112,24 @@ export default function PerformanceSourceSelectionControls({
     };
   }, [isUpdating]);
 
+  useEffect(() => {
+    if (!submittedWindow) {
+      windowRequestWasUpdatingRef.current = false;
+      return;
+    }
+    if (isUpdating) {
+      windowRequestWasUpdatingRef.current = true;
+      return;
+    }
+    if (!windowRequestWasUpdatingRef.current) {
+      return;
+    }
+
+    windowRequestWasUpdatingRef.current = false;
+    setSubmittedWindow(null);
+    setWindowDialogOpen(false);
+  }, [isUpdating, submittedWindow]);
+
   function updateSelection(
     patch: PerformanceControlPatch,
     focusTarget: PerformanceSourceControlFocusTarget,
@@ -152,20 +155,16 @@ export default function PerformanceSourceSelectionControls({
     );
   }
 
-  function applyExplicitDates(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!activeDateDraft.fromDate || !activeDateDraft.toDate) {
-      return;
-    }
-    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+  function applyExplicitDates(window: PerformanceCustomWindow) {
+    setSubmittedWindow(window);
     updateSelection(
       {
         period: "EXPLICIT",
-        reportStartDate: activeDateDraft.fromDate,
-        reportEndDate: activeDateDraft.toDate,
+        reportStartDate: window.fromDate,
+        reportEndDate: window.toDate,
       },
       { kind: "action", actionLabel: "Apply" },
-      submitter instanceof HTMLElement ? submitter : undefined,
+      windowTriggerRef.current ?? undefined,
     );
   }
 
@@ -319,64 +318,39 @@ export default function PerformanceSourceSelectionControls({
         </TextField>
       </ControlSlot>
 
-      <details
-        className={styles.windowDisclosure}
-        open={period === "EXPLICIT" ? true : undefined}
+      <button
+        ref={windowTriggerRef}
+        type="button"
+        className={styles.windowTrigger}
+        aria-haspopup="dialog"
+        aria-expanded={windowDialogOpen}
+        aria-labelledby="performance-review-window-label performance-review-window-value"
+        disabled={isUpdating}
+        onClick={() => setWindowDialogOpen(true)}
         data-performance-control-slot="custom-window"
         data-performance-window-control="true"
       >
-        <summary className={styles.windowSummary}>
-          <span className={styles.windowSummaryLabel}>Custom window</span>
-          <span className={styles.windowSummaryValue}>{windowLabel}</span>
-        </summary>
-        <form
-          className={styles.dateForm}
-          data-performance-date-form="true"
-          onSubmit={applyExplicitDates}
-        >
-          <TextField
-            size="small"
-            type="date"
-            value={activeDateDraft.fromDate}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "From",
-                min: availableStartDate,
-                max: activeDateDraft.toDate || reportEndDate,
-                suppressHydrationWarning: true,
-              },
-            }}
-            onChange={(event) =>
-              setDateDraft({ ...activeDateDraft, fromDate: event.currentTarget.value })
-            }
-          />
-          <TextField
-            size="small"
-            type="date"
-            value={activeDateDraft.toDate}
-            slotProps={{
-              htmlInput: {
-                "aria-label": "To",
-                min: activeDateDraft.fromDate || reportStartDate,
-                max: availableEndDate,
-                suppressHydrationWarning: true,
-              },
-            }}
-            onChange={(event) =>
-              setDateDraft({ ...activeDateDraft, toDate: event.currentTarget.value })
-            }
-          />
-          <ActionButton
-            type="submit"
-            priority="primary"
-            disabled={isUpdating}
-            className={styles.applyButton}
-          >
-            {isUpdating ? "Updating..." : "Apply"}
-          </ActionButton>
-        </form>
-      </details>
+        <span className={styles.windowTriggerCopy}>
+          <span id="performance-review-window-label" className={styles.windowSummaryLabel}>
+            Review window
+          </span>
+          <span id="performance-review-window-value" className={styles.windowSummaryValue}>
+            {windowLabel}
+          </span>
+        </span>
+        <span className={styles.windowTriggerAction} aria-hidden="true">Edit</span>
+      </button>
       {presentationControl}
+      <PerformanceCustomWindowDialog
+        open={windowDialogOpen}
+        confirmedWindow={{ fromDate: reportStartDate, toDate: reportEndDate }}
+        earliestAvailableDate={availableStartDate}
+        latestAvailableDate={availableEndDate}
+        isSubmitting={submittedWindow !== null || isUpdating}
+        onCancel={() => setWindowDialogOpen(false)}
+        onApply={applyExplicitDates}
+        onExited={() => windowTriggerRef.current?.focus()}
+      />
     </div>
   );
 }
