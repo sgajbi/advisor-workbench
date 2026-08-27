@@ -10,6 +10,9 @@ const narrativeEvidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
 const memoEvidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_798_EVIDENCE_DIR, "memo-evidence-pack")
   : null;
+const memoRecoveryEvidenceDirectory = process.env.ISSUE_877_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_877_EVIDENCE_DIR)
+  : null;
 
 type ProposalMockOptions = {
   actionFailure?: boolean;
@@ -750,6 +753,15 @@ test.describe("proposal memo posture", () => {
       page.getByRole("button", { name: "Record advisor review" }),
     ).toBeDisabled();
     expect(memoControls.getMemoReviewRequestCount()).toBe(1);
+    if (memoRecoveryEvidenceDirectory) {
+      await mkdir(memoRecoveryEvidenceDirectory, { recursive: true });
+      await recovery.screenshot({
+        path: path.join(
+          memoRecoveryEvidenceDirectory,
+          "proposal-memo-awaiting-confirmation.png",
+        ),
+      });
+    }
 
     memoControls.confirmMemoReview();
     const refreshRecord = page.getByRole("button", { name: "Refresh record" });
