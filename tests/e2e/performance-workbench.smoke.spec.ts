@@ -1727,7 +1727,12 @@ test.describe('Performance workbench smoke', () => {
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
 
-    const customWindow = sourceSelection.locator('[data-performance-window-control="true"]');
+    // MUI makes the page content inert while the modal is open, so a role locator rooted in the
+    // source-selection group correctly leaves the accessibility tree. Keep inspecting the same
+    // source-backed trigger through its stable DOM contract while independently proving the dialog.
+    const customWindow = page.locator(
+      '[data-performance-source-control-region="true"][aria-label="Performance analysis source selection"] [data-performance-window-control="true"]'
+    );
     for (const [name, touchTarget] of [
       ['3Y horizon', threeYearHorizon],
       ['Benchmark', benchmark],
