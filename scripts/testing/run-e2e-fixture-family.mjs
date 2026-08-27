@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { relative, resolve } from "node:path";
 
 import { loadScenarioRegistry } from "./e2e-scenario-registry.mjs";
@@ -93,6 +99,16 @@ export function buildFamilyProof({ familyName, scenarioOutcomes }) {
   };
 }
 
+export function buildReuseEnvironment(hasValidatedBuild) {
+  return hasValidatedBuild
+    ? { PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1" }
+    : {};
+}
+
+export function provesValidatedBuild({ exitCode, artifact, buildExists }) {
+  return exitCode === 0 && artifact?.result === "passed" && buildExists;
+}
+
 export async function runFixtureFamilies(arguments_ = process.argv.slice(2)) {
   const projectRoot = process.cwd();
   const registry = loadScenarioRegistry({ root: projectRoot });
@@ -109,6 +125,7 @@ export async function runFixtureFamilies(arguments_ = process.argv.slice(2)) {
   }
 
   let failed = false;
+  let hasValidatedBuild = false;
   for (const selectedFamily of familyNames) {
     const outputDirectory = resolve(
       projectRoot,
@@ -121,6 +138,11 @@ export async function runFixtureFamilies(arguments_ = process.argv.slice(2)) {
     for (const scenarioName of Object.keys(
       registry.families[selectedFamily].scenarios,
     )) {
+      const artifactPath = resolve(
+        outputDirectory,
+        `${selectedFamily}-${scenarioName}.json`,
+      );
+      rmSync(artifactPath, { force: true });
       let exitCode = 1;
       let runnerError = null;
       try {
@@ -129,23 +151,20 @@ export async function runFixtureFamilies(arguments_ = process.argv.slice(2)) {
           scenarioName,
           arguments_: forwardedArguments,
           resultDirectory: outputDirectory,
-          environmentOverrides: existsSync(
-            resolve(projectRoot, ".next-build", "BUILD_ID"),
-          )
-            ? { PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1" }
-            : {},
+          environmentOverrides: buildReuseEnvironment(hasValidatedBuild),
         });
       } catch (error) {
         runnerError = error instanceof Error ? error.message : String(error);
       }
 
-      const artifactPath = resolve(
-        outputDirectory,
-        `${selectedFamily}-${scenarioName}.json`,
-      );
       const artifact = existsSync(artifactPath)
         ? JSON.parse(readFileSync(artifactPath, "utf8"))
         : null;
+      hasValidatedBuild ||= provesValidatedBuild({
+        exitCode,
+        artifact,
+        buildExists: existsSync(resolve(projectRoot, ".next-build", "BUILD_ID")),
+      });
       scenarioOutcomes.push({
         scenario: scenarioName,
         exit_code: exitCode,

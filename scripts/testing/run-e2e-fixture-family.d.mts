@@ -27,6 +27,16 @@ export function buildFamilyProof(input: {
   result: "passed" | "failed";
 };
 
+export function buildReuseEnvironment(hasValidatedBuild: boolean):
+  | { PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1" }
+  | Record<string, never>;
+
+export function provesValidatedBuild(input: {
+  exitCode: number;
+  artifact: null | { result: string };
+  buildExists: boolean;
+}): boolean;
+
 export function runFixtureFamilies(arguments_?: string[]): Promise<number>;
 
 export function renderFamilySummary(artifact: Record<string, unknown>): string;
