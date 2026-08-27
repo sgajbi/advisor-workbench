@@ -35,7 +35,9 @@ describe("governed E2E fixture family runner", () => {
   });
 
   it("reuses a build only after this invocation proves it", () => {
-    expect(buildReuseEnvironment(false)).toEqual({});
+    expect(buildReuseEnvironment(false)).toEqual({
+      PLAYWRIGHT_REUSE_VALIDATED_BUILD: "0",
+    });
     expect(
       provesValidatedBuild({
         exitCode: 0,

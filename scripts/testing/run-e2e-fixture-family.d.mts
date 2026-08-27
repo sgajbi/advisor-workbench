@@ -27,9 +27,9 @@ export function buildFamilyProof(input: {
   result: "passed" | "failed";
 };
 
-export function buildReuseEnvironment(hasValidatedBuild: boolean):
-  | { PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1" }
-  | Record<string, never>;
+export function buildReuseEnvironment(hasValidatedBuild: boolean): {
+  PLAYWRIGHT_REUSE_VALIDATED_BUILD: "0" | "1";
+};
 
 export function provesValidatedBuild(input: {
   exitCode: number;

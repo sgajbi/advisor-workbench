@@ -100,9 +100,9 @@ export function buildFamilyProof({ familyName, scenarioOutcomes }) {
 }
 
 export function buildReuseEnvironment(hasValidatedBuild) {
-  return hasValidatedBuild
-    ? { PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1" }
-    : {};
+  return {
+    PLAYWRIGHT_REUSE_VALIDATED_BUILD: hasValidatedBuild ? "1" : "0",
+  };
 }
 
 export function provesValidatedBuild({ exitCode, artifact, buildExists }) {
