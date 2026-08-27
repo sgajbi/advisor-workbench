@@ -511,8 +511,8 @@ describe("manage workspace split components", () => {
   it("renders the governed PM copilot workspace without execution or client-contact claims", () => {
     render(<DpmCopilotWorkspace data={buildManageWorkspaceData()} mandateId="mandate_001" />);
 
-    expect(screen.getByRole("heading", { name: "PM Copilot Workspace" })).toBeInTheDocument();
-    expect(screen.getByText("Proof-Pack PM Memo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Decision-support workflows" })).toBeInTheDocument();
+    expect(screen.getByText("Evidence Pack Decision Memo")).toBeInTheDocument();
     expect(screen.getByText("Wave PM Memo")).toBeInTheDocument();
     expect(screen.getByText("Operations Handoff Summary")).toBeInTheDocument();
     expect(screen.getByText("Exception Summary")).toBeInTheDocument();
@@ -524,7 +524,7 @@ describe("manage workspace split components", () => {
     expect(screen.getAllByRole("button", { name: /^Prepare / })).toHaveLength(5);
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Current evidence pack unavailable",
+        name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",
       }),
     ).toBeDisabled();
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();

@@ -64,7 +64,7 @@ describe("DpmCopilotWorkspace", () => {
 
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
+      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
     );
     expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_001" });
 
@@ -121,7 +121,7 @@ describe("DpmCopilotWorkspace", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
+      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
     );
 
     const nextData = buildManageWorkspaceData();
@@ -142,7 +142,7 @@ describe("DpmCopilotWorkspace", () => {
     expect(screen.getByText("PB_SG_GLOBAL_GROWTH_002")).toBeInTheDocument();
     expect(screen.getByText("ppack_002")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }),
+      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
     ).toBeEnabled();
   });
 
@@ -173,7 +173,7 @@ describe("DpmCopilotWorkspace", () => {
     expect(screen.getByText("ppack_published_002")).toBeInTheDocument();
     expect(screen.queryByText("ppack_server_001")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }));
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({
         proofPackId: "ppack_published_002",
@@ -201,11 +201,11 @@ describe("DpmCopilotWorkspace", () => {
       </ManageProofPackStateProvider>,
     );
 
-    expect(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_stale" }));
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Current evidence pack not ready",
+        name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
       }),
     ).toBeDisabled();
     expect(screen.getByText("ppack_published_stale")).toBeInTheDocument();
@@ -234,11 +234,11 @@ describe("DpmCopilotWorkspace", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Current evidence pack not ready",
+        name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
       }),
     ).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_ready" }));
-    expect(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" })).toBeEnabled();
     expect(screen.getByText("ppack_published_ready")).toBeInTheDocument();
   });
 
@@ -250,7 +250,7 @@ describe("DpmCopilotWorkspace", () => {
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
 
     const unavailableAction = screen.getByRole("button", {
-      name: "Proof-Pack PM Memo unavailable: No current evidence pack available",
+      name: "Evidence Pack Decision Memo unavailable: No current evidence pack available",
     });
     expect(unavailableAction).toBeDisabled();
     expect(unavailableAction).toHaveTextContent("Unavailable");
@@ -267,11 +267,11 @@ describe("DpmCopilotWorkspace", () => {
 
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
 
-    expect(screen.getByText("Historical Reference")).toBeInTheDocument();
+    expect(screen.getByText("Historical evidence pack")).toBeInTheDocument();
     expect(screen.getByText("ppack_1")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Current evidence pack unavailable",
+        name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",
       }),
     ).toBeDisabled();
     expect(screen.getByText("Current evidence pack unavailable")).toBeInTheDocument();
@@ -286,7 +286,7 @@ describe("DpmCopilotWorkspace", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Decision-support evidence unavailable",
+        name: "Evidence Pack Decision Memo unavailable: Decision-support evidence unavailable",
       }),
     ).toBeDisabled();
     expect(screen.getByText("Decision-support evidence unavailable")).toBeInTheDocument();
@@ -303,7 +303,7 @@ describe("DpmCopilotWorkspace", () => {
 
       expect(
         screen.getByRole("button", {
-          name: "Proof-Pack PM Memo unavailable: Current evidence pack not ready",
+          name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
         }),
       ).toBeDisabled();
       expect(screen.getByText("Current evidence pack not ready")).toBeInTheDocument();

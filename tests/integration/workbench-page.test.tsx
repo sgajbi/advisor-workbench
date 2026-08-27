@@ -430,12 +430,15 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    expect(screen.getAllByRole("heading", { name: "PM Copilot Workspace" })).toHaveLength(2);
-    expect(screen.getByText("Historical Reference")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "PM Copilot", level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Decision-support workflows", level: 2 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Historical evidence pack")).toBeInTheDocument();
     expect(screen.getByText("ppack_1")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Proof-Pack PM Memo unavailable: Current evidence pack unavailable",
+        name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",
       })
     ).toBeDisabled();
     expect(

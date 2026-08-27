@@ -128,8 +128,8 @@ export default function DpmCopilotWorkspace({
 
   return (
     <SectionBlock
-      title="PM Copilot Workspace"
-      subtitle="Prepare internal decision-support material from governed portfolio evidence, with review and use boundaries kept explicit."
+      title="Decision-support workflows"
+      subtitle="Prepare review-required material from current portfolio evidence. Evidence, permitted use, and decision authority remain explicit."
       className="dpm-copilot-workspace"
       actions={
         <div className="dpm-copilot-badge-row" aria-label="Portfolio manager copilot status">
@@ -259,9 +259,9 @@ function buildCopilotActions({
   const actions: Array<Omit<CopilotAction, "contextKey">> = [
     {
       key: "proof-pack-memo",
-      label: "Proof-Pack PM Memo",
-      detail: "Request a review-required PM memo from proof-pack AI evidence.",
-      referenceLabel: currentProofPackId ? "Reference" : "Historical Reference",
+      label: "Evidence Pack Decision Memo",
+      detail: "Prepare a review-required portfolio decision memo from the current evidence pack.",
+      referenceLabel: currentProofPackId ? "Evidence pack" : "Historical evidence pack",
       reference: proofPackReference,
       blockedReason: proofPackBlockedReason,
       run: () => requestDpmProofPackAiPmMemo({ proofPackId: currentProofPackId ?? "" }),
