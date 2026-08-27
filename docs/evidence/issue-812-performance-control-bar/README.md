@@ -29,10 +29,14 @@ The evidence uses the repository's source-shaped deterministic populated Perform
 proves Workbench interaction, responsive composition, and Gateway/BFF request behaviour without
 claiming that a live upstream service produced these screenshots.
 
-## Reproduction
+## Evidence Boundary And Reproduction
 
-The captures were regenerated after the exact-head review fixes. Git history preserves the rendered
-implementation checkpoint; CI and the linked PR checks validate the complete branch head.
+The retained captures and geometry JSON record rendered implementation checkpoint `653fce9`, after
+the responsive layout corrections and before the later dialog lifecycle hardening. They prove the
+visual hierarchy, responsive geometry, initial dialog interaction, and request shape at that
+checkpoint. They are not exact-head proof of the later stale-draft, source-context, or batched-render
+corrections; focused component regressions and the linked exact-head CI checks own those lifecycle
+claims.
 
 ```powershell
 $env:WORKBENCH_DEPLOYMENT_ID=(git rev-parse HEAD)
@@ -40,9 +44,9 @@ node scripts/testing/run-performance-smoke-scenario.mjs populated --focus contro
 Remove-Item Env:WORKBENCH_DEPLOYMENT_ID
 ```
 
-Results: the registered issue-specific journey passed at all six governed widths. The runner used
-its checkout-specific optimized production build and ports and did not start, stop, or modify the
-shared canonical stack. Machine-readable dimensions are retained in
+At the recorded checkpoint, the registered issue-specific journey passed at all six governed
+widths. The runner used its checkout-specific optimized production build and ports and did not
+start, stop, or modify the shared canonical stack. Machine-readable dimensions are retained in
 `performance-control-bar-geometry.json`; the 1440px workstation records a 149.125px control bar,
 the Return Path stage beginning at 663.40625px, zero initial vertical scroll, and no page overflow.
 
