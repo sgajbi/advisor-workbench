@@ -19,6 +19,7 @@ import type {
   ProposalMemoProjectionData,
   ProposalMemoReplayEvidenceData,
 } from "../../src/features/proposals/types";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 vi.mock("../../src/features/proposals/api", () => ({
   createProposalMemo: vi.fn(),
@@ -349,6 +350,42 @@ describe("ProposalMemoPosturePanel", () => {
       "data-source-state",
       "ready",
     );
+  });
+
+  it("offers preparation when Gateway confirms the current memo is not prepared", async () => {
+    sourceState = emptyEvidenceState();
+    vi.mocked(getProposalMemo).mockRejectedValue(
+      new WorkbenchApiError("proposal memo", 404),
+    );
+    vi.mocked(getProposalMemoProjection).mockRejectedValue(
+      new WorkbenchApiError("proposal memo projection", 404),
+    );
+    vi.mocked(getProposalMemoReplayEvidence).mockRejectedValue(
+      new WorkbenchApiError("proposal memo replay evidence", 404),
+    );
+
+    renderPanel();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+        "data-source-state",
+        "not-prepared",
+      ),
+    );
+    expect(screen.getAllByText("Memo not prepared").length).toBeGreaterThan(0);
+    expect(
+      screen.queryByText(/Current memo evidence is unavailable/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Prepare advisor memo" }),
+    ).toBeDisabled();
+
+    await openMemoDetails();
+    enterActor();
+
+    expect(
+      screen.getByRole("button", { name: "Prepare advisor memo" }),
+    ).toBeEnabled();
   });
 
   it("withholds mutation controls when a required source view is unavailable", async () => {
