@@ -1,3 +1,6 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
 import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import {
   buildPerformanceSmokePagePath,
@@ -664,18 +667,20 @@ test.describe('Performance workbench smoke', () => {
   test('performance review uses one governed control bar and a decision-first return table', async ({
     page,
     request,
-  }) => {
+  }, testInfo) => {
     test.skip(
       process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
       'This deterministic control-bar proof requires the populated performance fixture.',
     );
     test.setTimeout(120_000);
     const runtime = observeBrowserRuntimeFailures(page);
+    const geometryEvidence: Array<Record<string, unknown>> = [];
 
     for (const viewport of [
       { name: 'desktop', width: 1440, height: 1000 },
       { name: 'compact-desktop', width: 1024, height: 1000 },
       { name: 'tablet', width: 768, height: 1100 },
+      { name: 'compact-tablet', width: 561, height: 1000 },
       { name: 'compact', width: 519, height: 1000 },
     ]) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -686,12 +691,32 @@ test.describe('Performance workbench smoke', () => {
       await expect(controlBars).toHaveCount(1);
       const controlBar = controlBars.first();
       await expect(controlBar).toBeVisible();
+      const controlBarBounds = await controlBar.boundingBox();
+      const returnPathStage = page.locator(
+        '.performance-chart-library-frame[data-layout="single-observation"], .performance-chart-library-frame[data-layout="time-series"]',
+      ).first();
+      await expect(returnPathStage).toBeVisible();
+      const returnPathBounds = await returnPathStage.boundingBox();
+      const initialPageGeometry = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        scrollY: window.scrollY,
+      }));
+      geometryEvidence.push({
+        viewport,
+        controlBar: controlBarBounds,
+        returnPathStage: returnPathBounds,
+        page: initialPageGeometry,
+      });
       if (viewport.width === 1440) {
-        const defaultControlBarBounds = await controlBar.boundingBox();
         expect(
-          defaultControlBarBounds?.height ?? Number.POSITIVE_INFINITY,
+          controlBarBounds?.height ?? Number.POSITIVE_INFINITY,
           'desktop default control-bar height',
-        ).toBeLessThanOrEqual(190);
+        ).toBeLessThanOrEqual(220);
+        expect(
+          returnPathBounds?.y ?? Number.POSITIVE_INFINITY,
+          'desktop return-path stage top',
+        ).toBeLessThanOrEqual(700);
       }
       await expect(page.getByRole('radio', { name: 'Absolute' })).toHaveAttribute(
         'aria-checked',
@@ -707,15 +732,24 @@ test.describe('Performance workbench smoke', () => {
         ]);
       expect(metricRows).toHaveLength(viewport.width > 640 ? 1 : 2);
 
-      const customWindow = controlBar.locator('details[data-performance-window-control="true"]');
-      await expect(customWindow).not.toHaveAttribute('open');
-      await expect(customWindow.locator('summary')).toContainText('Custom window');
-      await expect(customWindow.locator('summary')).toContainText(/\d{1,2} \w{3} \d{4}/);
-      await customWindow.locator('summary').click();
-      await expect(customWindow).toHaveAttribute('open');
+      const customWindow = controlBar.locator('[data-performance-window-control="true"]');
+      await expect(customWindow).toHaveAttribute('aria-haspopup', 'dialog');
+      await expect(customWindow).toHaveAttribute('aria-expanded', 'false');
+      await expect(customWindow).toContainText('Review window');
+      await expect(customWindow).toContainText(/\d{1,2} \w{3} \d{4}/);
+      const urlBeforeDialog = page.url();
+      await customWindow.click();
+      await expect(customWindow).toHaveAttribute('aria-expanded', 'true');
+      const customWindowDialog = page.getByRole('dialog', {
+        name: 'Choose a custom review window',
+      });
+      await expect(customWindowDialog).toBeVisible();
+      await expect(
+        customWindowDialog.getByRole('textbox', { name: 'From', exact: true }),
+      ).toBeFocused();
 
       for (const label of ['From', 'To']) {
-        const dateInput = controlBar.getByLabel(label, { exact: true });
+        const dateInput = customWindowDialog.getByRole('textbox', { name: label, exact: true });
         await expect(dateInput).toBeVisible();
         const bounds = await dateInput.boundingBox();
         expect(bounds?.width ?? 0, `${viewport.name} ${label} width`).toBeGreaterThanOrEqual(140);
@@ -724,6 +758,31 @@ test.describe('Performance workbench smoke', () => {
           (bounds?.x ?? 0) + (bounds?.width ?? 0),
           `${viewport.name} ${label} right edge`,
         ).toBeLessThanOrEqual(viewport.width + 1);
+      }
+      if (viewport.width <= 640) {
+        const dialogBounds = await customWindowDialog.boundingBox();
+        expect(dialogBounds?.x ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
+        expect(dialogBounds?.width ?? 0).toBeGreaterThanOrEqual(viewport.width - 2);
+      }
+
+      await page.screenshot({
+        path: `output/playwright/issue-812-performance-window-dialog-${viewport.name}.png`,
+        fullPage: false,
+        animations: 'disabled',
+      });
+
+      if (viewport.width === 1440) {
+        const refreshStatus = page.getByTestId('workbench-refresh-status');
+        await customWindowDialog.getByRole('button', { name: 'Apply window' }).click();
+        await expect(refreshStatus).toHaveAttribute('data-state', 'confirmed');
+        await expect(customWindowDialog).not.toBeVisible();
+        await expect(customWindow).toBeFocused();
+        await expect.poll(() => new URL(page.url()).searchParams.get('period')).toBe('EXPLICIT');
+      } else {
+        await page.keyboard.press('Escape');
+        await expect(customWindowDialog).not.toBeVisible();
+        await expect(customWindow).toBeFocused();
+        expect(page.url()).toBe(urlBeforeDialog);
       }
       await controlBar.scrollIntoViewIfNeeded();
       await page.screenshot({
@@ -807,6 +866,24 @@ test.describe('Performance workbench smoke', () => {
         fullPage: false,
         animations: 'disabled',
       });
+    }
+
+    await testInfo.attach('performance-control-bar-geometry', {
+      body: Buffer.from(JSON.stringify(geometryEvidence, null, 2)),
+      contentType: 'application/json',
+    });
+    const evidenceDirectory = process.env.PERFORMANCE_E2E_EVIDENCE_DIR?.trim();
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await writeFile(
+        resolve(evidenceDirectory, 'performance-control-bar-geometry.json'),
+        `${JSON.stringify({
+          proofType: 'deterministic populated Workbench fixture',
+          evidenceBoundary: 'Browser interaction and layout proof; not canonical live-source evidence.',
+          geometry: geometryEvidence,
+        }, null, 2)}\n`,
+        'utf8',
+      );
     }
 
     await page.setViewportSize({ width: 1440, height: 1000 });
@@ -1644,22 +1721,22 @@ test.describe('Performance workbench smoke', () => {
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
     }
 
-    const customWindow = sourceSelection.locator(
-      'details[data-performance-window-control="true"]'
-    );
-    const customWindowSummary = customWindow.locator('summary');
+    const customWindow = sourceSelection.locator('[data-performance-window-control="true"]');
     for (const [name, touchTarget] of [
       ['3Y horizon', threeYearHorizon],
       ['Benchmark', benchmark],
-      ['Custom window', customWindowSummary],
+      ['Review window', customWindow],
     ] as const) {
       const bounds = await touchTarget.boundingBox();
       expect(bounds?.height, `${name} touch target height`).toBeGreaterThanOrEqual(44);
     }
-    await expect(customWindow).not.toHaveAttribute('open');
-    await customWindowSummary.click();
-    await expect(customWindow).toHaveAttribute('open');
-    const applyButton = sourceSelection.getByRole('button', { name: 'Apply' });
+    await expect(customWindow).toHaveAttribute('aria-expanded', 'false');
+    await customWindow.click();
+    await expect(customWindow).toHaveAttribute('aria-expanded', 'true');
+    const reviewWindowDialog = page.getByRole('dialog', {
+      name: 'Choose a custom review window',
+    });
+    const applyButton = reviewWindowDialog.getByRole('button', { name: 'Apply window' });
     await expect(applyButton).toBeVisible();
     expect((await applyButton.boundingBox())?.height, 'Apply touch target height').toBeGreaterThanOrEqual(
       44

@@ -80,6 +80,7 @@
       "workbench_port_environment": "PERFORMANCE_E2E_WORKBENCH_PORT",
       "default_fixture_port": 18100,
       "default_workbench_port": 31030,
+      "evidence_directory_environment": "PERFORMANCE_E2E_EVIDENCE_DIR",
       "scenarios": {
         "populated": {
           "fixture_value": "populated",
@@ -100,6 +101,9 @@
             "evidence mode proves exception-first calculation assurance"
           ],
           "focuses": {
+            "control-bar": [
+              "performance review uses one governed control bar and a decision-first return table"
+            ],
             "return-path-density": [
               "single-observation Return Path stays compact, semantic, and responsive"
             ],
