@@ -914,14 +914,10 @@ export async function getProposalMemo(
   proposalId: string,
   versionNo: number,
 ): Promise<ProposalMemoData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo`,
+    "proposal memo",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal memo fetch failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoData;
 }
 
@@ -935,16 +931,10 @@ export async function getProposalMemoProjection(
     params.set("audience", audience);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/projection${query}`,
+    "proposal memo projection",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Proposal memo projection failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoProjectionData;
 }
 
@@ -1020,16 +1010,10 @@ export async function requestProposalMemoAdvisorCommentary(
 export async function getProposalMemoLineage(
   proposalId: string,
 ): Promise<ProposalMemoLineageData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/memos/lineage`,
+    "proposal memo lineage",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Proposal memo lineage failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoLineageData;
 }
 
@@ -1037,16 +1021,10 @@ export async function getProposalMemoReplayEvidence(
   proposalId: string,
   versionNo: number,
 ): Promise<ProposalMemoReplayEvidenceData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}/memo/replay-evidence`,
+    "proposal memo replay evidence",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Proposal memo replay evidence failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalMemoReplayEvidenceData;
 }
 

@@ -1440,9 +1440,11 @@ describe("proposal api", () => {
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/versions/2/memo`,
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/projection?audience=COMPLIANCE`,
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/review`,
@@ -1495,10 +1497,29 @@ describe("proposal api", () => {
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/memos/lineage`,
+      expect.objectContaining({ cache: "no-store" }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
       `${expectedBaseUrl}/proposals/pp_1/versions/2/memo/replay-evidence`,
+      expect.objectContaining({ cache: "no-store" }),
     );
+  });
+
+  it.each([
+    ["memo", () => getProposalMemo("pp_1", 2)],
+    ["projection", () => getProposalMemoProjection("pp_1", 2, "ADVISOR")],
+    ["lineage", () => getProposalMemoLineage("pp_1")],
+    ["replay evidence", () => getProposalMemoReplayEvidence("pp_1", 2)],
+  ])("preserves the HTTP status for a missing proposal memo %s read", async (_label, request) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("not found", { status: 404 })),
+    );
+
+    await expect(request()).rejects.toMatchObject({
+      name: "WorkbenchApiError",
+      status: 404,
+    });
   });
 
   it("calls full advisory workspace support endpoints", async () => {
