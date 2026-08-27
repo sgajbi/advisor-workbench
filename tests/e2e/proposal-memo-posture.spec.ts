@@ -43,6 +43,7 @@ async function mockProposalDetail(
   const initialMemoState = options.memoInitialState ?? "complete";
   const memoSourceVersionNo = options.memoSourceVersionNo ?? 2;
   let memoReviewed = initialMemoState !== "unreviewed";
+  let memoReviewRequestCount = 0;
   let memoReportRecorded = initialMemoState === "complete";
   let memoCommentaryRecorded = options.memoCommentaryInitiallyRecorded ?? false;
   let memoCommentaryEventId = memoCommentaryRecorded
@@ -308,6 +309,7 @@ async function mockProposalDetail(
   await page.route(
     "**/api/bff/api/v1/proposals/pp_1/versions/2/memo/review",
     async (route) => {
+      memoReviewRequestCount += 1;
       if (options.memoReviewFailure) {
         await route.fulfill({ status: 500, body: "INTERNAL_MEMO_REVIEW_FAILURE" });
         return;
@@ -579,6 +581,15 @@ async function mockProposalDetail(
       ],
     };
   }
+
+  return {
+    confirmMemoReview() {
+      memoReviewed = true;
+    },
+    getMemoReviewRequestCount() {
+      return memoReviewRequestCount;
+    },
+  };
 }
 
 test.describe("proposal memo posture", () => {
@@ -714,7 +725,7 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByTestId("proposal-memo-action-status")).toHaveCount(0);
 
     await page.unrouteAll({ behavior: "wait" });
-    await mockProposalDetail(page, {
+    const memoControls = await mockProposalDetail(page, {
       memoInitialState: "unreviewed",
       memoReviewRefreshMismatch: true,
     });
@@ -730,6 +741,30 @@ test.describe("proposal memo posture", () => {
       "The review was submitted, but the current memo evidence could not confirm it. Refresh before taking another action.",
     )).toBeVisible();
     await expect(page.getByTestId("proposal-memo-action-status")).toHaveCount(0);
+    const recovery = page.getByTestId("proposal-memo-confirmation-recovery");
+    await expect(recovery).toHaveAttribute(
+      "data-confirmation-state",
+      "awaiting-source",
+    );
+    await expect(
+      page.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    expect(memoControls.getMemoReviewRequestCount()).toBe(1);
+
+    memoControls.confirmMemoReview();
+    const refreshRecord = page.getByRole("button", { name: "Refresh record" });
+    await refreshRecord.focus();
+    await expect(refreshRecord).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(page.getByTestId("proposal-memo-action-status")).toContainText(
+      "Advisor review confirmed for proposal version 2.",
+    );
+    await expect(recovery).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Request discussion material" }),
+    ).toBeEnabled();
+    expect(memoControls.getMemoReviewRequestCount()).toBe(1);
   });
 
   test("keeps the proposal decision usable when workflow evidence is unavailable", async ({ page }) => {
