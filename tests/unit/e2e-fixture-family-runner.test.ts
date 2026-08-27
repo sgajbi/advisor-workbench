@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFamilyProof,
+  buildReuseEnvironment,
   parseFamilyArguments,
+  provesValidatedBuild,
 } from "../../scripts/testing/run-e2e-fixture-family.mjs";
 
 const passedArtifact = {
@@ -30,6 +32,44 @@ describe("governed E2E fixture family runner", () => {
     expect(() => parseFamilyArguments(["portfolio"])).toThrow(
       /Unexpected positional argument portfolio/,
     );
+  });
+
+  it("reuses a build only after this invocation proves it", () => {
+    expect(buildReuseEnvironment(false)).toEqual({});
+    expect(
+      provesValidatedBuild({
+        exitCode: 0,
+        artifact: passedArtifact,
+        buildExists: true,
+      }),
+    ).toBe(true);
+    expect(buildReuseEnvironment(true)).toEqual({
+      PLAYWRIGHT_REUSE_VALIDATED_BUILD: "1",
+    });
+  });
+
+  it("does not admit reuse without a successful exact artifact and build", () => {
+    expect(
+      provesValidatedBuild({
+        exitCode: 1,
+        artifact: passedArtifact,
+        buildExists: true,
+      }),
+    ).toBe(false);
+    expect(
+      provesValidatedBuild({
+        exitCode: 0,
+        artifact: null,
+        buildExists: true,
+      }),
+    ).toBe(false);
+    expect(
+      provesValidatedBuild({
+        exitCode: 0,
+        artifact: passedArtifact,
+        buildExists: false,
+      }),
+    ).toBe(false);
   });
 
   it("fails closed when a registered scenario is missing its proof artifact", () => {
