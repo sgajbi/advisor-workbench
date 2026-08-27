@@ -6,10 +6,6 @@
   box-shadow: var(--shadow-elevated);
 }
 
-.form {
-  display: contents;
-}
-
 .title {
   padding: 1.2rem 1.25rem 0.45rem;
   color: var(--text);
@@ -62,18 +58,6 @@
 }
 
 @media (max-width: 640px) {
-  .paper {
-    border: 0;
-    border-radius: 0;
-  }
-
-  .form {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    min-height: 100%;
-  }
-
   .title {
     padding: 1.25rem 1rem 0.45rem;
   }
@@ -87,11 +71,17 @@
   }
 
   .actions {
-    margin-top: auto;
     padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom));
   }
 
   .actions button {
     min-height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .paper {
+    border: 0;
+    border-radius: 0;
   }
 }
