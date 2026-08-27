@@ -274,14 +274,7 @@ describe("ProposalSimulateForm", () => {
         "Return to the portfolio review and select a valid advisory date before evaluating or saving this draft.",
       ),
     ).toBeInTheDocument();
-    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
-      "PB_SG_GLOBAL_BAL_001",
-      { reportingCurrency: "USD" },
-    );
-    expect(portfolioApiMocks.getRequiredPortfolioBook).not.toHaveBeenCalledWith(
-      "PB_SG_GLOBAL_BAL_001",
-      expect.objectContaining({ asOfDate: "2026-02-31" }),
-    );
+    expect(portfolioApiMocks.getRequiredPortfolioBook).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
@@ -319,9 +312,57 @@ describe("ProposalSimulateForm", () => {
       "PB_SG_GLOBAL_BAL_001",
       {},
     );
+    expect(screen.getByLabelText("Currency")).toHaveValue("");
+    expect(screen.getByLabelText("Price Currency")).toHaveValue("");
     expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("locks invalid source evidence while retrieving a replacement snapshot", async () => {
+    let resolveRefresh: ((book: ReturnType<typeof portfolioBook>) => void) | undefined;
+    portfolioApiMocks.getRequiredPortfolioBook
+      .mockResolvedValue(portfolioBook())
+      .mockResolvedValueOnce(portfolioBook(undefined, { asOfDate: "2026-04-31" }))
+      .mockImplementationOnce(
+        async () =>
+          await new Promise<ReturnType<typeof portfolioBook>>((resolve) => {
+            resolveRefresh = resolve;
+          }),
+      );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalWorkflowContextProvider
+          initialModel={buildSimulationProposalWorkflowContext({
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+          })}
+        >
+          <ProposalSimulateForm
+            initialPortfolioId="PB_SG_GLOBAL_BAL_001"
+            sourceContextConfirmed
+          />
+        </ProposalWorkflowContextProvider>
+      </QueryClientProvider>,
+    );
+
+    const evidence = await waitForPortfolioEvidence("unavailable");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Portfolio Evidence" }));
+
+    await waitFor(() =>
+      expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledTimes(2),
+    );
+    await waitForPortfolioEvidence("refreshing");
+    expect(evidence).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByText("Replacing invalid portfolio evidence")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refreshing..." })).toBeDisabled();
+    expect(screen.getByLabelText("Currency")).toHaveValue("");
+    expect(screen.getByLabelText("Price Currency")).toHaveValue("");
+
+    await act(async () => resolveRefresh?.(portfolioBook()));
+    await waitForPortfolioEvidence("ready");
+    expect(screen.getByLabelText("Currency")).toHaveValue("USD");
+    expect(screen.getByLabelText("Price Currency")).toHaveValue("USD");
   });
 
   it("derives and admits a valid leap-day advisory date from source", async () => {

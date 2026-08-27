@@ -112,7 +112,9 @@ export function buildProposalPortfolioEvidence({
   const sourcePosture = projectQuerySourcePosture({
     hasData: hasVisibleBookEvidence,
     isLoading: hasSelectedContext && bookQuery.isLoading,
-    isFetching: hasSelectedContext && bookQuery.isFetching,
+    isFetching:
+      (hasSelectedContext || dateIssue === "invalid_source_date") &&
+      bookQuery.isFetching,
     hasError: Boolean(bookQuery.error),
   });
   const matchesSelectedContext =
@@ -148,7 +150,7 @@ export function buildProposalPortfolioEvidence({
         hasBookData: bookPositions !== null,
         hasContextMismatch: hasCompleteBook && !matchesSelectedContext,
         hasIncompleteEvidence: status === "partial",
-        hasInvalidDate: dateIssue !== null,
+        dateIssue,
         positionCount: tradablePositions.length,
         posture: sourcePosture,
       }),
@@ -190,6 +192,9 @@ function resolveEvidenceStatus({
   dateIssue: ProposalEvidenceDateIssue | null;
   sourcePosture: QuerySourcePosture;
 }): ProposalPortfolioEvidenceStatus {
+  if (dateIssue === "invalid_source_date" && sourcePosture.isRefreshing) {
+    return "refreshing";
+  }
   if (dateIssue) {
     return "unavailable";
   }
@@ -223,7 +228,7 @@ function resolvePositionsStatus({
   hasBookData,
   hasContextMismatch,
   hasIncompleteEvidence,
-  hasInvalidDate,
+  dateIssue,
   positionCount,
   posture,
 }: {
@@ -231,11 +236,14 @@ function resolvePositionsStatus({
   hasBookData: boolean;
   hasContextMismatch: boolean;
   hasIncompleteEvidence: boolean;
-  hasInvalidDate: boolean;
+  dateIssue: ProposalEvidenceDateIssue | null;
   positionCount: number;
   posture: QuerySourcePosture;
 }): ProposalPositionsEvidenceStatus {
-  if (hasInvalidDate) {
+  if (dateIssue === "invalid_source_date" && posture.isRefreshing) {
+    return "refreshing";
+  }
+  if (dateIssue) {
     return "unavailable";
   }
   if (posture.isUnavailable) {
@@ -284,6 +292,13 @@ function evidenceCopy(
         hint: "Proposal evaluation will become available after the combined portfolio book responds.",
       };
     case "refreshing":
+      if (dateIssue === "invalid_source_date") {
+        return {
+          title: "Replacing invalid portfolio evidence",
+          body: "A new portfolio snapshot is being retrieved because the previous response carried an invalid advisory date.",
+          hint: "Evaluation remains paused until the replacement confirms a valid advisory date.",
+        };
+      }
       return {
         title: "Refreshing portfolio evidence",
         body: "The previously loaded snapshot remains visible while its combined portfolio book refreshes.",
