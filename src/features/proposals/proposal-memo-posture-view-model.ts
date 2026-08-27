@@ -2,6 +2,7 @@ import { projectBusinessState } from "@/copy/business-state-copy";
 
 import {
   isCurrentVersionNoMemoEvidence,
+  isCurrentVersionNoMemoLineage,
   lineageItemIdentity,
   memoIdentitiesEqual,
   resolveMemoSourceIdentity,
@@ -90,6 +91,7 @@ type BuildProposalMemoPostureModelInput = {
   projectionData?: ProposalMemoProjectionData | null;
   replayData?: ProposalMemoReplayEvidenceData | null;
   selectedAudience: ProposalMemoProjectionAudience;
+  sourceConfirmsMemoAbsent?: boolean;
   versionNo: number | null;
 };
 
@@ -132,6 +134,7 @@ export function buildProposalMemoPostureModel({
   projectionData,
   replayData,
   selectedAudience,
+  sourceConfirmsMemoAbsent = false,
   versionNo,
 }: BuildProposalMemoPostureModelInput): ProposalMemoPostureModel {
   const memoIdentity = resolveMemoSourceIdentity(
@@ -191,14 +194,24 @@ export function buildProposalMemoPostureModel({
       && lineageData?.lineage_complete === true,
   );
   const sourceIdentityCurrent = sourceEvidenceAligned
-    || isCurrentVersionNoMemoEvidence({
-      lineageData,
-      memoData,
-      projectionData,
-      proposalId,
-      replayData,
-      versionNo,
-    });
+    || (
+      sourceConfirmsMemoAbsent
+      && versionNo !== null
+      && lineageData !== null
+      && lineageData !== undefined
+      && isCurrentVersionNoMemoLineage(lineageData, proposalId, versionNo)
+    )
+    || (
+      !sourceConfirmsMemoAbsent
+      && isCurrentVersionNoMemoEvidence({
+        lineageData,
+        memoData,
+        projectionData,
+        proposalId,
+        replayData,
+        versionNo,
+      })
+    );
   const reportStatus =
     firstString(
       memoIdentity ? memoData?.report_package_posture : undefined,

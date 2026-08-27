@@ -258,6 +258,29 @@ describe("buildProposalMemoPostureModel", () => {
     expect(historicalLineageModel.nextActionKey).toBe("prepare");
   });
 
+  it("projects a source-confirmed 404 absence without synthetic memo records", () => {
+    const model = buildProposalMemoPostureModel({
+      lineageData: {
+        lineage_complete: true,
+        latest_memo_id: null,
+        memo_count: 0,
+        memos: [],
+        proposal: proposalSummary(),
+        proposal_id: PROPOSAL_ID,
+      },
+      proposalId: PROPOSAL_ID,
+      selectedAudience: "ADVISOR",
+      sourceConfirmsMemoAbsent: true,
+      versionNo: VERSION_NO,
+    });
+
+    expect(model.hasMemo).toBe(false);
+    expect(model.sourceIdentityCurrent).toBe(true);
+    expect(model.statusLabel).toBe("Memo not prepared");
+    expect(model.nextActionKey).toBe("prepare");
+    expect(model.nextActionTitle).toBe("Prepare the advisor memo");
+  });
+
   it("withholds preparation when a current-version empty record is not proven", () => {
     const model = buildProposalMemoPostureModel({
       proposalId: PROPOSAL_ID,

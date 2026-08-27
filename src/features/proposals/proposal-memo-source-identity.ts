@@ -210,7 +210,7 @@ export function isCurrentVersionNoMemoEvidence({
       && identityMarkersAreEmpty(projectionData, ["memo_id", "memo_hash"])
       && identityMarkersAreEmpty(replayData?.subject, ["memo_id"])
       && identityMarkersAreEmpty(replayData?.hashes, ["memo_hash"])
-      && lineageProvesCurrentVersionHasNoMemo(
+      && isCurrentVersionNoMemoLineage(
         lineageData,
         proposalId,
         versionNo,
@@ -218,11 +218,22 @@ export function isCurrentVersionNoMemoEvidence({
   );
 }
 
-function lineageProvesCurrentVersionHasNoMemo(
+export function isCurrentVersionNoMemoLineage(
   lineageData: ProposalMemoLineageData,
   proposalId: string,
   versionNo: number,
 ): boolean {
+  if (
+    !activeProposalIdentityIsValid(proposalId, versionNo)
+    || lineageData.proposal_id !== proposalId
+    || !proposalSummaryMatchesActiveVersion(
+      lineageData.proposal,
+      proposalId,
+      versionNo,
+    )
+  ) {
+    return false;
+  }
   const memos = lineageData.memos;
   if (
     lineageData.lineage_complete !== true
