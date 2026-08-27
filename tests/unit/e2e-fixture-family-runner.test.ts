@@ -22,10 +22,38 @@ const passedArtifact = {
 
 describe("governed E2E fixture family runner", () => {
   it("selects one registered CI family while forwarding safe Playwright controls", () => {
-    expect(parseFamilyArguments(["--family", "portfolio", "--workers=1"])).toEqual({
+    expect(
+      parseFamilyArguments([
+        "--family",
+        "portfolio",
+        "--workers",
+        "1",
+        "--timeout",
+        "60000",
+        "--project",
+        "chromium",
+      ]),
+    ).toEqual({
+      familyName: "portfolio",
+      forwardedArguments: [
+        "--workers",
+        "1",
+        "--timeout",
+        "60000",
+        "--project",
+        "chromium",
+      ],
+    });
+    expect(parseFamilyArguments(["--family=portfolio", "--workers=1"])).toEqual({
       familyName: "portfolio",
       forwardedArguments: ["--workers=1"],
     });
+  });
+
+  it("rejects a split Playwright control without its operand", () => {
+    expect(() => parseFamilyArguments(["--family", "portfolio", "--workers"])).toThrow(
+      /--workers requires a value/,
+    );
   });
 
   it("rejects positional values so package-manager flag stripping cannot widen proof", () => {
