@@ -100,7 +100,7 @@ while the user moves from attention posture into construction, review, and evide
 | [Rebalance Waves](Rebalance-Waves-Screen-Guide) | `/workbench/{portfolioId}?mode=waves` | Active | Guide available | Gateway, Core, Manage, Report, and Lotus AI |
 | Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active  | Guide planned — #605 | Gateway and Manage            |
 | Portfolio Memory          | `/workbench/{portfolioId}?mode=memory`       | Active  | Guide planned — #605 | Gateway and Manage            |
-| PM Copilot                | `/workbench/{portfolioId}?mode=copilot`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
+| [PM Copilot](PM-Copilot-Screen-Guide) | `/workbench/{portfolioId}?mode=copilot` | Active | Guide available | Gateway, Manage, and Lotus AI |
 | PM Operating Quality      | `/workbench/{portfolioId}?mode=quality`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
 | [Outcome reviews](Outcome-Reviews-Screen-Guide) | `/workbench/{portfolioId}?mode=reviews` | Active | Guide available | Gateway, Manage, Report, and Lotus AI |
 | Evidence Pack             | `/workbench/{portfolioId}?mode=proof`        | Active  | Guide planned — #605 | Gateway, Manage, and Report   |

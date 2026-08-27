@@ -31,6 +31,7 @@
 - [Manage Overview](Manage-Overview-Screen-Guide)
 - [Mandate Health](Mandate-Health-Screen-Guide)
 - [Rebalance Waves](Rebalance-Waves-Screen-Guide)
+- [PM Copilot](PM-Copilot-Screen-Guide)
 - [Outcome reviews](Outcome-Reviews-Screen-Guide)
 - [Portfolio Review Workflow](Portfolio-Review-Workflow)
 - [Advisor Book Workflow](Advisor-Book-Workflow)

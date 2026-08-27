@@ -190,7 +190,9 @@ must travel through Gateway-shaped contracts.
     review, client use, freshness, supersession, runtime, and stub posture as independent
     source-backed facts. Historical outcome-review proof-pack references remain lineage and cannot
     authorize a proof-pack memo unless the current Gateway proof-pack contract declares AI evidence
-    available. A persisted PM-quality summary invocation remains audit evidence with
+    available. A source-confirmed evidence pack prepared or loaded in the current Manage session is
+    shared across Evidence Pack, the evidence rail, and PM Copilot; its identity governs readiness,
+    request fencing, and the memo request payload. A persisted PM-quality summary invocation remains audit evidence with
     output unavailable unless the owning source independently returns generated material.
     Workbench does not create browser-owned prompts, generated-text retention, PM ranking,
     client-contact, order, execution, or OMS truth.
