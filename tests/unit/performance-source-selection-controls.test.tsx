@@ -93,7 +93,7 @@ describe("PerformanceSourceSelectionControls", () => {
     );
   });
 
-  it("closes only after direct source confirmation even when a pending render is batched", async () => {
+  it("submits an explicit review window through the same complete request path", async () => {
     const onRequestChange = vi.fn();
     const { rerender } = render(
       <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
