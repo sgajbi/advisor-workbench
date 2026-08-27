@@ -184,6 +184,11 @@
   max-width: 76ch;
 }
 
+.confirmationRefreshAction {
+  min-inline-size: max-content;
+  white-space: nowrap;
+}
+
 @container (max-width: 760px) {
   .workflowGrid,
   .supportFacts {
