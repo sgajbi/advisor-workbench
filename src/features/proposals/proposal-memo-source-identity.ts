@@ -163,7 +163,7 @@ export function isCurrentVersionNoMemoEvidence({
 }): boolean {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || lineageData?.proposal_id !== proposalId
+    || !lineageData
     || !proposalSummaryMatchesActiveVersion(
       lineageData.proposal,
       proposalId,
@@ -225,12 +225,12 @@ export function isCurrentVersionNoMemoLineage(
 ): boolean {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || lineageData.proposal_id !== proposalId
     || !proposalSummaryMatchesActiveVersion(
       lineageData.proposal,
       proposalId,
       versionNo,
     )
+    || !optionalExactValueMatches(lineageData.proposal_id, proposalId)
   ) {
     return false;
   }

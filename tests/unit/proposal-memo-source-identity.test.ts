@@ -248,6 +248,20 @@ describe("proposal memo source identity", () => {
     };
 
     expect(isCurrentVersionNoMemoEvidence(input)).toBe(true);
+    const { proposal_id: _optionalProposalId, ...lineageWithoutTopLevelId } =
+      input.lineageData;
+    expect(
+      isCurrentVersionNoMemoEvidence({
+        ...input,
+        lineageData: lineageWithoutTopLevelId,
+      }),
+    ).toBe(true);
+    expect(
+      isCurrentVersionNoMemoEvidence({
+        ...input,
+        lineageData: { ...input.lineageData, proposal_id: "pp_other" },
+      }),
+    ).toBe(false);
     expect(
       isCurrentVersionNoMemoEvidence({
         ...input,
