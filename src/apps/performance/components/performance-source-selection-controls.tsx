@@ -346,7 +346,7 @@ export default function PerformanceSourceSelectionControls({
       </button>
       {presentationControl}
       <PerformanceCustomWindowDialog
-        key={windowDialogSession}
+        key={`${windowDialogSession}:${reportStartDate}:${reportEndDate}`}
         open={windowDialogOpen}
         confirmedWindow={{ fromDate: reportStartDate, toDate: reportEndDate }}
         earliestAvailableDate={availableStartDate}

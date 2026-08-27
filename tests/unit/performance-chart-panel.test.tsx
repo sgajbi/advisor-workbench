@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { EChartsOption } from "echarts";
 
@@ -217,7 +217,7 @@ describe("PerformanceChartPanel", () => {
     expect(within(observationTable).queryByText("Cumulative active return")).not.toBeInTheDocument();
   });
 
-  it("falls back to chart point dates when report dates are missing", () => {
+  it("falls back to chart point dates when report dates are missing", async () => {
     render(
       <PerformanceChartPanel
         {...buildChartProps({
@@ -267,7 +267,20 @@ describe("PerformanceChartPanel", () => {
       )
     ).toBeTruthy();
     expect(document.querySelector(".performance-chart-stage.workbench-chart-shell")).toBeTruthy();
-    expect(document.querySelector("[data-performance-date-form='true']")).toBeTruthy();
+    const reviewWindow = screen.getByRole("button", { name: /Review window/i });
+    expect(reviewWindow).toHaveTextContent("01 Jan 2026");
+    expect(reviewWindow).toHaveTextContent("28 Feb 2026");
+    expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    fireEvent.click(reviewWindow);
+    const reviewWindowDialog = screen.getByRole("dialog", {
+      name: "Choose a custom review window",
+    });
+    expect(within(reviewWindowDialog).getByLabelText(/^From/)).toHaveValue("2026-01-01");
+    expect(within(reviewWindowDialog).getByLabelText(/^To/)).toHaveValue("2026-02-28");
+    fireEvent.click(within(reviewWindowDialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    });
     expect(screen.getByLabelText("Executive return strip")).toBeInTheDocument();
     expect(document.querySelector("[data-performance-analysis-control-bar='true']")).toBeTruthy();
     expect(document.querySelectorAll("[data-performance-control-slot]")).toHaveLength(5);
@@ -298,8 +311,8 @@ describe("PerformanceChartPanel", () => {
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,208,000");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("Ending market value");
     expect(screen.getByLabelText("Executive return strip")).toHaveTextContent("$1,250,000");
-    expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
-    expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
+    expect(reviewWindow).toHaveTextContent("01 Jan 2026");
+    expect(reviewWindow).toHaveTextContent("28 Feb 2026");
     fireEvent.click(screen.getByText("Return history"));
     const observationTable = screen.getByLabelText("Return path observation table");
     expect(within(observationTable).getByText("Cumulative portfolio TWR")).toBeInTheDocument();
@@ -406,17 +419,21 @@ describe("PerformanceChartPanel", () => {
     ).toContain("Observation");
   });
 
-  it("clears explicit date drafts when the source report-date context changes", () => {
+  it("discards explicit date drafts when the source report-date context changes", () => {
     const props = buildChartProps({
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-02-28",
     });
     const { rerender } = render(<PerformanceChartPanel {...props} />);
 
-    fireEvent.change(screen.getByLabelText("From"), {
+    fireEvent.click(screen.getByRole("button", { name: /Review window/i }));
+    let reviewWindowDialog = screen.getByRole("dialog", {
+      name: "Choose a custom review window",
+    });
+    fireEvent.change(within(reviewWindowDialog).getByLabelText(/^From/), {
       target: { value: "2026-01-15" },
     });
-    expect(screen.getByLabelText("From")).toHaveValue("2026-01-15");
+    expect(within(reviewWindowDialog).getByLabelText(/^From/)).toHaveValue("2026-01-15");
 
     rerender(
       <PerformanceChartPanel
@@ -426,8 +443,14 @@ describe("PerformanceChartPanel", () => {
       />,
     );
 
-    expect(screen.getByLabelText("From")).toHaveValue("2026-03-01");
-    expect(screen.getByLabelText("To")).toHaveValue("2026-03-31");
+    expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    const marchReviewWindow = screen.getByRole("button", { name: /Review window/i });
+    expect(marchReviewWindow).toHaveTextContent("01 Mar 2026");
+    expect(marchReviewWindow).toHaveTextContent("31 Mar 2026");
+    fireEvent.click(marchReviewWindow);
+    reviewWindowDialog = screen.getByRole("dialog", { name: "Choose a custom review window" });
+    expect(within(reviewWindowDialog).getByLabelText(/^From/)).toHaveValue("2026-03-01");
+    expect(within(reviewWindowDialog).getByLabelText(/^To/)).toHaveValue("2026-03-31");
 
     rerender(
       <PerformanceChartPanel
@@ -437,8 +460,11 @@ describe("PerformanceChartPanel", () => {
       />,
     );
 
-    expect(screen.getByLabelText("From")).toHaveValue("2026-01-01");
-    expect(screen.getByLabelText("To")).toHaveValue("2026-02-28");
+    expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Review window/i }));
+    reviewWindowDialog = screen.getByRole("dialog", { name: "Choose a custom review window" });
+    expect(within(reviewWindowDialog).getByLabelText(/^From/)).toHaveValue("2026-01-01");
+    expect(within(reviewWindowDialog).getByLabelText(/^To/)).toHaveValue("2026-02-28");
   });
 
   it("uses benchmark options from the workspace contract for selector labels", () => {

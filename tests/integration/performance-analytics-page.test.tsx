@@ -867,15 +867,21 @@ describe("PerformanceAnalyticsPage", () => {
     });
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Horizon" })).toBeVisible();
     expect(within(sourceSelection).getByRole("radiogroup", { name: "Basis" })).toBeVisible();
-    const customWindowSummary = within(sourceSelection).getByText("Custom window").closest("summary");
-    expect(customWindowSummary).toBeVisible();
-    expect(customWindowSummary).toHaveTextContent("Jan 2026");
-    expect(customWindowSummary).toHaveTextContent("Feb 2026");
-    expect(within(sourceSelection).getByLabelText("From")).not.toBeVisible();
-    expect(within(sourceSelection).getByLabelText("To")).not.toBeVisible();
-    fireEvent.click(customWindowSummary!);
-    expect(within(sourceSelection).getByLabelText("From")).toBeVisible();
-    expect(within(sourceSelection).getByLabelText("To")).toBeVisible();
+    const reviewWindow = within(sourceSelection).getByRole("button", { name: /Review window/i });
+    expect(reviewWindow).toBeVisible();
+    expect(reviewWindow).toHaveTextContent("Jan 2026");
+    expect(reviewWindow).toHaveTextContent("Feb 2026");
+    expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    fireEvent.click(reviewWindow);
+    const reviewWindowDialog = screen.getByRole("dialog", {
+      name: "Choose a custom review window",
+    });
+    expect(within(reviewWindowDialog).getByLabelText(/^From/)).toBeVisible();
+    expect(within(reviewWindowDialog).getByLabelText(/^To/)).toBeVisible();
+    fireEvent.click(within(reviewWindowDialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Choose a custom review window" })).not.toBeInTheDocument();
+    });
     expect(within(sourceSelection).getByLabelText("Frequency")).toBeVisible();
     expect(within(sourceSelection).getByLabelText("Benchmark")).toBeVisible();
     expect(screen.queryByRole("group", { name: "Return-path presentation" })).not.toBeInTheDocument();
