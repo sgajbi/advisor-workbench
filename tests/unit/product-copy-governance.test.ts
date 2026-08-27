@@ -4372,7 +4372,7 @@ describe("product-copy governance", () => {
           productCopyChecker,
           "--max=263",
           "--max-unresolved=1721",
-          "--unresolved-digest=5bc6cfba629fcc82e67522d8d72610ac3681a34effb66336067d1c89c0e541f5",
+          "--unresolved-digest=3849e34e4be70c7f17f5f0a3c1330835202bd8e2e2dcc9db1cba07f37240c9d1",
         ],
         {
           cwd: process.cwd(),
@@ -4386,7 +4386,7 @@ describe("product-copy governance", () => {
         "measured inventory matches the checked-in baselines at 263 finding(s) and 1721 unresolved expression(s)",
       );
       expect(stdout).toContain(
-        "5bc6cfba629fcc82e67522d8d72610ac3681a34effb66336067d1c89c0e541f5",
+        "3849e34e4be70c7f17f5f0a3c1330835202bd8e2e2dcc9db1cba07f37240c9d1",
       );
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
