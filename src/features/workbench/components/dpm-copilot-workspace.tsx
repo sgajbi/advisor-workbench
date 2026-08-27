@@ -25,6 +25,7 @@ import { requestDpmOutcomeReviewAiNarrative } from "@/features/workbench/outcome
 import { requestDpmPmOperatingQualitySummary } from "@/features/workbench/pm-operating-quality-api";
 import { requestDpmProofPackAiPmMemo } from "@/features/workbench/proof-pack-api";
 import { buildProofPackPanelModel } from "@/features/workbench/proof-pack-view-model";
+import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-state";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 
 type CopilotAction = {
@@ -52,6 +53,8 @@ export default function DpmCopilotWorkspace({
   mandateId?: string | null;
 }) {
   const portfolioId = data.portfolio.portfolio.portfolio_id;
+  const sharedProofPackState = useManageProofPackState();
+  const currentProofPack = sharedProofPackState?.proofPack ?? data.proofPack;
   const [actionState, setActionState] = useState<ActionState>({
     pending: null,
     result: null,
@@ -59,8 +62,8 @@ export default function DpmCopilotWorkspace({
   });
   const requestSequenceRef = useRef(0);
   const actions = useMemo(
-    () => buildCopilotActions({ data, portfolioId, mandateId: mandateId ?? null }),
-    [data, mandateId, portfolioId]
+    () => buildCopilotActions({ data, currentProofPack, portfolioId, mandateId: mandateId ?? null }),
+    [currentProofPack, data, mandateId, portfolioId]
   );
   const currentContextKeys = useMemo(
     () => new Set(actions.map((action) => action.contextKey)),
@@ -217,14 +220,16 @@ export default function DpmCopilotWorkspace({
 
 function buildCopilotActions({
   data,
+  currentProofPack,
   portfolioId,
   mandateId,
 }: {
   data: ManageWorkspaceData;
+  currentProofPack: ManageWorkspaceData["proofPack"];
   portfolioId: string;
   mandateId: string | null;
 }): CopilotAction[] {
-  const proofPackModel = buildProofPackPanelModel(data.proofPack);
+  const proofPackModel = buildProofPackPanelModel(currentProofPack);
   const currentProofPackId = proofPackModel.proofPackId === "N/A"
     ? null
     : proofPackModel.proofPackId;
