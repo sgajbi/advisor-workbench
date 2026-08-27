@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button } from "@mui/material";
 
@@ -162,17 +162,24 @@ function ProposalMemoPosturePanelProposalScope({
   const [confirmationError, setConfirmationError] = useState<string | null>(
     null,
   );
+  const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActionError(null);
+  }, [currentVersionNo]);
 
   return (
     <ProposalMemoPosturePanelSession
       key={`${proposalId}:${currentVersionNo ?? "unavailable"}`}
       proposalId={proposalId}
       currentVersionNo={currentVersionNo}
+      actionError={actionError}
       confirmationError={confirmationError}
       actionMessage={actionMessage}
       pendingAction={pendingAction}
       pendingConfirmation={pendingConfirmation}
+      onActionErrorChange={setActionError}
       onConfirmationErrorChange={setConfirmationError}
       onActionMessageChange={setActionMessage}
       onPendingActionChange={setPendingAction}
@@ -182,10 +189,12 @@ function ProposalMemoPosturePanelProposalScope({
 }
 
 type SessionProps = Props & {
+  actionError: string | null;
   confirmationError: string | null;
   actionMessage: string | null;
   pendingAction: PendingMemoActionState | null;
   pendingConfirmation: PendingMemoConfirmation | null;
+  onActionErrorChange: (value: string | null) => void;
   onConfirmationErrorChange: (value: string | null) => void;
   onActionMessageChange: (value: string | null) => void;
   onPendingActionChange: (value: PendingMemoActionState | null) => void;
@@ -195,10 +204,12 @@ type SessionProps = Props & {
 function ProposalMemoPosturePanelSession({
   proposalId,
   currentVersionNo,
+  actionError,
   confirmationError,
   actionMessage,
   pendingAction,
   pendingConfirmation,
+  onActionErrorChange: setActionError,
   onConfirmationErrorChange: setConfirmationError,
   onActionMessageChange: setActionMessage,
   onPendingActionChange,
@@ -207,7 +218,6 @@ function ProposalMemoPosturePanelSession({
   const versionNo = currentVersionNo ?? null;
   const [actorReference, setActorReference] = useState("");
   const [reviewRationale, setReviewRationale] = useState("");
-  const [actionError, setActionError] = useState<string | null>(null);
   const [audience, setAudience] =
     useState<ProposalMemoProjectionAudience>("ADVISOR");
 
