@@ -1919,6 +1919,51 @@ test("shows requested and source dates while blocking a mismatched source snapsh
   ).toBeDisabled();
 });
 
+test("keeps proposal decisions unavailable when source returns an impossible advisory date", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalPortfolioEvidence(page, { effectiveDate: "2026-04-31" });
+  await page.goto(buildProposalBuilderUrl(), {
+    waitUntil: "domcontentloaded",
+  });
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
+  await expect(evidence).toHaveAttribute(
+    "data-evidence-date-issue",
+    "invalid_source_date",
+  );
+  await expect(evidence).toHaveAttribute(
+    "data-effective-as-of-date",
+    "2026-04-31",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Portfolio evidence date is unavailable" }),
+  ).toBeVisible();
+  await expect(page.getByText("Invalid source date")).toBeVisible();
+  await expect(
+    page.getByText(
+      "Evaluation and draft handoff remain unavailable until the portfolio source provides a valid date.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Buy More" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sell Down" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Evaluate Workspace" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Save Advisor Draft" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Refresh Portfolio Evidence" }),
+  ).toBeEnabled();
+  await testInfo.attach("proposal-invalid-source-date", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+});
+
 test("withholds mixed-currency impact until refreshed source evidence matches the proposal", async ({
   page,
 }, testInfo) => {
