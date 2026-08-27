@@ -671,7 +671,9 @@ describe("canonical live validation script", () => {
       'getByTestId("proposal-memo-source-state")',
     );
     expect(browserWorkflows).toContain('"data-source-state"');
+    expect(browserWorkflows).toContain("not-prepared|ready");
     expect(browserWorkflows).toContain('"ready"');
+    expect(browserWorkflows).toContain("initialSourceState");
     expect(script).toContain("validateBankDemoProofPanel");
     expect(script).toContain("RFC-0028 bank demo supported-claim register");
     expect(script).toContain('from "./validation/advisory-policy-proof.mjs"');
