@@ -110,5 +110,17 @@ describe("financial-formatters", () => {
         "2026-08-27T15:02:35",
       ),
     ).toBe(false);
+    expect(
+      timestampsRepresentSameInstant(
+        " 2026-08-27T15:02:35Z",
+        "2026-08-27T15:02:35Z",
+      ),
+    ).toBe(false);
+    expect(
+      timestampsRepresentSameInstant(
+        "2026-08-27T15:02:35Z",
+        "2026-08-27T15:02:35Z ",
+      ),
+    ).toBe(false);
   });
 });

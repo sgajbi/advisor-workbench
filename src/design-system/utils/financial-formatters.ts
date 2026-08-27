@@ -301,9 +301,12 @@ function parseTimestampValue(value: string | null | undefined): Date | null {
 function parseTimestampInstant(
   value: string | null | undefined,
 ): { epochSecond: number; fractionalSecond: string } | null {
-  const candidate = value?.trim();
+  const candidate = value;
+  if (!candidate || candidate !== candidate.trim()) {
+    return null;
+  }
   const parsed = parseTimestampValue(candidate);
-  if (!candidate || !parsed) {
+  if (!parsed) {
     return null;
   }
   const fractionalMatch = candidate.match(
