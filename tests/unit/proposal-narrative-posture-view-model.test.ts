@@ -527,6 +527,44 @@ describe("proposal narrative posture view model", () => {
     }
   });
 
+  it("confirms the same review instant across equivalent timezone representations", () => {
+    expect(() =>
+      confirmNarrativeReviewRefresh({
+        ...activeProposal,
+        review: confirmedReview,
+        refreshedReview: {
+          ...confirmedReview,
+          narrative_review: {
+            ...confirmedReview.narrative_review,
+            reviewed_at: "2026-05-22T17:00:00+08:00",
+          },
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects review timestamps that differ below JavaScript millisecond precision", () => {
+    expect(() =>
+      confirmNarrativeReviewRefresh({
+        ...activeProposal,
+        review: {
+          ...confirmedReview,
+          narrative_review: {
+            ...confirmedReview.narrative_review,
+            reviewed_at: "2026-05-22T09:00:00.1234Z",
+          },
+        },
+        refreshedReview: {
+          ...confirmedReview,
+          narrative_review: {
+            ...confirmedReview.narrative_review,
+            reviewed_at: "2026-05-22T09:00:00.1235Z",
+          },
+        },
+      }),
+    ).toThrow("refreshed proposal evidence did not confirm it");
+  });
+
   it("confirms a discussion pack only from matching action, summary and event refreshes", () => {
     expect(() =>
       confirmDiscussionPackRefresh({
