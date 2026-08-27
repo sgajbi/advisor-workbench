@@ -1,6 +1,9 @@
 export interface ScenarioResult {
   title: string;
+  retry?: number;
   status: "passed" | "failed" | "skipped" | "timedOut" | "interrupted";
+  duration_ms?: number;
+  errors?: string[];
 }
 
 export interface ScenarioProof {
