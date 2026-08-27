@@ -93,7 +93,7 @@ describe("PerformanceSourceSelectionControls", () => {
     );
   });
 
-  it("submits an explicit review window through the same complete request path", async () => {
+  it("closes only after direct source confirmation even when a pending render is batched", async () => {
     const onRequestChange = vi.fn();
     const { rerender } = render(
       <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
@@ -129,13 +129,6 @@ describe("PerformanceSourceSelectionControls", () => {
     expect(windowTrigger).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
     expect(screen.getByRole("button", { name: "Applying…" })).toBeDisabled();
 
-    rerender(
-      <PerformanceSourceSelectionControls
-        {...baseProps}
-        isUpdating
-        onRequestChange={onRequestChange}
-      />,
-    );
     rerender(
       <PerformanceSourceSelectionControls
         {...baseProps}

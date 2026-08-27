@@ -77,7 +77,29 @@ export default function PerformanceSourceSelectionControls({
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
   const availableStartDate = capabilities.returnPath.earliestAvailableDate;
   const availableEndDate = capabilities.returnPath.latestAvailableDate;
+  const sourceWindowContext = [
+    portfolioId,
+    period,
+    reportStartDate,
+    reportEndDate,
+    availableStartDate,
+    availableEndDate,
+  ].join(":");
+  const previousSourceWindowContextRef = useRef(sourceWindowContext);
   const windowLabel = `${formatDate(reportStartDate)} – ${formatDate(reportEndDate)}`;
+
+  useEffect(() => {
+    const sourceWindowContextChanged =
+      previousSourceWindowContextRef.current !== sourceWindowContext;
+    previousSourceWindowContextRef.current = sourceWindowContext;
+    if (!sourceWindowContextChanged || !windowDialogOpen) {
+      return;
+    }
+
+    windowRequestWasUpdatingRef.current = false;
+    setSubmittedWindow(null);
+    setWindowDialogOpen(false);
+  }, [sourceWindowContext, windowDialogOpen]);
 
   useEffect(() => {
     const updateCompleted = wasUpdatingRef.current && !isUpdating;
@@ -346,7 +368,7 @@ export default function PerformanceSourceSelectionControls({
       </button>
       {presentationControl}
       <PerformanceCustomWindowDialog
-        key={`${windowDialogSession}:${reportStartDate}:${reportEndDate}`}
+        key={windowDialogSession}
         open={windowDialogOpen}
         confirmedWindow={{ fromDate: reportStartDate, toDate: reportEndDate }}
         earliestAvailableDate={availableStartDate}
