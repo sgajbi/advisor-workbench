@@ -225,6 +225,11 @@ Current repository posture:
     prompt construction. An outcome-review proof-pack reference is historical lineage only; it
     must not enable a proof-pack memo action unless a current Gateway proof-pack response also
     declares AI-evidence input available. Manage surfaces also preserve Gateway-provided
+    proof-pack session state through one provider-owned reference shared by Evidence Pack, the
+    evidence rail, and PM Copilot. When a source-confirmed pack is loaded or published in-session,
+    Copilot action readiness, visible lineage, context identity, and request payload must all derive
+    from that same resolved pack; no consumer may retain an older server-rendered pack identity.
+    Manage surfaces also preserve Gateway-provided
     action-register supportability from the portfolio overview `rebalance_snapshot`; missing
     supportability is shown as unknown/N/A rather than as verified zero activity.
 15. Manage `mode=quality` renders the PM operating quality governance surface from Gateway

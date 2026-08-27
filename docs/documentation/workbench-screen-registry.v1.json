@@ -763,19 +763,20 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "PM-Copilot-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-ai"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/components/dpm-copilot-workspace.tsx",
+        "tests/unit/dpm-copilot-workspace.test.tsx"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/manage-proof-copilot-workspace.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-evidence-and-governance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "pm-operating-quality",
