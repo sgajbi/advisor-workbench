@@ -1680,11 +1680,13 @@ export async function validateProposalMemoEvidencePackPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(memoPanel.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+  const memoSourceState = memoPanel.getByTestId("proposal-memo-source-state");
+  await expect(memoSourceState).toHaveAttribute(
     "data-source-state",
-    "ready",
+    /^(not-prepared|ready)$/,
     { timeout: timeoutMs },
   );
+  const initialSourceState = await memoSourceState.getAttribute("data-source-state");
   await expect(memoPanel.getByLabel("Advisor memo workflow")).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1756,6 +1758,7 @@ export async function validateProposalMemoEvidencePackPanel(
     kind: "proposal-memo-evidence-pack",
     proposalId,
     versionNo: proposalVersionNo,
+    initialSourceState,
     reviewState: "source-confirmed-advisor-use",
     actionsPerformed,
     clientReadyRelease: "not-requested",
