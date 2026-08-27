@@ -192,6 +192,13 @@
             "Outcome reviews keeps comparison truth, evidence, and next actions distinct"
           ]
         },
+        "proof-copilot": {
+          "fixture_value": "proof-copilot",
+          "spec": "tests/e2e/manage-proof-copilot-workspace.spec.ts",
+          "expected_tests": [
+            "PM Copilot follows the source-confirmed evidence pack across Manage modes"
+          ]
+        },
         "rebalance-waves": {
           "fixture_value": "rebalance-waves",
           "spec": "tests/e2e/manage-rebalance-workspace.spec.ts",
