@@ -1304,8 +1304,14 @@ Important validation expectations:
     source-owned portfolio-book response. Treat a carried review-context value as the explicit
     override, never replace a non-empty user value with a source default, and repeat the portfolio
     read with the resolved date and currency before enabling evaluation or draft handoff. Proposal
-    entry actions must use the shared review-context URL authority rather than portfolio-only string
-    interpolation. If the lightweight portfolio workspace shell is unavailable, Proposal Builder
+    Builder must validate both carried and returned dates through the shared semantic business-date
+    authority; a shape-only `YYYY-MM-DD` check does not establish a real calendar date. Invalid
+    carried context and invalid source evidence remain distinguishable, action-blocking unavailable
+    states. Adopt date and currency defaults together only after the returned date is valid, so a
+    malformed temporal authority cannot trigger a second source request or partial context promotion.
+    Proposal entry actions must use the shared review-context URL authority rather than
+    portfolio-only string interpolation. If the lightweight portfolio workspace shell is unavailable,
+    Proposal Builder
     may use an identity-matched Gateway portfolio-book response as partial shell context; publish
     its confirmed portfolio, client, booking-centre, business-date, and base-currency facts to the
     Review Context strip and the form together, label missing mandate context explicitly, and reject

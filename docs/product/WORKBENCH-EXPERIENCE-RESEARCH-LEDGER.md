@@ -4284,6 +4284,70 @@ records the Proposal Builder route and its Gateway/Core/Advise ownership, while 
 dedicated business screen guide. Repository context and the codebase review ledger carry the new
 one-snapshot source-authority rule without duplicating that technical detail into the catalogue.
 
+## Proposal Builder Semantic Calendar-Date Admission
+
+### Business and engineering job
+
+An advisor must not evaluate or retain a proposal against a date that has the right textual shape
+but cannot exist on the calendar. Carried review context and returned portfolio-book evidence are
+both external inputs at the Workbench decision boundary. An impossible value must remain visible
+as a source-quality exception, never become a confirmed snapshot or be silently rolled into another
+day.
+
+### Primary-source research
+
+Research was reviewed on 2026-08-27:
+
+1. [OWASP Input Validation guidance](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html)
+   distinguishes syntactic validation from semantic validation and requires potentially untrusted
+   backend feeds to be validated as they enter a workflow. A `YYYY-MM-DD` shape check therefore
+   cannot establish that the month and day form a real calendar date.
+2. [WCAG 2.2 error identification guidance](https://www.w3.org/WAI/WCAG22/Understanding/error-identification)
+   requires descriptive text that identifies what is invalid and supports a corrective next step;
+   a generic unavailable badge alone is insufficient.
+3. [WCAG 2.2 status-message guidance](https://www.w3.org/WAI/WCAG22/Understanding/status-messages)
+   requires important state and error changes that do not move focus to remain programmatically
+   available to assistive technology.
+4. Workbench's `isBusinessDateValue` helper is the internal calendar authority already proven for
+   leap years and month lengths. Proposal Builder can reuse it without another dependency, policy,
+   or service contract.
+
+### Adopted decisions
+
+1. Use the shared semantic calendar validator for schema admission, source request eligibility,
+   source-default adoption, response matching, and portfolio-evidence readiness.
+2. Project invalid carried and invalid returned dates as two explicit reasons beneath the existing
+   `unavailable` business posture; neither can authorize evaluation, holding-derived draft actions,
+   or handoff.
+3. Preserve the rejected raw source value only in stable machine-readable evidence while showing
+   **Invalid carried date** or **Invalid source date** to the advisor.
+4. Keep source refresh available when the returned source date is invalid, because a new source
+   response can recover. Disable that false recovery for an invalid carried date and direct the
+   advisor back to portfolio review instead.
+5. Adopt source date and source currency defaults atomically. An invalid source date must not cause
+   a second portfolio read merely because the same response carried a usable currency.
+
+### Rejected decisions
+
+1. Keeping the shape-only regular expressions in the schema, query, effect, or evidence model.
+2. Parsing through JavaScript `Date`, browser date controls, or timezone conversion, because
+   rollover or normalization can invent a different advisory date.
+3. Silently substituting today's date, the route date, a demonstration date, or the source's nearest
+   valid day.
+4. Adding a Proposal-only date helper, a new validation dependency, or browser-owned date policy
+   when the shared Workbench authority already owns the rule.
+5. Changing Gateway or Core contracts for a Workbench admission defect; the existing source field
+   remains authoritative when valid and explicitly unavailable when malformed.
+
+### Validation and publication decision
+
+Workbench #821 owns the bounded implementation. Focused model, component, and optimized-browser
+proof covers valid leap day, non-leap February, month length, impossible month/day, valid source
+defaults, invalid carried context, invalid returned evidence, final-action fencing, and source-
+request integrity. The Proposal Builder screen guide and repository context change because the
+advisor-visible recovery path and source-admission rule are now more precise; publish the wiki after
+merge and verify strict source parity.
+
 ## Proposal Builder Indicative Impact Currency Authority
 
 ### Business and engineering job
