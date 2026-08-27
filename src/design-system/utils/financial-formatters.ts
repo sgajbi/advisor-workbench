@@ -217,6 +217,20 @@ export function isTimestampValue(value: string | null | undefined): boolean {
   return parseTimestampValue(value) !== null;
 }
 
+export function timestampsRepresentSameInstant(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  const leftInstant = parseTimestampInstant(left);
+  const rightInstant = parseTimestampInstant(right);
+  return Boolean(
+    leftInstant &&
+      rightInstant &&
+      leftInstant.epochSecond === rightInstant.epochSecond &&
+      leftInstant.fractionalSecond === rightInstant.fractionalSecond,
+  );
+}
+
 export function isBusinessDateValue(value: string | null | undefined): boolean {
   return parseBusinessDateValue(value) !== null;
 }
@@ -282,4 +296,24 @@ function parseTimestampValue(value: string | null | undefined): Date | null {
 
   const parsed = new Date(candidate);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseTimestampInstant(
+  value: string | null | undefined,
+): { epochSecond: number; fractionalSecond: string } | null {
+  const candidate = value?.trim();
+  const parsed = parseTimestampValue(candidate);
+  if (!candidate || !parsed) {
+    return null;
+  }
+  const fractionalMatch = candidate.match(
+    /:\d{2}(?:\.(\d+))?(?:Z|[+-]\d{2}:\d{2})$/i,
+  );
+  if (!fractionalMatch) {
+    return null;
+  }
+  return {
+    epochSecond: Math.floor(parsed.getTime() / 1_000),
+    fractionalSecond: (fractionalMatch[1] ?? "").replace(/0+$/, ""),
+  };
 }

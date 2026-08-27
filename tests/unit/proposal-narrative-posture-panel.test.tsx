@@ -288,7 +288,7 @@ describe("ProposalNarrativePosturePanel", () => {
           related_version_no: 2,
           status: "ACCEPTED",
           report_reference_id: "report-document-001",
-          generated_at: "2026-05-22T09:01:00Z",
+          generated_at: "2026-05-22T17:01:00+08:00",
           include_reviewed_narrative: true,
           proposal_narrative_package: {
             proposal_version_no: 2,

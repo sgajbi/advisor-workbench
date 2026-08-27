@@ -538,6 +538,21 @@ describe("proposal narrative posture view model", () => {
     ).not.toThrow();
   });
 
+  it("confirms the same source-generated instant across equivalent timezone representations", () => {
+    expect(() =>
+      confirmDiscussionPackRefresh({
+        ...activeProposal,
+        report: discussionPackRequest({
+          generated_at: "2026-05-22T09:01:00.41829Z",
+        }),
+        summary: discussionPackSummary({
+          generated_at: "2026-05-22T17:01:00.418290+08:00",
+        }),
+        events: activeEvents(),
+      }),
+    ).not.toThrow();
+  });
+
   it("confirms the original discussion-pack request after the proposal advances", () => {
     const advancedProposal = {
       ...activeProposalSummary,
