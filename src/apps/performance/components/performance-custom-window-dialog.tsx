@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -45,14 +45,6 @@ export default function PerformanceCustomWindowDialog({
   const [draft, setDraft] = useState(confirmedWindow);
   const [errors, setErrors] = useState<PerformanceCustomWindowErrors>({});
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    setDraft(confirmedWindow);
-    setErrors({});
-  }, [confirmedWindow, open]);
-
   function submitWindow(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateCustomWindow(
@@ -71,8 +63,6 @@ export default function PerformanceCustomWindowDialog({
     if (isSubmitting) {
       return;
     }
-    setDraft(confirmedWindow);
-    setErrors({});
     onCancel();
   }
 
