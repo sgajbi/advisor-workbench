@@ -234,6 +234,31 @@ describe("PerformanceSourceSelectionControls", () => {
     expect(onRequestChange).toHaveBeenCalledTimes(1);
   });
 
+  it("closes an unchanged explicit window without issuing a redundant request", async () => {
+    const onRequestChange = vi.fn();
+    render(
+      <PerformanceSourceSelectionControls
+        {...baseProps}
+        period="EXPLICIT"
+        reportStartDate="2026-02-01"
+        reportEndDate="2026-03-31"
+        onRequestChange={onRequestChange}
+      />,
+    );
+
+    const windowTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Feb 2026 – 31 Mar 2026",
+    });
+    fireEvent.click(windowTrigger);
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(windowTrigger).toHaveFocus();
+    });
+    expect(onRequestChange).not.toHaveBeenCalled();
+  });
+
   it("preserves the source-published date range after confirming a shorter explicit window", async () => {
     const capabilities = buildPerformanceCapabilities();
     const sourceRange = {
