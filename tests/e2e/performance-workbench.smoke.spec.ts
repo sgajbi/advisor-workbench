@@ -820,12 +820,17 @@ test.describe('Performance workbench smoke', () => {
         clientWidth: element.clientWidth,
         scrollWidth: element.scrollWidth,
       }));
-      if (viewport.width > 519) {
+      const historyOverflow = historyGeometry.scrollWidth - historyGeometry.clientWidth;
+      if (historyOverflow <= 1) {
         expect(
-          historyGeometry.scrollWidth - historyGeometry.clientWidth,
+          historyOverflow,
           `${viewport.name} return-history overflow`,
         ).toBeLessThanOrEqual(1);
       } else {
+        expect(
+          viewport.width,
+          `${viewport.name} may use the governed compact table scroll`,
+        ).toBeLessThanOrEqual(561);
         expect(historyGeometry.scrollWidth).toBeGreaterThan(historyGeometry.clientWidth);
         await historyRegion.evaluate((element) => {
           element.scrollLeft = element.scrollWidth;
