@@ -161,6 +161,28 @@ describe("proposal portfolio evidence", () => {
     },
   );
 
+  it("locks invalid source evidence while a replacement snapshot is loading", () => {
+    const evidence = buildEvidence({
+      asOfDate: "",
+      reportingCurrency: "",
+      bookQuery: {
+        ...readyQuery(portfolioBook({ as_of_date: "2026-04-31" })),
+        isFetching: true,
+      },
+    });
+
+    expect(evidence).toMatchObject({
+      status: "refreshing",
+      canEvaluateAndHandoff: false,
+      title: "Replacing invalid portfolio evidence",
+      context: {
+        effectiveAsOfDate: "2026-04-31",
+        dateIssue: "invalid_source_date",
+      },
+      positions: { status: "refreshing" },
+    });
+  });
+
   it("distinguishes a confirmed empty book from unavailable evidence", () => {
     const evidence = buildEvidence({
       bookQuery: readyQuery(portfolioBook({ positions: [] })),

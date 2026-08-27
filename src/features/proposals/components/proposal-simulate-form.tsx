@@ -186,6 +186,7 @@ export default function ProposalSimulateForm({
   const evidenceCurrency = baseCurrency.trim().toUpperCase();
   const hasPortfolioEvidenceContext = evidencePortfolioId.length > 0;
   const hasValidEvidenceDate = isBusinessDateValue(evidenceAsOfDate);
+  const canRequestPortfolioEvidence = !evidenceAsOfDate || hasValidEvidenceDate;
   const hasValidEvidenceCurrency = /^[A-Z]{3}$/.test(evidenceCurrency);
   const workflowContextModel = useMemo(
     () =>
@@ -209,13 +210,20 @@ export default function ProposalSimulateForm({
           ? { reportingCurrency: evidenceCurrency }
           : {}),
       }),
-    enabled: sourceContextConfirmed && hasPortfolioEvidenceContext,
+    enabled:
+      sourceContextConfirmed &&
+      hasPortfolioEvidenceContext &&
+      canRequestPortfolioEvidence,
     ...workbenchStrictQueryDefaults,
   });
   const sourceBookAsOfDate = portfolioBookQuery.data?.as_of_date?.trim() ?? "";
   const hasValidSourceBookDate = isBusinessDateValue(sourceBookAsOfDate);
   const sourceBookIdentityCurrency =
     portfolioBookQuery.data?.portfolio.base_currency?.trim().toUpperCase() ?? "";
+  const sourceBookDefaultCurrency =
+    hasValidSourceBookDate && /^[A-Z]{3}$/.test(sourceBookIdentityCurrency)
+      ? sourceBookIdentityCurrency
+      : "";
 
   useEffect(() => {
     if (
@@ -229,10 +237,9 @@ export default function ProposalSimulateForm({
     }
     if (
       !evidenceCurrency &&
-      hasValidSourceBookDate &&
-      /^[A-Z]{3}$/.test(sourceBookIdentityCurrency)
+      sourceBookDefaultCurrency
     ) {
-      form.setValue("baseCurrency", sourceBookIdentityCurrency, {
+      form.setValue("baseCurrency", sourceBookDefaultCurrency, {
         shouldDirty: false,
         shouldValidate: true,
       });
@@ -243,28 +250,28 @@ export default function ProposalSimulateForm({
     form,
     hasValidSourceBookDate,
     sourceBookAsOfDate,
-    sourceBookIdentityCurrency,
+    sourceBookDefaultCurrency,
   ]);
   const resolvedCashFlows = useMemo(
     () =>
       cashFlows.map((item) =>
-        item.currency.trim() || !sourceBookIdentityCurrency
+        item.currency.trim() || !sourceBookDefaultCurrency
           ? item
-          : { ...item, currency: sourceBookIdentityCurrency },
+          : { ...item, currency: sourceBookDefaultCurrency },
       ),
-    [cashFlows, sourceBookIdentityCurrency],
+    [cashFlows, sourceBookDefaultCurrency],
   );
   const resolvedTrades = useMemo(
     () =>
       trades.map((item) =>
-        item.referencePriceCurrency?.trim() || !sourceBookIdentityCurrency
+        item.referencePriceCurrency?.trim() || !sourceBookDefaultCurrency
           ? item
           : {
               ...item,
-              referencePriceCurrency: sourceBookIdentityCurrency,
+              referencePriceCurrency: sourceBookDefaultCurrency,
             },
       ),
-    [sourceBookIdentityCurrency, trades],
+    [sourceBookDefaultCurrency, trades],
   );
   const draftFingerprint = useMemo(
     () =>

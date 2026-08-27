@@ -1958,10 +1958,38 @@ test("keeps proposal decisions unavailable when source returns an impossible adv
   await expect(
     page.getByRole("button", { name: "Refresh Portfolio Evidence" }),
   ).toBeEnabled();
+  await expect(page.getByLabel("Currency")).toHaveValue("");
+  await expect(page.getByLabel("Price Currency")).toHaveValue("");
   await testInfo.attach("proposal-invalid-source-date", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
+});
+
+test("does not replace an invalid carried advisory date with an undated portfolio read", async ({
+  page,
+}) => {
+  const requestedDates: string[] = [];
+  await mockProposalPortfolioEvidence(page, { requestedDates });
+  await page.goto(
+    buildProposalBuilderUrl({ advisoryDate: "2026-02-31", reportingCurrency: "USD" }),
+    { waitUntil: "domcontentloaded" },
+  );
+
+  const evidence = page.getByTestId("proposal-portfolio-evidence");
+  await expect(evidence).toHaveAttribute("data-evidence-status", "unavailable");
+  await expect(evidence).toHaveAttribute(
+    "data-evidence-date-issue",
+    "invalid_requested_date",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Advisory date needs correction" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Refresh Portfolio Evidence" }),
+  ).toBeDisabled();
+  await page.waitForLoadState("networkidle");
+  expect(requestedDates).toEqual([]);
 });
 
 test("withholds mixed-currency impact until refreshed source evidence matches the proposal", async ({
