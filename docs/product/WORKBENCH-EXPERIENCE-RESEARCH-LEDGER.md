@@ -4319,8 +4319,8 @@ Research was reviewed on 2026-08-27:
 2. Project invalid carried and invalid returned dates as two explicit reasons beneath the existing
    `unavailable` business posture; neither can authorize evaluation, holding-derived draft actions,
    or handoff.
-3. Preserve the rejected raw source value only in stable machine-readable evidence while showing
-   **Invalid carried date** or **Invalid source date** to the advisor.
+3. Preserve the rejected raw date in the evidence facts and stable machine-readable state while
+   the panel heading and body identify whether carried or returned source context is invalid.
 4. Keep source refresh available when the returned source date is invalid, because a new source
    response can recover. Disable that false recovery for an invalid carried date and direct the
    advisor back to portfolio review instead.

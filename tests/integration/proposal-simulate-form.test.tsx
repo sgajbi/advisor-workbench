@@ -268,7 +268,7 @@ describe("ProposalSimulateForm", () => {
       "invalid_requested_date",
     );
     expect(screen.getByText("Advisory date needs correction")).toBeInTheDocument();
-    expect(screen.getByText("Invalid carried date")).toBeInTheDocument();
+    expect(screen.getByText("2026-02-31")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Return to the portfolio review and select a valid advisory date before evaluating or saving this draft.",
@@ -313,7 +313,7 @@ describe("ProposalSimulateForm", () => {
       "invalid_source_date",
     );
     expect(screen.getByText("Portfolio evidence date is unavailable")).toBeInTheDocument();
-    expect(screen.getByText("Invalid source date")).toBeInTheDocument();
+    expect(screen.getByText("2026-04-31")).toBeInTheDocument();
     expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledTimes(1);
     expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
       "PB_SG_GLOBAL_BAL_001",

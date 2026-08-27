@@ -1941,7 +1941,7 @@ test("keeps proposal decisions unavailable when source returns an impossible adv
   await expect(
     page.getByRole("heading", { name: "Portfolio evidence date is unavailable" }),
   ).toBeVisible();
-  await expect(page.getByText("Invalid source date")).toBeVisible();
+  await expect(evidence.getByText("2026-04-31")).toBeVisible();
   await expect(
     page.getByText(
       "Evaluation and draft handoff remain unavailable until the portfolio source provides a valid date.",

@@ -88,20 +88,12 @@ export function ProposalPortfolioEvidencePanel({
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Advisory As-of</Text>
-          <strong>
-            {evidence.context.dateIssue === "invalid_requested_date"
-              ? "Invalid carried date"
-              : evidence.context.requestedAsOfDate || "Not selected"}
-          </strong>
+          <strong>{evidence.context.requestedAsOfDate || "Not selected"}</strong>
           <Text variant="metadata">Requested proposal context</Text>
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Source As-of</Text>
-          <strong>
-            {evidence.context.dateIssue === "invalid_source_date"
-              ? "Invalid source date"
-              : evidence.context.effectiveAsOfDate ?? "Not confirmed"}
-          </strong>
+          <strong>{evidence.context.effectiveAsOfDate ?? "Not confirmed"}</strong>
           <Text variant="metadata">
             {sourceCurrency
               ? `${sourceCurrency} portfolio book`
