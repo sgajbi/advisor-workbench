@@ -58,7 +58,8 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
    portfolio.
 2. Confirm the portfolio, reporting currency, and business-date posture in the shell-owned
    **Review context** strip. Confirm the reporting window, return basis, and benchmark
-   in the one shared Performance analysis bar. Exact dates appear only for a Custom dates review;
+   in the one shared Performance analysis bar. **Review window** opens the exact-date dialog only
+   when a custom review is required; the bar continues to show the last source-confirmed range.
    Risk does not render a second **Risk context** control group or a Frequency selector because the
    governed Risk contracts do not currently accept observation frequency.
 3. Read the exact executive measures and the exception-first **Mandate comparison**. Start with
@@ -74,10 +75,11 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
 
 ## Implemented Capabilities
 
-- Reuses the shared source-confirmed Horizon, Basis, Benchmark, and Custom window controls from
+- Reuses the shared source-confirmed Horizon, Basis, Benchmark, and Review window controls from
   Performance. Risk omits Frequency until the governed Risk contracts support it; its modules
   inherit the supported selection once and do not duplicate context or introduce a screen-local
-  selector.
+  selector. The exact-date dialog owns draft input; only a source-accepted request updates the
+  visible range and inherited Risk context.
 - Presents source-returned realized volatility, max drawdown, largest-position weight and driver,
   and source coverage in a compact executive evidence strip.
 - States whether the principal drawdown was recovered before period end or remained below its prior

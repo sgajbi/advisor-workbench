@@ -1,0 +1,151 @@
+{
+  "proofType": "deterministic populated Workbench fixture",
+  "evidenceBoundary": "Browser interaction and layout proof; not canonical live-source evidence.",
+  "testedImplementationRevision": "653fce920184ade5220d242b55fd82d796921384",
+  "geometry": [
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 1000
+      },
+      "controlBar": {
+        "x": 326.796875,
+        "y": 502.28125,
+        "width": 686.40625,
+        "height": 149.125
+      },
+      "returnPathStage": {
+        "x": 326.796875,
+        "y": 663.40625,
+        "width": 686.40625,
+        "height": 248.359375
+      },
+      "page": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "scrollY": 0
+      }
+    },
+    {
+      "viewport": {
+        "name": "compact-desktop",
+        "width": 1024,
+        "height": 1000
+      },
+      "controlBar": {
+        "x": 67.265625,
+        "y": 641.0625,
+        "width": 889.46875,
+        "height": 155.84375
+      },
+      "returnPathStage": {
+        "x": 67.265625,
+        "y": 808.90625,
+        "width": 889.46875,
+        "height": 193.984375
+      },
+      "page": {
+        "clientWidth": 1024,
+        "scrollWidth": 1024,
+        "scrollY": 0
+      }
+    },
+    {
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1100
+      },
+      "controlBar": {
+        "x": 62.796875,
+        "y": 641.0625,
+        "width": 642.40625,
+        "height": 149.125
+      },
+      "returnPathStage": {
+        "x": 62.796875,
+        "y": 802.1875,
+        "width": 642.40625,
+        "height": 248.359375
+      },
+      "page": {
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "scrollY": 0
+      }
+    },
+    {
+      "viewport": {
+        "name": "compact-tablet",
+        "width": 561,
+        "height": 1000
+      },
+      "controlBar": {
+        "x": 62.796875,
+        "y": 817.96875,
+        "width": 435.40625,
+        "height": 388.515625
+      },
+      "returnPathStage": {
+        "x": 62.796875,
+        "y": 1218.484375,
+        "width": 435.40625,
+        "height": 286.828125
+      },
+      "page": {
+        "clientWidth": 561,
+        "scrollWidth": 561,
+        "scrollY": 0
+      }
+    },
+    {
+      "viewport": {
+        "name": "compact",
+        "width": 519,
+        "height": 1000
+      },
+      "controlBar": {
+        "x": 62.796875,
+        "y": 803.96875,
+        "width": 393.40625,
+        "height": 388.515625
+      },
+      "returnPathStage": {
+        "x": 62.796875,
+        "y": 1204.484375,
+        "width": 393.40625,
+        "height": 286.828125
+      },
+      "page": {
+        "clientWidth": 519,
+        "scrollWidth": 519,
+        "scrollY": 0
+      }
+    },
+    {
+      "viewport": {
+        "name": "phone",
+        "width": 390,
+        "height": 844
+      },
+      "controlBar": {
+        "x": 62.796875,
+        "y": 949.53125,
+        "width": 264.40625,
+        "height": 388.515625
+      },
+      "returnPathStage": {
+        "x": 62.796875,
+        "y": 1350.046875,
+        "width": 264.40625,
+        "height": 318.734375
+      },
+      "page": {
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "scrollY": 0
+      }
+    }
+  ]
+}

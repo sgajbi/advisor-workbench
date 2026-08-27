@@ -1203,7 +1203,11 @@ Important validation expectations:
     consumed by that mode's governed source request; a shared control must not imply unsupported
     authority. Downstream comparison and risk panels inherit
     only their supported confirmed source context instead of adding page-local selectors. Keep
-    exact dates behind the Custom dates disclosure, comparison
+    the complete confirmed explicit range visible on a compact Review window control and keep
+    exact-date drafting inside its focused dialog. The dialog owns only draft state: Cancel,
+    Escape, validation failure, and source rejection must leave the confirmed labels, URL, and
+    evidence unchanged; source acceptance commits them together and restores focus unless the user
+    has moved elsewhere. Keep comparison
     display overrides behind their own disclosure, return-view presentation local to the Summary
     Return History module, and analytical segment selection local to Analysis. Preserve the
     last confirmed evidence and labels while a new selection is pending or failed; restore the
@@ -1216,7 +1220,12 @@ Important validation expectations:
     widths, source-changing controls must retain a measured 44px touch target without reducing
     desktop workstation density. Wide financial comparisons may scroll only inside a named,
     keyboard-focusable region; set governed widths and pinned offsets through `AnalyticsTable`
-    instead of a new global selector. Use `npm run test:e2e:performance:analysis-controls` for the
+    instead of a new global selector. Gate the shared control bar against the actual centre-pane
+    inline size, not only the browser viewport: its 1440px canonical workstation proof must keep
+    the bar at or below 220px, place the Return Path stage at or above the fold boundary of 700px,
+    and prevent page-level horizontal overflow. Use the registered `control-bar` focus in the
+    populated Performance fixture for this geometry and dialog transaction proof. Use
+    `npm run test:e2e:performance:analysis-controls` for the
     owned direct horizon/benchmark, mode-retention, URL, focus, touch-target, and responsive proof.
 35. Persisted Advisor Brief review is a source-confirmed internal decision transaction. Offer only
     known actions admitted by the returned workflow, state each business consequence, require the

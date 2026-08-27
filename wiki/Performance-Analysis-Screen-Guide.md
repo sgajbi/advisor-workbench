@@ -73,9 +73,11 @@ advice approval, or client-publication authority.
 
 - Presents Gateway-backed contribution and attribution detail without calculating effects in the
   browser.
-- Exposes source-backed horizon, basis, frequency, benchmark, and progressively disclosed explicit
-  dates through the same reusable selection component and request-shaping path as Summary. Risk
-  uses that component only for its supported subset and does not expose Frequency.
+- Exposes source-backed horizon, basis, frequency, benchmark, and a compact **Review window**
+  control through the same reusable selection component and request-shaping path as Summary. The
+  complete confirmed range stays visible while exact-date drafting is contained in a focused,
+  validated dialog. Risk uses that component only for its supported subset and does not expose
+  Frequency.
 - Applies the selection as one source transaction; downstream analysis inherits the confirmed
   context and does not repeat horizon or benchmark controls.
 - Keeps the prior confirmed view under its original labels while a new selection is pending or
