@@ -179,6 +179,15 @@ export default function PerformanceSourceSelectionControls({
   }
 
   function applyExplicitDates(window: PerformanceCustomWindow) {
+    const confirmedWindowIsUnchanged =
+      period === "EXPLICIT" &&
+      reportStartDate === window.fromDate &&
+      reportEndDate === window.toDate;
+    if (confirmedWindowIsUnchanged) {
+      setWindowDialogOpen(false);
+      return;
+    }
+
     setSubmittedWindow(window);
     updateSelection(
       {
