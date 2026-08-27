@@ -1561,9 +1561,11 @@ Most relevant current governance:
     Proposal review actions follow the same source-confirmation rule as lifecycle actions: bind to
     the active source version, admit downstream packaging only after its prerequisite evidence is
     confirmed, and announce success only when the action response and refreshed owning read agree.
-    If a narrative review or discussion-pack mutation persists but immediate confirmation fails,
-    retain that exact mutation response as pending confirmation, expose a bounded source refresh,
-    and fence both submission actions until the refreshed owning read confirms the original action.
+    If a narrative review, memo review, commentary, or package mutation persists but immediate
+    confirmation fails, retain that exact mutation response as pending confirmation, expose a
+    bounded source refresh, and fence every conflicting submission until the refreshed owning reads
+    confirm the original action. Keep failures that occur before persistence version-scoped; only a
+    persisted receipt crosses a same-proposal version remount.
     Own the in-flight lock, pending confirmation, and terminal success or failure outcome at proposal
     scope from submission start—not only after persistence—so an active-version remount cannot
     discard the transaction or deliver its outcome to an obsolete session. Refresh the original
