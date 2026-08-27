@@ -4322,10 +4322,11 @@ Research was reviewed on 2026-08-27:
 3. Preserve the rejected raw date in the evidence facts and stable machine-readable state while
    the panel heading and body identify whether carried or returned source context is invalid.
 4. Keep source refresh available when the returned source date is invalid, because a new source
-   response can recover. Disable that false recovery for an invalid carried date and direct the
-   advisor back to portfolio review instead.
-5. Adopt source date and source currency defaults atomically. An invalid source date must not cause
-   a second portfolio read merely because the same response carried a usable currency.
+   response can recover; publish the replacement as busy and lock repeated refresh. Disable that
+   false recovery for an invalid carried date, make no implicit undated read, and direct the advisor
+   back to portfolio review instead.
+5. Adopt source date and source currency defaults atomically across form, cash-flow, and trade
+   fields. An invalid source date must not cause another read or partially promote currency.
 
 ### Rejected decisions
 
