@@ -62,8 +62,8 @@ export const MANAGE_MODE_DEFINITIONS: ManageModeDefinition[] = [
     key: "copilot",
     label: "Copilot",
     detail: "AI workflow packs",
-    title: "PM Copilot Workspace",
-    description: "Governed PM workflow-pack requests backed by Gateway, Manage, and lotus-ai.",
+    title: "PM Copilot",
+    description: "Governed internal decision support from the portfolio evidence under review.",
   },
   {
     key: "quality",
