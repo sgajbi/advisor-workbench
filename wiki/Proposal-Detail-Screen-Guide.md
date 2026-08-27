@@ -101,6 +101,11 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Presents memo work as **memo evidence → advisor review → discussion material → record and
   audience**. The advisor reference is always explicit, the active proposal version is read-only,
   and unknown source states fail closed rather than becoming a permissive browser default.
+- Treats a source-confirmed current-version absence as **Memo not prepared**, not as an outage.
+  Workbench enables only **Prepare advisor memo** after the memo, projection, and replay reads all
+  report not found and complete lineage confirms that no current-version memo exists. Permission,
+  transport, malformed response, incomplete lineage, or contradictory memo evidence remains
+  unavailable and does not expose the action.
 - Enables memo review, discussion material, and optional commentary only when their exact upstream
   evidence is current. A successful mutation is not announced until memo, projection, lineage,
   replay, review, report, and commentary reads reconcile where the action requires them.
@@ -127,7 +132,7 @@ These use cases do not substitute for authenticated production-role or portfolio
 | Create next version | Current version contains a usable retained simulation request and no conflicting action is active | Gateway creates a new proposal version |
 | Record advisor review | Current version, reviewer reference, and rationale are available | Gateway records advisor-use narrative review; it does not approve client release |
 | Request discussion pack | Refreshed current-version evidence confirms advisor review and a reviewer reference is available | Gateway records a discussion-pack request; rendering, archive, and delivery remain downstream |
-| Prepare advisor memo | Current proposal version and explicit advisor or reviewer reference are available | Gateway records the current-version working memo; this is not advisor approval or client release |
+| Prepare advisor memo | Current proposal version, explicit advisor or reviewer reference, three matching not-found memo reads, and complete lineage proving no current-version memo | Gateway records the current-version working memo; this is not advisor approval or client release |
 | Record advisor review | Refreshed memo evidence matches the current version; advisor reference and rationale are present | Gateway records approval for advisor use against that memo hash |
 | Request discussion material | Refreshed advisor-review evidence matches the current memo | Gateway records the package request; rendering, archive, delivery, and client use remain downstream |
 | Request advisor commentary | Current memo and advisor-review evidence admit the bounded request | Gateway records the request; generated commentary remains optional and non-authoritative |
@@ -158,6 +163,7 @@ and [Integrations](Integrations).
 | Loading | Proposal record is being retrieved | Wait; no action posture is inferred |
 | Ready | Decision-first proposal record with supporting evidence and source-admitted actions | Review before acting |
 | Supporting evidence checking | Primary detail remains visible while workflow, approvals, or lineage settle | Actions remain unavailable until the complete evidence set agrees |
+| Memo not prepared | Gateway confirms that memo, projection, and replay are absent while complete lineage confirms no memo for the current proposal version | Enter the advisor or reviewer reference, then use **Prepare advisor memo** |
 | Partial supporting evidence | Available proposal evidence remains visible and the missing source family is named | Restore the missing evidence before a lifecycle action |
 | Action pending | The initiating action remains fenced across same-proposal version changes and conflicting controls are unavailable | Wait for persistence and coherent refresh |
 | Action confirmation failed | No success is shown; prior evidence remains under its original proposal version and duplicate narrative, memo, commentary, or package submission is fenced, including when a newer version becomes active | Use **Refresh record** to read and reconcile the original persisted action before taking another action; the mutation is not repeated |
@@ -195,12 +201,14 @@ Proposal Detail deliberately does not:
   portfolio return, and routine/restricted/unavailable/not-found return context.
 - `tests/unit/proposal-narrative-posture-panel.test.tsx` and
   `tests/unit/proposal-memo-posture-panel.test.tsx` prove the two advisor-review modes and their
-  fail-closed action posture. The memo proof retains one persisted receipt across a same-proposal
+  fail-closed action posture. The memo proof distinguishes source-confirmed absence from permission,
+  transport, contract, lineage, and contradictory-evidence failures. It retains one persisted receipt across a same-proposal
   version change, resets it only at proposal identity, and proves refresh success and failure without
   a second mutation. Discussion-pack state must match the active reviewed narrative hash; repeat
   commentary succeeds only when the exact returned event appears in refreshed memo or replay evidence.
 - `tests/e2e/proposal-memo-posture.spec.ts` provides optimized-production browser proof for proposal
-  detail, memo, source-confirmed narrative review, discussion-pack gating, safe action failure,
+  detail, source-confirmed first memo preparation, explicit preparation failure, memo review,
+  source-confirmed narrative review, discussion-pack gating, safe action failure,
   refresh disagreement, keyboard, responsive container reflow, and exact visible-overflow behavior.
 - Reviewed Proposal Detail narrative screenshots are published under
   `docs/evidence/issue-798-product-copy/narrative-review/`; they support visual review but do not

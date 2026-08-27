@@ -1608,6 +1608,12 @@ Most relevant current governance:
     request id from another version or duplicate canonical request events.
     Memo and generated-working-aid workflows must require an explicit actor reference, preserve the
     source-owned proposal version as read-only context, and fail closed on unknown source states.
+    A current proposal version with no prepared memo is a source-confirmed business start state only
+    when Gateway returns not-found for the memo, projection, and replay reads and complete lineage
+    proves that the current version has no memo. Present that state as **Memo not prepared** and admit
+    only the preparation action; permission, transport, malformed-contract, incomplete-lineage, and
+    contradictory-current-memo outcomes remain unavailable. Do not synthesize empty memo records or
+    parse display copy to recover transport semantics.
     Confirm compound success only when every source view required by that action agrees; never let a
     mutation response, toast, generated commentary, or browser projection stand in for refreshed
     source evidence. Correlate versioned package evidence to the active reviewed narrative hash.
