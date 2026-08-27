@@ -21,7 +21,6 @@ function completeLineage() {
       current_version_no: VERSION_NO,
       proposal_id: PROPOSAL_ID,
     },
-    proposal_id: PROPOSAL_ID,
   };
 }
 
@@ -46,12 +45,21 @@ describe("proposal memo source state", () => {
     expect(sourceState()).toBe("not-prepared");
   });
 
+  it("accepts a matching optional top-level lineage proposal identity", () => {
+    expect(sourceState({
+      lineageData: { ...completeLineage(), proposal_id: PROPOSAL_ID },
+    })).toBe("not-prepared");
+  });
+
   it.each([
     ["memo transport failure", { memoError: new WorkbenchApiError("proposal memo", 503) }],
     ["projection permission failure", { projectionError: new WorkbenchApiError("projection", 403) }],
     ["replay contract failure", { replayError: new Error("unreadable response") }],
     ["lineage failure", { lineageError: new WorkbenchApiError("lineage", 502) }],
     ["incomplete lineage", { lineageData: { ...completeLineage(), lineage_complete: false } }],
+    ["contradictory top-level proposal identity", {
+      lineageData: { ...completeLineage(), proposal_id: "pp_other" },
+    }],
     ["contradictory lineage", {
       lineageData: {
         ...completeLineage(),
