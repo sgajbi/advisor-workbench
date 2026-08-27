@@ -140,6 +140,7 @@ function renderForm(
   initialPortfolioId = "PB_SG_GLOBAL_BAL_001",
   initialReportingCurrency = "USD",
   sourceContextConfirmed = true,
+  initialAsOfDate = "2026-04-10",
 ) {
   const queryClient = new QueryClient();
   const view = render(
@@ -151,7 +152,7 @@ function renderForm(
       >
         <ProposalSimulateForm
           initialPortfolioId={initialPortfolioId}
-          initialAsOfDate="2026-04-10"
+          initialAsOfDate={initialAsOfDate}
           initialReportingCurrency={initialReportingCurrency}
           sourceContextConfirmed={sourceContextConfirmed}
         />
@@ -255,6 +256,110 @@ describe("ProposalSimulateForm", () => {
     expect(screen.queryByLabelText("Portfolio Currency")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Currency")).toHaveValue("USD");
     expect(screen.getByLabelText("Price Currency")).toHaveValue("USD");
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
+  });
+
+  it("fails closed on an invalid carried advisory date without requesting it from source", async () => {
+    renderForm("PB_SG_GLOBAL_BAL_001", "USD", true, "2026-02-31");
+
+    const evidence = await waitForPortfolioEvidence("unavailable");
+    expect(evidence).toHaveAttribute(
+      "data-evidence-date-issue",
+      "invalid_requested_date",
+    );
+    expect(screen.getByText("Advisory date needs correction")).toBeInTheDocument();
+    expect(screen.getByText("Invalid carried date")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Return to the portfolio review and select a valid advisory date before evaluating or saving this draft.",
+      ),
+    ).toBeInTheDocument();
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { reportingCurrency: "USD" },
+    );
+    expect(portfolioApiMocks.getRequiredPortfolioBook).not.toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      expect.objectContaining({ asOfDate: "2026-02-31" }),
+    );
+    expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("fails closed when the portfolio source returns an impossible advisory date", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockResolvedValue(
+      portfolioBook(undefined, { asOfDate: "2026-04-31" }),
+    );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalWorkflowContextProvider
+          initialModel={buildSimulationProposalWorkflowContext({
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+          })}
+        >
+          <ProposalSimulateForm
+            initialPortfolioId="PB_SG_GLOBAL_BAL_001"
+            sourceContextConfirmed
+          />
+        </ProposalWorkflowContextProvider>
+      </QueryClientProvider>,
+    );
+
+    const evidence = await waitForPortfolioEvidence("unavailable");
+    expect(evidence).toHaveAttribute(
+      "data-evidence-date-issue",
+      "invalid_source_date",
+    );
+    expect(screen.getByText("Portfolio evidence date is unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Invalid source date")).toBeInTheDocument();
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledTimes(1);
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      {},
+    );
+    expect(screen.getByRole("button", { name: "Refresh Portfolio Evidence" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Save Advisor Draft" })).toBeDisabled();
+  });
+
+  it("derives and admits a valid leap-day advisory date from source", async () => {
+    portfolioApiMocks.getRequiredPortfolioBook.mockImplementation(
+      async (
+        portfolioId: string,
+        params: { asOfDate?: string; reportingCurrency?: string } = {},
+      ) =>
+        portfolioBook(undefined, {
+          portfolioId,
+          asOfDate: params.asOfDate ?? "2028-02-29",
+          currency: params.reportingCurrency,
+        }),
+    );
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalWorkflowContextProvider
+          initialModel={buildSimulationProposalWorkflowContext({
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+          })}
+        >
+          <ProposalSimulateForm
+            initialPortfolioId="PB_SG_GLOBAL_BAL_001"
+            sourceContextConfirmed
+          />
+        </ProposalWorkflowContextProvider>
+      </QueryClientProvider>,
+    );
+
+    const evidence = await waitForPortfolioEvidence("ready");
+    expect(evidence).toHaveAttribute("data-requested-as-of-date", "2028-02-29");
+    expect(evidence).toHaveAttribute("data-effective-as-of-date", "2028-02-29");
+    expect(evidence).not.toHaveAttribute("data-evidence-date-issue");
+    expect(portfolioApiMocks.getRequiredPortfolioBook).toHaveBeenLastCalledWith(
+      "PB_SG_GLOBAL_BAL_001",
+      { asOfDate: "2028-02-29", reportingCurrency: "USD" },
+    );
     expect(screen.getByRole("button", { name: "Evaluate Workspace" })).toBeEnabled();
   });
 

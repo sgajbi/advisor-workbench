@@ -49,6 +49,7 @@ import {
 import { buildProposalPortfolioEvidence } from "../proposal-portfolio-evidence";
 import { MainWithSideRailLayout, SectionBlock } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import {
   AdviseEvaluationSummaryPanel,
   CashMovementsPanel,
@@ -70,7 +71,10 @@ const schema = z.object({
   asOfDate: z
     .string()
     .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an advisory date in YYYY-MM-DD format"),
+    .refine(
+      isBusinessDateValue,
+      "Use a valid advisory date in YYYY-MM-DD format",
+    ),
   mandateId: z.string().optional(),
   baseCurrency: z.string().trim().length(3, "Use a three-letter currency code"),
   cashAmount: proposalScenarioCashInputSchema,
@@ -181,7 +185,7 @@ export default function ProposalSimulateForm({
   const evidenceAsOfDate = asOfDate.trim();
   const evidenceCurrency = baseCurrency.trim().toUpperCase();
   const hasPortfolioEvidenceContext = evidencePortfolioId.length > 0;
-  const hasValidEvidenceDate = /^\d{4}-\d{2}-\d{2}$/.test(evidenceAsOfDate);
+  const hasValidEvidenceDate = isBusinessDateValue(evidenceAsOfDate);
   const hasValidEvidenceCurrency = /^[A-Z]{3}$/.test(evidenceCurrency);
   const workflowContextModel = useMemo(
     () =>
@@ -209,20 +213,25 @@ export default function ProposalSimulateForm({
     ...workbenchStrictQueryDefaults,
   });
   const sourceBookAsOfDate = portfolioBookQuery.data?.as_of_date?.trim() ?? "";
+  const hasValidSourceBookDate = isBusinessDateValue(sourceBookAsOfDate);
   const sourceBookIdentityCurrency =
     portfolioBookQuery.data?.portfolio.base_currency?.trim().toUpperCase() ?? "";
 
   useEffect(() => {
     if (
       !evidenceAsOfDate &&
-      /^\d{4}-\d{2}-\d{2}$/.test(sourceBookAsOfDate)
+      hasValidSourceBookDate
     ) {
       form.setValue("asOfDate", sourceBookAsOfDate, {
         shouldDirty: false,
         shouldValidate: true,
       });
     }
-    if (!evidenceCurrency && /^[A-Z]{3}$/.test(sourceBookIdentityCurrency)) {
+    if (
+      !evidenceCurrency &&
+      hasValidSourceBookDate &&
+      /^[A-Z]{3}$/.test(sourceBookIdentityCurrency)
+    ) {
       form.setValue("baseCurrency", sourceBookIdentityCurrency, {
         shouldDirty: false,
         shouldValidate: true,
@@ -232,6 +241,7 @@ export default function ProposalSimulateForm({
     evidenceAsOfDate,
     evidenceCurrency,
     form,
+    hasValidSourceBookDate,
     sourceBookAsOfDate,
     sourceBookIdentityCurrency,
   ]);

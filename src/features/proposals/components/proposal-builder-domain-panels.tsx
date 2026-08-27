@@ -37,7 +37,11 @@ export function ProposalPortfolioEvidencePanel({
   refreshBlocked?: boolean;
 }) {
   const refreshPending = evidence.status === "checking" || evidence.status === "refreshing";
-  const refreshDisabled = evidence.status === "not_selected" || refreshPending || refreshBlocked;
+  const refreshDisabled =
+    evidence.status === "not_selected" ||
+    evidence.context.dateIssue === "invalid_requested_date" ||
+    refreshPending ||
+    refreshBlocked;
 
   return (
     <section
@@ -48,6 +52,7 @@ export function ProposalPortfolioEvidencePanel({
       data-evidence-status={evidence.status}
       data-requested-as-of-date={evidence.context.requestedAsOfDate || undefined}
       data-effective-as-of-date={evidence.context.effectiveAsOfDate ?? undefined}
+      data-evidence-date-issue={evidence.context.dateIssue ?? undefined}
       data-evidence-currency={sourceCurrency ?? undefined}
     >
       <div className={styles.panelHeader}>
@@ -83,12 +88,20 @@ export function ProposalPortfolioEvidencePanel({
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Advisory As-of</Text>
-          <strong>{evidence.context.requestedAsOfDate || "Not selected"}</strong>
+          <strong>
+            {evidence.context.dateIssue === "invalid_requested_date"
+              ? "Invalid carried date"
+              : evidence.context.requestedAsOfDate || "Not selected"}
+          </strong>
           <Text variant="metadata">Requested proposal context</Text>
         </div>
         <div className={styles.evidenceFact}>
           <Text variant="microLabel">Source As-of</Text>
-          <strong>{evidence.context.effectiveAsOfDate ?? "Not confirmed"}</strong>
+          <strong>
+            {evidence.context.dateIssue === "invalid_source_date"
+              ? "Invalid source date"
+              : evidence.context.effectiveAsOfDate ?? "Not confirmed"}
+          </strong>
           <Text variant="metadata">
             {sourceCurrency
               ? `${sourceCurrency} portfolio book`
