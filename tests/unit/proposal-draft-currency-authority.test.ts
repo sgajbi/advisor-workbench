@@ -39,6 +39,7 @@ function portfolioEvidence({
     context: {
       requestedAsOfDate: "2026-04-10",
       effectiveAsOfDate: sourceCurrency ? "2026-04-10" : null,
+      dateIssue: null,
       requestedCurrency: "USD",
       effectiveCurrency: sourceCurrency,
     },
