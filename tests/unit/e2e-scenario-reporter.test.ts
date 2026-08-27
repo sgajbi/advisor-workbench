@@ -57,6 +57,30 @@ describe("governed E2E scenario reporter", () => {
     );
   });
 
+  it("fails when a retried test passes only after a non-passing attempt", () => {
+    const proof = evaluateScenarioProof({
+      expectedTests: ["source-backed proof"],
+      plannedTests: ["source-backed proof"],
+      results: [
+        { title: "source-backed proof", retry: 0, status: "failed" },
+        { title: "source-backed proof", retry: 1, status: "passed" },
+      ],
+    });
+
+    expect(proof.result).toBe("failed");
+    expect(proof.findings).toEqual(
+      expect.arrayContaining([
+        'Test execution is duplicated: "source-backed proof".',
+        'Test attempt "source-backed proof" finished with failed.',
+      ]),
+    );
+    expect(proof.counts).toMatchObject({
+      executed: 2,
+      passed: 1,
+      failed: 1,
+    });
+  });
+
   it("fails closed on an empty selection", () => {
     const proof = evaluateScenarioProof({
       expectedTests: [],
