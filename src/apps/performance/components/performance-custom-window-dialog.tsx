@@ -100,7 +100,7 @@ export default function PerformanceCustomWindowDialog({
         },
       }}
     >
-      <form onSubmit={submitWindow} noValidate>
+      <form className={styles.form} onSubmit={submitWindow} noValidate>
         <DialogTitle id="performance-custom-window-title" className={styles.title}>
           Choose a custom review window
         </DialogTitle>
