@@ -10,6 +10,10 @@ import {
 import { requestDpmOutcomeReviewAiNarrative } from "../../src/features/workbench/outcome-review-api";
 import { requestDpmPmOperatingQualitySummary } from "../../src/features/workbench/pm-operating-quality-api";
 import { requestDpmProofPackAiPmMemo } from "../../src/features/workbench/proof-pack-api";
+import {
+  ManageProofPackStateProvider,
+  useManageProofPackState,
+} from "../../src/features/workbench/manage-proof-pack-state";
 import type { DpmProofPackGatewayResponse } from "../../src/features/workbench/types";
 import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
 import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
@@ -142,6 +146,102 @@ describe("DpmCopilotWorkspace", () => {
     ).toBeEnabled();
   });
 
+  it("uses the source-confirmed evidence pack published in the Manage session", async () => {
+    const data = buildManageWorkspaceData();
+    const serverPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_server_001",
+    });
+    const publishedPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_published_002",
+    });
+    data.proofPack = serverPack;
+    vi.mocked(requestDpmProofPackAiPmMemo).mockResolvedValue(
+      buildProofPackMemoResponse("ppack_published_002"),
+    );
+
+    render(
+      <ManageProofPackStateProvider initialProofPack={serverPack}>
+        <PublishProofPackButton proofPack={publishedPack} />
+        <DpmCopilotWorkspace data={data} mandateId="mandate_001" />
+      </ManageProofPackStateProvider>,
+    );
+
+    expect(screen.getByText("ppack_server_001")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_002" }));
+    expect(screen.getByText("ppack_published_002")).toBeInTheDocument();
+    expect(screen.queryByText("ppack_server_001")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" }));
+    await waitFor(() =>
+      expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({
+        proofPackId: "ppack_published_002",
+      }),
+    );
+  });
+
+  it("uses a newly published pack's supportability instead of stale server readiness", () => {
+    const data = buildManageWorkspaceData();
+    const serverPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_server_ready",
+    });
+    const publishedPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_published_stale",
+      state: "STALE",
+    });
+    data.proofPack = serverPack;
+
+    render(
+      <ManageProofPackStateProvider initialProofPack={serverPack}>
+        <PublishProofPackButton proofPack={publishedPack} />
+        <DpmCopilotWorkspace data={data} mandateId="mandate_001" />
+      </ManageProofPackStateProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_stale" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Proof-Pack PM Memo unavailable: Current evidence pack not ready",
+      }),
+    ).toBeDisabled();
+    expect(screen.getByText("ppack_published_stale")).toBeInTheDocument();
+    expect(requestDpmProofPackAiPmMemo).not.toHaveBeenCalled();
+  });
+
+  it("enables the action when a source-confirmed pack replaces blocked server evidence", () => {
+    const data = buildManageWorkspaceData();
+    const serverPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_server_stale",
+      state: "STALE",
+    });
+    const publishedPack = buildProofPack({
+      aiEvidenceInputAvailable: true,
+      proofPackId: "ppack_published_ready",
+    });
+    data.proofPack = serverPack;
+
+    render(
+      <ManageProofPackStateProvider initialProofPack={serverPack}>
+        <PublishProofPackButton proofPack={publishedPack} />
+        <DpmCopilotWorkspace data={data} mandateId="mandate_001" />
+      </ManageProofPackStateProvider>,
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "Proof-Pack PM Memo unavailable: Current evidence pack not ready",
+      }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_ready" }));
+    expect(screen.getByRole("button", { name: "Prepare Proof-Pack PM Memo" })).toBeEnabled();
+    expect(screen.getByText("ppack_published_ready")).toBeInTheDocument();
+  });
+
   it("keeps unavailable actions disabled and names their business blocker", () => {
     const data = buildManageWorkspaceData();
     data.proofPack = null;
@@ -241,6 +341,40 @@ function buildProofPack({
         proof_pack_id: proofPackId,
         sections: [{ section: "mandate_alignment", state: "READY" }],
       },
+    },
+  };
+}
+
+function PublishProofPackButton({
+  proofPack,
+}: {
+  proofPack: DpmProofPackGatewayResponse;
+}) {
+  const state = useManageProofPackState();
+  return (
+    <button type="button" onClick={() => state?.publishProofPack(proofPack)}>
+      Publish {proofPack.supportability.proof_pack_id}
+    </button>
+  );
+}
+
+function buildProofPackMemoResponse(proofPackId: string) {
+  return {
+    ...buildDpmAiWorkflowResponse("proof-pack-memo"),
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:RFC-0040",
+      state: "READY",
+      proof_pack_id: proofPackId,
+      reason_codes: ["PROOF_PACK_READY"],
+      markdown_available: true,
+      report_input_available: true,
+      ai_evidence_input_available: true,
+    },
+    ai_evidence_input: { proof_pack_id: proofPackId },
+    memo_request: {
+      requested_outputs: ["pm_memo"],
+      audience: ["portfolio_manager"],
     },
   };
 }
