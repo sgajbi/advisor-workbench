@@ -1307,8 +1307,11 @@ Important validation expectations:
     Builder must validate both carried and returned dates through the shared semantic business-date
     authority; a shape-only `YYYY-MM-DD` check does not establish a real calendar date. Invalid
     carried context and invalid source evidence remain distinguishable, action-blocking unavailable
-    states. Adopt date and currency defaults together only after the returned date is valid, so a
-    malformed temporal authority cannot trigger a second source request or partial context promotion.
+    states. A non-empty invalid carried date must disable the portfolio-book read rather than silently
+    changing it into an undated request. An invalid returned date may be replaced through deliberate
+    refresh, but the replacement request must publish one busy, action-locked recovery state. Adopt
+    date and currency defaults across the form, cash flows, and trades only after the returned date is
+    valid, so malformed temporal authority cannot trigger another read or partial context promotion.
     Proposal entry actions must use the shared review-context URL authority rather than
     portfolio-only string interpolation. If the lightweight portfolio workspace shell is unavailable,
     Proposal Builder
