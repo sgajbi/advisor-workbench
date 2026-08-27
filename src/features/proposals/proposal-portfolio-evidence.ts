@@ -1,5 +1,6 @@
 import type { PortfolioBookResponse } from "@/apps/portfolio/api";
 import type { PortfolioPositionView } from "@/apps/portfolio/types";
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
 import {
   projectQuerySourcePosture,
   type QuerySourcePosture,
@@ -27,6 +28,10 @@ export type ProposalPositionsEvidenceStatus =
 
 export type ProposalCashAuthority = "portfolio_book" | "manual_scenario";
 
+export type ProposalEvidenceDateIssue =
+  | "invalid_requested_date"
+  | "invalid_source_date";
+
 type QueryEvidence<TData> = {
   data: TData | undefined;
   isLoading: boolean;
@@ -47,6 +52,7 @@ export type ProposalPortfolioEvidenceModel = {
   context: {
     requestedAsOfDate: string;
     effectiveAsOfDate: string | null;
+    dateIssue: ProposalEvidenceDateIssue | null;
     requestedCurrency: string;
     effectiveCurrency: string | null;
   };
@@ -77,21 +83,29 @@ export function buildProposalPortfolioEvidence({
   const normalizedPortfolioId = portfolioId.trim();
   const normalizedAsOfDate = asOfDate.trim();
   const normalizedCurrency = reportingCurrency.trim().toUpperCase();
+  const hasValidRequestedDate = isBusinessDateValue(normalizedAsOfDate);
   const hasSelectedContext =
     normalizedPortfolioId.length > 0 &&
-    /^\d{4}-\d{2}-\d{2}$/.test(normalizedAsOfDate) &&
+    hasValidRequestedDate &&
     /^[A-Z]{3}$/.test(normalizedCurrency);
   const bookPositions = Array.isArray(bookQuery.data?.positions)
     ? bookQuery.data.positions
     : null;
   const sourceCash = finiteNumberOrNull(bookQuery.data?.summary?.cash_market_value_base);
   const effectiveAsOfDate = nonEmptyStringOrNull(bookQuery.data?.as_of_date);
+  const hasValidEffectiveDate = isBusinessDateValue(effectiveAsOfDate);
+  const dateIssue = resolveDateIssue({
+    requestedAsOfDate: normalizedAsOfDate,
+    hasValidRequestedDate,
+    effectiveAsOfDate,
+    hasValidEffectiveDate,
+  });
   const effectivePortfolioId = nonEmptyStringOrNull(bookQuery.data?.portfolio?.portfolio_id);
   const effectiveCurrency = currencyCodeOrNull(bookQuery.data?.portfolio?.base_currency);
   const hasCompleteBook =
     bookPositions !== null &&
     sourceCash !== null &&
-    effectiveAsOfDate !== null &&
+    hasValidEffectiveDate &&
     effectivePortfolioId !== null &&
     effectiveCurrency !== null;
   const hasVisibleBookEvidence = bookPositions !== null || sourceCash !== null;
@@ -111,6 +125,7 @@ export function buildProposalPortfolioEvidence({
     hasCompleteBook,
     hasVisibleBookEvidence,
     matchesSelectedContext,
+    dateIssue,
     sourcePosture,
   });
   const positions = bookPositions ?? [];
@@ -119,10 +134,11 @@ export function buildProposalPortfolioEvidence({
   return {
     status,
     canEvaluateAndHandoff: status === "ready",
-    ...evidenceCopy(status),
+    ...evidenceCopy(status, dateIssue),
     context: {
       requestedAsOfDate: normalizedAsOfDate,
       effectiveAsOfDate,
+      dateIssue,
       requestedCurrency: normalizedCurrency,
       effectiveCurrency,
     },
@@ -132,6 +148,7 @@ export function buildProposalPortfolioEvidence({
         hasBookData: bookPositions !== null,
         hasContextMismatch: hasCompleteBook && !matchesSelectedContext,
         hasIncompleteEvidence: status === "partial",
+        hasInvalidDate: dateIssue !== null,
         positionCount: tradablePositions.length,
         posture: sourcePosture,
       }),
@@ -163,14 +180,19 @@ function resolveEvidenceStatus({
   hasCompleteBook,
   hasVisibleBookEvidence,
   matchesSelectedContext,
+  dateIssue,
   sourcePosture,
 }: {
   hasSelectedContext: boolean;
   hasCompleteBook: boolean;
   hasVisibleBookEvidence: boolean;
   matchesSelectedContext: boolean;
+  dateIssue: ProposalEvidenceDateIssue | null;
   sourcePosture: QuerySourcePosture;
 }): ProposalPortfolioEvidenceStatus {
+  if (dateIssue) {
+    return "unavailable";
+  }
   if (sourcePosture.isUnavailable) {
     return "unavailable";
   }
@@ -201,6 +223,7 @@ function resolvePositionsStatus({
   hasBookData,
   hasContextMismatch,
   hasIncompleteEvidence,
+  hasInvalidDate,
   positionCount,
   posture,
 }: {
@@ -208,9 +231,13 @@ function resolvePositionsStatus({
   hasBookData: boolean;
   hasContextMismatch: boolean;
   hasIncompleteEvidence: boolean;
+  hasInvalidDate: boolean;
   positionCount: number;
   posture: QuerySourcePosture;
 }): ProposalPositionsEvidenceStatus {
+  if (hasInvalidDate) {
+    return "unavailable";
+  }
   if (posture.isUnavailable) {
     return "unavailable";
   }
@@ -235,7 +262,10 @@ function resolvePositionsStatus({
   return positionCount > 0 ? "ready" : "empty";
 }
 
-function evidenceCopy(status: ProposalPortfolioEvidenceStatus): {
+function evidenceCopy(
+  status: ProposalPortfolioEvidenceStatus,
+  dateIssue: ProposalEvidenceDateIssue | null,
+): {
   title: string;
   body: string;
   hint: string | null;
@@ -284,12 +314,46 @@ function evidenceCopy(status: ProposalPortfolioEvidenceStatus): {
         hint: "Refresh again before relying on this draft for an advisory decision.",
       };
     case "unavailable":
+      if (dateIssue === "invalid_requested_date") {
+        return {
+          title: "Advisory date needs correction",
+          body: "The advisory date carried into this proposal is not a valid calendar date.",
+          hint: "Return to the portfolio review and select a valid advisory date before evaluating or saving this draft.",
+        };
+      }
+      if (dateIssue === "invalid_source_date") {
+        return {
+          title: "Portfolio evidence date is unavailable",
+          body: "The portfolio source returned an advisory date that is not a valid calendar date.",
+          hint: "Evaluation and draft handoff remain unavailable until the portfolio source provides a valid date.",
+        };
+      }
       return {
         title: "Portfolio evidence is unavailable",
         body: "The combined holdings and cash snapshot could not be loaded from the approved portfolio source.",
         hint: "No empty-book or manual-cash fallback is used to authorize evaluation. Refresh after the source recovers.",
       };
   }
+}
+
+function resolveDateIssue({
+  requestedAsOfDate,
+  hasValidRequestedDate,
+  effectiveAsOfDate,
+  hasValidEffectiveDate,
+}: {
+  requestedAsOfDate: string;
+  hasValidRequestedDate: boolean;
+  effectiveAsOfDate: string | null;
+  hasValidEffectiveDate: boolean;
+}): ProposalEvidenceDateIssue | null {
+  if (requestedAsOfDate && !hasValidRequestedDate) {
+    return "invalid_requested_date";
+  }
+  if (effectiveAsOfDate && !hasValidEffectiveDate) {
+    return "invalid_source_date";
+  }
+  return null;
 }
 
 function isCashPosition(position: PortfolioPositionView): boolean {
