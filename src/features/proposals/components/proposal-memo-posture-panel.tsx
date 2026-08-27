@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button } from "@mui/material";
 
@@ -164,10 +164,14 @@ function ProposalMemoPosturePanelProposalScope({
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionStateVersionNo, setActionStateVersionNo] = useState(
+    currentVersionNo,
+  );
 
-  useEffect(() => {
+  if (actionStateVersionNo !== currentVersionNo) {
+    setActionStateVersionNo(currentVersionNo);
     setActionError(null);
-  }, [currentVersionNo]);
+  }
 
   return (
     <ProposalMemoPosturePanelSession
