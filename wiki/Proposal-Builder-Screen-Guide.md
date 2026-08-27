@@ -144,8 +144,8 @@ Shared endpoint families and runtime ownership remain in [API Surface](API-Surfa
 | --- | --- | --- |
 | Preparing | Hydration-safe disabled actions and source-evidence loading | Wait; no first action can be lost before handlers are ready |
 | Advisory date not confirmed | Empty required date field and unavailable source-backed proposal actions | Select the intended advisory date; Workbench does not substitute a demonstration date |
-| Carried advisory date invalid | **Invalid carried date**, a descriptive correction message, and unavailable proposal actions | Return to portfolio review and select a valid calendar date; refreshing the same proposal cannot correct its carried context |
-| Source advisory date invalid | **Invalid source date**, retained non-authoritative source facts, and unavailable proposal actions | Refresh portfolio evidence so the source can provide a valid date; Workbench does not normalize or substitute the returned value |
+| Carried advisory date invalid | **Advisory date needs correction**, the rejected date, and unavailable proposal actions | Return to portfolio review and select a valid calendar date; refreshing the same proposal cannot correct its carried context |
+| Source advisory date invalid | **Portfolio evidence date is unavailable**, the rejected source date, retained non-authoritative facts, and unavailable proposal actions | Refresh portfolio evidence so the source can provide a valid date; Workbench does not normalize or substitute the returned value |
 | Workspace context limited, book confirmed | Confirmed portfolio-book identity, date, and base currency; mandate context is visibly unavailable | Continue only after the form's required holdings and cash evidence also confirms the same context |
 | Workspace context unconfirmed | Unavailable portfolio actions and no portfolio-scoped navigation, even if a later evidence refresh succeeds | Refresh the page or return to **My book**; browser evidence cannot independently authorize the workflow |
 | Evidence confirmed | Holdings, cash, date, currency, and readiness are visible | Continue construction or deliberately refresh the source |
