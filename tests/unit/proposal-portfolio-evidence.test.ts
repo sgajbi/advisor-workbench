@@ -104,6 +104,63 @@ describe("proposal portfolio evidence", () => {
     });
   });
 
+  it("admits a valid leap-day portfolio context", () => {
+    const evidence = buildEvidence({
+      asOfDate: "2028-02-29",
+      bookQuery: readyQuery(portfolioBook({ as_of_date: "2028-02-29" })),
+    });
+
+    expect(evidence).toMatchObject({
+      status: "ready",
+      canEvaluateAndHandoff: true,
+      context: {
+        requestedAsOfDate: "2028-02-29",
+        effectiveAsOfDate: "2028-02-29",
+        dateIssue: null,
+      },
+    });
+  });
+
+  it.each(["2026-02-29", "2026-04-31", "2026-13-01", "2026-00-10"])(
+    "fails closed on invalid carried calendar date %s",
+    (asOfDate) => {
+      const evidence = buildEvidence({ asOfDate });
+
+      expect(evidence).toMatchObject({
+        status: "unavailable",
+        canEvaluateAndHandoff: false,
+        title: "Advisory date needs correction",
+        body: "The advisory date carried into this proposal is not a valid calendar date.",
+        context: {
+          requestedAsOfDate: asOfDate,
+          dateIssue: "invalid_requested_date",
+        },
+        positions: { status: "unavailable" },
+      });
+    },
+  );
+
+  it.each(["2026-02-29", "2026-04-31", "2026-13-01"])(
+    "fails closed on invalid source calendar date %s",
+    (asOfDate) => {
+      const evidence = buildEvidence({
+        bookQuery: readyQuery(portfolioBook({ as_of_date: asOfDate })),
+      });
+
+      expect(evidence).toMatchObject({
+        status: "unavailable",
+        canEvaluateAndHandoff: false,
+        title: "Portfolio evidence date is unavailable",
+        body: "The portfolio source returned an advisory date that is not a valid calendar date.",
+        context: {
+          effectiveAsOfDate: asOfDate,
+          dateIssue: "invalid_source_date",
+        },
+        positions: { status: "unavailable" },
+      });
+    },
+  );
+
   it("distinguishes a confirmed empty book from unavailable evidence", () => {
     const evidence = buildEvidence({
       bookQuery: readyQuery(portfolioBook({ positions: [] })),
