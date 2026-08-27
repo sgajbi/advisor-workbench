@@ -57,6 +57,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
       "overview",
       "mandate-health",
       "outcome-reviews",
+      "proof-copilot",
       "rebalance-waves",
     ]),
   },

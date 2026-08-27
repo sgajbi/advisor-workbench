@@ -33,7 +33,7 @@ const registry = JSON.parse(
 ) as ScenarioRegistry;
 
 describe("E2E fixture scenario registry", () => {
-  it("owns the four governed browser-proof families and 20 unique scenarios", () => {
+  it("owns the four governed browser-proof families and 21 unique scenarios", () => {
     expect(registry.schema_version).toBe("1.0.0");
     expect(Object.keys(registry.families)).toEqual([
       "portfolio",
@@ -46,7 +46,7 @@ describe("E2E fixture scenario registry", () => {
         (total, family) => total + Object.keys(family.scenarios).length,
         0,
       ),
-    ).toBe(20);
+    ).toBe(21);
   });
 
   it("requires a non-empty, duplicate-free exact test set for every scenario", () => {
@@ -107,7 +107,7 @@ describe("E2E fixture scenario registry", () => {
     expect(expectedExecutions).toEqual({
       portfolio: 12,
       performance: 24,
-      manage: 4,
+      manage: 5,
       reports: 19,
     });
   });

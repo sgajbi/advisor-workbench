@@ -1,9 +1,12 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 
 import { fallbackNormalizedCapabilities } from "../../src/features/platform-capabilities/api";
+import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
 
 export type ManageFixtureGateway = {
   close: () => Promise<void>;
+  getLastLoadedProofPackId: () => string | null;
+  getLastProofPackMemoId: () => string | null;
   port: number;
   setMandateHealthExceptionMode: (
     mode: "windows" | "empty" | "unavailable" | "delayed-next",
@@ -19,6 +22,10 @@ const secondaryPortfolioId = "PB_SG_INCOME_001";
 const secondaryMandateId = "MANDATE_PB_SG_INCOME_001";
 const waveId = "dwv_001";
 const campaignId = "campaign-holdings-202605";
+export const manageProofPackFixtureIds = {
+  initial: "proof-pack-server-001",
+  published: "proof-pack-published-002",
+} as const;
 
 export async function startManageFixtureGateway({
   port,
@@ -31,6 +38,8 @@ export async function startManageFixtureGateway({
     | "unavailable"
     | "delayed-next" = "windows";
   let activeMandateHealthPortfolioId = portfolioId;
+  let lastLoadedProofPackId: string | null = null;
+  let lastProofPackMemoId: string | null = null;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
     const path = requestUrl.pathname;
@@ -92,9 +101,67 @@ export async function startManageFixtureGateway({
     }
     if (
       path === "/api/v1/dpm/command-center/outcome-reviews" &&
-      process.env.MANAGE_E2E_FIXTURE === "outcome-reviews"
+      ["outcome-reviews", "proof-copilot"].includes(
+        process.env.MANAGE_E2E_FIXTURE ?? "",
+      )
     ) {
-      sendJson(response, outcomeReviewEnvelope());
+      sendJson(
+        response,
+        outcomeReviewEnvelope(
+          process.env.MANAGE_E2E_FIXTURE === "proof-copilot"
+            ? manageProofPackFixtureIds.initial
+            : undefined,
+        ),
+      );
+      return;
+    }
+    if (
+      process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
+      path === "/api/v1/dpm/command-center/proof-packs" &&
+      request.method === "POST"
+    ) {
+      sendJson(response, proofPackEnvelope(manageProofPackFixtureIds.published), 201);
+      return;
+    }
+    const proofPackMemoMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/proof-packs\/([^/]+)\/ai-pm-memo$/,
+    );
+    if (
+      process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
+      proofPackMemoMatch &&
+      request.method === "POST"
+    ) {
+      lastProofPackMemoId = decodeURIComponent(proofPackMemoMatch[1]);
+      if (lastProofPackMemoId !== manageProofPackFixtureIds.published) {
+        sendJson(response, { code: "fixture_stale_proof_pack_rejected" }, 409);
+        return;
+      }
+      sendJson(
+        response,
+        buildDpmAiWorkflowResponse("proof-pack-memo", {
+          sourceReference: lastProofPackMemoId,
+        }),
+      );
+      return;
+    }
+    const proofPackMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/proof-packs\/([^/]+)$/,
+    );
+    if (
+      process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
+      proofPackMatch &&
+      request.method === "GET"
+    ) {
+      const requestedProofPackId = decodeURIComponent(proofPackMatch[1]);
+      if (
+        requestedProofPackId !== manageProofPackFixtureIds.initial &&
+        requestedProofPackId !== manageProofPackFixtureIds.published
+      ) {
+        sendJson(response, { code: "fixture_proof_pack_not_found" }, 404);
+        return;
+      }
+      lastLoadedProofPackId = requestedProofPackId;
+      sendJson(response, proofPackEnvelope(requestedProofPackId));
       return;
     }
     const launchedWaveItemsMatch = path.match(
@@ -249,6 +316,8 @@ export async function startManageFixtureGateway({
   return {
     port,
     close: () => closeServer(server),
+    getLastLoadedProofPackId: () => lastLoadedProofPackId,
+    getLastProofPackMemoId: () => lastProofPackMemoId,
     setMandateHealthExceptionMode: (mode) => {
       mandateHealthExceptionMode = mode;
     },
@@ -378,7 +447,23 @@ function portfolio360(requestedPortfolioId = portfolioId) {
       position_count: 18,
     },
     performance_snapshot: null,
-    rebalance_snapshot: null,
+    rebalance_snapshot:
+      process.env.MANAGE_E2E_FIXTURE === "proof-copilot"
+        ? {
+            status: "READY",
+            last_rebalance_run_id: "rebalance-run-2026-05-03",
+            last_run_at_utc: "2026-05-03T09:00:00Z",
+            recent_runs: [
+              {
+                rebalance_run_id: "rebalance-run-2026-05-03",
+                status: "READY",
+                created_at_utc: "2026-05-03T09:00:00Z",
+                error_code: null,
+                workflow_state: "REVIEW_READY",
+              },
+            ],
+          }
+        : null,
     current_positions: [],
     projected_positions: [],
     projected_summary: null,
@@ -508,7 +593,7 @@ function waveItemsEnvelope() {
   };
 }
 
-function outcomeReviewEnvelope() {
+function outcomeReviewEnvelope(proofPackId = "proof-pack-2026-05-13") {
   return {
     correlation_id: "corr-manage-outcome-reviews",
     contract_version: "v1",
@@ -544,7 +629,7 @@ function outcomeReviewEnvelope() {
           portfolio_id: portfolioId,
           rebalance_run_id: "rebalance-run-2026-05-03",
           wave_id: waveId,
-          proof_pack_id: "proof-pack-2026-05-13",
+          proof_pack_id: proofPackId,
           expected_snapshot_hash: "sha256:expected-review-snapshot",
           realized_snapshot_hash: "sha256:realised-review-snapshot",
           retain_until: "2033-05-13",
@@ -618,6 +703,41 @@ function outcomeReviewEnvelope() {
           },
         },
       ],
+    },
+  };
+}
+
+function proofPackEnvelope(proofPackId: string) {
+  return {
+    correlation_id: `corr-${proofPackId}`,
+    contract_version: "v1",
+    source_service: "lotus-manage",
+    upstream_status: 200,
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:RFC-0040",
+      state: "READY",
+      proof_pack_id: proofPackId,
+      reason_codes: ["PROOF_PACK_READY"],
+      markdown_available: true,
+      report_input_available: true,
+      ai_evidence_input_available: true,
+    },
+    data: {
+      proof_pack: {
+        proof_pack_id: proofPackId,
+        portfolio_id: portfolioId,
+        mandate_id: mandateId,
+        rebalance_run_id: "rebalance-run-2026-05-03",
+        as_of_date: "2026-05-13",
+        sections: [
+          {
+            section: "mandate_alignment",
+            state: "READY",
+            finding: "Mandate evidence is ready for portfolio-manager review.",
+          },
+        ],
+      },
     },
   };
 }
