@@ -247,6 +247,16 @@ function renderPanel(
   };
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, reject, resolve };
+}
+
 function enterActor(reference = "advisor_9") {
   fireEvent.change(screen.getByLabelText("Advisor or reviewer reference"), {
     target: { value: reference },
@@ -780,6 +790,59 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.queryByTestId("proposal-memo-confirmation-recovery"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps an in-flight review fenced and delivers failure after a version remount", async () => {
+    sourceState = evidenceState();
+    const reviewRequest = createDeferred<
+      Awaited<ReturnType<typeof reviewProposalMemo>>
+    >();
+    vi.mocked(reviewProposalMemo).mockReturnValue(reviewRequest.promise);
+    const { rerenderPanel } = renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Recording review…" }),
+    ).toBeDisabled();
+    sourceState = evidenceState({}, VERSION_NO + 1);
+    rerenderPanel(VERSION_NO + 1);
+    await openMemoDetails();
+    enterActor("advisor_10");
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "New-version evidence supports advisor use." } },
+    );
+    const remountedReview = screen.getByRole("button", {
+      name: "Recording review…",
+    });
+    expect(remountedReview).toBeDisabled();
+    fireEvent.click(remountedReview);
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+
+    reviewRequest.reject(new Error("SOURCE_UNAVAILABLE"));
+
+    expect(
+      await screen.findByText(
+        "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+      ),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Record advisor review" }),
+      ).toBeEnabled(),
+    );
   });
 
   it("resets an unresolved confirmation when proposal identity changes", async () => {
