@@ -16,7 +16,7 @@
 
 @container performance-control-bar (max-width: 46rem) and (min-width: 34.01rem) {
   .presentationSlot {
-    grid-column: auto;
+    grid-column: 3 / span 2;
     align-self: end;
   }
 
