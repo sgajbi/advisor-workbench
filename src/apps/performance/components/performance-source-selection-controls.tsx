@@ -72,6 +72,7 @@ export default function PerformanceSourceSelectionControls({
   const windowTriggerRef = useRef<HTMLButtonElement | null>(null);
   const windowRequestWasUpdatingRef = useRef(false);
   const [windowDialogOpen, setWindowDialogOpen] = useState(false);
+  const [windowDialogSession, setWindowDialogSession] = useState(0);
   const [submittedWindow, setSubmittedWindow] = useState<PerformanceCustomWindow | null>(null);
   const resolvedBenchmarkOptions = buildResolvedBenchmarkOptions({ benchmark, benchmarkOptions });
   const availableStartDate = capabilities.returnPath.earliestAvailableDate;
@@ -326,7 +327,10 @@ export default function PerformanceSourceSelectionControls({
         aria-expanded={windowDialogOpen}
         aria-labelledby="performance-review-window-label performance-review-window-value"
         disabled={isUpdating}
-        onClick={() => setWindowDialogOpen(true)}
+        onClick={() => {
+          setWindowDialogSession((current) => current + 1);
+          setWindowDialogOpen(true);
+        }}
         data-performance-control-slot="custom-window"
         data-performance-window-control="true"
       >
@@ -342,6 +346,7 @@ export default function PerformanceSourceSelectionControls({
       </button>
       {presentationControl}
       <PerformanceCustomWindowDialog
+        key={windowDialogSession}
         open={windowDialogOpen}
         confirmedWindow={{ fromDate: reportStartDate, toDate: reportEndDate }}
         earliestAvailableDate={availableStartDate}
