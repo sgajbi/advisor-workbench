@@ -616,6 +616,7 @@ function ProposalMemoPosturePanelSession({
           severity="warning"
           action={
             <Button
+              className={styles.confirmationRefreshAction}
               color="inherit"
               size="small"
               onClick={() =>
@@ -645,6 +646,7 @@ function ProposalMemoPosturePanelSession({
           }
           action={
             <Button
+              className={styles.confirmationRefreshAction}
               color="inherit"
               size="small"
               disabled={pendingAction !== null}
