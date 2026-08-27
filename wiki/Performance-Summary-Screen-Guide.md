@@ -68,8 +68,8 @@ investment suitability, or supervisory authority.
 1. Enter from [Advisor Book](Advisor-Book-Workflow),
    [Portfolio Review](Portfolio-Review-Screen-Guide), or another selected-portfolio record screen.
 2. Confirm the reporting horizon, net or gross basis, observation frequency, and benchmark once in
-   the governed analysis bar. Open **Custom dates** only when the review requires an explicit
-   window; reporting currency remains source evidence rather than an unsupported selector.
+   the governed analysis bar. Choose **Review window** only when the review requires exact dates;
+   reporting currency remains source evidence rather than an unsupported selector.
 3. Read portfolio return, benchmark return, active return, annualised or money-weighted measures
    only when the source contract supports them.
 4. Review the exact portfolio, benchmark, and active-return evidence for the published periods. A
@@ -87,11 +87,14 @@ or moving focus away from the active rail or source control.
 
 ## Implemented Capabilities
 
-- Uses one compact governed analysis bar for Horizon, Basis, Frequency, Benchmark, Custom window,
+- Uses one compact governed analysis bar for Horizon, Basis, Frequency, Benchmark, Review window,
   and Summary-only Return view. Analysis reuses the complete source selection; Risk reuses the
   supported subset without Frequency. Neither mode renders another page-local context.
-- Keeps exact start and end dates behind the Custom dates disclosure and preserves their complete
-  values and Apply action across desktop, tablet, and compact layouts.
+- Keeps the complete source-confirmed date range visible on the compact **Review window** control.
+  Exact-date drafting happens in a focused dialog with source bounds, validation, Cancel, and
+  **Apply window** actions across desktop, tablet, and phone layouts. The displayed range and URL
+  change only after the source accepts the request; Cancel, Escape, invalid input, or a rejected
+  refresh leave the prior confirmed window unchanged and return focus to the initiating control.
 - Defaults Return History to the six-column Absolute portfolio-versus-benchmark review. Relative
   and Combined views are available when that analytical question is required; they do not change
   the source selection.
