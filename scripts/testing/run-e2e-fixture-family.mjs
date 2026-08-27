@@ -12,6 +12,17 @@ import { runFixtureScenario } from "./run-e2e-fixture-scenario.mjs";
 
 const EVIDENCE_BOUNDARY =
   "Deterministic Workbench fixture-browser proof; not canonical live-source, deployment, production, or bank-acceptance evidence.";
+const FORWARDED_OPTIONS_WITH_VALUE = new Set([
+  "--global-timeout",
+  "--max-failures",
+  "--project",
+  "--retries",
+  "--shard",
+  "--timeout",
+  "--trace",
+  "--workers",
+  "-j",
+]);
 
 export function parseFamilyArguments(arguments_) {
   let familyName = null;
@@ -29,6 +40,15 @@ export function parseFamilyArguments(arguments_) {
     }
     if (argument.startsWith("--family=")) {
       familyName = argument.slice("--family=".length);
+      continue;
+    }
+    if (FORWARDED_OPTIONS_WITH_VALUE.has(argument)) {
+      const value = arguments_[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error(`${argument} requires a value.`);
+      }
+      forwardedArguments.push(argument, value);
+      index += 1;
       continue;
     }
     if (!argument.startsWith("--")) {
