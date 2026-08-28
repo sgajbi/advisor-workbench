@@ -1602,18 +1602,25 @@ Most relevant current governance:
     the active source version, admit downstream packaging only after its prerequisite evidence is
     confirmed, and announce success only when the action response and refreshed owning read agree.
     If a narrative review, memo review, commentary, or package mutation persists but immediate
-    confirmation fails, retain that exact mutation response as pending confirmation, expose a
-    bounded source refresh, and fence every conflicting submission until the refreshed owning reads
-    confirm the original action. Keep failures that occur before persistence version-scoped; only a
-    persisted receipt crosses a same-proposal version remount.
+    confirmation fails, retain that exact mutation response as pending confirmation and expose a
+    bounded source refresh. Fence conflicting submissions for that same proposal version until the
+    refreshed owning reads confirm the original action. If the proposal advances, retain and
+    reconcile the historical receipt against its own immutable memo, projection, replay, event, and
+    lineage identity without disabling source-admitted work on the current version. Treat a source
+    current version later than the receipt as normal lifecycle progression, a source current version
+    earlier than the receipt as impossible, and a complete lineage that omits the historical item as
+    retained evidence unavailable rather than generic source disagreement. Keep failures that occur
+    before persistence version-scoped; only a persisted receipt crosses a same-proposal version
+    remount.
     Own the in-flight lock, pending confirmation, and terminal success or failure outcome at proposal
     scope from submission start—not only after persistence—so an active-version remount cannot
     discard the transaction or deliver its outcome to an obsolete session. Refresh the original
     persisted version rather than substituting the newly active version. Release the in-flight lock
     only when the source request fails or exact source confirmation succeeds, retain the truthful
     terminal outcome on the current screen, and reset the full scope when the proposal identity
-    changes. Never create a new idempotency key while the earlier action is in flight or persisted
-    but unconfirmed.
+    changes. Never create a second idempotency key for the same version while its earlier action is
+    in flight or persisted but unconfirmed; version-scoped receipt storage must not overwrite a
+    historical receipt when a later version admits its own action.
     Proposal-wide delivery summary and event envelopes may identify a newer active proposal version
     while still carrying the exact older-version report record. Confirm that original request from
     its report-request id, narrative version/hash, monotonic package state, and matching
