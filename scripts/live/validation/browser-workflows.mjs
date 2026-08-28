@@ -2386,16 +2386,24 @@ export async function validateConstructionAlternativesPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(
+    constructionPanel.getByLabel("Status Not generated"),
+  ).toBeVisible({ timeout: timeoutMs });
   await constructionPanel
     .getByRole("button", { name: "Generate alternatives" })
     .click({
       timeout: timeoutMs,
     });
   await expect(
-    constructionPanel.getByText("Construction alternatives generated."),
+    constructionPanel.getByText(
+      "Construction alternatives generated from mandate data.",
+    ),
   ).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(
+    constructionPanel.getByLabel("Status Evidence available"),
+  ).toBeVisible({ timeout: timeoutMs });
   await expect(
     constructionPanel.getByText("Alternatives Comparison"),
   ).toBeVisible({

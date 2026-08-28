@@ -25,6 +25,7 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   await expect(
     panel.getByText("Construction alternatives have not been generated")
   ).toBeVisible();
+  await expect(panel.getByLabel("Status Not generated")).toBeVisible();
 
   const responsePromise = page.waitForResponse(
     (response) =>
@@ -35,6 +36,9 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   );
   await panel.getByRole("button", { name: "Generate alternatives" }).click();
   const response = await responsePromise;
+  const requestBody = response.request().postDataJSON() as
+    | { body?: { methods?: unknown; options_override?: unknown } }
+    | null;
   const responseText = await response.text().catch(() => "");
   let responseBody: {
     correlation_id?: string;
@@ -61,6 +65,15 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   await expect(panel.getByRole("button", { name: "Generate alternatives" })).toBeEnabled({
     timeout: 90_000,
   });
+  const expectedEvidenceStatus = evidenceStatusLabel(
+    responseBody?.supportability?.state,
+    Array.isArray(responseBody?.data?.alternatives)
+      ? responseBody.data.alternatives.length
+      : 0,
+  );
+  await expect(panel.getByLabel(`Status ${expectedEvidenceStatus}`)).toBeVisible({
+    timeout: 90_000,
+  });
 
   const panelText = await panel.innerText();
   const screenshotPath = path.join(outputDir, "construction-alternatives-live.png");
@@ -73,6 +86,9 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
     request: {
       method: "POST",
       path: "/api/bff/api/v1/dpm/command-center/construction/alternative-sets/generate",
+      methodsSuppliedByWorkbench: requestBody?.body?.methods !== undefined,
+      optionsOverrideSuppliedByWorkbench:
+        requestBody?.body?.options_override !== undefined,
     },
     response: {
       status: response.status(),
@@ -102,6 +118,7 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
         panelText.includes("Alternatives Comparison") ||
         panelText.includes("Recommended Path") ||
         panelText.includes("Mandate Fit"),
+      evidenceStatusLabel: expectedEvidenceStatus,
       textExcerpt: panelText.slice(0, 2000),
     },
   };
@@ -118,4 +135,19 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   expect(evidence.ui.includesManageAuthority).toBe(false);
   expect(evidence.ui.includesBusinessAlternativeCopy).toBe(true);
   expect(evidence.ui.includesNoLocalMethodologyClaim).toBe(true);
+  expect(evidence.request.methodsSuppliedByWorkbench).toBe(false);
+  expect(evidence.request.optionsOverrideSuppliedByWorkbench).toBe(false);
 });
+
+function evidenceStatusLabel(
+  sourceState: string | undefined,
+  alternativeCount: number,
+): string {
+  const normalized = sourceState?.trim().toUpperCase() ?? "UNKNOWN";
+  if (normalized === "BLOCKED") return "Blocked";
+  if (normalized === "UNSUPPORTED") return "Unsupported";
+  if (normalized === "DEGRADED" || normalized === "PARTIAL") {
+    return alternativeCount > 0 ? "Partial evidence" : "Unavailable";
+  }
+  return alternativeCount > 0 ? "Evidence available" : "Unavailable";
+}

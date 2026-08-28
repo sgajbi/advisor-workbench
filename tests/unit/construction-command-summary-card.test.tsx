@@ -77,7 +77,7 @@ describe("ConstructionCommandSummaryCard", () => {
         model={buildConstructionPanelModel(constructionResponse)}
         portfolioId="PB_SG_GLOBAL_BAL_001"
         generatePending={false}
-        actionMessage="Construction alternatives generated."
+        actionMessage="Construction alternatives generated from mandate data."
         actionError={null}
         onGenerateAlternatives={vi.fn()}
       />,
@@ -88,7 +88,9 @@ describe("ConstructionCommandSummaryCard", () => {
     expect(screen.getByText("Within Range")).toBeInTheDocument();
     expect(screen.getByText("72.4%")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
-    expect(screen.getByText("Construction alternatives generated.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Construction alternatives generated from mandate data."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Regime Scenario Pack Ready")).not.toBeInTheDocument();
     expect(screen.queryByText("Review required")).not.toBeInTheDocument();
     expect(screen.queryByText("cas_1")).not.toBeInTheDocument();
