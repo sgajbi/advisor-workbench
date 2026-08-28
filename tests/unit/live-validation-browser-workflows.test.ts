@@ -23,6 +23,7 @@ const {
   resolveHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
   validateAdvisoryJourneyScreens,
+  validatePmOperatingQualityPanel,
 } = browserWorkflowModule as unknown as {
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
     panelState: "partial";
@@ -110,6 +111,7 @@ const {
   ) => string;
   validateAdvisorBriefPanel: (...args: unknown[]) => Promise<void>;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
+  validatePmOperatingQualityPanel: (...args: unknown[]) => Promise<void>;
 };
 
 type AdvisorBriefReviewEvidence = {
@@ -245,7 +247,7 @@ describe("live validation browser workflow helpers", () => {
   });
 
   it("binds PM operating-quality browser proof to source ids and explicit state", () => {
-    const source = browserWorkflowModule.validatePmOperatingQualityPanel.toString();
+    const source = validatePmOperatingQualityPanel.toString();
 
     expect(source).toMatch(
       /getByTestId\(\s*"pm-operating-quality-source-evidence"/,
