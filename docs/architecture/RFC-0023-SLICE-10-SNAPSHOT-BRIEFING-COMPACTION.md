@@ -1,14 +1,18 @@
 # RFC-0023 Slice 10: Snapshot Briefing Compaction
 
+> Historical delivery record. The named executive-summary and snapshot-business-reading
+> components were later retired; use the current Risk composition and architecture index for new
+> work.
+
 ## Intent
 
 Reduce the remaining first-paint height in `Risk Snapshot` by tightening its business-reading surface through a shared compact executive-summary contract.
 
 ## Changes
 
-- Added a reusable compact density mode to [risk-executive-summary.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-executive-summary.tsx).
-- Applied the compact executive-summary mode to [risk-snapshot-business-reading.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-snapshot-business-reading.tsx).
-- Added shared compact briefing styling in [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css) for:
+- Added a reusable compact density mode to the then-current `risk-executive-summary.tsx`.
+- Applied the compact executive-summary mode to the then-current `risk-snapshot-business-reading.tsx`.
+- Added shared compact briefing styling in [globals.css](..\..\src\app\globals.css) for:
   - tighter briefing padding
   - tighter headline line-height
   - slightly denser secondary text

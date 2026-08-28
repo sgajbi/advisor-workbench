@@ -6,10 +6,10 @@ Reduce the remaining first-paint height in the `Drawdown` module by tightening t
 
 ## Changes
 
-- Applied compact detail-section density to the `Episode review` block in [risk-drawdown-detail.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-drawdown-detail.tsx).
+- Applied compact detail-section density to the `Episode review` block in [risk-drawdown-detail.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail.tsx).
 - Applied the shared compact note-card treatment to the drawdown interpretation card.
 - Applied compact analytical-table density to the drawdown episode table.
-- Tightened drawdown detail stack spacing in [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css).
+- Tightened drawdown detail stack spacing in [globals.css](..\..\src\app\globals.css).
 
 ## Why This Matters
 

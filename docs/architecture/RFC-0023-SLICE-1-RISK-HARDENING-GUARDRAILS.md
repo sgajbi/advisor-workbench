@@ -1,6 +1,6 @@
 # RFC-0023 Slice 1: Risk Hardening Guardrail Baseline
 
-- RFC: [RFC-0023](C:/Users/Sandeep/projects/lotus-workbench/docs/rfcs/RFC-0023-risk-workspace-ux-hardening-and-production-readiness.md)
+- RFC: [RFC-0023](..\rfcs\RFC-0023-risk-workspace-ux-hardening-and-production-readiness.md)
 - Date: 2026-04-08
 - Status: completed
 
@@ -30,7 +30,7 @@ The pre-existing RFC-0022 architecture guard continues to enforce:
 
 Primary test:
 
-1. [rfc0022-risk-architecture-guard.test.ts](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/rfc0022-risk-architecture-guard.test.ts)
+1. [rfc0022-risk-architecture-guard.test.ts](..\..\tests\unit\rfc0022-risk-architecture-guard.test.ts)
 
 ### New RFC-0023 hardening guards
 
@@ -47,7 +47,7 @@ Slice 1 adds explicit protection for the hardened Risk workspace interaction mod
 
 Primary test:
 
-1. [rfc0023-risk-hardening-guard.test.ts](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/rfc0023-risk-hardening-guard.test.ts)
+1. [rfc0023-risk-hardening-guard.test.ts](..\..\tests\unit\rfc0023-risk-hardening-guard.test.ts)
 
 ## Runtime Behavior Check
 
@@ -60,7 +60,7 @@ Slice 1 also tightens one panel-level contract test so the runtime behavior is e
 
 Primary test:
 
-1. [risk-snapshot-panel.test.tsx](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/risk-snapshot-panel.test.tsx)
+1. [risk-snapshot-panel.test.tsx](..\..\tests\unit\risk-snapshot-panel.test.tsx)
 
 ## Why This Slice Matters
 

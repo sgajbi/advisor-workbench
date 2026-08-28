@@ -17,8 +17,8 @@ It exists so new UI work:
 
 This is a usage guide, not a theory document. It should be read alongside:
 
-1. [RFC-0021-ui-architecture-hardening-and-design-system-governance.md](C:/Users/Sandeep/projects/lotus-workbench/docs/rfcs/RFC-0021-ui-architecture-hardening-and-design-system-governance.md)
-2. [UI-ARCHITECTURE-AUDIT-LEDGER.md](C:/Users/Sandeep/projects/lotus-workbench/docs/architecture/UI-ARCHITECTURE-AUDIT-LEDGER.md)
+1. [RFC-0021-ui-architecture-hardening-and-design-system-governance.md](..\rfcs\RFC-0021-ui-architecture-hardening-and-design-system-governance.md)
+2. [UI-ARCHITECTURE-AUDIT-LEDGER.md](UI-ARCHITECTURE-AUDIT-LEDGER.md)
 
 ## Design-System Layers
 
@@ -38,9 +38,9 @@ Feature code should compose the shared layers. It should not redefine them.
 
 Source of truth:
 
-1. [tokens.ts](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/theme/tokens.ts)
-2. [tokens.css](C:/Users/Sandeep/projects/lotus-workbench/src/styles/global/tokens.css)
-3. [workbench-shell.css](C:/Users/Sandeep/projects/lotus-workbench/src/styles/global/workbench-shell.css)
+1. [tokens.ts](..\..\src\design-system\theme\tokens.ts)
+2. [tokens.css](..\..\src\styles\global\tokens.css)
+3. [workbench-shell.css](..\..\src\styles\global\workbench-shell.css)
 
 `src/app/globals.css` is only the governed global-style import entrypoint. Do not add token,
 typography, layout, or feature declarations there; place new shared declarations in the matching
@@ -64,7 +64,7 @@ Do not add arbitrary one-off spacing or font-size values in page code unless the
 
 Primary typography primitive:
 
-1. [text.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/text.tsx)
+1. [text.tsx](..\..\src\design-system\components\text.tsx)
 
 Use semantic variants rather than local classes for:
 
@@ -82,7 +82,7 @@ Financial values should use tabular numerals through the shared typography and f
 
 Shared financial formatting lives in:
 
-1. [financial-formatters.ts](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/utils/financial-formatters.ts)
+1. [financial-formatters.ts](..\..\src\design-system\utils\financial-formatters.ts)
 
 Use shared formatting for:
 
@@ -100,11 +100,11 @@ Do not duplicate formatting logic inside route modules if the shared layer alrea
 
 Use:
 
-1. [app-page-shell.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/app-page-shell.tsx)
-2. [main-with-side-rail-layout.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/main-with-side-rail-layout.tsx)
-3. [workbench-page-frame.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/workbench-page-frame.tsx)
-4. [section-block.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/section-block.tsx)
-5. [section-header.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/section-header.tsx)
+1. [app-page-shell.tsx](..\..\src\design-system\components\app-page-shell.tsx)
+2. [main-with-side-rail-layout.tsx](..\..\src\design-system\components\main-with-side-rail-layout.tsx)
+3. [workbench-page-frame.tsx](..\..\src\design-system\components\workbench-page-frame.tsx)
+4. [section-block.tsx](..\..\src\design-system\components\section-block.tsx)
+5. [section-header.tsx](..\..\src\design-system\components\section-header.tsx)
 
 Use these when building:
 
@@ -119,11 +119,11 @@ Do not hand-build new page shell structures in feature routes unless the shared 
 
 Use:
 
-1. [mode-tabs.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/mode-tabs.tsx)
-2. [workbench-choice-group.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/workbench-choice-group.tsx)
-3. [action-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-button.tsx)
-4. [action-link.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/action-link.tsx)
-5. [disclosure-toggle-button.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/disclosure-toggle-button.tsx)
+1. [mode-tabs.tsx](..\..\src\design-system\components\mode-tabs.tsx)
+2. [workbench-choice-group.tsx](..\..\src\design-system\components\workbench-choice-group.tsx)
+3. [action-button.tsx](..\..\src\design-system\components\action-button.tsx)
+4. [action-link.tsx](..\..\src\design-system\components\action-link.tsx)
+5. [disclosure-toggle-button.tsx](..\..\src\design-system\components\disclosure-toggle-button.tsx)
 
 Rules:
 
@@ -148,10 +148,10 @@ Do not introduce new panel-toggle vocabulary such as `Open detail`, `Show more`,
 
 Use:
 
-1. [semantic-badge.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/semantic-badge.tsx)
-2. [screen-state-panel.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/screen-state-panel.tsx)
-3. [capability-state-panel.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/capability-state-panel.tsx)
-4. [workspace-status-panel.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/workspace-status-panel.tsx)
+1. [semantic-badge.tsx](..\..\src\design-system\components\semantic-badge.tsx)
+2. [screen-state-panel.tsx](..\..\src\design-system\components\screen-state-panel.tsx)
+3. [capability-state-panel.tsx](..\..\src\design-system\components\capability-state-panel.tsx)
+4. [workspace-status-panel.tsx](..\..\src\design-system\components\workspace-status-panel.tsx)
 
 Use these for:
 
@@ -165,10 +165,10 @@ Do not introduce local badge color systems or route-specific status language if 
 
 Use:
 
-1. [analytics-table.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/analytics-table.tsx)
-2. [workbench-summary-metric-strip.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/workbench-summary-metric-strip.tsx)
-3. [analytics-stat.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/analytics-stat.tsx)
-4. [kpi-stat-tile.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/design-system/components/kpi-stat-tile.tsx)
+1. [analytics-table.tsx](..\..\src\design-system\components\analytics-table.tsx)
+2. [workbench-summary-metric-strip.tsx](..\..\src\design-system\components\workbench-summary-metric-strip.tsx)
+3. [analytics-stat.tsx](..\..\src\design-system\components\analytics-stat.tsx)
+4. [kpi-stat-tile.tsx](..\..\src\design-system\components\kpi-stat-tile.tsx)
 
 Rules:
 

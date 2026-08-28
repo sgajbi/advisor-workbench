@@ -23,7 +23,7 @@ This slice tightens those page-level surfaces without changing panel contracts o
 
 ### Executive briefing densification
 
-Updated [risk-executive-overview.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-executive-overview.tsx) so:
+Updated [risk-executive-overview.tsx](..\..\src\apps\performance\components\risk\risk-executive-overview.tsx) so:
 
 1. posture cards and `What matters now` now live in one shared executive band,
 2. the right-hand briefing column holds both posture support cards and the cross-panel reading,
@@ -31,7 +31,7 @@ Updated [risk-executive-overview.tsx](C:/Users/Sandeep/projects/lotus-workbench/
 
 ### Page-level spacing tightening
 
-Updated [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css) to:
+Updated [globals.css](..\..\src\app\globals.css) to:
 
 1. reduce shell padding and inter-section gaps,
 2. tighten the context strip row,
@@ -55,7 +55,7 @@ It makes the page more front-office useful by:
 
 Added:
 
-1. [risk-executive-overview.test.tsx](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/risk-executive-overview.test.tsx)
+1. [risk-executive-overview.test.tsx](..\..\tests\unit\risk-executive-overview.test.tsx)
 
 This test proves:
 
@@ -64,7 +64,7 @@ This test proves:
 3. secondary posture cards remain present,
 4. the cross-panel action list remains intact.
 
-Existing page tests in [performance-risk-mode.test.tsx](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/performance-risk-mode.test.tsx) continue to guard live request behavior, panel ordering, and interaction flows.
+Existing page tests in [performance-risk-mode.test.tsx](..\..\tests\unit\performance-risk-mode.test.tsx) continue to guard live request behavior, panel ordering, and interaction flows.
 
 ## Validation
 

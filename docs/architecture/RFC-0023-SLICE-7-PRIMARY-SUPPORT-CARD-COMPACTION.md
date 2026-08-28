@@ -1,19 +1,22 @@
 # RFC-0023 Slice 7: Primary Support Card Compaction
 
+> Historical delivery record. `risk-snapshot-supporting-measures.tsx` was later retired; use the
+> current Risk composition and architecture index for new work.
+
 ## Intent
 
 Reduce first-paint height in the primary risk review without removing information. This slice compacts supporting metric surfaces in `Risk Snapshot`, `Drawdown`, and `Concentration` by moving them onto a shared dense card contract.
 
 ## Changes
 
-- Added a reusable compact density mode to [risk-metric-card.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-metric-card.tsx).
-- Migrated [risk-snapshot-supporting-measures.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-snapshot-supporting-measures.tsx) from panel-local markup onto the shared metric-card primitive.
+- Added a reusable compact density mode to [risk-metric-card.tsx](..\..\src\apps\performance\components\risk\risk-metric-card.tsx).
+- Migrated the then-current `risk-snapshot-supporting-measures.tsx` from panel-local markup onto the shared metric-card primitive.
 - Applied compact metric-card density to:
-  - [risk-snapshot-supporting-measures.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-snapshot-supporting-measures.tsx)
-  - [risk-drawdown-detail.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-drawdown-detail.tsx)
-  - [risk-concentration-indicator-strip.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-concentration-indicator-strip.tsx)
+  - the then-current `risk-snapshot-supporting-measures.tsx`
+  - [risk-drawdown-detail.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail.tsx)
+  - [risk-concentration-indicator-strip.tsx](..\..\src\apps\performance\components\risk\risk-concentration-indicator-strip.tsx)
 - Applied compact detail-section density to the supporting-measures sections in Snapshot and Drawdown.
-- Updated [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css) with a shared `.performance-risk-metric-card-compact` treatment and tighter concentration indicator spacing.
+- Updated [globals.css](..\..\src\app\globals.css) with a shared `.performance-risk-metric-card-compact` treatment and tighter concentration indicator spacing.
 
 ## Why This Matters
 
