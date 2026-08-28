@@ -68,7 +68,15 @@ describe("Risk Review interpretation authority", () => {
     expect(browserWorkflow).toContain('getByTestId("risk-mandate-comparison")');
     expect(browserWorkflow).toContain('"data-mandate-availability"');
     expect(browserWorkflow).toContain('"risk-mandate-comparison"');
-    expect(browserWorkflow).toContain('for (const expectedState of ["within", "breach", "not_defined"])');
+    expect(browserWorkflow).toContain(
+      "buildMandateConstraintProofRows(mandateComparisons)",
+    );
+    expect(browserWorkflow).toContain(
+      "for (const expected of expectedMandateStates)",
+    );
+    expect(browserWorkflow).toContain(
+      "published by both ${previousSource} and ${source}",
+    );
     expect(browserWorkflow).toContain('"Realised volatility"');
     expect(browserWorkflow).toContain('"Source coverage"');
     expect(browserWorkflow).toContain("for (const width of [1440, 1024, 519])");
