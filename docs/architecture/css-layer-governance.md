@@ -99,7 +99,7 @@ containerized local-CI lane. The CSS gate validates:
 - selector families listed in `forbiddenSelectorPrefixes` do not return to any governed global
   layer after migration to a component owner;
 - every CSS Module is discovered automatically, its selector AST is parsed with
-  `postcss-selector-parser`, and only functional `:global(...)` pseudo-class nodes count against
+  `postcss-selector-parser`, and every bare or functional `:global` pseudo-class node counts against
   the exact reviewed baseline; comments and attribute values cannot consume allowance, invalid
   selectors fail closed, and a new module begins with zero allowed escapes.
 
