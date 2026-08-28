@@ -717,19 +717,23 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "Construction-Alternatives-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-manage"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/components/construction-alternatives-panel.tsx",
+        "src/features/workbench/construction-alternatives-view-model.ts",
+        "src/features/workbench/construction-api.ts",
+        "tests/unit/construction-alternatives-panel.test.tsx",
+        "tests/unit/construction-alternatives-view-model.test.ts"
       ],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/live/construction-alternatives.live.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-core-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "portfolio-memory",
@@ -740,19 +744,19 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "Portfolio-Memory-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-manage"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/components/portfolio-memory-panel.tsx",
+        "src/features/workbench/portfolio-memory-view-model.ts",
+        "tests/unit/portfolio-memory-panel.test.tsx",
+        "tests/unit/portfolio-memory-view-model.test.ts"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-evidence-and-governance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "pm-copilot",
@@ -787,21 +791,22 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
+      "wikiSlug": "PM-Operating-Quality-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-ai"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
         "src/features/workbench/manage-workspace.tsx",
         "src/features/workbench/pm-operating-quality-api.ts",
-        "src/features/workbench/components/pm-operating-quality-summary-invocations-card.tsx"
+        "src/features/workbench/components/pm-operating-quality-panel.tsx",
+        "src/features/workbench/pm-operating-quality-view-model.ts",
+        "src/features/workbench/components/pm-operating-quality-summary-invocations-card.tsx",
+        "tests/unit/pm-operating-quality-panel.test.tsx",
+        "tests/unit/pm-operating-quality-view-model.test.ts",
+        "tests/integration/pm-operating-quality-create.integration.test.tsx"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-evidence-and-governance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "outcome-reviews",
@@ -842,19 +847,21 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "active",
-      "wikiSlug": null,
-      "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-report"],
+      "wikiSlug": "Evidence-Pack-Screen-Guide",
+      "sourceOwners": ["lotus-gateway", "lotus-manage", "lotus-ai"],
       "implementationEvidence": [
         "src/features/workbench/manage-workspace-navigation.ts",
-        "src/features/workbench/manage-workspace.tsx"
+        "src/features/workbench/manage-workspace.tsx",
+        "src/features/workbench/components/proof-pack-panel.tsx",
+        "src/features/workbench/proof-pack-view-model.ts",
+        "src/features/workbench/proof-pack-api.ts",
+        "tests/unit/proof-pack-panel.test.tsx",
+        "tests/unit/proof-pack-workspace.test.tsx",
+        "tests/unit/proof-pack-view-model.test.ts"
       ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "manage-evidence-and-governance-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "advisory-overview",
@@ -946,16 +953,21 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Opportunities-And-Ideas-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-idea"],
-      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
-      "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
+      "implementationEvidence": [
+        "src/apps/recommendations/page.tsx",
+        "src/features/proposals/components/advisory-opportunities-workspace.tsx",
+        "src/features/proposals/components/idea-candidate-action-panel.tsx",
+        "src/features/proposals/advisory-opportunities-view-model.ts",
+        "tests/integration/advisory-opportunities-workspace.test.tsx"
+      ],
+      "runtimeEvidence": [
+        "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/idea-candidate-actions.spec.ts"
+      ],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "advisory-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "bank-demo-proof",
@@ -966,16 +978,18 @@
       "fragment": null,
       "surfaceClassification": "active-mode",
       "navigationPosture": "capability-disabled",
-      "wikiSlug": null,
+      "wikiSlug": "Bank-Demo-Proof-Screen-Guide",
       "sourceOwners": ["lotus-gateway", "lotus-advise"],
-      "implementationEvidence": ["src/apps/recommendations/page.tsx"],
+      "implementationEvidence": [
+        "src/apps/recommendations/page.tsx",
+        "src/features/proposals/components/bank-demo-proof-workspace.tsx",
+        "src/features/proposals/bank-demo-proof-view-model.ts",
+        "tests/integration/bank-demo-proof-workspace.test.tsx",
+        "tests/unit/bank-demo-proof-view-model.test.ts"
+      ],
       "runtimeEvidence": ["scripts/live/validation/browser-workflows.mjs"],
       "supportOwner": "lotus-workbench",
-      "coverageException": {
-        "issue": 605,
-        "plannedSlice": "advisory-guides",
-        "reason": "Dedicated business mode guide is pending."
-      }
+      "coverageException": null
     },
     {
       "id": "client-context-alias",

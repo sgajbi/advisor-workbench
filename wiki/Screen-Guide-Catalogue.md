@@ -7,14 +7,10 @@ to find its operating guide.
 
 ## Current Scope
 
-The checked-in screen registry currently records **21 route entrypoints, 36 active business
-screens or modes, and two compatibility aliases**. Twenty-seven active surfaces now have one
-implementation-backed guide that passes the complete guide standard. The remaining nine dedicated
-guides are explicit work under
-[lotus-workbench issue #605](https://github.com/sgajbi/lotus-workbench/issues/605).
-The catalogue is therefore an inventory and delivery control as well as a navigation page. A
-screen marked “guide planned” is implemented, but its complete business operating guide has not
-yet passed the documentation gate.
+The checked-in screen registry records **21 route entrypoints, 36 active business screens or modes,
+and two compatibility aliases**. All 36 active surfaces map to one implementation-backed guide and
+there are no documentation coverage exceptions. The catalogue is therefore both a business reader
+map and an executable delivery control.
 
 The route-to-guide relationship, implementation evidence, source owners, and governed coverage
 exceptions are governed by
@@ -98,12 +94,12 @@ while the user moves from attention posture into construction, review, and evide
 | [Manage Overview](Manage-Overview-Screen-Guide) | `/workbench/{portfolioId}?mode=overview` | Active | Guide available | Gateway, Core, and Manage |
 | [Mandate Health](Mandate-Health-Screen-Guide) | `/workbench/{portfolioId}?mode=mandate` | Active | Guide available | Gateway, Core, and Manage |
 | [Rebalance Waves](Rebalance-Waves-Screen-Guide) | `/workbench/{portfolioId}?mode=waves` | Active | Guide available | Gateway, Core, Manage, Report, and Lotus AI |
-| Construction Alternatives | `/workbench/{portfolioId}?mode=construction` | Active  | Guide planned — #605 | Gateway and Manage            |
-| Portfolio Memory          | `/workbench/{portfolioId}?mode=memory`       | Active  | Guide planned — #605 | Gateway and Manage            |
+| [Construction Alternatives](Construction-Alternatives-Screen-Guide) | `/workbench/{portfolioId}?mode=construction` | Active  | Guide available | Gateway and Manage            |
+| [Portfolio Memory](Portfolio-Memory-Screen-Guide) | `/workbench/{portfolioId}?mode=memory`       | Active  | Guide available | Gateway and Manage            |
 | [PM Copilot](PM-Copilot-Screen-Guide) | `/workbench/{portfolioId}?mode=copilot` | Active | Guide available | Gateway, Manage, and Lotus AI |
-| PM Operating Quality      | `/workbench/{portfolioId}?mode=quality`      | Active  | Guide planned — #605 | Gateway, Manage, and Lotus AI |
+| [PM Operating Quality](PM-Operating-Quality-Screen-Guide) | `/workbench/{portfolioId}?mode=quality`      | Active  | Guide available | Gateway, Manage, and Lotus AI |
 | [Outcome reviews](Outcome-Reviews-Screen-Guide) | `/workbench/{portfolioId}?mode=reviews` | Active | Guide available | Gateway, Manage, Report, and Lotus AI |
-| Evidence Pack             | `/workbench/{portfolioId}?mode=proof`        | Active  | Guide planned — #605 | Gateway, Manage, and Report   |
+| [Evidence Pack](Evidence-Pack-Screen-Guide) | `/workbench/{portfolioId}?mode=proof`        | Active  | Guide available | Gateway, Manage, and Lotus AI |
 
 The presence of an AI-assisted mode does not make generated content authoritative. Its guide must
 identify the source evidence, human review boundary, persistence posture, and prohibited downstream
@@ -120,8 +116,8 @@ describe implemented validation surfaces rather than a promise of unrestricted p
 | [Advisory Overview](Advisory-Overview-Screen-Guide) | `/recommendations?mode=overview`      | Capability-disabled | Guide available      | Gateway and Advise            |
 | [Advisor Cockpit](Advisor-Cockpit-Screen-Guide)     | `/recommendations?mode=cockpit`       | Capability-disabled | Guide available      | Gateway and Advise            |
 | [Advisory Copilot](Advisory-Copilot-Screen-Guide)   | `/recommendations?mode=copilot`       | Capability-disabled | Guide available      | Gateway, Advise, and Lotus AI |
-| Opportunities And Ideas                             | `/recommendations?mode=opportunities` | Capability-disabled | Guide planned — #605 | Gateway and Lotus Idea        |
-| Bank Demo Proof                                     | `/recommendations?mode=proof`         | Capability-disabled | Guide planned — #605 | Gateway and Advise            |
+| [Opportunities And Ideas](Opportunities-And-Ideas-Screen-Guide) | `/recommendations?mode=opportunities` | Capability-disabled | Guide available | Gateway and Lotus Idea        |
+| [Bank Demo Proof](Bank-Demo-Proof-Screen-Guide) | `/recommendations?mode=proof`         | Capability-disabled | Guide available | Gateway and Advise            |
 
 The guides will distinguish read-only decision support, persisted review actions, and human-owned
 decisions. No guide may claim suitability approval, client publication, or order execution unless
@@ -197,9 +193,9 @@ individual guides instead of copied:
 - [Operations Runbook](Operations-Runbook)
 - [Troubleshooting](Troubleshooting)
 
-## Delivery Sequence
+## Coverage Governance
 
-Issue #605 will remove coverage exceptions in business-workflow slices. Each slice must validate
-the actual screen, update its source and state descriptions, pass the documentation gate, and keep
-wiki source and the published GitHub wiki in parity. Completion means all 36 active screens or
-modes have one canonical, template-complete guide and no unexplained exception remains.
+Issue #605 established the registry, template, and complete guide set. New routes or independently
+navigable modes must update the registry, provide implementation evidence, map to one canonical
+guide (or a justified issue-backed exception), pass `npm run quality:screen-docs`, and preserve wiki
+source/publication parity. Aliases continue to reuse the canonical guide rather than duplicate it.
