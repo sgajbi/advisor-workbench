@@ -110,10 +110,16 @@ These use cases do not substitute for authenticated production-role or portfolio
   evidence is current. A successful mutation is not announced until memo, projection, lineage,
   replay, review, report, and commentary reads reconcile where the action requires them.
 - When a memo action persists but those reads remain stale or fail, the screen retains the exact
-  persisted action as **Awaiting confirmation**, fences every memo mutation, and offers one
-  read-only **Refresh record** action. This recovery follows the original proposal version and
-  audience if a newer version becomes active; it never repeats the mutation or creates a new
-  idempotency key. A request that fails before persistence remains version-local and may be retried.
+  persisted action as **Awaiting confirmation** and offers one read-only **Refresh record** action.
+  Recovery follows the original proposal version and audience; a later proposal version is a
+  normal lifecycle transition, not source disagreement. The historical receipt reconciles only
+  against that version's memo, projection, replay, event, and retained-lineage identity. It never
+  repeats the mutation, substitutes the current version, or creates a new idempotency key.
+- An unconfirmed receipt fences another memo action for the same proposal version. If the proposal
+  advances, the earlier receipt remains visible and recoverable but does not disable the current
+  version's advisor reference, audience, rationale, or admitted action. A complete lineage record
+  that no longer contains the earlier memo is presented as retained evidence unavailable; an
+  impossible receipt version later than the source current version still fails closed.
 - Treats generated commentary as an optional working aid. It never upgrades the retained memo,
   advisor review, suitability evidence, client-release posture, or proposal lifecycle state.
 - Creates a next proposal version only from the current source proposal's retained simulation
@@ -166,7 +172,9 @@ and [Integrations](Integrations).
 | Memo not prepared | Gateway confirms that memo, projection, and replay are absent while complete lineage confirms no memo for the current proposal version | Enter the advisor or reviewer reference, then use **Prepare advisor memo** |
 | Partial supporting evidence | Available proposal evidence remains visible and the missing source family is named | Restore the missing evidence before a lifecycle action |
 | Action pending | The initiating action remains fenced across same-proposal version changes and conflicting controls are unavailable | Wait for persistence and coherent refresh |
-| Action confirmation failed | No success is shown; prior evidence remains under its original proposal version and duplicate narrative, memo, commentary, or package submission is fenced, including when a newer version becomes active | Use **Refresh record** to read and reconcile the original persisted action before taking another action; the mutation is not repeated |
+| Current-version action confirmation failed | No success is shown; the persisted receipt remains under the current proposal version and conflicting same-version memo actions are fenced | Use **Refresh record** to reconcile the original action; the mutation is not repeated |
+| Historical action awaiting confirmation | The earlier version and its recovery remain explicit while the current proposal workflow stays usable | Continue current-version work where its own source evidence admits it; recheck the earlier record before relying on that historical action |
+| Historical evidence unavailable | The persisted earlier action remains identified, but complete source lineage no longer supplies that version's retained memo evidence | Do not interpret it as confirmed or as source disagreement; use the support path for the named earlier version |
 | Restricted | Proposal review is withheld with no inferred approval posture | Return to the originating worklist and use the bank's access process |
 | Unavailable | Source proposal record is unavailable | Return to the originating worklist and retry after Gateway recovers |
 | Not found or invalid id | No proposal evidence is shown | Return to the originating worklist or create a new draft where appropriate |
@@ -204,7 +212,9 @@ Proposal Detail deliberately does not:
   fail-closed action posture. The memo proof distinguishes source-confirmed absence from permission,
   transport, contract, lineage, and contradictory-evidence failures. It retains one persisted receipt across a same-proposal
   version change, resets it only at proposal identity, and proves refresh success and failure without
-  a second mutation. Discussion-pack state must match the active reviewed narrative hash; repeat
+  a second same-version mutation. It also proves that an earlier receipt remains recoverable without
+  locking an advanced proposal version, that future-version evidence fails closed, and that a
+  missing historical lineage item has a distinct unavailable posture. Discussion-pack state must match the active reviewed narrative hash; repeat
   commentary succeeds only when the exact returned event appears in refreshed memo or replay evidence.
 - `tests/e2e/proposal-memo-posture.spec.ts` provides optimized-production browser proof for proposal
   detail, source-confirmed first memo preparation, explicit preparation failure, memo review,

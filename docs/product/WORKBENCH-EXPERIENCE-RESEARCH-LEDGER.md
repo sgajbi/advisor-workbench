@@ -6941,3 +6941,53 @@ component status semantics, and source-derived canonical evidence. The Risk guid
 repository context, and codebase review ledger change because product and operator truth changed.
 No Gateway calculation, Workbench CSS, dependency, authentication, entitlement, or runtime
 topology change is part of this slice.
+
+## 2026-08-28 — Historical proposal-memo receipt continuity (#889)
+
+### Business workflow question
+
+How should Proposal Detail preserve an already-persisted memo action when its source confirmation
+belongs to version 2 but the advisor has legitimately advanced the proposal to version 3?
+
+### Evidence consulted
+
+1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
+   describes proposal work as a guided identify, construct, deliver, and implement lifecycle that
+   must scale complex advisor workflows.
+2. [GOV.UK confirmation pages](https://design-system.service.gov.uk/patterns/confirmation-pages/)
+   treats a confirmation and reference as a durable transaction record and makes the next step
+   explicit.
+3. [WCAG 2.2 Status Messages](https://www.w3.org/TR/WCAG22/#status-messages) requires asynchronous
+   outcomes to be programmatically determinable without taking focus.
+4. The Gateway memo contract defines `current_version_no` as the latest immutable proposal version,
+   while memo, projection, replay, and lineage items retain their own requested version identities.
+
+### Adopted decisions
+
+1. Reconcile a historical receipt only from its exact proposal version, memo id/hash, projection,
+   replay, returned action event, and matching retained-lineage item.
+2. Treat a later proposal-wide current version as normal monotonic lifecycle progress. Treat a
+   receipt version later than the source current version as impossible and fail closed.
+3. Keep complete-but-missing historical lineage distinct from genuine cross-source disagreement.
+4. Retain pending receipts and confirmation failure reasons by version. Fence only same-version
+   memo work; an earlier receipt remains visible without blocking source-admitted current-version
+   work.
+5. Keep recovery and success announcements in the typed proposal-memo copy authority with status
+   semantics; never infer confirmation from a mutation response or toast.
+
+### Rejected decisions
+
+1. Relabelling the historical receipt as current or substituting version 3 evidence.
+2. Discarding the earlier persisted action when the component remounts.
+3. Requiring proposal-wide latest-version metadata to equal every nested historical record.
+4. Weakening memo hash, event, proposal, requested-version, or complete-lineage validation.
+5. Showing generic source-disagreement language for ordinary version progression.
+
+### Validation and publication decision
+
+The change is Workbench-only and does not alter Gateway, Advise, API, calculation, CSS, dependency,
+authentication, entitlement, or runtime topology. Failing-first tests reproduce v2 receipt/v3
+proposal progression, future-version rejection, and missing historical lineage; rendered tests prove
+the earlier recovery remains visible while current-version fields and actions are usable. Proposal
+Detail wiki truth, repository context, and the codebase review ledger change and require publication
+after merge.
