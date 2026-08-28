@@ -4,7 +4,7 @@ This directory separates current architecture authority from historical delivery
 
 ## Current Authority
 
-- [Product architecture blueprint](../documentation/product-architecture-blueprint.md)
+- [Architecture wiki](../../wiki/Architecture.md)
 - [UI and Gateway capability contract](workbench-ui-gateway-capability-contract.md)
 - [UI system usage guide](workbench-ui-system-usage-guide.md)
 - [Surface hierarchy system](workbench-surface-hierarchy-system.md)
@@ -18,6 +18,12 @@ This directory separates current architecture authority from historical delivery
 - [Portfolio record route-bundle governance](portfolio-record-route-bundle-governance.md)
 
 The machine-readable JSON inventories are executable policy inputs. Their schemas live beside them.
+
+## Target Architecture
+
+The [product architecture blueprint](../documentation/product-architecture-blueprint.md) is a
+proposed target-state model. It guides convergence but must not be cited as proof that a capability,
+route, boundary, or operating control is currently implemented.
 
 ## Review And Improvement Ledgers
 
@@ -34,4 +40,3 @@ state.
 validation evidence from the Risk workspace programme. File paths, selectors, and component names
 inside them describe the delivery slice at that time. Use current authority above for new design or
 refactoring decisions, and verify historical links against current source before reuse.
-

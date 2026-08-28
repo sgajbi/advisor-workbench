@@ -1,230 +1,112 @@
-# Workbench UI-to-Gateway Capability Contract
+# Workbench UI-To-Gateway Capability Contract
 
-## Purpose
+## Current Scope
 
-Portfolio and Performance pages now use explicit UI capability maps at the API/view-model
-boundary. The goal is to make feature supportability intentional instead of scattering `if data
-exists` checks across rendering components.
+This record defines how Workbench turns typed Gateway responses into truthful presentation states.
+It covers UI supportability and capability rendering; it does not transfer domain policy,
+calculation, entitlement, workflow, or production-identity authority into the browser.
 
-This contract does **not** move domain business logic into the UI. It only answers a narrower UI
-question:
+Current route and endpoint truth is maintained in [API Surface](../../wiki/API-Surface.md), current
+product posture in [Supported Features](../../wiki/Supported-Features.md), and source ownership in
+[Integrations](../../wiki/Integrations.md). This record owns the architectural rules below rather
+than duplicating those inventories.
 
-- is a feature supported by the current payload?
-- is it partially supported?
-- should it render an unavailable state?
-- should it remain hidden for the current mode?
+## Request And Authority Flow
 
-## Capability state vocabulary
+```text
+browser selection and business input
+  -> Workbench route/view model
+  -> /api/bff closed-header boundary
+  -> lotus-gateway typed product contract
+  -> owning service facts, calculations, policy, workflow, and evidence
+  -> Workbench supported/partial/unavailable/hidden presentation
+```
 
-Every workspace feature resolves to one of:
+The BFF removes browser-supplied authority and applies server-owned caller context before Gateway.
+Route-family adapters may narrow authority further. A capability response never creates identity,
+entitlement, approval, or execution authority by itself.
 
-- `supported`: render the normal feature
-- `partial`: render a partial-state explanation
-- `unavailable`: render a compact unavailable state
-- `hidden`: do not render the feature for the current mode/context
+## Capability Vocabulary
 
-The shared vocabulary lives in [`src/shell/workspace-capabilities.ts`](../../src/shell/workspace-capabilities.ts).
+The shared workspace vocabulary is defined in
+[`src/shell/workspace-capabilities.ts`](../../src/shell/workspace-capabilities.ts):
 
-## Portfolio feature dependencies
+| State | UI obligation |
+| --- | --- |
+| `supported` | Render the source-backed feature and its available actions |
+| `partial` | Keep usable facts visible and name the missing or degraded source dependency |
+| `unavailable` | Render a business-safe unavailable state with a recovery or support path |
+| `hidden` | Omit the feature only when the current mode or source contract says it is not applicable |
 
-`PortfolioWorkspaceCapabilities` is built in
-[`src/apps/portfolio/capabilities.ts`](../../src/apps/portfolio/capabilities.ts).
+Domain-specific view models may use richer state names such as blocked, unsupported, empty,
+access-restricted, undefined-limit, or measure-unavailable. They must preserve the source meaning
+and must not collapse distinct failure or policy states into reassuring copy.
 
-Feature dependencies:
+## Ownership Rules
 
-- `summaryKpis`
-  - portfolio workspace summary payload
-- `readinessIndicators`
-  - source `readiness_indicators` when available
-  - otherwise UI falls back to source-backed summary evidence already present in the workspace
-- `allocation`
-  - `allocation_views`
-  - partial if holdings exist but allocation views are missing
-- `topHoldings`
-  - `top_positions`
-  - partial if holdings exist but ranked output is missing
-- `income`
-  - `income_summary`
-  - partial if transactions exist but no income aggregation is available
-- `activity`
-  - `activity_summary`
-  - partial if transactions exist but no activity aggregation is available
-- `projectedCashflow`
-  - `cashflow_outlook`
-  - hidden outside detailed mode
-- `holdingsDrilldown`
-  - `positions`
-  - hidden outside detailed mode
-- `transactionsDrilldown`
-  - `recent_transactions`
-  - hidden outside detailed mode
-- `performanceSnapshot`
-  - portfolio `performance` snapshot payload
+Gateway and source services own:
 
-## Performance feature dependencies
+- domain facts, calculations, thresholds, policy, and methodology;
+- source readiness, supportability, lineage, freshness, and coverage;
+- persisted workflow state, decisions, evidence, reports, and generated-material posture;
+- capability and entitlement facts exposed by the supported contract.
 
-`PerformanceWorkspaceCapabilities` is built in
-[`src/apps/performance/capabilities.ts`](../../src/apps/performance/capabilities.ts).
+Workbench owns:
 
-Feature dependencies:
+- route and selected-context preservation;
+- typed transport through the BFF;
+- view-model mapping from source facts to business-first information hierarchy;
+- consistent loading, empty, partial, unavailable, blocked, unsupported, stale, and error states;
+- accessible presentation, progressive detail, and supported action affordances.
 
-- `summaryKpis`
-  - performance summary payload
-- `returnPath`
-  - chart observations in the selected series
-- `benchmarkComparison`
-  - benchmark context plus benchmark-relative returns
-- `multiHorizonReturns`
-  - horizon comparison contract
-  - may remain partial when benchmark-relative comparison is unavailable
-- `contributionRanking`
-  - contribution payload
-  - position ranking when available
-- `attributionDetail`
-  - attribution payload
-- `contributionDetail`
-  - contribution payload
-- `evidence`
-  - future execution / lineage / calculation evidence surfaces
-  - currently unavailable by contract
+Workbench must not infer a supported state from data presence alone, invent fallback calculations or
+thresholds, silently replace a missing source response, or show action success before persistence
+succeeds.
 
-## Current live Gateway-backed usage
+## Current Implementation Pattern
 
-The current `lotus-workbench` UI consumes these Performance contracts directly:
+- Shell-level workspace capability is centralised in `src/shell/workspace-capabilities.ts`.
+- Performance capability mapping is owned by `src/apps/performance/capabilities.ts` and its typed
+  view models.
+- Portfolio supportability is composed from the current workspace and domain view models; the
+  retired `src/apps/portfolio/capabilities.ts` module is not a current authority.
+- Manage, advisory, proposal, reporting, and data-product surfaces use feature-owned typed API and
+  view-model modules rather than one browser-wide capability map.
+- Shared unavailable and supportability presentation uses design-system primitives rather than
+  screen-local fallback markup where applicable.
 
-- `GET /workbench/{portfolio_id}/performance/summary`
-- `GET /workbench/{portfolio_id}/performance/details`
-- `GET /workbench/{portfolio_id}/performance/horizon-comparison`
-- `GET /workbench/{portfolio_id}/performance/attribution-trend`
+Performance Evidence is an implemented runtime-gated surface. It renders source calculation,
+lineage, coverage, and supporting-record posture when Gateway supplies it, and fails visibly when
+that evidence is unavailable. It is not a future placeholder and does not infer missing evidence.
 
-The UI no longer consumes a monolithic `GET /workbench/{portfolio_id}/performance` helper path.
-Local repo scanning found no remaining monolithic consumer outside `lotus-gateway` router/service
-definitions and Gateway unit tests. Any retirement decision for that endpoint now depends on
-deployment-edge or external-consumer verification rather than any in-repo Workbench dependency.
+## Failure And Compatibility Rules
 
-The current Portfolio UI consumes a decomposed workspace contract shape:
+1. Additive response fields may be absent; absence must map to a truthful unavailable/not-supplied
+   posture unless the contract defines another meaning.
+2. A partial source response must retain usable facts and expose the specific gap.
+3. Network, parsing, authorization, and source failures must remain distinguishable where the user
+   or support action differs.
+4. Mutations show success only after the owning service confirms persistence. If the subsequent
+   refresh fails, show persisted-but-refresh-failed rather than fabricated freshness.
+5. Capability-disabled routes may be directly validated, but ordinary shell promotion remains
+   closed until the governing capability changes.
+6. Compatibility routes and aliases reuse canonical view and guide ownership; they do not create a
+   second business contract.
 
-- `GET /portfolio/portfolios/{portfolio_id}/workspace`
-- `GET /portfolio/portfolios/{portfolio_id}/allocations`
-- `GET /portfolio/portfolios/{portfolio_id}/positions`
-- `GET /portfolio/portfolios/{portfolio_id}/income-summary`
-- `GET /portfolio/portfolios/{portfolio_id}/activity-summary`
-- `GET /portfolio/portfolios/{portfolio_id}/liquidity`
-- `GET /portfolio/portfolios/{portfolio_id}/transactions`
-- `GET /portfolio/portfolios/{portfolio_id}/readiness`
-- `GET /portfolio/portfolios/{portfolio_id}/insights`
-- `GET /portfolio/portfolios/{portfolio_id}/workflow`
-- `GET /portfolio/portfolios/{portfolio_id}/projected-cashflow`
+## Evidence
 
-## High-value upstream-backed attributes now surfaced
+- `npm run quality:bff-header-boundary` proves the shared BFF ingress pattern is present.
+- `npm run quality:screen-docs` reconciles routes, modes, source owners, evidence, and guides.
+- Unit and integration tests prove feature-specific mapping and failure behavior.
+- Fixture browser families prove deterministic Workbench states against governed fixtures.
+- `npm run live:validate` is required for an integrated source-backed capability claim.
 
-The UI now explicitly exposes these contract fields because they improve front-office trust without
-expanding the API surface:
+Historical latency samples or delivery-slice measurements are not a current performance baseline.
+Use current run artefacts and source timings when making a performance claim.
 
-- Performance benchmark provenance
-  - `net_performance.benchmark_return_source`
-  - `gross_performance.benchmark_return_source`
-  - shown in the return-path benchmark context
-- Performance benchmark option context
-  - `benchmark_options`
-  - used for benchmark label resolution and benchmark selection controls
-- Performance money-weighted return
-  - `money_weighted_return`
-  - shown only when the contract actually provides it
-  - supportability fields `status`, `reason_codes`, `warnings`, `fallback_from`,
-    `fallback_reason`, `is_approximation`, and `holding_period_return_pct` are exposed through
-    the Performance return-path MWR drill-down when Gateway publishes a non-ordinary MWR posture
-    such as XIRR fallback, no-root, multiple-root, or approximation behavior
-- Portfolio reporting freshness
-  - `readiness.reporting.generated_at_utc`
-  - `readiness.reporting.row_count`
-  - shown in the summary-first readiness signal
-- Portfolio operational trust signals
-  - `operations.controls_blocking`
-  - `operations.publish_allowed`
-  - `operations.latest_booked_transaction_date`
-  - used in readiness support messaging with explicit precedence
+## Change Rule
 
-## Keep-or-retire decisions still open
-
-These items still need an explicit governance decision rather than silent drift:
-
-- Gateway monolithic Performance endpoint
-  - local repo evidence shows no current in-repo consumer outside Gateway internals/tests
-  - keep only if a deployed or external consumer still depends on it
-  - otherwise retire after external-consumer confirmation
-- Performance Evidence contract
-  - currently unavailable by design
-  - add only when Gateway can expose real lineage/evidence data
-- Portfolio historical snapshots and reporting-currency restatement
-  - UI remains explicit that these are pending source support
-  - do not fake support from client-side transforms
-
-## Measured Performance latency baseline
-
-Local browser-side timing against the active BFF routes now provides a concrete baseline for the
-Performance hot path. Three-run averages collected on 2026-03-30 were:
-
-- `summary`
-  - total `app`: `3896.95ms`
-  - dominant phase: `perf-summary=2566.71ms`
-- `details`
-  - total `app`: `3547.88ms`
-  - dominant phase: `perf-summary=2516.66ms`
-- `horizon-comparison`
-  - total `app`: `5064.89ms`
-  - dominant phase: `perf-horizon=3437.31ms`
-- `attribution-trend`
-  - total `app`: `4123.56ms`
-  - dominant phase: `perf-attribution=3147.84ms`
-
-Interpretation:
-
-- Gateway overhead is visible but no longer dominant after the recent benchmark-catalog and
-  overview-fanout reductions.
-- The next material latency wins should come from upstream analytics workloads, especially the
-  summary, horizon-comparison, and attribution computations.
-- Future optimization work should be measured against these phase timings rather than inferred from
-  code inspection alone.
-
-## Ownership boundaries
-
-Backend ownership:
-
-- `lotus-core` owns domain truth and calculations
-- `lotus-performance` owns performance analytics computation and analytical contracts
-- `lotus-gateway` owns UI-appropriate contract shaping and aggregation
-
-UI ownership:
-
-- consume payloads
-- build capability maps from current contract supportability
-- render supported / partial / unavailable / hidden states consistently
-
-UI does **not** own:
-
-- domain readiness rules
-- portfolio or performance calculation logic
-- benchmark methodology
-- business reconciliation logic
-
-## Why this matters
-
-Without an explicit capability contract, the UI drifts toward:
-
-- duplicated support checks
-- inconsistent empty and partial states
-- hidden coupling between component trees and raw payload shape
-
-The capability map keeps page orchestrators thinner and makes missing Gateway support visible as an
-explicit follow-up item rather than an accidental UI behavior.
-
-## Known follow-up gaps
-
-Current gaps are intentionally represented as unavailable or partial capability states:
-
-- portfolio performance snapshot remains unavailable when the portfolio workspace contract does not
-  include performance data
-- performance evidence / lineage surfaces are not yet exposed by Gateway
-- some portfolio readiness indicators still degrade to UI supportability when source-backed
-  readiness indicators are absent
+When a source contract or capability changes, update the owning typed API/view model, meaningful
+failure-path tests, [Supported Features](../../wiki/Supported-Features.md), the relevant screen
+guide, and API/integration documentation in the same issue-backed slice. Do not strengthen product
+claims until exact-main and any required canonical evidence exist.
