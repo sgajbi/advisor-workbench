@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import postcss from "postcss";
@@ -271,6 +271,117 @@ function assertForbiddenSelectorPrefixes(repoRoot, moduleBudgets, prefixes = [])
   }
 }
 
+function assertCssModuleEscapeBudgetShape(baseline) {
+  const { root, defaultMaxGlobalEscapes, exceptions } = baseline;
+
+  if (typeof root !== "string" || root.length === 0) {
+    throw new Error("CSS module escape governance must include a non-empty root path.");
+  }
+
+  if (!Number.isInteger(defaultMaxGlobalEscapes) || defaultMaxGlobalEscapes < 0) {
+    throw new Error(
+      "CSS module escape governance must include a finite non-negative integer defaultMaxGlobalEscapes.",
+    );
+  }
+
+  if (!Array.isArray(exceptions)) {
+    throw new Error("CSS module escape governance exceptions must be an array.");
+  }
+
+  const seenPaths = new Set();
+  for (const exception of exceptions) {
+    if (typeof exception.path !== "string" || !exception.path.endsWith(".module.css")) {
+      throw new Error(
+        "Each CSS module escape exception must include a .module.css path.",
+      );
+    }
+    if (!Number.isInteger(exception.maxGlobalEscapes) || exception.maxGlobalEscapes < 0) {
+      throw new Error(
+        `CSS module escape exception for ${exception.path} must include a finite non-negative integer maxGlobalEscapes.`,
+      );
+    }
+    if (seenPaths.has(exception.path)) {
+      throw new Error(`CSS module escape baseline includes duplicate path ${exception.path}.`);
+    }
+    seenPaths.add(exception.path);
+  }
+}
+
+export function countCssModuleGlobalEscapes(text, cssPath = "CSS module") {
+  const root = parseCssRoot(text, cssPath);
+  let count = 0;
+
+  root.walkRules((rule) => {
+    count += rule.selector.match(/:global\s*\(/g)?.length ?? 0;
+  });
+
+  return count;
+}
+
+function findCssModulePaths(directoryPath) {
+  const modulePaths = [];
+
+  for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+    const entryPath = join(directoryPath, entry.name);
+    if (entry.isDirectory()) {
+      modulePaths.push(...findCssModulePaths(entryPath));
+    } else if (entry.isFile() && entry.name.endsWith(".module.css")) {
+      modulePaths.push(entryPath);
+    }
+  }
+
+  return modulePaths;
+}
+
+function assertCssModuleEscapeBudgets(repoRoot, baseline) {
+  assertCssModuleEscapeBudgetShape(baseline);
+
+  const rootPath = resolve(repoRoot, baseline.root);
+  const modulePaths = findCssModulePaths(rootPath)
+    .map((modulePath) => repoRelativePath(repoRoot, modulePath))
+    .sort();
+  const modulePathSet = new Set(modulePaths);
+  const exceptionsByPath = new Map(
+    baseline.exceptions.map((exception) => [exception.path, exception.maxGlobalEscapes]),
+  );
+  const orphanExceptions = [...exceptionsByPath.keys()].filter(
+    (exceptionPath) => !modulePathSet.has(exceptionPath),
+  );
+
+  if (orphanExceptions.length > 0) {
+    throw new Error(
+      `CSS module escape baseline references missing modules: ${orphanExceptions.join(", ")}.`,
+    );
+  }
+
+  const report = modulePaths.map((modulePath) => {
+    const actualGlobalEscapes = countCssModuleGlobalEscapes(
+      fileText(repoRoot, modulePath),
+      modulePath,
+    );
+    const maxGlobalEscapes =
+      exceptionsByPath.get(modulePath) ?? baseline.defaultMaxGlobalEscapes;
+
+    if (actualGlobalEscapes > maxGlobalEscapes) {
+      throw new Error(
+        `${modulePath} has ${actualGlobalEscapes} :global(...) escapes; budget is ${maxGlobalEscapes}. ` +
+          "Scope selectors beside their component or add a reviewed exact baseline exception.",
+      );
+    }
+
+    if (actualGlobalEscapes < maxGlobalEscapes) {
+      throw new Error(
+        `${modulePath} has ${actualGlobalEscapes} :global(...) escapes; baseline still allows ${maxGlobalEscapes}. ` +
+          "Lower scripts/quality/css-global-governance-baseline.json in the same migration so the ratchet leaves no escape headroom.",
+      );
+    }
+
+    return { path: modulePath, globalEscapes: actualGlobalEscapes };
+  });
+
+  return report;
+}
+
 function assertLocalImportBudgetCoverage(entrypointPath, localImportPaths, moduleBudgets) {
   for (const moduleBudget of moduleBudgets) {
     assertBudgetShape("module", moduleBudget);
@@ -361,9 +472,20 @@ export function validateCssGlobalGovernance({
     effectiveBaseline.modules,
     effectiveBaseline.forbiddenSelectorPrefixes,
   );
+
+  return {
+    cssModuleEscapes: assertCssModuleEscapeBudgets(
+      effectiveRepoRoot,
+      effectiveBaseline.cssModuleEscapes,
+    ),
+  };
 }
 
 if (isMainModule()) {
-  validateCssGlobalGovernance();
+  const { cssModuleEscapes } = validateCssGlobalGovernance();
+  console.log("CSS module escape budgets (path | :global escapes):");
+  for (const moduleReport of cssModuleEscapes) {
+    console.log(`${moduleReport.path} | ${moduleReport.globalEscapes}`);
+  }
   console.log("CSS global governance gate passed.");
 }

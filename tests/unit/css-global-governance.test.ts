@@ -13,6 +13,14 @@ interface CssBudget {
 
 interface CssBaseline {
   forbiddenSelectorPrefixes?: string[];
+  cssModuleEscapes: {
+    root: string;
+    defaultMaxGlobalEscapes: number;
+    exceptions: Array<{
+      path: string;
+      maxGlobalEscapes: number;
+    }>;
+  };
   entrypoint: CssBudget & {
     imports: string[];
   };
@@ -62,6 +70,11 @@ function createFixture() {
   const baseBudget = writeFixtureFile(repoRoot, "src/styles/global/base.css", baseText);
 
   const baseline: CssBaseline = {
+    cssModuleEscapes: {
+      root: "src",
+      defaultMaxGlobalEscapes: 0,
+      exceptions: [],
+    },
     entrypoint: {
       ...entrypointBudget,
       imports: [
@@ -847,6 +860,100 @@ describe("CSS global governance gate", () => {
       expect(() =>
         validateCssGlobalGovernance({ repoRoot, baseline: malformedBaseline }),
       ).toThrow(/array of non-empty strings/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a new global escape in an otherwise scoped CSS module", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        "src/features/example/example.module.css",
+        ".root :global(.unsafe) {\n  color: red;\n}\n",
+      );
+
+      expect(() => validateCssGlobalGovernance({ repoRoot, baseline })).toThrow(
+        /has 1 :global\(\.\.\.\) escapes; budget is 0/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts an exact reviewed CSS module escape exception", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const modulePath = "src/features/example/example.module.css";
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        modulePath,
+        ".root :global(.interop) {\n  color: inherit;\n}\n",
+      );
+      const baselineWithException: CssBaseline = {
+        ...baseline,
+        cssModuleEscapes: {
+          ...baseline.cssModuleEscapes,
+          exceptions: [{ path: modulePath, maxGlobalEscapes: 1 }],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: baselineWithException }),
+      ).not.toThrow();
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects stale CSS module escape headroom after selectors are scoped", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const modulePath = "src/features/example/example.module.css";
+
+    try {
+      writeFixtureFile(repoRoot, modulePath, ".root {\n  color: inherit;\n}\n");
+      const staleBaseline: CssBaseline = {
+        ...baseline,
+        cssModuleEscapes: {
+          ...baseline.cssModuleEscapes,
+          exceptions: [{ path: modulePath, maxGlobalEscapes: 1 }],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: staleBaseline }),
+      ).toThrow(/baseline still allows 1/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects CSS module escape exceptions for missing modules", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const baselineWithOrphanException: CssBaseline = {
+      ...baseline,
+      cssModuleEscapes: {
+        ...baseline.cssModuleEscapes,
+        exceptions: [
+          {
+            path: "src/features/retired/retired.module.css",
+            maxGlobalEscapes: 1,
+          },
+        ],
+      },
+    };
+
+    try {
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: baselineWithOrphanException }),
+      ).toThrow(/references missing modules/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }
