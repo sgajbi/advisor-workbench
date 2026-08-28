@@ -865,7 +865,7 @@ export type WorkbenchMandateComparison = {
     source_reason_code?: string | null;
   }>;
   review_policy?: {
-    review_frequency: string;
+    review_frequency?: string | null;
     last_review_date?: string | null;
     next_review_due_date?: string | null;
     state: "due" | "overdue" | "scheduled" | "not_defined";

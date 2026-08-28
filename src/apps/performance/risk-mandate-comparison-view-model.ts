@@ -3,6 +3,11 @@ import type {
   WorkbenchMandateConstraintState,
 } from "@/features/workbench/types";
 import {
+  RISK_MANDATE_COMPARISON_COPY,
+  riskMandateContextNotice,
+  type RiskMandateContextPosture,
+} from "@/copy/risk-mandate-comparison-copy";
+import {
   formatBusinessDateValue,
   formatPercent,
   formatTimestampValue,
@@ -48,7 +53,7 @@ export type RiskMandateComparisonSourceViewModel = {
   constraints: RiskMandateConstraintViewModel[];
   reviewPolicy: {
     frequency: string;
-    state: "due" | "overdue" | "scheduled" | "not_defined";
+    state: "due" | "overdue" | "scheduled" | "not_defined" | "unavailable";
     stateLabel: string;
     tone: RiskMandateComparisonTone;
     lastReviewDate: string;
@@ -64,11 +69,16 @@ export type RiskMandateComparisonSourceViewModel = {
   }>;
 };
 
+type RiskMandateReviewPolicyViewModel = NonNullable<
+  RiskMandateComparisonSourceViewModel["reviewPolicy"]
+>;
+
 export type RiskMandateComparisonViewModel = {
   availability: "not_supplied" | "partially_supplied" | "supplied";
   availabilityLabel: string;
   availabilityTone: RiskMandateComparisonTone;
   summary: string;
+  contextPosture: RiskMandateContextPosture | null;
   contextNotice: string | null;
   sources: RiskMandateComparisonSourceViewModel[];
 };
@@ -90,6 +100,7 @@ export function buildRiskMandateComparisonViewModel({
       availabilityTone: "default",
       summary:
         "Mandate comparison is not available for this Risk review. Confirm the approved mandate before deciding whether a limit applies; no breach or all-clear is shown.",
+      contextPosture: null,
       contextNotice: null,
       sources: [],
     };
@@ -108,6 +119,11 @@ export function buildRiskMandateComparisonViewModel({
       : mapMissingSource("concentration", "Concentration constraints"),
   ];
   const partiallySupplied = suppliedSourceCount === 1;
+  const contextPosture = compareMandateContexts(
+    [portfolioRisk, concentrationRisk].filter(
+      (comparison): comparison is WorkbenchMandateComparison => Boolean(comparison),
+    ),
+  );
 
   return {
     availability: partiallySupplied ? "partially_supplied" : "supplied",
@@ -118,8 +134,9 @@ export function buildRiskMandateComparisonViewModel({
     summary: partiallySupplied
       ? "Mandate comparison is available for only one Risk view. Review the missing source family before treating the evidence as complete."
       : "Compare each measure with its approved mandate limit. States, limits, headroom, review timing, and dates are shown exactly as received.",
-    contextNotice: contextsConflict(sources)
-      ? "Gateway returned different mandate contexts across portfolio risk and concentration. Review the source evidence before use."
+    contextPosture,
+    contextNotice: contextPosture
+      ? riskMandateContextNotice(contextPosture)
       : null,
     sources,
   };
@@ -164,26 +181,7 @@ function mapSource(
         (left, right) =>
           constraintPriority(left.state) - constraintPriority(right.state),
       ),
-    reviewPolicy: comparison.review_policy
-      ? {
-          frequency: formatSourceCodeLabel(
-            comparison.review_policy.review_frequency,
-          ),
-          state: comparison.review_policy.state,
-          stateLabel: reviewPolicyLabel(comparison.review_policy.state),
-          tone: reviewPolicyTone(comparison.review_policy.state),
-          lastReviewDate: formatBusinessDateValue(
-            comparison.review_policy.last_review_date,
-            {
-              nullDisplay: "Not reported",
-            },
-          ),
-          nextReviewDueDate: formatBusinessDateValue(
-            comparison.review_policy.next_review_due_date,
-            { nullDisplay: "Not reported" },
-          ),
-        }
-      : null,
+    reviewPolicy: mapReviewPolicy(comparison.review_policy),
     lineage: comparison.source_lineage.map((lineage, index) => ({
       key: `${lineage.product_name}:${lineage.product_version}:${lineage.source_record_id ?? index}`,
       product: `${lineage.product_name} ${lineage.product_version}`,
@@ -338,7 +336,7 @@ function constraintStateLabel(
     case "measure_unavailable":
       return "Measure unavailable";
     default:
-      return "Evidence unavailable";
+      return RISK_MANDATE_COMPARISON_COPY.constraintEvidenceUnavailable;
   }
 }
 
@@ -348,7 +346,11 @@ function constraintStateTone(
   if (state === "breach") {
     return "danger";
   }
-  if (state === "not_defined" || state === "measure_unavailable") {
+  if (
+    state === "not_defined" ||
+    state === "measure_unavailable" ||
+    state === "unavailable"
+  ) {
     return "warn";
   }
   return "default";
@@ -364,6 +366,35 @@ function constraintPriority(
     unavailable: 3,
     within: 4,
   }[state];
+}
+
+function mapReviewPolicy(
+  reviewPolicy: WorkbenchMandateComparison["review_policy"],
+): RiskMandateReviewPolicyViewModel | null {
+  if (!reviewPolicy) {
+    return null;
+  }
+
+  const state = isReviewPolicyState(reviewPolicy.state)
+    ? reviewPolicy.state
+    : "unavailable";
+  const frequency = nonBlank(reviewPolicy.review_frequency);
+
+  return {
+    frequency: frequency
+      ? formatSourceCodeLabel(frequency)
+      : RISK_MANDATE_COMPARISON_COPY.notReported,
+    state,
+    stateLabel: reviewPolicyLabel(state),
+    tone: reviewPolicyTone(state),
+    lastReviewDate: formatBusinessDateValue(reviewPolicy.last_review_date, {
+      nullDisplay: RISK_MANDATE_COMPARISON_COPY.notReported,
+    }),
+    nextReviewDueDate: formatBusinessDateValue(
+      reviewPolicy.next_review_due_date,
+      { nullDisplay: RISK_MANDATE_COMPARISON_COPY.notReported },
+    ),
+  };
 }
 
 function supportabilityLabel(
@@ -407,46 +438,76 @@ function dateAlignmentTone(
 }
 
 function reviewPolicyLabel(
-  state: NonNullable<
-    RiskMandateComparisonSourceViewModel["reviewPolicy"]
-  >["state"],
+  state: RiskMandateReviewPolicyViewModel["state"],
 ): string {
   return {
     due: "Review due",
     overdue: "Review overdue",
     scheduled: "Review scheduled",
     not_defined: "Review cadence not defined",
+    unavailable: RISK_MANDATE_COMPARISON_COPY.reviewStateUnavailable,
   }[state];
 }
 
 function reviewPolicyTone(
-  state: NonNullable<
-    RiskMandateComparisonSourceViewModel["reviewPolicy"]
-  >["state"],
+  state: RiskMandateReviewPolicyViewModel["state"],
 ): RiskMandateComparisonTone {
   return state === "overdue"
     ? "danger"
-    : state === "due" || state === "not_defined"
+    : state === "due" || state === "not_defined" || state === "unavailable"
       ? "warn"
       : "default";
 }
 
-function contextsConflict(
-  sources: RiskMandateComparisonSourceViewModel[],
-): boolean {
-  const suppliedSources = sources.filter(
-    (source) => source.availability === "supplied",
-  );
-  if (suppliedSources.length < 2) {
-    return false;
+const MANDATE_CONTEXT_FIELDS = [
+  "mandate_id",
+  "mandate_version",
+  "risk_profile",
+  "comparison_as_of_date",
+  "mandate_as_of_date",
+  "mandate_health_as_of_date",
+] as const satisfies ReadonlyArray<keyof WorkbenchMandateComparison>;
+
+function compareMandateContexts(
+  comparisons: WorkbenchMandateComparison[],
+): RiskMandateContextPosture | null {
+  if (comparisons.length < 2) {
+    return null;
   }
-  const [first, ...rest] = suppliedSources;
-  return rest.some(
-    (source) =>
-      source.mandateReference !== first.mandateReference ||
-      source.mandateVersion !== first.mandateVersion ||
-      source.comparisonAsOf !== first.comparisonAsOf,
-  );
+
+  const [first, ...rest] = comparisons;
+  let insufficientEvidence = false;
+
+  for (const comparison of rest) {
+    for (const field of MANDATE_CONTEXT_FIELDS) {
+      const firstValue = contextValue(first[field]);
+      const comparisonValue = contextValue(comparison[field]);
+
+      if (firstValue === null && comparisonValue === null) {
+        insufficientEvidence = true;
+        continue;
+      }
+      if (
+        firstValue === null ||
+        comparisonValue === null ||
+        firstValue !== comparisonValue
+      ) {
+        return "conflict";
+      }
+    }
+  }
+
+  return insufficientEvidence ? "insufficient_evidence" : "aligned";
+}
+
+function contextValue(value: unknown): string | null {
+  return typeof value === "string" ? nonBlank(value) : null;
+}
+
+function isReviewPolicyState(
+  value: string,
+): value is "due" | "overdue" | "scheduled" | "not_defined" {
+  return ["due", "overdue", "scheduled", "not_defined"].includes(value);
 }
 
 function finite(value: number | null | undefined): number | null {
