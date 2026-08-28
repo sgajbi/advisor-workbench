@@ -723,10 +723,14 @@
         "src/features/workbench/manage-workspace-navigation.ts",
         "src/features/workbench/manage-workspace.tsx",
         "src/features/workbench/components/construction-alternatives-panel.tsx",
+        "src/features/workbench/construction-alternatives-panel-helpers.ts",
         "src/features/workbench/construction-alternatives-view-model.ts",
         "src/features/workbench/construction-api.ts",
         "tests/unit/construction-alternatives-panel.test.tsx",
-        "tests/unit/construction-alternatives-view-model.test.ts"
+        "tests/unit/construction-alternatives-panel-helpers.test.ts",
+        "tests/unit/construction-alternatives-view-model.test.ts",
+        "tests/unit/use-construction-alternatives-actions.test.ts",
+        "tests/unit/workbench-api.test.ts"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",

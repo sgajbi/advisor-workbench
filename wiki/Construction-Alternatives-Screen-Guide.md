@@ -10,7 +10,7 @@ for one selected portfolio before recording a preferred path for further review.
 | Route | `/workbench/{portfolioId}?mode=construction` |
 | Navigation | **Mandate management**, then **Construction** |
 | Authority | `lotus-manage:RFC-0039` through Gateway |
-| Current limitation | Browser-owned request defaults and an idle success badge are tracked in #910 |
+| Request posture | Workbench sends source identity and context; Manage owns methods and construction policy |
 
 ## Business Purpose
 
@@ -34,9 +34,11 @@ which alternative merits source-owned selection; it does not decide suitability 
 ## Implemented Capabilities
 
 - Requests an alternative set through the Workbench BFF and Gateway.
+- Leaves method choice, cash constraints, minimum trade policy, and valuation policy to Manage.
 - Compares alternative measures, constraints, source readiness, and external-product evidence.
 - Records a source-owned alternative selection and refreshes the returned set.
-- Distinguishes idle, ready, partial, blocked, unsupported, and unavailable posture.
+- Distinguishes not generated, generating, evidence available, partial evidence, blocked,
+  unsupported, unavailable, and transport-failure posture.
 
 ## Decisions And Actions
 
@@ -49,25 +51,29 @@ which alternative merits source-owned selection; it does not decide suitability 
 ## Information And Source Authority
 
 Manage owns alternatives, measures, constraints, readiness, selection, and acknowledgement
-supportability. Workbench presents the typed response. Current request defaults for methods, cash
-band, and minimum trade value are browser-supplied and must not be interpreted as mandate policy;
-their removal or source governance is tracked in #910.
+supportability. Workbench presents the typed response. Default generation sends the selected
+portfolio, mandate, model, booking-centre, as-of, tenant, and requested source families. It does not
+send a method list, cash band, minimum trade value, valuation mode, or other browser-owned policy.
+Manage therefore remains the authority for governed construction methods and constraints.
 
 ## Screen States And Recovery
 
 | State | Recovery |
 | --- | --- |
-| Idle | Review the request context before generation; no source alternative exists yet |
+| Not generated | Review the request context before generation; no source alternative exists yet |
+| Generating | Keep the action disabled until Gateway returns; no success confirmation is shown |
 | Ready | Compare and select a supported alternative |
-| Partial or blocked | Resolve the named source or constraint gap |
+| Partial evidence | Compare available paths and resolve the named evidence gap before approval |
+| Blocked | Resolve the named source or constraint gap; selection remains unavailable |
 | Unsupported | Review the source limitation; selection remains unavailable |
-| Unavailable or error | Retry through Gateway after the owning service recovers |
+| Unavailable or request failed | Retry through Gateway after the owning service recovers |
 
 ## Workbench Boundaries
 
 Workbench does not calculate alternatives, mandate limits, hedge eligibility, suitability, orders,
-fills, settlement, or execution evidence. The current static **Evidence Available** idle badge is a
-known presentation defect, not proof of source evidence.
+fills, settlement, or execution evidence. An **Evidence available** badge appears only after a
+source response contains comparable alternatives. A failed request does not create or preserve a
+new success confirmation.
 
 ## Adjacent Handoffs
 
@@ -78,14 +84,18 @@ known presentation defect, not proof of source evidence.
 ## Evidence And Validation
 
 - `tests/unit/construction-alternatives-panel.test.tsx`
+- `tests/unit/construction-alternatives-panel-helpers.test.ts`
 - `tests/unit/construction-alternatives-view-model.test.ts`
+- `tests/unit/use-construction-alternatives-actions.test.ts`
+- `tests/unit/workbench-api.test.ts`
 - `tests/live/construction-alternatives.live.spec.ts`
 - `npm run live:validate:construction`
 
 ## First Support Step
 
 Confirm the selected portfolio, source readiness, and returned alternative-set status. Do not treat
-the idle badge or browser request defaults as source evidence.
+an in-progress or failed request as source evidence. Inspect the source reason codes when evidence
+is partial, blocked, unsupported, or unavailable.
 
 ## Related Documentation
 
