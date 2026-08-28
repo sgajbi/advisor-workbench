@@ -49,7 +49,10 @@ export function proposalMemoRefreshFailureCopy({
   historicalEvidenceUnavailable: boolean;
   versionNo: number;
 }): string {
-  if (currentVersionNo === null || versionNo >= currentVersionNo) {
+  if (currentVersionNo !== null && versionNo > currentVersionNo) {
+    return `${ACTION_SUBJECT[action]} is recorded for proposal version ${versionNo}, but the active proposal record reports version ${currentVersionNo}. Refresh the proposal record before taking another action.`;
+  }
+  if (currentVersionNo === null || versionNo === currentVersionNo) {
     return CURRENT_VERSION_REFRESH_FAILURE_COPY[action];
   }
   const sourcePosture = historicalEvidenceUnavailable

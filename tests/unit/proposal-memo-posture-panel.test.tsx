@@ -878,25 +878,30 @@ describe("ProposalMemoPosturePanel", () => {
       "memo_3",
       "sha256:memo-003",
     );
+    const regressedState = evidenceState({}, VERSION_NO - 1);
+    const stateForVersion = (versionNo: number) =>
+      versionNo === VERSION_NO
+        ? originalState
+        : versionNo < VERSION_NO
+          ? regressedState
+          : currentState;
     let lineageState = originalState;
     vi.mocked(getProposalMemo).mockImplementation(async (_proposalId, versionNo) =>
-      versionNo === VERSION_NO ? originalState.memo : currentState.memo,
+      stateForVersion(versionNo).memo,
     );
     vi.mocked(getProposalMemoProjection).mockImplementation(
       async (_proposalId, versionNo) =>
-        versionNo === VERSION_NO
-          ? originalState.projection
-          : currentState.projection,
+        stateForVersion(versionNo).projection,
     );
     vi.mocked(getProposalMemoLineage).mockImplementation(
       async () => lineageState.lineage,
     );
     vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
       async (_proposalId, versionNo) =>
-        versionNo === VERSION_NO ? originalState.replay : currentState.replay,
+        stateForVersion(versionNo).replay,
     );
     vi.mocked(reviewProposalMemo).mockImplementation(async (_proposalId, versionNo) => {
-      const state = versionNo === VERSION_NO ? originalState : currentState;
+      const state = stateForVersion(versionNo);
       if (versionNo !== VERSION_NO) {
         currentState = withMemoIdentity(
           evidenceState({ reviewed: true }, VERSION_NO + 1),
@@ -934,6 +939,23 @@ describe("ProposalMemoPosturePanel", () => {
       screen.getByRole("button", { name: "Record advisor review" }),
     );
     await screen.findByRole("button", { name: "Refresh record" });
+
+    lineageState = regressedState;
+    rerenderPanel(VERSION_NO - 1);
+
+    expect(
+      await screen.findByText(
+        "Advisor review is recorded for proposal version 2, but the active proposal record reports version 1. Refresh the proposal record before taking another action.",
+      ),
+    ).toBeInTheDocument();
+    await openMemoDetails();
+    expect(
+      screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeDisabled();
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
 
     originalState = withProposalCurrentVersion(originalState, VERSION_NO + 1);
     lineageState = {

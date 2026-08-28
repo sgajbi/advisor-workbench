@@ -320,8 +320,8 @@ function ProposalMemoPosturePanelSession({
   const sourceUnavailable = sourceState === "unavailable";
   const sourceReady = sourceState === "ready" || sourceState === "not-prepared";
   const actorEntered = actorReference.trim().length > 0;
-  const currentPendingConfirmation = pendingConfirmations.find(
-    (confirmation) => confirmation.versionNo === versionNo,
+  const blockingPendingConfirmation = pendingConfirmations.find(
+    (confirmation) => versionNo !== null && confirmation.versionNo >= versionNo,
   ) ?? null;
 
   async function refreshMemoState(
@@ -383,7 +383,7 @@ function ProposalMemoPosturePanelSession({
       || !posture.sourceIdentityCurrent
       || posture.hasMemo
       || pendingAction !== null
-      || currentPendingConfirmation !== null
+      || blockingPendingConfirmation !== null
     ) {
       return;
     }
@@ -412,7 +412,7 @@ function ProposalMemoPosturePanelSession({
       !posture.memoHash ||
       !reviewRationale.trim() ||
       pendingAction !== null ||
-      currentPendingConfirmation !== null
+      blockingPendingConfirmation !== null
     ) {
       return;
     }
@@ -449,7 +449,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestReportPackage ||
       !posture.memoHash ||
       pendingAction !== null ||
-      currentPendingConfirmation !== null
+      blockingPendingConfirmation !== null
     ) {
       return;
     }
@@ -480,7 +480,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestCommentary ||
       !posture.memoHash ||
       pendingAction !== null ||
-      currentPendingConfirmation !== null
+      blockingPendingConfirmation !== null
     ) {
       return;
     }
@@ -606,7 +606,7 @@ function ProposalMemoPosturePanelSession({
       actions={
         <SemanticBadge
           tone={
-            currentPendingConfirmation === null
+            blockingPendingConfirmation === null
             && sourceReady
             && posture.sourceEvidenceAligned
               ? "success"
@@ -615,7 +615,7 @@ function ProposalMemoPosturePanelSession({
         >
           {versionNo === null
             ? "Version required"
-            : currentPendingConfirmation !== null
+            : blockingPendingConfirmation !== null
               ? pendingAction?.kind === "refresh" || sourceRefreshing
                 ? "Checking record"
                 : "Awaiting confirmation"
@@ -645,7 +645,7 @@ function ProposalMemoPosturePanelSession({
           prepared or reviewed.
         </Alert>
       ) : null}
-      {sourceUnavailable && currentPendingConfirmation === null ? (
+      {sourceUnavailable && blockingPendingConfirmation === null ? (
         <Alert
           severity="warning"
           action={
@@ -702,7 +702,7 @@ function ProposalMemoPosturePanelSession({
           })}
         </Alert>
       ))}
-      {actionError && currentPendingConfirmation === null ? (
+      {actionError && blockingPendingConfirmation === null ? (
         <Alert severity="warning" role="alert">
           {actionError}
         </Alert>
@@ -750,7 +750,7 @@ function ProposalMemoPosturePanelSession({
             rows={3}
             value={reviewRationale}
             onChange={(event) => setReviewRationale(event.target.value)}
-            disabled={pendingAction !== null || currentPendingConfirmation !== null}
+            disabled={pendingAction !== null || blockingPendingConfirmation !== null}
             placeholder="Explain why the memo evidence is appropriate for advisor use."
           />
         </label>
@@ -775,7 +775,7 @@ function ProposalMemoPosturePanelSession({
               className="input"
                 value={actorReference}
                 onChange={(event) => setActorReference(event.target.value)}
-                disabled={pendingAction !== null || currentPendingConfirmation !== null}
+                disabled={pendingAction !== null || blockingPendingConfirmation !== null}
                 placeholder="Enter the advisor or reviewer reference"
               autoComplete="off"
             />
@@ -785,7 +785,7 @@ function ProposalMemoPosturePanelSession({
             <select
               className="input"
               value={audience}
-              disabled={pendingAction !== null || currentPendingConfirmation !== null}
+              disabled={pendingAction !== null || blockingPendingConfirmation !== null}
               onChange={(event) =>
                 setAudience(
                   event.target.value as ProposalMemoProjectionAudience,
@@ -836,7 +836,7 @@ function ProposalMemoPosturePanelSession({
                  versionNo === null ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 currentPendingConfirmation !== null
+                 blockingPendingConfirmation !== null
                }
               onClick={() => void handleCreateMemo()}
             >
@@ -855,7 +855,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRecordReview ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 currentPendingConfirmation !== null
+                 blockingPendingConfirmation !== null
                }
               onClick={() => void handleReviewMemo()}
             >
@@ -873,7 +873,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRequestReportPackage ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 currentPendingConfirmation !== null
+                 blockingPendingConfirmation !== null
                }
               onClick={() => void handleRequestDiscussionMaterial()}
             >
@@ -890,7 +890,7 @@ function ProposalMemoPosturePanelSession({
                 !actorEntered ||
                 sourceLoading ||
                 pendingAction !== null ||
-                currentPendingConfirmation !== null
+                blockingPendingConfirmation !== null
               }
               onClick={() => void handleRequestCommentary()}
             >
