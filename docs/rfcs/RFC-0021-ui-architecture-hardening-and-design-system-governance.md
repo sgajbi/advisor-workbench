@@ -841,8 +841,8 @@ Delivered outcomes:
 
 Primary implementation evidence:
 
-1. [UI-ARCHITECTURE-AUDIT-LEDGER.md](..\architecture\UI-ARCHITECTURE-AUDIT-LEDGER.md)
-2. [workbench-ui-system-usage-guide.md](..\architecture\workbench-ui-system-usage-guide.md)
+1. [UI-ARCHITECTURE-AUDIT-LEDGER.md](../architecture/UI-ARCHITECTURE-AUDIT-LEDGER.md)
+2. [workbench-ui-system-usage-guide.md](../architecture/workbench-ui-system-usage-guide.md)
 
 ## Approval Requested
 

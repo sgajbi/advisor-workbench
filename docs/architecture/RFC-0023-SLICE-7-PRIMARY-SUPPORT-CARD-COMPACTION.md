@@ -9,14 +9,14 @@ Reduce first-paint height in the primary risk review without removing informatio
 
 ## Changes
 
-- Added a reusable compact density mode to [risk-metric-card.tsx](..\..\src\apps\performance\components\risk\risk-metric-card.tsx).
+- Added a reusable compact density mode to [risk-metric-card.tsx](../../src/apps/performance/components/risk/risk-metric-card.tsx).
 - Migrated the then-current `risk-snapshot-supporting-measures.tsx` from panel-local markup onto the shared metric-card primitive.
 - Applied compact metric-card density to:
   - the then-current `risk-snapshot-supporting-measures.tsx`
-  - [risk-drawdown-detail.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail.tsx)
-  - [risk-concentration-indicator-strip.tsx](..\..\src\apps\performance\components\risk\risk-concentration-indicator-strip.tsx)
+  - [risk-drawdown-detail.tsx](../../src/apps/performance/components/risk/risk-drawdown-detail.tsx)
+  - [risk-concentration-indicator-strip.tsx](../../src/apps/performance/components/risk/risk-concentration-indicator-strip.tsx)
 - Applied compact detail-section density to the supporting-measures sections in Snapshot and Drawdown.
-- Updated [globals.css](..\..\src\app\globals.css) with a shared `.performance-risk-metric-card-compact` treatment and tighter concentration indicator spacing.
+- Updated [globals.css](../../src/app/globals.css) with a shared `.performance-risk-metric-card-compact` treatment and tighter concentration indicator spacing.
 
 ## Why This Matters
 

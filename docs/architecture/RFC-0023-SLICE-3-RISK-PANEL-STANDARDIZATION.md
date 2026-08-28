@@ -20,8 +20,8 @@ layer.
 
 Added:
 
-1. [risk-methodology-access.tsx](..\..\src\apps\performance\components\risk\risk-methodology-access.tsx)
-2. [risk-panel-utility-row.tsx](..\..\src\apps\performance\components\risk\risk-panel-utility-row.tsx)
+1. [risk-methodology-access.tsx](../../src/apps/performance/components/risk/risk-methodology-access.tsx)
+2. [risk-panel-utility-row.tsx](../../src/apps/performance/components/risk/risk-panel-utility-row.tsx)
 
 The utility row now standardizes:
 
@@ -31,15 +31,15 @@ The utility row now standardizes:
 
 This removes repeated panel-local composition in:
 
-1. [risk-snapshot-panel.tsx](..\..\src\apps\performance\components\risk\risk-snapshot-panel.tsx)
-2. [risk-drawdown-panel.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-panel.tsx)
-3. [risk-concentration-panel.tsx](..\..\src\apps\performance\components\risk\risk-concentration-panel.tsx)
-4. [risk-rolling-panel.tsx](..\..\src\apps\performance\components\risk\risk-rolling-panel.tsx)
-5. [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
+1. [risk-snapshot-panel.tsx](../../src/apps/performance/components/risk/risk-snapshot-panel.tsx)
+2. [risk-drawdown-panel.tsx](../../src/apps/performance/components/risk/risk-drawdown-panel.tsx)
+3. [risk-concentration-panel.tsx](../../src/apps/performance/components/risk/risk-concentration-panel.tsx)
+4. [risk-rolling-panel.tsx](../../src/apps/performance/components/risk/risk-rolling-panel.tsx)
+5. [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
 
 ### Explicit shell priority variants
 
-Updated [risk-module-shell.tsx](..\..\src\apps\performance\components\risk\risk-module-shell.tsx) to support:
+Updated [risk-module-shell.tsx](../../src/apps/performance/components/risk/risk-module-shell.tsx) to support:
 
 1. `priority="primary"`
 2. `priority="secondary"`
@@ -67,8 +67,8 @@ It improves the workspace by:
 
 Added:
 
-1. [risk-panel-utility-row.test.tsx](..\..\tests\unit\risk-panel-utility-row.test.tsx)
-2. [risk-module-shell.test.tsx](..\..\tests\unit\risk-module-shell.test.tsx)
+1. [risk-panel-utility-row.test.tsx](../../tests/unit/risk-panel-utility-row.test.tsx)
+2. [risk-module-shell.test.tsx](../../tests/unit/risk-module-shell.test.tsx)
 
 These tests prove:
 
