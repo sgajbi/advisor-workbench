@@ -6991,3 +6991,49 @@ proposal progression, future-version rejection, and missing historical lineage; 
 the earlier recovery remains visible while current-version fields and actions are usable. Proposal
 Detail wiki truth, repository context, and the codebase review ledger change and require publication
 after merge.
+
+## 2026-08-29 — Asynchronous result focus continuity (#919)
+
+### Business workflow question
+
+When a portfolio manager requests an AI-assisted outcome-review summary, how should the Workbench
+make the newly returned review context immediately discoverable without leaving keyboard focus on a
+completed action or moving it before source persistence succeeds?
+
+### Evidence consulted
+
+1. [WAI-ARIA keyboard interface guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
+   requires predictable focus movement and a visible focus point for keyboard users.
+2. [WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) permits
+   programmatic focus on newly inserted static content when the resulting order preserves meaning
+   and operability.
+3. [React `useEffect`](https://react.dev/reference/react/useEffect) documents that passive effects
+   may run after paint even for interaction-driven updates.
+4. [React `useLayoutEffect`](https://react.dev/reference/react/useLayoutEffect) provides the bounded
+   pre-paint commit timing required when the visible result and its focus target must appear as one
+   coherent update.
+
+### Adopted decisions
+
+1. Keep the focus target on the result heading with `tabIndex=-1`; it is a contextual reading point,
+   not an extra stop in ordinary sequential navigation.
+2. Move focus only after the Gateway-backed result is accepted and rendered. Pending and failure
+   states retain the initiating workflow context.
+3. Use the shared result component's layout effect so all current outcome, proof, wave, exception,
+   and operating-quality consumers inherit the same commit-synchronous handoff.
+4. Prove both the component contract and the optimized Chromium workflow: keyboard activation,
+   source-backed response, visible result, and focused result heading.
+
+### Rejected decisions
+
+1. Removing or weakening the focus assertion because isolated runs usually pass.
+2. Adding arbitrary timers, retries, polling, or test-only focus calls.
+3. Moving focus before source success, to a generic status region, or to `document.body`.
+4. Creating a screen-local helper when the existing shared result component owns the behavior.
+
+### Validation and publication decision
+
+Workbench #919 owns this shared accessibility correction. The Outcome reviews guide changes because
+keyboard-operating truth changed and therefore requires wiki publication after merge. No Gateway,
+Manage, Lotus AI, API, calculation, copy, CSS, dependency, identity, entitlement, or runtime
+topology contract changes.
