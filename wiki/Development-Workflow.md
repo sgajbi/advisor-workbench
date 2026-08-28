@@ -12,7 +12,10 @@
   Runs the CSS global governance ratchet and then `eslint . --max-warnings=0` through the
   repository flat ESLint configuration. The gate keeps `src/app/globals.css` as a composition
   entrypoint, enforces the governed global-style budgets, rejects migrated component selector
-  families that return to global CSS, and scans application source, tests, live validators, scripts,
+  families that return to global CSS, discovers every `*.module.css` under `src`, and rejects any
+  new or unratcheted `:global(...)` escape. New CSS Modules have a zero-escape budget by default;
+  legacy exceptions are exact per-file counts with no headroom. The wider lint chain scans
+  application source, tests, live validators, scripts,
   and configuration files while keeping Next/Core Web Vitals and stable React Hooks correctness
   rules scoped to production app source.
 - `npm run lint:react-compiler`
@@ -34,3 +37,5 @@
 - keep CSS ownership guidance in `docs/architecture/css-layer-governance.md`
 - when a selector family moves to a component-owned CSS Module, lower the global budget and add its
   prefix to `forbiddenSelectorPrefixes` in the same issue-backed slice
+- when a CSS Module escape becomes a locally imported class, lower that module's exact
+  `maxGlobalEscapes` in the same slice and remove its exception when the count reaches zero

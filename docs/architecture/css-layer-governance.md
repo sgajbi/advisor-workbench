@@ -17,6 +17,20 @@ The migration rule is incremental: move selectors only when the owning component
 primitive boundary is clear and validation can prove no behavior regression. Do not perform bulk
 mechanical splits that hide ownership or cascade changes.
 
+The same boundary applies inside `*.module.css`. CSS Modules are locally scoped by default;
+`:global(...)` is a narrow interoperability escape, not a way to place a feature-wide global
+stylesheet outside the global-layer budgets. The governance baseline scans every CSS Module under
+`src`, permits zero new global escapes by default, and records exact per-file exceptions for legacy
+interoperability. Any escape increase fails the blocking lint gate, while an escape reduction fails
+until the exact baseline is lowered in the same migration. New modules therefore enter the system
+with a zero-escape budget automatically.
+
+Manage's Review Evidence rail is the first selector family migrated from the legacy
+`manage-workspace.module.css` escape surface under this rule. Its grid, heading, headline, and
+definition-list placement now live in `manage-evidence-rail.module.css` and are applied through the
+component's imported class map. Do not restore the retired `manage-evidence-rail*` global class
+contract or repair this component from the Manage workspace stylesheet.
+
 `PortfolioScreenRail` is the first shared cross-route component migrated under this ownership
 model. Its presentation is colocated in
 `src/apps/portfolio/components/portfolio-screen-rail.module.css`; page-specific shells may own
@@ -83,12 +97,15 @@ containerized local-CI lane. The CSS gate validates:
 - each global layer stays within its line and byte budget in
   `scripts/quality/css-global-governance-baseline.json`;
 - selector families listed in `forbiddenSelectorPrefixes` do not return to any governed global
-  layer after migration to a component owner.
+  layer after migration to a component owner;
+- every CSS Module is discovered automatically, its parsed selector-level `:global(...)` count
+  equals the exact reviewed baseline, and a new module begins with zero allowed escapes.
 
 When a migration removes selectors from `legacy-global.css`, lower the corresponding baseline in the
 same PR and add the migrated selector family to `forbiddenSelectorPrefixes`. Increase a budget only
 with issue-backed evidence explaining why a selector belongs in a global layer instead of a feature
-module.
+module. When a migration removes `:global(...)` selectors from a CSS Module, lower that module's
+`maxGlobalEscapes` in the same PR; remove the exception entirely when the count reaches zero.
 
 ## Ownership expectations
 
