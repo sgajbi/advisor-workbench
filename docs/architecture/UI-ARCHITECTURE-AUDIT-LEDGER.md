@@ -394,7 +394,7 @@ Slice 1 is considered complete when:
      told contributors which primitives to use, which naming rules apply, and which patterns are
      now product standards.
    - Slice 8 closes this with:
-     - [workbench-ui-system-usage-guide.md](C:/Users/Sandeep/projects/lotus-workbench/docs/architecture/workbench-ui-system-usage-guide.md)
+     - [workbench-ui-system-usage-guide.md](workbench-ui-system-usage-guide.md)
 
 2. **RFC-0021 and the RFC index still showed the work as proposed**
    - The implementation had materially advanced, but the governance artifacts did not yet reflect

@@ -6,10 +6,10 @@ Tighten the `Concentration` module’s lower-detail area so the panel remains pr
 
 ## Changes
 
-- Applied the shared compact detail-section density to both detail blocks in [risk-concentration-panel.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-concentration-panel.tsx):
+- Applied the shared compact detail-section density to both detail blocks in [risk-concentration-panel.tsx](..\..\src\apps\performance\components\risk\risk-concentration-panel.tsx):
   - `Driver analysis`
   - `Concentration scale`
-- Tightened concentration-specific layout and copy density in [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css):
+- Tightened concentration-specific layout and copy density in [globals.css](..\..\src\app\globals.css):
   - smaller module-body gap
   - denser driver row spacing
   - tighter scale-card spacing

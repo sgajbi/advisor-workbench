@@ -31,7 +31,7 @@ It hardens the delivery baseline so later UX slices cannot drift away from the r
 
 ## Gateway Request Builders
 
-Canonical builders are in [risk_workspace_service.py](C:/Users/Sandeep/projects/lotus-gateway/src/app/services/risk_workspace_service.py):
+Canonical builders are in [risk_workspace_service.py](https://github.com/sgajbi/lotus-gateway/blob/main/src/app/services/risk_workspace_service.py):
 
 | Builder | Key request rules |
 |---|---|
@@ -185,7 +185,7 @@ Observed live values:
 
 ## Workbench Test Gaps Closed In This Slice
 
-Updated [workbench-api.test.ts](C:/Users/Sandeep/projects/lotus-workbench/tests/unit/workbench-api.test.ts) to add direct request-shape coverage for:
+Updated [workbench-api.test.ts](..\..\tests\unit\workbench-api.test.ts) to add direct request-shape coverage for:
 
 1. risk summary with and without benchmark context,
 2. concentration omitting `detail_basis`,

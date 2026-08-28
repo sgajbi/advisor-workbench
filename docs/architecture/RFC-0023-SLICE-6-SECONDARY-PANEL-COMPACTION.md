@@ -6,12 +6,12 @@ Tighten the first-paint footprint of the secondary risk modules so `Rolling Risk
 
 ## Changes
 
-- Added a shared compact density contract to [risk-detail-section.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-detail-section.tsx).
-- Added a shared compact density contract to [risk-analytical-table.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-analytical-table.tsx).
+- Added a shared compact density contract to [risk-detail-section.tsx](..\..\src\apps\performance\components\risk\risk-detail-section.tsx).
+- Added a shared compact density contract to [risk-analytical-table.tsx](..\..\src\apps\performance\components\risk\risk-analytical-table.tsx).
 - Applied the compact contract to:
-  - [risk-rolling-window-detail.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-rolling-window-detail.tsx)
-  - [risk-attribution-panel.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-attribution-panel.tsx)
-- Tightened secondary-panel styling in [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css):
+  - [risk-rolling-window-detail.tsx](..\..\src\apps\performance\components\risk\risk-rolling-window-detail.tsx)
+  - [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
+- Tightened secondary-panel styling in [globals.css](..\..\src\app\globals.css):
   - 2-column secondary headline metrics instead of 4-up metric strips
   - lower minimum card height for rolling and attribution highlight cards
   - compact table max-height for secondary review tables

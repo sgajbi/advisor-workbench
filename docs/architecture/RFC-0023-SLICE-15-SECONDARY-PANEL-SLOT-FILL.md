@@ -6,8 +6,8 @@ Fix the remaining white void inside the secondary analytical band by making each
 
 ## Changes
 
-- Updated [risk-secondary-panel-group.tsx](C:/Users/Sandeep/projects/lotus-workbench/src/apps/performance/components/risk/risk-secondary-panel-group.tsx) to add explicit rolling and attribution slot wrappers.
-- Updated [globals.css](C:/Users/Sandeep/projects/lotus-workbench/src/app/globals.css) so secondary panel slots:
+- Updated [risk-secondary-panel-group.tsx](..\..\src\apps\performance\components\risk\risk-secondary-panel-group.tsx) to add explicit rolling and attribution slot wrappers.
+- Updated [globals.css](..\..\src\app\globals.css) so secondary panel slots:
   - fill available width
   - align to the top
   - keep child panels at `width: 100%`
