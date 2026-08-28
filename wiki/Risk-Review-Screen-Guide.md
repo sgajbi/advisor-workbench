@@ -215,14 +215,18 @@ bank approval or competitor superiority.
   independently covered.
 - A deterministic source-authority guard prohibits retired threshold helpers and policy placeholders
   from returning and requires stable comparison evidence attributes.
+- The primary constraint row carries a stable source-and-key identity; progressive disclosure uses
+  a distinct constraint-evidence heading such as **Cash allocation evidence**. Business copy remains readable while canonical
+  proof cannot become ambiguous when the same constraint is discussed in its evidence detail.
 - CSS governance removes the retired concentration-scale and side-stack selectors, prohibits their
   return, and lowers the exact legacy-global size ratchet.
 - Canonical browser validation uses `PB_SG_GLOBAL_BAL_001`, confirms all five Risk modules,
   populated attribution evidence, and an aligned mandate context. It derives every expected
   constraint family, key, and state from the exact Gateway summary and concentration responses,
-  rejects duplicate source ownership and extra or missing rendered rows, records machine-readable
-  comparison proof, rejects retired first-scan classifications, and proves page reflow at 1440,
-  1024, and 519 pixels.
+  addresses each rendered row by source family and constraint key, rejects duplicate source
+  ownership and extra, missing, duplicated, or state-mismatched rendered rows, records
+  machine-readable comparison proof, rejects retired first-scan classifications, and proves page
+  reflow at 1440, 1024, and 519 pixels.
 - Canonical screenshots remain evidence only after API and calculation validation pass; a
   screenshot alone is not source, entitlement, mandate, identity, suitability, or readiness proof.
 - Protected PR checks, exact-main releasability, wiki publication, strict parity, and clean branch
