@@ -1013,6 +1013,22 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.queryByTestId("proposal-memo-confirmation-recovery"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+    ).toHaveValue("Current-version evidence supports advisor use.");
+
+    rerenderPanel(VERSION_NO - 1);
+    expect(
+      await screen.findByText(
+        "Memo evidence is confirmed through proposal version 2, but the active proposal record reports version 1. Refresh the proposal record before taking another action.",
+      ),
+    ).toBeInTheDocument();
+    await openMemoDetails();
+    expect(
+      screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
+    ).toBeDisabled();
   });
 
   it("keeps an in-flight review fenced without attributing its failure to a new version", async () => {

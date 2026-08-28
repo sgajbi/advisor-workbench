@@ -150,6 +150,9 @@ function ProposalMemoPosturePanelProposalScope({
   const [actionFailure, setActionFailure] =
     useState<MemoActionFailure | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [confirmedVersionFloor, setConfirmedVersionFloor] = useState<
+    number | null
+  >(null);
 
   return (
     <ProposalMemoPosturePanelSession
@@ -157,11 +160,13 @@ function ProposalMemoPosturePanelProposalScope({
       proposalId={proposalId}
       currentVersionNo={currentVersionNo}
       actionFailure={actionFailure}
+      confirmedVersionFloor={confirmedVersionFloor}
       confirmationFailures={confirmationFailures}
       actionMessage={actionMessage}
       pendingAction={pendingAction}
       pendingConfirmations={pendingConfirmations}
       onActionFailureChange={setActionFailure}
+      onConfirmedVersionFloorChange={setConfirmedVersionFloor}
       onConfirmationFailuresChange={setConfirmationFailures}
       onActionMessageChange={setActionMessage}
       onPendingActionChange={setPendingAction}
@@ -172,11 +177,13 @@ function ProposalMemoPosturePanelProposalScope({
 
 type SessionProps = Props & {
   actionFailure: MemoActionFailure | null;
+  confirmedVersionFloor: number | null;
   confirmationFailures: Record<number, PendingConfirmationFailure>;
   actionMessage: string | null;
   pendingAction: PendingMemoActionState | null;
   pendingConfirmations: PendingMemoConfirmation[];
   onActionFailureChange: (value: MemoActionFailure | null) => void;
+  onConfirmedVersionFloorChange: Dispatch<SetStateAction<number | null>>;
   onConfirmationFailuresChange: Dispatch<
     SetStateAction<Record<number, PendingConfirmationFailure>>
   >;
@@ -191,11 +198,13 @@ function ProposalMemoPosturePanelSession({
   proposalId,
   currentVersionNo,
   actionFailure,
+  confirmedVersionFloor,
   confirmationFailures,
   actionMessage,
   pendingAction,
   pendingConfirmations,
   onActionFailureChange: setActionFailure,
+  onConfirmedVersionFloorChange: setConfirmedVersionFloor,
   onConfirmationFailuresChange: setConfirmationFailures,
   onActionMessageChange: setActionMessage,
   onPendingActionChange,
@@ -321,6 +330,13 @@ function ProposalMemoPosturePanelSession({
   const blockingPendingConfirmation = pendingConfirmations.find(
     (confirmation) => versionNo !== null && confirmation.versionNo >= versionNo,
   ) ?? null;
+  const versionRegressionBlocked = Boolean(
+    versionNo !== null
+    && confirmedVersionFloor !== null
+    && versionNo < confirmedVersionFloor,
+  );
+  const workflowBlocked =
+    blockingPendingConfirmation !== null || versionRegressionBlocked;
 
   async function refreshMemoState(
     targetVersionNo: number,
@@ -381,7 +397,7 @@ function ProposalMemoPosturePanelSession({
       || !posture.sourceIdentityCurrent
       || posture.hasMemo
       || pendingAction !== null
-      || blockingPendingConfirmation !== null
+      || workflowBlocked
     ) {
       return;
     }
@@ -410,7 +426,7 @@ function ProposalMemoPosturePanelSession({
       !posture.memoHash ||
       !reviewRationale.trim() ||
       pendingAction !== null ||
-      blockingPendingConfirmation !== null
+      workflowBlocked
     ) {
       return;
     }
@@ -447,7 +463,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestReportPackage ||
       !posture.memoHash ||
       pendingAction !== null ||
-      blockingPendingConfirmation !== null
+      workflowBlocked
     ) {
       return;
     }
@@ -478,7 +494,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestCommentary ||
       !posture.memoHash ||
       pendingAction !== null ||
-      blockingPendingConfirmation !== null
+      workflowBlocked
     ) {
       return;
     }
@@ -526,6 +542,9 @@ function ProposalMemoPosturePanelSession({
         persistedConfirmation.selectedAudience,
       );
       confirmPendingMemoRefresh(persistedConfirmation, refreshed);
+      setConfirmedVersionFloor((current) =>
+        Math.max(current ?? 0, persistedConfirmation.versionNo),
+      );
       onPendingConfirmationsChange((current) =>
         removePendingConfirmation(current, persistedConfirmation),
       );
@@ -574,7 +593,13 @@ function ProposalMemoPosturePanelSession({
         pendingConfirmation.selectedAudience,
       );
       confirmPendingMemoRefresh(pendingConfirmation, refreshed);
-      if (pendingConfirmation.kind === "review") {
+      setConfirmedVersionFloor((current) =>
+        Math.max(current ?? 0, pendingConfirmation.versionNo),
+      );
+      if (
+        pendingConfirmation.kind === "review"
+        && pendingConfirmation.versionNo === versionNo
+      ) {
         setReviewRationale("");
       }
       setActionMessage(proposalMemoActionSuccessCopy(
@@ -607,7 +632,7 @@ function ProposalMemoPosturePanelSession({
       actions={
         <SemanticBadge
           tone={
-            blockingPendingConfirmation === null
+            !workflowBlocked
             && sourceReady
             && posture.sourceEvidenceAligned
               ? "success"
@@ -616,7 +641,9 @@ function ProposalMemoPosturePanelSession({
         >
           {versionNo === null
             ? "Version required"
-            : blockingPendingConfirmation !== null
+            : versionRegressionBlocked
+              ? "Proposal refresh required"
+              : blockingPendingConfirmation !== null
               ? pendingAction?.kind === "refresh" || sourceRefreshing
                 ? "Checking record"
                 : "Awaiting confirmation"
@@ -644,6 +671,13 @@ function ProposalMemoPosturePanelSession({
         <Alert severity="warning">
           A current proposal version is required before memo evidence can be
           prepared or reviewed.
+        </Alert>
+      ) : null}
+      {versionRegressionBlocked ? (
+        <Alert severity="warning" role="alert">
+          Memo evidence is confirmed through proposal version {confirmedVersionFloor},
+          but the active proposal record reports version {versionNo}. Refresh the
+          proposal record before taking another action.
         </Alert>
       ) : null}
       {sourceUnavailable && blockingPendingConfirmation === null ? (
@@ -752,7 +786,7 @@ function ProposalMemoPosturePanelSession({
             rows={3}
             value={reviewRationale}
             onChange={(event) => setReviewRationale(event.target.value)}
-            disabled={pendingAction !== null || blockingPendingConfirmation !== null}
+            disabled={pendingAction !== null || workflowBlocked}
             placeholder="Explain why the memo evidence is appropriate for advisor use."
           />
         </label>
@@ -777,7 +811,7 @@ function ProposalMemoPosturePanelSession({
               className="input"
                 value={actorReference}
                 onChange={(event) => setActorReference(event.target.value)}
-                disabled={pendingAction !== null || blockingPendingConfirmation !== null}
+                disabled={pendingAction !== null || workflowBlocked}
                 placeholder="Enter the advisor or reviewer reference"
               autoComplete="off"
             />
@@ -787,7 +821,7 @@ function ProposalMemoPosturePanelSession({
             <select
               className="input"
               value={audience}
-              disabled={pendingAction !== null || blockingPendingConfirmation !== null}
+              disabled={pendingAction !== null || workflowBlocked}
               onChange={(event) =>
                 setAudience(
                   event.target.value as ProposalMemoProjectionAudience,
@@ -838,7 +872,7 @@ function ProposalMemoPosturePanelSession({
                  versionNo === null ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 blockingPendingConfirmation !== null
+                 workflowBlocked
                }
               onClick={() => void handleCreateMemo()}
             >
@@ -857,7 +891,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRecordReview ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 blockingPendingConfirmation !== null
+                 workflowBlocked
                }
               onClick={() => void handleReviewMemo()}
             >
@@ -875,7 +909,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRequestReportPackage ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 blockingPendingConfirmation !== null
+                 workflowBlocked
                }
               onClick={() => void handleRequestDiscussionMaterial()}
             >
@@ -892,7 +926,7 @@ function ProposalMemoPosturePanelSession({
                 !actorEntered ||
                 sourceLoading ||
                 pendingAction !== null ||
-                blockingPendingConfirmation !== null
+                workflowBlocked
               }
               onClick={() => void handleRequestCommentary()}
             >
