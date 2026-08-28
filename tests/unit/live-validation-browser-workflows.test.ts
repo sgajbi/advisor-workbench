@@ -244,6 +244,23 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('"Reporting coverage"');
   });
 
+  it("binds PM operating-quality browser proof to source ids and explicit state", () => {
+    const source = browserWorkflowModule.validatePmOperatingQualityPanel.toString();
+
+    expect(source).toMatch(
+      /getByTestId\(\s*"pm-operating-quality-source-evidence"/,
+    );
+    expect(source).toMatch(/"data-panel-state",\s*"ready"/);
+    expect(source).toMatch(/"data-attention-state",\s*"clear"/);
+    expect(source).toMatch(/"data-source-service",\s*"lotus-manage"/);
+    expect(source).toMatch(/"data-score-run-id",\s*expectedEvidence\.scoreRunId/);
+    expect(source).toMatch(
+      /"data-fairness-analysis-id",\s*expectedEvidence\.fairnessAnalysisId/,
+    );
+    expect(source).not.toContain("Latest Score Run");
+    expect(source).not.toContain('"Fairness Analysis"');
+  });
+
   it("uses the governed live timeout while attribution history settles", () => {
     const source = browserWorkflowModule.validatePerformanceAnalysisPanel.toString();
 

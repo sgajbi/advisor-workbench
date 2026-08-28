@@ -2152,6 +2152,7 @@ async function run() {
       workbenchBaseUrl,
       portfolioId,
       timeoutMs,
+      expectedEvidence: pmOperatingQualityEvidence,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
     await validateDpmCopilotWorkspace(page, {
