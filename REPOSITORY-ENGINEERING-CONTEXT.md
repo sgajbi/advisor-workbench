@@ -977,6 +977,9 @@ Use these commands as the primary local contract:
    `npm run live:stack:up`
    `npm run live:stack:up:workbench-local`
    `npm run live:validate`
+   Canonical startup rebuilds only the Lotus Idea Compose project on each run because its isolated
+   capacity proof binds `/version` to a fresh build-time run identity. Do not remove that targeted
+   build or replace the exact commit, branch, and run comparison with reusable-image assumptions.
 10. hermetic stateless scale regression
     `npm run scale:proof`
 
