@@ -33,6 +33,19 @@ describe("proposal memo copy", () => {
     );
   });
 
+  it("fails closed when a retained receipt is ahead of the active proposal record", () => {
+    expect(
+      proposalMemoRefreshFailureCopy({
+        action: "review",
+        currentVersionNo: 1,
+        historicalEvidenceUnavailable: false,
+        versionNo: 2,
+      }),
+    ).toBe(
+      "Advisor review is recorded for proposal version 2, but the active proposal record reports version 1. Refresh the proposal record before taking another action.",
+    );
+  });
+
   it("governs action outcomes outside the screen component", () => {
     expect(PROPOSAL_MEMO_ACTION_FAILURE_COPY.create).toContain("was not prepared");
     expect(proposalMemoActionSuccessCopy("report", 4)).toBe(
