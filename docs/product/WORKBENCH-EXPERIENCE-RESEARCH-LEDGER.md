@@ -459,7 +459,7 @@ The reading order is:
 
 ### Current-product and professional-standard research
 
-Research was reviewed on 2026-08-20 and refreshed on 2026-08-27 from official sources:
+Research was reviewed on 2026-08-20 and refreshed on 2026-08-29 from official sources:
 
 1. [BlackRock Aladdin Risk](https://www.blackrock.com/aladdin/platforms/products/aladdin-risk)
    emphasizes context-appropriate models and factors, risk decomposition, and source analytics.
@@ -475,6 +475,9 @@ Research was reviewed on 2026-08-20 and refreshed on 2026-08-27 from official so
    presents portfolio risk, exposure and proposal analysis as one decision workflow.
 6. [W3C WCAG status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
    requires important state changes to remain programmatically determinable without forcing focus.
+7. [W3C accessible names and descriptions](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/)
+   recommends concise visible labels and distinct names when otherwise similar elements have
+   different purposes.
 
 ### Adopted
 
@@ -486,6 +489,10 @@ Research was reviewed on 2026-08-20 and refreshed on 2026-08-27 from official so
 - Preserve absent, unavailable, date-misaligned, undefined-limit, and unavailable-measure states.
 - Use dense progressive disclosure for methodology, episodes, series, and attribution detail.
 - Validate keyboard semantics, accessible evidence labels, and 1440/1024/519-pixel reflow.
+- Give the primary comparison row and its progressive source-evidence section distinct purposes:
+  the row names the constraint; the disclosure heading names that constraint's evidence.
+- Bind canonical proof to the exact Gateway source family and constraint key rather than display
+  copy, while still asserting the rendered state and rejecting missing, extra, or duplicated rows.
 
 ### Rejected
 
@@ -495,6 +502,8 @@ Research was reviewed on 2026-08-20 and refreshed on 2026-08-27 from official so
 - Repeated KPI cards for facts that compare more quickly in one aligned constraint ledger.
 - Merely adding a disclaimer while retaining the fabricated scale or accessible classification.
 - Copying competitor layout, wording, visual identity, thresholds, or unsupported capability.
+- A global text locator whose result changes when the same business term appears in progressive
+  evidence, and hiding useful evidence copy merely to make that locator pass.
 
 ### Implementation and validation
 
@@ -505,6 +514,12 @@ placeholder with an exception-first, responsive constraint ledger. Focused trans
 component, source-authority, keyboard, responsive Playwright, and canonical machine-readable proof
 own the implementation. Deterministic fixtures reproduce Gateway's published example contract;
 they are regression evidence, not live source authority.
+
+Issue #922 removes the last display-copy dependency from canonical row proof. Each rendered row now
+carries one source-and-constraint identity, while progressive disclosure uses a purposeful
+`<constraint> evidence` heading. The validator derives its expected rows from the exact Gateway
+responses, proves each row is unique and visible, and compares its source, key, and state without
+calculating or inferring policy in the browser.
 
 ## Portfolio Review
 
