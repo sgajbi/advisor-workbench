@@ -13,8 +13,11 @@ import { expectWorkbenchRelationshipIntegrity } from "./workbench-relationship-e
 test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const evidenceDirectory = process.env.ISSUE_811_EVIDENCE_DIR
-  ? path.resolve(process.env.ISSUE_811_EVIDENCE_DIR, "manage-overview")
+const evidenceRoot =
+  process.env.MANAGE_OVERVIEW_EVIDENCE_DIR ??
+  process.env.ISSUE_811_EVIDENCE_DIR;
+const evidenceDirectory = evidenceRoot
+  ? path.resolve(evidenceRoot, "manage-overview")
   : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
