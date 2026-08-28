@@ -27,6 +27,35 @@ const OWNERSHIP_CONTRACT = readFileSync(
 );
 
 describe("canonical live validation script", () => {
+  it("passes exact Gateway mandate evidence to the Risk browser proof", () => {
+    const script = normalizeSourceNewlines(
+      readFileSync(
+        join(
+          process.cwd(),
+          "scripts",
+          "live",
+          "validate-canonical-workbench-live.mjs",
+        ),
+        "utf8",
+      ),
+    );
+    const riskInvocation = script.match(
+      /await validateRiskPanel\(page, \{\n([\s\S]*?)\n    \}\);/,
+    )?.[1];
+    const summaryInvocation = script.match(
+      /await validatePerformanceSummaryPanel\(page, \{\n([\s\S]*?)\n    \}\);/,
+    )?.[1];
+
+    expect(riskInvocation).toContain("mandateComparisons: {");
+    expect(riskInvocation).toContain(
+      "summary: riskSummary.mandate_comparison",
+    );
+    expect(riskInvocation).toContain(
+      "concentration: riskConcentration.mandate_comparison",
+    );
+    expect(summaryInvocation).not.toContain("mandateComparisons");
+  });
+
   it("seeds PM operating quality with the current trusted-tenant Manage contract", () => {
     const script = readFileSync(
       join(
