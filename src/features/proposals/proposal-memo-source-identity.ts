@@ -194,8 +194,13 @@ function resolveMemoLineage(
     return { kind: "invalid" };
   }
   const identities = memos.map((memo) => lineageItemIdentity(memo, proposalId));
+  const sourceCurrentVersionNo = lineageData.proposal?.current_version_no;
   if (
     identities.some((identity) => !identity)
+    || !isPositiveSafeInteger(sourceCurrentVersionNo)
+    || identities.some(
+      (identity) => identity && identity.versionNo > sourceCurrentVersionNo,
+    )
     || new Set(identities.map((identity) => identity?.memoId)).size !== memos.length
   ) {
     return { kind: "invalid" };
@@ -219,7 +224,6 @@ function resolveMemoLineage(
   const matchingIndex = identities.findIndex((identity) =>
     memoIdentitiesEqual(identity, currentIdentity),
   );
-  const sourceCurrentVersionNo = lineageData.proposal?.current_version_no;
   if (matchingIndex < 0) {
     return lineageData.lineage_complete === true
       && allowNewerProposalVersion

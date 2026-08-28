@@ -653,6 +653,59 @@ describe("proposal memo source-refresh confirmation", () => {
     ).toThrow("Refreshed memo evidence is not aligned across the source record.");
   });
 
+  it("rejects every action confirmation when refreshed evidence regresses behind its response", () => {
+    const advancedActionMemo = {
+      ...alignedEvidence().memo!,
+      proposal: {
+        ...proposalSummary(),
+        current_version_no: VERSION_NO + 1,
+      },
+    };
+    const refreshed = alignedEvidence();
+
+    expect(() =>
+      confirmMemoCreateRefresh({ action: advancedActionMemo, refreshed }),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+    expect(() =>
+      confirmMemoReviewRefresh({
+        action: {
+          memo: advancedActionMemo,
+          review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+        },
+        refreshed,
+      }),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+    expect(() =>
+      confirmMemoReportPackageRefresh({
+        action: {
+          memo: advancedActionMemo,
+          report_package_event: actionEvent(
+            REPORT_EVENT_ID,
+            "MEMO_REPORT_PACKAGE_RECORDED",
+          ),
+          report: { status: "ARCHIVED" },
+        },
+        refreshed,
+      }),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+    expect(() =>
+      confirmMemoCommentaryRefresh({
+        action: {
+          memo: advancedActionMemo,
+          ai_event: actionEvent(
+            COMMENTARY_EVENT_ID,
+            "MEMO_AI_REFERENCE_RECORDED",
+          ),
+          commentary: {
+            authoritative_for_memo_status: false,
+            status: "REVIEW_REQUIRED",
+          },
+        },
+        refreshed,
+      }),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+  });
+
   it("rejects a stale-version action response even when refreshed evidence is current", () => {
     const staleAction = {
       ...alignedEvidence().memo!,
