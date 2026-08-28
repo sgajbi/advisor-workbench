@@ -500,9 +500,12 @@ claims.
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
 Gateway before classifying the panel as ready: score run, source-defined fairness analysis,
 bounded supervisory review action, and governed summary invocation. The browser proof then checks
-the persisted summary-invocation detail and list surface. This prevents a false ready claim when
-the PM quality endpoints are reachable but the canonical stack has no persisted operating-quality
-evidence.
+that the selected quality-run and fairness-review ids match those persisted through Gateway, that
+the source and authority remain Manage-owned, that source states are present, and that the screen
+has no active failure posture. It also checks the persisted summary-invocation detail and list
+surface. This prevents a false ready claim when the PM quality endpoints are reachable but the
+canonical stack has no persisted operating-quality evidence, and avoids coupling proof to mutable
+business labels.
 
 For bounded RFC37-WTBD-004 candidate-source proof, validation now previews a
 `BULK_REVIEW_CAMPAIGN` wave through Gateway with

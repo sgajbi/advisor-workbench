@@ -10,7 +10,7 @@ fairness-review, review-action, and summary-invocation evidence.
 | Route | `/workbench/{portfolioId}?mode=quality` |
 | Authority | Manage through Gateway; Lotus AI provides bounded review-required support |
 | Use | Internal supervision and operating-quality review |
-| Validation caveat | Stale canonical label assertions are tracked in #911 |
+| Validation | Canonical proof matches the selected Manage records and explicit screen state |
 
 ## Business Purpose
 
@@ -76,7 +76,8 @@ decision engine.
 - `tests/unit/pm-operating-quality-panel.test.tsx`
 - `tests/unit/pm-operating-quality-view-model.test.ts`
 - `tests/integration/pm-operating-quality-create.integration.test.tsx`
-- `scripts/live/validation/browser-workflows.mjs` (copy-drift correction pending #911)
+- `scripts/live/validation/browser-workflows.mjs` verifies the exact seeded quality run and
+  fairness review, Manage authority, source state, and absence of an active failure posture.
 
 ## First Support Step
 
