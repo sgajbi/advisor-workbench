@@ -154,6 +154,48 @@ function confirmedPendingActionVersion(
   );
 }
 
+function classifyPartialHistoricalLineage(
+  pendingConfirmation: PendingMemoConfirmation | undefined,
+  lineage: ProposalMemoRefreshEvidence["lineage"] | undefined,
+  proposalId: string,
+  versionNo: number,
+): void {
+  if (!pendingConfirmation || !lineage) {
+    return;
+  }
+  const actionVersionFloor = confirmedPendingActionVersion(
+    pendingConfirmation,
+    proposalId,
+    versionNo,
+  );
+  if (
+    lineage.proposal?.current_version_no === undefined
+    || lineage.proposal.current_version_no < actionVersionFloor
+  ) {
+    return;
+  }
+  const actionMemo = pendingConfirmation.kind === "create"
+    ? pendingConfirmation.result
+    : pendingConfirmation.result.memo;
+  const actionIdentity = resolveHistoricalMemoSourceIdentity(
+    actionMemo,
+    proposalId,
+    versionNo,
+  );
+  if (
+    resolveHistoricalMemoLineageSource(
+      lineage,
+      actionIdentity,
+      proposalId,
+      versionNo,
+    ).kind === "historical-item-missing"
+  ) {
+    throw new ProposalMemoRefreshVerificationError(
+      "historical-lineage-unavailable",
+    );
+  }
+}
+
 function upsertPendingAction(
   current: PendingMemoActionState[],
   next: PendingMemoActionState,
@@ -436,28 +478,14 @@ function ProposalMemoPosturePanelSession({
         || lineageResult.status === "rejected"
         || replayResult.status === "rejected"
       ) {
-        if (lineageResult.status === "fulfilled" && pendingConfirmation) {
-          const actionMemo = pendingConfirmation.kind === "create"
-            ? pendingConfirmation.result
-            : pendingConfirmation.result.memo;
-          const actionIdentity = resolveHistoricalMemoSourceIdentity(
-            actionMemo,
-            proposalId,
-            targetVersionNo,
-          );
-          if (
-            resolveHistoricalMemoLineageSource(
-              lineageResult.value,
-              actionIdentity,
-              proposalId,
-              targetVersionNo,
-            ).kind === "historical-item-missing"
-          ) {
-            throw new ProposalMemoRefreshVerificationError(
-              "historical-lineage-unavailable",
-            );
-          }
-        }
+        classifyPartialHistoricalLineage(
+          pendingConfirmation,
+          lineageResult.status === "fulfilled"
+            ? lineageResult.value
+            : undefined,
+          proposalId,
+          targetVersionNo,
+        );
         throw new Error("MEMO_REFRESH_UNAVAILABLE");
       }
       return {
@@ -488,6 +516,12 @@ function ProposalMemoPosturePanelSession({
       !lineageResult.data ||
       !replayResult.data
     ) {
+      classifyPartialHistoricalLineage(
+        pendingConfirmation,
+        lineageResult.error ? undefined : lineageResult.data,
+        proposalId,
+        targetVersionNo,
+      );
       throw new Error("MEMO_REFRESH_UNAVAILABLE");
     }
     return {
@@ -662,6 +696,7 @@ function ProposalMemoPosturePanelSession({
       const refreshed = await refreshMemoState(
         persistedConfirmation.versionNo,
         persistedConfirmation.selectedAudience,
+        persistedConfirmation,
       );
       const confirmedSourceVersionNo =
         confirmedProposalVersionFromMemoRefresh(refreshed);
