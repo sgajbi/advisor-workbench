@@ -595,6 +595,23 @@ describe("canonical live validation script", () => {
     expect(browserValidator).toContain("repository: \"lotus-idea\"");
   });
 
+  it("forwards canonical DPM context through the Docker Workbench boundary", () => {
+    const compose = readFileSync(
+      join(process.cwd(), "docker-compose.yml"),
+      "utf8",
+    );
+
+    for (const variable of [
+      "WORKBENCH_BFF_TENANT_ID",
+      "WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID",
+      "WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID",
+      "WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID",
+      "WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE",
+    ]) {
+      expect(compose).toContain(`- ${variable}=\${${variable}:-`);
+    }
+  });
+
   it("requires the exact canonical PM quality records to be ready", () => {
     const script = readFileSync(
       join(
