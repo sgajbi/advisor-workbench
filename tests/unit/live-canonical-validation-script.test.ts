@@ -286,6 +286,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("function Get-CanonicalDpmCommandCenterEnvironment");
     expect(script).toContain("$requiredValues = @{");
     expect(script).not.toContain("$requiredValues = [ordered]@{");
+    expect(script).toContain(
+      "WORKBENCH_BFF_TENANT_ID = [string]$context.tenant_id",
+    );
     expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID");
     expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID");
     expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID");
