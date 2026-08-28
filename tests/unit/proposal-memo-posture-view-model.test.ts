@@ -543,6 +543,48 @@ describe("buildProposalMemoPostureModel", () => {
 });
 
 describe("proposal memo source-refresh confirmation", () => {
+  it("confirms a historical receipt from its immutable evidence after the proposal advances", () => {
+    const action = alignedEvidence().memo!;
+    const refreshed = alignedEvidence();
+    const advancedProposal = {
+      ...proposalSummary(),
+      current_version_no: VERSION_NO + 1,
+    };
+    refreshed.memo = { ...refreshed.memo, proposal: advancedProposal };
+    refreshed.projection = { ...refreshed.projection, proposal: advancedProposal };
+    refreshed.lineage = { ...refreshed.lineage, proposal: advancedProposal };
+
+    expect(() => confirmMemoCreateRefresh({ action, refreshed })).not.toThrow();
+  });
+
+  it("distinguishes unavailable historical lineage from source disagreement", () => {
+    const action = alignedEvidence().memo!;
+    const refreshed = alignedEvidence();
+    const advancedProposal = {
+      ...proposalSummary(),
+      current_version_no: VERSION_NO + 1,
+    };
+    refreshed.memo = { ...refreshed.memo, proposal: advancedProposal };
+    refreshed.projection = { ...refreshed.projection, proposal: advancedProposal };
+    refreshed.lineage = {
+      ...refreshed.lineage,
+      proposal: advancedProposal,
+      memo_count: 1,
+      latest_memo_id: "memo_3",
+      memos: [
+        {
+          memo_id: "memo_3",
+          memo_hash: "sha256:memo-3",
+          proposal_version_no: VERSION_NO + 1,
+        },
+      ],
+    };
+
+    expect(() => confirmMemoCreateRefresh({ action, refreshed })).toThrow(
+      "Historical memo evidence is unavailable for this proposal version.",
+    );
+  });
+
   it("confirms memo preparation only when every refreshed source agrees", () => {
     expect(() =>
       confirmMemoCreateRefresh({
