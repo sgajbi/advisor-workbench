@@ -364,7 +364,19 @@ export function buildPmOperatingQualityPanelModel(params: {
     params.scoreRuns ??
     params.policies;
   const supportability = primary?.supportability;
-  const supportabilityState = normalizeState(supportability?.state);
+  const supportabilityState = resolvePanelSupportabilityState(
+    [
+      params.policies?.supportability?.state,
+      params.scoreRuns?.supportability?.state,
+      fairnessAnalysisResponse?.supportability?.state,
+      reviewActionResponse?.supportability?.state,
+      params.summaryInvocations?.supportability?.state,
+      params.summaryInvocationDetail?.supportability?.state,
+      summary?.supportability?.state,
+    ],
+    policyRows.length,
+    scoreRunRows,
+  );
   const fairnessSegmentRows = buildFairnessSegmentRows(fairnessAnalysis);
   const fairnessSegmentRequests = extractFairnessSegmentRequests(params.scoreRuns);
   const reasonCodes = [
@@ -1231,6 +1243,48 @@ function resolvePanelState(
     return "empty";
   }
   return "ready";
+}
+
+function resolvePanelSupportabilityState(
+  states: ReadonlyArray<string | null | undefined>,
+  policyCount: number,
+  scoreRuns: ReadonlyArray<PmOperatingQualityScoreRunRow>,
+): string {
+  const normalizedStates = states
+    .map(normalizeState)
+    .filter((state) => state !== "UNKNOWN");
+  const evidenceStates = [
+    ...normalizedStates,
+    ...scoreRuns.map((scoreRun) => normalizeState(scoreRun.state)),
+  ];
+  const blockedState = evidenceStates.find(
+    (state) => state.includes("BLOCKED") || state.includes("UNSUPPORTED"),
+  );
+  if (blockedState) {
+    return blockedState;
+  }
+  const attentionState = evidenceStates.find(
+    (state) =>
+      state.includes("PARTIAL") ||
+      state.includes("DEGRADED") ||
+      state.includes("WATCH") ||
+      state.includes("PENDING") ||
+      state.includes("REVIEW") ||
+      state.includes("BREACH"),
+  );
+  if (attentionState) {
+    return attentionState;
+  }
+  if (scoreRuns.length > 0) {
+    return evidenceStates.find((state) => state.includes("READY")) ?? "READY";
+  }
+  if (
+    normalizedStates.some((state) => state.includes("EMPTY")) ||
+    policyCount === 0
+  ) {
+    return "EMPTY";
+  }
+  return normalizedStates[0] ?? "UNKNOWN";
 }
 
 function summarizeForbiddenUses(rows: PmOperatingQualityScoreRunRow[]): string {

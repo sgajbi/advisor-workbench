@@ -816,6 +816,34 @@ describe("PM operating quality view model", () => {
     expect(model.reasonCodes).toContain("PM_QUALITY_FAIRNESS_SPREAD_REVIEW_REQUIRED");
   });
 
+  it("keeps populated source evidence ready when summary text is intentionally absent", () => {
+    const model = buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      summaryInvocations: {
+        ...summaryInvocations,
+        supportability: {
+          ...summaryInvocations.supportability,
+          state: "UNKNOWN",
+          reason_codes: ["PM_QUALITY_SUMMARY_HISTORY_NO_TEXT_STORED"],
+        },
+      },
+      summaryInvocationDetail: {
+        ...summaryInvocationDetail,
+        supportability: {
+          ...summaryInvocationDetail.supportability,
+          state: "EMPTY",
+          reason_codes: ["PM_QUALITY_SUMMARY_HISTORY_NO_TEXT_STORED"],
+        },
+      },
+    });
+
+    expect(model.state).toBe("ready");
+    expect(model.supportabilityState).toBe("READY");
+    expect(model.scoreRunId).toBe("pmq_run_001");
+    expect(model.summaryInvocationId).toBe("pmq_summary_001");
+  });
+
   it("renders Manage-owned review-action ledger and detail without workflow claims", () => {
     const model = buildPmOperatingQualityPanelModel({
       policies,
