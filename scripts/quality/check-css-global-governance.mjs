@@ -272,15 +272,19 @@ function assertForbiddenSelectorPrefixes(repoRoot, moduleBudgets, prefixes = [])
 }
 
 function assertCssModuleEscapeBudgetShape(baseline) {
-  const { root, defaultMaxGlobalEscapes, exceptions } = baseline;
-
-  if (typeof root !== "string" || root.length === 0) {
-    throw new Error("CSS module escape governance must include a non-empty root path.");
+  if (!baseline || typeof baseline !== "object" || Array.isArray(baseline)) {
+    throw new Error("CSS module escape governance must be an object.");
   }
 
-  if (!Number.isInteger(defaultMaxGlobalEscapes) || defaultMaxGlobalEscapes < 0) {
+  const { root, defaultMaxGlobalEscapes, exceptions } = baseline;
+
+  if (root !== "src") {
+    throw new Error("CSS module escape governance must scan the complete src root.");
+  }
+
+  if (defaultMaxGlobalEscapes !== 0) {
     throw new Error(
-      "CSS module escape governance must include a finite non-negative integer defaultMaxGlobalEscapes.",
+      "CSS module escape governance defaultMaxGlobalEscapes must remain zero.",
     );
   }
 
@@ -295,9 +299,18 @@ function assertCssModuleEscapeBudgetShape(baseline) {
         "Each CSS module escape exception must include a .module.css path.",
       );
     }
-    if (!Number.isInteger(exception.maxGlobalEscapes) || exception.maxGlobalEscapes < 0) {
+    if (
+      !exception.path.startsWith(`${root}/`) ||
+      exception.path.includes("\\") ||
+      exception.path.split("/").includes("..")
+    ) {
       throw new Error(
-        `CSS module escape exception for ${exception.path} must include a finite non-negative integer maxGlobalEscapes.`,
+        `CSS module escape exception ${exception.path} must be a normalized path below ${root}.`,
+      );
+    }
+    if (!Number.isInteger(exception.maxGlobalEscapes) || exception.maxGlobalEscapes <= 0) {
+      throw new Error(
+        `CSS module escape exception for ${exception.path} must include a positive integer maxGlobalEscapes; remove zero-count exceptions.`,
       );
     }
     if (seenPaths.has(exception.path)) {
