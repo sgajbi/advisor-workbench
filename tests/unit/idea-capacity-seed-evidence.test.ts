@@ -145,6 +145,12 @@ describe("Idea capacity seed evidence", () => {
     expect(() =>
       validateIdeaCapacitySeedEvidenceProvenance(manifest, {
         ...expected,
+        branch: "feat/stale-runtime",
+      }),
+    ).toThrow(/current branch/);
+    expect(() =>
+      validateIdeaCapacitySeedEvidenceProvenance(manifest, {
+        ...expected,
         runId: "canonical-front-office-2026-04-11",
       }),
     ).toThrow(/current runId/);

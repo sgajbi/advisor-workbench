@@ -38,8 +38,18 @@ $runtimeRunId = [string]$version.build.ciRunId
 if ([string]::IsNullOrWhiteSpace($commitSha) -or [string]::IsNullOrWhiteSpace($branch) -or [string]::IsNullOrWhiteSpace($runtimeRunId)) {
   throw "Lotus Idea /version did not expose commit, branch, and run provenance."
 }
-if ($commitSha -ne $ExpectedCommitSha -or $branch -ne $ExpectedBranch -or $runtimeRunId -ne $RunId) {
-  throw "Lotus Idea runtime provenance does not match the expected source commit, branch, and startup run. Rebuild the Idea image."
+$provenanceMismatches = @()
+if ($commitSha -ne $ExpectedCommitSha) {
+  $provenanceMismatches += "commit"
+}
+if ($branch -ne $ExpectedBranch) {
+  $provenanceMismatches += "branch"
+}
+if ($runtimeRunId -ne $RunId) {
+  $provenanceMismatches += "run"
+}
+if ($provenanceMismatches.Count -gt 0) {
+  throw "Lotus Idea runtime provenance does not match the expected source identity: $($provenanceMismatches -join ', '). The targeted Idea build did not produce the requested identity."
 }
 
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null

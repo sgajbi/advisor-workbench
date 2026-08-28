@@ -397,11 +397,17 @@ function Get-CanonicalFrontOfficeDatePolicy {
 function Invoke-ComposeUp {
   param(
     [string]$RepoPath,
-    [hashtable]$Environment = @{}
+    [hashtable]$Environment = @{},
+    [switch]$Build
   )
 
+  $composeCommand = $composeUpCommand
+  if ($Build -and $composeCommand -notmatch "(?:^|\s)--build(?:\s|$)") {
+    $composeCommand = "$composeCommand --build"
+  }
+
   Invoke-WithProcessEnvironment -Environment $Environment -ScriptBlock {
-    Invoke-RepoCommand $RepoPath $composeUpCommand
+    Invoke-RepoCommand $RepoPath $composeCommand
   }
 }
 
@@ -780,7 +786,9 @@ Invoke-ComposeUp $adviseRepo
 Start-CanonicalManage
 
 Invoke-ComposeUp $reportRepo
-Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment
+# The capacity proof binds to a fresh per-startup run id embedded in Idea's image metadata.
+# Rebuild only the Idea Compose project so reusable images cannot retain a prior run id.
+Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment -Build
 Invoke-CanonicalIdeaSeed
 
 if (Test-LocalApp "archive") {
