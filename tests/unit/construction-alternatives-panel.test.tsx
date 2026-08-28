@@ -252,6 +252,8 @@ describe("ConstructionAlternativesPanel", () => {
       screen.getByRole("button", { name: "Generate alternatives" }),
     ).toBeEnabled();
     expect(screen.getAllByText("Not generated").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Status Not generated")).toBeInTheDocument();
+    expect(screen.queryByText("Evidence available")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(getExternalOrderExecutionAcknowledgement).toHaveBeenCalledWith({
         portfolio,
@@ -313,6 +315,7 @@ describe("ConstructionAlternativesPanel", () => {
     expect(screen.queryByText("cas_1")).not.toBeInTheDocument();
     expect(screen.queryByText("alt_balanced_transition")).not.toBeInTheDocument();
     expect((await screen.findAllByText("Balanced Transition")).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Status Evidence available")).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "Turnover" })).toBeInTheDocument();
     expect(screen.getAllByText("4.8%").length).toBeGreaterThan(0);
     expect(screen.getByText("Mandate Integrity Checks")).toBeInTheDocument();

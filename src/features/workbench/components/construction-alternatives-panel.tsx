@@ -1,6 +1,5 @@
 "use client";
 
-import { businessStateLabel } from "@/copy/business-state-copy";
 import {
   SectionBlock,
   SemanticBadge,
@@ -14,7 +13,7 @@ import ConstructionRecommendedActionsCard from "@/features/workbench/components/
 import ConstructionSelectedDetailCard from "@/features/workbench/components/construction-selected-detail-card";
 import ExecutionAcknowledgementSupportabilityPanel from "@/features/workbench/components/execution-acknowledgement-supportability-panel";
 import {
-  constructionBadgeTone,
+  resolveConstructionEvidenceStatus,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
 
 import { useConstructionAlternativesActions } from "@/features/workbench/use-construction-alternatives-actions";
@@ -38,6 +37,11 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
     generateAlternatives,
     selectAlternative,
   } = useConstructionAlternativesActions({ portfolio });
+  const evidenceStatus = resolveConstructionEvidenceStatus({
+    panelState: model.state,
+    generatePending,
+    actionError,
+  });
 
   return (
     <SectionBlock
@@ -46,10 +50,9 @@ export default function ConstructionAlternativesPanel({ portfolio }: Props) {
       className="construction-alternatives-panel"
       actions={
         <div className="construction-alternatives-badge-row">
-          <SemanticBadge tone={constructionBadgeTone(model.supportabilityState)}>
-            {businessStateLabel(model.supportabilityState)}
+          <SemanticBadge tone={evidenceStatus.tone}>
+            {evidenceStatus.label}
           </SemanticBadge>
-          <SemanticBadge tone="success">Evidence Available</SemanticBadge>
         </div>
       }
     >

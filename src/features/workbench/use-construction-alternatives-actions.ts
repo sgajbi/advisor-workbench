@@ -12,6 +12,7 @@ import {
 } from "@/features/workbench/construction-alternatives-view-model";
 import {
   canSelectConstructionAlternative,
+  constructionGenerationMessage,
   resolveConstructionAlternativeLabel,
 } from "@/features/workbench/construction-alternatives-panel-helpers";
 import type {
@@ -125,7 +126,9 @@ export function useConstructionAlternativesActions({
         portfolio,
       });
       setResponse(generated);
-      setActionMessage("Construction alternatives generated.");
+      setActionMessage(
+        constructionGenerationMessage(buildConstructionPanelModel(generated).state),
+      );
     } catch (error) {
       setActionError(
         error instanceof Error

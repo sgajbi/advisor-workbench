@@ -6,6 +6,19 @@ import type {
 
 export type ConstructionBadgeTone = "default" | "success" | "warn" | "danger";
 
+export type ConstructionEvidenceStatus = {
+  state:
+    | "not_generated"
+    | "generating"
+    | "available"
+    | "partial"
+    | "blocked"
+    | "unsupported"
+    | "unavailable";
+  label: string;
+  tone: ConstructionBadgeTone;
+};
+
 export type ConstructionStatePanelCopy = {
   kind: "empty" | "permission_blocked" | "unavailable" | "partial";
   title: string;
@@ -48,6 +61,46 @@ export function constructionBadgeTone(state: string): ConstructionBadgeTone {
     return "danger";
   }
   return "default";
+}
+
+export function resolveConstructionEvidenceStatus(input: {
+  panelState: ConstructionPanelState;
+  generatePending: boolean;
+  actionError: string | null;
+}): ConstructionEvidenceStatus {
+  if (input.generatePending) {
+    return { state: "generating", label: "Generating", tone: "warn" };
+  }
+  if (input.actionError && input.panelState === "idle") {
+    return { state: "unavailable", label: "Unavailable", tone: "danger" };
+  }
+
+  const statusByPanelState: Record<
+    ConstructionPanelState,
+    ConstructionEvidenceStatus
+  > = {
+    idle: { state: "not_generated", label: "Not generated", tone: "default" },
+    ready: { state: "available", label: "Evidence available", tone: "success" },
+    partial: { state: "partial", label: "Partial evidence", tone: "warn" },
+    blocked: { state: "blocked", label: "Blocked", tone: "danger" },
+    unsupported: { state: "unsupported", label: "Unsupported", tone: "danger" },
+    unavailable: { state: "unavailable", label: "Unavailable", tone: "danger" },
+  };
+  return statusByPanelState[input.panelState];
+}
+
+export function constructionGenerationMessage(
+  panelState: ConstructionPanelState,
+): string {
+  const messageByPanelState: Record<ConstructionPanelState, string> = {
+    idle: "Construction request completed.",
+    ready: "Construction alternatives generated from mandate data.",
+    partial: "Construction alternatives generated with partial evidence.",
+    blocked: "Construction request completed with blocking conditions.",
+    unsupported: "Construction is not supported for this mandate.",
+    unavailable: "Construction request completed without comparable alternatives.",
+  };
+  return messageByPanelState[panelState];
 }
 
 export function buildConstructionStatePanelCopy(
