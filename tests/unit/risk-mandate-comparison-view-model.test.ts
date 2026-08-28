@@ -223,6 +223,121 @@ describe("risk mandate comparison view model", () => {
     expect(model.sources[1].mandateVersion).toBe("4");
   });
 
+  it.each([
+    ["mandate_id", "MANDATE_ALTERNATE"],
+    ["mandate_version", "4"],
+    ["risk_profile", "GROWTH"],
+    ["comparison_as_of_date", "2026-03-01"],
+    ["mandate_as_of_date", "2026-03-01"],
+    ["mandate_health_as_of_date", "2026-03-01"],
+  ] as const)(
+    "treats a raw %s mismatch as a different mandate context",
+    (field, value) => {
+      const model = buildRiskMandateComparisonViewModel({
+        portfolioRisk: buildMandateComparisonFixture(),
+        concentrationRisk: buildMandateComparisonFixture({ [field]: value }),
+      });
+
+      expect(model.contextPosture).toBe("conflict");
+      expect(model.contextNotice).toContain("different mandate contexts");
+    },
+  );
+
+  it("does not let display formatting hide a raw date mismatch", () => {
+    const model = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture({
+        comparison_as_of_date: "invalid-date-a",
+      }),
+      concentrationRisk: buildMandateComparisonFixture({
+        comparison_as_of_date: "invalid-date-b",
+      }),
+    });
+
+    expect(model.sources[0].comparisonAsOf).toBe(model.sources[1].comparisonAsOf);
+    expect(model.contextPosture).toBe("conflict");
+  });
+
+  it("distinguishes one-sided missing context from bilateral missing evidence", () => {
+    const oneSided = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture({ risk_profile: null }),
+      concentrationRisk: buildMandateComparisonFixture(),
+    });
+    const bilateral = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture({ risk_profile: null }),
+      concentrationRisk: buildMandateComparisonFixture({ risk_profile: null }),
+    });
+
+    expect(oneSided.contextPosture).toBe("conflict");
+    expect(bilateral.contextPosture).toBe("insufficient_evidence");
+    expect(bilateral.contextNotice).toContain("insufficient");
+  });
+
+  it("keeps complete identical raw context aligned", () => {
+    const model = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture(),
+      concentrationRisk: buildMandateComparisonFixture(),
+    });
+
+    expect(model.contextPosture).toBe("aligned");
+    expect(model.contextNotice).toBeNull();
+  });
+
+  it("fails closed for unknown constraint and review-policy states", () => {
+    const model = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture({
+        constraints: [
+          {
+            key: "future_constraint",
+            label: "Future constraint",
+            limit: null,
+            measure: null,
+            headroom: null,
+            state: "future_state",
+            reason: "The source returned a newly introduced state.",
+          },
+        ],
+        review_policy: {
+          review_frequency: "QUARTERLY",
+          last_review_date: null,
+          next_review_due_date: null,
+          state: "future_state",
+        },
+      } as Partial<ReturnType<typeof buildMandateComparisonFixture>>),
+      concentrationRisk: null,
+    });
+
+    expect(model.sources[0].constraints[0]).toMatchObject({
+      state: "unavailable",
+      stateLabel: "Evidence unavailable",
+      tone: "warn",
+    });
+    expect(model.sources[0].reviewPolicy).toMatchObject({
+      state: "unavailable",
+      stateLabel: "Review state unavailable",
+      tone: "warn",
+    });
+  });
+
+  it("renders an absent source cadence without inventing a review frequency", () => {
+    const model = buildRiskMandateComparisonViewModel({
+      portfolioRisk: buildMandateComparisonFixture({
+        review_policy: {
+          review_frequency: null,
+          last_review_date: "2025-12-31",
+          next_review_due_date: "2026-03-31",
+          state: "scheduled",
+        },
+      } as Partial<ReturnType<typeof buildMandateComparisonFixture>>),
+      concentrationRisk: null,
+    });
+
+    expect(model.sources[0].reviewPolicy).toMatchObject({
+      frequency: "Not reported",
+      state: "scheduled",
+      stateLabel: "Review scheduled",
+    });
+  });
+
   it("preserves a missing portfolio comparison beside supplied concentration evidence", () => {
     const model = buildRiskMandateComparisonViewModel({
       portfolioRisk: undefined,
