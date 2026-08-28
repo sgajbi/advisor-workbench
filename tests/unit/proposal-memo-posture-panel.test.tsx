@@ -1199,6 +1199,75 @@ describe("ProposalMemoPosturePanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("classifies an aged-out receipt from complete historical lineage", async () => {
+    const historicalState = evidenceState();
+    const activeState = withMemoIdentity(
+      evidenceState({}, VERSION_NO + 1),
+      "memo_3",
+      "sha256:memo-003",
+    );
+    let historicalMemoUnavailable = false;
+    let lineageState = historicalState.lineage;
+
+    vi.mocked(getProposalMemo).mockImplementation(async (_proposalId, versionNo) => {
+      if (versionNo === VERSION_NO && historicalMemoUnavailable) {
+        throw new WorkbenchApiError("proposal memo", 404);
+      }
+      return versionNo === VERSION_NO ? historicalState.memo : activeState.memo;
+    });
+    vi.mocked(getProposalMemoProjection).mockImplementation(
+      async (_proposalId, versionNo) =>
+        versionNo === VERSION_NO
+          ? historicalState.projection
+          : activeState.projection,
+    );
+    vi.mocked(getProposalMemoLineage).mockImplementation(async () => lineageState);
+    vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
+      async (_proposalId, versionNo) =>
+        versionNo === VERSION_NO ? historicalState.replay : activeState.replay,
+    );
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        ...historicalState.memo,
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: MEMO_HASH,
+        },
+      },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+      replayed: false,
+    });
+
+    const { rerenderPanel } = renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      screen.getByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Record advisor review" }));
+    await screen.findByRole("button", { name: "Refresh record" });
+
+    lineageState = activeState.lineage;
+    rerenderPanel(VERSION_NO + 1);
+    await screen.findByText("Memo prepared");
+    historicalMemoUnavailable = true;
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByText(
+        "Advisor review for proposal version 2 was recorded, but retained evidence for that version is unavailable. Recheck this earlier record before relying on it, and use the current source posture to determine the next available action.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toHaveAttribute("data-confirmation-state", "lineage-unavailable");
+    expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+  });
+
   it("preserves a newer action outcome when historical confirmation finishes later", async () => {
     let historicalState = evidenceState();
     let currentState = withMemoIdentity(
