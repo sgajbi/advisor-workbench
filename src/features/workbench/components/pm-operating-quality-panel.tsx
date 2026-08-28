@@ -132,6 +132,7 @@ export default function PmOperatingQualityPanel({
     model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
+  const renderedState = loadError || actionError ? "partial" : model.state;
 
   return (
     <SectionBlock
@@ -161,7 +162,19 @@ export default function PmOperatingQualityPanel({
         />
       ) : null}
 
-      <div className="pm-quality-status-strip">
+      <div
+        className="pm-quality-status-strip"
+        data-testid="pm-operating-quality-source-evidence"
+        data-panel-state={renderedState}
+        data-attention-state={loadError || actionError ? "required" : "clear"}
+        data-supportability-state={model.supportabilityState}
+        data-source-service={model.operationEvidence.sourceService}
+        data-authority={model.authority}
+        data-score-run-id={model.scoreRunId}
+        data-score-run-state={model.selectedScoreRun?.state ?? "N/A"}
+        data-fairness-analysis-id={model.fairnessAnalysisId}
+        data-fairness-analysis-state={model.fairnessState}
+      >
         <MetricRow label="Policy" value={`${model.policyId} / ${model.policyVersion}`} />
         <MetricRow label="Selected Quality Run" value={model.scoreRunId} />
         <MetricRow label="Selected Fairness Review" value={model.fairnessAnalysisId} />

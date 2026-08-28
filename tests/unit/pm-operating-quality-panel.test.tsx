@@ -371,6 +371,18 @@ describe("PmOperatingQualityPanel", () => {
     );
 
     expect(screen.getByRole("heading", { name: "PM Operating Quality" })).toBeInTheDocument();
+    const sourceEvidence = screen.getByTestId("pm-operating-quality-source-evidence");
+    expect(sourceEvidence).toHaveAttribute("data-panel-state", "partial");
+    expect(sourceEvidence).toHaveAttribute("data-attention-state", "clear");
+    expect(sourceEvidence).toHaveAttribute("data-supportability-state", "PENDING_REVIEW");
+    expect(sourceEvidence).toHaveAttribute("data-source-service", "lotus-manage");
+    expect(sourceEvidence).toHaveAttribute(
+      "data-authority",
+      "lotus-manage:RFC-0042/PM_OPERATING_QUALITY"
+    );
+    expect(sourceEvidence).toHaveAttribute("data-score-run-id", "pmq_run_001");
+    expect(sourceEvidence).toHaveAttribute("data-score-run-state", "READY");
+    expect(sourceEvidence).toHaveAttribute("data-fairness-analysis-id", "N/A");
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
     expect(
@@ -523,6 +535,14 @@ describe("PmOperatingQualityPanel", () => {
     expect(
       screen.getByLabelText("PM operating quality action error status")
     ).toBeInTheDocument();
+    expect(screen.getByTestId("pm-operating-quality-source-evidence")).toHaveAttribute(
+      "data-panel-state",
+      "partial"
+    );
+    expect(screen.getByTestId("pm-operating-quality-source-evidence")).toHaveAttribute(
+      "data-attention-state",
+      "required"
+    );
     expect(screen.getByText("business blocked")).toBeInTheDocument();
     expect(screen.getByText("409")).toBeInTheDocument();
     expect(screen.getByText("Gateway PM operating quality route")).toBeInTheDocument();
