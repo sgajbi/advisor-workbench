@@ -56,6 +56,12 @@ universal severity, concentration, limit compliance, breach, or all-clear classi
 browser-owned thresholds. When the comparison is absent, unavailable, partially supported,
 date-misaligned, undefined, or missing a measure, keep that exact boundary visible. Never add a
 local threshold, calculated headroom, traffic light, severity scale, or reassuring fallback.
+Compare summary and concentration mandate identity only from their raw source fields before any
+label or date formatting. A one-sided missing value or unequal value is a context conflict; a value
+missing from both reads is insufficient evidence, not agreement. Unknown constraint or review-policy
+states must remain visibly unavailable, and an absent review frequency must remain not reported.
+Canonical proof must derive expected constraint keys and states from the exact Gateway responses;
+never restore a hard-coded state list or browser-owned source precedence.
 
 Shared proposal and advisory shells must remain neutral unless the owning workspace publishes a
 typed source-backed workflow-context model. Queue-level context may summarize current source counts,
