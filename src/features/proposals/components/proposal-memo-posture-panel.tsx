@@ -282,9 +282,12 @@ function ProposalMemoPosturePanelSession({
   const sourceConfirmsMemoAbsent = isProposalMemoSourceConfirmedAbsent({
     lineageData: lineageQuery.data,
     lineageError: lineageQuery.error,
+    memoData: memoQuery.data,
     memoError: memoQuery.error,
+    projectionData: projectionQuery.data,
     projectionError: projectionQuery.error,
     proposalId,
+    replayData: replayQuery.data,
     replayError: replayQuery.error,
     versionNo,
   });

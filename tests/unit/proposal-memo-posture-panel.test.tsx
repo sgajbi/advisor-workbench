@@ -216,6 +216,28 @@ function emptyEvidenceState(): EvidenceState {
   };
 }
 
+function mockMemoNotPrepared() {
+  sourceState = emptyEvidenceState();
+  vi.mocked(getProposalMemo).mockImplementation(async () => {
+    if (!sourceState.memo.memo_id) {
+      throw new WorkbenchApiError("proposal memo", 404);
+    }
+    return sourceState.memo;
+  });
+  vi.mocked(getProposalMemoProjection).mockImplementation(async () => {
+    if (!sourceState.projection.memo_id) {
+      throw new WorkbenchApiError("proposal memo projection", 404);
+    }
+    return sourceState.projection;
+  });
+  vi.mocked(getProposalMemoReplayEvidence).mockImplementation(async () => {
+    if (!sourceState.replay.subject?.memo_id) {
+      throw new WorkbenchApiError("proposal memo replay evidence", 404);
+    }
+    return sourceState.replay;
+  });
+}
+
 function renderPanel(
   currentVersionNo: number | null = 2,
   proposalId = PROPOSAL_ID,
@@ -232,6 +254,7 @@ function renderPanel(
     </QueryClientProvider>,
   );
   return {
+    queryClient,
     rerenderPanel(
       nextVersionNo: number | null,
       nextProposalId = proposalId,
@@ -320,15 +343,18 @@ describe("ProposalMemoPosturePanel", () => {
     await waitFor(() =>
       expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
         "data-source-state",
-        "ready",
+        "unavailable",
       ),
     );
     expect(
-      screen.getByRole("button", { name: "Prepare advisor memo" }),
-    ).toBeDisabled();
+      screen.getByText(/Current memo evidence is unavailable/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Prepare advisor memo" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("permits current-version preparation when complete lineage retains only prior versions", async () => {
+  it("rejects empty success envelopes even when lineage retains only prior versions", async () => {
     sourceState = emptyEvidenceState();
     sourceState.lineage = {
       ...sourceState.lineage,
@@ -344,25 +370,19 @@ describe("ProposalMemoPosturePanel", () => {
     renderPanel();
 
     expect(
-      await screen.findByRole("button", { name: "Prepare advisor memo" }),
-    ).toBeDisabled();
+      await screen.findByText(/Current memo evidence is unavailable/),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
       "data-source-state",
-      "ready",
+      "unavailable",
     );
+    expect(
+      screen.queryByRole("button", { name: "Prepare advisor memo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("offers preparation when Gateway confirms the current memo is not prepared", async () => {
-    sourceState = emptyEvidenceState();
-    vi.mocked(getProposalMemo).mockRejectedValue(
-      new WorkbenchApiError("proposal memo", 404),
-    );
-    vi.mocked(getProposalMemoProjection).mockRejectedValue(
-      new WorkbenchApiError("proposal memo projection", 404),
-    );
-    vi.mocked(getProposalMemoReplayEvidence).mockRejectedValue(
-      new WorkbenchApiError("proposal memo replay evidence", 404),
-    );
+    mockMemoNotPrepared();
 
     renderPanel();
 
@@ -386,6 +406,35 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.getByRole("button", { name: "Prepare advisor memo" }),
     ).toBeEnabled();
+  });
+
+  it("withholds preparation when retained current memo data conflicts with refreshed absence", async () => {
+    const { queryClient } = renderPanel();
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+        "data-source-state",
+        "ready",
+      ),
+    );
+
+    mockMemoNotPrepared();
+    await act(async () => {
+      await queryClient.refetchQueries();
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("proposal-memo-source-state")).toHaveAttribute(
+        "data-source-state",
+        "unavailable",
+      ),
+    );
+    expect(
+      screen.getByText(/Current memo evidence is unavailable/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Prepare advisor memo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("withholds mutation controls when a required source view is unavailable", async () => {
@@ -440,7 +489,7 @@ describe("ProposalMemoPosturePanel", () => {
   });
 
   it("prepares a memo and confirms success only after all source views refresh", async () => {
-    sourceState = emptyEvidenceState();
+    mockMemoNotPrepared();
     vi.mocked(createProposalMemo).mockImplementation(async () => {
       sourceState = evidenceState();
       return sourceState.memo;
@@ -1025,7 +1074,7 @@ describe("ProposalMemoPosturePanel", () => {
   });
 
   it("sanitizes source failures and never invents an actor reference", async () => {
-    sourceState = emptyEvidenceState();
+    mockMemoNotPrepared();
     vi.mocked(createProposalMemo).mockRejectedValue(
       new Error("upstream 500: secret host"),
     );

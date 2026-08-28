@@ -51,6 +51,52 @@ describe("proposal memo source state", () => {
     })).toBe("not-prepared");
   });
 
+  it("rejects successful empty envelopes as malformed rather than authorizing preparation", () => {
+    expect(sourceState({
+      memoData: {},
+      memoError: undefined,
+      projectionData: { audience: "ADVISOR", sections: [] },
+      projectionError: undefined,
+      replayData: { audit_events: [], hashes: {} },
+      replayError: undefined,
+    })).toBe("unavailable");
+  });
+
+  it("rejects retained current memo data when the latest reads report absence", () => {
+    expect(sourceState({
+      memoData: {
+        memo: {
+          memo_hash: "sha256:memo-2",
+          memo_id: "memo_2",
+          proposal_id: PROPOSAL_ID,
+          proposal_version_no: VERSION_NO,
+        },
+        memo_hash: "sha256:memo-2",
+        memo_id: "memo_2",
+        proposal: completeLineage().proposal,
+        proposal_version_no: VERSION_NO,
+      },
+    })).toBe("unavailable");
+    expect(sourceState({
+      projectionData: {
+        memo_hash: "sha256:memo-2",
+        memo_id: "memo_2",
+        proposal: completeLineage().proposal,
+        proposal_version_no: VERSION_NO,
+      },
+    })).toBe("unavailable");
+    expect(sourceState({
+      replayData: {
+        hashes: { memo_hash: "sha256:memo-2" },
+        subject: {
+          memo_id: "memo_2",
+          proposal_id: PROPOSAL_ID,
+          proposal_version_no: VERSION_NO,
+        },
+      },
+    })).toBe("unavailable");
+  });
+
   it.each([
     ["memo transport failure", { memoError: new WorkbenchApiError("proposal memo", 503) }],
     ["projection permission failure", { projectionError: new WorkbenchApiError("projection", 403) }],
