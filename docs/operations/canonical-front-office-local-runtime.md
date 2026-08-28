@@ -179,7 +179,8 @@ policy, canonical startup fails closed before seeding Idea evidence.
 Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
 same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
 value fails startup; the validator must not create evidence in one tenant or date while the screen
-reads another.
+reads another. The server-owned BFF tenant header is bound to that same tenant so Gateway tenancy
+cannot silently diverge from the DPM query context.
 
 ### Lotus Idea capacity evidence
 

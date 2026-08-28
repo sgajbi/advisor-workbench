@@ -982,7 +982,8 @@ Use these commands as the primary local contract:
    build or replace the exact commit, branch, and run comparison with reusable-image assumptions.
    The same startup path injects the platform demo-data contract's DPM tenant, portfolio-manager,
    book, and command-centre date into Workbench and the PM Operating Quality seed; do not reintroduce
-   separate validator or UI defaults for canonical proof.
+   separate validator or UI defaults for canonical proof. The server-owned BFF tenant header must
+   remain bound to the same canonical tenant because Gateway scopes PM evidence by that authority.
 10. hermetic stateless scale regression
     `npm run scale:proof`
 

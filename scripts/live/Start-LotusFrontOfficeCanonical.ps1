@@ -419,6 +419,7 @@ function Get-CanonicalDpmCommandCenterEnvironment {
   $contract = Get-Content -Raw $canonicalContractPath | ConvertFrom-Json
   $context = $contract.dpm_command_center
   $requiredValues = @{
+    WORKBENCH_BFF_TENANT_ID = [string]$context.tenant_id
     WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID = [string]$context.tenant_id
     WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID = [string]$context.portfolio_manager_id
     WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID = [string]$context.book_id
