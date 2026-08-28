@@ -19,6 +19,9 @@ export default function RiskMandateComparison({
       aria-label="Mandate comparison"
       data-testid="risk-mandate-comparison"
       data-mandate-availability={comparison.availability}
+      data-mandate-context-posture={
+        comparison.contextPosture ?? "not_comparable"
+      }
     >
       <header className={styles.header}>
         <div className={styles.heading}>
@@ -111,7 +114,9 @@ function MandateComparisonSource({
                 <span className={styles.factLabel}>Review policy</span>
                 <span className={styles.reviewPolicyValue}>
                   <SemanticBadge tone={source.reviewPolicy.tone}>
-                    {source.reviewPolicy.stateLabel}
+                    <span data-review-policy-state={source.reviewPolicy.state}>
+                      {source.reviewPolicy.stateLabel}
+                    </span>
                   </SemanticBadge>
                   <span>
                     {source.reviewPolicy.frequency} · next{" "}
@@ -200,6 +205,7 @@ function ConstraintRow({
       className={styles.tableRow}
       role="row"
       aria-rowindex={rowIndex}
+      data-mandate-constraint={constraint.key}
       data-mandate-state={constraint.state}
     >
       <div className={styles.constraintCell} role="cell">
