@@ -38,6 +38,8 @@ export function buildMandateComparisonFixture(
 }
 
 export function buildSummaryMandateComparisonFixture(): WorkbenchMandateComparison {
+  // Mirrors Gateway's source-owned composer split after lotus-gateway#677:
+  // summary owns cash/tracking evidence; concentration owns position/issuer evidence.
   return buildMandateComparisonFixture({
     constraints: [
       {

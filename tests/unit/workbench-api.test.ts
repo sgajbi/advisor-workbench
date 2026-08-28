@@ -1021,7 +1021,7 @@ describe("workbench api", () => {
         },
       ],
       review_policy: {
-        review_frequency: "QUARTERLY",
+        review_frequency: null,
         last_review_date: "2025-12-31",
         next_review_due_date: "2026-03-31",
         state: "scheduled",
@@ -1072,6 +1072,10 @@ describe("workbench api", () => {
       headroom: 0.0141,
       measure: { value: 0.0859 },
       limit: { minimum: 0.02, maximum: 0.1 },
+    });
+    expect(response.mandate_comparison?.review_policy).toMatchObject({
+      review_frequency: null,
+      state: "scheduled",
     });
   });
 

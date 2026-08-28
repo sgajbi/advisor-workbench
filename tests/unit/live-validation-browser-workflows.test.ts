@@ -7,6 +7,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 
 const {
   buildReportCentreProofPosture,
+  buildMandateConstraintProofRows,
   classifyAttributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
   classifyAdvisoryJourneyScreenshotState,
@@ -29,6 +30,10 @@ const {
     pdfOutputState: "ready" | "unavailable";
     reason: string;
   };
+  buildMandateConstraintProofRows: (comparisons: {
+    summary?: { constraints?: Array<{ key?: string; state?: string }> } | null;
+    concentration?: { constraints?: Array<{ key?: string; state?: string }> } | null;
+  }) => Array<{ source: string; key: string; state: string }>;
   classifyAttributionDetailEvidence: (counts: {
     detailTableCount: number;
     summaryTableCount: number;
@@ -124,6 +129,52 @@ const ACCEPTED_REVIEW_EVIDENCE: AdvisorBriefReviewEvidence = {
 };
 
 describe("live validation browser workflow helpers", () => {
+  it("derives exact mandate constraint proof from both Gateway reads", () => {
+    expect(
+      buildMandateConstraintProofRows({
+        summary: {
+          constraints: [
+            { key: "cash_band", state: "within" },
+            { key: "tracking_error", state: "not_defined" },
+          ],
+        },
+        concentration: {
+          constraints: [{ key: "issuer_max_weight", state: "breach" }],
+        },
+      }),
+    ).toEqual([
+      { source: "summary", key: "cash_band", state: "within" },
+      { source: "summary", key: "tracking_error", state: "not_defined" },
+      { source: "concentration", key: "issuer_max_weight", state: "breach" },
+    ]);
+  });
+
+  it.each([
+    [
+      "missing source evidence",
+      { summary: { constraints: [] }, concentration: null },
+      /concentration returned no mandate constraint evidence/,
+    ],
+    [
+      "malformed source rows",
+      {
+        summary: { constraints: [{ key: "cash_band", state: "within" }] },
+        concentration: { constraints: [{ key: "", state: "breach" }] },
+      },
+      /malformed mandate constraint evidence/,
+    ],
+    [
+      "duplicate source ownership",
+      {
+        summary: { constraints: [{ key: "issuer_max_weight", state: "measure_unavailable" }] },
+        concentration: { constraints: [{ key: "issuer_max_weight", state: "breach" }] },
+      },
+      /published by both summary and concentration/,
+    ],
+  ])("fails closed for %s", (_case, comparisons, expectedError) => {
+    expect(() => buildMandateConstraintProofRows(comparisons)).toThrow(expectedError);
+  });
+
   it("navigates on document readiness and preserves the caller timeout", async () => {
     const response = { ok: () => true, status: () => 200 };
     const goto = vi.fn().mockResolvedValue(response);
