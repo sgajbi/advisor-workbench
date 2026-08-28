@@ -37,6 +37,9 @@ describe("Risk Review interpretation authority", () => {
     );
 
     expect(comparison).toContain('data-testid="risk-mandate-comparison"');
+    expect(comparison).toContain(
+      '`risk-mandate-constraint-${sourceKey}-${constraint.key}`',
+    );
     expect(comparison).toContain("data-mandate-state");
     expect(projection).toContain("constraint.headroom");
     expect(projection).toContain("constraint.state");
@@ -73,6 +76,12 @@ describe("Risk Review interpretation authority", () => {
     );
     expect(browserWorkflow).toContain(
       "for (const expected of expectedMandateStates)",
+    );
+    expect(browserWorkflow).toContain(
+      '`risk-mandate-constraint-${expected.source}-${expected.key}`',
+    );
+    expect(browserWorkflow).not.toContain(
+      'mandateComparison.getByText("Cash allocation", { exact: true })',
     );
     expect(browserWorkflow).toContain(
       "published by both ${previousSource} and ${source}",

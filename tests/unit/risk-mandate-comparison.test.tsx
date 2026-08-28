@@ -136,6 +136,12 @@ describe("RiskMandateComparison", () => {
     expect(portfolioTable).toHaveTextContent("8.59%");
     expect(portfolioTable).toHaveTextContent("2.00%–10.00%");
     expect(portfolioTable).toHaveTextContent("+1.41 pp");
+    expect(
+      screen.getByTestId("risk-mandate-constraint-summary-cash_band"),
+    ).toHaveTextContent("Cash allocation");
+    expect(
+      within(surface).getAllByText("Cash allocation", { exact: true }),
+    ).toHaveLength(1);
 
     const concentrationTable = screen.getByRole("table", {
       name: "Concentration constraints",
@@ -155,6 +161,9 @@ describe("RiskMandateComparison", () => {
 
     const disclosures = screen.getAllByText("Source evidence and lineage");
     fireEvent.click(disclosures[0]);
+    expect(
+      screen.getByRole("heading", { name: "Cash allocation evidence" }),
+    ).toBeVisible();
     expect(surface).toHaveTextContent("DiscretionaryMandateBinding v1");
     expect(surface).toHaveTextContent("cash_weight");
     expect(surface).toHaveTextContent("24 Feb 2026, 01:00 UTC");

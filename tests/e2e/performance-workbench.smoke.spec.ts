@@ -1348,7 +1348,12 @@ test.describe('Performance workbench smoke', () => {
       await expect(mandateComparison).toHaveAttribute('data-mandate-availability', 'supplied');
       await expect(mandateComparison).toContainText('MANDATE_PB_SG_GLOBAL_BAL_001');
       await expect(mandateComparison).toContainText('Source evidence supplied');
-      await expect(mandateComparison).toContainText('Cash allocation');
+      const cashConstraint = page.getByTestId(
+        'risk-mandate-constraint-summary-cash_band',
+      );
+      await expect(cashConstraint).toHaveCount(1);
+      await expect(cashConstraint).toContainText('Cash allocation');
+      await expect(cashConstraint).toHaveAttribute('data-mandate-state', 'within');
       await expect(mandateComparison).toContainText('Within mandate');
       await expect(mandateComparison).toContainText('Tracking error');
       await expect(mandateComparison).toContainText('Limit not defined');
@@ -1376,6 +1381,12 @@ test.describe('Performance workbench smoke', () => {
         await sourceEvidence.focus();
         await expect(sourceEvidence).toBeFocused();
         await sourceEvidence.press('Enter');
+        await expect(
+          mandateComparison.getByRole('heading', {
+            name: 'Cash allocation evidence',
+            exact: true,
+          }),
+        ).toBeVisible();
         await expect(mandateComparison).toContainText('DiscretionaryMandateBinding v1');
         await expect(mandateComparison).toContainText('cash_weight');
       }
