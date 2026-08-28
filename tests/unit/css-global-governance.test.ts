@@ -958,4 +958,72 @@ describe("CSS global governance gate", () => {
       rmSync(repoRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects a non-zero default that would give new modules escape headroom", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const permissiveBaseline: CssBaseline = {
+      ...baseline,
+      cssModuleEscapes: {
+        ...baseline.cssModuleEscapes,
+        defaultMaxGlobalEscapes: 1,
+      },
+    };
+
+    try {
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: permissiveBaseline }),
+      ).toThrow(/defaultMaxGlobalEscapes must remain zero/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects zero-count exceptions instead of retaining obsolete configuration", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const modulePath = "src/features/example/example.module.css";
+
+    try {
+      writeFixtureFile(repoRoot, modulePath, ".root {\n  color: inherit;\n}\n");
+      const baselineWithZeroException: CssBaseline = {
+        ...baseline,
+        cssModuleEscapes: {
+          ...baseline.cssModuleEscapes,
+          exceptions: [{ path: modulePath, maxGlobalEscapes: 0 }],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: baselineWithZeroException }),
+      ).toThrow(/remove zero-count exceptions/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects exception paths outside the complete source scan root", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const baselineWithEscapedPath: CssBaseline = {
+      ...baseline,
+      cssModuleEscapes: {
+        ...baseline.cssModuleEscapes,
+        exceptions: [
+          {
+            path: "tests/fixtures/unsafe.module.css",
+            maxGlobalEscapes: 1,
+          },
+        ],
+      },
+    };
+
+    try {
+      expect(() =>
+        validateCssGlobalGovernance({ repoRoot, baseline: baselineWithEscapedPath }),
+      ).toThrow(/must be a normalized path below src/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
 });
