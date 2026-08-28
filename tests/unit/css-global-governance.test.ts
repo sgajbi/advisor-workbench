@@ -911,6 +911,59 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("does not count :global text inside selector attribute values", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        "src/features/example/example.module.css",
+        '.root[data-note=":global("] {\n  color: inherit;\n}\n',
+      );
+
+      expect(() => validateCssGlobalGovernance({ repoRoot, baseline })).not.toThrow();
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("does not count :global text inside selector comments", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        "src/features/example/example.module.css",
+        ".root/* :global( */ {\n  color: inherit;\n}\n",
+      );
+
+      expect(() => validateCssGlobalGovernance({ repoRoot, baseline })).not.toThrow();
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed when a CSS module selector cannot be parsed", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        "src/features/example/example.module.css",
+        ".root:: {\n  color: inherit;\n}\n",
+      );
+
+      expect(() => validateCssGlobalGovernance({ repoRoot, baseline })).toThrow(
+        /contains an invalid selector/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("rejects stale CSS module escape headroom after selectors are scoped", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;

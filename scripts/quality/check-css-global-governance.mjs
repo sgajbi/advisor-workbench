@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import postcss from "postcss";
+import selectorParser from "postcss-selector-parser";
 import valueParser from "postcss-value-parser";
 
 function resolveDefaultRepoRoot() {
@@ -325,7 +326,18 @@ export function countCssModuleGlobalEscapes(text, cssPath = "CSS module") {
   let count = 0;
 
   root.walkRules((rule) => {
-    count += rule.selector.match(/:global\s*\(/g)?.length ?? 0;
+    try {
+      selectorParser((selectors) => {
+        selectors.walkPseudos((pseudo) => {
+          if (pseudo.value.toLowerCase() === ":global" && Array.isArray(pseudo.nodes)) {
+            count += 1;
+          }
+        });
+      }).processSync(rule.selector, { lossless: true });
+    } catch (error) {
+      const reason = error?.message ?? String(error);
+      throw new Error(`${cssPath} contains an invalid selector ${rule.selector}: ${reason}`);
+    }
   });
 
   return count;
