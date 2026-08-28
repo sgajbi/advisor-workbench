@@ -1428,7 +1428,7 @@ test.describe('Performance workbench smoke', () => {
       }));
       expect(layout.scrollWidth - layout.clientWidth).toBeLessThanOrEqual(2);
       await page.screenshot({
-        path: `output/playwright/issue-875-mandate-comparison-${viewport.name}.png`,
+        path: `output/playwright/risk-mandate-comparison-${viewport.name}.png`,
         fullPage: false,
         animations: 'disabled',
       });

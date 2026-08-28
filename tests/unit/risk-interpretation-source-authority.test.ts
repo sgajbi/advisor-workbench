@@ -92,6 +92,14 @@ describe("Risk Review interpretation authority", () => {
     expect(browserWorkflow).toContain("for (const width of [1440, 1024, 519])");
     expect(browserWorkflow).toContain("Risk review creates page-level horizontal scrolling");
 
+    const browserRegression = readSource(
+      "tests/e2e/performance-workbench.smoke.spec.ts",
+    );
+    expect(browserRegression).toContain(
+      "risk-mandate-comparison-${viewport.name}.png",
+    );
+    expect(browserRegression).not.toContain("issue-875-mandate-comparison");
+
     const fixtureGateway = readSource(
       "tests/e2e/performance-fixture-gateway.ts",
     );
