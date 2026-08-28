@@ -259,6 +259,13 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toMatch(
       /"data-fairness-analysis-id",\s*expectedEvidence\.fairnessAnalysisId/,
     );
+    expect(source).toMatch(
+      /"data-score-run-state",\s*expectedEvidence\.scoreRunState/,
+    );
+    expect(source).toMatch(
+      /"data-fairness-analysis-state",\s*expectedEvidence\.fairnessAnalysisState/,
+    );
+    expect(source).not.toContain("/^(?!N\\/A$).+/");
     expect(source).not.toContain("Latest Score Run");
     expect(source).not.toContain('"Fairness Analysis"');
   });

@@ -575,6 +575,25 @@ describe("canonical live validation script", () => {
     expect(browserValidator).toContain("repository: \"lotus-idea\"");
   });
 
+  it("requires the exact canonical PM quality records to be ready", () => {
+    const script = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validate-canonical-workbench-live.mjs",
+      ),
+      "utf8",
+    );
+
+    expect(script).toContain("extractPmQualityScoreRunState");
+    expect(script).toContain("extractPmQualityFairnessAnalysisState");
+    expect(script).toContain('scoreRunState !== "READY"');
+    expect(script).toContain('fairnessAnalysisState !== "READY"');
+    expect(script).toContain("scoreRunState,");
+    expect(script).toContain("fairnessAnalysisState,");
+  });
+
   it("delegates isolated Idea capacity seeding without exposing credentials or client state", () => {
     const script = readFileSync(
       join(process.cwd(), "scripts", "live", "Invoke-IdeaCapacitySeed.ps1"),

@@ -2557,12 +2557,12 @@ export async function validatePmOperatingQualityPanel(
   );
   await expect(sourceEvidence).toHaveAttribute(
     "data-score-run-state",
-    /^(?!N\/A$).+/,
+    expectedEvidence.scoreRunState,
     { timeout: timeoutMs },
   );
   await expect(sourceEvidence).toHaveAttribute(
     "data-fairness-analysis-state",
-    /^(?!N\/A$).+/,
+    expectedEvidence.fairnessAnalysisState,
     { timeout: timeoutMs },
   );
   await expect(
