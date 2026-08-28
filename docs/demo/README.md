@@ -1,74 +1,58 @@
-# Advisor Workbench Demo Pack
+# Governed Workbench Demonstration
 
-## Goal
+Workbench demonstrations use the canonical front-office runtime and the governed portfolio
+`PB_SG_GLOBAL_BAL_001`. The prior `DEMO_ADV_USD_001` walkthrough and manual approval-chain script
+were retired because they no longer matched the current proposal workflow, source evidence, or
+canonical dataset.
 
-Run deterministic UI walkthroughs for:
+## Evidence Gate
 
-1. the benchmark-aware `Performance` workstation, and
-2. the proposal lifecycle / approval chain flow.
+Do not begin a review-ready demonstration from manually assembled services or stale screenshots.
+Bring up and validate the governed stack first:
 
-## Prerequisites
+```bash
+npm run live:stack:up
+npm run live:validate
+```
 
-- lotus-advise running at `http://advise.dev.lotus`
-- lotus-gateway running at `http://gateway.dev.lotus`
-- UI running at `http://workbench.dev.lotus`
-- lotus-core query running at `http://core-query.dev.lotus`
-- lotus-core ingestion running at `http://core-ingestion.dev.lotus`
-- lotus-performance running at `http://performance.dev.lotus`
+Only after API, calculation, contract, and panel validation succeeds should review-ready evidence
+be captured. Diagnostic captures must use a `diagnostic-` prefix and remain separate from demo
+evidence. Teardown when the session is complete:
 
-## Performance Workstation Walkthrough
+```bash
+npm run live:stack:down
+```
 
-Open `http://workbench.dev.lotus/performance`.
+The [canonical runtime guide](../operations/canonical-front-office-local-runtime.md) owns service
+heads, configuration, startup, validation, evidence locations, recovery, and teardown.
 
-Expected seeded runtime context:
+## Business Walkthrough
 
-- portfolio: `DEMO_ADV_USD_001`
-- default benchmark: `Global Balanced 60/40`
-- alternate benchmark: `Global Growth 80/20`
+Use the [Screen Guide Catalogue](../../wiki/Screen-Guide-Catalogue.md) to choose a workflow and
+follow the guide for the exact source authority, screen states, actions, and unsupported boundary.
+A typical review follows this order:
 
-Verify:
+1. **Adviser book and portfolio context** — select `PB_SG_GLOBAL_BAL_001` and retain the governed
+   business date.
+2. **Portfolio review** — assess value, allocation, holdings, activity, income, liquidity, and
+   source readiness before opening specialist analysis.
+3. **Performance and risk** — review benchmark-relative return, contribution, attribution, risk,
+   evidence, and human-reviewed adviser briefing.
+4. **Portfolio management** — move from mandate attention into rebalance, construction, memory,
+   outcome, operating-quality, or evidence-pack work only where source posture supports it.
+5. **Advisory and reporting** — review source-owned opportunities or proposals and request only the
+   reports and bounded actions exposed by the relevant guide.
 
-1. summary first paint shows:
-   - `DEMO_ADV_USD_001`
-   - `As of 2026-03-27`
-   - benchmark context
-   - market value / MWR / active return context
-2. the main chart stage supports:
-   - `MTD`, `QTD`, `YTD`, `1Y`, `3Y`, `5Y`
-   - explicit `From` / `To` dates
-   - `Monthly` / `Quarterly`
-   - `NET` / `GROSS`
-   - benchmark selector sourced from the live benchmark catalog
-3. switching benchmark from `Global Balanced 60/40` to `Global Growth 80/20` updates:
-   - benchmark chip values
-   - active return
-   - multi-horizon comparison bars
-   - attribution context
-4. the lower analytical canvas shows:
-   - `Multi-Horizon Returns`
-   - `Attribution Over Time`
-   - `Top / Bottom Contributors`
-   - `Attribution Detail`
-   - `Relative Segment Matrix`
-   - `Contribution Detail`
-5. `Advisor Brief` shows bounded provider provenance without opening browser dev tools:
-   - provenance strip includes execution mode and source-ref count
-   - audit drawer exposes provider mode, provider id, adapter kind, and model id
-   - the same brief contract should render whether the upstream author was managed OpenAI or a local OpenAI-compatible model
+Do not demonstrate a capability-disabled route as production-enabled, treat generated material as
+approved advice, claim a report-input handoff is report generation, or present a recorded
+conversion intent as a proposal or order.
 
-## Proposal Workflow Walkthrough
+## Evidence Interpretation
 
-1. Open `/proposals/simulate` and click `Save Draft`; Workbench creates and evaluates the draft through Gateway advisory workspace APIs backed by `lotus-advise`.
-2. Open `/proposals` and select the created proposal.
-3. On detail page:
-   - click `Submit To Risk Review`
-   - click `Approve Risk`
-   - click `Record Client Consent`
-4. Verify:
-   - state becomes `EXECUTION_READY`
-   - workflow timeline includes create/submit/approval/consent events
-   - approvals panel includes risk and client consent records
-
-## Reference Script
-
-- `docs/demo/scripts/demo-ui-approval-chain.md`
+- `output/playwright/live-canonical/` contains canonical validation artefacts for the current run.
+- `docs/evidence/` contains historical issue-scoped diagnostic or reviewer packs; it is not the
+  current canonical evidence source.
+- Fixture Playwright runs prove deterministic Workbench behaviour against governed fixtures, not
+  live source integration.
+- A successful local demonstration does not certify production identity, entitlement, resilience,
+  capacity, disaster recovery, regulatory compliance, or bank acceptance.
