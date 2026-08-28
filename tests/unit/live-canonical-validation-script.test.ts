@@ -588,6 +588,10 @@ describe("canonical live validation script", () => {
 
     expect(script).toContain("extractPmQualityScoreRunState");
     expect(script).toContain("extractPmQualityFairnessAnalysisState");
+    expect(script).toContain("const sendPmQualityJson");
+    expect(script).toContain(
+      '"X-Tenant-Id": dpmCommandCenterDefaults.tenantId',
+    );
     expect(script).toContain('scoreRunState !== "READY"');
     expect(script).toContain('fairnessAnalysisState !== "READY"');
     expect(script).toContain("scoreRunState,");

@@ -567,13 +567,23 @@ function extractPmQualitySummaryInvocationId(response) {
 async function ensureCanonicalPmOperatingQualityEvidence() {
   const asOfDate = dpmCommandCenterDefaults.asOfDate;
   const pmQualityBaseUrl = `${gatewayBaseUrl}/api/v1/dpm/command-center/pm-operating-quality`;
+  const sendPmQualityJson = (
+    url,
+    description,
+    { method = "GET", body } = {},
+  ) =>
+    sendJson(summary, url, description, timeoutMs, {
+      method,
+      body,
+      headers: {
+        "X-Tenant-Id": dpmCommandCenterDefaults.tenantId,
+      },
+    });
   const scoreRunRequest = buildCanonicalPmQualityScoreRunRequest(asOfDate);
-  const scoreRunResponse = await postJson(
-    summary,
+  const scoreRunResponse = await sendPmQualityJson(
     `${pmQualityBaseUrl}/score-runs`,
     "DPM PM operating-quality score-run create",
-    timeoutMs,
-    { body: scoreRunRequest },
+    { method: "POST", body: { body: scoreRunRequest } },
   );
   const scoreRunId = extractPmQualityScoreRunId(scoreRunResponse);
   if (!scoreRunId) {
@@ -589,35 +599,36 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     sourceVersion: asOfDate,
     contentHash: "sha256:pmq-canonical-source-quality",
   });
-  const fairnessResponse = await postJson(
-    summary,
+  const fairnessResponse = await sendPmQualityJson(
     `${pmQualityBaseUrl}/fairness-analyses`,
     "DPM PM operating-quality fairness-analysis create",
-    timeoutMs,
     {
+      method: "POST",
       body: {
-        policy_id: "pmq_canonical_dpm",
-        policy_version: "2026.05",
-        as_of_date: asOfDate,
-        actor_id: "workbench-system",
-        minimum_segment_score_run_count: 1,
-        maximum_average_score_spread: "5.00",
-        segments: [
-          {
-            segment_id: "canonical_sg_dpm_balanced",
-            segment_type: "BOOK_PROFILE",
-            display_name: "Singapore DPM balanced book",
-            score_run_ids: [scoreRunId],
-            source_refs: [bookSourceRef],
-          },
-          {
-            segment_id: "canonical_apac_balanced",
-            segment_type: "REGION",
-            display_name: "APAC balanced DPM",
-            score_run_ids: [scoreRunId],
-            source_refs: [bookSourceRef],
-          },
-        ],
+        body: {
+          policy_id: "pmq_canonical_dpm",
+          policy_version: "2026.05",
+          as_of_date: asOfDate,
+          actor_id: "workbench-system",
+          minimum_segment_score_run_count: 1,
+          maximum_average_score_spread: "5.00",
+          segments: [
+            {
+              segment_id: "canonical_sg_dpm_balanced",
+              segment_type: "BOOK_PROFILE",
+              display_name: "Singapore DPM balanced book",
+              score_run_ids: [scoreRunId],
+              source_refs: [bookSourceRef],
+            },
+            {
+              segment_id: "canonical_apac_balanced",
+              segment_type: "REGION",
+              display_name: "APAC balanced DPM",
+              score_run_ids: [scoreRunId],
+              source_refs: [bookSourceRef],
+            },
+          ],
+        },
       },
     },
   );
@@ -629,33 +640,34 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     );
   }
 
-  const reviewResponse = await postJson(
-    summary,
+  const reviewResponse = await sendPmQualityJson(
     `${pmQualityBaseUrl}/review-actions`,
     "DPM PM operating-quality review-action create",
-    timeoutMs,
     {
+      method: "POST",
       body: {
-        target_type: "SCORE_RUN",
-        target_id: scoreRunId,
-        action_type: "ACKNOWLEDGE",
-        action_state: "REVIEW_REQUIRED",
-        review_action_ref: `PMQ-CANONICAL-REVIEW-${scoreRunId}`,
-        review_reason:
-          "Canonical live validation recorded bounded supervisory review evidence.",
-        actor_id: "workbench-system",
-        policy_id: "pmq_canonical_dpm",
-        policy_version: "2026.05",
-        as_of_date: asOfDate,
-        source_refs: [
-          buildPmQualitySourceRef({
-            sourceSystem: "lotus-workbench",
-            sourceType: "CANONICAL_FRONT_OFFICE_VALIDATION",
-            sourceId: "rfc36-43-audit-20260524",
-            sourceVersion: "2026-05-24",
-            contentHash: "sha256:pmq-canonical-review",
-          }),
-        ],
+        body: {
+          target_type: "SCORE_RUN",
+          target_id: scoreRunId,
+          action_type: "ACKNOWLEDGE",
+          action_state: "REVIEW_REQUIRED",
+          review_action_ref: `PMQ-CANONICAL-REVIEW-${scoreRunId}`,
+          review_reason:
+            "Canonical live validation recorded bounded supervisory review evidence.",
+          actor_id: "workbench-system",
+          policy_id: "pmq_canonical_dpm",
+          policy_version: "2026.05",
+          as_of_date: asOfDate,
+          source_refs: [
+            buildPmQualitySourceRef({
+              sourceSystem: "lotus-workbench",
+              sourceType: "CANONICAL_FRONT_OFFICE_VALIDATION",
+              sourceId: "rfc36-43-audit-20260524",
+              sourceVersion: "2026-05-24",
+              contentHash: "sha256:pmq-canonical-review",
+            }),
+          ],
+        },
       },
     },
   );
@@ -666,32 +678,33 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     );
   }
 
-  const summaryResponse = await postJson(
-    summary,
+  const summaryResponse = await sendPmQualityJson(
     `${pmQualityBaseUrl}/summary-invocations`,
     "DPM PM operating-quality summary-invocation create",
-    timeoutMs,
     {
+      method: "POST",
       body: {
-        score_run_id: scoreRunId,
-        review_action_id: reviewActionId,
-        invocation_state: "COMPLETED",
-        summary_ref: `PMQ-CANONICAL-SUMMARY-${scoreRunId}`,
-        workflow_pack_name: "pm_quality_summary.pack",
-        workflow_pack_version: "v1",
-        workflow_run_id: `pmq-canonical-summary-${scoreRunId}`,
-        summary_artifact_ref: `pmq-canonical-summary-artifact-${scoreRunId}`,
-        summary_content_hash: "sha256:pmq-canonical-summary",
-        requested_by: "workbench-system",
-        source_refs: [
-          buildPmQualitySourceRef({
-            sourceSystem: "lotus-ai",
-            sourceType: "pm_quality_summary.pack",
-            sourceId: `pmq-canonical-summary-${scoreRunId}`,
-            sourceVersion: "v1",
-            contentHash: "sha256:pmq-canonical-summary",
-          }),
-        ],
+        body: {
+          score_run_id: scoreRunId,
+          review_action_id: reviewActionId,
+          invocation_state: "COMPLETED",
+          summary_ref: `PMQ-CANONICAL-SUMMARY-${scoreRunId}`,
+          workflow_pack_name: "pm_quality_summary.pack",
+          workflow_pack_version: "v1",
+          workflow_run_id: `pmq-canonical-summary-${scoreRunId}`,
+          summary_artifact_ref: `pmq-canonical-summary-artifact-${scoreRunId}`,
+          summary_content_hash: "sha256:pmq-canonical-summary",
+          requested_by: "workbench-system",
+          source_refs: [
+            buildPmQualitySourceRef({
+              sourceSystem: "lotus-ai",
+              sourceType: "pm_quality_summary.pack",
+              sourceId: `pmq-canonical-summary-${scoreRunId}`,
+              sourceVersion: "v1",
+              contentHash: "sha256:pmq-canonical-summary",
+            }),
+          ],
+        },
       },
     },
   );
@@ -703,39 +716,31 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     );
   }
 
-  const scoreRunList = await fetchJson(
-    summary,
+  const scoreRunList = await sendPmQualityJson(
     `${pmQualityBaseUrl}/score-runs?book_id=${encodeURIComponent(
       dpmCommandCenterDefaults.bookId,
     )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
     "DPM PM operating-quality score-run list",
-    timeoutMs,
   );
-  const reviewActionList = await fetchJson(
-    summary,
+  const reviewActionList = await sendPmQualityJson(
     `${pmQualityBaseUrl}/review-actions?target_type=SCORE_RUN&target_id=${encodeURIComponent(
       scoreRunId,
     )}&as_of_date=${encodeURIComponent(asOfDate)}&limit=10&offset=0`,
     "DPM PM operating-quality review-action list",
-    timeoutMs,
   );
-  const fairnessAnalysisList = await fetchJson(
-    summary,
+  const fairnessAnalysisList = await sendPmQualityJson(
     `${pmQualityBaseUrl}/fairness-analyses?policy_id=pmq_canonical_dpm&policy_version=2026.05&as_of_date=${encodeURIComponent(
       asOfDate,
     )}&limit=10&offset=0`,
     "DPM PM operating-quality fairness-analysis list",
-    timeoutMs,
   );
-  const summaryInvocationList = await fetchJson(
-    summary,
+  const summaryInvocationList = await sendPmQualityJson(
     `${pmQualityBaseUrl}/summary-invocations?score_run_id=${encodeURIComponent(
       scoreRunId,
     )}&review_action_id=${encodeURIComponent(reviewActionId)}&as_of_date=${encodeURIComponent(
       asOfDate,
     )}&limit=10&offset=0`,
     "DPM PM operating-quality summary-invocation list",
-    timeoutMs,
   );
   if (extractPmQualityScoreRunId(scoreRunList) !== scoreRunId) {
     throw new Error(
