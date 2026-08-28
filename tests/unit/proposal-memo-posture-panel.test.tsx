@@ -1151,16 +1151,20 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeDisabled();
   });
 
-  it("retains the mutation response floor when refreshed evidence is behind it", async () => {
+  it("retains the mutation response floor when refreshed evidence is unavailable", async () => {
     sourceState = evidenceState();
     vi.mocked(reviewProposalMemo).mockImplementation(async () => {
-      sourceState = withProposalCurrentVersion(
-        evidenceState({ reviewed: true }),
-        VERSION_NO + 1,
+      vi.mocked(getProposalMemo).mockRejectedValue(
+        new Error("memo refresh transport unavailable"),
       );
       return {
         memo: {
           ...sourceState.memo,
+          review_posture: {
+            status: "RECORDED",
+            review_action: "APPROVE_FOR_ADVISOR_USE",
+            source_memo_hash: MEMO_HASH,
+          },
           proposal: proposalSummary(VERSION_NO + 2),
         },
         review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),

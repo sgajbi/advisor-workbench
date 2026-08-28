@@ -135,20 +135,18 @@ function confirmPendingMemoRefresh(
   }
 }
 
-function retainedProposalVersionFloor(
+function confirmedPendingActionVersion(
   confirmation: PendingMemoConfirmation,
-  refreshed: ProposalMemoRefreshEvidence,
+  proposalId: string,
+  versionNo: number,
 ): number {
   const actionMemo = confirmation.kind === "create"
     ? confirmation.result
     : confirmation.result.memo;
-  return Math.max(
-    confirmedProposalVersionFromMemoAction(
-      actionMemo,
-      refreshed.proposalId,
-      refreshed.versionNo,
-    ),
-    confirmedProposalVersionFromMemoRefresh(refreshed),
+  return confirmedProposalVersionFromMemoAction(
+    actionMemo,
+    proposalId,
+    versionNo,
   );
 }
 
@@ -617,14 +615,20 @@ function ProposalMemoPosturePanelSession({
       onPendingConfirmationsChange((current) =>
         upsertPendingConfirmation(current, persistedConfirmation),
       );
+      const responseVersionFloor = confirmedPendingActionVersion(
+        persistedConfirmation,
+        proposalId,
+        persistedConfirmation.versionNo,
+      );
+      setConfirmedVersionFloor((current) =>
+        Math.max(current ?? 0, responseVersionFloor),
+      );
       const refreshed = await refreshMemoState(
         persistedConfirmation.versionNo,
         persistedConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo = retainedProposalVersionFloor(
-        persistedConfirmation,
-        refreshed,
-      );
+      const confirmedSourceVersionNo =
+        confirmedProposalVersionFromMemoRefresh(refreshed);
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );
@@ -680,14 +684,20 @@ function ProposalMemoPosturePanelSession({
       current?.versionNo === pendingConfirmation.versionNo ? null : current,
     );
     try {
+      const responseVersionFloor = confirmedPendingActionVersion(
+        pendingConfirmation,
+        proposalId,
+        pendingConfirmation.versionNo,
+      );
+      setConfirmedVersionFloor((current) =>
+        Math.max(current ?? 0, responseVersionFloor),
+      );
       const refreshed = await refreshMemoState(
         pendingConfirmation.versionNo,
         pendingConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo = retainedProposalVersionFloor(
-        pendingConfirmation,
-        refreshed,
-      );
+      const confirmedSourceVersionNo =
+        confirmedProposalVersionFromMemoRefresh(refreshed);
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );
