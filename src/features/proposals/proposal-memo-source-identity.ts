@@ -17,6 +17,11 @@ export type ProposalMemoLineageItem = NonNullable<
   ProposalMemoLineageData["memos"]
 >[number];
 
+export type ProposalMemoLineageResolution =
+  | { kind: "matched"; item: ProposalMemoLineageItem }
+  | { kind: "historical-item-missing" }
+  | { kind: "invalid" };
+
 export function resolveMemoSourceIdentity(
   source: ProposalMemoData | null | undefined,
   proposalId: string,
@@ -24,7 +29,7 @@ export function resolveMemoSourceIdentity(
 ): ProposalMemoIdentity | null {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryMatchesActiveVersion(source?.proposal, proposalId, versionNo)
+    || !proposalSummaryCoversRequestedVersion(source?.proposal, proposalId, versionNo)
     || source?.proposal_version_no !== versionNo
     || exactString(source.memo, "proposal_id") !== proposalId
     || source.memo?.proposal_version_no !== versionNo
@@ -51,7 +56,7 @@ export function resolveProjectionSourceIdentity(
 ): ProposalMemoIdentity | null {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryMatchesActiveVersion(source?.proposal, proposalId, versionNo)
+    || !proposalSummaryCoversRequestedVersion(source?.proposal, proposalId, versionNo)
     || source?.proposal_version_no !== versionNo
   ) {
     return null;
@@ -88,12 +93,32 @@ export function selectCurrentMemoLineageItem(
   proposalId: string,
   versionNo: number | null,
 ): ProposalMemoLineageItem | undefined {
+  const resolution = resolveMemoLineageSource(
+    lineageData,
+    currentIdentity,
+    proposalId,
+    versionNo,
+  );
+  return resolution.kind === "matched" ? resolution.item : undefined;
+}
+
+export function resolveMemoLineageSource(
+  lineageData: ProposalMemoLineageData | null | undefined,
+  currentIdentity: ProposalMemoIdentity | null,
+  proposalId: string,
+  versionNo: number | null,
+): ProposalMemoLineageResolution {
   const memos = lineageData?.memos;
   const memoCount = lineageData?.memo_count;
   const lineageProposalId = lineageData?.proposal_id;
   if (
-    !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryMatchesActiveVersion(lineageData?.proposal, proposalId, versionNo)
+    !lineageData
+    || !activeProposalIdentityIsValid(proposalId, versionNo)
+    || !proposalSummaryCoversRequestedVersion(
+      lineageData?.proposal,
+      proposalId,
+      versionNo,
+    )
     || !currentIdentity
     || !Array.isArray(memos)
     || !isNonNegativeSafeInteger(memoCount)
@@ -102,22 +127,42 @@ export function selectCurrentMemoLineageItem(
       && (!isExactNonBlankString(lineageProposalId)
         || lineageProposalId !== proposalId))
   ) {
-    return undefined;
+    return { kind: "invalid" };
   }
   const identities = memos.map((memo) => lineageItemIdentity(memo, proposalId));
   if (
     identities.some((identity) => !identity)
     || new Set(identities.map((identity) => identity?.memoId)).size !== memos.length
   ) {
-    return undefined;
+    return { kind: "invalid" };
+  }
+  const latestMemoId = exactString(lineageData, "latest_memo_id");
+  if (
+    (memos.length === 0 && lineageData.latest_memo_id != null)
+    || (memos.length > 0
+      && (!latestMemoId
+        || !identities.some((identity) => identity?.memoId === latestMemoId)))
+  ) {
+    return { kind: "invalid" };
   }
   const matchingIndex = identities.findIndex((identity) =>
     memoIdentitiesEqual(identity, currentIdentity),
   );
-  return matchingIndex >= 0
-    && currentIdentity.memoId === lineageData?.latest_memo_id
-    ? memos[matchingIndex]
-    : undefined;
+  const sourceCurrentVersionNo = lineageData.proposal?.current_version_no;
+  if (matchingIndex < 0) {
+    return lineageData.lineage_complete === true
+      && isPositiveSafeInteger(sourceCurrentVersionNo)
+      && sourceCurrentVersionNo > versionNo
+      ? { kind: "historical-item-missing" }
+      : { kind: "invalid" };
+  }
+  if (
+    sourceCurrentVersionNo === versionNo
+    && currentIdentity.memoId !== latestMemoId
+  ) {
+    return { kind: "invalid" };
+  }
+  return { kind: "matched", item: memos[matchingIndex] };
 }
 
 export function lineageItemIdentity(
@@ -196,6 +241,19 @@ function proposalSummaryMatchesActiveVersion(
   return Boolean(
     proposal?.proposal_id === proposalId
       && proposal.current_version_no === versionNo,
+  );
+}
+
+function proposalSummaryCoversRequestedVersion(
+  proposal: ProposalSummary | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): boolean {
+  return Boolean(
+    activeProposalIdentityIsValid(proposalId, versionNo)
+      && proposal?.proposal_id === proposalId
+      && isPositiveSafeInteger(proposal.current_version_no)
+      && proposal.current_version_no >= versionNo,
   );
 }
 

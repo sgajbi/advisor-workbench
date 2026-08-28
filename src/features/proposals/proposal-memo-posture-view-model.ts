@@ -5,9 +5,9 @@ import {
   lineageItemIdentity,
   memoIdentitiesEqual,
   resolveMemoSourceIdentity,
+  resolveMemoLineageSource,
   resolveProjectionSourceIdentity,
   resolveReplaySourceIdentity,
-  selectCurrentMemoLineageItem,
   type ProposalMemoIdentity,
 } from "./proposal-memo-source-identity";
 
@@ -77,6 +77,7 @@ export type ProposalMemoPostureModel = {
   reviewConfirmed: boolean;
   reviewPostureLabel: string;
   sourceEvidenceAligned: boolean;
+  sourceEvidenceFailureReason: "alignment" | "historical-lineage-unavailable" | null;
   sourceIdentityCurrent: boolean;
   statusLabel: string;
   supportabilityLabel: string;
@@ -154,12 +155,15 @@ export function buildProposalMemoPostureModel({
   const memoHash = memoIdentity?.memoHash ?? null;
   const memoId = memoIdentity?.memoId ?? null;
   const hasMemo = Boolean(memoIdentity);
-  const latestMemo = selectCurrentMemoLineageItem(
+  const lineageResolution = resolveMemoLineageSource(
     lineageData,
     memoIdentity,
     proposalId,
     versionNo,
   );
+  const latestMemo = lineageResolution.kind === "matched"
+    ? lineageResolution.item
+    : undefined;
   const projectionMatchesCurrentMemo = memoIdentitiesEqual(
     projectionIdentity,
     memoIdentity,
@@ -200,6 +204,11 @@ export function buildProposalMemoPostureModel({
       && lineageData !== undefined
       && isCurrentVersionNoMemoLineage(lineageData, proposalId, versionNo)
     );
+  const sourceEvidenceFailureReason = sourceEvidenceAligned
+    ? null
+    : lineageResolution.kind === "historical-item-missing"
+      ? "historical-lineage-unavailable" as const
+      : "alignment" as const;
   const reportStatus =
     firstString(
       memoIdentity ? memoData?.report_package_posture : undefined,
@@ -293,6 +302,7 @@ export function buildProposalMemoPostureModel({
     reviewConfirmed,
     reviewPostureLabel,
     sourceEvidenceAligned,
+    sourceEvidenceFailureReason,
     sourceIdentityCurrent,
     statusLabel: sourceLabel(
       memoIdentity ? memoData?.memo_status : undefined,
@@ -547,6 +557,19 @@ export type ProposalMemoRefreshEvidence = {
   versionNo: number;
 };
 
+export class ProposalMemoRefreshVerificationError extends Error {
+  constructor(
+    readonly reason: "alignment" | "historical-lineage-unavailable",
+  ) {
+    super(
+      reason === "historical-lineage-unavailable"
+        ? "Historical memo evidence is unavailable for this proposal version."
+        : "Refreshed memo evidence is not aligned across the source record.",
+    );
+    this.name = "ProposalMemoRefreshVerificationError";
+  }
+}
+
 function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): ProposalMemoPostureModel {
   const model = buildProposalMemoPostureModel({
     lineageData: refreshed.lineage,
@@ -558,7 +581,12 @@ function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): Proposal
     versionNo: refreshed.versionNo,
   });
   if (!model.sourceEvidenceAligned) {
-    throw new Error("Refreshed memo evidence is not aligned across the source record.");
+    if (model.sourceEvidenceFailureReason === "historical-lineage-unavailable") {
+      throw new ProposalMemoRefreshVerificationError(
+        "historical-lineage-unavailable",
+      );
+    }
+    throw new ProposalMemoRefreshVerificationError("alignment");
   }
   return model;
 }
