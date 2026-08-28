@@ -289,6 +289,23 @@ describe("construction alternatives view model", () => {
     });
   });
 
+  it("preserves partial Manage supportability when alternatives are returned", () => {
+    const response: DpmConstructionGatewayResponse = {
+      ...readyResponse,
+      supportability: {
+        ...readyResponse.supportability,
+        state: "PARTIAL",
+        reason_codes: ["SOURCE_EVIDENCE_PARTIAL"],
+      },
+    };
+
+    const model = buildConstructionPanelModel(response);
+
+    expect(model.state).toBe("partial");
+    expect(model.supportabilityState).toBe("PARTIAL");
+    expect(model.supportabilityReasons).toEqual(["SOURCE_EVIDENCE_PARTIAL"]);
+  });
+
   it("uses an idle state before Gateway returns an alternative set", () => {
     const model = buildConstructionPanelModel(null);
 
