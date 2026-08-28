@@ -136,9 +136,18 @@ describe("RiskMandateComparison", () => {
     expect(portfolioTable).toHaveTextContent("8.59%");
     expect(portfolioTable).toHaveTextContent("2.00%–10.00%");
     expect(portfolioTable).toHaveTextContent("+1.41 pp");
-    expect(
-      screen.getByTestId("risk-mandate-constraint-summary-cash_band"),
-    ).toHaveTextContent("Cash allocation");
+    const cashConstraint = screen.getByTestId(
+      "risk-mandate-constraint-summary-cash_band",
+    );
+    expect(cashConstraint).toHaveAttribute(
+      "data-mandate-constraint-source",
+      "summary",
+    );
+    expect(cashConstraint).toHaveAttribute(
+      "data-mandate-constraint",
+      "cash_band",
+    );
+    expect(cashConstraint).toHaveTextContent("Cash allocation");
     expect(
       within(surface).getAllByText("Cash allocation", { exact: true }),
     ).toHaveLength(1);
