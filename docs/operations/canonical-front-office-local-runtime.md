@@ -181,11 +181,13 @@ policy, canonical startup fails closed before seeding Idea evidence.
 Canonical startup delegates capacity-resource construction and workload execution to
 `lotus-idea`. Workbench only coordinates readiness and verifies the returned evidence. The flow:
 
-1. waits for the exact Idea source revision and the Advise realization dependency,
-2. verifies Idea `/version` commit and branch metadata against the checked-out repository,
-3. invokes the Idea-owned synthetic seed and service-capacity workload runners,
-4. accepts exactly one successful `downstream_submission` probe in the `test` profile, and
-5. records source artifact paths, SHA-256 digests, and provenance in
+1. rebuilds only the Idea Compose project with the checked-out commit, branch, and fresh canonical
+   run identity; unrelated services continue to use the normal reusable-image posture,
+2. waits for the exact Idea source revision and the Advise realization dependency,
+3. verifies Idea `/version` commit, branch, and run metadata against the requested identity,
+4. invokes the Idea-owned synthetic seed and service-capacity workload runners,
+5. accepts exactly one successful `downstream_submission` probe in the `test` profile, and
+6. records source artifact paths, SHA-256 digests, and provenance in
    `output/canonical-front-office/idea-capacity-seed-evidence.json`.
 
 Capacity evidence uses the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace. It must not reuse
@@ -589,9 +591,11 @@ When validating active Workbench source changes without rebuilding the whole sta
 `npm run live:stack:up:workbench-local` or
 `Start-LotusFrontOfficeCanonical.ps1 -LocalApps workbench` before collecting final browser proof.
 That path keeps the canonical backend stack but serves Workbench from the current branch, avoiding
-stale Docker image evidence for newly added panels or selectors. If Gateway, Advise, Manage, Core,
-or another source service changed, use the default `npm run live:stack:up:validate` path or pass
-`-BuildImages` explicitly before accepting live proof.
+stale Docker image evidence for newly added panels or selectors. Both default startup paths rebuild
+the Idea Compose project automatically because its capacity evidence embeds a fresh per-run identity;
+they do not rebuild unrelated services for that reason. If Gateway, Advise, Manage, Core, or another
+source service changed, use the default `npm run live:stack:up:validate` path or pass `-BuildImages`
+explicitly before accepting live proof.
 
 The DPM mandate command-center panel is screenshot-ready only when Gateway returns a canonical
 populated `READY` supportability posture. Partial, degraded, blocked, and empty command-center

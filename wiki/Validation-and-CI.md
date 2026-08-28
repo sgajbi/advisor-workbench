@@ -307,8 +307,11 @@ concurrency group.
   `lotus-workbench` Git origin, be clean, and point exactly at `origin/main`; a clean checkout of
   another Lotus repository is rejected instead of being labeled as Workbench proof.
 - Lotus Idea capacity integration proof must use Idea-owned seed and workload automation after Idea
-  and Advise readiness. The validator matches Idea `/version` to the checked-out commit and branch,
-  requires the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace, and accepts exactly one
+  and Advise readiness. The validator matches Idea `/version` to the checked-out commit, branch,
+  and fresh canonical run identity. Canonical startup therefore rebuilds only the Idea Compose
+  project before this proof; a prior reusable Idea image is never relabelled or accepted as the
+  current run, and unrelated services are not rebuilt solely for Idea provenance. The proof
+  requires the isolated `CAPACITY_SYNTHETIC_PORTFOLIO_001` namespace and accepts exactly one
   report-only downstream-submission probe. Workbench evidence retains artifact paths, SHA-256
   digests, and provenance but excludes conversion-intent identifiers, downstream paths, and
   credentials. Canonical startup binds one per-run local trusted-caller marker to the Idea runtime
