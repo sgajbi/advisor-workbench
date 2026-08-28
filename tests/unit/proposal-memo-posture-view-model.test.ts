@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildProposalMemoPostureModel,
+  confirmedProposalVersionFromMemoRefresh,
   confirmMemoCommentaryRefresh,
   confirmMemoCreateRefresh,
   confirmMemoReportPackageRefresh,
@@ -584,6 +585,20 @@ describe("proposal memo source-refresh confirmation", () => {
     refreshed.lineage = { ...refreshed.lineage, proposal: advancedProposal };
 
     expect(() => confirmMemoCreateRefresh({ action, refreshed })).not.toThrow();
+    expect(confirmedProposalVersionFromMemoRefresh(refreshed)).toBe(
+      VERSION_NO + 1,
+    );
+
+    refreshed.projection = {
+      ...refreshed.projection,
+      proposal: {
+        ...advancedProposal,
+        current_version_no: VERSION_NO + 2,
+      },
+    };
+    expect(() => confirmMemoCreateRefresh({ action, refreshed })).toThrow(
+      "Refreshed memo evidence is not aligned across the source record.",
+    );
   });
 
   it("distinguishes unavailable historical lineage from source disagreement", () => {
