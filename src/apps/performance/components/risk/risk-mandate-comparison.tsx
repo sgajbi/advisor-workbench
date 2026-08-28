@@ -185,6 +185,7 @@ function ConstraintTable({
         {source.constraints.map((constraint, index) => (
           <ConstraintRow
             key={constraint.key}
+            sourceKey={source.key}
             constraint={constraint}
             rowIndex={index + 2}
           />
@@ -195,9 +196,11 @@ function ConstraintTable({
 }
 
 function ConstraintRow({
+  sourceKey,
   constraint,
   rowIndex,
 }: {
+  sourceKey: RiskMandateComparisonSourceViewModel["key"];
   constraint: RiskMandateConstraintViewModel;
   rowIndex: number;
 }) {
@@ -206,6 +209,7 @@ function ConstraintRow({
       className={styles.tableRow}
       role="row"
       aria-rowindex={rowIndex}
+      data-testid={`risk-mandate-constraint-${sourceKey}-${constraint.key}`}
       data-mandate-constraint={constraint.key}
       data-mandate-state={constraint.state}
     >
@@ -269,9 +273,17 @@ function SourceEvidence({
       </dl>
 
       {source.constraints.map((constraint) => (
-        <section key={constraint.key} className={styles.evidenceSection}>
-          <Text variant="subsectionTitle" as="h4">
-            {constraint.name}
+        <section
+          key={constraint.key}
+          className={styles.evidenceSection}
+          aria-labelledby={`mandate-comparison-${source.key}-${constraint.key}-evidence`}
+        >
+          <Text
+            variant="subsectionTitle"
+            as="h4"
+            id={`mandate-comparison-${source.key}-${constraint.key}-evidence`}
+          >
+            {constraint.name} evidence
           </Text>
           <dl className={styles.evidenceGrid}>
             {constraint.evidence.map((item) => (
