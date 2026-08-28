@@ -24,6 +24,7 @@ import {
 } from "../proposal-memo-action-payloads";
 import {
   buildProposalMemoPostureModel,
+  confirmedProposalVersionFromMemoAction,
   confirmedProposalVersionFromMemoRefresh,
   confirmMemoCommentaryRefresh,
   confirmMemoCreateRefresh,
@@ -132,6 +133,23 @@ function confirmPendingMemoRefresh(
         refreshed,
       });
   }
+}
+
+function retainedProposalVersionFloor(
+  confirmation: PendingMemoConfirmation,
+  refreshed: ProposalMemoRefreshEvidence,
+): number {
+  const actionMemo = confirmation.kind === "create"
+    ? confirmation.result
+    : confirmation.result.memo;
+  return Math.max(
+    confirmedProposalVersionFromMemoAction(
+      actionMemo,
+      refreshed.proposalId,
+      refreshed.versionNo,
+    ),
+    confirmedProposalVersionFromMemoRefresh(refreshed),
+  );
 }
 
 function upsertPendingAction(
@@ -603,8 +621,10 @@ function ProposalMemoPosturePanelSession({
         persistedConfirmation.versionNo,
         persistedConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo =
-        confirmedProposalVersionFromMemoRefresh(refreshed);
+      const confirmedSourceVersionNo = retainedProposalVersionFloor(
+        persistedConfirmation,
+        refreshed,
+      );
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );
@@ -664,8 +684,10 @@ function ProposalMemoPosturePanelSession({
         pendingConfirmation.versionNo,
         pendingConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo =
-        confirmedProposalVersionFromMemoRefresh(refreshed);
+      const confirmedSourceVersionNo = retainedProposalVersionFloor(
+        pendingConfirmation,
+        refreshed,
+      );
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );

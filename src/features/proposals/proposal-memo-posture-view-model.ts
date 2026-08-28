@@ -603,20 +603,43 @@ export class ProposalMemoRefreshVerificationError extends Error {
 export function confirmedProposalVersionFromMemoRefresh(
   refreshed: ProposalMemoRefreshEvidence,
 ): number {
+  const sourceProposals = [
+    refreshed.memo?.proposal,
+    refreshed.projection?.proposal,
+    refreshed.lineage?.proposal,
+  ];
   const sourceVersions = [
-    refreshed.memo?.proposal?.current_version_no,
-    refreshed.projection?.proposal?.current_version_no,
-    refreshed.lineage?.proposal?.current_version_no,
+    ...sourceProposals.map((proposal) => proposal?.current_version_no),
   ];
   const confirmedVersion = sourceVersions[0];
   if (
     !Number.isSafeInteger(confirmedVersion)
     || Number(confirmedVersion) < refreshed.versionNo
     || sourceVersions.some((versionNo) => versionNo !== confirmedVersion)
+    || sourceProposals.some(
+      (proposal) => proposal?.proposal_id !== refreshed.proposalId,
+    )
   ) {
     throw new ProposalMemoRefreshVerificationError("alignment");
   }
   return Number(confirmedVersion);
+}
+
+export function confirmedProposalVersionFromMemoAction(
+  action: ProposalMemoData | null | undefined,
+  proposalId: string,
+  versionNo: number,
+): number {
+  const identity = resolveHistoricalMemoSourceIdentity(
+    action,
+    proposalId,
+    versionNo,
+  );
+  const responseVersionNo = action?.proposal?.current_version_no;
+  if (!identity || !Number.isSafeInteger(responseVersionNo)) {
+    throw new ProposalMemoRefreshVerificationError("alignment");
+  }
+  return Number(responseVersionNo);
 }
 
 function assertRefreshEvidence(

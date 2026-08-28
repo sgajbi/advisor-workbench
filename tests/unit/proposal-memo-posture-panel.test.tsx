@@ -1151,6 +1151,50 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeDisabled();
   });
 
+  it("retains the mutation response floor when refreshed evidence is behind it", async () => {
+    sourceState = evidenceState();
+    vi.mocked(reviewProposalMemo).mockImplementation(async () => {
+      sourceState = withProposalCurrentVersion(
+        evidenceState({ reviewed: true }),
+        VERSION_NO + 1,
+      );
+      return {
+        memo: {
+          ...sourceState.memo,
+          proposal: proposalSummary(VERSION_NO + 2),
+        },
+        review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+        replayed: false,
+      };
+    });
+
+    renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      screen.getByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Evidence supports advisor use." } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Record advisor review" }));
+
+    expect(
+      await screen.findByText(
+        "Memo evidence is confirmed through proposal version 4, but the active proposal record reports version 2. Refresh the proposal record before taking another action.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toHaveAttribute("data-confirmation-state", "awaiting-source");
+    expect(
+      screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Record advisor review" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("preserves a newer action outcome when historical confirmation finishes later", async () => {
     let historicalState = evidenceState();
     let currentState = withMemoIdentity(
