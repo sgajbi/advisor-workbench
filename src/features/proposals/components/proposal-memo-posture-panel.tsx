@@ -24,6 +24,7 @@ import {
 } from "../proposal-memo-action-payloads";
 import {
   buildProposalMemoPostureModel,
+  confirmedProposalVersionFromMemoRefresh,
   confirmMemoCommentaryRefresh,
   confirmMemoCreateRefresh,
   confirmMemoReportPackageRefresh,
@@ -106,26 +107,27 @@ type PendingMemoConfirmation = (
 function confirmPendingMemoRefresh(
   confirmation: PendingMemoConfirmation,
   refreshed: ProposalMemoRefreshEvidence,
-): void {
+): number {
   switch (confirmation.kind) {
     case "create":
       confirmMemoCreateRefresh({ action: confirmation.result, refreshed });
-      return;
+      break;
     case "review":
       confirmMemoReviewRefresh({ action: confirmation.result, refreshed });
-      return;
+      break;
     case "report":
       confirmMemoReportPackageRefresh({
         action: confirmation.result,
         refreshed,
       });
-      return;
+      break;
     case "commentary":
       confirmMemoCommentaryRefresh({
         action: confirmation.result,
         refreshed,
       });
   }
+  return confirmedProposalVersionFromMemoRefresh(refreshed);
 }
 
 function upsertPendingAction(
@@ -594,9 +596,12 @@ function ProposalMemoPosturePanelSession({
         persistedConfirmation.versionNo,
         persistedConfirmation.selectedAudience,
       );
-      confirmPendingMemoRefresh(persistedConfirmation, refreshed);
+      const confirmedSourceVersionNo = confirmPendingMemoRefresh(
+        persistedConfirmation,
+        refreshed,
+      );
       setConfirmedVersionFloor((current) =>
-        Math.max(current ?? 0, persistedConfirmation.versionNo),
+        Math.max(current ?? 0, confirmedSourceVersionNo),
       );
       onPendingConfirmationsChange((current) =>
         removePendingConfirmation(current, persistedConfirmation),
@@ -648,9 +653,12 @@ function ProposalMemoPosturePanelSession({
         pendingConfirmation.versionNo,
         pendingConfirmation.selectedAudience,
       );
-      confirmPendingMemoRefresh(pendingConfirmation, refreshed);
+      const confirmedSourceVersionNo = confirmPendingMemoRefresh(
+        pendingConfirmation,
+        refreshed,
+      );
       setConfirmedVersionFloor((current) =>
-        Math.max(current ?? 0, pendingConfirmation.versionNo),
+        Math.max(current ?? 0, confirmedSourceVersionNo),
       );
       if (
         pendingConfirmation.kind === "review"

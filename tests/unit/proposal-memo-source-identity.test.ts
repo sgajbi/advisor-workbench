@@ -254,6 +254,14 @@ describe("proposal memo source identity", () => {
     expect(
       resolveHistoricalMemoLineageSource(lineage, identity, PROPOSAL_ID, VERSION_NO),
     ).toEqual({ kind: "matched", item: lineage.memos?.[0] });
+    expect(
+      resolveHistoricalMemoLineageSource(
+        { ...lineage, latest_memo_id: MEMO_ID },
+        identity,
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toEqual({ kind: "invalid" });
   });
 
   it("classifies a missing historical lineage item without masking invalid lineage", () => {

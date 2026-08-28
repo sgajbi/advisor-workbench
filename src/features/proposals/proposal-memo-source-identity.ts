@@ -201,11 +201,18 @@ function resolveMemoLineage(
     return { kind: "invalid" };
   }
   const latestMemoId = exactString(lineageData, "latest_memo_id");
+  const latestIdentity = identities.find(
+    (identity) => identity?.memoId === latestMemoId,
+  );
+  const highestLineageVersion = Math.max(
+    0,
+    ...identities.map((identity) => identity?.versionNo ?? 0),
+  );
   if (
     (memos.length === 0 && lineageData.latest_memo_id != null)
     || (memos.length > 0
       && (!latestMemoId
-        || !identities.some((identity) => identity?.memoId === latestMemoId)))
+        || latestIdentity?.versionNo !== highestLineageVersion))
   ) {
     return { kind: "invalid" };
   }
@@ -292,9 +299,14 @@ export function isCurrentVersionNoMemoLineage(
     return lineageData.latest_memo_id == null;
   }
   const latestMemoId = exactString(lineageData, "latest_memo_id");
+  const latestIdentity = identities.find(
+    (identity) => identity?.memoId === latestMemoId,
+  );
+  const highestLineageVersion = Math.max(
+    ...identities.map((identity) => identity?.versionNo ?? 0),
+  );
   return Boolean(
-    latestMemoId
-      && identities.some((identity) => identity?.memoId === latestMemoId),
+    latestIdentity?.versionNo === highestLineageVersion,
   );
 }
 

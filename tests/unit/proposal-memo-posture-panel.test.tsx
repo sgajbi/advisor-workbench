@@ -1041,10 +1041,12 @@ describe("ProposalMemoPosturePanel", () => {
       ),
     ).toHaveValue("Current-version evidence supports advisor use.");
 
-    rerenderPanel(VERSION_NO - 1);
+    originalState = evidenceState({ reviewed: true });
+    lineageState = originalState;
+    rerenderPanel(VERSION_NO);
     expect(
       await screen.findByText(
-        "Memo evidence is confirmed through proposal version 2, but the active proposal record reports version 1. Refresh the proposal record before taking another action.",
+        "Memo evidence is confirmed through proposal version 3, but the active proposal record reports version 2. Refresh the proposal record before taking another action.",
       ),
     ).toBeInTheDocument();
     await openMemoDetails();

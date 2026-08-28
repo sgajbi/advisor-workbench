@@ -588,7 +588,27 @@ export class ProposalMemoRefreshVerificationError extends Error {
   }
 }
 
+export function confirmedProposalVersionFromMemoRefresh(
+  refreshed: ProposalMemoRefreshEvidence,
+): number {
+  const sourceVersions = [
+    refreshed.memo?.proposal?.current_version_no,
+    refreshed.projection?.proposal?.current_version_no,
+    refreshed.lineage?.proposal?.current_version_no,
+  ];
+  const confirmedVersion = sourceVersions[0];
+  if (
+    !Number.isSafeInteger(confirmedVersion)
+    || Number(confirmedVersion) < refreshed.versionNo
+    || sourceVersions.some((versionNo) => versionNo !== confirmedVersion)
+  ) {
+    throw new ProposalMemoRefreshVerificationError("alignment");
+  }
+  return Number(confirmedVersion);
+}
+
 function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): ProposalMemoPostureModel {
+  confirmedProposalVersionFromMemoRefresh(refreshed);
   const model = buildProposalMemoPostureModelForVersion({
     lineageData: refreshed.lineage,
     memoData: refreshed.memo,
