@@ -210,6 +210,7 @@ function ConstraintRow({
       role="row"
       aria-rowindex={rowIndex}
       data-testid={`risk-mandate-constraint-${sourceKey}-${constraint.key}`}
+      data-mandate-constraint-source={sourceKey}
       data-mandate-constraint={constraint.key}
       data-mandate-state={constraint.state}
     >

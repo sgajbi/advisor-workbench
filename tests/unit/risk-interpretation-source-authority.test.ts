@@ -40,6 +40,7 @@ describe("Risk Review interpretation authority", () => {
     expect(comparison).toContain(
       '`risk-mandate-constraint-${sourceKey}-${constraint.key}`',
     );
+    expect(comparison).toContain("data-mandate-constraint-source");
     expect(comparison).toContain("data-mandate-state");
     expect(projection).toContain("constraint.headroom");
     expect(projection).toContain("constraint.state");
