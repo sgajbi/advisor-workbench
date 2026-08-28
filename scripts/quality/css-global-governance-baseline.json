@@ -1,6 +1,92 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Ratcheting Workbench global CSS ownership baseline. Lower limits as legacy global selectors migrate beside owning features.",
+  "cssModuleEscapes": {
+    "root": "src",
+    "defaultMaxGlobalEscapes": 0,
+    "exceptions": [
+      {
+        "path": "src/apps/performance/components/performance-advisor-brief-mode.module.css",
+        "maxGlobalEscapes": 167
+      },
+      {
+        "path": "src/apps/performance/components/performance-custom-window-dialog.module.css",
+        "maxGlobalEscapes": 2
+      },
+      {
+        "path": "src/apps/performance/components/performance-return-path-chart-stage.module.css",
+        "maxGlobalEscapes": 1
+      },
+      {
+        "path": "src/apps/performance/components/performance-source-selection-controls.module.css",
+        "maxGlobalEscapes": 6
+      },
+      {
+        "path": "src/apps/performance/evidence/performance-evidence-assurance-workspace.module.css",
+        "maxGlobalEscapes": 2
+      },
+      {
+        "path": "src/apps/portfolio/components/portfolio-income-activity.module.css",
+        "maxGlobalEscapes": 1
+      },
+      {
+        "path": "src/apps/portfolio/components/portfolio-projected-cashflow.module.css",
+        "maxGlobalEscapes": 6
+      },
+      {
+        "path": "src/apps/portfolio/components/portfolio-screen-rail.module.css",
+        "maxGlobalEscapes": 1
+      },
+      {
+        "path": "src/features/intake/intake-workspace.module.css",
+        "maxGlobalEscapes": 3
+      },
+      {
+        "path": "src/features/proposals/components/advisory-overview-workspace.module.css",
+        "maxGlobalEscapes": 2
+      },
+      {
+        "path": "src/features/proposals/components/policy-review-workspace.module.css",
+        "maxGlobalEscapes": 1
+      },
+      {
+        "path": "src/features/proposals/components/proposal-builder-workflow-rail.module.css",
+        "maxGlobalEscapes": 1
+      },
+      {
+        "path": "src/features/proposals/components/proposal-detail-view.module.css",
+        "maxGlobalEscapes": 12
+      },
+      {
+        "path": "src/features/proposals/components/proposal-review-panel.module.css",
+        "maxGlobalEscapes": 6
+      },
+      {
+        "path": "src/features/proposals/components/proposal-simulate-form.module.css",
+        "maxGlobalEscapes": 6
+      },
+      {
+        "path": "src/features/proposals/components/proposal-workspace-shell.module.css",
+        "maxGlobalEscapes": 7
+      },
+      {
+        "path": "src/features/report-ordering/report-ordering-workspace.module.css",
+        "maxGlobalEscapes": 5
+      },
+      {
+        "path": "src/features/workbench/components/dpm-campaign-definitions-section.module.css",
+        "maxGlobalEscapes": 2
+      },
+      {
+        "path": "src/features/workbench/components/manage-overview.module.css",
+        "maxGlobalEscapes": 2
+      },
+      {
+        "path": "src/features/workbench/manage-workspace.module.css",
+        "maxGlobalEscapes": 664
+      }
+    ]
+  },
   "forbiddenSelectorPrefixes": [
     "domain-products-",
     "intake-operation-tabs",
