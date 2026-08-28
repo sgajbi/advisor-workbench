@@ -170,7 +170,68 @@ describe("useConstructionAlternativesActions", () => {
     expect(generateDpmConstructionAlternatives).toHaveBeenCalledWith({ portfolio });
     expect(result.current.model.alternativeSetId).toBe("cas_1");
     expect(result.current.model.selectedAlternative?.label).toBe("Balanced Transition");
-    expect(result.current.actionMessage).toBe("Construction alternatives generated.");
+    expect(result.current.actionMessage).toBe(
+      "Construction alternatives generated from mandate data.",
+    );
+  });
+
+  it("does not publish success confirmation before source persistence succeeds", async () => {
+    let resolveGeneration: ((response: DpmConstructionGatewayResponse) => void) | undefined;
+    vi.mocked(generateDpmConstructionAlternatives).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveGeneration = resolve;
+        }),
+    );
+    const { result } = renderHook(() => useConstructionAlternativesActions({ portfolio }));
+
+    let generation: Promise<void> | undefined;
+    act(() => {
+      generation = result.current.generateAlternatives();
+    });
+
+    expect(result.current.generatePending).toBe(true);
+    expect(result.current.actionMessage).toBeNull();
+    expect(result.current.model.state).toBe("idle");
+
+    await act(async () => {
+      resolveGeneration?.(readyResponse);
+      await generation;
+    });
+
+    expect(result.current.generatePending).toBe(false);
+    expect(result.current.actionMessage).toBe(
+      "Construction alternatives generated from mandate data.",
+    );
+  });
+
+  it("keeps a failed source request explicit and does not fabricate evidence", async () => {
+    vi.mocked(generateDpmConstructionAlternatives).mockRejectedValue(
+      new Error("Manage construction unavailable"),
+    );
+    const { result } = renderHook(() => useConstructionAlternativesActions({ portfolio }));
+
+    await act(async () => {
+      await result.current.generateAlternatives();
+    });
+
+    expect(result.current.model.state).toBe("idle");
+    expect(result.current.actionMessage).toBeNull();
+    expect(result.current.actionError).toBe("Manage construction unavailable");
+  });
+
+  it("reports source-owned blocking posture instead of a success claim", async () => {
+    vi.mocked(generateDpmConstructionAlternatives).mockResolvedValue(blockedResponse);
+    const { result } = renderHook(() => useConstructionAlternativesActions({ portfolio }));
+
+    await act(async () => {
+      await result.current.generateAlternatives();
+    });
+
+    expect(result.current.model.state).toBe("blocked");
+    expect(result.current.actionMessage).toBe(
+      "Construction request completed with blocking conditions.",
+    );
   });
 
   it("selects an alternative through Gateway and does not construct execution posture", async () => {

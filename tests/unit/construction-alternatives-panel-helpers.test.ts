@@ -5,6 +5,8 @@ import {
   buildConstructionStatePanelCopy,
   canSelectConstructionAlternative,
   constructionBadgeTone,
+  constructionGenerationMessage,
+  resolveConstructionEvidenceStatus,
   resolveConstructionAlternativeLabel,
   shouldShowConstructionAttentionReasons,
   shouldShowConstructionStatePanel,
@@ -44,6 +46,38 @@ describe("construction alternatives panel helpers", () => {
     expect(constructionBadgeTone("Acceptable")).toBe("warn");
     expect(constructionBadgeTone("BLOCKED")).toBe("danger");
     expect(constructionBadgeTone("UNKNOWN")).toBe("default");
+  });
+
+  it.each([
+    ["idle", false, null, "not_generated", "Not generated", "default"],
+    ["idle", true, null, "generating", "Generating", "warn"],
+    ["idle", false, "Source unavailable", "unavailable", "Unavailable", "danger"],
+    ["ready", false, null, "available", "Evidence available", "success"],
+    ["partial", false, null, "partial", "Partial evidence", "warn"],
+    ["blocked", false, null, "blocked", "Blocked", "danger"],
+    ["unsupported", false, null, "unsupported", "Unsupported", "danger"],
+    ["unavailable", false, null, "unavailable", "Unavailable", "danger"],
+  ] as const)(
+    "derives %s evidence posture without pre-announcing success",
+    (panelState, generatePending, actionError, state, label, tone) => {
+      expect(
+        resolveConstructionEvidenceStatus({
+          panelState,
+          generatePending,
+          actionError,
+        }),
+      ).toEqual({ state, label, tone });
+    },
+  );
+
+  it.each([
+    ["ready", "Construction alternatives generated from mandate data."],
+    ["partial", "Construction alternatives generated with partial evidence."],
+    ["blocked", "Construction request completed with blocking conditions."],
+    ["unsupported", "Construction is not supported for this mandate."],
+    ["unavailable", "Construction request completed without comparable alternatives."],
+  ] as const)("keeps %s generation feedback aligned to source posture", (state, message) => {
+    expect(constructionGenerationMessage(state)).toBe(message);
   });
 
   it("builds deterministic state panel copy without backend recomputation", () => {
