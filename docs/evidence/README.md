@@ -1,13 +1,13 @@
 # Review Evidence Index
 
 This directory contains issue-scoped diagnostic and reviewer evidence retained with the repository.
-Each pack must state its source head, fixture or runtime context, proven behavior, and non-claims.
+Each pack must state its source head, fixture or runtime context, proven behaviour, and non-claims.
 
 Evidence classes are not interchangeable:
 
 | Evidence | Supports | Does not support by itself |
 | --- | --- | --- |
-| Deterministic fixture render | Workbench behavior and responsive composition against governed fixtures | Source-service integration or production readiness |
+| Deterministic fixture render | Workbench behaviour and responsive composition against governed fixtures | Source-service integration or production readiness |
 | Canonical runtime artefact | Integrated behavior for the governed seed and recorded service heads | Production identity, resilience, capacity, or bank acceptance |
 | Exact-main CI | Releasability of the merged repository head | External-service or production-environment certification |
 | Diagnostic capture | Root-cause analysis or reviewer comparison | Product promotion or closure evidence |

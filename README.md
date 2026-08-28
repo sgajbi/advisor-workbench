@@ -1,7 +1,7 @@
 # Lotus Workbench
 
 Lotus Workbench is the primary front-office product interface for the Lotus wealth-management
-platform. It gives relationship managers, client advisors, portfolio managers, investment
+platform. It gives relationship managers, client advisers, portfolio managers, investment
 specialists, operations teams, and support teams one decision-oriented view of source-owned
 portfolio, performance, risk, advisory, portfolio-management, reporting, and data-product facts.
 
@@ -14,9 +14,9 @@ evidence. Those responsibilities remain with the relevant Lotus services and are
 
 | Business area | Current Workbench role | Primary source authority |
 | --- | --- | --- |
-| Advisor book | Select an entitled portfolio and preserve the business review date | Gateway and Core |
+| Adviser book | Select an entitled portfolio and preserve the business review date | Gateway and Core |
 | Portfolio review | Review value, allocation, holdings, activity, income, liquidity, and intake readiness | Gateway and Core |
-| Performance and risk | Interpret returns, benchmark-relative results, contributors, risk, evidence, and advisor briefing | Gateway, Performance, Risk, Advise, and Lotus AI |
+| Performance and risk | Interpret returns, benchmark-relative results, contributors, risk, evidence, and adviser briefing | Gateway, Performance, Risk, Advise, and Lotus AI |
 | Portfolio management | Review mandate attention, rebalance waves, construction alternatives, portfolio memory, operating quality, outcomes, and evidence packs | Gateway and Manage, with bounded Report and Lotus AI handoffs |
 | Advisory and proposals | Review opportunities, suitability, risk impact, discussion material, approvals, and implementation posture | Gateway, Idea, Advise, Risk, Report, and Lotus AI |
 | Report centre | Order approved portfolio reports and monitor source-owned report-data jobs | Gateway and Report |
