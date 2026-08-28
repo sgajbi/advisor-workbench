@@ -6,15 +6,15 @@ Improve first-paint readability of the secondary analytical tables by reducing h
 
 ## Changes
 
-- Added a reusable table-text wrapper in [risk-table-text.tsx](..\..\src\apps\performance\components\risk\risk-table-text.tsx).
-- Updated [risk-analytical-table.tsx](..\..\src\apps\performance\components\risk\risk-analytical-table.tsx) to accept React nodes in cells so panels can render controlled table text.
-- Updated [risk-rolling-window-detail.tsx](..\..\src\apps\performance\components\risk\risk-rolling-window-detail.tsx):
+- Added a reusable table-text wrapper in [risk-table-text.tsx](../../src/apps/performance/components/risk/risk-table-text.tsx).
+- Updated [risk-analytical-table.tsx](../../src/apps/performance/components/risk/risk-analytical-table.tsx) to accept React nodes in cells so panels can render controlled table text.
+- Updated [risk-rolling-window-detail.tsx](../../src/apps/performance/components/risk/risk-rolling-window-detail.tsx):
   - shorter table headers
   - clamped review-note cell rendering
-- Updated [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx):
+- Updated [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx):
   - shorter table headers
   - truncated group-cell rendering
-- Tightened the corresponding table text styles in [globals.css](..\..\src\app\globals.css).
+- Tightened the corresponding table text styles in [globals.css](../../src/app/globals.css).
 
 ## Why This Matters
 

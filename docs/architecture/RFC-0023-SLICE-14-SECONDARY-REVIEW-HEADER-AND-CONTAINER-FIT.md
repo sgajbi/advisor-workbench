@@ -6,13 +6,13 @@ Remove the remaining dead white space in the secondary analytical band by tighte
 
 ## Changes
 
-- Tightened secondary analytical container behavior in [globals.css](..\..\src\app\globals.css):
+- Tightened secondary analytical container behavior in [globals.css](../../src/app/globals.css):
   - secondary grid items explicitly size to content
   - secondary band items no longer preserve unnecessary height below shorter tables
 - Tightened review controls and table headers in:
-  - [risk-rolling-window-detail.tsx](..\..\src\apps\performance\components\risk\risk-rolling-window-detail.tsx)
-  - [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
-- Added reusable compact table text rendering with [risk-table-text.tsx](..\..\src\apps\performance\components\risk\risk-table-text.tsx) and enabled React-node cells in [risk-analytical-table.tsx](..\..\src\apps\performance\components\risk\risk-analytical-table.tsx).
+  - [risk-rolling-window-detail.tsx](../../src/apps/performance/components/risk/risk-rolling-window-detail.tsx)
+  - [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
+- Added reusable compact table text rendering with [risk-table-text.tsx](../../src/apps/performance/components/risk/risk-table-text.tsx) and enabled React-node cells in [risk-analytical-table.tsx](../../src/apps/performance/components/risk/risk-analytical-table.tsx).
 
 ## Why This Matters
 

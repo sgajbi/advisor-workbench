@@ -9,23 +9,23 @@ Move panel-density tightening out of panel-local CSS and into the shared risk sh
 
 ## Changes
 
-- Added a reusable `density` prop to [risk-module-shell.tsx](..\..\src\apps\performance\components\risk\risk-module-shell.tsx).
-- Added the shared compact shell styling to [globals.css](..\..\src\app\globals.css):
+- Added a reusable `density` prop to [risk-module-shell.tsx](../../src/apps/performance/components/risk/risk-module-shell.tsx).
+- Added the shared compact shell styling to [globals.css](../../src/app/globals.css):
   - tighter shell body gaps
   - tighter header/action spacing
   - tighter module-body gap
-- Fixed the rolling headline strip by making [globals.css](..\..\src\app\globals.css) treat `.performance-risk-metric-strip` as a real grid, so rolling headline metrics no longer collapse into a vertical stack.
-- Reworked the secondary analytical row in [globals.css](..\..\src\app\globals.css) so it uses independent-width flex columns instead of equal-height grid tracks.
+- Fixed the rolling headline strip by making [globals.css](../../src/app/globals.css) treat `.performance-risk-metric-strip` as a real grid, so rolling headline metrics no longer collapse into a vertical stack.
+- Reworked the secondary analytical row in [globals.css](../../src/app/globals.css) so it uses independent-width flex columns instead of equal-height grid tracks.
 - Applied compact executive-summary density to:
   - the then-current `risk-rolling-business-reading.tsx`
-  - [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
-- Tightened attribution analytical detail density in [globals.css](..\..\src\app\globals.css) by further capping the compact attribution table and note spacing.
+  - [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
+- Tightened attribution analytical detail density in [globals.css](../../src/app/globals.css) by further capping the compact attribution table and note spacing.
 - Applied `density="compact"` to all five risk modules:
-  - [risk-snapshot-panel.tsx](..\..\src\apps\performance\components\risk\risk-snapshot-panel.tsx)
-  - [risk-drawdown-panel.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-panel.tsx)
-  - [risk-concentration-panel.tsx](..\..\src\apps\performance\components\risk\risk-concentration-panel.tsx)
-  - [risk-rolling-panel.tsx](..\..\src\apps\performance\components\risk\risk-rolling-panel.tsx)
-  - [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
+  - [risk-snapshot-panel.tsx](../../src/apps/performance/components/risk/risk-snapshot-panel.tsx)
+  - [risk-drawdown-panel.tsx](../../src/apps/performance/components/risk/risk-drawdown-panel.tsx)
+  - [risk-concentration-panel.tsx](../../src/apps/performance/components/risk/risk-concentration-panel.tsx)
+  - [risk-rolling-panel.tsx](../../src/apps/performance/components/risk/risk-rolling-panel.tsx)
+  - [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
 
 ## Why This Matters
 

@@ -185,7 +185,7 @@ Observed live values:
 
 ## Workbench Test Gaps Closed In This Slice
 
-Updated [workbench-api.test.ts](..\..\tests\unit\workbench-api.test.ts) to add direct request-shape coverage for:
+Updated [workbench-api.test.ts](../../tests/unit/workbench-api.test.ts) to add direct request-shape coverage for:
 
 1. risk summary with and without benchmark context,
 2. concentration omitting `detail_basis`,

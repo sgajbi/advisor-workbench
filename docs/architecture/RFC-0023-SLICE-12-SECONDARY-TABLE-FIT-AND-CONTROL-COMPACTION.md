@@ -6,11 +6,11 @@ Tighten the last remaining high-noise surfaces in the secondary analytical row b
 
 ## Changes
 
-- Added compact segmented-control styling in [globals.css](..\..\src\app\globals.css).
+- Added compact segmented-control styling in [globals.css](../../src/app/globals.css).
 - Applied the compact segmented-control treatment to:
-  - [risk-rolling-window-detail.tsx](..\..\src\apps\performance\components\risk\risk-rolling-window-detail.tsx)
-  - [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
-- Tightened analytical-table fit in [globals.css](..\..\src\app\globals.css):
+  - [risk-rolling-window-detail.tsx](../../src/apps/performance/components/risk/risk-rolling-window-detail.tsx)
+  - [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
+- Tightened analytical-table fit in [globals.css](../../src/app/globals.css):
   - smaller cell sizing for rolling and attribution detail tables
   - fixed-width table layout retained
   - attribution toolbar spacing compressed

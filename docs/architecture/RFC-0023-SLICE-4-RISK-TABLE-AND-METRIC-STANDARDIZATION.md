@@ -19,7 +19,7 @@ This slice standardizes those patterns before more panel polish lands.
 
 ### Shared risk analytical table
 
-Added [risk-analytical-table.tsx](..\..\src\apps\performance\components\risk\risk-analytical-table.tsx).
+Added [risk-analytical-table.tsx](../../src/apps/performance/components/risk/risk-analytical-table.tsx).
 
 It standardizes:
 
@@ -29,15 +29,15 @@ It standardizes:
 
 Current adopters:
 
-1. [risk-drawdown-detail.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail.tsx)
-2. [risk-rolling-window-detail.tsx](..\..\src\apps\performance\components\risk\risk-rolling-window-detail.tsx)
-3. [risk-drawdown-detail-drawer.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail-drawer.tsx)
-4. [risk-rolling-detail-drawer.tsx](..\..\src\apps\performance\components\risk\risk-rolling-detail-drawer.tsx)
-5. [risk-attribution-panel.tsx](..\..\src\apps\performance\components\risk\risk-attribution-panel.tsx)
+1. [risk-drawdown-detail.tsx](../../src/apps/performance/components/risk/risk-drawdown-detail.tsx)
+2. [risk-rolling-window-detail.tsx](../../src/apps/performance/components/risk/risk-rolling-window-detail.tsx)
+3. [risk-drawdown-detail-drawer.tsx](../../src/apps/performance/components/risk/risk-drawdown-detail-drawer.tsx)
+4. [risk-rolling-detail-drawer.tsx](../../src/apps/performance/components/risk/risk-rolling-detail-drawer.tsx)
+5. [risk-attribution-panel.tsx](../../src/apps/performance/components/risk/risk-attribution-panel.tsx)
 
 ### Shared risk metric card
 
-Added [risk-metric-card.tsx](..\..\src\apps\performance\components\risk\risk-metric-card.tsx).
+Added [risk-metric-card.tsx](../../src/apps/performance/components/risk/risk-metric-card.tsx).
 
 It standardizes:
 
@@ -48,8 +48,8 @@ It standardizes:
 
 Current adopters:
 
-1. drawdown supporting metrics in [risk-drawdown-detail.tsx](..\..\src\apps\performance\components\risk\risk-drawdown-detail.tsx)
-2. concentration indicator tiles in [risk-concentration-indicator-strip.tsx](..\..\src\apps\performance\components\risk\risk-concentration-indicator-strip.tsx)
+1. drawdown supporting metrics in [risk-drawdown-detail.tsx](../../src/apps/performance/components/risk/risk-drawdown-detail.tsx)
+2. concentration indicator tiles in [risk-concentration-indicator-strip.tsx](../../src/apps/performance/components/risk/risk-concentration-indicator-strip.tsx)
 
 ## Why This Slice Matters
 
@@ -67,8 +67,8 @@ That gives later UX work a safer base for:
 
 Added:
 
-1. [risk-analytical-table.test.tsx](..\..\tests\unit\risk-analytical-table.test.tsx)
-2. [risk-metric-card.test.tsx](..\..\tests\unit\risk-metric-card.test.tsx)
+1. [risk-analytical-table.test.tsx](../../tests/unit/risk-analytical-table.test.tsx)
+2. [risk-metric-card.test.tsx](../../tests/unit/risk-metric-card.test.tsx)
 
 These tests prove:
 
