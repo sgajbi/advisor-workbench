@@ -213,9 +213,12 @@ describe("OutcomeReviewPanel", () => {
     });
 
     render(<OutcomeReviewPanel portfolioId="PB_SG_GLOBAL_BAL_001" response={readyResponse} />);
-    fireEvent.click(
-      screen.getByRole("button", { name: /Prepare AI-assisted review summary/ }),
-    );
+    const requestSummary = screen.getByRole("button", {
+      name: /Prepare AI-assisted review summary/,
+    });
+    requestSummary.focus();
+    expect(requestSummary).toHaveFocus();
+    fireEvent.click(requestSummary);
 
     await waitFor(() => {
       expect(requestDpmOutcomeReviewAiNarrative).toHaveBeenCalledWith({

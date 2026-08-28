@@ -105,11 +105,23 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
     await blockedClientActions.click();
     await expect(page.getByText("Client message generation", { exact: true })).toBeVisible();
     await blockedClientActions.click();
-    await expect(
-      page.getByRole("button", {
-        name: /Prepare AI-assisted review summary/,
-      }),
-    ).toHaveCount(1);
+    const prepareSummary = page.getByRole("button", {
+      name: /Prepare AI-assisted review summary/,
+    });
+    await expect(prepareSummary).toHaveCount(1);
+    if (viewport.width === 1440) {
+      await prepareSummary.focus();
+      await expect(prepareSummary).toBeFocused();
+      await prepareSummary.press("Enter");
+      const narrativeHeading = page.getByRole("heading", {
+        name: "Outcome review narrative",
+      });
+      await expect(narrativeHeading).toBeVisible();
+      await expect(narrativeHeading).toBeFocused();
+      await expect(
+        page.getByLabel("Status Live output • review required"),
+      ).toBeVisible();
+    }
 
     const sourceProfile = page.getByText("View source profile", { exact: true });
     await expect(sourceProfile).toBeVisible();

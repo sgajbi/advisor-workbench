@@ -115,6 +115,29 @@ export async function startManageFixtureGateway({
       );
       return;
     }
+    const outcomeReviewNarrativeMatch = path.match(
+      /^\/api\/v1\/dpm\/command-center\/outcome-reviews\/([^/]+)\/ai-narrative$/,
+    );
+    if (
+      process.env.MANAGE_E2E_FIXTURE === "outcome-reviews" &&
+      outcomeReviewNarrativeMatch &&
+      request.method === "POST"
+    ) {
+      const requestedOutcomeReviewId = decodeURIComponent(
+        outcomeReviewNarrativeMatch[1],
+      );
+      if (requestedOutcomeReviewId !== "outcome-review-2026-05-13") {
+        sendJson(response, { code: "fixture_outcome_review_not_found" }, 404);
+        return;
+      }
+      sendJson(
+        response,
+        buildDpmAiWorkflowResponse("outcome-narrative", {
+          sourceReference: requestedOutcomeReviewId,
+        }),
+      );
+      return;
+    }
     if (
       process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
       path === "/api/v1/dpm/command-center/proof-packs" &&
