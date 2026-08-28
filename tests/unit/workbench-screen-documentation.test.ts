@@ -87,9 +87,9 @@ describe("Workbench screen documentation governance", () => {
       routeEntrypoints: 21,
       activeSurfaces: 36,
       aliases: 2,
-      mappedGuides: 30,
-      coverageExceptions: 6,
-      unmappedGuides: 6,
+      mappedGuides: 36,
+      coverageExceptions: 0,
+      unmappedGuides: 0,
     });
   });
 

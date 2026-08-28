@@ -98,6 +98,17 @@ make test-e2e-fixtures
 make ci-local-docker
 ```
 
+For the bounded, non-certifying two-replica engineering regression:
+
+```bash
+npm run scale:proof
+npm run scale:proof:down
+```
+
+Workbench exposes `/api/health/live` and `/api/health/ready` for container orchestration and
+operator diagnosis. The scale proof exercises distribution, latency, error, persistence, resource,
+and replica-replacement controls; it is not production capacity or resilience certification.
+
 `make check` covers dependency/security policy, lint and architecture controls, React correctness,
 screen-documentation governance, type safety, coverage-backed tests, and a production build. The
 fixture gate proves deterministic Workbench behavior; `npm run live:validate` is required for an
