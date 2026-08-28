@@ -92,4 +92,3 @@ the idle badge or browser request defaults as source evidence.
 - [API Surface](API-Surface)
 - [Supported Features](Supported-Features)
 - [Operations Runbook](Operations-Runbook)
-

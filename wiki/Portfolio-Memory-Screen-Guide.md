@@ -87,4 +87,3 @@ posture before treating the timeline as complete.
 - [API Surface](API-Surface)
 - [Integrations](Integrations)
 - [Troubleshooting](Troubleshooting)
-

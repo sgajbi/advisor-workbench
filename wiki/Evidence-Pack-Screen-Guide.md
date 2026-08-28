@@ -92,4 +92,3 @@ Do not use the current report action label as proof that a report exists.
 - [API Surface](API-Surface)
 - [Report centre](Report-Centre-Screen-Guide)
 - [Validation and CI](Validation-and-CI)
-
