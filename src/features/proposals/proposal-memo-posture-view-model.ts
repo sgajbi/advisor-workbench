@@ -4,6 +4,9 @@ import {
   isCurrentVersionNoMemoLineage,
   lineageItemIdentity,
   memoIdentitiesEqual,
+  resolveHistoricalMemoLineageSource,
+  resolveHistoricalMemoSourceIdentity,
+  resolveHistoricalProjectionSourceIdentity,
   resolveMemoSourceIdentity,
   resolveMemoLineageSource,
   resolveProjectionSourceIdentity,
@@ -127,7 +130,13 @@ const COMMENTARY_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze
   UNAVAILABLE: "Unavailable",
 });
 
-export function buildProposalMemoPostureModel({
+export function buildProposalMemoPostureModel(
+  input: BuildProposalMemoPostureModelInput,
+): ProposalMemoPostureModel {
+  return buildProposalMemoPostureModelForVersion(input, false);
+}
+
+function buildProposalMemoPostureModelForVersion({
   lineageData,
   memoData,
   proposalId,
@@ -136,13 +145,22 @@ export function buildProposalMemoPostureModel({
   selectedAudience,
   sourceConfirmsMemoAbsent = false,
   versionNo,
-}: BuildProposalMemoPostureModelInput): ProposalMemoPostureModel {
-  const memoIdentity = resolveMemoSourceIdentity(
+}: BuildProposalMemoPostureModelInput, allowNewerProposalVersion: boolean): ProposalMemoPostureModel {
+  const memoIdentityResolver = allowNewerProposalVersion
+    ? resolveHistoricalMemoSourceIdentity
+    : resolveMemoSourceIdentity;
+  const projectionIdentityResolver = allowNewerProposalVersion
+    ? resolveHistoricalProjectionSourceIdentity
+    : resolveProjectionSourceIdentity;
+  const memoLineageResolver = allowNewerProposalVersion
+    ? resolveHistoricalMemoLineageSource
+    : resolveMemoLineageSource;
+  const memoIdentity = memoIdentityResolver(
     memoData,
     proposalId,
     versionNo,
   );
-  const projectionIdentity = resolveProjectionSourceIdentity(
+  const projectionIdentity = projectionIdentityResolver(
     projectionData,
     proposalId,
     versionNo,
@@ -155,7 +173,7 @@ export function buildProposalMemoPostureModel({
   const memoHash = memoIdentity?.memoHash ?? null;
   const memoId = memoIdentity?.memoId ?? null;
   const hasMemo = Boolean(memoIdentity);
-  const lineageResolution = resolveMemoLineageSource(
+  const lineageResolution = memoLineageResolver(
     lineageData,
     memoIdentity,
     proposalId,
@@ -379,7 +397,7 @@ export function confirmMemoCreateRefresh({
   action: ProposalMemoData;
   refreshed: ProposalMemoRefreshEvidence;
 }): void {
-  const actionIdentity = resolveMemoSourceIdentity(
+  const actionIdentity = resolveHistoricalMemoSourceIdentity(
     action,
     refreshed.proposalId,
     refreshed.versionNo,
@@ -399,7 +417,7 @@ export function confirmMemoReviewRefresh({
   action: ProposalMemoReviewData;
   refreshed: ProposalMemoRefreshEvidence;
 }): void {
-  const actionIdentity = resolveMemoSourceIdentity(
+  const actionIdentity = resolveHistoricalMemoSourceIdentity(
     action.memo,
     refreshed.proposalId,
     refreshed.versionNo,
@@ -427,7 +445,7 @@ export function confirmMemoReportPackageRefresh({
   action: ProposalMemoReportPackageData;
   refreshed: ProposalMemoRefreshEvidence;
 }): void {
-  const actionIdentity = resolveMemoSourceIdentity(
+  const actionIdentity = resolveHistoricalMemoSourceIdentity(
     action.memo,
     refreshed.proposalId,
     refreshed.versionNo,
@@ -457,7 +475,7 @@ export function confirmMemoCommentaryRefresh({
   action: ProposalMemoAdvisorCommentaryData;
   refreshed: ProposalMemoRefreshEvidence;
 }): void {
-  const actionIdentity = resolveMemoSourceIdentity(
+  const actionIdentity = resolveHistoricalMemoSourceIdentity(
     action.memo,
     refreshed.proposalId,
     refreshed.versionNo,
@@ -571,7 +589,7 @@ export class ProposalMemoRefreshVerificationError extends Error {
 }
 
 function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): ProposalMemoPostureModel {
-  const model = buildProposalMemoPostureModel({
+  const model = buildProposalMemoPostureModelForVersion({
     lineageData: refreshed.lineage,
     memoData: refreshed.memo,
     proposalId: refreshed.proposalId,
@@ -579,7 +597,7 @@ function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): Proposal
     replayData: refreshed.replay,
     selectedAudience: refreshed.selectedAudience,
     versionNo: refreshed.versionNo,
-  });
+  }, true);
   if (!model.sourceEvidenceAligned) {
     if (model.sourceEvidenceFailureReason === "historical-lineage-unavailable") {
       throw new ProposalMemoRefreshVerificationError(

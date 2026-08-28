@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   memoIdentitiesEqual,
+  resolveHistoricalMemoLineageSource,
+  resolveHistoricalMemoSourceIdentity,
+  resolveHistoricalProjectionSourceIdentity,
   resolveMemoSourceIdentity,
-  resolveMemoLineageSource,
   resolveProjectionSourceIdentity,
   resolveReplaySourceIdentity,
   selectCurrentMemoLineageItem,
@@ -81,7 +83,7 @@ describe("proposal memo source identity", () => {
     ).toEqual(expected);
   });
 
-  it("resolves requested-version evidence after the proposal advances", () => {
+  it("admits advanced-proposal evidence only for historical reconciliation", () => {
     const advancedProposal = {
       ...proposalSummary(),
       current_version_no: VERSION_NO + 1,
@@ -93,9 +95,28 @@ describe("proposal memo source identity", () => {
         PROPOSAL_ID,
         VERSION_NO,
       ),
-    ).toMatchObject({ versionNo: VERSION_NO });
+    ).toBeNull();
     expect(
       resolveProjectionSourceIdentity(
+        {
+          proposal: advancedProposal,
+          proposal_version_no: VERSION_NO,
+          memo_id: MEMO_ID,
+          memo_hash: MEMO_HASH,
+        },
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toBeNull();
+    expect(
+      resolveHistoricalMemoSourceIdentity(
+        { ...memoSource(), proposal: advancedProposal },
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toMatchObject({ versionNo: VERSION_NO });
+    expect(
+      resolveHistoricalProjectionSourceIdentity(
         {
           proposal: advancedProposal,
           proposal_version_no: VERSION_NO,
@@ -205,7 +226,8 @@ describe("proposal memo source identity", () => {
       ...proposalSummary(),
       current_version_no: VERSION_NO + 1,
     };
-    const identity = resolveMemoSourceIdentity(
+    expect(resolveMemoSourceIdentity(historical, PROPOSAL_ID, VERSION_NO)).toBeNull();
+    const identity = resolveHistoricalMemoSourceIdentity(
       historical,
       PROPOSAL_ID,
       VERSION_NO,
@@ -230,8 +252,8 @@ describe("proposal memo source identity", () => {
     };
 
     expect(
-      selectCurrentMemoLineageItem(lineage, identity, PROPOSAL_ID, VERSION_NO),
-    ).toEqual(lineage.memos?.[0]);
+      resolveHistoricalMemoLineageSource(lineage, identity, PROPOSAL_ID, VERSION_NO),
+    ).toEqual({ kind: "matched", item: lineage.memos?.[0] });
   });
 
   it("classifies a missing historical lineage item without masking invalid lineage", () => {
@@ -240,7 +262,7 @@ describe("proposal memo source identity", () => {
       ...proposalSummary(),
       current_version_no: VERSION_NO + 1,
     };
-    const identity = resolveMemoSourceIdentity(
+    const identity = resolveHistoricalMemoSourceIdentity(
       historical,
       PROPOSAL_ID,
       VERSION_NO,
@@ -260,10 +282,10 @@ describe("proposal memo source identity", () => {
     };
 
     expect(
-      resolveMemoLineageSource(lineage, identity, PROPOSAL_ID, VERSION_NO),
+      resolveHistoricalMemoLineageSource(lineage, identity, PROPOSAL_ID, VERSION_NO),
     ).toEqual({ kind: "historical-item-missing" });
     expect(
-      resolveMemoLineageSource(
+      resolveHistoricalMemoLineageSource(
         { ...lineage, latest_memo_id: "memo_missing" },
         identity,
         PROPOSAL_ID,

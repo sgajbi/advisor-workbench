@@ -359,6 +359,35 @@ describe("buildProposalMemoPostureModel", () => {
     });
   });
 
+  it("keeps active actions disabled when source evidence belongs to an older requested version", () => {
+    const evidence = alignedEvidence();
+    const advancedProposal = {
+      ...proposalSummary(),
+      current_version_no: VERSION_NO + 1,
+    };
+    evidence.memo = { ...evidence.memo, proposal: advancedProposal };
+    evidence.projection = { ...evidence.projection, proposal: advancedProposal };
+    evidence.lineage = { ...evidence.lineage, proposal: advancedProposal };
+
+    const model = buildProposalMemoPostureModel({
+      lineageData: evidence.lineage,
+      memoData: evidence.memo,
+      proposalId: evidence.proposalId,
+      projectionData: evidence.projection,
+      replayData: evidence.replay,
+      selectedAudience: evidence.selectedAudience,
+      versionNo: evidence.versionNo,
+    });
+
+    expect(model).toMatchObject({
+      canRecordReview: false,
+      canRequestCommentary: false,
+      canRequestReportPackage: false,
+      sourceEvidenceAligned: false,
+      sourceIdentityCurrent: false,
+    });
+  });
+
   it("rejects aligned evidence when complete lineage repeats a memo identity", () => {
     const evidence = alignedEvidence();
     evidence.lineage = {
