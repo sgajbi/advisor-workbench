@@ -207,7 +207,7 @@ describe("buildProposalMemoPostureModel", () => {
     expect(proposalMemoStatusLabel("SOURCE_VALIDATED_BY_RISK")).toBe("Review required");
   });
 
-  it("shows a truthful preparation action when no memo exists", () => {
+  it("does not infer preparation authority from successful empty envelopes", () => {
     const model = buildProposalMemoPostureModel({
       lineageData: {
         lineage_complete: true,
@@ -228,8 +228,8 @@ describe("buildProposalMemoPostureModel", () => {
     expect(model.hasMemo).toBe(false);
     expect(model.statusLabel).toBe("Memo not prepared");
     expect(model.reviewPostureLabel).toBe("Review required");
-    expect(model.sourceIdentityCurrent).toBe(true);
-    expect(model.nextActionKey).toBe("prepare");
+    expect(model.sourceIdentityCurrent).toBe(false);
+    expect(model.nextActionKey).toBe("track");
     expect(model.clientDraftPublicationLabel).toBe("Unavailable");
     expect(model.reportPackageStatusLabel).toBe("Not requested");
 
@@ -254,8 +254,8 @@ describe("buildProposalMemoPostureModel", () => {
       versionNo: VERSION_NO,
     });
 
-    expect(historicalLineageModel.sourceIdentityCurrent).toBe(true);
-    expect(historicalLineageModel.nextActionKey).toBe("prepare");
+    expect(historicalLineageModel.sourceIdentityCurrent).toBe(false);
+    expect(historicalLineageModel.nextActionKey).toBe("track");
   });
 
   it("projects a source-confirmed 404 absence without synthetic memo records", () => {

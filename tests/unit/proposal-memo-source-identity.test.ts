@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isCurrentVersionNoMemoEvidence,
   memoIdentitiesEqual,
   resolveMemoSourceIdentity,
   resolveProjectionSourceIdentity,
@@ -230,104 +229,4 @@ describe("proposal memo source identity", () => {
     ).toBe(false);
   });
 
-  it("accepts only a complete current-version no-memo record", () => {
-    const input = {
-      lineageData: {
-        lineage_complete: true,
-        latest_memo_id: null,
-        memo_count: 0,
-        memos: [],
-        proposal: proposalSummary(),
-        proposal_id: PROPOSAL_ID,
-      },
-      memoData: {},
-      projectionData: { audience: "ADVISOR", sections: [] },
-      proposalId: PROPOSAL_ID,
-      replayData: { audit_events: [], hashes: {} },
-      versionNo: VERSION_NO,
-    };
-
-    expect(isCurrentVersionNoMemoEvidence(input)).toBe(true);
-    const { proposal_id: _optionalProposalId, ...lineageWithoutTopLevelId } =
-      input.lineageData;
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: lineageWithoutTopLevelId,
-      }),
-    ).toBe(true);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: { ...input.lineageData, proposal_id: "pp_other" },
-      }),
-    ).toBe(false);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: {
-          ...input.lineageData,
-          latest_memo_id: "memo_previous",
-          memo_count: 1,
-          memos: [{
-            memo_hash: "sha256:previous",
-            memo_id: "memo_previous",
-            proposal_version_no: VERSION_NO - 1,
-          }],
-        },
-      }),
-    ).toBe(true);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: {
-          lineage_complete: true,
-          latest_memo_id: null,
-          memo_count: 0,
-          memos: [],
-        },
-      }),
-    ).toBe(false);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: {
-          ...input.lineageData,
-          proposal: { ...proposalSummary(), current_version_no: VERSION_NO - 1 },
-        },
-      }),
-    ).toBe(false);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        replayData: {
-          subject: {
-            proposal_id: PROPOSAL_ID,
-            proposal_version_no: VERSION_NO - 1,
-          },
-        },
-      }),
-    ).toBe(false);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: { ...input.lineageData, memo_count: 1 },
-      }),
-    ).toBe(false);
-    expect(
-      isCurrentVersionNoMemoEvidence({
-        ...input,
-        lineageData: {
-          ...input.lineageData,
-          latest_memo_id: "memo_current",
-          memo_count: 1,
-          memos: [{
-            memo_hash: "sha256:current",
-            memo_id: "memo_current",
-            proposal_version_no: VERSION_NO,
-          }],
-        },
-      }),
-    ).toBe(false);
-  });
 });

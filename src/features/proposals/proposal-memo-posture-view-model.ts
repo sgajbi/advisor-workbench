@@ -1,7 +1,6 @@
 import { projectBusinessState } from "@/copy/business-state-copy";
 
 import {
-  isCurrentVersionNoMemoEvidence,
   isCurrentVersionNoMemoLineage,
   lineageItemIdentity,
   memoIdentitiesEqual,
@@ -200,17 +199,6 @@ export function buildProposalMemoPostureModel({
       && lineageData !== null
       && lineageData !== undefined
       && isCurrentVersionNoMemoLineage(lineageData, proposalId, versionNo)
-    )
-    || (
-      !sourceConfirmsMemoAbsent
-      && isCurrentVersionNoMemoEvidence({
-        lineageData,
-        memoData,
-        projectionData,
-        proposalId,
-        replayData,
-        versionNo,
-      })
     );
   const reportStatus =
     firstString(

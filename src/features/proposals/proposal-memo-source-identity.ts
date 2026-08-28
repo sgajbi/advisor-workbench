@@ -146,78 +146,6 @@ export function memoIdentitiesEqual(
   );
 }
 
-export function isCurrentVersionNoMemoEvidence({
-  lineageData,
-  memoData,
-  projectionData,
-  proposalId,
-  replayData,
-  versionNo,
-}: {
-  lineageData: ProposalMemoLineageData | null | undefined;
-  memoData: ProposalMemoData | null | undefined;
-  projectionData: ProposalMemoProjectionData | null | undefined;
-  proposalId: string;
-  replayData: ProposalMemoReplayEvidenceData | null | undefined;
-  versionNo: number | null;
-}): boolean {
-  if (
-    !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !lineageData
-    || !proposalSummaryMatchesActiveVersion(
-      lineageData.proposal,
-      proposalId,
-      versionNo,
-    )
-    || !optionalProposalSummaryMatchesActiveVersion(
-      memoData?.proposal,
-      proposalId,
-      versionNo,
-    )
-    || !optionalProposalSummaryMatchesActiveVersion(
-      projectionData?.proposal,
-      proposalId,
-      versionNo,
-    )
-    || !optionalProposalSummaryMatchesActiveVersion(
-      lineageData?.proposal,
-      proposalId,
-      versionNo,
-    )
-    || !optionalExactValueMatches(memoData?.proposal_version_no, versionNo)
-    || !optionalExactValueMatches(
-      projectionData?.proposal_version_no,
-      versionNo,
-    )
-    || !optionalExactValueMatches(lineageData?.proposal_id, proposalId)
-    || !optionalExactValueMatches(replayData?.subject?.proposal_id, proposalId)
-    || !optionalExactValueMatches(
-      replayData?.subject?.proposal_version_no,
-      versionNo,
-    )
-  ) {
-    return false;
-  }
-
-  return Boolean(
-    identityMarkersAreEmpty(memoData, ["memo_id", "memo_hash"])
-      && identityMarkersAreEmpty(memoData?.memo, [
-        "memo_id",
-        "memo_hash",
-        "proposal_id",
-        "proposal_version_no",
-      ])
-      && identityMarkersAreEmpty(projectionData, ["memo_id", "memo_hash"])
-      && identityMarkersAreEmpty(replayData?.subject, ["memo_id"])
-      && identityMarkersAreEmpty(replayData?.hashes, ["memo_hash"])
-      && isCurrentVersionNoMemoLineage(
-        lineageData,
-        proposalId,
-        versionNo,
-      ),
-  );
-}
-
 export function isCurrentVersionNoMemoLineage(
   lineageData: ProposalMemoLineageData,
   proposalId: string,
@@ -271,30 +199,11 @@ function proposalSummaryMatchesActiveVersion(
   );
 }
 
-function optionalProposalSummaryMatchesActiveVersion(
-  proposal: ProposalSummary | null | undefined,
-  proposalId: string,
-  versionNo: number,
-): boolean {
-  return !proposal || proposalSummaryMatchesActiveVersion(
-    proposal,
-    proposalId,
-    versionNo,
-  );
-}
-
 function optionalExactValueMatches<T>(
   value: T | null | undefined,
   expected: T,
 ): boolean {
   return value == null || value === expected;
-}
-
-function identityMarkersAreEmpty(
-  source: Record<string, unknown> | null | undefined,
-  keys: readonly string[],
-): boolean {
-  return keys.every((key) => source?.[key] == null);
 }
 
 function activeProposalIdentityIsValid(

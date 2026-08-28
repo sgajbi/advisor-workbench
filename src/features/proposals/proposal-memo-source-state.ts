@@ -1,6 +1,11 @@
 import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 
-import { isCurrentVersionNoMemoLineage } from "./proposal-memo-source-identity";
+import {
+  isCurrentVersionNoMemoLineage,
+  resolveMemoSourceIdentity,
+  resolveProjectionSourceIdentity,
+  resolveReplaySourceIdentity,
+} from "./proposal-memo-source-identity";
 
 import type {
   ProposalMemoData,
@@ -34,9 +39,12 @@ type ProposalMemoAbsenceInput = Pick<
   ProposalMemoSourceStateInput,
   | "lineageData"
   | "lineageError"
+  | "memoData"
   | "memoError"
+  | "projectionData"
   | "projectionError"
   | "proposalId"
+  | "replayData"
   | "replayError"
   | "versionNo"
 >;
@@ -44,9 +52,12 @@ type ProposalMemoAbsenceInput = Pick<
 export function isProposalMemoSourceConfirmedAbsent({
   lineageData,
   lineageError,
+  memoData,
   memoError,
+  projectionData,
   projectionError,
   proposalId,
+  replayData,
   replayError,
   versionNo,
 }: ProposalMemoAbsenceInput): boolean {
@@ -57,6 +68,9 @@ export function isProposalMemoSourceConfirmedAbsent({
     && getWorkbenchApiErrorStatus(replayError) === 404
     && !lineageError
     && lineageData
+    && !resolveMemoSourceIdentity(memoData, proposalId, versionNo)
+    && !resolveProjectionSourceIdentity(projectionData, proposalId, versionNo)
+    && !resolveReplaySourceIdentity(replayData, proposalId, versionNo)
     && isCurrentVersionNoMemoLineage(lineageData, proposalId, versionNo)
   );
 }
@@ -95,9 +109,12 @@ export function resolveProposalMemoSourceState({
   if (isProposalMemoSourceConfirmedAbsent({
     lineageData,
     lineageError,
+    memoData,
     memoError,
+    projectionData,
     projectionError,
     proposalId,
+    replayData,
     replayError,
     versionNo,
   })) {
