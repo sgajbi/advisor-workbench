@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import RiskMandateComparison from "../../src/apps/performance/components/risk/risk-mandate-comparison";
 import { buildRiskMandateComparisonViewModel } from "../../src/apps/performance/risk-mandate-comparison-view-model";
+import type { WorkbenchMandateComparison } from "../../src/features/workbench/types";
 import { buildMandateComparisonFixture } from "../fixtures/risk-mandate-comparison-fixtures";
 
 describe("RiskMandateComparison", () => {
@@ -122,6 +123,7 @@ describe("RiskMandateComparison", () => {
 
     const surface = screen.getByTestId("risk-mandate-comparison");
     expect(surface).toHaveAttribute("data-mandate-availability", "supplied");
+    expect(surface).toHaveAttribute("data-mandate-context-posture", "aligned");
     expect(surface).toHaveTextContent("MANDATE_PB_SG_GLOBAL_BAL_001");
     expect(surface).toHaveTextContent("Balanced");
     expect(surface).toHaveTextContent("Review overdue");
@@ -145,6 +147,10 @@ describe("RiskMandateComparison", () => {
       "data-mandate-state",
       "breach",
     );
+    expect(within(concentrationTable).getAllByRole("row")[1]).toHaveAttribute(
+      "data-mandate-constraint",
+      "issuer_max_weight",
+    );
     expect(surface).not.toHaveTextContent("All clear");
 
     const disclosures = screen.getAllByText("Source evidence and lineage");
@@ -152,6 +158,67 @@ describe("RiskMandateComparison", () => {
     expect(surface).toHaveTextContent("DiscretionaryMandateBinding v1");
     expect(surface).toHaveTextContent("cash_weight");
     expect(surface).toHaveTextContent("24 Feb 2026, 01:00 UTC");
+  });
+
+  it("renders different and insufficient mandate contexts as explicit status evidence", () => {
+    const { rerender } = render(
+      <RiskMandateComparison
+        comparison={buildRiskMandateComparisonViewModel({
+          portfolioRisk: buildMandateComparisonFixture(),
+          concentrationRisk: buildMandateComparisonFixture({
+            risk_profile: "GROWTH",
+          }),
+        })}
+      />,
+    );
+
+    const surface = screen.getByTestId("risk-mandate-comparison");
+    expect(surface).toHaveAttribute("data-mandate-context-posture", "conflict");
+    expect(
+      screen.getByText(/different mandate contexts/),
+    ).toHaveAttribute("role", "status");
+
+    rerender(
+      <RiskMandateComparison
+        comparison={buildRiskMandateComparisonViewModel({
+          portfolioRisk: buildMandateComparisonFixture({ risk_profile: null }),
+          concentrationRisk: buildMandateComparisonFixture({ risk_profile: null }),
+        })}
+      />,
+    );
+
+    expect(surface).toHaveAttribute(
+      "data-mandate-context-posture",
+      "insufficient_evidence",
+    );
+    expect(
+      screen.getByText(/insufficient mandate context/),
+    ).toHaveAttribute("role", "status");
+  });
+
+  it("keeps absent cadence and unknown review state explicit", () => {
+    render(
+      <RiskMandateComparison
+        comparison={buildRiskMandateComparisonViewModel({
+          portfolioRisk: buildMandateComparisonFixture({
+            review_policy: {
+              review_frequency: null,
+              last_review_date: null,
+              next_review_due_date: "2026-03-31",
+              state: "future_state",
+            } as unknown as WorkbenchMandateComparison["review_policy"],
+          }),
+          concentrationRisk: null,
+        })}
+      />,
+    );
+
+    const reviewState = screen.getByText("Review state unavailable");
+    expect(reviewState).toHaveAttribute(
+      "data-review-policy-state",
+      "unavailable",
+    );
+    expect(screen.getByText(/Not reported · next 31 Mar 2026/)).toBeVisible();
   });
 
   it("keeps a source-declared unavailable comparison useful without inventing rows", () => {

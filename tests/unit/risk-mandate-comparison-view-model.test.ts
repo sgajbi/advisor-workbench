@@ -302,7 +302,7 @@ describe("risk mandate comparison view model", () => {
           next_review_due_date: null,
           state: "future_state",
         },
-      } as Partial<ReturnType<typeof buildMandateComparisonFixture>>),
+      } as unknown as Partial<ReturnType<typeof buildMandateComparisonFixture>>),
       concentrationRisk: null,
     });
 
