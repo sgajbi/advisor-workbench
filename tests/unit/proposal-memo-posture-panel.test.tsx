@@ -1015,7 +1015,7 @@ describe("ProposalMemoPosturePanel", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps an in-flight review fenced and delivers failure after a version remount", async () => {
+  it("keeps an in-flight review fenced without attributing its failure to a new version", async () => {
     sourceState = evidenceState();
     const reviewRequest = createDeferred<
       Awaited<ReturnType<typeof reviewProposalMemo>>
@@ -1056,16 +1056,16 @@ describe("ProposalMemoPosturePanel", () => {
 
     reviewRequest.reject(new Error("SOURCE_UNAVAILABLE"));
 
-    expect(
-      await screen.findByText(
-        "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
-      ),
-    ).toBeInTheDocument();
     await waitFor(() =>
       expect(
         screen.getByRole("button", { name: "Record advisor review" }),
       ).toBeEnabled(),
     );
+    expect(
+      screen.queryByText(
+        "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("resets an unresolved confirmation when proposal identity changes", async () => {
