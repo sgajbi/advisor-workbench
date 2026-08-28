@@ -329,7 +329,7 @@ export function countCssModuleGlobalEscapes(text, cssPath = "CSS module") {
     try {
       selectorParser((selectors) => {
         selectors.walkPseudos((pseudo) => {
-          if (pseudo.value.toLowerCase() === ":global" && Array.isArray(pseudo.nodes)) {
+          if (pseudo.value.toLowerCase() === ":global") {
             count += 1;
           }
         });

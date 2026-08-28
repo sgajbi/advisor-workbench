@@ -884,6 +884,25 @@ describe("CSS global governance gate", () => {
     }
   });
 
+  it("rejects a bare global mode switch in an otherwise scoped CSS module", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        "src/features/example/example.module.css",
+        ".root :global .unsafe {\n  color: red;\n}\n",
+      );
+
+      expect(() => validateCssGlobalGovernance({ repoRoot, baseline })).toThrow(
+        /has 1 :global\(\.\.\.\) escapes; budget is 0/,
+      );
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
   it("accepts an exact reviewed CSS module escape exception", async () => {
     const { repoRoot, baseline } = createFixture();
     const { validateCssGlobalGovernance } = await governanceModulePromise;

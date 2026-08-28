@@ -13,8 +13,8 @@
   repository flat ESLint configuration. The gate keeps `src/app/globals.css` as a composition
   entrypoint, enforces the governed global-style budgets, rejects migrated component selector
   families that return to global CSS, discovers every `*.module.css` under `src`, and rejects any
-  new or unratcheted `:global(...)` escape. The gate counts parsed functional pseudo-classes rather
-  than text in comments or attribute values and fails closed on invalid selectors. New CSS Modules
+  new or unratcheted `:global` escape. The gate counts parsed bare and functional pseudo-classes
+  rather than text in comments or attribute values and fails closed on invalid selectors. New CSS Modules
   have a zero-escape budget by default;
   legacy exceptions are exact per-file counts with no headroom. The wider lint chain scans
   application source, tests, live validators, scripts,
