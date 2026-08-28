@@ -115,7 +115,9 @@ promote dormant labels into product ownership just because historical route file
   supportability, coverage, methodology, and source controls. Summary and concentration can include
   additive Gateway-owned `mandate_comparison` evidence composed from Manage-owned constraints,
   review policy and lineage plus exact Core/Risk measures. Workbench formats those facts and does
-  not calculate limits, headroom, universal severity bands, breach, or all-clear posture.
+  not calculate limits, headroom, universal severity bands, breach, or all-clear posture. Review
+  frequency is nullable source truth; Workbench renders absence as **Not reported**. Summary and
+  concentration context alignment is checked on the raw source fields before display formatting.
 - Data Product Catalogue is served through `/data-products` and independently consumes Gateway
   `/api/v1/domain-products/catalog`, `/dependency-graph`, and `/trust-certification` through the
   internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;

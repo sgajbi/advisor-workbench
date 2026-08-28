@@ -90,6 +90,10 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
 - Presents Gateway-owned `mandate_comparison` facts from summary and concentration: mandate
   identity and version, risk profile, comparison dates, source state, measure, limit, source
   headroom, basis, reason, review due state, and progressively disclosed lineage.
+- Compares the two mandate contexts before presentation formatting. Unequal or one-sided missing
+  mandate identity, version, risk profile, comparison date, mandate date, or mandate-health date is
+  shown as a different context; a value absent from both reads is shown as insufficient alignment
+  evidence. It is never treated as silent agreement.
 - Presents drawdown depth, duration, episodes, benchmark-relative context, and an on-demand
   underwater series only when the source contract supports them.
 - Presents rolling-risk windows with exact latest, typical, range, coverage, and source-supported
@@ -143,8 +147,11 @@ ownership remains in [Integrations](Integrations).
 | Ready | Exact evidence, methodology access, and source-owned mandate comparison | Review exceptions and evidence gaps before within-mandate rows |
 | Comparison not supplied | Existing Risk evidence remains visible with an explicit additive-contract boundary | Confirm Gateway version/source support; do not infer limits or state |
 | Comparison unavailable or partial | Source reason, date alignment, available rows, and missing evidence remain visible | Qualify use and inspect lineage/supportability |
+| Different mandate contexts | Portfolio-risk and concentration evidence remain separate with an explicit context warning | Do not combine the rows into one conclusion; inspect source identity and dates |
+| Mandate context insufficient | Available rows remain visible, but the screen states that source alignment is unproven | Review the missing mandate facts before relying on the comparison |
 | Limit not defined | Source measure remains visible with no fabricated threshold or headroom | Confirm the approved mandate outside Workbench if the decision requires it |
 | Measure unavailable | Approved limit and source reason remain visible without a fabricated value | Investigate the named source measure before deciding |
+| Review state or cadence unavailable | Supplied review dates remain visible; unknown state is warning evidence and absent cadence is **Not reported** | Confirm review policy with the mandate authority; do not infer a schedule |
 | Partial | Usable modules remain visible with named source limitations, warnings, and partial failures | Qualify any discussion and inspect the affected module |
 | Unavailable | Risk source evidence is not available for the selected context | Confirm portfolio/context and use the approved support path |
 | Access restricted | Explicit permission-blocked posture without restricted data | Use an entitled role or approved access-support process |
@@ -203,13 +210,18 @@ bank approval or competitor superiority.
 - Component and projection tests prove every source comparison state, exact measure, limit,
   source headroom, review timing, date alignment, lineage, additive-field absence, and unavailable
   comparison without browser-owned policy.
+- A raw-context field matrix proves that display formatting cannot hide differences; bilateral
+  absence, one-sided absence, unknown review/constraint states, and nullable cadence are all
+  independently covered.
 - A deterministic source-authority guard prohibits retired threshold helpers and policy placeholders
   from returning and requires stable comparison evidence attributes.
 - CSS governance removes the retired concentration-scale and side-stack selectors, prohibits their
   return, and lowers the exact legacy-global size ratchet.
 - Canonical browser validation uses `PB_SG_GLOBAL_BAL_001`, confirms all five Risk modules,
-  populated attribution evidence, and Gateway-owned mandate states; rejects retired first-scan
-  classifications; records machine-readable comparison proof; and proves page reflow at 1440,
+  populated attribution evidence, and an aligned mandate context. It derives every expected
+  constraint family, key, and state from the exact Gateway summary and concentration responses,
+  rejects duplicate source ownership and extra or missing rendered rows, records machine-readable
+  comparison proof, rejects retired first-scan classifications, and proves page reflow at 1440,
   1024, and 519 pixels.
 - Canonical screenshots remain evidence only after API and calculation validation pass; a
   screenshot alone is not source, entitlement, mandate, identity, suitability, or readiness proof.
@@ -222,8 +234,9 @@ governed validation sequence.
 ## First Support Step
 
 Record the selected portfolio, period, basis, benchmark, reporting currency, as-of date, and which
-module or mandate comparison says **Partial**, **Unavailable**, **Dates differ**, **Limit not
-defined**, **Measure unavailable**, or **Access restricted**. Open source evidence and lineage,
+module or mandate comparison says **Partial**, **Unavailable**, **Dates differ**, **Different
+mandate contexts**, **Mandate context insufficient**, **Limit not defined**, **Measure
+unavailable**, **Review state unavailable**, or **Access restricted**. Open source evidence and lineage,
 record the correlation id and source reason without copying client data or raw payloads into an
 unapproved channel, and do not invent a missing threshold, headroom, breach, or all-clear.
 

@@ -6884,3 +6884,60 @@ wider global-layer decomposition programme. Repository context, CSS architecture
 review ledger, and authored Architecture/Development Workflow wiki pages change because the
 executable ownership rule changed. No screen guide, Gateway/API/OpenAPI contract, domain model,
 calculation, dependency, runtime topology, identity, entitlement, or authentication changes.
+
+## 2026-08-28 — Risk mandate-context truth and exception evidence (#890)
+
+### Business workflow question
+
+When an advisor reviews mandate exceptions, how should Workbench distinguish a genuinely aligned
+portfolio-risk and concentration view from contradictory or incomplete source context without
+inventing mandate policy in the browser?
+
+### Evidence consulted
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   describes a common risk language, book-level outlier monitoring, alerts, and exception-based
+   reviews as the wealth-workstation value pattern.
+2. [BlackRock Aladdin Risk](https://www.blackrock.com/aladdin/platforms/products/aladdin-risk)
+   emphasizes consistent portfolio risk evidence plus integrated governance, compliance, and
+   exception monitoring.
+3. [W3C WCAG 2.2 Use of Color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color)
+   requires visible information in addition to colour where colour carries status.
+4. [W3C Status Messages](https://www.w3.org/WAI/WCAG21/Understanding/status-messages.html)
+   requires important status changes to be programmatically determinable without taking focus.
+5. [FCA risk-warning guidance](https://www.fca.org.uk/firms/risk-warnings-mainstream-investments)
+   calls for clear, balanced, non-misleading risk communication that supports understanding.
+
+### Adopted decisions
+
+1. Compare mandate id, version, risk profile, comparison date, mandate date, and mandate-health date
+   from the raw source facts before formatting. Display strings are presentation, never identity.
+2. Use three explicit cross-source outcomes when both reads are present: **aligned**, **different
+   mandate contexts**, and **mandate context insufficient**. A one-sided missing value is a conflict;
+   bilateral absence is insufficient evidence.
+3. Keep readable status text and stable machine evidence together. Unknown source enums use warning
+   posture and explicit unavailable language; they never share within-mandate styling.
+4. Preserve a nullable review frequency as **Not reported** while retaining any supplied review
+   state and dates. Workbench does not choose a cadence.
+5. Make canonical proof source-derived: assert every exact Gateway source family, constraint key,
+   and state, and reject duplicate ownership or extra/missing rendered rows.
+
+### Rejected decisions
+
+1. Comparing formatted labels or dates, including two identical fallback strings.
+2. Treating missing-on-both as agreement or missing-on-one as an ordinary partial display.
+3. Adding a browser precedence rule to hide duplicate constraints; Gateway #677/PR #683 owns the
+   composer correction.
+4. Hard-coding canonical states such as `within`, `breach`, or `not_defined` independently of the
+   exact source payload.
+5. Communicating unknown and within-mandate evidence through the same neutral tone, or using colour
+   without text.
+
+### Validation and publication decision
+
+Focused proof covers the raw-context field matrix, formatted-date collision, bilateral and
+one-sided absence, unknown constraint/review states, nullable cadence, transport preservation,
+component status semantics, and source-derived canonical evidence. The Risk guide, API guide,
+repository context, and codebase review ledger change because product and operator truth changed.
+No Gateway calculation, Workbench CSS, dependency, authentication, entitlement, or runtime
+topology change is part of this slice.
