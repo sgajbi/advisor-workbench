@@ -21,6 +21,6 @@
 
 ## Local references
 
-- [docs/rfcs/README.md](../docs/rfcs/README.md)
-- [docs/documentation/product-architecture-blueprint.md](../docs/documentation/product-architecture-blueprint.md)
-- [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
+- [docs/rfcs/README.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/rfcs/README.md)
+- [docs/documentation/product-architecture-blueprint.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/documentation/product-architecture-blueprint.md)
+- [docs/operations/canonical-front-office-local-runtime.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/operations/canonical-front-office-local-runtime.md)

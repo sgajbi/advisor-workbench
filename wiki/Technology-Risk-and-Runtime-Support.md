@@ -26,11 +26,11 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | Scale validation dependency | Official NGINX stable `1.30.3` Alpine `3.23` slim image | Digest-pinned, separately scanned, and used only by the hermetic regression harness |
 
 The versioned source is
-[`workbench-runtime-support-policy.v1.json`](../docs/architecture/workbench-runtime-support-policy.v1.json).
+[`workbench-runtime-support-policy.v1.json`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/workbench-runtime-support-policy.v1.json).
 The architecture decision is
-[`workbench-production-runtime-decision.md`](../docs/architecture/workbench-production-runtime-decision.md).
+[`workbench-production-runtime-decision.md`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/workbench-production-runtime-decision.md).
 The direct dependency source is
-[`workbench-dependency-risk-inventory.v1.json`](../docs/architecture/workbench-dependency-risk-inventory.v1.json).
+[`workbench-dependency-risk-inventory.v1.json`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/workbench-dependency-risk-inventory.v1.json).
 
 ## Governed Typography Delivery
 

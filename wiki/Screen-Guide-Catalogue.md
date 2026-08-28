@@ -14,9 +14,9 @@ map and an executable delivery control.
 
 The route-to-guide relationship, implementation evidence, source owners, and governed coverage
 exceptions are governed by
-[`workbench-screen-registry.v1.json`](../docs/documentation/workbench-screen-registry.v1.json).
+[`workbench-screen-registry.v1.json`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/documentation/workbench-screen-registry.v1.json).
 The corresponding
-[`screen guide template`](../docs/documentation/workbench-screen-guide-template.md) defines the
+[`screen guide template`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/documentation/workbench-screen-guide-template.md) defines the
 minimum content required before an exception can be removed.
 
 ## How To Read Availability

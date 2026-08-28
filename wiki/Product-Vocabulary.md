@@ -3,7 +3,7 @@
 Workbench uses one precise business language across portfolio, performance, advisory, suitability,
 portfolio-management, and reporting workflows. This page is the reader-facing index; the complete
 definitions, allowed contexts, restricted alternatives, and engineering rules are maintained in
-[`docs/documentation/product-vocabulary.md`](../docs/documentation/product-vocabulary.md).
+[`docs/documentation/product-vocabulary.md`](https://github.com/sgajbi/lotus-workbench/blob/main/docs/documentation/product-vocabulary.md).
 
 ## Core terms
 

@@ -180,7 +180,7 @@ posture until the gateway has access to the platform-generated RFC-0087 certific
 
 ## First docs to read
 
-- [README.md](../README.md)
-- [REPOSITORY-ENGINEERING-CONTEXT.md](../REPOSITORY-ENGINEERING-CONTEXT.md)
-- [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
-- [docs/documentation/product-architecture-blueprint.md](../docs/documentation/product-architecture-blueprint.md)
+- [README.md](https://github.com/sgajbi/lotus-workbench/blob/main/README.md)
+- [REPOSITORY-ENGINEERING-CONTEXT.md](https://github.com/sgajbi/lotus-workbench/blob/main/REPOSITORY-ENGINEERING-CONTEXT.md)
+- [docs/operations/canonical-front-office-local-runtime.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/operations/canonical-front-office-local-runtime.md)
+- [docs/documentation/product-architecture-blueprint.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/documentation/product-architecture-blueprint.md)

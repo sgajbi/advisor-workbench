@@ -21,9 +21,10 @@
   and configuration files while keeping Next/Core Web Vitals and stable React Hooks correctness
   rules scoped to production app source.
 - `npm run lint:react-compiler`
-  Runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
-  report-only evaluator for React Compiler compatibility. It is not part of `make check` until the
-  current finding families are refactored and promoted through a focused issue.
+  Runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/`. It is part of
+  the blocking `npm run lint` chain and therefore runs through `make lint`, `make check`, and the
+  protected feature, pull-request, and main releasability lanes. The rule set is a correctness and
+  compiler-readiness gate; passing it does not enable the React Compiler runtime.
 - `make typecheck`
 - `make test-coverage`
 - `make test-e2e`
@@ -36,6 +37,8 @@
 - keep `wiki/` as the authored wiki source
 - route runtime and route examples into the wiki
 - keep deep product-architecture and runtime details in `docs/`
+- label target architecture and historical delivery records explicitly; do not present them as
+  current implementation truth
 - keep CSS ownership guidance in `docs/architecture/css-layer-governance.md`
 - when a selector family moves to a component-owned CSS Module, lower the global budget and add its
   prefix to `forbiddenSelectorPrefixes` in the same issue-backed slice

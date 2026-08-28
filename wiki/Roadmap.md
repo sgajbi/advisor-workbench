@@ -1,23 +1,44 @@
-# Roadmap
+# Workbench Roadmap
 
-## Current phase
+## Current Scope
 
-- active premium front-office product client
-- Portfolio and Performance are the strongest current app surfaces
+Workbench is an active front-office product client with implementation-backed portfolio,
+performance, risk, portfolio-management, reporting, data-product, and bounded advisory/proposal
+surfaces. Portfolio and Performance are the most mature shell-promoted workspaces. Several direct
+advisory and proposal routes are implemented for bounded validation while their top-level shell
+capability remains disabled.
 
-## Intentional limitations
+This page records future state only where an open GitHub issue owns it. Current capability truth is
+maintained in [Supported Features](Supported-Features); the complete implemented route and mode
+inventory is in the [Screen Guide Catalogue](Screen-Guide-Catalogue).
 
-- some historical compatibility routes still exist
-- workbench topology is still converging toward the target shell and app map
+## Prioritised Delivery Themes
 
-## Next priorities
+| Theme | Current limitation | Durable owner |
+| --- | --- | --- |
+| Production principal and session | Local configured callers are non-certifying development fixtures; production identity remains fail-closed | [#436](https://github.com/sgajbi/lotus-workbench/issues/436) and [lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563) |
+| Capability promotion | Implemented advisory/proposal routes do not yet imply unrestricted shell access or production entitlement | Capability-specific issues and [Supported Features](Supported-Features) |
+| CSS ownership | Legacy global selectors and CSS Module escapes still require incremental, evidenced migration | [#492](https://github.com/sgajbi/lotus-workbench/issues/492) |
+| Evidence retention | Repository-retained rendered packs need enforceable size, replacement, and retirement policy | [#830](https://github.com/sgajbi/lotus-workbench/issues/830) |
+| Source-truth wording | Remaining technical, reassuring, or over-authoritative product copy must be replaced with business language that matches the contract | [#798](https://github.com/sgajbi/lotus-workbench/issues/798) |
+| Product architecture convergence | Navigation, route ownership, design-system reuse, and source-service boundaries continue to converge without big-bang replacement | [#781](https://github.com/sgajbi/lotus-workbench/issues/781) and issue-backed screen slices |
 
-1. keep strengthening Portfolio and Performance truth and density
-2. promote the embedded RFC-0039 construction alternatives lab, RFC-0040 proof-pack evidence
-   panel, RFC-0041 rebalance-wave command-center panel, and RFC-0042 outcome-review panel with
-   canonical live evidence and screenshots
-   - manage-owned RFC-0040 proof-pack evidence is now rendered through Gateway in Workbench; the
-     remaining roadmap focus is canonical proof promotion, richer wave drawers, item-selection UX,
-     dedicated DPM routes, and external execution integration when owning services support it.
-3. preserve gateway-first integration discipline
-4. continue aligning route ownership to the product architecture blueprint
+## Intentional Boundaries
+
+- Workbench will not duplicate portfolio records, analytics calculations, mandate policy, report
+  generation, or AI authority owned by backend services.
+- A capability-disabled or runtime-gated screen is not a roadmap mock-up, but neither is it a
+  production promotion claim.
+- Construction, evidence-pack, rebalance, outcome-review, and operating-quality surfaces already
+  render bounded Gateway/Manage facts. Future work must deepen source contracts and evidence where
+  issues require it rather than re-announcing those screens as unimplemented.
+- External execution, client publication, production identity, resilience certification, and bank
+  acceptance remain unsupported until their owning contracts, controls, and validation evidence
+  are implemented.
+
+## Roadmap Governance
+
+New future-state statements require an owning GitHub issue with evidence, impact, acceptance
+criteria, and a validation condition. When work merges, update [Supported Features](Supported-Features)
+and the relevant screen guide before removing it from this page. Historical aspirations must not
+remain after current implementation or product direction supersedes them.
