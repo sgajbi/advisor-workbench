@@ -235,7 +235,11 @@ function resolvePanelState(
   if (supportabilityState === "UNSUPPORTED") {
     return "unsupported";
   }
-  if (supportabilityState === "DEGRADED" || supportabilityState === "UNKNOWN") {
+  if (
+    supportabilityState === "DEGRADED" ||
+    supportabilityState === "PARTIAL" ||
+    supportabilityState === "UNKNOWN"
+  ) {
     return alternativeCount > 0 ? "partial" : "unavailable";
   }
   return alternativeCount > 0 ? "ready" : "unavailable";
