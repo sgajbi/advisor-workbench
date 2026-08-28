@@ -402,7 +402,10 @@ export function confirmMemoCreateRefresh({
     refreshed.proposalId,
     refreshed.versionNo,
   );
-  const refreshedModel = assertRefreshEvidence(refreshed);
+  const refreshedModel = assertRefreshEvidence(
+    refreshed,
+    actionIdentity ? action.proposal?.current_version_no : undefined,
+  );
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
   ) {
@@ -422,7 +425,10 @@ export function confirmMemoReviewRefresh({
     refreshed.proposalId,
     refreshed.versionNo,
   );
-  const refreshedModel = assertRefreshEvidence(refreshed);
+  const refreshedModel = assertRefreshEvidence(
+    refreshed,
+    actionIdentity ? action.memo?.proposal?.current_version_no : undefined,
+  );
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
     || !memoActionEventConfirmed({
@@ -450,7 +456,10 @@ export function confirmMemoReportPackageRefresh({
     refreshed.proposalId,
     refreshed.versionNo,
   );
-  const refreshedModel = assertRefreshEvidence(refreshed);
+  const refreshedModel = assertRefreshEvidence(
+    refreshed,
+    actionIdentity ? action.memo?.proposal?.current_version_no : undefined,
+  );
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
     || !memoActionEventConfirmed({
@@ -480,7 +489,10 @@ export function confirmMemoCommentaryRefresh({
     refreshed.proposalId,
     refreshed.versionNo,
   );
-  const refreshedModel = assertRefreshEvidence(refreshed);
+  const refreshedModel = assertRefreshEvidence(
+    refreshed,
+    actionIdentity ? action.memo?.proposal?.current_version_no : undefined,
+  );
   if (
     !actionMatchesRefreshedMemo(actionIdentity, refreshed, refreshedModel)
     || !memoActionEventConfirmed({
@@ -607,8 +619,17 @@ export function confirmedProposalVersionFromMemoRefresh(
   return Number(confirmedVersion);
 }
 
-function assertRefreshEvidence(refreshed: ProposalMemoRefreshEvidence): ProposalMemoPostureModel {
-  confirmedProposalVersionFromMemoRefresh(refreshed);
+function assertRefreshEvidence(
+  refreshed: ProposalMemoRefreshEvidence,
+  actionCurrentVersionNo?: number,
+): ProposalMemoPostureModel {
+  const confirmedVersionNo = confirmedProposalVersionFromMemoRefresh(refreshed);
+  if (
+    actionCurrentVersionNo !== undefined
+    && confirmedVersionNo < actionCurrentVersionNo
+  ) {
+    throw new ProposalMemoRefreshVerificationError("alignment");
+  }
   const model = buildProposalMemoPostureModelForVersion({
     lineageData: refreshed.lineage,
     memoData: refreshed.memo,
