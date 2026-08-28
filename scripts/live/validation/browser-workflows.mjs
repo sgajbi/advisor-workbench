@@ -2492,7 +2492,13 @@ export async function validateConstructionAlternativesPanel(
 
 export async function validatePmOperatingQualityPanel(
   page,
-  { workbenchBaseUrl, portfolioId, timeoutMs, screenshotRegisteredPanel },
+  {
+    workbenchBaseUrl,
+    portfolioId,
+    timeoutMs,
+    expectedEvidence,
+    screenshotRegisteredPanel,
+  },
 ) {
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=quality`, {
     timeout: timeoutMs,
@@ -2509,8 +2515,8 @@ export async function validatePmOperatingQualityPanel(
   const qualityStatusStrip = qualityPanel.locator(".pm-quality-status-strip");
   for (const label of [
     "Policy",
-    "Latest Score Run",
-    "Fairness Analysis",
+    "Selected Quality Run",
+    "Selected Fairness Review",
     "Summary Invocation",
     "Authority",
   ]) {
@@ -2520,6 +2526,45 @@ export async function validatePmOperatingQualityPanel(
       timeout: timeoutMs,
     });
   }
+  const sourceEvidence = qualityPanel.getByTestId(
+    "pm-operating-quality-source-evidence",
+  );
+  await expect(sourceEvidence).toHaveAttribute("data-panel-state", "ready", {
+    timeout: timeoutMs,
+  });
+  await expect(sourceEvidence).toHaveAttribute("data-attention-state", "clear", {
+    timeout: timeoutMs,
+  });
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-source-service",
+    "lotus-manage",
+    { timeout: timeoutMs },
+  );
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-authority",
+    /^lotus-manage:/,
+    { timeout: timeoutMs },
+  );
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-score-run-id",
+    expectedEvidence.scoreRunId,
+    { timeout: timeoutMs },
+  );
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-fairness-analysis-id",
+    expectedEvidence.fairnessAnalysisId,
+    { timeout: timeoutMs },
+  );
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-score-run-state",
+    /^(?!N\/A$).+/,
+    { timeout: timeoutMs },
+  );
+  await expect(sourceEvidence).toHaveAttribute(
+    "data-fairness-analysis-state",
+    /^(?!N\/A$).+/,
+    { timeout: timeoutMs },
+  );
   await expect(
     page.getByLabel("PM operating quality summary generation status"),
   ).toBeVisible({

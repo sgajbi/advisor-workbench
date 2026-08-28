@@ -1155,6 +1155,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain(
       "summaryInvocationId: pmOperatingQualityEvidence.summaryInvocationId",
     );
+    expect(script).toContain("expectedEvidence: pmOperatingQualityEvidence");
     expect(script).toContain('"dpm.copilot_workspace"');
     expect(browserWorkflowModule).toContain(
       "Construction alternatives generated from mandate data.",
@@ -1172,11 +1173,10 @@ describe("canonical live validation script", () => {
       "PM operating quality summary generation status",
     );
     expect(browserWorkflowModule).toContain(
-      'qualityPanel.locator(".pm-quality-status-strip")',
+      'qualityPanel.getByTestId(\n    "pm-operating-quality-source-evidence"',
     );
-    expect(browserWorkflowModule).toContain(
-      "qualityStatusStrip.getByText(label, { exact: true })",
-    );
+    expect(browserWorkflowModule).toContain('"data-score-run-id"');
+    expect(browserWorkflowModule).toContain('"data-fairness-analysis-id"');
     expect(browserWorkflowModule).toContain(
       'getByText("Summary Invocation Detail", { exact: true })',
     );
