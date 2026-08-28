@@ -281,9 +281,11 @@ Current repository posture:
     Feature-specific selectors should migrate beside their React owner with a lowered baseline and
     a forbidden selector-prefix ratchet instead of growing `legacy-global.css`. In particular,
     `*.module.css` files are locally scoped owners, not uncounted global layers. The CSS governance
-    gate discovers every module under `src`, allows zero new `:global(...)` escapes by default, and
-    requires exact per-file exceptions with no headroom. Lower `maxGlobalEscapes` in the same
-    migration whenever an escape is removed; delete the exception at zero. Manage Review Evidence
+    gate discovers every module under `src`, parses selector ASTs so comments and attribute values
+    cannot masquerade as functional `:global(...)` escapes, allows zero new escapes by default, and
+    requires exact per-file exceptions with no headroom. Invalid selectors fail closed. Lower
+    `maxGlobalEscapes` in the same migration whenever an escape is removed; delete the exception at
+    zero. Manage Review Evidence
     rail presentation belongs to `manage-evidence-rail.module.css`; do not restore its retired
     global class contract inside `manage-workspace.module.css`.
     `PortfolioScreenRail` owns its presentation in a colocated CSS Module; route shells own only its
