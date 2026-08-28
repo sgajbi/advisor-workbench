@@ -27,9 +27,31 @@ export function resolveMemoSourceIdentity(
   proposalId: string,
   versionNo: number | null,
 ): ProposalMemoIdentity | null {
+  return resolveMemoIdentity(source, proposalId, versionNo, false);
+}
+
+export function resolveHistoricalMemoSourceIdentity(
+  source: ProposalMemoData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): ProposalMemoIdentity | null {
+  return resolveMemoIdentity(source, proposalId, versionNo, true);
+}
+
+function resolveMemoIdentity(
+  source: ProposalMemoData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+  allowNewerProposalVersion: boolean,
+): ProposalMemoIdentity | null {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryCoversRequestedVersion(source?.proposal, proposalId, versionNo)
+    || !proposalSummaryMatchesRequestedVersion(
+      source?.proposal,
+      proposalId,
+      versionNo,
+      allowNewerProposalVersion,
+    )
     || source?.proposal_version_no !== versionNo
     || exactString(source.memo, "proposal_id") !== proposalId
     || source.memo?.proposal_version_no !== versionNo
@@ -54,9 +76,31 @@ export function resolveProjectionSourceIdentity(
   proposalId: string,
   versionNo: number | null,
 ): ProposalMemoIdentity | null {
+  return resolveProjectionIdentity(source, proposalId, versionNo, false);
+}
+
+export function resolveHistoricalProjectionSourceIdentity(
+  source: ProposalMemoProjectionData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+): ProposalMemoIdentity | null {
+  return resolveProjectionIdentity(source, proposalId, versionNo, true);
+}
+
+function resolveProjectionIdentity(
+  source: ProposalMemoProjectionData | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+  allowNewerProposalVersion: boolean,
+): ProposalMemoIdentity | null {
   if (
     !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryCoversRequestedVersion(source?.proposal, proposalId, versionNo)
+    || !proposalSummaryMatchesRequestedVersion(
+      source?.proposal,
+      proposalId,
+      versionNo,
+      allowNewerProposalVersion,
+    )
     || source?.proposal_version_no !== versionNo
   ) {
     return null;
@@ -108,16 +152,36 @@ export function resolveMemoLineageSource(
   proposalId: string,
   versionNo: number | null,
 ): ProposalMemoLineageResolution {
+  return resolveMemoLineage(lineageData, currentIdentity, proposalId, versionNo, false);
+}
+
+export function resolveHistoricalMemoLineageSource(
+  lineageData: ProposalMemoLineageData | null | undefined,
+  currentIdentity: ProposalMemoIdentity | null,
+  proposalId: string,
+  versionNo: number | null,
+): ProposalMemoLineageResolution {
+  return resolveMemoLineage(lineageData, currentIdentity, proposalId, versionNo, true);
+}
+
+function resolveMemoLineage(
+  lineageData: ProposalMemoLineageData | null | undefined,
+  currentIdentity: ProposalMemoIdentity | null,
+  proposalId: string,
+  versionNo: number | null,
+  allowNewerProposalVersion: boolean,
+): ProposalMemoLineageResolution {
   const memos = lineageData?.memos;
   const memoCount = lineageData?.memo_count;
   const lineageProposalId = lineageData?.proposal_id;
   if (
     !lineageData
     || !activeProposalIdentityIsValid(proposalId, versionNo)
-    || !proposalSummaryCoversRequestedVersion(
+    || !proposalSummaryMatchesRequestedVersion(
       lineageData?.proposal,
       proposalId,
       versionNo,
+      allowNewerProposalVersion,
     )
     || !currentIdentity
     || !Array.isArray(memos)
@@ -151,6 +215,7 @@ export function resolveMemoLineageSource(
   const sourceCurrentVersionNo = lineageData.proposal?.current_version_no;
   if (matchingIndex < 0) {
     return lineageData.lineage_complete === true
+      && allowNewerProposalVersion
       && isPositiveSafeInteger(sourceCurrentVersionNo)
       && sourceCurrentVersionNo > versionNo
       ? { kind: "historical-item-missing" }
@@ -255,6 +320,17 @@ function proposalSummaryCoversRequestedVersion(
       && isPositiveSafeInteger(proposal.current_version_no)
       && proposal.current_version_no >= versionNo,
   );
+}
+
+function proposalSummaryMatchesRequestedVersion(
+  proposal: ProposalSummary | null | undefined,
+  proposalId: string,
+  versionNo: number | null,
+  allowNewerProposalVersion: boolean,
+): boolean {
+  return allowNewerProposalVersion
+    ? proposalSummaryCoversRequestedVersion(proposal, proposalId, versionNo)
+    : proposalSummaryMatchesActiveVersion(proposal, proposalId, versionNo);
 }
 
 function optionalExactValueMatches<T>(
