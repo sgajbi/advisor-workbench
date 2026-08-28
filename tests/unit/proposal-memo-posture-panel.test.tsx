@@ -879,6 +879,10 @@ describe("ProposalMemoPosturePanel", () => {
       "sha256:memo-003",
     );
     const regressedState = evidenceState({}, VERSION_NO - 1);
+    const historicalMemoRefresh = createDeferred<
+      Awaited<ReturnType<typeof getProposalMemo>>
+    >();
+    let holdHistoricalMemoRefresh = false;
     const stateForVersion = (versionNo: number) =>
       versionNo === VERSION_NO
         ? originalState
@@ -886,8 +890,11 @@ describe("ProposalMemoPosturePanel", () => {
           ? regressedState
           : currentState;
     let lineageState = originalState;
-    vi.mocked(getProposalMemo).mockImplementation(async (_proposalId, versionNo) =>
-      stateForVersion(versionNo).memo,
+    vi.mocked(getProposalMemo).mockImplementation(
+      async (_proposalId, versionNo) =>
+        holdHistoricalMemoRefresh && versionNo === VERSION_NO
+          ? historicalMemoRefresh.promise
+          : stateForVersion(versionNo).memo,
     );
     vi.mocked(getProposalMemoProjection).mockImplementation(
       async (_proposalId, versionNo) =>
@@ -1003,7 +1010,22 @@ describe("ProposalMemoPosturePanel", () => {
       VERSION_NO + 1,
     );
     lineageState = originalState;
+    holdHistoricalMemoRefresh = true;
     fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Refreshing…" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeEnabled();
+    holdHistoricalMemoRefresh = false;
+    historicalMemoRefresh.resolve(originalState.memo);
 
     expect(
       await screen.findByText("Advisor review confirmed for proposal version 2."),
@@ -1031,7 +1053,7 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeDisabled();
   });
 
-  it("keeps an in-flight review fenced without attributing its failure to a new version", async () => {
+  it("keeps an in-flight review busy state and failure version-scoped", async () => {
     sourceState = evidenceState();
     const reviewRequest = createDeferred<
       Awaited<ReturnType<typeof reviewProposalMemo>>
@@ -1064,10 +1086,18 @@ describe("ProposalMemoPosturePanel", () => {
       { target: { value: "New-version evidence supports advisor use." } },
     );
     const remountedReview = screen.getByRole("button", {
-      name: "Recording review…",
+      name: "Record advisor review",
     });
-    expect(remountedReview).toBeDisabled();
-    fireEvent.click(remountedReview);
+    expect(remountedReview).toBeEnabled();
+    expect(
+      screen.getByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+    ).toBeEnabled();
+    expect(
+      screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
+    ).toBeEnabled();
+    expect(screen.getByRole("combobox", { name: "Audience view" })).toBeEnabled();
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
 
     reviewRequest.reject(new Error("SOURCE_UNAVAILABLE"));

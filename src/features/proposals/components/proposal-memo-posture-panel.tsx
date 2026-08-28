@@ -122,6 +122,35 @@ function confirmPendingMemoRefresh(
   }
 }
 
+function upsertPendingAction(
+  current: PendingMemoActionState[],
+  next: PendingMemoActionState,
+): PendingMemoActionState[] {
+  return [...current.filter((item) => item.versionNo !== next.versionNo), next];
+}
+
+function removePendingAction(
+  current: PendingMemoActionState[],
+  completed: PendingMemoActionState,
+): PendingMemoActionState[] {
+  return current.filter(
+    (item) =>
+      item.versionNo !== completed.versionNo || item.kind !== completed.kind,
+  );
+}
+
+function hasPendingAction(
+  actions: PendingMemoActionState[],
+  versionNo: number,
+  kind?: PendingMemoActionState["kind"],
+): boolean {
+  return actions.some(
+    (action) =>
+      action.versionNo === versionNo
+      && (kind === undefined || action.kind === kind),
+  );
+}
+
 export default function ProposalMemoPosturePanel({
   proposalId,
   currentVersionNo,
@@ -139,8 +168,9 @@ function ProposalMemoPosturePanelProposalScope({
   proposalId,
   currentVersionNo,
 }: Props) {
-  const [pendingAction, setPendingAction] =
-    useState<PendingMemoActionState | null>(null);
+  const [pendingActions, setPendingActions] = useState<
+    PendingMemoActionState[]
+  >([]);
   const [pendingConfirmations, setPendingConfirmations] = useState<
     PendingMemoConfirmation[]
   >([]);
@@ -163,13 +193,13 @@ function ProposalMemoPosturePanelProposalScope({
       confirmedVersionFloor={confirmedVersionFloor}
       confirmationFailures={confirmationFailures}
       actionMessage={actionMessage}
-      pendingAction={pendingAction}
+      pendingActions={pendingActions}
       pendingConfirmations={pendingConfirmations}
       onActionFailureChange={setActionFailure}
       onConfirmedVersionFloorChange={setConfirmedVersionFloor}
       onConfirmationFailuresChange={setConfirmationFailures}
       onActionMessageChange={setActionMessage}
-      onPendingActionChange={setPendingAction}
+      onPendingActionsChange={setPendingActions}
       onPendingConfirmationsChange={setPendingConfirmations}
     />
   );
@@ -180,7 +210,7 @@ type SessionProps = Props & {
   confirmedVersionFloor: number | null;
   confirmationFailures: Record<number, PendingConfirmationFailure>;
   actionMessage: string | null;
-  pendingAction: PendingMemoActionState | null;
+  pendingActions: PendingMemoActionState[];
   pendingConfirmations: PendingMemoConfirmation[];
   onActionFailureChange: (value: MemoActionFailure | null) => void;
   onConfirmedVersionFloorChange: Dispatch<SetStateAction<number | null>>;
@@ -188,7 +218,7 @@ type SessionProps = Props & {
     SetStateAction<Record<number, PendingConfirmationFailure>>
   >;
   onActionMessageChange: (value: string | null) => void;
-  onPendingActionChange: (value: PendingMemoActionState | null) => void;
+  onPendingActionsChange: Dispatch<SetStateAction<PendingMemoActionState[]>>;
   onPendingConfirmationsChange: Dispatch<
     SetStateAction<PendingMemoConfirmation[]>
   >;
@@ -201,13 +231,13 @@ function ProposalMemoPosturePanelSession({
   confirmedVersionFloor,
   confirmationFailures,
   actionMessage,
-  pendingAction,
+  pendingActions,
   pendingConfirmations,
   onActionFailureChange: setActionFailure,
   onConfirmedVersionFloorChange: setConfirmedVersionFloor,
   onConfirmationFailuresChange: setConfirmationFailures,
   onActionMessageChange: setActionMessage,
-  onPendingActionChange,
+  onPendingActionsChange: setPendingActions,
   onPendingConfirmationsChange,
 }: SessionProps) {
   const versionNo = currentVersionNo ?? null;
@@ -337,6 +367,17 @@ function ProposalMemoPosturePanelSession({
   );
   const workflowBlocked =
     blockingPendingConfirmation !== null || versionRegressionBlocked;
+  const pendingAction = pendingActions.find(
+    (action) => action.versionNo === versionNo,
+  ) ?? null;
+  const pendingConfirmationRefreshing = Boolean(
+    blockingPendingConfirmation
+    && hasPendingAction(
+      pendingActions,
+      blockingPendingConfirmation.versionNo,
+      "refresh",
+    ),
+  );
 
   async function refreshMemoState(
     targetVersionNo: number,
@@ -524,7 +565,8 @@ function ProposalMemoPosturePanelSession({
     operation: () => Promise<PendingMemoConfirmation>,
     onConfirmed?: () => void,
   ) {
-    onPendingActionChange({ kind: action, versionNo: actionVersionNo });
+    const actionState = { kind: action, versionNo: actionVersionNo } as const;
+    setPendingActions((current) => upsertPendingAction(current, actionState));
     setActionFailure(null);
     setConfirmationFailures((current) =>
       omitConfirmationFailure(current, actionVersionNo),
@@ -568,21 +610,24 @@ function ProposalMemoPosturePanelSession({
         });
       }
     } finally {
-      onPendingActionChange(null);
+      setPendingActions((current) => removePendingAction(current, actionState));
     }
   }
 
   async function handleRefreshConfirmation(
     pendingConfirmation: PendingMemoConfirmation,
   ) {
-    if (pendingAction !== null) {
+    if (
+      hasPendingAction(pendingActions, pendingConfirmation.versionNo)
+    ) {
       return;
     }
 
-    onPendingActionChange({
+    const refreshState = {
       kind: "refresh",
       versionNo: pendingConfirmation.versionNo,
-    });
+    } as const;
+    setPendingActions((current) => upsertPendingAction(current, refreshState));
     setConfirmationFailures((current) =>
       omitConfirmationFailure(current, pendingConfirmation.versionNo),
     );
@@ -619,7 +664,9 @@ function ProposalMemoPosturePanelSession({
             : "source-unconfirmed",
       }));
     } finally {
-      onPendingActionChange(null);
+      setPendingActions((current) =>
+        removePendingAction(current, refreshState),
+      );
     }
   }
 
@@ -644,7 +691,7 @@ function ProposalMemoPosturePanelSession({
             : versionRegressionBlocked
               ? "Proposal refresh required"
               : blockingPendingConfirmation !== null
-              ? pendingAction?.kind === "refresh" || sourceRefreshing
+                ? pendingConfirmationRefreshing || sourceRefreshing
                 ? "Checking record"
                 : "Awaiting confirmation"
               : sourceLoading || sourceRefreshing
@@ -711,17 +758,30 @@ function ProposalMemoPosturePanelSession({
           role="alert"
           data-testid="proposal-memo-confirmation-recovery"
           data-confirmation-state={
-            pendingAction?.kind === "refresh" ? "refreshing" : "awaiting-source"
+            hasPendingAction(
+              pendingActions,
+              pendingConfirmation.versionNo,
+              "refresh",
+            )
+              ? "refreshing"
+              : "awaiting-source"
           }
           action={
             <Button
               className={styles.confirmationRefreshAction}
               color="inherit"
               size="small"
-              disabled={pendingAction !== null}
+              disabled={hasPendingAction(
+                pendingActions,
+                pendingConfirmation.versionNo,
+              )}
               onClick={() => void handleRefreshConfirmation(pendingConfirmation)}
             >
-              {pendingAction?.kind === "refresh"
+              {hasPendingAction(
+                pendingActions,
+                pendingConfirmation.versionNo,
+                "refresh",
+              )
                 ? "Refreshing…"
                 : "Refresh record"}
             </Button>
