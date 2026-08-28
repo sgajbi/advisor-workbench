@@ -1834,6 +1834,7 @@ export async function validateRiskPanel(
     benchmarkCode,
     canonicalStartDate,
     canonicalAsOfDate,
+    mandateComparisons,
     timeoutMs,
     assertTableHasRows,
     screenshotRegisteredPanel,
@@ -1899,6 +1900,11 @@ export async function validateRiskPanel(
     "supplied",
     { timeout: timeoutMs },
   );
+  await expect(mandateComparison).toHaveAttribute(
+    "data-mandate-context-posture",
+    "aligned",
+    { timeout: timeoutMs },
+  );
   await expect(mandateComparison.getByText("Source evidence supplied", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1909,11 +1915,35 @@ export async function validateRiskPanel(
     timeout: timeoutMs,
   });
   const mandateStates = await mandateComparison
-    .locator("[data-mandate-state]")
-    .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-mandate-state")));
-  for (const expectedState of ["within", "breach", "not_defined"]) {
-    if (!mandateStates.includes(expectedState)) {
-      throw new Error(`Risk mandate comparison did not render source state ${expectedState}.`);
+    .locator("[data-mandate-source]")
+    .evaluateAll((sources) =>
+      sources.flatMap((source) =>
+        Array.from(source.querySelectorAll("[data-mandate-constraint]")).map((row) => ({
+          source: source.getAttribute("data-mandate-source"),
+          key: row.getAttribute("data-mandate-constraint"),
+          state: row.getAttribute("data-mandate-state"),
+        })),
+      ),
+    );
+  const expectedMandateStates = buildMandateConstraintProofRows(mandateComparisons);
+  if (mandateStates.length !== expectedMandateStates.length) {
+    throw new Error(
+      `Risk mandate comparison rendered ${mandateStates.length} constraint rows; Gateway returned ${expectedMandateStates.length}.`,
+    );
+  }
+  for (const expected of expectedMandateStates) {
+    const rendered = mandateStates.find(
+      (row) => row.source === expected.source && row.key === expected.key,
+    );
+    if (!rendered) {
+      throw new Error(
+        `Risk mandate comparison did not render ${expected.source} constraint ${expected.key}.`,
+      );
+    }
+    if (rendered.state !== expected.state) {
+      throw new Error(
+        `Risk mandate comparison rendered ${expected.source} constraint ${expected.key} as ${rendered.state ?? "missing"}; Gateway returned ${expected.state}.`,
+      );
     }
   }
   summary.uiChecks.push({
@@ -1921,7 +1951,9 @@ export async function validateRiskPanel(
     kind: "risk-mandate-comparison",
     portfolioId,
     availability: "supplied",
-    sourceStates: [...new Set(mandateStates)].sort(),
+    contextPosture: "aligned",
+    sourceStates: [...new Set(mandateStates.map((row) => row.state))].sort(),
+    sourceConstraintEvidence: mandateStates,
     browserPolicyCalculation: "none",
   });
   for (const retiredClassification of [
@@ -1954,6 +1986,41 @@ export async function validateRiskPanel(
   }
   await page.setViewportSize(originalViewport);
   await screenshotRegisteredPanel(page, "performance.risk.snapshot");
+}
+
+export function buildMandateConstraintProofRows(mandateComparisons) {
+  const sources = [
+    ["summary", mandateComparisons?.summary],
+    ["concentration", mandateComparisons?.concentration],
+  ];
+  const rows = [];
+  const sourceByConstraint = new Map();
+
+  for (const [source, comparison] of sources) {
+    if (!comparison || !Array.isArray(comparison.constraints)) {
+      throw new Error(`Risk ${source} returned no mandate constraint evidence.`);
+    }
+    for (const constraint of comparison.constraints) {
+      const key = typeof constraint?.key === "string" ? constraint.key.trim() : "";
+      const state = typeof constraint?.state === "string" ? constraint.state.trim() : "";
+      if (!key || !state) {
+        throw new Error(`Risk ${source} returned malformed mandate constraint evidence.`);
+      }
+      const previousSource = sourceByConstraint.get(key);
+      if (previousSource) {
+        throw new Error(
+          `Risk mandate constraint ${key} is published by both ${previousSource} and ${source}.`,
+        );
+      }
+      sourceByConstraint.set(key, source);
+      rows.push({ source, key, state });
+    }
+  }
+
+  if (rows.length === 0) {
+    throw new Error("Risk sources returned no mandate constraint rows.");
+  }
+  return rows;
 }
 
 export function classifyPerformanceEvidenceScreenshotState(assuranceState) {

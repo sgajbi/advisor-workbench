@@ -64,6 +64,7 @@ function MandateComparisonSource({
     <section
       className={styles.source}
       aria-labelledby={`mandate-comparison-${source.key}`}
+      data-mandate-source={source.key}
       data-mandate-source-availability={source.availability}
       data-mandate-supportability={source.supportability}
       data-date-alignment={source.dateAlignment}

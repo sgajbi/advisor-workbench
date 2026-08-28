@@ -2012,6 +2012,10 @@ async function run() {
       benchmarkCode,
       canonicalStartDate,
       canonicalAsOfDate,
+      mandateComparisons: {
+        summary: riskSummary.mandate_comparison,
+        concentration: riskConcentration.mandate_comparison,
+      },
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
