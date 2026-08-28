@@ -619,6 +619,8 @@ export function confirmedProposalVersionFromMemoRefresh(
     || sourceProposals.some(
       (proposal) => proposal?.proposal_id !== refreshed.proposalId,
     )
+    || (refreshed.lineage?.proposal_id !== undefined
+      && refreshed.lineage.proposal_id !== refreshed.proposalId)
   ) {
     throw new ProposalMemoRefreshVerificationError("alignment");
   }

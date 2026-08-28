@@ -634,6 +634,15 @@ describe("proposal memo source-refresh confirmation", () => {
     expect(() => confirmedProposalVersionFromMemoRefresh(foreignEvidence)).toThrow(
       "Refreshed memo evidence is not aligned across the source record.",
     );
+
+    const contradictoryLineageOwner = alignedEvidence();
+    contradictoryLineageOwner.lineage = {
+      ...contradictoryLineageOwner.lineage,
+      proposal_id: "pp_other",
+    };
+    expect(() =>
+      confirmedProposalVersionFromMemoRefresh(contradictoryLineageOwner),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
   });
 
   it("distinguishes unavailable historical lineage from source disagreement", () => {
