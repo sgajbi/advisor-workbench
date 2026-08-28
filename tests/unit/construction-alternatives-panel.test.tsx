@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ConstructionAlternativesPanel from "../../src/features/workbench/components/construction-alternatives-panel";
@@ -373,6 +373,79 @@ describe("ConstructionAlternativesPanel", () => {
       "/workbench/PB_SG_GLOBAL_BAL_001?mode=proof",
     );
     expect(screen.queryByText("PDF Export")).not.toBeInTheDocument();
+  });
+
+  it("shows generating posture until the source response succeeds", async () => {
+    let resolveGeneration: ((response: DpmConstructionGatewayResponse) => void) | undefined;
+    vi.mocked(generateDpmConstructionAlternatives).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveGeneration = resolve;
+        }),
+    );
+
+    render(<ConstructionAlternativesPanel portfolio={portfolio} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Generate alternatives" }),
+    );
+
+    expect(await screen.findByLabelText("Status Generating")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generating alternatives" }),
+    ).toBeDisabled();
+    expect(screen.queryByText("Evidence available")).not.toBeInTheDocument();
+
+    resolveGeneration?.(readyResponse);
+    expect(
+      await screen.findByLabelText("Status Evidence available"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps a failed generation visibly unavailable without fabricated evidence", async () => {
+    vi.mocked(generateDpmConstructionAlternatives).mockRejectedValue(
+      new Error("Manage construction unavailable"),
+    );
+
+    render(<ConstructionAlternativesPanel portfolio={portfolio} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Generate alternatives" }),
+    );
+
+    expect(await screen.findByLabelText("Status Unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByText("Construction alternatives unavailable"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Evidence available")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generate alternatives" }),
+    ).toBeEnabled();
+  });
+
+  it("shows source blocking posture without a success badge", async () => {
+    vi.mocked(generateDpmConstructionAlternatives).mockResolvedValue({
+      ...readyResponse,
+      supportability: {
+        ...readyResponse.supportability,
+        state: "BLOCKED",
+        reason_codes: ["CONSTRUCTION_SOURCE_READINESS_BLOCKED"],
+      },
+    });
+
+    render(<ConstructionAlternativesPanel portfolio={portfolio} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Generate alternatives" }),
+    );
+
+    const header = screen.getByRole("group", {
+      name: "Construction Alternatives section header",
+    });
+    await waitFor(() => {
+      expect(within(header).getByLabelText("Status Blocked")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByText("Construction request completed with blocking conditions."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Evidence available")).not.toBeInTheDocument();
   });
 
   it("selects an alternative through Gateway without client-side decision logic", async () => {

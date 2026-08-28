@@ -2374,6 +2374,9 @@ export async function validateConstructionAlternativesPanel(
     page,
     "construction-alternatives-panel",
   );
+  const constructionHeader = constructionPanel.getByRole("group", {
+    name: "Construction Alternatives section header",
+  });
   await expect(
     constructionPanel.getByRole("heading", {
       name: "Construction Alternatives",
@@ -2387,7 +2390,7 @@ export async function validateConstructionAlternativesPanel(
     timeout: timeoutMs,
   });
   await expect(
-    constructionPanel.getByLabel("Status Not generated"),
+    constructionHeader.getByLabel("Status Not generated"),
   ).toBeVisible({ timeout: timeoutMs });
   await constructionPanel
     .getByRole("button", { name: "Generate alternatives" })
@@ -2402,7 +2405,7 @@ export async function validateConstructionAlternativesPanel(
     timeout: timeoutMs,
   });
   await expect(
-    constructionPanel.getByLabel("Status Evidence available"),
+    constructionHeader.getByLabel("Status Evidence available"),
   ).toBeVisible({ timeout: timeoutMs });
   await expect(
     constructionPanel.getByText("Alternatives Comparison"),

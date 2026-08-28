@@ -19,13 +19,16 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   });
 
   const panel = page.locator(".construction-alternatives-panel");
+  const panelHeader = panel.getByRole("group", {
+    name: "Construction Alternatives section header",
+  });
   await expect(panel.getByRole("heading", { name: "Construction Alternatives" })).toBeVisible({
     timeout: 60_000,
   });
   await expect(
     panel.getByText("Construction alternatives have not been generated")
   ).toBeVisible();
-  await expect(panel.getByLabel("Status Not generated")).toBeVisible();
+  await expect(panelHeader.getByLabel("Status Not generated")).toBeVisible();
 
   const responsePromise = page.waitForResponse(
     (response) =>
@@ -71,7 +74,7 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
       ? responseBody.data.alternatives.length
       : 0,
   );
-  await expect(panel.getByLabel(`Status ${expectedEvidenceStatus}`)).toBeVisible({
+  await expect(panelHeader.getByLabel(`Status ${expectedEvidenceStatus}`)).toBeVisible({
     timeout: 90_000,
   });
 
