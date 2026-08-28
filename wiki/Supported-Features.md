@@ -1,400 +1,137 @@
 # Supported Features
 
-This page separates implementation-backed Workbench capability from target-state roadmap language.
-It is intended for developers, business users, operations, sales/pre-sales, and demo preparation.
+## Current Scope And Evidence Posture
 
-## Canonical Home Entry
+This page is the authoritative capability catalogue for the current Workbench mainline. It states
+what the product renders or records, how a user reaches it, and where product promotion stops. The
+[Screen Guide Catalogue](Screen-Guide-Catalogue) owns the complete 21-route, 36-screen/mode map;
+individual guides own detailed workflow, source, state, action, and support behavior.
 
-`/suite` is a compatibility alias of the canonical `/` Home entry and does not own a separate
-command-center surface. Both currently resolve to Portfolio Review. The retired Suite prototype's
-hard-coded clients, portfolios, analytics, priorities, role workflows, and technical policy
-diagnostics are not supported features and are not shipped. The future authenticated advisor-first
-Home remains governed by Workbench issue #470 and must use supported source authority; Workbench
-must not reintroduce fabricated fallback business state while that dependency is unavailable.
+Implemented does not mean production-entitled, client-ready, execution-ready, operationally
+certified, or bank-approved. Capability-disabled and runtime-gated surfaces are implemented but
+remain bounded by shell posture, source readiness, identity, entitlement, or evidence. See
+[Validation and CI](Validation-and-CI) for the evidence classes behind these claims.
 
-## Governed Review Continuity
+## Availability Vocabulary
 
-Workbench uses one governed URL context for portfolio, valuation date, review period, reporting
-currency, selected record, and source-accepted report batch. The common portfolio/date/period/
-currency context is preserved through supported Portfolio, Performance, Advice, Reporting, and
-Mandate management handoffs. Record and batch identity remains bounded to screens that can consume
-the corresponding source contract.
+| Posture | Meaning |
+| --- | --- |
+| Active | Available through the current shell or a supported portfolio workflow |
+| Runtime-gated | Rendered only when the selected source context publishes the required capability |
+| Capability-disabled | Implemented for bounded direct or in-workspace validation, while ordinary top-level promotion remains closed |
+| Compatibility | Maintained entry path that resolves to a canonical current screen |
+| Unsupported | No Workbench capability or source-backed authority is claimed |
 
-Missing portfolio selection opens **My book**; repeated, malformed, unsupported, catalogue-missing,
-or source-conflicting context fails closed. Workbench does not substitute the canonical demo,
-configured, preferred, or first catalogue portfolio to keep a screen populated. A URL value is a
-request, not source evidence: every screen still requires its Gateway response to confirm the
-applicable portfolio and date/window/currency identity before showing analytical detail.
+## Adviser Book And Portfolio Records
 
-Confirmed user decisions create browser-history entries. Source normalization may update the
-current entry. Back and Forward restore the matching source-backed review without remounting the
-complete workspace or discarding useful keyboard focus. This continuity contract does not add
-household, team, delegate, supervisor, entitlement, identity, or authentication capability.
+| Capability | Posture | Current boundary |
+| --- | --- | --- |
+| Adviser book and portfolio selection | Active | Entitled own-book membership and review-date preservation; no team, delegate, household, or supervisory-book claim |
+| Portfolio review | Active | Source-backed value, allocation, positions, activity, income, liquidity, and review context |
+| Allocation and concentration drill-down | Active | Exposure composition, coverage, and direct contributing holdings; no browser calculation authority |
+| Positions and transactions | Active | Booked records, source status, settlement posture where applicable, and lineage |
+| Income and projected cash movement | Active | Booked income and source projections; no fabricated forecast or tax advice |
+| Portfolio intake | Active | Review-controlled publication and readiness; no silent data acceptance |
 
-## Current Implementation-Backed Surfaces
+Guides: [Adviser Book Workflow](Advisor-Book-Workflow),
+[Portfolio Review](Portfolio-Review-Screen-Guide), [Allocation](Portfolio-Allocation-Screen-Guide),
+[Positions](Positions-Screen-Guide), [Transactions](Transactions-Screen-Guide),
+[Income and activity](Income-And-Activity-Screen-Guide),
+[Projected cash flow](Projected-Cash-Movement-Screen-Guide), and
+[Portfolio Intake](Portfolio-Intake-Screen-Guide).
 
-| Surface                                 | Route                                                               | Backing contract                                                                                                                                                                                                                                                                                                                        | Current support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| --------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Advisor own-book coverage               | `/book` and the shared portfolio context switcher                   | Gateway `GET /api/v1/advisor-book/portfolios` over Core `PortfolioManagerBookMembership:v1`                                                                                                                                                                                                                                             | Implemented for authenticated own-book portfolio membership, explicit business date, exact client and mandate filters, deterministic sorting and paging, portfolio workflow handoff, and task-preserving portfolio context switching. Gateway tenant-scope, assignment-basis, provenance, empty, degraded, permission, and unavailable posture remain visible. Workbench does not infer household, team, delegated, supervisor, AUM, attention, or ownership scope and never substitutes the global portfolio catalogue. Production principal resolution remains blocked by #436.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Portfolio review                        | `/portfolio`                                                        | Gateway Workbench portfolio APIs                                                                                                                                                                                                                                                                                                        | Supported as the mandate and attention entry point for the selected portfolio, with canonical live proof. It presents source-backed review context and paths into record detail; it does not create recommendations, approvals, or trade instructions. The retired `tab=detailed` query is ignored and is not a separate supported screen.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Portfolio allocation review             | `/allocation`                                                       | Gateway portfolio workspace and `/api/v1/portfolio/portfolios/{portfolio_id}/allocations` through the Workbench BFF                                                                                                                                                                                                                     | Supported for source allocation views, exposure and concentration review, cash-aware booked-holding contribution, direct-allocation drill-down, and explicit expanded-exposure coverage checking and recovery. Valid direct evidence remains usable when optional coverage cannot be confirmed. Workbench does not infer expanded look-through contributors, targets, drift, suitability, recommendations, rebalance decisions, or execution authority.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Portfolio positions review              | `/positions`                                                        | Gateway portfolio workspace securities, cash balances, record availability, and transaction-ledger detail                                                                                                                                                                                                                               | Supported for the complete booked securities-and-cash inventory, valuation, cost basis, portfolio weight, P&L, source availability, and recent holding-activity lineage. Recent activity remains distinct from the full transaction ledger; Workbench does not infer tax lots, restrictions, advice, orders, or execution.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Portfolio transaction review            | `/transactions`                                                     | Gateway portfolio workspace transaction ledger and source-availability evidence                                                                                                                                                                                                                                                         | Supported for booked transaction activity, transaction-currency gross amount, portfolio-currency net cost and realized P&L, booking components, source coverage, settlement-attention posture, paging, and related-event review. Workbench does not book, amend, cancel, approve, execute, settle, or reconcile transactions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Portfolio bundle intake                 | `/intake`                                                           | Gateway `/api/v1/intake/portfolio-bundle` through the Workbench BFF                                                                                                                                                                                                                                                                     | Supported as a blank-safe, review-controlled workspace for portfolio creation, opening positions, transactions, instrument reference data, price observations, and CSV bundle import. Each request is independent; manual and file paths expose exact validation and require review before publication. Server-rendered task choices remain natively disabled until Workbench owns the controls, so the first ready action opens the correct request without a lost click or second attempt. One typed normalization boundary trims business strings and dates and canonicalizes governed currency, ISIN, and transaction-type codes before validation and review, so review facts, intent fingerprint, Gateway payload, and receipt reconciliation share the same source request. Operational file review does not impose an arbitrary record limit: record families remain collapsed until requested, then show ten source-ordered records per page with explicit range, total, page, and keyboard navigation while the complete normalized request remains eligible for publication. Material edits invalidate review. While source publication is pending, the exact reviewed request remains visible and every publication-affecting control is natively disabled; failure restores the same reviewed intent for exact retry. Failed identical retries retain the exact payload and idempotency key, and acceptance appears only from task-relevant Gateway publication counts with correlation and contract evidence. Workbench does not claim activation, valuation, reporting, analytics readiness, duplicate resolution, lineage completion, or durable job completion. |
-| Portfolio income and activity           | `/income`                                                           | Gateway portfolio workspace `income_summary` and `activity_summary`                                                                                                                                                                                                                                                                     | Supported as the dedicated source-backed screen for income composition, source-defined activity buckets, net movement, cash weight, and evidence posture. Workbench does not forecast income or calculate activity classifications locally.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Portfolio projected cash movement       | `/cashflow`                                                         | Gateway `/api/v1/portfolio/portfolios/{portfolio_id}/projected-cashflow` through the Workbench BFF                                                                                                                                                                                                                                      | Supported for explicit 10-, 30-, and 90-day expected inflow/outflow review, projection identity, dated movements, source scope, limitations, support evidence, and confirmed export. Figures represent projected movement rather than opening cash, ending cash, liquidity sufficiency, or funding capacity; Workbench does not recommend or initiate funding actions, transfers, trades, or settlement.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Portfolio report ordering               | `/reports`                                                          | Gateway `/api/v1/report-ordering/options`, `/api/v1/reports/portfolio-reviews`, `/api/v1/report-batches*`, `/api/v1/report-jobs`, and source-backed Advisor Book through the Workbench BFF                                                                                                                                              | Implemented for one selected portfolio or an explicit bundle of at least two active portfolios selected from the advisor's source-backed book. The same firm-approved report setup is reviewed once, submitted idempotently, and tracked as separate per-portfolio outcomes; it is not a consolidated client, household, or book report. Gateway re-verifies membership and eligibility at submission. Workbench shows portfolio-report count, complete, in-progress, and attention posture plus per-portfolio lifecycle, attempts, and support evidence. Structured data and governed PDF readiness remain independent. Report-data completion does not claim archive, advisor approval, client delivery, or communication. The browser does not control workers, capacity, materialized membership, archive publication, download, or distribution.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Performance and risk review             | `/performance` route modes                                          | Gateway performance summary, detail, horizon-comparison, attribution, risk, advisor-brief, and evidence APIs                                                                                                                                                                                                                            | Supported for selected-portfolio benchmark-aware return, Return History, multi-horizon, contribution, attribution, risk, internal brief, and calculation-evidence review according to source capability. Summary, Analysis, and Risk reuse one governed, capability-aware source-selection bar for horizon, basis, benchmark, and progressively disclosed explicit dates; Frequency appears only in Summary and Analysis because current Risk contracts do not consume it. Downstream comparison and risk views inherit only their supported confirmed context rather than repeating local selectors. Absolute is the default six-column Return History review, while Relative and Combined remain Summary-only display choices. Performance selections are transactional: prior figures retain their original source-confirmed labels while a requested scope is pending or failed, and summary, detail, controls, Review Context, and URL become current together only after matching source success. Horizon Comparison and historical attribution each own an independent source state that distinguishes source failure, access restriction, confirmed absence, one exact observation, and multiple observations; comparison/trend visuals require at least two observations and exact retry re-contacts source authority. Workbench does not calculate performance, infer missing analytics, recommend trades, publish client reports, or claim official performance sign-off. |
-| Data-product discovery                  | `/data-products`                                                    | Gateway domain-product APIs                                                                                                                                                                                                                                                                                                             | Supported for catalog, dependencies, and live trust posture.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Advisory proposal priorities            | `/recommendations` and `/recommendations?mode=overview`             | Gateway `GET /api/v1/proposals` through the Workbench BFF over Advise proposal lifecycle                                                                                                                                                                                                                                                | Implemented as a selected-portfolio compatibility workspace for cursor-bounded proposal prioritisation, lifecycle handoffs, record navigation, explicit partial-window posture, and source-backed refresh/retry. Initial failure withholds the queue; failed background refresh retains earlier evidence as unconfirmed; retry remains focus-stable and duplicate-fenced until Gateway settles. The global Advisory app entry remains capability-disabled. Workbench does not claim a complete advisor book, calculate suitability, approve or publish advice, contact clients, or authorize execution.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Advisor proposal narrative posture      | `/proposals`, `/proposals/{proposalId}`                             | Gateway `/api/v1/proposals*`                                                                                                                                                                                                                                                                                                            | Implemented for advisor proposal queue/detail, advisor-use narrative review, reviewed narrative report-package request, delivery-summary posture, delivery-event posture, and governed canonical proof through Gateway only. Canonical validation creates a seeded advisor-review narrative proposal, exercises the panel, and captures `proposal-narrative-posture-live.png`. The shell `Proposal` app entry remains disabled until broader product promotion is separately proven.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Advisor suitability policy review queue | `/proposals?mode=suitability`                                       | Gateway `/api/v1/advisory-policy-evaluations/review-queue`, `/api/v1/advisory-policy-evaluations/{evaluation_id}`, `/api/v1/advisory-policy-evaluations/{evaluation_id}/sign-off-package`, `/api/v1/advisory-policy-evaluations/{evaluation_id}/workflow`, and `/api/v1/advisory-policy-evaluations/{evaluation_id}/sign-off-decisions` | Implemented for review of Advise-owned suitability policy evaluations that need advisor, compliance, or supervisory attention. Workbench requests the queue through Gateway with the active portfolio id and provides an explicit pointer- and keyboard-operable review worklist. The selected proposal and version stay visibly bound to the decision-first evidence pane, including policy status, sign-off posture, sign-off source-package posture, policy workflow posture, client-publication block posture, open approval/disclosure/consent requirements, source-evidence completeness, and next action. Selection is preserved across queue reorder and fenced across portfolio changes, removed records, and stale detail or mutation completions. Workbench can record a bounded request for more evidence against the selected source evaluation hash through Gateway only; it does not calculate suitability, approve/waive policy findings, record sign-off approval, publish client-ready material, or call `lotus-advise` directly.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Advisor proposal risk and impact review | `/proposals?mode=risk-impact`                                       | Gateway `GET /api/v1/proposals/{proposal_id}/risk-impact` plus the cursor-bounded proposal list through the Workbench BFF                                                                                                                                                                                                               | Implemented as a selected-record decision workspace for one portfolio and one source-filtered `RISK_REVIEW` proposal window. Workbench shows exact current-versus-proposed allocation evidence, source-owned risk observations, workflow gates, exceptions, capability limits, and lineage for one selected proposal without N+1 detail reads. It preserves keyboard selection, refresh focus, portfolio/lifecycle drill-in context, and container-aware reflow. Gateway owns the experience projection; Advise owns proposal, gate, and lineage truth; Core or a source-declared bounded fallback owns allocation evidence; and the named risk source owns risk measures. Workbench does not calculate allocation delta, risk, suitability, mandate compliance, approval, client readiness, or execution posture. The global Proposal entry remains capability-disabled and canonical `PB_SG_GLOBAL_BAL_001` promotion evidence remains a separate gate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Advisor proposal implementation status  | `/proposals?mode=implementation`                                    | Gateway `GET /api/v1/proposals/{proposal_id}/execution-status` with discriminator `proposal-implementation-status.v1` plus the cursor-bounded proposal list                                                                                                                                                                             | Implemented as a selected-record handoff, completion, and exception workspace. Workbench retains eligible lifecycle records in the current source window, validates proposal, portfolio, state, version, status semantics, capability posture, freshness, and lineage; displays partial and historical-version evidence explicitly; and confirms refresh only after list and detail reconcile. Advise owns advisory handoff and reconciliation and the named downstream provider owns execution truth. Workbench does not mutate status or infer owner, SLA, priority, order, fill, allocation, settlement, custody, or accounting completion.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Adviser discussion pack review          | `/proposals?mode=discussion-pack`                                   | Gateway `GET /api/v1/proposals/{proposal_id}/discussion-pack-review` with discriminator `proposal-discussion-pack-review.v1` plus the state-filtered, cursor-bounded proposal list                                                                                                                                                      | Implemented as **Client meeting preparation** for one selected proposal. Workbench validates proposal, portfolio, version, lifecycle, support reference, capabilities, and client-release boundaries; presents the meeting rationale, adviser memo, disclosure requirements, report package, consent, and release control in decision order; labels AI-assisted provenance; and performs no N+1 reads. Advise owns proposal, narrative, memo, policy, review, and consent evidence; Report owns named package evidence. Workbench does not generate, approve, publish, release, deliver, contact a client, or infer discussion readiness from lifecycle state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Advisor cockpit operating workflow      | `/recommendations?mode=cockpit`                                     | Gateway `/api/v1/advisor-cockpit*`                                                                                                                                                                                                                                                                                                      | Implemented for source-owned action list, snapshot counts, supportability posture, unsupported-capability boundaries, meeting-preparation packets, tactical house-view impact review items, and bounded advisor acknowledgement. Workbench renders Gateway/Advise truth only; it does not reconstruct policy semantics, clear blockers, approve policy findings, infer tactical house-view membership, infer client-ready publication, contact clients, generate orders, or claim OMS execution. Canonical validation proves the house-view cohort seed, action list, preparation-packet route, snapshot, supportability, idempotent acknowledgement, and `advisory-advisor-cockpit-live.png`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Lotus Idea opportunity triage           | `/recommendations?mode=opportunities`                               | Gateway `GET /api/v1/ideas/review-queues/advisor`, `GET /api/v1/ideas/candidates/{candidate_id}`, and candidate `POST` review-action, feedback, and conversion-intent routes                                                                                                                                                            | Implemented as a Gateway-backed Workbench surface over Lotus Idea-owned advisor review queue candidates. The BFF discards browser-supplied Idea authority headers and applies its configured subject, role, route capability, and portfolio entitlement only in explicit `dev`/`development`/`local`/`test` fixture mode; an unset or other environment fails closed before Gateway until an authenticated session principal is available. Workbench renders Idea-owned rank, score, priority, review posture, source-signal ids, reason codes, durable-storage posture, policy version, and supported-feature promotion posture. Advisor actions use business-labelled source candidate reasons plus the matching source-valid audit reason. A retry preserves the exact original payload and idempotency key; success requires accepted/replayed source persistence and appears only after both source queries refresh, while persistence and refresh failures remain explicit. It does not rerank candidates, clone Idea scoring, infer downstream conversion, create proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a supported feature before canonical browser proof, data-product certification, and `lotus-idea` supported-feature evidence exist.                                                                                                                                                                                                                                                                                                                                                                          |
-| Advisory Copilot review preparation     | `/recommendations?mode=copilot`                                     | Gateway `/api/v1/advisory-copilot*`                                                                                                                                                                                                                                                                                                     | Supported for source-declared proposal-review tasks and audiences, proposal-version evidence packets, AI-assisted output with an output-adjacent disclosure, explicit evidence limitations, review-control failure, and persisted internal review. Human review and client use remain separate; recording internal review never approves client use. Workbench requests Advise-owned evidence and Lotus AI workflow output through Gateway and does not construct evidence sections, prompts, controls, AI/model lineage, review state, policy semantics, client communication, orders, execution, or settlement locally. Canonical `PB_SG_GLOBAL_BAL_001` validation records `ADVISORY_COPILOT_CANONICAL_PROOF_CREATED` and captures `advisory-advisory-copilot-live.png`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Bank demo proof                         | `/recommendations?mode=proof`                                       | Gateway `/api/v1/advisory/bank-demo-proof/scenario-contract` and `/api/v1/advisory/bank-demo-proof/supported-claim-register`                                                                                                                                                                                                            | Implemented for RFC-0028 scenario and supported-claim proof posture owned by `lotus-advise` and exposed through Gateway. Workbench renders scenario steps, proof marker, supported-claim classifications, approved wording, publication boundaries, proof-handling rules, and source-evidence posture without constructing proof packs, promoting client-ready publication, approving sign-off, contacting clients, creating orders, or claiming OMS/fill/settlement truth. Canonical validation verifies the Gateway contracts and captures `advisory-bank-demo-proof-live.png` as governed screenshot evidence.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| DPM mandate command center              | `/workbench/{portfolioId}`, `/workbench/{portfolioId}?mode=mandate` | Gateway `/api/v1/dpm/command-center*` | Supported for a selected-item mandate review flow from source-owned book health and monitoring posture to an active exception, accountable owner, next step, and progressively disclosed lineage. Valid cursor-bounded rows remain reviewable when more source views exist; Workbench labels the visible count as a view, navigates through the BFF, retains the last confirmed evidence on failure, and claims zero only from an exhaustive response. Summary scores render only when Manage publishes them. Missing context remains unavailable rather than receiving local defaults; Workbench does not infer readiness from exception count, fabricate exception identity, or attach aggregate actions to an individual exception. Complete, partial, degraded/stale, blocked, empty, unsupported, and unavailable postures remain explicit. Optimized browser evidence covers desktop, tablet, mobile, and effective 200% zoom width without page-level horizontal overflow. |
-| DPM rebalance-wave command center       | `/workbench/{portfolioId}?mode=waves`                               | Gateway `/api/v1/dpm/command-center/waves*`                                                                                                                                                                                                                                                                                             | Implemented for wave queue, preview, create, detail, items, source-check, simulation, approval, staging, handoff, proof posture, supportability, report-input, point-of-work governed AI PM memo and operations-brief requests with shared fail-closed disclosure, active Manage-owned campaign-definition list rendering, selected-campaign candidate-source review, read-only campaign lifecycle evidence, append-only launch history, preview-readiness review, launch-package readiness, and READY-gated campaign launch through Gateway only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| DPM construction alternatives           | `/workbench/{portfolioId}?mode=construction`                        | Gateway `/api/v1/dpm/command-center/construction/alternative-sets*`                                                                                                                                                                                                                                                                     | Implemented for generation, comparison, and PM selection through Gateway only. Canonical panel proof is governed as `dpm.construction_alternatives` and does not claim Workbench-local construction methodology, order routing, trade execution, or OMS truth.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| DPM proof-pack evidence                 | `/workbench/{portfolioId}?mode=proof`                               | Gateway `/api/v1/dpm/command-center/proof-packs*`                                                                                                                                                                                                                                                                                       | Implemented for generation from Gateway rebalance-run reference, proof-pack identity, sections, hashes, Markdown/report/AI posture, and governed PM memo requests with shared output-availability, evidence, review, client-use, and freshness disclosure.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| DPM portfolio memory                    | `/workbench/{portfolioId}?mode=memory`                              | Gateway `/api/v1/dpm/command-center/portfolios/{portfolio_id}/memory`                                                                                                                                                                                                                                                                   | Implemented for manage-owned timeline event order, event mix, source systems, source refs, artifact refs, reason codes, supportability, and content hash; canonical live proof accepts populated ready, partial, degraded, and blocked source truth while still failing empty or unsupported memory.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| DPM outcome review                      | `/workbench/{portfolioId}?mode=reviews`                             | Gateway `/api/v1/dpm/command-center/outcome-reviews*`                                                                                                                                                                                                                                                                                   | Implemented for expected-versus-realised review comparison, review posture, dimensions, source lineage, evidence availability, client-communication controls, report preparation, and an AI-assisted internal review summary with shared fail-closed result disclosure. Workbench does not infer mandate compliance, calculate outcomes, approve client communication, or present generated commentary as source evidence.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| DPM PM operating quality                | `/workbench/{portfolioId}?mode=quality`                             | Gateway `/api/v1/dpm/command-center/pm-operating-quality*`                                                                                                                                                                                                                                                                              | Implemented for Manage-owned policy, score-run, source-defined segment, fairness-analysis preview/create/list/detail, score-run support-summary requests with shared fail-closed result disclosure, bounded supervisory review-action preview/create/list/detail, and summary-invocation preview/create/list/detail through Gateway only. Supervisors can explicitly select one quality run, fairness review, and recorded action using pointer or keyboard; the selected source records stay visibly bound to detail, readiness, support-summary, review-action, and summary-invocation controls across source reorder, with late or superseded detail and mutation completion fenced. Review-action and summary-invocation creates are preview-gated and record Manage-owned evidence; persisted invocation history is explicitly audit evidence with generated output unavailable unless the source returns that output independently. Workbench does not calculate PM scores, fairness spreads, segment membership, PM rankings, HR/conduct posture, client communication, trade/order, OMS, execution, fills, or settlement truth.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| DPM PM copilot workspace                | `/workbench/{portfolioId}?mode=copilot`                             | Gateway/lotus-ai typed workflow execution posture                                                                                                                                                                                                                                                                                       | Implemented for evidence-pack decision memo, wave memo, operations brief, exception summary, outcome narrative, and PM-quality support-summary requests with one reusable business result and disclosure. A source-confirmed evidence pack prepared or loaded in the current Manage session governs the visible reference, readiness, request fence, and memo payload across Evidence Pack and Copilot modes; historical lineage remains non-actionable. Preparation, output availability, evidence, human review, client use, freshness, limitations, supersession, runtime, and support diagnostics remain independent source-backed facts. Canonical panel proof is governed as `dpm.copilot_workspace`; Workbench does not construct or store prompts, store generated responses, contact clients, route orders, or claim OMS execution. |
+## Performance And Risk
 
-## Risk Review Interpretation Boundary
+| Capability | Posture | Current boundary |
+| --- | --- | --- |
+| Benchmark-aware performance summary | Active | Source-returned returns, benchmark, horizon, contribution context, and explicit unavailable posture |
+| Contribution and attribution analysis | Runtime-gated | Source-confirmed detail, windows, and evidence; no local analytics fallback |
+| Risk review | Runtime-gated | Source measures and Gateway-owned mandate comparison; no browser thresholds, all-clear inference, or suitability decision |
+| Performance evidence | Runtime-gated | Calculation lineage, coverage, supporting records, and source diagnostics |
+| Adviser brief | Active | Internal talking points with provider/source disclosure and confirmed human-review workflow; not approved client advice |
 
-The runtime-gated `/performance?mode=risk` screen presents exact Gateway/Lotus Risk volatility,
-drawdown, concentration, rolling-risk, and historical risk-attribution evidence. Its executive
-first scan leads with realized volatility, max drawdown and factual recovery posture, largest
-position and source driver, and source coverage. It does not turn those values into universal
-contained, moderate, elevated, high, severe, acceptable, or diversified classifications.
+Guides: [Performance Summary](Performance-Summary-Screen-Guide),
+[Performance Analysis](Performance-Analysis-Screen-Guide), [Risk Review](Risk-Review-Screen-Guide),
+[Performance Evidence](Performance-Evidence-Screen-Guide), and
+[Performance Adviser Brief](Performance-Advisor-Brief-Screen-Guide).
 
-Gateway summary and concentration contracts can include an additive `mandate_comparison` built from
-Manage-owned limits, health, review policy and lineage plus exact Core/Risk measures. The screen
-renders source-supplied measure, limit, headroom, basis, date, review due state and reason,
-distinguishing within, breach, undefined limit, unavailable measure, unavailable evidence, and an
-absent additive field. Workbench does not calculate risk, limits, headroom, suitability, limit
-compliance, remediation, advice, a proposal, or an order.
+## Portfolio Management
 
-## Performance Calculation Assurance
+| Capability | Posture | Current boundary |
+| --- | --- | --- |
+| Manage overview and mandate health | Active | Exception-led attention, source health, cursor-bounded review, and lineage |
+| Rebalance waves | Active | Source readiness, proposed changes, bounded workflow actions, and audit evidence; no execution claim |
+| Construction alternatives | Active | Manage-generated alternatives and source-owned selection; current browser-default and idle-badge defects are tracked in #910 |
+| Portfolio memory | Active | Read-only Manage-persisted decision/evidence timeline; no note creation or source-store search |
+| PM Copilot | Active | Review-required internal material over exact source records; no prompt, approval, client, or order authority |
+| PM operating quality | Active | Supervisory policy, score, fairness, review-action, and invocation evidence; no autonomous ranking or personnel decision |
+| Outcome reviews | Active | Expected-versus-realised evidence and bounded AI support; no browser-owned variance calculation |
+| Evidence pack | Active | Manage-owned evidence, coverage, report-ready input, and PM memo support; no report generation, publication, or delivery |
 
-The runtime-gated `/performance?mode=evidence` screen is implemented as an exception-first review
-of the current Gateway/Performance evidence package. It separates overall internal-review posture,
-calculation completion, lineage confirmation, review items, supporting-record count, context, and
-source limitations. Only explicit supported and completed evidence can produce **Ready for internal
-review**; missing, unfamiliar, pending, stale, failed, qualified, unsupported-coverage, or
-zero-calculation states fail closed. Source identifiers, versions, raw lifecycle values, upstream
-snapshots, methodology references, limitations, and routes remain in one collapsed technical
-support disclosure. Returned artifacts open through the Workbench/Gateway evidence or document
-boundary. Workbench does not calculate performance, synthesize evidence, certify an official
-return, approve client release, or provide a screen-local evidence retry.
+Guides: [Manage Overview](Manage-Overview-Screen-Guide), [Mandate Health](Mandate-Health-Screen-Guide),
+[Rebalance Waves](Rebalance-Waves-Screen-Guide),
+[Construction Alternatives](Construction-Alternatives-Screen-Guide),
+[Portfolio Memory](Portfolio-Memory-Screen-Guide), [PM Copilot](PM-Copilot-Screen-Guide),
+[PM Operating Quality](PM-Operating-Quality-Screen-Guide),
+[Outcome reviews](Outcome-Reviews-Screen-Guide), and [Evidence Pack](Evidence-Pack-Screen-Guide).
 
-## DPM Portfolio Memory
+## Advisory Opportunities And Proposals
 
-## Advisor Suitability Policy Review Queue
+The top-level Advisory and Proposal shell capabilities remain disabled. The modes below are
+implemented and directly renderable for bounded validation; this is not unrestricted product
+promotion or production entitlement.
 
-The RFC-0025 Suitability review surface gives advisers and supervisors a governed queue of
-source-owned policy evaluations that need review before client discussion.
+| Capability | Posture | Current boundary |
+| --- | --- | --- |
+| Advisory overview and cockpit | Capability-disabled | Source-owned priorities, preparation, supportability, and bounded acknowledgements |
+| Advisory Copilot | Capability-disabled | Review-required proposal-version support; no autonomous advice or client publication |
+| Opportunities and Ideas | Capability-disabled | Canonical-portfolio Idea queue/detail and persisted review, feedback, or conversion intent; no proposal creation |
+| Proposal Builder | Capability-disabled | Source evidence, adviser draft intent, evaluation, and governed draft handoff |
+| Suitability and risk impact | Capability-disabled | Source evaluations and exceptions; no browser policy, approval, or calculation authority |
+| Approval and discussion-pack review | Capability-disabled | Proposal lifecycle, narrative, memo, package, consent, and release posture where source-backed |
+| Implementation status | Capability-disabled | Handoff, exception, version, and source-currentness review; no fill or settlement claim |
+| Bank Demo Proof | Capability-disabled | Read-only RFC-0028 scenario and supported-claim register; no approval or publication action |
 
-Implemented:
+Guides: [Advisory Overview](Advisory-Overview-Screen-Guide),
+[Advisor Cockpit](Advisor-Cockpit-Screen-Guide), [Advisory Copilot](Advisory-Copilot-Screen-Guide),
+[Opportunities and Ideas](Opportunities-And-Ideas-Screen-Guide),
+[Proposal Builder](Proposal-Builder-Screen-Guide), [Approval Queue](Approval-Queue-Screen-Guide),
+[Suitability review](Suitability-Review-Screen-Guide),
+[Risk and Impact](Risk-And-Impact-Screen-Guide),
+[Discussion Pack Review](Discussion-Pack-Review-Screen-Guide),
+[Implementation Status](Implementation-Status-Screen-Guide),
+[Proposal Detail](Proposal-Detail-Screen-Guide), and [Bank Demo Proof](Bank-Demo-Proof-Screen-Guide).
 
-1. loads the portfolio-scoped policy review queue through the Workbench BFF and Gateway only,
-2. requests the source review posture and policy workflow posture for evaluations requiring review,
-3. renders proposal identity, proposal version, policy pack/version, policy status, sign-off
-   posture, selected evaluation evidence, sign-off source-package posture, policy workflow
-   posture, client-publication block posture, open approval/disclosure/consent requirements,
-   source-evidence completeness, and advisor next action,
-4. translates source statuses and requirement arrays into private-banking workflow language,
-5. treats the policy-review queue as the screen's only worklist and count authority; Suitability
-   mode does not request or render the generic proposal-list queue,
-6. keeps one keyboard-operable worklist beside one selected decision at desktop and advisor-tablet
-   widths, then preserves worklist-before-decision order on compact screens,
-7. refreshes the queue, selected evaluation, sign-off package, and workflow as one source
-   transaction; it announces success only after all four reads succeed and their identities agree,
-8. shows explicit unavailable, permission-blocked, refresh-failed, partial, and empty states without
-   fallback policy rows,
-9. keeps source refs, source gaps, sign-off package evidence, workflow blockers, and review
-   request outcomes in private-banking language without exposing endpoint names, RFC posture
-   constants, or raw source payload fields,
-10. records a bounded request for more evidence through Gateway against the source evaluation hash
-    without claiming approval, waiver, sign-off completion, or client-ready publication.
+## Reporting And Data Governance
 
-Not supported in Workbench:
+| Capability | Posture | Current boundary |
+| --- | --- | --- |
+| Report centre | Active | Approved report selection, reviewed single-portfolio or own-book bundle request, and report-data job tracking; no worker control or client-delivery claim |
+| Data Product Catalogue | Active | Ownership, approved use, dependencies, and independently recoverable live assurance; catalogue presence is not downstream workflow readiness |
 
-1. local suitability calculation,
-2. policy approval, waiver, or sign-off approval mutation,
-3. client-ready publication,
-4. direct calls to `lotus-advise`,
-5. local interpretation of policy rule hashes, source refs, or technical payload fields as
-   advisor decisions.
+Guides: [Report centre](Report-Centre-Screen-Guide) and
+[Data Product Catalogue](Data-Product-Catalogue-Screen-Guide).
 
-## Advisor Cockpit Operating Workflow
+## AI-Assisted Material
 
-The RFC-0026 cockpit gives advisors a portfolio-scoped operating worklist that is owned by
-`lotus-advise` and exposed through Gateway.
+AI-assisted capabilities are internal decision support. Workbench preserves source references,
+provider posture, evidence availability, limitations, permitted use, and human-review state where
+returned. It does not construct prompts, store generated text as domain truth, infer approval,
+contact clients, rank staff autonomously, or create orders. Generated material must remain visibly
+separate from source evidence.
 
-Implemented:
+## Unsupported Or Not Certified
 
-1. loads action items, operating snapshot, and supportability through the Workbench BFF and Gateway
-   only,
-2. renders backend-counted pending-review, blocked, and priority counts without recalculating
-   source posture in the browser,
-3. preserves source-owned action identity, version, owner role, priority, SLA band, reason codes,
-   source-readiness gaps, dependency readiness, evidence summaries, and unsupported-capability
-   boundaries,
-4. renders meeting-preparation packets from the dedicated Gateway preparation-packet route; uses
-   snapshot preparation evidence only as a bounded fallback when no dedicated page is supplied,
-   and does not let a dedicated-route failure appear as current snapshot-backed evidence or
-   synthesize client-ready material,
-5. records a bounded advisor acknowledgement with an idempotency key and action-item version while
-   leaving policy blockers and client-publication posture source-owned,
-6. treats already acknowledged source actions as replay evidence during repeated canonical
-   validation instead of posting a conflicting acknowledgement,
-7. shows explicit unavailable and empty states without fallback worklists,
-8. participates in canonical Workbench proof as `advisory.advisor_cockpit` with API proof and a
-   governed screenshot,
-9. uses a dedicated BFF authority adapter that derives the development advisor from its server-side
-   actor, authorizes the selected portfolio against configured entitlement, strips browser
-   authority, and supplies only the least-privilege read or acknowledgement capability for
-   allowlisted routes.
+The current Workbench does not claim:
 
-Not supported in Workbench:
+- production IdP/session/token-claims identity or entitlement certification;
+- unrestricted Advisory or Proposal shell promotion;
+- autonomous advice, suitability approval, client communication, or publication;
+- browser-owned portfolio, performance, risk, mandate, fairness, or construction calculations;
+- report rendering, archival, or delivery from the Evidence Pack report-input action;
+- order creation, routing, fills, settlement, or external execution certification;
+- production high availability, disaster recovery, capacity, regulatory compliance, or bank
+  acceptance from local, fixture, or canonical demonstration evidence.
 
-1. local suitability or policy evaluation,
-2. policy approval, waiver, sign-off, or blocker clearing,
-3. client-ready publication,
-4. client communication, OMS, order generation, execution, fills, or settlement,
-5. direct calls to `lotus-advise`,
-6. browser-selected advisor, role, capability, principal posture, legal entity, or portfolio
-   entitlement,
-7. production access before the authenticated-session principal contract is implemented.
-
-## Bank Demo Proof
-
-The RFC-0028 proof surface gives advisors, sales, pre-sales, and demo reviewers a governed view of
-which advisory demo claims are implementation-backed, blocked, or not yet suitable for client-ready
-material.
-
-Implemented:
-
-1. loads the Advise-owned scenario contract and supported-claim register through the Workbench BFF
-   and Gateway only,
-2. renders scenario steps, proof marker, source products, proof-handling rules, supported-claim
-   classifications, approved claim wording, and unsupported boundaries in business-facing language,
-3. keeps client-ready publication, sign-off approval, external client communication, order,
-   fill, settlement, and OMS truth visibly blocked where the source register says they are blocked,
-4. shows explicit unavailable/error state without fallback proof claims,
-5. participates in canonical Workbench proof as `advisory.bank_demo_proof` with Gateway contract
-   checks and a governed screenshot.
-
-Not supported in Workbench:
-
-1. proof-pack construction,
-2. local supported-claim classification,
-3. client-ready publication approval,
-4. sign-off approval,
-5. client communication, order creation, OMS execution, fills, or settlement,
-6. direct calls to `lotus-advise`.
-
-## Advisor Proposal Narrative And Memo Evidence
-
-The RFC-0023/RFC-0024 proposal detail panels give advisors and supervisors a bounded way to review
-advisor-use narrative and memo evidence posture before downstream report packaging.
-
-Implemented:
-
-1. lists proposal queue items from Gateway and opens direct proposal detail routes,
-2. loads proposal detail, workflow, approvals, lineage, delivery summary, and delivery events
-   through the Workbench BFF/Gateway boundary,
-3. records advisor-use narrative review against an explicit proposal version with an idempotency
-   key,
-4. confirms the persisted review identity, reviewer, time, state, and source hash from the
-   authoritative current-version narrative read; delivery summary remains separate package posture,
-5. requests reviewed narrative report packaging through Gateway with
-   `include_reviewed_narrative=true`,
-6. displays review posture, report-package posture, delivery status, latest delivery event, policy
-   version, and source narrative hash,
-7. participates in canonical Workbench proof as `proposal.narrative_posture` with a governed
-   screenshot after advisor-use review and reviewed report-package request pass,
-8. creates or replays advisor-use memo/evidence-pack posture, records advisor-use memo review,
-   requests memo report-package posture, requests non-authoritative commentary, and displays memo
-   lineage and replay hash visibility through Gateway-backed proposal memo endpoints,
-9. participates in canonical Workbench proof as `proposal.memo_evidence_pack` with a governed
-   screenshot after advisor-use memo review and memo evidence-pack checks pass,
-10. renders missing evidence as explicit not-reviewed, not-requested, no-report, no-event,
-   memo-pending, no-lineage, or no-replay states
-   rather than inferring client-ready status.
-
-Not supported in Workbench:
-
-1. narrative generation,
-2. client-ready publication inference,
-3. PDF rendering,
-4. archive publication,
-5. memo fact inference,
-6. authoritative AI commentary claims,
-7. client contact or client messaging,
-8. direct calls to `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive`.
-
-## AI-Assisted Output Disclosure
-
-Workbench provides one reusable, business-facing disclosure beside supported AI-assisted or
-rule-based narrative output.
-
-Implemented:
-
-1. distinguishes source-authored, rule-based, requested, AI-assisted, and unavailable preparation,
-2. reports output availability, source evidence, human review, client-use permission, and freshness
-   as separate dimensions, with live, partial, stale, simulation, and unavailable output named in
-   the compact summary and Availability shown in expanded facts,
-3. fails closed when provenance, evidence references, source-recorded review, client-use permission,
-   or freshness is not published,
-4. keeps provider, model, workflow-run, and evidence identifiers in secondary support details,
-5. uses a keyboard- and screen-reader-native disclosure control with visible non-color status text,
-6. applies the contract to Performance Advisor Brief, Advisory Copilot, and the six DPM workflow
-   families: proof-pack PM memo, wave PM memo, operations brief, exception summary, outcome
-   narrative, and PM-quality support summary,
-7. identifies Workbench-composed Performance fallback narrative as rule-based and internal working
-   material rather than fabricating an AI provider or implying client approval,
-8. counts only usable Performance metrics or normalized nonblank source references as evidence;
-   empty fallback narrative reports zero evidence,
-9. treats a superseded advisor-brief or DPM workflow run as historical, blocks client use, and
-   shows source-published replacement lineage when available,
-10. treats persisted PM-quality summary invocation history as audit evidence only, with output
-    unavailable and client use blocked unless the owning source independently returns output.
-11. gives Performance Advisor Brief a source-allowed, review-before-confirm workflow for internal
-    acceptance, rejection, revision, supersession, and withdrawal; success is visible only after
-    Gateway and Lotus AI persist the action and return complete actor, timestamp, transition-count,
-    and review-history evidence.
-
-Not yet supported:
-
-1. client-use approval when the owning source does not explicitly publish live output, adequate
-   evidence, and a source-recorded human review,
-2. Workbench inference of freshness, reviewer identity, review time, or generation provenance.
-
-The RFC40-WTBD-010 portfolio-memory panel gives portfolio managers, operations, audit, and
-sales/pre-sales a single readable event trail for DPM evidence.
-
-Implemented:
-
-1. loads portfolio memory through Gateway only,
-2. renders manage-owned supportability, event count, event type counts, source systems, reason
-   codes, source-system/source-type facets, bounded search boundary, and content hash,
-3. preserves event order, event type, event time, source refs, artifact refs, and reason codes,
-4. handles empty, partial, degraded, unsupported, unavailable, and endpoint error states without implying
-   local reconstruction,
-5. emits bounded observability for `dpm.portfolio-memory.get` and
-   `dpm.portfolio-memory.search` without portfolio ids, event ids, source refs, source ids,
-   content hashes, request bodies, response bodies, or screen content as labels.
-
-Not yet supported:
-
-1. event detail drawers,
-2. global portfolio-universe discovery,
-3. retention or audit-policy controls,
-4. cross-app lifecycle export,
-5. client-demo script steps beyond the canonical Workbench screenshot after live validation.
-
-## DPM Wave Command Center
-
-The first RFC-0041 Workbench wave panel is intentionally bounded.
-
-Implemented:
-
-1. lists explicit portfolio-list waves through Gateway,
-2. previews and creates a canonical portfolio wave through the Workbench BFF/Gateway boundary,
-3. opens wave detail and item posture,
-4. source-checks, simulates, approves, stages, and hands off selected waves through Gateway,
-5. renders manage-owned lifecycle state, item state, source-readiness state, supportability,
-   aggregate metrics, report-input refs, proof-pack refs, handoff refs, reason codes, blocked
-   actions, remediation owner, and `external_execution_claimed` posture,
-6. provides point-of-work governed `lotus-ai` wave PM memo and operations-brief requests through
-   Gateway only and displays the shared review-required, fail-closed output disclosure without
-   constructing prompts, memo text, handoff summaries, execution instructions, or client messages
-   locally,
-7. lists active Manage-owned `BulkReviewCampaignDefinition:v1` definitions through Gateway and
-   renders campaign name, version, status, as-of date, candidate count, eligible portfolio type,
-   governance posture, and source-backed posture without rendering content hashes or recalculating
-   membership,
-8. reads bounded `BulkReviewCampaignDiscovery:v1` posture through Gateway and renders Manage-owned
-   eligible candidate count, expiry posture, access purpose, governance posture, and source-ref
-   posture without discovering global campaign cohorts,
-9. renders selected campaign candidate-source product, source-owned selection basis when supplied by
-   Gateway/Manage, source readiness, applied filters, warnings, lineage count, next action, and
-   no-OMS/no-client-contact boundaries without local cohort discovery,
-10. opens campaign lifecycle evidence through Gateway for a selected campaign definition and exposes
-    bounded Gateway-backed retire/supersede controls that use current caller identity, require a
-    business rationale and explicit consequence confirmation, and limit supersession to an existing
-    active version; accepted commands refresh definitions and lifecycle evidence with readable
-    roles plus exact source actor references without
-    inferring lifecycle state or recalculating membership locally,
-11. opens paged append-only `BulkReviewCampaignDefinitionLaunchHistory:v1` through Gateway and
-    displays Manage-recorded wave id, launched-at time, launched-by business role plus exact actor
-    reference, requested as-of date,
-    correlation id, idempotency key, page counts, and operating boundaries without recomputing launch
-    state, membership, readiness, idempotency, maker-checker, trade approval, order generation,
-    routing, fills, settlement, or OMS execution,
-12. checks campaign preview readiness and launch-package readiness through Gateway and enables
-    launch only when Manage returns `READY` and the user confirms the durable-wave consequence;
-    preserves source-owned reason codes, blocked actions, source posture, durable wave, and
-    idempotency evidence; and clears confirmation after success to prevent an immediate repeat,
-    without recomputing membership, readiness, maker-checker workflow, trade approval, staging, or
-    OMS execution locally,
-13. renders Manage campaign workflow audit evidence from Gateway operating queue,
-    approval inbox, workflow board, assignment plan, workflow automation, approval-decision,
-    assignment-action, assignment-task, and maker-checker read endpoints, preserving source refs,
-    count/page metadata, reason codes, content hashes, task-transition posture, and operating
-    boundaries; supported approval, assignment, task, transition, and maker-checker commands use
-    exact typed Manage fields, human rationale, and source-confirmed refresh rather than local state,
-14. presents campaign administration as one keyboard-operable selected-record worklist and one
-    decision pane with review, governance, lifecycle, and launch modes; every pending state, result,
-    and error is fenced to campaign id/version, and every browser-triggered campaign request uses
-    the same-origin Workbench BFF,
-15. emits bounded Workbench observability labels without portfolio ids, wave ids, campaign ids,
-    report-input refs,
-    workflow-pack run ids, request bodies, or response bodies as metric labels.
-
-Not yet supported:
-
-1. dedicated `/dpm/waves` route,
-2. PM-book discovery or automatic affected-portfolio discovery,
-3. item selection drawer,
-4. richer workflow drawers and eligibility explanations beyond manage reason-code rendering,
-5. global campaign discovery or campaign-definition upsert UX,
-6. CIO approval workflow,
-7. external OMS/execution integration,
-8. client-side source-readiness, report-input, proof-pack, AI prompt, memo narrative,
-   operations-handoff summary, exception-summary narrative, or handoff calculation.
-
-## DPM Flow Diagram
-
-```mermaid
-flowchart LR
-  PM[Portfolio manager] --> WB[Workbench /workbench/{portfolioId}]
-  WB --> BFF[Workbench BFF]
-  BFF --> GW[Gateway DPM command-center APIs]
-  GW --> Manage[lotus-manage DPM authority]
-  Manage --> Waves[RFC-0041 waves]
-  Manage --> Construction[RFC-0039 alternatives]
-  Manage --> ProofPacks[RFC-0040 proof packs]
-  Manage --> Memory[RFC40-WTBD-010 portfolio memory]
-  Manage --> Outcomes[RFC-0042 outcomes]
-  GW --> Report[lotus-report via Gateway]
-  GW --> AI[lotus-ai via Gateway]
-```
-
-## Demo Guidance
-
-Use `PB_SG_GLOBAL_BAL_001` and the canonical local runtime. Demo claims should say that Workbench
-is Gateway-backed and manage-owned for DPM operating truth. You may claim source-owned PM-book
-resolution for the embedded command-center run-monitoring action after canonical validation passes.
-Canonical screenshots require a populated `READY` command-center summary. The Workbench view model
-and live validator preserve partial, degraded, blocked, and empty posture for
-diagnostics and regression evidence.
-Do not claim external execution, Workbench-local PM-book inference, dedicated PM-book wave discovery
-screens, or autonomous CIO approval until those owning services and Workbench proof promote them.
+Future state is maintained only in the issue-backed [Roadmap](Roadmap). Source contracts and route
+details remain in [API Surface](API-Surface) and [Integrations](Integrations).

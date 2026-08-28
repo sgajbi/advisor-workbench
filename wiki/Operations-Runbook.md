@@ -181,6 +181,6 @@ offline client-demo preparation and operational documentation. It complements
 
 ## Key references
 
-- [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
-- [docs/demo/README.md](../docs/demo/README.md)
-- [docs/architecture/workbench-scalability-and-availability-decision.md](../docs/architecture/workbench-scalability-and-availability-decision.md)
+- [docs/operations/canonical-front-office-local-runtime.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/operations/canonical-front-office-local-runtime.md)
+- [docs/demo/README.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/demo/README.md)
+- [docs/architecture/workbench-scalability-and-availability-decision.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/workbench-scalability-and-availability-decision.md)

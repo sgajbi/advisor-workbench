@@ -1,33 +1,44 @@
 # Security and Governance
 
-## Current governance
+## Current Scope And Evidence Posture
 
-- RFC-0070
-  gold-standard product experience foundation and ownership model
-- RFC-0071
-  environment-scoped service identity and ingress governance
-- RFC-0072
-  multi-lane CI and release governance
-- RFC-0073
-  context and agent guidance system
+This page describes controls implemented in the current Workbench repository: the browser-to-BFF
+request boundary, development-only caller fixtures, route-specific authority narrowing, dependency
+and image security gates, capability-truth rules, and exact-head delivery evidence.
 
-## Repo-specific guardrails
+These controls reduce impersonation, contract-drift, dependency, and unsupported-feature risk. They
+do **not** certify production authentication, authorization, entitlement, data privacy, operational
+resilience, regulatory compliance, or bank acceptance. Production principal/session resolution is
+still owned by [Workbench #436](https://github.com/sgajbi/lotus-workbench/issues/436) and
+[lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563). Local configured callers
+are non-certifying development fixtures and fail closed outside permitted development environments.
 
-- gateway-first product integration
-- canonical seeded-data runtime validation
-- Playwright browser smoke and coverage-backed tests
-- audit-clean browser and build-tool dependencies before demo-ready canonical proof
-- no unsupported UI states or fabricated data
+## Control And Evidence Map
 
-## Operational discipline
+| Control area | Implemented boundary | Primary evidence | Remaining boundary |
+| --- | --- | --- | --- |
+| Browser request trust | BFF rebuilds Gateway headers from a closed allowlist and discards browser-supplied authority | `quality:bff-header-boundary`, behavioral BFF tests | Not an IdP or session implementation |
+| Route authority | Server-owned development context is narrowed per route and portfolio scope | Route-family tests and canonical local validation | Production claims await authenticated principal resolution |
+| Capability truth | Disabled, unsupported, partial, and unavailable states remain explicit | `quality:screen-docs`, product-copy gate, browser scenarios | Implemented route does not imply production promotion |
+| Dependency and image risk | Direct dependency admission, `npm audit`, pinned production image, vulnerability and SBOM gates | Feature, PR, and main releasability lanes | Not a production penetration test or deployment certification |
+| Release governance | Signed commits, protected CI, exact-head review authority, exact-main validation | GitHub PR checks and Main Releasability | Green CI cannot override a blocking review finding |
+| Integrated product proof | Governed runtime and `PB_SG_GLOBAL_BAL_001` canonical validation | `npm run live:validate` evidence | Does not prove production capacity, DR, or bank acceptance |
 
-- keep active product-surface truth explicit
-- treat Portfolio and Performance as the supported front-office paths
-- document compatibility redirects without presenting them as active product ownership
-- distinguish disabled shell entries from active apps when capability posture says they are not
-  supported yet
-- remove high-risk client dependencies when a smaller browser-native implementation satisfies the
-  same front-office workflow
+Use [API Surface](API-Surface) for request contracts, [Validation and CI](Validation-and-CI) for
+evidence classes, [Technology Risk and Runtime Support](Technology-Risk-and-Runtime-Support) for the
+supported stack, and [Operations Runbook](Operations-Runbook) for runtime response.
+
+## Governing Standards
+
+- Platform RFC-0070 — product experience foundation and ownership model.
+- Platform RFC-0071 — environment-scoped service identity and ingress governance.
+- Platform RFC-0072 — multi-lane CI and release governance.
+- Platform RFC-0073 — context and agent guidance system.
+
+Repo-specific guardrails require Gateway-first integration, canonical seeded-data validation,
+coverage-backed and browser proof, audited dependencies and images, explicit capability posture,
+and no fabricated business state. Compatibility routes and disabled shell entries are documented
+without presenting them as active production ownership.
 
 ## Universal BFF request-header boundary
 

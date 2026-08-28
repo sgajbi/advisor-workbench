@@ -100,10 +100,10 @@ concurrency group.
   `docs/architecture/css-layer-governance.md`, including exact size ratchets and forbidden migrated
   selector prefixes.
 - `npm run lint:react-compiler`
-  runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/` as an explicit
-  report-only React Compiler compatibility evaluator. It is not part of `make check`, Feature Lane,
-  PR Merge Gate, or Main Releasability until its finding families are refactored and promoted by a
-  focused governance change. Running the evaluator does not enable the React Compiler runtime.
+  runs the broader `eslint-plugin-react-hooks` recommended rule set against `src/`. It is a blocking
+  step in `npm run lint`, so `make lint`, `make check`, Feature Lane, PR Merge Gate, and Main
+  Releasability all enforce it. This proves conformance to the checked rule set; it does not enable
+  or certify the React Compiler runtime.
 - `make build`
   runs `next build` after the repository-owned lint and typecheck gates in `make check`. Workbench
   does not rely on Next's duplicate build-time ESLint integration as the lint authority.
@@ -135,7 +135,7 @@ concurrency group.
   `.next-dev`; production validation owns `.next-build`. The protected PR browser lane runs this
   proof and reuses only its validated build for Playwright. Local machine-readable evidence is
   written to `output/next-artifact-isolation.json`. See
-  [Next.js Artifact Isolation](../docs/architecture/next-artifact-isolation.md).
+  [Next.js Artifact Isolation](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/next-artifact-isolation.md).
 - `npm run test:e2e:performance:populated`
   deterministic production-browser proof for complete Performance economics, supported modules,
   evidence navigation, contribution detail, and desktop layout. The isolated fixture Gateway uses

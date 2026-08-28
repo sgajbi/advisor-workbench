@@ -29,5 +29,5 @@ npm run live:validate
 
 ## References
 
-- [docs/operations/canonical-front-office-local-runtime.md](../docs/operations/canonical-front-office-local-runtime.md)
-- [docs/architecture/CODEBASE-REVIEW-LEDGER.md](../docs/architecture/CODEBASE-REVIEW-LEDGER.md)
+- [docs/operations/canonical-front-office-local-runtime.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/operations/canonical-front-office-local-runtime.md)
+- [docs/architecture/CODEBASE-REVIEW-LEDGER.md](https://github.com/sgajbi/lotus-workbench/blob/main/docs/architecture/CODEBASE-REVIEW-LEDGER.md)
