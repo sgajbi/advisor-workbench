@@ -8,8 +8,8 @@ architecture, standards, RFCs, runtime procedures, evidence, and historical deli
 
 | Audience | Start here | Continue with |
 | --- | --- | --- |
-| Relationship manager, advisor, or portfolio manager | [Screen Guide Catalogue](../wiki/Screen-Guide-Catalogue.md) | [Product Vocabulary](../wiki/Product-Vocabulary.md), [Supported Features](../wiki/Supported-Features.md) |
-| Product owner or bank stakeholder | [Product architecture blueprint](documentation/product-architecture-blueprint.md) | [Architecture](../wiki/Architecture.md), [Technology Risk and Runtime Support](../wiki/Technology-Risk-and-Runtime-Support.md) |
+| Relationship manager, adviser, or portfolio manager | [Screen Guide Catalogue](../wiki/Screen-Guide-Catalogue.md) | [Product Vocabulary](../wiki/Product-Vocabulary.md), [Supported Features](../wiki/Supported-Features.md) |
+| Product owner or bank stakeholder | [Architecture](../wiki/Architecture.md) | [Supported Features](../wiki/Supported-Features.md), [Technology Risk and Runtime Support](../wiki/Technology-Risk-and-Runtime-Support.md), [target architecture blueprint](documentation/product-architecture-blueprint.md) |
 | Engineer | [Getting Started](../wiki/Getting-Started.md) | [Architecture records](architecture/README.md), [Development Workflow](../wiki/Development-Workflow.md) |
 | Operations or support | [Operations index](operations/README.md) | [Operations Runbook](../wiki/Operations-Runbook.md), [Troubleshooting](../wiki/Troubleshooting.md) |
 | Security, risk, or governance | [Security and Governance](../wiki/Security-and-Governance.md) | [Validation and CI](../wiki/Validation-and-CI.md), [runtime support decision](architecture/workbench-production-runtime-decision.md) |
@@ -22,6 +22,7 @@ architecture, standards, RFCs, runtime procedures, evidence, and historical deli
 | [`architecture/`](architecture/README.md) | Current component boundaries, quality policy, runtime decisions, and historical delivery records | Business operating instructions |
 | [`documentation/`](documentation/README.md) | Documentation standards, registries, vocabulary, branch guidance, and architecture blueprint | Published operator guidance |
 | [`operations/`](operations/README.md) | Canonical runtime, CI strategy, supportability, invocation posture, and response examples | Domain-service deployment manuals |
+| [`automation/`](automation/Automation-Ecosystem.md) | Repository automation entry points and platform handoffs | Portable path resolution for `auto:refresh:pas`, which remains tracked in #913 |
 | [`product/`](product/README.md) | Product research and screen-level design decisions | Source-owned business methodology |
 | [`rfcs/`](rfcs/README.md) | Workbench-specific decisions and their implementation posture | Cross-repository platform RFCs |
 | [`demo/`](demo/README.md) | Governed demonstration entry point and supported walkthrough scope | Production certification |
@@ -49,4 +50,3 @@ architecture, standards, RFCs, runtime procedures, evidence, and historical deli
    certification.
 5. Use the [implementation documentation standard](documentation/implementation-documentation-standard.md)
    and [screen guide template](documentation/workbench-screen-guide-template.md).
-

@@ -47,7 +47,7 @@ Gateway #573 and Workbench #470 own that future aggregate.
 
 ```powershell
 $env:PORTFOLIO_E2E_EVIDENCE_DIR = `
-  "C:\Users\Sandeep\projects\lotus-workbench\output\playwright\issue-797-portfolio-value-language"
+  "<lotus-workbench>/output/playwright/issue-797-portfolio-value-language"
 $env:PORTFOLIO_E2E_FIXTURE_PORT = "18797"
 $env:PORTFOLIO_E2E_WORKBENCH_PORT = "31797"
 npm run test:e2e:portfolio:review-matrix
