@@ -284,6 +284,11 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[switch]$SkipSeedCleanup");
     expect(script).toContain("function Test-LocalApp");
     expect(script).toContain("function Invoke-ComposeUp");
+    expect(script).toContain("[switch]$Build");
+    expect(script).toContain(
+      '$composeCommand -notmatch "(?:^|\\s)--build(?:\\s|$)"',
+    );
+    expect(script).toContain('$composeCommand = "$composeCommand --build"');
     expect(script).toContain("function Start-LocalUvicornService");
     expect(script).toContain("function Start-CanonicalManage");
     expect(script).toContain("function Start-DirectIngress");
@@ -449,7 +454,12 @@ describe("canonical live validation script", () => {
     expect(script).toContain("LOTUS_IDEA_BUILD_GIT_BRANCH");
     expect(script).toContain("[guid]::NewGuid().ToString('N')");
     expect(script).toContain("-RunId $ideaCanonicalRunId");
-    expect(script).toContain("Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment");
+    expect(script).toContain(
+      "Invoke-ComposeUp $ideaRepo $ideaBuildEnvironment -Build",
+    );
+    expect(script).not.toContain("Invoke-ComposeUp $performanceRepo -Build");
+    expect(script).not.toContain("Invoke-ComposeUp $riskRepo -Build");
+    expect(script).not.toContain("Invoke-ComposeUp $reportRepo -Build");
     expect(script.indexOf("if ($CoreManageOnly)")).toBeLessThan(
       script.indexOf("$ideaSourceIdentity = Get-GitRepositoryIdentity -RepoPath $ideaRepo"),
     );
@@ -575,7 +585,13 @@ describe("canonical live validation script", () => {
     expect(script).toContain("ExpectedCommitSha");
     expect(script).toContain("ExpectedBranch");
     expect(script).toContain("$version.build.ciRunId");
+    expect(script).toContain("$commitSha -ne $ExpectedCommitSha");
+    expect(script).toContain("$branch -ne $ExpectedBranch");
     expect(script).toContain("$runtimeRunId -ne $RunId");
+    expect(script).toContain('$provenanceMismatches += "commit"');
+    expect(script).toContain('$provenanceMismatches += "branch"');
+    expect(script).toContain('$provenanceMismatches += "run"');
+    expect(script).toContain("targeted Idea build did not produce");
     expect(script).toContain("runtime provenance does not match");
     expect(script).toContain("seed_downstream_capacity_resource.py");
     expect(script).toContain("run_service_capacity_workload.py");
