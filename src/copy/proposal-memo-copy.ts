@@ -58,7 +58,7 @@ export function proposalMemoRefreshFailureCopy({
   const sourcePosture = historicalEvidenceUnavailable
     ? "retained evidence for that version is unavailable"
     : "its retained evidence has not yet confirmed the action";
-  return `${ACTION_SUBJECT[action]} for proposal version ${versionNo} was recorded, but ${sourcePosture}. Current-version work remains available; recheck this earlier record before relying on it.`;
+  return `${ACTION_SUBJECT[action]} for proposal version ${versionNo} was recorded, but ${sourcePosture}. Recheck this earlier record before relying on it, and use the current source posture to determine the next available action.`;
 }
 
 export function proposalMemoActionSuccessCopy(

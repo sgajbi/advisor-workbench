@@ -991,7 +991,7 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeEnabled();
     expect(
       screen.getByText(
-        "Advisor review for proposal version 2 was recorded, but its retained evidence has not yet confirmed the action. Current-version work remains available; recheck this earlier record before relying on it.",
+        "Advisor review for proposal version 2 was recorded, but its retained evidence has not yet confirmed the action. Recheck this earlier record before relying on it, and use the current source posture to determine the next available action.",
       ),
     ).toBeInTheDocument();
     expect(

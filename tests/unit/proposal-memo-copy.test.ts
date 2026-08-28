@@ -29,7 +29,7 @@ describe("proposal memo copy", () => {
         versionNo: 2,
       }),
     ).toBe(
-      "Advisor review for proposal version 2 was recorded, but retained evidence for that version is unavailable. Current-version work remains available; recheck this earlier record before relying on it.",
+      "Advisor review for proposal version 2 was recorded, but retained evidence for that version is unavailable. Recheck this earlier record before relying on it, and use the current source posture to determine the next available action.",
     );
   });
 
