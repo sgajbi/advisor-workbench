@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildProposalMemoPostureModel,
+  confirmedProposalVersionFromMemoAction,
   confirmedProposalVersionFromMemoRefresh,
   confirmMemoCommentaryRefresh,
   confirmMemoCreateRefresh,
@@ -597,6 +598,40 @@ describe("proposal memo source-refresh confirmation", () => {
       },
     };
     expect(() => confirmMemoCreateRefresh({ action, refreshed })).toThrow(
+      "Refreshed memo evidence is not aligned across the source record.",
+    );
+  });
+
+  it("confirms version floors only for the requested proposal", () => {
+    const action = alignedEvidence().memo!;
+    expect(
+      confirmedProposalVersionFromMemoAction(action, PROPOSAL_ID, VERSION_NO),
+    ).toBe(VERSION_NO);
+    expect(() =>
+      confirmedProposalVersionFromMemoAction(
+        action,
+        "pp_other",
+        VERSION_NO,
+      ),
+    ).toThrow("Refreshed memo evidence is not aligned across the source record.");
+
+    const foreignEvidence = alignedEvidence();
+    const foreignProposal = {
+      ...proposalSummary(),
+      proposal_id: "pp_other",
+      current_version_no: VERSION_NO + 1,
+    };
+    foreignEvidence.memo = { ...foreignEvidence.memo, proposal: foreignProposal };
+    foreignEvidence.projection = {
+      ...foreignEvidence.projection,
+      proposal: foreignProposal,
+    };
+    foreignEvidence.lineage = {
+      ...foreignEvidence.lineage,
+      proposal: foreignProposal,
+    };
+
+    expect(() => confirmedProposalVersionFromMemoRefresh(foreignEvidence)).toThrow(
       "Refreshed memo evidence is not aligned across the source record.",
     );
   });
