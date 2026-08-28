@@ -1128,7 +1128,7 @@ describe("canonical live validation script", () => {
     );
     expect(script).toContain('"dpm.copilot_workspace"');
     expect(browserWorkflowModule).toContain(
-      "Construction alternatives generated.",
+      "Construction alternatives generated from mandate data.",
     );
     expect(browserWorkflowModule).toContain(
       "construction-alternatives-summary",
