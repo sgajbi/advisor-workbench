@@ -78,6 +78,11 @@ type MemoActionFailure = {
   versionNo: number;
 };
 
+type MemoActionSuccess = {
+  copy: string;
+  versionNo: number;
+};
+
 type PendingConfirmationFailure =
   | "source-unconfirmed"
   | "historical-lineage-unavailable";
@@ -187,7 +192,8 @@ function ProposalMemoPosturePanelProposalScope({
   >({});
   const [actionFailure, setActionFailure] =
     useState<MemoActionFailure | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] =
+    useState<MemoActionSuccess | null>(null);
   const [confirmedVersionFloor, setConfirmedVersionFloor] = useState<
     number | null
   >(null);
@@ -200,13 +206,13 @@ function ProposalMemoPosturePanelProposalScope({
       actionFailure={actionFailure}
       confirmedVersionFloor={confirmedVersionFloor}
       confirmationFailures={confirmationFailures}
-      actionMessage={actionMessage}
+      actionSuccess={actionSuccess}
       pendingActions={pendingActions}
       pendingConfirmations={pendingConfirmations}
       onActionFailureChange={setActionFailure}
       onConfirmedVersionFloorChange={setConfirmedVersionFloor}
       onConfirmationFailuresChange={setConfirmationFailures}
-      onActionMessageChange={setActionMessage}
+      onActionSuccessChange={setActionSuccess}
       onPendingActionsChange={setPendingActions}
       onPendingConfirmationsChange={setPendingConfirmations}
     />
@@ -217,7 +223,7 @@ type SessionProps = Props & {
   actionFailure: MemoActionFailure | null;
   confirmedVersionFloor: number | null;
   confirmationFailures: Record<number, PendingConfirmationFailure>;
-  actionMessage: string | null;
+  actionSuccess: MemoActionSuccess | null;
   pendingActions: PendingMemoActionState[];
   pendingConfirmations: PendingMemoConfirmation[];
   onActionFailureChange: (value: MemoActionFailure | null) => void;
@@ -225,7 +231,7 @@ type SessionProps = Props & {
   onConfirmationFailuresChange: Dispatch<
     SetStateAction<Record<number, PendingConfirmationFailure>>
   >;
-  onActionMessageChange: (value: string | null) => void;
+  onActionSuccessChange: Dispatch<SetStateAction<MemoActionSuccess | null>>;
   onPendingActionsChange: Dispatch<SetStateAction<PendingMemoActionState[]>>;
   onPendingConfirmationsChange: Dispatch<
     SetStateAction<PendingMemoConfirmation[]>
@@ -238,13 +244,13 @@ function ProposalMemoPosturePanelSession({
   actionFailure,
   confirmedVersionFloor,
   confirmationFailures,
-  actionMessage,
+  actionSuccess,
   pendingActions,
   pendingConfirmations,
   onActionFailureChange: setActionFailure,
   onConfirmedVersionFloorChange: setConfirmedVersionFloor,
   onConfirmationFailuresChange: setConfirmationFailures,
-  onActionMessageChange: setActionMessage,
+  onActionSuccessChange: setActionSuccess,
   onPendingActionsChange: setPendingActions,
   onPendingConfirmationsChange,
 }: SessionProps) {
@@ -584,7 +590,9 @@ function ProposalMemoPosturePanelSession({
     setConfirmationFailures((current) =>
       omitConfirmationFailure(current, actionVersionNo),
     );
-    setActionMessage(null);
+    setActionSuccess((current) =>
+      current?.versionNo === actionVersionNo ? null : current,
+    );
     let confirmation: PendingMemoConfirmation | null = null;
     try {
       const persistedConfirmation = await operation();
@@ -607,7 +615,10 @@ function ProposalMemoPosturePanelSession({
         removePendingConfirmation(current, persistedConfirmation),
       );
       onConfirmed?.();
-      setActionMessage(proposalMemoActionSuccessCopy(action, actionVersionNo));
+      setActionSuccess({
+        copy: proposalMemoActionSuccessCopy(action, actionVersionNo),
+        versionNo: actionVersionNo,
+      });
     } catch (error) {
       if (confirmation) {
         const failedConfirmation = confirmation;
@@ -647,7 +658,9 @@ function ProposalMemoPosturePanelSession({
     setConfirmationFailures((current) =>
       omitConfirmationFailure(current, pendingConfirmation.versionNo),
     );
-    setActionMessage(null);
+    setActionSuccess((current) =>
+      current?.versionNo === pendingConfirmation.versionNo ? null : current,
+    );
     try {
       const refreshed = await refreshMemoState(
         pendingConfirmation.versionNo,
@@ -666,10 +679,17 @@ function ProposalMemoPosturePanelSession({
       ) {
         setReviewRationale("");
       }
-      setActionMessage(proposalMemoActionSuccessCopy(
-        pendingConfirmation.kind,
-        pendingConfirmation.versionNo,
-      ));
+      setActionSuccess((current) =>
+        current && current.versionNo > pendingConfirmation.versionNo
+          ? current
+          : {
+              copy: proposalMemoActionSuccessCopy(
+                pendingConfirmation.kind,
+                pendingConfirmation.versionNo,
+              ),
+              versionNo: pendingConfirmation.versionNo,
+            },
+      );
       onPendingConfirmationsChange((current) =>
         removePendingConfirmation(current, pendingConfirmation),
       );
@@ -833,13 +853,13 @@ function ProposalMemoPosturePanelSession({
           )}
         </Alert>
       ) : null}
-      {actionMessage ? (
+      {actionSuccess ? (
         <Alert
           severity="success"
           role="status"
           data-testid="proposal-memo-action-status"
         >
-          {actionMessage}
+          {actionSuccess.copy}
         </Alert>
       ) : null}
 
