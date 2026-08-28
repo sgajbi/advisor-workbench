@@ -6846,3 +6846,41 @@ Suitability alignment. Each screen slice requires focused semantic and rendered 
 next one begins, followed by full repository gates, protected exact-head review, exact-main
 validation, and wiki publication/parity. Workbench #798 remains the separate owner of a general
 copy-layer and jargon-enforcement mechanism; no competing framework is introduced here.
+
+## 2026-08-28 — CSS Module escape governance and Review Evidence ownership (#805)
+
+### Evidence and decision
+
+Current main had already reduced `manage-workspace.module.css` from the issue's historical 4,059
+lines / 708 escapes to 3,818 lines / 664 escapes, but the executable global-CSS ratchet still did
+not count `:global(...)` inside CSS Modules. The repository therefore had accurate budgets for
+files named as global layers and no equivalent protection against a feature module behaving as an
+uncounted global stylesheet.
+
+CSS Modules and Next.js both define module class names as locally scoped by default. MDN's cascade
+guidance favours low-weight, deliberately owned selectors over specificity escalation. Workbench
+will retain the proven React, Next.js, PostCSS, CSS Modules, and Vitest stack and encode that
+boundary directly: discover every module under `src`, allow zero escapes by default, and retain
+only exact, no-headroom exceptions for legacy interoperability. This avoids a new styling runtime,
+an experimental filesystem API, and a bulk cascade rewrite.
+
+The first migration is the Manage Review Evidence rail because it has one clear React owner and a
+small complete selector family. Its four global escape arms move to imported local classes without
+changing business content, source authority, information hierarchy, responsive behavior, or the
+shared `DefinitionList` contract. The wider Manage module ratchets from 664 to 660 escapes. Future
+slices must prove their own owner and rendered boundary; this decision does not authorize a
+mechanical split of the remaining stylesheet.
+
+### References
+
+1. [CSS Modules: local scope and explicit dependencies](https://github.com/css-modules/css-modules/blob/master/README.md)
+2. [Next.js CSS Modules](https://nextjs.org/docs/13/app/building-your-application/styling/css-modules)
+3. [MDN specificity and cascade guidance](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Specificity)
+
+### Validation and publication decision
+
+Workbench #805 owns the escape fitness function and the first Manage migration; #492 remains the
+wider global-layer decomposition programme. Repository context, CSS architecture guidance, the
+review ledger, and authored Architecture/Development Workflow wiki pages change because the
+executable ownership rule changed. No screen guide, Gateway/API/OpenAPI contract, domain model,
+calculation, dependency, runtime topology, identity, entitlement, or authentication changes.

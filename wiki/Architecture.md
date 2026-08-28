@@ -34,6 +34,11 @@ capacity or bank certification.
 Workbench keeps design tokens and true cross-screen primitives in governed global layers. Feature
 composition and component interaction states belong beside their React owner in CSS Modules; each
 migration removes the corresponding legacy selectors and lowers the executable global-CSS budget.
+CSS Modules are locally scoped owners, not alternative global layers: the blocking governance gate
+discovers every module, permits zero new `:global(...)` escapes by default, and holds each legacy
+exception to an exact no-headroom count. Manage's Review Evidence rail is owned by its colocated
+module; the wider Manage workspace stylesheet no longer reaches into that component through global
+class names.
 
 Responsive behavior follows available business canvas rather than device labels. Page and shell
 composition may use viewport breakpoints, while a reusable analytical module that can appear beside
