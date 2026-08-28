@@ -5,6 +5,8 @@ import { buildManageEvidenceRailModel } from "@/features/workbench/manage-eviden
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
 import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-state";
 
+import styles from "./manage-evidence-rail.module.css";
+
 export default function ManageEvidenceRail({
   data,
 }: {
@@ -18,14 +20,15 @@ export default function ManageEvidenceRail({
   );
 
   return (
-    <div className="manage-evidence-rail">
+    <div className={styles.rail}>
       <WorkbenchRailCard>
-        <div className="manage-evidence-rail-header">
+        <div className={styles.header}>
           <Text variant="label">Review evidence</Text>
-          <strong>{model.headline}</strong>
+          <strong className={styles.headline}>{model.headline}</strong>
         </div>
         <DefinitionList
           ariaLabel="Manage source evidence"
+          className={styles.definitionList}
           items={model.items}
         />
       </WorkbenchRailCard>
