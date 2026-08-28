@@ -281,6 +281,26 @@ describe("proposal memo source identity", () => {
         VERSION_NO,
       ),
     ).toEqual({ kind: "invalid" });
+    expect(
+      resolveHistoricalMemoLineageSource(
+        {
+          ...lineage,
+          latest_memo_id: "memo_3_duplicate",
+          memo_count: 3,
+          memos: [
+            ...(lineage.memos ?? []),
+            {
+              memo_id: "memo_3_duplicate",
+              memo_hash: "sha256:memo-3-duplicate",
+              proposal_version_no: VERSION_NO + 1,
+            },
+          ],
+        },
+        identity,
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toEqual({ kind: "invalid" });
   });
 
   it("classifies a missing historical lineage item without masking invalid lineage", () => {

@@ -202,6 +202,7 @@ function resolveMemoLineage(
       (identity) => identity && identity.versionNo > sourceCurrentVersionNo,
     )
     || new Set(identities.map((identity) => identity?.memoId)).size !== memos.length
+    || new Set(identities.map((identity) => identity?.versionNo)).size !== memos.length
   ) {
     return { kind: "invalid" };
   }
