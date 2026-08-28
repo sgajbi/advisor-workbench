@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  isCurrentVersionNoMemoLineage,
   memoIdentitiesEqual,
   resolveHistoricalMemoLineageSource,
   resolveHistoricalMemoSourceIdentity,
@@ -409,6 +410,43 @@ describe("proposal memo source identity", () => {
         VERSION_NO,
       ),
     ).toBeUndefined();
+  });
+
+  it("rejects duplicate historical versions as proof that the current memo is absent", () => {
+    const lineage: ProposalMemoLineageData = {
+      proposal: proposalSummary(),
+      memo_count: 2,
+      latest_memo_id: "memo_1_b",
+      lineage_complete: true,
+      memos: [
+        {
+          memo_id: "memo_1_a",
+          memo_hash: "sha256:memo-1-a",
+          proposal_version_no: VERSION_NO - 1,
+        },
+        {
+          memo_id: "memo_1_b",
+          memo_hash: "sha256:memo-1-b",
+          proposal_version_no: VERSION_NO - 1,
+        },
+      ],
+    };
+
+    expect(
+      isCurrentVersionNoMemoLineage(lineage, PROPOSAL_ID, VERSION_NO),
+    ).toBe(false);
+    expect(
+      isCurrentVersionNoMemoLineage(
+        {
+          ...lineage,
+          memo_count: 1,
+          memos: [lineage.memos![0]],
+          latest_memo_id: "memo_1_a",
+        },
+        PROPOSAL_ID,
+        VERSION_NO,
+      ),
+    ).toBe(true);
   });
 
   it("requires every field when comparing canonical identities", () => {
