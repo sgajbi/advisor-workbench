@@ -92,6 +92,9 @@ client-delivery authority, trade approval, order-routing authority, or execution
 - Requests an AI-assisted review summary through Gateway over Manage-owned evidence and presents the
   returned Lotus AI workflow result with preparation, availability, evidence, human-review,
   client-use, freshness, limitation, and diagnostic disclosure.
+- Moves keyboard focus to the returned AI-assisted review heading in the same committed update that
+  publishes the result, so an adviser does not remain on a now-completed action or lose the new
+  review context below the current viewport.
 - Fences report and AI responses to the selected outcome-review identity. A response for another
   review fails closed, and a late response cannot replace evidence for a newer selected source
   context.
@@ -187,7 +190,8 @@ superiority.
 - `tests/e2e/manage-outcome-reviews-workspace.spec.ts` proves the optimized production screen at
   1440, 1024, 768, and 519 pixels with one screen heading, one AI-assisted action, readable
   two-column decision summaries, progressive source/client-control detail, no page-level overflow,
-  and no raw known source commands or contract names in the business path.
+  no raw known source commands or contract names in the business path, and keyboard activation that
+  hands focus to the returned AI-assisted review heading.
 - Reviewable rendered evidence is committed under
   `docs/evidence/issue-799-product-vocabulary/outcome-reviews/`.
 - `scripts/live/validation/browser-workflows.mjs` remains the governed canonical Manage browser
