@@ -9,7 +9,7 @@ const proposalDocs = [
   "docs/rfcs/RFC-0001-dpm-first-proposal-simulation-screen.md",
   "docs/rfcs/RFC-0002-ui-proposal-workspace-v1.md",
   "docs/rfcs/RFC-0008-advisory-iterative-intent-builder-for-proposal-simulation.md",
-  "docs/demo/scripts/demo-ui-approval-chain.md",
+  "wiki/Proposal-Builder-Screen-Guide.md",
   "wiki/API-Surface.md",
   "wiki/Architecture.md",
 ];

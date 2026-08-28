@@ -22,17 +22,20 @@ describe("mandate health documentation truth", () => {
 
   it("publishes the implementation boundary and canonical evidence standard", () => {
     const supportedFeatures = readRepositoryFile("wiki/Supported-Features.md");
+    const screenGuide = readRepositoryFile("wiki/Mandate-Health-Screen-Guide.md");
     const apiSurface = readRepositoryFile("wiki/API-Surface.md");
     const integrations = readRepositoryFile("wiki/Integrations.md");
     const runbook = readRepositoryFile(
       "docs/operations/canonical-front-office-local-runtime.md",
     );
 
-    expect(supportedFeatures).toContain("selected-item mandate review flow");
-    expect(supportedFeatures).toContain("effective 200% zoom width");
+    expect(supportedFeatures).toContain("Manage overview and mandate health");
+    expect(supportedFeatures).toContain("[Mandate Health](Mandate-Health-Screen-Guide)");
+    expect(screenGuide).toContain("selected-item accountability and next step");
     expect(apiSurface).toContain("exception-specific owners and next steps");
     expect(integrations).toContain("Missing scores, owners, actions, and evidence remain");
     expect(runbook).toContain("selects a source-owned attention item with the keyboard");
+    expect(runbook).toContain("effective 200% zoom");
     expect(runbook).toContain("must not introduce horizontal scrolling");
   });
 

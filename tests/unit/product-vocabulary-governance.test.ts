@@ -48,7 +48,7 @@ describe("Workbench product vocabulary governance", () => {
 
     expect(wiki).toContain("docs/documentation/product-vocabulary.md");
     expect(wiki).toContain("Runtime terms remain in their owning domain");
-    expect(home).toContain("[Product vocabulary](Product-Vocabulary)");
+    expect(home).toContain("[Product Vocabulary](Product-Vocabulary)");
     expect(sidebar).toContain("[Product Vocabulary](Product-Vocabulary)");
   });
 
