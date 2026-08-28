@@ -36,6 +36,7 @@ import {
 } from "../proposal-memo-posture-view-model";
 import {
   PROPOSAL_MEMO_ACTION_FAILURE_COPY,
+  proposalMemoPendingActionCopy,
   proposalMemoActionSuccessCopy,
   proposalMemoRefreshFailureCopy,
   type ProposalMemoActionCopyKey,
@@ -61,10 +62,15 @@ type Props = {
 
 type PendingMemoAction = ProposalMemoActionCopyKey;
 
-type PendingMemoActionState = {
-  kind: PendingMemoAction | "refresh";
-  versionNo: number;
-};
+type PendingMemoActionState =
+  | {
+      kind: PendingMemoAction;
+      versionNo: number;
+    }
+  | {
+      kind: "refresh";
+      versionNo: number;
+    };
 
 type MemoActionFailure = {
   copy: string;
@@ -367,9 +373,14 @@ function ProposalMemoPosturePanelSession({
   );
   const workflowBlocked =
     blockingPendingConfirmation !== null || versionRegressionBlocked;
-  const pendingAction = pendingActions.find(
+  const pendingVersionAction = pendingActions.find(
     (action) => action.versionNo === versionNo,
   ) ?? null;
+  const pendingMutation = pendingActions.find(
+    (action) => action.kind !== "refresh",
+  ) ?? null;
+  const actionControlsBusy =
+    pendingMutation !== null || pendingVersionAction !== null;
   const pendingConfirmationRefreshing = Boolean(
     blockingPendingConfirmation
     && hasPendingAction(
@@ -437,7 +448,7 @@ function ProposalMemoPosturePanelSession({
       || !actorEntered
       || !posture.sourceIdentityCurrent
       || posture.hasMemo
-      || pendingAction !== null
+      || actionControlsBusy
       || workflowBlocked
     ) {
       return;
@@ -466,7 +477,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRecordReview ||
       !posture.memoHash ||
       !reviewRationale.trim() ||
-      pendingAction !== null ||
+      actionControlsBusy ||
       workflowBlocked
     ) {
       return;
@@ -503,7 +514,7 @@ function ProposalMemoPosturePanelSession({
       !actorEntered ||
       !posture.canRequestReportPackage ||
       !posture.memoHash ||
-      pendingAction !== null ||
+      actionControlsBusy ||
       workflowBlocked
     ) {
       return;
@@ -534,7 +545,7 @@ function ProposalMemoPosturePanelSession({
       !actorEntered ||
       !posture.canRequestCommentary ||
       !posture.memoHash ||
-      pendingAction !== null ||
+      actionControlsBusy ||
       workflowBlocked
     ) {
       return;
@@ -694,6 +705,8 @@ function ProposalMemoPosturePanelSession({
                 ? pendingConfirmationRefreshing || sourceRefreshing
                 ? "Checking record"
                 : "Awaiting confirmation"
+              : pendingMutation !== null
+                ? "Recording action"
               : sourceLoading || sourceRefreshing
                 ? "Checking evidence"
                 : sourceUnavailable
@@ -803,6 +816,15 @@ function ProposalMemoPosturePanelSession({
           {actionFailure.copy}
         </Alert>
       ) : null}
+      {pendingMutation !== null
+      && pendingMutation.versionNo !== versionNo ? (
+        <Alert severity="info" role="status">
+          {proposalMemoPendingActionCopy(
+            pendingMutation.kind,
+            pendingMutation.versionNo,
+          )}
+        </Alert>
+      ) : null}
       {actionMessage ? (
         <Alert
           severity="success"
@@ -846,7 +868,7 @@ function ProposalMemoPosturePanelSession({
             rows={3}
             value={reviewRationale}
             onChange={(event) => setReviewRationale(event.target.value)}
-            disabled={pendingAction !== null || workflowBlocked}
+            disabled={actionControlsBusy || workflowBlocked}
             placeholder="Explain why the memo evidence is appropriate for advisor use."
           />
         </label>
@@ -871,7 +893,7 @@ function ProposalMemoPosturePanelSession({
               className="input"
                 value={actorReference}
                 onChange={(event) => setActorReference(event.target.value)}
-                disabled={pendingAction !== null || workflowBlocked}
+                disabled={actionControlsBusy || workflowBlocked}
                 placeholder="Enter the advisor or reviewer reference"
               autoComplete="off"
             />
@@ -881,7 +903,7 @@ function ProposalMemoPosturePanelSession({
             <select
               className="input"
               value={audience}
-              disabled={pendingAction !== null || workflowBlocked}
+              disabled={actionControlsBusy || workflowBlocked}
               onChange={(event) =>
                 setAudience(
                   event.target.value as ProposalMemoProjectionAudience,
@@ -931,12 +953,12 @@ function ProposalMemoPosturePanelSession({
                 !actorEntered ||
                  versionNo === null ||
                  sourceLoading ||
-                 pendingAction !== null ||
+                 actionControlsBusy ||
                  workflowBlocked
                }
               onClick={() => void handleCreateMemo()}
             >
-              {pendingAction?.kind === "create"
+              {pendingVersionAction?.kind === "create"
                 ? "Preparing memo…"
                 : "Prepare advisor memo"}
             </Button>
@@ -950,12 +972,12 @@ function ProposalMemoPosturePanelSession({
                 !reviewRationale.trim() ||
                  !posture.canRecordReview ||
                  sourceLoading ||
-                 pendingAction !== null ||
+                 actionControlsBusy ||
                  workflowBlocked
                }
               onClick={() => void handleReviewMemo()}
             >
-              {pendingAction?.kind === "review"
+              {pendingVersionAction?.kind === "review"
                 ? "Recording review…"
                 : "Record advisor review"}
             </Button>
@@ -968,12 +990,12 @@ function ProposalMemoPosturePanelSession({
                 !actorEntered ||
                  !posture.canRequestReportPackage ||
                  sourceLoading ||
-                 pendingAction !== null ||
+                 actionControlsBusy ||
                  workflowBlocked
                }
               onClick={() => void handleRequestDiscussionMaterial()}
             >
-              {pendingAction?.kind === "report"
+              {pendingVersionAction?.kind === "report"
                 ? "Requesting material…"
                 : "Request discussion material"}
             </Button>
@@ -985,12 +1007,12 @@ function ProposalMemoPosturePanelSession({
               disabled={
                 !actorEntered ||
                 sourceLoading ||
-                pendingAction !== null ||
+                actionControlsBusy ||
                 workflowBlocked
               }
               onClick={() => void handleRequestCommentary()}
             >
-              {pendingAction?.kind === "commentary"
+              {pendingVersionAction?.kind === "commentary"
                 ? "Requesting review aid…"
                 : posture.commentaryRecorded
                   ? "Refresh advisor commentary"

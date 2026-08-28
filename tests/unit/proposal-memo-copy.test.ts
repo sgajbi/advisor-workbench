@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   PROPOSAL_MEMO_ACTION_FAILURE_COPY,
+  proposalMemoPendingActionCopy,
   proposalMemoActionSuccessCopy,
   proposalMemoRefreshFailureCopy,
 } from "../../src/copy/proposal-memo-copy";
@@ -50,6 +51,9 @@ describe("proposal memo copy", () => {
     expect(PROPOSAL_MEMO_ACTION_FAILURE_COPY.create).toContain("was not prepared");
     expect(proposalMemoActionSuccessCopy("report", 4)).toBe(
       "Discussion material confirmed for proposal version 4.",
+    );
+    expect(proposalMemoPendingActionCopy("review", 2)).toBe(
+      "Advisor review for proposal version 2 is still being recorded. Wait for the confirmed outcome before taking another proposal action.",
     );
   });
 });

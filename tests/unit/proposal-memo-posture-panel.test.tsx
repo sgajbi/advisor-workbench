@@ -1053,7 +1053,7 @@ describe("ProposalMemoPosturePanel", () => {
     ).toBeDisabled();
   });
 
-  it("keeps an in-flight review busy state and failure version-scoped", async () => {
+  it("keeps in-flight mutations proposal-scoped and failures version-scoped", async () => {
     sourceState = evidenceState();
     const reviewRequest = createDeferred<
       Awaited<ReturnType<typeof reviewProposalMemo>>
@@ -1088,16 +1088,22 @@ describe("ProposalMemoPosturePanel", () => {
     const remountedReview = screen.getByRole("button", {
       name: "Record advisor review",
     });
-    expect(remountedReview).toBeEnabled();
+    expect(remountedReview).toBeDisabled();
     expect(
       screen.getByPlaceholderText(
         "Explain why the memo evidence is appropriate for advisor use.",
       ),
-    ).toBeEnabled();
+    ).toBeDisabled();
     expect(
       screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
-    ).toBeEnabled();
-    expect(screen.getByRole("combobox", { name: "Audience view" })).toBeEnabled();
+    ).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Audience view" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Advisor review for proposal version 2 is still being recorded. Wait for the confirmed outcome before taking another proposal action.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(remountedReview);
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
 
     reviewRequest.reject(new Error("SOURCE_UNAVAILABLE"));
@@ -1107,6 +1113,11 @@ describe("ProposalMemoPosturePanel", () => {
         screen.getByRole("button", { name: "Record advisor review" }),
       ).toBeEnabled(),
     );
+    expect(
+      screen.queryByText(
+        "Advisor review for proposal version 2 is still being recorded. Wait for the confirmed outcome before taking another proposal action.",
+      ),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",

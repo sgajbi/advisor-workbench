@@ -73,3 +73,10 @@ export function proposalMemoActionSuccessCopy(
   };
   return `${subject[action]} confirmed for proposal version ${versionNo}.`;
 }
+
+export function proposalMemoPendingActionCopy(
+  action: ProposalMemoActionCopyKey,
+  versionNo: number,
+): string {
+  return `${ACTION_SUBJECT[action]} for proposal version ${versionNo} is still being recorded. Wait for the confirmed outcome before taking another proposal action.`;
+}
