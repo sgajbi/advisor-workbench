@@ -1266,6 +1266,23 @@ describe("ProposalMemoPosturePanel", () => {
       screen.getByTestId("proposal-memo-confirmation-recovery"),
     ).toHaveAttribute("data-confirmation-state", "lineage-unavailable");
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
+
+    const memoCallsBeforeStaleOwnerRefresh = vi.mocked(getProposalMemo).mock.calls.length;
+    rerenderPanel(VERSION_NO);
+    fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
+    await waitFor(() =>
+      expect(vi.mocked(getProposalMemo).mock.calls.length).toBeGreaterThan(
+        memoCallsBeforeStaleOwnerRefresh,
+      ),
+    );
+    expect(
+      await screen.findByText(
+        "Advisor review for proposal version 2 was recorded, but complete source lineage no longer retains evidence for that version. Refresh the proposal record before relying on the action or taking another step.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toHaveAttribute("data-confirmation-state", "lineage-unavailable");
   });
 
   it("preserves a newer action outcome when historical confirmation finishes later", async () => {

@@ -32,6 +32,16 @@ describe("proposal memo copy", () => {
     ).toBe(
       "Advisor review for proposal version 2 was recorded, but retained evidence for that version is unavailable. Recheck this earlier record before relying on it, and use the current source posture to determine the next available action.",
     );
+    expect(
+      proposalMemoRefreshFailureCopy({
+        action: "review",
+        currentVersionNo: 2,
+        historicalEvidenceUnavailable: true,
+        versionNo: 2,
+      }),
+    ).toBe(
+      "Advisor review for proposal version 2 was recorded, but complete source lineage no longer retains evidence for that version. Refresh the proposal record before relying on the action or taking another step.",
+    );
   });
 
   it("fails closed when a retained receipt is ahead of the active proposal record", () => {

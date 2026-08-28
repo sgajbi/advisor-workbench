@@ -49,6 +49,9 @@ export function proposalMemoRefreshFailureCopy({
   historicalEvidenceUnavailable: boolean;
   versionNo: number;
 }): string {
+  if (historicalEvidenceUnavailable && currentVersionNo === versionNo) {
+    return `${ACTION_SUBJECT[action]} for proposal version ${versionNo} was recorded, but complete source lineage no longer retains evidence for that version. Refresh the proposal record before relying on the action or taking another step.`;
+  }
   if (currentVersionNo !== null && versionNo > currentVersionNo) {
     return `${ACTION_SUBJECT[action]} is recorded for proposal version ${versionNo}, but the active proposal record reports version ${currentVersionNo}. Refresh the proposal record before taking another action.`;
   }
