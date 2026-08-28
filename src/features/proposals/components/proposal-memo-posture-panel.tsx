@@ -47,6 +47,10 @@ import {
   isProposalMemoSourceConfirmedAbsent,
   resolveProposalMemoSourceState,
 } from "../proposal-memo-source-state";
+import {
+  resolveHistoricalMemoLineageSource,
+  resolveHistoricalMemoSourceIdentity,
+} from "../proposal-memo-source-identity";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
   SectionBlock,
@@ -416,20 +420,52 @@ function ProposalMemoPosturePanelSession({
   async function refreshMemoState(
     targetVersionNo: number,
     targetAudience: ProposalMemoProjectionAudience,
+    pendingConfirmation?: PendingMemoConfirmation,
   ): Promise<ProposalMemoRefreshEvidence> {
     if (targetVersionNo !== versionNo || targetAudience !== audience) {
-      const [memo, projection, lineage, replay] = await Promise.all([
+      const [memoResult, projectionResult, lineageResult, replayResult] =
+        await Promise.allSettled([
         getProposalMemo(proposalId, targetVersionNo),
         getProposalMemoProjection(proposalId, targetVersionNo, targetAudience),
         getProposalMemoLineage(proposalId),
         getProposalMemoReplayEvidence(proposalId, targetVersionNo),
       ]);
+      if (
+        memoResult.status === "rejected"
+        || projectionResult.status === "rejected"
+        || lineageResult.status === "rejected"
+        || replayResult.status === "rejected"
+      ) {
+        if (lineageResult.status === "fulfilled" && pendingConfirmation) {
+          const actionMemo = pendingConfirmation.kind === "create"
+            ? pendingConfirmation.result
+            : pendingConfirmation.result.memo;
+          const actionIdentity = resolveHistoricalMemoSourceIdentity(
+            actionMemo,
+            proposalId,
+            targetVersionNo,
+          );
+          if (
+            resolveHistoricalMemoLineageSource(
+              lineageResult.value,
+              actionIdentity,
+              proposalId,
+              targetVersionNo,
+            ).kind === "historical-item-missing"
+          ) {
+            throw new ProposalMemoRefreshVerificationError(
+              "historical-lineage-unavailable",
+            );
+          }
+        }
+        throw new Error("MEMO_REFRESH_UNAVAILABLE");
+      }
       return {
-        memo,
+        memo: memoResult.value,
         proposalId,
-        projection,
-        lineage,
-        replay,
+        projection: projectionResult.value,
+        lineage: lineageResult.value,
+        replay: replayResult.value,
         selectedAudience: targetAudience,
         versionNo: targetVersionNo,
       };
@@ -695,6 +731,7 @@ function ProposalMemoPosturePanelSession({
       const refreshed = await refreshMemoState(
         pendingConfirmation.versionNo,
         pendingConfirmation.selectedAudience,
+        pendingConfirmation,
       );
       const confirmedSourceVersionNo =
         confirmedProposalVersionFromMemoRefresh(refreshed);
@@ -834,6 +871,9 @@ function ProposalMemoPosturePanelSession({
               "refresh",
             )
               ? "refreshing"
+              : confirmationFailures[pendingConfirmation.versionNo]
+                === "historical-lineage-unavailable"
+                ? "lineage-unavailable"
               : "awaiting-source"
           }
           action={
