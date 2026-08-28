@@ -1908,43 +1908,34 @@ export async function validateRiskPanel(
   await expect(mandateComparison.getByText("Source evidence supplied", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(mandateComparison.getByText("Cash allocation", { exact: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(mandateComparison.getByText("Largest issuer exposure", { exact: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
-  const mandateStates = await mandateComparison
-    .locator("[data-mandate-source]")
-    .evaluateAll((sources) =>
-      sources.flatMap((source) =>
-        Array.from(source.querySelectorAll("[data-mandate-constraint]")).map((row) => ({
-          source: source.getAttribute("data-mandate-source"),
-          key: row.getAttribute("data-mandate-constraint"),
-          state: row.getAttribute("data-mandate-state"),
-        })),
-      ),
-    );
   const expectedMandateStates = buildMandateConstraintProofRows(mandateComparisons);
-  if (mandateStates.length !== expectedMandateStates.length) {
-    throw new Error(
-      `Risk mandate comparison rendered ${mandateStates.length} constraint rows; Gateway returned ${expectedMandateStates.length}.`,
-    );
-  }
+  const constraintRows = mandateComparison.locator("[data-mandate-constraint]");
+  await expect(constraintRows).toHaveCount(expectedMandateStates.length, {
+    timeout: timeoutMs,
+  });
+  const mandateStates = [];
   for (const expected of expectedMandateStates) {
-    const rendered = mandateStates.find(
-      (row) => row.source === expected.source && row.key === expected.key,
+    const rendered = mandateComparison.getByTestId(
+      `risk-mandate-constraint-${expected.source}-${expected.key}`,
     );
-    if (!rendered) {
-      throw new Error(
-        `Risk mandate comparison did not render ${expected.source} constraint ${expected.key}.`,
-      );
-    }
-    if (rendered.state !== expected.state) {
-      throw new Error(
-        `Risk mandate comparison rendered ${expected.source} constraint ${expected.key} as ${rendered.state ?? "missing"}; Gateway returned ${expected.state}.`,
-      );
-    }
+    await expect(rendered).toHaveCount(1, { timeout: timeoutMs });
+    await expect(rendered).toBeVisible({ timeout: timeoutMs });
+    await expect(rendered).toHaveAttribute(
+      "data-mandate-constraint-source",
+      expected.source,
+      { timeout: timeoutMs },
+    );
+    await expect(rendered).toHaveAttribute(
+      "data-mandate-constraint",
+      expected.key,
+      { timeout: timeoutMs },
+    );
+    await expect(rendered).toHaveAttribute(
+      "data-mandate-state",
+      expected.state,
+      { timeout: timeoutMs },
+    );
+    mandateStates.push(expected);
   }
   summary.uiChecks.push({
     description: "Gateway-owned Risk mandate comparison",
