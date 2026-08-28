@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { AiAssistanceDisclosure } from "@/design-system";
 import type { DpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
@@ -20,7 +20,7 @@ export default function DpmAiWorkflowResult({
 }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (focusOnMount) {
       headingRef.current?.focus();
     }
