@@ -51,16 +51,13 @@ function buildDpmConstructionCallerHeaders(params: {
 
 function buildConstructionAlternativeSetRequest(
   portfolio: WorkbenchPortfolio360,
-  methods: string[]
 ): Record<string, unknown> {
   const portfolioId = portfolio.portfolio.portfolio_id;
-  const baseCurrency = portfolio.portfolio.base_currency;
   const callerContext = resolveDefaultCallerContext();
   const dpmContext = resolveDefaultDpmContext();
   const sourceAsOfDate = dpmContext.sourceAsOfDate || portfolio.as_of_date;
   return {
     input_mode: "stateful",
-    methods,
     stateful_input: {
       portfolio_id: portfolioId,
       as_of: sourceAsOfDate,
@@ -76,35 +73,17 @@ function buildConstructionAlternativeSetRequest(
       include_shelf: true,
       include_model_portfolio: true,
     },
-    options_override: {
-      valuation_mode: "TRUST_SNAPSHOT",
-      cash_band_min_weight: "0.00",
-      cash_band_max_weight: "0.15",
-      min_trade_notional: {
-        amount: "100",
-        currency: baseCurrency,
-      },
-    },
   };
 }
 
 export async function generateDpmConstructionAlternatives(params: {
   portfolio: WorkbenchPortfolio360;
-  methods?: string[];
   actorId?: string;
   idempotencyKey?: string;
 }): Promise<DpmConstructionGatewayResponse> {
   const portfolioId = params.portfolio.portfolio.portfolio_id;
   const actorId = params.actorId ?? "workbench-construction-operator";
-  const methods = params.methods ?? [
-    "DO_NOTHING_BASELINE",
-    "HEURISTIC_EXPLAINABLE",
-    "MIN_TURNOVER",
-  ];
-  const requestBody = buildConstructionAlternativeSetRequest(
-    params.portfolio,
-    methods
-  );
+  const requestBody = buildConstructionAlternativeSetRequest(params.portfolio);
   const statefulInput = requestBody.stateful_input as
     | { as_of?: unknown }
     | undefined;

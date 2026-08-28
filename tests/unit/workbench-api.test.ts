@@ -2907,7 +2907,6 @@ describe("workbench api", () => {
 
     await generateDpmConstructionAlternatives({
       portfolio: constructionPortfolio(),
-      methods: ["DO_NOTHING_BASELINE", "MIN_TURNOVER"],
       idempotencyKey: "workbench-construction-test-idem-1",
     });
 
@@ -2921,10 +2920,7 @@ describe("workbench api", () => {
     const body = JSON.parse(options.body);
     expect(body.idempotency_key).toBe("workbench-construction-test-idem-1");
     expect(body.body.input_mode).toBe("stateful");
-    expect(body.body.methods).toEqual([
-      "DO_NOTHING_BASELINE",
-      "MIN_TURNOVER",
-    ]);
+    expect(body.body).not.toHaveProperty("methods");
     expect(body.body.stateful_input.portfolio_id).toBe(
       "PB_SG_GLOBAL_BAL_001"
     );
@@ -2940,7 +2936,9 @@ describe("workbench api", () => {
     expect(body.body.stateful_input.tenant_id).toBe("tenant-sg");
     expect(body.body.stateful_input.booking_center_code).toBe("Singapore");
     expect(body.body.stateful_input.include_model_portfolio).toBe(true);
-    expect(body.body.options_override.valuation_mode).toBe("TRUST_SNAPSHOT");
+    expect(body.body).not.toHaveProperty("options_override");
+    expect(JSON.stringify(body.body)).not.toContain("cash_band");
+    expect(JSON.stringify(body.body)).not.toContain("min_trade_notional");
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("construction-alternatives");
     expect(metricEventsJson).not.toContain("PB_SG_GLOBAL_BAL_001");
