@@ -112,7 +112,7 @@ type PendingMemoConfirmation = (
 function confirmPendingMemoRefresh(
   confirmation: PendingMemoConfirmation,
   refreshed: ProposalMemoRefreshEvidence,
-): number {
+): void {
   switch (confirmation.kind) {
     case "create":
       confirmMemoCreateRefresh({ action: confirmation.result, refreshed });
@@ -132,7 +132,6 @@ function confirmPendingMemoRefresh(
         refreshed,
       });
   }
-  return confirmedProposalVersionFromMemoRefresh(refreshed);
 }
 
 function upsertPendingAction(
@@ -604,13 +603,12 @@ function ProposalMemoPosturePanelSession({
         persistedConfirmation.versionNo,
         persistedConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo = confirmPendingMemoRefresh(
-        persistedConfirmation,
-        refreshed,
-      );
+      const confirmedSourceVersionNo =
+        confirmedProposalVersionFromMemoRefresh(refreshed);
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );
+      confirmPendingMemoRefresh(persistedConfirmation, refreshed);
       onPendingConfirmationsChange((current) =>
         removePendingConfirmation(current, persistedConfirmation),
       );
@@ -666,13 +664,12 @@ function ProposalMemoPosturePanelSession({
         pendingConfirmation.versionNo,
         pendingConfirmation.selectedAudience,
       );
-      const confirmedSourceVersionNo = confirmPendingMemoRefresh(
-        pendingConfirmation,
-        refreshed,
-      );
+      const confirmedSourceVersionNo =
+        confirmedProposalVersionFromMemoRefresh(refreshed);
       setConfirmedVersionFloor((current) =>
         Math.max(current ?? 0, confirmedSourceVersionNo),
       );
+      confirmPendingMemoRefresh(pendingConfirmation, refreshed);
       if (
         pendingConfirmation.kind === "review"
         && pendingConfirmation.versionNo === versionNo
