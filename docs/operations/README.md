@@ -12,4 +12,3 @@ Start with the [Operations Runbook](../../wiki/Operations-Runbook.md) for sympto
 the canonical runtime guide for integrated `PB_SG_GLOBAL_BAL_001` proof. A successful local or
 fixture run is engineering evidence, not production deployment, disaster-recovery, capacity, or
 bank-certification evidence.
-
