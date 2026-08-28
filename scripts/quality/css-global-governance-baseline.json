@@ -83,7 +83,7 @@
       },
       {
         "path": "src/features/workbench/manage-workspace.module.css",
-        "maxGlobalEscapes": 664
+        "maxGlobalEscapes": 660
       }
     ]
   },

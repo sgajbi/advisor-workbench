@@ -56,6 +56,21 @@ describe("Manage Overview responsive composition", () => {
     expect(workspaceCss).not.toContain("manage-rebalance-evidence");
     expect(workspaceCss).not.toContain("manage-context-rail");
     expect(workspaceCss).not.toContain("manage-rail-actions");
-    expect(workspaceCss).toContain("manage-evidence-rail");
+    expect(workspaceCss).not.toContain("manage-evidence-rail");
+  });
+
+  it("keeps review-evidence rail styles locally owned without global escapes", () => {
+    const evidenceRailCss = readFileSync(
+      path.join(
+        process.cwd(),
+        "src/features/workbench/components/manage-evidence-rail.module.css",
+      ),
+      "utf8",
+    );
+
+    expect(evidenceRailCss).toMatch(/\.rail\s*\{[\s\S]*?display: grid;/);
+    expect(evidenceRailCss).toMatch(/\.headline\s*\{[\s\S]*?font-weight: 700;/);
+    expect(evidenceRailCss).toMatch(/\.definitionList\s*\{[\s\S]*?margin-top: 10px;/);
+    expect(evidenceRailCss).not.toContain(":global(");
   });
 });

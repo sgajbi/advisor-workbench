@@ -1,0 +1,22 @@
+.rail {
+  display: grid;
+  gap: 14px;
+}
+
+.header {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #c6c6cd;
+}
+
+.headline {
+  color: #131b2e;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 19px;
+}
+
+.definitionList {
+  margin-top: 10px;
+}
