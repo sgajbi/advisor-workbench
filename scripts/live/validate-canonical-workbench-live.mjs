@@ -506,6 +506,18 @@ function extractPmQualityScoreRunId(response) {
   );
 }
 
+function extractPmQualityScoreRunState(response, scoreRunId) {
+  const data = extractGatewayEnvelopeData(response);
+  const candidates = [
+    data?.score_run,
+    ...(Array.isArray(data?.score_runs) ? data.score_runs : []),
+  ];
+  const selected = candidates.find(
+    (candidate) => readString(candidate?.score_run_id) === scoreRunId,
+  );
+  return readString(selected?.state) || null;
+}
+
 function extractPmQualityFairnessAnalysisId(response) {
   const data = extractGatewayEnvelopeData(response);
   return (
@@ -515,6 +527,19 @@ function extractPmQualityFairnessAnalysisId(response) {
     readString(response?.supportability?.fairness_analysis_id) ||
     null
   );
+}
+
+function extractPmQualityFairnessAnalysisState(response, fairnessAnalysisId) {
+  const data = extractGatewayEnvelopeData(response);
+  const candidates = [
+    data?.fairness_analysis,
+    ...(Array.isArray(data?.fairness_analyses) ? data.fairness_analyses : []),
+  ];
+  const selected = candidates.find(
+    (candidate) =>
+      readString(candidate?.fairness_analysis_id) === fairnessAnalysisId,
+  );
+  return readString(selected?.state) || null;
 }
 
 function extractPmQualityReviewActionId(response) {
@@ -717,6 +742,15 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
       "DPM PM operating-quality score-run list did not return the seeded score run.",
     );
   }
+  const scoreRunState = extractPmQualityScoreRunState(
+    scoreRunList,
+    scoreRunId,
+  );
+  if (scoreRunState !== "READY") {
+    throw new Error(
+      `DPM PM operating-quality score run ${scoreRunId} is not ready: ${scoreRunState ?? "missing state"}.`,
+    );
+  }
   if (extractPmQualityReviewActionId(reviewActionList) !== reviewActionId) {
     throw new Error(
       "DPM PM operating-quality review-action list did not return the seeded review action.",
@@ -730,6 +764,15 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
       "DPM PM operating-quality fairness-analysis list did not return the seeded analysis.",
     );
   }
+  const fairnessAnalysisState = extractPmQualityFairnessAnalysisState(
+    fairnessAnalysisList,
+    fairnessAnalysisId,
+  );
+  if (fairnessAnalysisState !== "READY") {
+    throw new Error(
+      `DPM PM operating-quality fairness analysis ${fairnessAnalysisId} is not ready: ${fairnessAnalysisState ?? "missing state"}.`,
+    );
+  }
   if (
     extractPmQualitySummaryInvocationId(summaryInvocationList) !==
     summaryInvocationId
@@ -741,7 +784,9 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
 
   return {
     scoreRunId,
+    scoreRunState,
     fairnessAnalysisId,
+    fairnessAnalysisState,
     reviewActionId,
     summaryInvocationId,
     asOfDate,
