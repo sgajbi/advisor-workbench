@@ -56,7 +56,7 @@ describe("canonical live validation script", () => {
     expect(summaryInvocation).not.toContain("mandateComparisons");
   });
 
-  it("seeds PM operating quality with the current trusted-tenant Manage contract", () => {
+  it("seeds PM operating quality in the canonical DPM tenant", () => {
     const script = readFileSync(
       join(
         process.cwd(),
@@ -66,9 +66,8 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
-    expect(script).toContain("CANONICAL_CALLER_CONTEXT_HEADERS");
     expect(script).toContain(
-      'tenant_id: CANONICAL_CALLER_CONTEXT_HEADERS["X-Tenant-Id"]',
+      "tenant_id: dpmCommandCenterDefaults.tenantId",
     );
     expect(script).toContain("enabled: true");
     expect(script).toContain("weights: [");
@@ -284,6 +283,20 @@ describe("canonical live validation script", () => {
     expect(script).toContain("[switch]$SkipSeedCleanup");
     expect(script).toContain("function Test-LocalApp");
     expect(script).toContain("function Invoke-ComposeUp");
+    expect(script).toContain("function Get-CanonicalDpmCommandCenterEnvironment");
+    expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID");
+    expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID");
+    expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID");
+    expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE");
+    expect(script).toContain(
+      "$canonicalDpmCommandCenterEnvironment = Get-CanonicalDpmCommandCenterEnvironment",
+    );
+    expect(script).toContain(
+      "$workbenchEnvironment = $canonicalDpmCommandCenterEnvironment.Clone()",
+    );
+    expect(script).toContain(
+      "$dockerWorkbenchEnvironment = $canonicalDpmCommandCenterEnvironment.Clone()",
+    );
     expect(script).toContain("[switch]$Build");
     expect(script).toContain(
       '$composeCommand -notmatch "(?:^|\\s)--build(?:\\s|$)"',
@@ -392,14 +405,16 @@ describe("canonical live validation script", () => {
     expect(script).toContain(
       "Leaving Docker-owned $Description listener on :$Port",
     );
-    expect(script).toContain("$previousBffBaseUrl = $env:BFF_BASE_URL");
-    expect(script).toContain("$previousLotusEnvironment = $env:LOTUS_ENVIRONMENT");
-    expect(script).toContain("$previousIdeaAuthMode = $env:WORKBENCH_IDEA_AUTH_MODE");
-    expect(script).toContain('$env:BFF_BASE_URL = "http://gateway.dev.lotus"');
-    expect(script).toContain('$env:LOTUS_ENVIRONMENT = "dev"');
-    expect(script).toContain('$env:WORKBENCH_IDEA_AUTH_MODE = "development_configured"');
     expect(script).toContain(
-      "$previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED",
+      "$workbenchEnvironment.BFF_BASE_URL = \"http://gateway.dev.lotus\"",
+    );
+    expect(script).toContain('$workbenchEnvironment.LOTUS_ENVIRONMENT = "dev"');
+    expect(script).toContain(
+      '$workbenchEnvironment.WORKBENCH_IDEA_AUTH_MODE = "development_configured"',
+    );
+    expect(script).toContain('$workbenchEnvironment.NEXT_TELEMETRY_DISABLED = "1"');
+    expect(script).toContain(
+      "Invoke-WithProcessEnvironment -Environment $workbenchEnvironment",
     );
     expect(script).toContain('Test-LocalApp "workbench"');
     expect(script).toContain("function Invoke-WithProcessEnvironment");
@@ -591,6 +606,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("const sendPmQualityJson");
     expect(script).toContain(
       '"X-Tenant-Id": dpmCommandCenterDefaults.tenantId',
+    );
+    expect(script).toContain(
+      "tenant_id: dpmCommandCenterDefaults.tenantId",
     );
     expect(script).toContain('scoreRunState !== "READY"');
     expect(script).toContain('fairnessAnalysisState !== "READY"');

@@ -411,6 +411,27 @@ function Invoke-ComposeUp {
   }
 }
 
+function Get-CanonicalDpmCommandCenterEnvironment {
+  if (-not (Test-Path $canonicalContractPath)) {
+    throw "Canonical front-office demo data contract not found: $canonicalContractPath"
+  }
+
+  $contract = Get-Content -Raw $canonicalContractPath | ConvertFrom-Json
+  $context = $contract.dpm_command_center
+  $requiredValues = [ordered]@{
+    WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID = [string]$context.tenant_id
+    WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID = [string]$context.portfolio_manager_id
+    WORKBENCH_DPM_COMMAND_CENTER_BOOK_ID = [string]$context.book_id
+    WORKBENCH_DPM_COMMAND_CENTER_AS_OF_DATE = [string]$context.command_center_as_of_date
+  }
+  foreach ($entry in $requiredValues.GetEnumerator()) {
+    if ([string]::IsNullOrWhiteSpace($entry.Value)) {
+      throw "Canonical front-office demo data contract is missing the DPM value for $($entry.Key)."
+    }
+  }
+  return $requiredValues
+}
+
 function Invoke-WithProcessEnvironment {
   param(
     [hashtable]$Environment,
@@ -478,26 +499,18 @@ function Start-WorkbenchDevServer {
   $err = Join-Path $workbenchRepo "workbench-3000.dev.err.log"
   if (Test-Path $out) { Remove-Item $out -Force }
   if (Test-Path $err) { Remove-Item $err -Force }
-  $previousBffBaseUrl = $env:BFF_BASE_URL
-  $previousLotusEnvironment = $env:LOTUS_ENVIRONMENT
-  $previousIdeaAuthMode = $env:WORKBENCH_IDEA_AUTH_MODE
-  $previousNextTelemetryDisabled = $env:NEXT_TELEMETRY_DISABLED
-  $env:BFF_BASE_URL = "http://gateway.dev.lotus"
-  $env:LOTUS_ENVIRONMENT = "dev"
-  $env:WORKBENCH_IDEA_AUTH_MODE = "development_configured"
-  $env:NEXT_TELEMETRY_DISABLED = "1"
-  try {
+  $workbenchEnvironment = $canonicalDpmCommandCenterEnvironment.Clone()
+  $workbenchEnvironment.BFF_BASE_URL = "http://gateway.dev.lotus"
+  $workbenchEnvironment.LOTUS_ENVIRONMENT = "dev"
+  $workbenchEnvironment.WORKBENCH_IDEA_AUTH_MODE = "development_configured"
+  $workbenchEnvironment.NEXT_TELEMETRY_DISABLED = "1"
+  Invoke-WithProcessEnvironment -Environment $workbenchEnvironment -ScriptBlock {
     Start-Process -FilePath "npm.cmd" `
       -ArgumentList "run","dev","--","--hostname","0.0.0.0","--port","3000" `
       -WorkingDirectory $workbenchRepo `
       -RedirectStandardOutput $out `
       -RedirectStandardError $err `
       -WindowStyle Hidden | Out-Null
-  } finally {
-    $env:BFF_BASE_URL = $previousBffBaseUrl
-    $env:LOTUS_ENVIRONMENT = $previousLotusEnvironment
-    $env:WORKBENCH_IDEA_AUTH_MODE = $previousIdeaAuthMode
-    $env:NEXT_TELEMETRY_DISABLED = $previousNextTelemetryDisabled
   }
   Start-Sleep -Seconds 10
 }
@@ -728,6 +741,7 @@ if ($RequireMainlineSources) {
 
 Write-Host "Previewing managed canonical hosts block from lotus-platform ..."
 Invoke-RepoCommand $platformRepo "powershell -ExecutionPolicy Bypass -File automation\\Sync-Dev-Ingress-Hosts.ps1"
+$canonicalDpmCommandCenterEnvironment = Get-CanonicalDpmCommandCenterEnvironment
 
 if ($CleanCoreState) {
   Write-Host "Resetting lotus-core Docker state before canonical reseed ..."
@@ -832,11 +846,11 @@ if (Test-LocalApp "workbench") {
   Start-WorkbenchDevServer
 } else {
   Stop-HostProcessOnPort -Port 3000 -Description "Workbench"
-  Invoke-ComposeUp $workbenchRepo @{
-    BFF_BASE_URL = "http://host.docker.internal:8100"
-    LOTUS_ENVIRONMENT = "dev"
-    WORKBENCH_IDEA_AUTH_MODE = "development_configured"
-  }
+  $dockerWorkbenchEnvironment = $canonicalDpmCommandCenterEnvironment.Clone()
+  $dockerWorkbenchEnvironment.BFF_BASE_URL = "http://host.docker.internal:8100"
+  $dockerWorkbenchEnvironment.LOTUS_ENVIRONMENT = "dev"
+  $dockerWorkbenchEnvironment.WORKBENCH_IDEA_AUTH_MODE = "development_configured"
+  Invoke-ComposeUp $workbenchRepo $dockerWorkbenchEnvironment
 }
 
 if (-not $RunValidation) {

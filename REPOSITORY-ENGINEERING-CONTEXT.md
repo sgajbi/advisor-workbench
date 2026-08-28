@@ -980,6 +980,9 @@ Use these commands as the primary local contract:
    Canonical startup rebuilds only the Lotus Idea Compose project on each run because its isolated
    capacity proof binds `/version` to a fresh build-time run identity. Do not remove that targeted
    build or replace the exact commit, branch, and run comparison with reusable-image assumptions.
+   The same startup path injects the platform demo-data contract's DPM tenant, portfolio-manager,
+   book, and command-centre date into Workbench and the PM Operating Quality seed; do not reintroduce
+   separate validator or UI defaults for canonical proof.
 10. hermetic stateless scale regression
     `npm run scale:proof`
 
