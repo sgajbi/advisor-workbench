@@ -132,7 +132,6 @@ export default function PmOperatingQualityPanel({
     model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
-  const renderedState = loadError || actionError ? "partial" : model.state;
 
   return (
     <SectionBlock
@@ -165,7 +164,7 @@ export default function PmOperatingQualityPanel({
       <div
         className="pm-quality-status-strip"
         data-testid="pm-operating-quality-source-evidence"
-        data-panel-state={renderedState}
+        data-panel-state={loadError || actionError ? "partial" : model.state}
         data-attention-state={loadError || actionError ? "required" : "clear"}
         data-supportability-state={model.supportabilityState}
         data-source-service={model.operationEvidence.sourceService}
