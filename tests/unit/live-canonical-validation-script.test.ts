@@ -7,6 +7,12 @@ const REPORT_CENTRE_CLASSIFICATION_PATTERN =
 function normalizeSourceNewlines(source: string): string {
   return source.replace(/\r\n?/g, "\n");
 }
+
+function readNormalizedSource(...pathSegments: string[]): string {
+  return normalizeSourceNewlines(
+    readFileSync(join(process.cwd(), ...pathSegments), "utf8"),
+  );
+}
 const OWNERSHIP_MODULE = readFileSync(
   join(
     process.cwd(),
@@ -28,16 +34,10 @@ const OWNERSHIP_CONTRACT = readFileSync(
 
 describe("canonical live validation script", () => {
   it("passes exact Gateway mandate evidence to the Risk browser proof", () => {
-    const script = normalizeSourceNewlines(
-      readFileSync(
-        join(
-          process.cwd(),
-          "scripts",
-          "live",
-          "validate-canonical-workbench-live.mjs",
-        ),
-        "utf8",
-      ),
+    const script = readNormalizedSource(
+      "scripts",
+      "live",
+      "validate-canonical-workbench-live.mjs",
     );
     const riskInvocation = script.match(
       /await validateRiskPanel\(page, \{\n([\s\S]*?)\n    \}\);/,
@@ -96,6 +96,21 @@ describe("canonical live validation script", () => {
     (newline) => {
       expect(normalizeSourceNewlines(["first", "second"].join(newline))).toBe(
         "first\nsecond",
+      );
+    },
+  );
+
+  it.each(["\n", "\r\n"])(
+    "recognizes PM source-evidence ownership with %j newlines",
+    (newline) => {
+      const sourceEvidenceBinding = [
+        "const sourceEvidence = qualityPanel.getByTestId(",
+        '    "pm-operating-quality-source-evidence",',
+        ");",
+      ].join(newline);
+
+      expect(normalizeSourceNewlines(sourceEvidenceBinding)).toContain(
+        'qualityPanel.getByTestId(\n    "pm-operating-quality-source-evidence"',
       );
     },
   );
@@ -967,15 +982,11 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
-    const browserWorkflowModule = readFileSync(
-      join(
-        process.cwd(),
-        "scripts",
-        "live",
-        "validation",
-        "browser-workflows.mjs",
-      ),
-      "utf8",
+    const browserWorkflowModule = readNormalizedSource(
+      "scripts",
+      "live",
+      "validation",
+      "browser-workflows.mjs",
     );
     const runbook = readFileSync(
       join(
@@ -1173,15 +1184,11 @@ describe("canonical live validation script", () => {
       ),
       "utf8",
     );
-    const browserWorkflowModule = readFileSync(
-      join(
-        process.cwd(),
-        "scripts",
-        "live",
-        "validation",
-        "browser-workflows.mjs",
-      ),
-      "utf8",
+    const browserWorkflowModule = readNormalizedSource(
+      "scripts",
+      "live",
+      "validation",
+      "browser-workflows.mjs",
     );
     const runbook = readFileSync(
       join(
