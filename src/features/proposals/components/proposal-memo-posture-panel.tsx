@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button } from "@mui/material";
 
@@ -28,11 +28,18 @@ import {
   confirmMemoCreateRefresh,
   confirmMemoReportPackageRefresh,
   confirmMemoReviewRefresh,
+  ProposalMemoRefreshVerificationError,
   PROPOSAL_MEMO_PROJECTION_AUDIENCE_LABELS,
   PROPOSAL_MEMO_PROJECTION_AUDIENCES,
   type ProposalMemoProjectionAudience,
   type ProposalMemoRefreshEvidence,
 } from "../proposal-memo-posture-view-model";
+import {
+  PROPOSAL_MEMO_ACTION_FAILURE_COPY,
+  proposalMemoActionSuccessCopy,
+  proposalMemoRefreshFailureCopy,
+  type ProposalMemoActionCopyKey,
+} from "@/copy/proposal-memo-copy";
 import {
   isProposalMemoSourceConfirmedAbsent,
   resolveProposalMemoSourceState,
@@ -52,12 +59,16 @@ type Props = {
   currentVersionNo?: number | null;
 };
 
-type PendingMemoAction = "create" | "review" | "report" | "commentary";
+type PendingMemoAction = ProposalMemoActionCopyKey;
 
 type PendingMemoActionState = {
   kind: PendingMemoAction | "refresh";
   versionNo: number;
 };
+
+type PendingConfirmationFailure =
+  | "source-unconfirmed"
+  | "historical-lineage-unavailable";
 
 type PendingMemoConfirmation = (
   | {
@@ -79,42 +90,6 @@ type PendingMemoConfirmation = (
 ) & {
   selectedAudience: ProposalMemoProjectionAudience;
   versionNo: number;
-};
-
-const ACTION_FAILURE_COPY: Record<PendingMemoAction, string> = {
-  create:
-    "The advisor memo was not prepared. Recheck the advisor reference and try again.",
-  review:
-    "Advisor review was not recorded. Recheck the rationale and reviewer reference, then try again.",
-  report:
-    "Discussion material was not requested. Confirm the advisor review and try again.",
-  commentary:
-    "Advisor commentary was not requested. Confirm the advisor review and try again.",
-};
-
-const REFRESH_FAILURE_COPY: Record<PendingMemoAction, string> = {
-  create:
-    "The memo request completed, but the current evidence record could not confirm it. Refresh before taking another action.",
-  review:
-    "The review was submitted, but the current memo evidence could not confirm it. Refresh before taking another action.",
-  report:
-    "The material request was submitted, but the current memo record could not confirm it. Refresh before retrying.",
-  commentary:
-    "The commentary request was submitted, but the current memo record could not confirm it. Refresh before retrying.",
-};
-
-const ACTION_SUCCESS_COPY: Record<
-  PendingMemoAction,
-  (versionNo: number) => string
-> = {
-  create: (versionNo) =>
-    `Advisor memo confirmed for proposal version ${versionNo}.`,
-  review: (versionNo) =>
-    `Advisor review confirmed for proposal version ${versionNo}.`,
-  report: (versionNo) =>
-    `Discussion material confirmed for proposal version ${versionNo}.`,
-  commentary: (versionNo) =>
-    `Advisor commentary confirmed for proposal version ${versionNo}.`,
 };
 
 function confirmPendingMemoRefresh(
@@ -161,11 +136,12 @@ function ProposalMemoPosturePanelProposalScope({
 }: Props) {
   const [pendingAction, setPendingAction] =
     useState<PendingMemoActionState | null>(null);
-  const [pendingConfirmation, setPendingConfirmation] =
-    useState<PendingMemoConfirmation | null>(null);
-  const [confirmationError, setConfirmationError] = useState<string | null>(
-    null,
-  );
+  const [pendingConfirmations, setPendingConfirmations] = useState<
+    PendingMemoConfirmation[]
+  >([]);
+  const [confirmationFailures, setConfirmationFailures] = useState<
+    Record<number, PendingConfirmationFailure>
+  >({});
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionStateVersionNo, setActionStateVersionNo] = useState(
@@ -183,45 +159,49 @@ function ProposalMemoPosturePanelProposalScope({
       proposalId={proposalId}
       currentVersionNo={currentVersionNo}
       actionError={actionError}
-      confirmationError={confirmationError}
+      confirmationFailures={confirmationFailures}
       actionMessage={actionMessage}
       pendingAction={pendingAction}
-      pendingConfirmation={pendingConfirmation}
+      pendingConfirmations={pendingConfirmations}
       onActionErrorChange={setActionError}
-      onConfirmationErrorChange={setConfirmationError}
+      onConfirmationFailuresChange={setConfirmationFailures}
       onActionMessageChange={setActionMessage}
       onPendingActionChange={setPendingAction}
-      onPendingConfirmationChange={setPendingConfirmation}
+      onPendingConfirmationsChange={setPendingConfirmations}
     />
   );
 }
 
 type SessionProps = Props & {
   actionError: string | null;
-  confirmationError: string | null;
+  confirmationFailures: Record<number, PendingConfirmationFailure>;
   actionMessage: string | null;
   pendingAction: PendingMemoActionState | null;
-  pendingConfirmation: PendingMemoConfirmation | null;
+  pendingConfirmations: PendingMemoConfirmation[];
   onActionErrorChange: (value: string | null) => void;
-  onConfirmationErrorChange: (value: string | null) => void;
+  onConfirmationFailuresChange: Dispatch<
+    SetStateAction<Record<number, PendingConfirmationFailure>>
+  >;
   onActionMessageChange: (value: string | null) => void;
   onPendingActionChange: (value: PendingMemoActionState | null) => void;
-  onPendingConfirmationChange: (value: PendingMemoConfirmation | null) => void;
+  onPendingConfirmationsChange: Dispatch<
+    SetStateAction<PendingMemoConfirmation[]>
+  >;
 };
 
 function ProposalMemoPosturePanelSession({
   proposalId,
   currentVersionNo,
   actionError,
-  confirmationError,
+  confirmationFailures,
   actionMessage,
   pendingAction,
-  pendingConfirmation,
+  pendingConfirmations,
   onActionErrorChange: setActionError,
-  onConfirmationErrorChange: setConfirmationError,
+  onConfirmationFailuresChange: setConfirmationFailures,
   onActionMessageChange: setActionMessage,
   onPendingActionChange,
-  onPendingConfirmationChange,
+  onPendingConfirmationsChange,
 }: SessionProps) {
   const versionNo = currentVersionNo ?? null;
   const [actorReference, setActorReference] = useState("");
@@ -340,6 +320,9 @@ function ProposalMemoPosturePanelSession({
   const sourceUnavailable = sourceState === "unavailable";
   const sourceReady = sourceState === "ready" || sourceState === "not-prepared";
   const actorEntered = actorReference.trim().length > 0;
+  const currentPendingConfirmation = pendingConfirmations.find(
+    (confirmation) => confirmation.versionNo === versionNo,
+  ) ?? null;
 
   async function refreshMemoState(
     targetVersionNo: number,
@@ -400,7 +383,7 @@ function ProposalMemoPosturePanelSession({
       || !posture.sourceIdentityCurrent
       || posture.hasMemo
       || pendingAction !== null
-      || pendingConfirmation !== null
+      || currentPendingConfirmation !== null
     ) {
       return;
     }
@@ -429,7 +412,7 @@ function ProposalMemoPosturePanelSession({
       !posture.memoHash ||
       !reviewRationale.trim() ||
       pendingAction !== null ||
-      pendingConfirmation !== null
+      currentPendingConfirmation !== null
     ) {
       return;
     }
@@ -466,7 +449,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestReportPackage ||
       !posture.memoHash ||
       pendingAction !== null ||
-      pendingConfirmation !== null
+      currentPendingConfirmation !== null
     ) {
       return;
     }
@@ -497,7 +480,7 @@ function ProposalMemoPosturePanelSession({
       !posture.canRequestCommentary ||
       !posture.memoHash ||
       pendingAction !== null ||
-      pendingConfirmation !== null
+      currentPendingConfirmation !== null
     ) {
       return;
     }
@@ -529,33 +512,50 @@ function ProposalMemoPosturePanelSession({
   ) {
     onPendingActionChange({ kind: action, versionNo: actionVersionNo });
     setActionError(null);
-    setConfirmationError(null);
+    setConfirmationFailures((current) =>
+      omitConfirmationFailure(current, actionVersionNo),
+    );
     setActionMessage(null);
     let confirmation: PendingMemoConfirmation | null = null;
     try {
-      confirmation = await operation();
-      onPendingConfirmationChange(confirmation);
-      const refreshed = await refreshMemoState(
-        confirmation.versionNo,
-        confirmation.selectedAudience,
+      const persistedConfirmation = await operation();
+      confirmation = persistedConfirmation;
+      onPendingConfirmationsChange((current) =>
+        upsertPendingConfirmation(current, persistedConfirmation),
       );
-      confirmPendingMemoRefresh(confirmation, refreshed);
-      onPendingConfirmationChange(null);
+      const refreshed = await refreshMemoState(
+        persistedConfirmation.versionNo,
+        persistedConfirmation.selectedAudience,
+      );
+      confirmPendingMemoRefresh(persistedConfirmation, refreshed);
+      onPendingConfirmationsChange((current) =>
+        removePendingConfirmation(current, persistedConfirmation),
+      );
       onConfirmed?.();
-      setActionMessage(ACTION_SUCCESS_COPY[action](actionVersionNo));
-    } catch {
+      setActionMessage(proposalMemoActionSuccessCopy(action, actionVersionNo));
+    } catch (error) {
       if (confirmation) {
-        setConfirmationError(REFRESH_FAILURE_COPY[action]);
+        const failedConfirmation = confirmation;
+        setConfirmationFailures((current) => ({
+          ...current,
+          [failedConfirmation.versionNo]:
+            error instanceof ProposalMemoRefreshVerificationError
+            && error.reason === "historical-lineage-unavailable"
+              ? "historical-lineage-unavailable"
+              : "source-unconfirmed",
+        }));
       } else {
-        setActionError(ACTION_FAILURE_COPY[action]);
+        setActionError(PROPOSAL_MEMO_ACTION_FAILURE_COPY[action]);
       }
     } finally {
       onPendingActionChange(null);
     }
   }
 
-  async function handleRefreshConfirmation() {
-    if (pendingConfirmation === null || pendingAction !== null) {
+  async function handleRefreshConfirmation(
+    pendingConfirmation: PendingMemoConfirmation,
+  ) {
+    if (pendingAction !== null) {
       return;
     }
 
@@ -563,7 +563,9 @@ function ProposalMemoPosturePanelSession({
       kind: "refresh",
       versionNo: pendingConfirmation.versionNo,
     });
-    setConfirmationError(null);
+    setConfirmationFailures((current) =>
+      omitConfirmationFailure(current, pendingConfirmation.versionNo),
+    );
     setActionMessage(null);
     try {
       const refreshed = await refreshMemoState(
@@ -574,14 +576,22 @@ function ProposalMemoPosturePanelSession({
       if (pendingConfirmation.kind === "review") {
         setReviewRationale("");
       }
-      setActionMessage(
-        ACTION_SUCCESS_COPY[pendingConfirmation.kind](
-          pendingConfirmation.versionNo,
-        ),
+      setActionMessage(proposalMemoActionSuccessCopy(
+        pendingConfirmation.kind,
+        pendingConfirmation.versionNo,
+      ));
+      onPendingConfirmationsChange((current) =>
+        removePendingConfirmation(current, pendingConfirmation),
       );
-      onPendingConfirmationChange(null);
-    } catch {
-      setConfirmationError(REFRESH_FAILURE_COPY[pendingConfirmation.kind]);
+    } catch (error) {
+      setConfirmationFailures((current) => ({
+        ...current,
+        [pendingConfirmation.versionNo]:
+          error instanceof ProposalMemoRefreshVerificationError
+          && error.reason === "historical-lineage-unavailable"
+            ? "historical-lineage-unavailable"
+            : "source-unconfirmed",
+      }));
     } finally {
       onPendingActionChange(null);
     }
@@ -596,7 +606,7 @@ function ProposalMemoPosturePanelSession({
       actions={
         <SemanticBadge
           tone={
-            pendingConfirmation === null
+            currentPendingConfirmation === null
             && sourceReady
             && posture.sourceEvidenceAligned
               ? "success"
@@ -605,7 +615,7 @@ function ProposalMemoPosturePanelSession({
         >
           {versionNo === null
             ? "Version required"
-            : pendingConfirmation !== null
+            : currentPendingConfirmation !== null
               ? pendingAction?.kind === "refresh" || sourceRefreshing
                 ? "Checking record"
                 : "Awaiting confirmation"
@@ -635,7 +645,7 @@ function ProposalMemoPosturePanelSession({
           prepared or reviewed.
         </Alert>
       ) : null}
-      {sourceUnavailable && pendingConfirmation === null ? (
+      {sourceUnavailable && currentPendingConfirmation === null ? (
         <Alert
           severity="warning"
           action={
@@ -659,9 +669,9 @@ function ProposalMemoPosturePanelSession({
           refreshes.
         </Alert>
       ) : null}
-      {pendingConfirmation !== null
-      && (pendingAction === null || pendingAction.kind === "refresh") ? (
+      {pendingConfirmations.map((pendingConfirmation) => (
         <Alert
+          key={`${pendingConfirmation.kind}:${pendingConfirmation.versionNo}`}
           severity="warning"
           role="alert"
           data-testid="proposal-memo-confirmation-recovery"
@@ -674,7 +684,7 @@ function ProposalMemoPosturePanelSession({
               color="inherit"
               size="small"
               disabled={pendingAction !== null}
-              onClick={() => void handleRefreshConfirmation()}
+              onClick={() => void handleRefreshConfirmation(pendingConfirmation)}
             >
               {pendingAction?.kind === "refresh"
                 ? "Refreshing…"
@@ -682,10 +692,17 @@ function ProposalMemoPosturePanelSession({
             </Button>
           }
         >
-          {confirmationError ?? REFRESH_FAILURE_COPY[pendingConfirmation.kind]}
+          {proposalMemoRefreshFailureCopy({
+            action: pendingConfirmation.kind,
+            currentVersionNo: versionNo,
+            historicalEvidenceUnavailable:
+              confirmationFailures[pendingConfirmation.versionNo]
+              === "historical-lineage-unavailable",
+            versionNo: pendingConfirmation.versionNo,
+          })}
         </Alert>
-      ) : null}
-      {actionError && pendingConfirmation === null ? (
+      ))}
+      {actionError && currentPendingConfirmation === null ? (
         <Alert severity="warning" role="alert">
           {actionError}
         </Alert>
@@ -733,7 +750,7 @@ function ProposalMemoPosturePanelSession({
             rows={3}
             value={reviewRationale}
             onChange={(event) => setReviewRationale(event.target.value)}
-            disabled={pendingAction !== null || pendingConfirmation !== null}
+            disabled={pendingAction !== null || currentPendingConfirmation !== null}
             placeholder="Explain why the memo evidence is appropriate for advisor use."
           />
         </label>
@@ -758,7 +775,7 @@ function ProposalMemoPosturePanelSession({
               className="input"
                 value={actorReference}
                 onChange={(event) => setActorReference(event.target.value)}
-                disabled={pendingAction !== null || pendingConfirmation !== null}
+                disabled={pendingAction !== null || currentPendingConfirmation !== null}
                 placeholder="Enter the advisor or reviewer reference"
               autoComplete="off"
             />
@@ -768,7 +785,7 @@ function ProposalMemoPosturePanelSession({
             <select
               className="input"
               value={audience}
-              disabled={pendingAction !== null || pendingConfirmation !== null}
+              disabled={pendingAction !== null || currentPendingConfirmation !== null}
               onChange={(event) =>
                 setAudience(
                   event.target.value as ProposalMemoProjectionAudience,
@@ -819,7 +836,7 @@ function ProposalMemoPosturePanelSession({
                  versionNo === null ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 pendingConfirmation !== null
+                 currentPendingConfirmation !== null
                }
               onClick={() => void handleCreateMemo()}
             >
@@ -838,7 +855,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRecordReview ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 pendingConfirmation !== null
+                 currentPendingConfirmation !== null
                }
               onClick={() => void handleReviewMemo()}
             >
@@ -856,7 +873,7 @@ function ProposalMemoPosturePanelSession({
                  !posture.canRequestReportPackage ||
                  sourceLoading ||
                  pendingAction !== null ||
-                 pendingConfirmation !== null
+                 currentPendingConfirmation !== null
                }
               onClick={() => void handleRequestDiscussionMaterial()}
             >
@@ -873,7 +890,7 @@ function ProposalMemoPosturePanelSession({
                 !actorEntered ||
                 sourceLoading ||
                 pendingAction !== null ||
-                pendingConfirmation !== null
+                currentPendingConfirmation !== null
               }
               onClick={() => void handleRequestCommentary()}
             >
@@ -901,4 +918,34 @@ function requireVersion(versionNo: number | null): number {
     throw new Error("A current proposal version is required.");
   }
   return versionNo;
+}
+
+function upsertPendingConfirmation(
+  confirmations: PendingMemoConfirmation[],
+  next: PendingMemoConfirmation,
+): PendingMemoConfirmation[] {
+  return [
+    ...confirmations.filter(
+      (confirmation) => confirmation.versionNo !== next.versionNo,
+    ),
+    next,
+  ];
+}
+
+function removePendingConfirmation(
+  confirmations: PendingMemoConfirmation[],
+  completed: PendingMemoConfirmation,
+): PendingMemoConfirmation[] {
+  return confirmations.filter(
+    (confirmation) => confirmation.versionNo !== completed.versionNo,
+  );
+}
+
+function omitConfirmationFailure(
+  failures: Record<number, PendingConfirmationFailure>,
+  versionNo: number,
+): Record<number, PendingConfirmationFailure> {
+  const next = { ...failures };
+  delete next[versionNo];
+  return next;
 }

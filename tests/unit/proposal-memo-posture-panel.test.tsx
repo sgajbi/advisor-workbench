@@ -47,11 +47,11 @@ function proposalSummary(versionNo = VERSION_NO) {
   };
 }
 
-function actionEvent(eventId: string, eventType: string) {
+function actionEvent(eventId: string, eventType: string, memoHash = MEMO_HASH) {
   return {
     event_id: eventId,
     event_type: eventType,
-    reason: { source_memo_hash: MEMO_HASH },
+    reason: { source_memo_hash: memoHash },
   };
 }
 
@@ -196,6 +196,70 @@ function evidenceState({
           : []),
       ],
       explanation: { client_ready_publication: "BLOCKED" },
+    },
+  };
+}
+
+function withProposalCurrentVersion(
+  evidence: EvidenceState,
+  currentVersionNo: number,
+): EvidenceState {
+  const proposal = proposalSummary(currentVersionNo);
+  return {
+    memo: { ...evidence.memo, proposal },
+    projection: { ...evidence.projection, proposal },
+    lineage: { ...evidence.lineage, proposal },
+    replay: evidence.replay,
+  };
+}
+
+function withMemoIdentity(
+  evidence: EvidenceState,
+  memoId: string,
+  memoHash: string,
+): EvidenceState {
+  const updatePosture = (posture: Record<string, unknown> | undefined) =>
+    posture?.status === "RECORDED"
+      ? { ...posture, source_memo_hash: memoHash }
+      : posture;
+  const updateEvents = (events: Array<Record<string, unknown>> | undefined) =>
+    events?.map((event) => ({
+      ...event,
+      reason:
+        typeof event.reason === "object" && event.reason !== null
+          ? { ...event.reason, source_memo_hash: memoHash }
+          : event.reason,
+    }));
+  return {
+    memo: {
+      ...evidence.memo,
+      memo_id: memoId,
+      memo_hash: memoHash,
+      memo: { ...evidence.memo.memo, memo_id: memoId, memo_hash: memoHash },
+      review_posture: updatePosture(evidence.memo.review_posture),
+      report_package_posture: updatePosture(evidence.memo.report_package_posture),
+      ai_commentary_posture: updatePosture(evidence.memo.ai_commentary_posture),
+      audit_events: updateEvents(evidence.memo.audit_events),
+    },
+    projection: {
+      ...evidence.projection,
+      memo_id: memoId,
+      memo_hash: memoHash,
+    },
+    lineage: {
+      ...evidence.lineage,
+      latest_memo_id: memoId,
+      memos: evidence.lineage.memos?.map((memo) => ({
+        ...memo,
+        memo_id: memoId,
+        memo_hash: memoHash,
+      })),
+    },
+    replay: {
+      ...evidence.replay,
+      subject: { ...evidence.replay.subject, memo_id: memoId },
+      hashes: { ...evidence.replay.hashes, memo_hash: memoHash },
+      audit_events: updateEvents(evidence.replay.audit_events),
     },
   };
 }
@@ -807,9 +871,13 @@ describe("ProposalMemoPosturePanel", () => {
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
   });
 
-  it("retains a persisted confirmation across a same-proposal version remount", async () => {
+  it("retains a historical confirmation without locking the advanced version", async () => {
     let originalState = evidenceState();
-    const currentState = evidenceState({}, VERSION_NO + 1);
+    let currentState = withMemoIdentity(
+      evidenceState({}, VERSION_NO + 1),
+      "memo_3",
+      "sha256:memo-003",
+    );
     let lineageState = originalState;
     vi.mocked(getProposalMemo).mockImplementation(async (_proposalId, versionNo) =>
       versionNo === VERSION_NO ? originalState.memo : currentState.memo,
@@ -827,17 +895,31 @@ describe("ProposalMemoPosturePanel", () => {
       async (_proposalId, versionNo) =>
         versionNo === VERSION_NO ? originalState.replay : currentState.replay,
     );
-    vi.mocked(reviewProposalMemo).mockResolvedValue({
-      memo: {
-        ...originalState.memo,
-        review_posture: {
-          status: "RECORDED",
-          review_action: "APPROVE_FOR_ADVISOR_USE",
-          source_memo_hash: MEMO_HASH,
+    vi.mocked(reviewProposalMemo).mockImplementation(async (_proposalId, versionNo) => {
+      const state = versionNo === VERSION_NO ? originalState : currentState;
+      if (versionNo !== VERSION_NO) {
+        currentState = withMemoIdentity(
+          evidenceState({ reviewed: true }, VERSION_NO + 1),
+          "memo_3",
+          "sha256:memo-003",
+        );
+      }
+      return {
+        memo: {
+          ...state.memo,
+          review_posture: {
+            status: "RECORDED",
+            review_action: "APPROVE_FOR_ADVISOR_USE",
+            source_memo_hash: MEMO_HASH,
+          },
         },
-      },
-      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
-      replayed: false,
+        review_event: actionEvent(
+          REVIEW_EVENT_ID,
+          "MEMO_REVIEW_RECORDED",
+          state.memo.memo_hash,
+        ),
+        replayed: false,
+      };
     });
     const { rerenderPanel } = renderPanel();
     await openMemoDetails();
@@ -853,18 +935,51 @@ describe("ProposalMemoPosturePanel", () => {
     );
     await screen.findByRole("button", { name: "Refresh record" });
 
-    lineageState = currentState;
+    originalState = withProposalCurrentVersion(originalState, VERSION_NO + 1);
+    lineageState = {
+      ...currentState,
+      lineage: {
+        ...currentState.lineage,
+        memo_count: 2,
+        memos: [
+          ...(originalState.lineage.memos ?? []),
+          ...(currentState.lineage.memos ?? []),
+        ],
+      },
+    };
     rerenderPanel(VERSION_NO + 1);
 
     expect(
       await screen.findByRole("button", { name: "Refresh record" }),
     ).toBeEnabled();
-    expect(
-      await screen.findByText("Awaiting confirmation"),
-    ).toBeInTheDocument();
+    expect(screen.queryByText("Awaiting confirmation")).not.toBeInTheDocument();
+    expect(await screen.findByText("Memo prepared")).toBeInTheDocument();
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
 
-    originalState = evidenceState({ reviewed: true });
+    await openMemoDetails();
+    enterActor("advisor_10");
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Current-version evidence supports advisor use." } },
+    );
+    expect(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByText(
+        "Advisor review for proposal version 2 was recorded, but its retained evidence has not yet confirmed the action. Current-version work remains available; recheck this earlier record before relying on it.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("proposal-memo-confirmation-recovery"),
+    ).toBeInTheDocument();
+
+    originalState = withProposalCurrentVersion(
+      evidenceState({ reviewed: true }),
+      VERSION_NO + 1,
+    );
     lineageState = originalState;
     fireEvent.click(screen.getByRole("button", { name: "Refresh record" }));
 
