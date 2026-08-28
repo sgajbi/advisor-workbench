@@ -922,7 +922,7 @@ describe("ProposalMemoPosturePanel", () => {
           review_posture: {
             status: "RECORDED",
             review_action: "APPROVE_FOR_ADVISOR_USE",
-            source_memo_hash: MEMO_HASH,
+            source_memo_hash: state.memo.memo_hash,
           },
         },
         review_event: actionEvent(
@@ -1030,7 +1030,7 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       await screen.findByText("Advisor review confirmed for proposal version 2."),
     ).toBeInTheDocument();
-    expect(getProposalMemo).toHaveBeenLastCalledWith(PROPOSAL_ID, VERSION_NO);
+    expect(getProposalMemo).toHaveBeenCalledWith(PROPOSAL_ID, VERSION_NO);
     expect(reviewProposalMemo).toHaveBeenCalledTimes(1);
     expect(
       screen.queryByTestId("proposal-memo-confirmation-recovery"),
@@ -1053,6 +1053,132 @@ describe("ProposalMemoPosturePanel", () => {
     expect(
       screen.getByPlaceholderText("Enter the advisor or reviewer reference"),
     ).toBeDisabled();
+  });
+
+  it("preserves a newer action outcome when historical confirmation finishes later", async () => {
+    let historicalState = evidenceState();
+    let currentState = withMemoIdentity(
+      evidenceState({ reviewed: true }, VERSION_NO + 1),
+      "memo_3",
+      "sha256:memo-003",
+    );
+    let lineageState = historicalState.lineage;
+    const historicalMemoRefresh = createDeferred<
+      Awaited<ReturnType<typeof getProposalMemo>>
+    >();
+    let holdHistoricalMemoRefresh = false;
+    const stateForVersion = (versionNo: number) =>
+      versionNo === VERSION_NO ? historicalState : currentState;
+    const alignLineage = () => {
+      lineageState = {
+        ...currentState.lineage,
+        memo_count: 2,
+        memos: [
+          ...(historicalState.lineage.memos ?? []),
+          ...(currentState.lineage.memos ?? []),
+        ],
+      };
+    };
+
+    vi.mocked(getProposalMemo).mockImplementation(
+      async (_proposalId, versionNo) =>
+        holdHistoricalMemoRefresh && versionNo === VERSION_NO
+          ? historicalMemoRefresh.promise
+          : stateForVersion(versionNo).memo,
+    );
+    vi.mocked(getProposalMemoProjection).mockImplementation(
+      async (_proposalId, versionNo) => stateForVersion(versionNo).projection,
+    );
+    vi.mocked(getProposalMemoLineage).mockImplementation(
+      async () => lineageState,
+    );
+    vi.mocked(getProposalMemoReplayEvidence).mockImplementation(
+      async (_proposalId, versionNo) => stateForVersion(versionNo).replay,
+    );
+    vi.mocked(reviewProposalMemo).mockResolvedValue({
+      memo: {
+        ...historicalState.memo,
+        review_posture: {
+          status: "RECORDED",
+          review_action: "APPROVE_FOR_ADVISOR_USE",
+          source_memo_hash: MEMO_HASH,
+        },
+      },
+      review_event: actionEvent(REVIEW_EVENT_ID, "MEMO_REVIEW_RECORDED"),
+      replayed: false,
+    });
+    vi.mocked(requestProposalMemoReportPackage).mockImplementation(async () => {
+      currentState = withMemoIdentity(
+        evidenceState(
+          { reviewed: true, reportRecorded: true },
+          VERSION_NO + 1,
+        ),
+        "memo_3",
+        "sha256:memo-003",
+      );
+      alignLineage();
+      return {
+        memo: currentState.memo,
+        report_package_event: actionEvent(
+          REPORT_EVENT_ID,
+          "MEMO_REPORT_PACKAGE_RECORDED",
+          currentState.memo.memo_hash,
+        ),
+        report: { status: "ARCHIVED" },
+        replayed: false,
+      };
+    });
+
+    const { rerenderPanel } = renderPanel();
+    await openMemoDetails();
+    enterActor();
+    fireEvent.change(
+      await screen.findByPlaceholderText(
+        "Explain why the memo evidence is appropriate for advisor use.",
+      ),
+      { target: { value: "Historical evidence supported advisor use." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record advisor review" }),
+    );
+    await screen.findByRole("button", { name: "Refresh record" });
+
+    historicalState = withProposalCurrentVersion(
+      evidenceState({ reviewed: true }),
+      VERSION_NO + 1,
+    );
+    alignLineage();
+    rerenderPanel(VERSION_NO + 1);
+    await openMemoDetails();
+    enterActor("advisor_10");
+
+    holdHistoricalMemoRefresh = true;
+    fireEvent.click(await screen.findByRole("button", { name: "Refresh record" }));
+    expect(
+      await screen.findByRole("button", { name: "Refreshing…" }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", {
+      name: "Request discussion material",
+    }));
+    expect(
+      await screen.findByText(
+        "Discussion material confirmed for proposal version 3.",
+      ),
+    ).toBeInTheDocument();
+
+    holdHistoricalMemoRefresh = false;
+    historicalMemoRefresh.resolve(historicalState.memo);
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("proposal-memo-confirmation-recovery"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText("Discussion material confirmed for proposal version 3."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Advisor review confirmed for proposal version 2."),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps in-flight mutations proposal-scoped and failures version-scoped", async () => {
