@@ -14,7 +14,6 @@ import {
   writeValidationSummary,
 } from "./validation/evidence-summary-writer.mjs";
 import {
-  CANONICAL_CALLER_CONTEXT_HEADERS,
   checkDns,
   fetchJson,
   fetchJsonUntil,
@@ -406,7 +405,7 @@ function buildPmQualitySourceRef({
 
 function buildCanonicalPmQualityPolicy(asOfDate) {
   return {
-    tenant_id: CANONICAL_CALLER_CONTEXT_HEADERS["X-Tenant-Id"],
+    tenant_id: dpmCommandCenterDefaults.tenantId,
     policy_id: "pmq_canonical_dpm",
     policy_version: "2026.05",
     enabled: true,

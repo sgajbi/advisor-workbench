@@ -176,6 +176,11 @@ The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
 duplicating date literals in Workbench automation. If the platform contract is missing the date
 policy, canonical startup fails closed before seeding Idea evidence.
 
+Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
+same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
+value fails startup; the validator must not create evidence in one tenant or date while the screen
+reads another.
+
 ### Lotus Idea capacity evidence
 
 Canonical startup delegates capacity-resource construction and workload execution to
