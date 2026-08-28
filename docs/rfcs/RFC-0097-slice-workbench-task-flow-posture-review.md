@@ -43,7 +43,7 @@ task-flow state, review state, or replacement lineage from narrative text or fal
    - passed with existing autoprefixer mixed-support warnings in `src/app/globals.css`.
 5. `git diff --check`
    - passed with existing CRLF normalization warnings only.
-6. `powershell -ExecutionPolicy Bypass -File C:\Users\Sandeep\projects\lotus-platform\automation\Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-workbench`
+6. `powershell -ExecutionPolicy Bypass -File <lotus-platform>\automation\Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-workbench`
    - reported expected branch-local drift for `Integrations.md`; publish after merge to `main`.
 7. Handoff-readiness follow-up: Workbench now preserves and renders gateway task-flow
    `handoff_refs`.
@@ -62,7 +62,7 @@ task-flow state, review state, or replacement lineage from narrative text or fal
 
 1. Domain handoff execution remains a future cross-service slice.
 2. Live end-to-end validation passed on 2026-04-21 through the governed clean-core proof profile:
-   `C:\Users\Sandeep\projects\lotus-platform\output\front-office-qa\canonical-front-office-qa-20260421-192148.md`.
+   `<lotus-platform>\output\front-office-qa\canonical-front-office-qa-20260421-192148.md`.
 3. The proof validated initial advisor-brief workflow-pack posture plus `ACCEPT`, `SUPERSEDE`, and
    `REVISE` task-flow posture through `lotus-ai` -> `lotus-gateway` -> `lotus-workbench`.
 4. Final governance review, docs/context/wiki publication, skills assessment, and branch hygiene

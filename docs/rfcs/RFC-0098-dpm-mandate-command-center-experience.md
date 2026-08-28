@@ -2,15 +2,20 @@
 
 | Metadata | Details |
 | --- | --- |
-| **Status** | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST, LIFECYCLE-EVIDENCE, PREVIEW-READINESS, LAUNCH-HISTORY, AND READY-GATED LAUNCH RENDERING, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`; CANONICAL LIVE WAVE AI MEMO PROOF IN PROGRESS |
+| **Status** | IN PROGRESS — bounded command-center, construction, portfolio-memory, rebalance-wave, PM Copilot, operating-quality, outcome-review, and evidence-pack surfaces are implemented; fresh complete canonical certification remains open under Workbench #140 |
 | **Created** | 2026-05-03 |
-| **Last Tightened** | 2026-05-06 |
+| **Last Tightened** | 2026-08-28 |
 | **Owner** | `lotus-workbench` |
 | **Primary Upstream Contract** | `lotus-gateway` RFC-0098 `DPM Command Center` |
 | **Business Sponsor Persona** | DPM head, portfolio manager, CIO desk, investment control, operations, sales/pre-sales |
 | **Depends On** | `lotus-gateway` RFC-0098, `lotus-manage` RFC-0037, `lotus-manage` RFC-0038, `lotus-manage` RFC-0040, `lotus-manage` RFC-0041, `lotus-manage` RFC-0042, `lotus-core` RFC-0087, Workbench RFC-0076/RFC-0077 canonical proof contracts |
 | **Doc Location** | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
-| **Implementation Branch** | `wtbd-rfc40-portfolio-memory-workbench` for the RFC40-WTBD-010 portfolio-memory Workbench realization |
+| **Current Product Guide** | `wiki/Screen-Guide-Catalogue.md` and the linked Manage screen guides |
+
+The implementation statements in this RFC describe bounded Workbench surfaces, not complete
+canonical certification, production identity, execution, client delivery, or bank acceptance.
+Historical branch and run notes below preserve delivery evidence from the time they were recorded;
+GitHub issue #140 and current screen guides own present closure and capability truth.
 
 RFC-0038 command-center cockpit live proof passed on 2026-05-06 with local Workbench and Gateway:
 `output/rfc38-wtbd002-command-center-cockpit-command-center-validated/live-validation-summary.json`.

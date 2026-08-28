@@ -29,5 +29,5 @@ Governance boundary:
 | RFC-0021 | UI Architecture Hardening and Design-System Governance | IMPLEMENTED | `docs/rfcs/RFC-0021-ui-architecture-hardening-and-design-system-governance.md` |
 | RFC-0022 | Stateful Risk Workspace and lotus-risk UI Integration | IMPLEMENTED | `docs/rfcs/RFC-0022-stateful-risk-workspace-and-lotus-risk-ui-integration.md` |
 | RFC-0023 | Risk Workspace UX Hardening and Production Readiness | IMPLEMENTED | `docs/rfcs/RFC-0023-risk-workspace-ux-hardening-and-production-readiness.md` |
-| RFC-0098 | DPM Mandate Command Center Experience | IN PROGRESS - RFC-0038 COMMAND-CENTER COCKPIT, RFC-0039 CONSTRUCTION LAB, RFC-0040 PROOF-PACK PANEL, RFC-0040/RFC-0041/RFC-0042 PORTFOLIO-MEMORY PANEL, RFC-0041 REBALANCE-WAVE PANEL WITH CAMPAIGN-DEFINITION LIST, LIFECYCLE-EVIDENCE, PREVIEW-READINESS, LAUNCH-HISTORY, READY-GATED LAUNCH RENDERING, AND READ-ONLY CAMPAIGN WORKFLOW AUDIT EVIDENCE, AND RFC-0042 OUTCOME PANEL IMPLEMENTED ON `/workbench/{portfolioId}`, CANONICAL LIVE MEMORY/WAVE PROOF PENDING | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
+| RFC-0098 | DPM Mandate Command Center Experience | IN PROGRESS — bounded Manage surfaces implemented; complete fresh canonical certification remains open under Workbench #140 | `docs/rfcs/RFC-0098-dpm-mandate-command-center-experience.md` |
 
