@@ -108,6 +108,18 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Portfolio realised tax summary")).toBeInTheDocument();
     expect(screen.getByText("Source owner store query: No")).toBeInTheDocument();
     expect(screen.getByText("Selected review detail")).toBeInTheDocument();
+    expect(screen.getByTestId("selected-outcome-review-detail")).toHaveAttribute(
+      "data-outcome-review-id",
+      "or_1",
+    );
+    expect(screen.getByTestId("selected-outcome-review-detail")).toHaveAttribute(
+      "data-expected-snapshot-hash",
+      "sha256:expected",
+    );
+    expect(screen.getByTestId("selected-outcome-review-detail")).toHaveAttribute(
+      "data-realized-snapshot-hash",
+      "sha256:realized",
+    );
     expect(screen.getByText("Ready for adviser review")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();

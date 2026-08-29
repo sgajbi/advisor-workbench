@@ -2590,6 +2590,12 @@ export function buildOutcomeReviewSourceEvidenceProof(sourceReview) {
 
   const isSourceHash = (value) =>
     typeof value === "string" && /^sha256:.+$/u.test(value.trim());
+  const outcomeReviewId = sourceReview.outcome_review_id;
+  if (typeof outcomeReviewId !== "string" || !outcomeReviewId.trim()) {
+    throw new Error(
+      "Canonical Outcome Review proof requires a source-owned outcome review identity.",
+    );
+  }
   const expectedHash = sourceReview.expected_snapshot?.source_hashes?.expected;
   const realizedHash = sourceReview.realized_snapshot?.source_hashes?.realized;
   const proofPackAvailable =
@@ -2606,6 +2612,13 @@ export function buildOutcomeReviewSourceEvidenceProof(sourceReview) {
   ].filter(Boolean).length;
 
   return {
+    outcomeReviewId: outcomeReviewId.trim(),
+    expectedSnapshotHash: isSourceHash(expectedHash)
+      ? expectedHash.trim()
+      : "N/A",
+    realizedSnapshotHash: isSourceHash(realizedHash)
+      ? realizedHash.trim()
+      : "N/A",
     expectedAvailability: isSourceHash(expectedHash)
       ? "Available"
       : "Not available",
@@ -2651,6 +2664,24 @@ export async function validateOutcomeReviewPanel(
     timeout: timeoutMs,
   });
   const sourceEvidence = buildOutcomeReviewSourceEvidenceProof(sourceReview);
+  const selectedReview = outcomeReviewPanel.getByTestId(
+    "selected-outcome-review-detail",
+  );
+  await expect(selectedReview).toHaveAttribute(
+    "data-outcome-review-id",
+    sourceEvidence.outcomeReviewId,
+    { timeout: timeoutMs },
+  );
+  await expect(selectedReview).toHaveAttribute(
+    "data-expected-snapshot-hash",
+    sourceEvidence.expectedSnapshotHash,
+    { timeout: timeoutMs },
+  );
+  await expect(selectedReview).toHaveAttribute(
+    "data-realized-snapshot-hash",
+    sourceEvidence.realizedSnapshotHash,
+    { timeout: timeoutMs },
+  );
   const readiness = outcomeReviewPanel.getByLabel(
     "Selected outcome review readiness",
   );

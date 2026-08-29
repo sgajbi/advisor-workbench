@@ -218,6 +218,7 @@ describe("live validation browser workflow helpers", () => {
     it("derives complete evidence from one Gateway review record", () => {
       expect(
         buildOutcomeReviewSourceEvidenceProof({
+          outcome_review_id: "or-complete",
           expected_snapshot: {
             source_hashes: { expected: "sha256:expected" },
           },
@@ -228,6 +229,9 @@ describe("live validation browser workflow helpers", () => {
           source_lineage: [{ source_system: "lotus-performance" }],
         }),
       ).toEqual({
+        outcomeReviewId: "or-complete",
+        expectedSnapshotHash: "sha256:expected",
+        realizedSnapshotHash: "sha256:realized",
         expectedAvailability: "Available",
         realizedAvailability: "Available",
         proofPackAvailability: "Available",
@@ -238,12 +242,16 @@ describe("live validation browser workflow helpers", () => {
     it("keeps missing and malformed source evidence explicit", () => {
       expect(
         buildOutcomeReviewSourceEvidenceProof({
+          outcome_review_id: "or-partial",
           expected_snapshot: {
             source_hashes: { expected: "not-a-source-hash" },
           },
           proof_pack_id: "proof-pack-1",
         }),
       ).toEqual({
+        outcomeReviewId: "or-partial",
+        expectedSnapshotHash: "N/A",
+        realizedSnapshotHash: "N/A",
         expectedAvailability: "Not available",
         realizedAvailability: "Not available",
         proofPackAvailability: "Available",
@@ -258,6 +266,13 @@ describe("live validation browser workflow helpers", () => {
       expect(() => buildOutcomeReviewSourceEvidenceProof([])).toThrow(
         /requires one Gateway source record/i,
       );
+      expect(() =>
+        buildOutcomeReviewSourceEvidenceProof({
+          expected_snapshot: {
+            source_hashes: { expected: "sha256:expected" },
+          },
+        }),
+      ).toThrow(/requires a source-owned outcome review identity/i);
     });
   });
 
