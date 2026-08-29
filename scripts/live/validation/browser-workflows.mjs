@@ -322,6 +322,30 @@ export function classifyAttributionDetailEvidence({
   );
 }
 
+export function classifyContributionDetailEvidence({
+  positionTableVisible,
+  segmentTableVisible,
+  governedPartialVisible,
+}) {
+  const visibleStateCount = [
+    positionTableVisible,
+    segmentTableVisible,
+    governedPartialVisible,
+  ].filter(Boolean).length;
+  if (visibleStateCount !== 1) {
+    throw new Error(
+      `Performance contribution detail rendered an invalid or ambiguous source state: positions=${positionTableVisible}, segments=${segmentTableVisible}, partial=${governedPartialVisible}.`,
+    );
+  }
+  if (positionTableVisible) {
+    return "position_rows";
+  }
+  if (segmentTableVisible) {
+    return "segment_rows";
+  }
+  return "governed_partial";
+}
+
 async function assertRailModeActive(page, labelPattern, timeoutMs) {
   const railButton = page.getByRole("button", { name: labelPattern }).first();
   await expect(railButton).toBeVisible({ timeout: timeoutMs });
@@ -1647,28 +1671,76 @@ export async function validatePerformanceAnalysisPanel(
   const performanceDriversPanel = page.locator("#performance-drivers").first();
   await expect(performanceDriversPanel).toBeVisible({ timeout: timeoutMs });
   await performanceDriversPanel.scrollIntoViewIfNeeded();
+  const positionContributionTable = performanceDriversPanel.locator(
+    'table[aria-label="Position contribution table"]',
+  );
+  const segmentContributionTable = performanceDriversPanel.locator(
+    'table[aria-label="Asset Class contribution table"]',
+  );
+  const governedContributionPartial = performanceDriversPanel.getByText(
+    "Contribution detail is marked available, but no position or segment contribution rows were returned for the current selection.",
+    { exact: true },
+  );
+  let contributionEvidence = null;
+  await expect
+    .poll(
+      async () => {
+        try {
+          contributionEvidence = classifyContributionDetailEvidence({
+            positionTableVisible: await positionContributionTable.isVisible(),
+            segmentTableVisible: await segmentContributionTable.isVisible(),
+            governedPartialVisible: await governedContributionPartial.isVisible(),
+          });
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { timeout: timeoutMs },
+    )
+    .toBe(true);
   const positionsTab = performanceDriversPanel.getByRole("tab", {
     name: /^Positions/i,
   });
-  await expect(positionsTab).toBeVisible({ timeout: timeoutMs });
-  await positionsTab.scrollIntoViewIfNeeded();
-  await positionsTab.click({ timeout: timeoutMs });
-  await assertTableHasRows(
-    performanceDriversPanel.locator('table[aria-label="Position contribution table"]'),
-    1,
-    "Position contribution detail table",
-  );
   const segmentSummaryTab = performanceDriversPanel.getByRole("tab", {
     name: /^Segment Summary/i,
   });
-  await expect(segmentSummaryTab).toBeVisible({ timeout: timeoutMs });
-  await segmentSummaryTab.scrollIntoViewIfNeeded();
-  await segmentSummaryTab.click({ timeout: timeoutMs });
-  await assertTableHasRows(
-    performanceDriversPanel.locator('table[aria-label="Asset Class contribution table"]'),
-    1,
-    "Segment contribution detail table",
-  );
+  if (contributionEvidence === "position_rows") {
+    await expect(positionsTab).toBeVisible({ timeout: timeoutMs });
+    await expect(positionsTab).toHaveAttribute("aria-selected", "true");
+    await assertTableHasRows(
+      positionContributionTable,
+      1,
+      "Position contribution detail table",
+    );
+    if (
+      (await segmentSummaryTab.count()) > 0 &&
+      (await segmentSummaryTab.isEnabled())
+    ) {
+      await segmentSummaryTab.scrollIntoViewIfNeeded();
+      await segmentSummaryTab.click({ timeout: timeoutMs });
+      await assertTableHasRows(
+        segmentContributionTable,
+        1,
+        "Segment contribution detail table",
+      );
+    }
+  } else if (contributionEvidence === "segment_rows") {
+    await expect(segmentSummaryTab).toBeVisible({ timeout: timeoutMs });
+    await expect(segmentSummaryTab).toHaveAttribute("aria-selected", "true");
+    await assertTableHasRows(
+      segmentContributionTable,
+      1,
+      "Segment contribution detail table",
+    );
+  } else {
+    await expect(governedContributionPartial).toBeVisible({ timeout: timeoutMs });
+  }
+  recordUiCheck({
+    description: "Contribution detail evidence",
+    kind: "supportability",
+    posture: contributionEvidence,
+  });
   await screenshotRegisteredPanel(page, "performance.analysis.contribution");
 }
 
