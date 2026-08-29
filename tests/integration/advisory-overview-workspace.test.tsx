@@ -88,7 +88,10 @@ describe("AdvisoryOverviewWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Open proposal review" }),
-    ).toHaveAttribute("href", "/proposals/PRP-RISK");
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
     expect(
       screen.getByRole("listbox", {
         name: "Advisory proposal decision worklist",
@@ -197,7 +200,10 @@ describe("AdvisoryOverviewWorkspace", () => {
     });
     expect(
       screen.getByRole("link", { name: "Open proposal review" }),
-    ).toHaveAttribute("href", "/proposals/PRP-RISK");
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
   });
 
   it("retains a requested proposal while Gateway resolves its source identity", async () => {
@@ -235,7 +241,10 @@ describe("AdvisoryOverviewWorkspace", () => {
     expect(options[1]).toHaveAttribute("aria-selected", "true");
     expect(
       screen.getByRole("link", { name: "Open proposal review" }),
-    ).toHaveAttribute("href", "/proposals/PRP-READY");
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001",
+    );
   });
 
   it("starts from the first source window when the selected portfolio changes", async () => {
