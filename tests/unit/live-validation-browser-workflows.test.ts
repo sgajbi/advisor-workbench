@@ -771,6 +771,19 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain('getByText("Review Evidence")');
   });
 
+  it("binds Advisory Overview proof to Gateway rows instead of retired journey navigation", () => {
+    const source = validateAdvisoryJourneyScreens.toString();
+
+    expect(source).toContain(
+      'url.pathname.endsWith("/api/bff/api/v1/proposals")',
+    );
+    expect(source).toContain("buildProposalListSourceRows(");
+    expect(source).toContain(
+      "return validateAdvisoryOverviewDecisionSurface(page,",
+    );
+    expect(source).not.toContain('getByLabel("Advisory journey screens")');
+  });
+
   it("derives the source-owned high-cash candidate identity from its queue link", () => {
     expect(
       resolveHighCashIdeaCandidateId(
