@@ -1122,7 +1122,7 @@ export async function validateAdvisoryJourneyScreens(
         "aria-labelledby",
         "advisory-copilot-decision-title",
       );
-      await expect(page.getByLabel("Advisory copilot posture")).toBeVisible({
+      await expect(page.getByTestId("advisory-copilot-status")).toBeVisible({
         timeout: timeoutMs,
       });
       await expect(page.getByLabel("Advisory copilot actions")).toBeVisible({

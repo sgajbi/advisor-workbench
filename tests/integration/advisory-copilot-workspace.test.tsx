@@ -187,6 +187,9 @@ describe("AdvisoryCopilotWorkspace", () => {
         name: "Prepare an evidence-led proposal review",
       }),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("advisory-copilot-status")).toHaveAccessibleName(
+      "Advisory Copilot status",
+    );
     expect(screen.getAllByText("Not approved for client use").length).toBeGreaterThan(0);
     expect(
       screen.queryByText(

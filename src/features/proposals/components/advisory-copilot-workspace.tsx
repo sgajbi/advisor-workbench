@@ -188,6 +188,7 @@ export default function AdvisoryCopilotWorkspace({
         <div
           className={styles.metricGrid}
           aria-label={ADVISORY_COPILOT_COPY.statusAriaLabel}
+          data-testid="advisory-copilot-status"
         >
           {model.supportabilityRows.map((row) => (
             <div className={styles.metricTile} key={row.label}>
