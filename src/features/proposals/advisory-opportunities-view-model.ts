@@ -32,14 +32,19 @@ export type AdvisoryOpportunitiesModel = {
 export function buildAdvisoryOpportunitiesModel({
   portfolioId,
   queue,
+  selectedCandidateId,
 }: {
   portfolioId: string;
   queue?: AdvisorIdeaReviewQueueData | null;
+  selectedCandidateId?: string;
 }): AdvisoryOpportunitiesModel {
-  const rows = (queue?.items ?? [])
-    .filter((item) => item.candidate?.candidateId)
-    .slice(0, 12)
-    .map((item) => buildOpportunityRow(portfolioId, item));
+  const candidateItems = (queue?.items ?? []).filter(
+    (item) => item.candidate?.candidateId,
+  );
+  const rows = selectVisibleOpportunityItems(
+    candidateItems,
+    selectedCandidateId,
+  ).map((item) => buildOpportunityRow(portfolioId, item));
 
   return {
     portfolioId,
@@ -56,6 +61,28 @@ export function buildAdvisoryOpportunitiesModel({
         : "No Idea-owned candidates are currently ready for advisor review in this portfolio.",
     rows,
   };
+}
+
+function selectVisibleOpportunityItems(
+  items: AdvisorIdeaQueueItem[],
+  selectedCandidateId: string | undefined,
+): AdvisorIdeaQueueItem[] {
+  const visibleItems = items.slice(0, 12);
+  if (
+    !selectedCandidateId ||
+    visibleItems.some(
+      (item) => item.candidate?.candidateId === selectedCandidateId,
+    )
+  ) {
+    return visibleItems;
+  }
+
+  const selectedItem = items.find(
+    (item) => item.candidate?.candidateId === selectedCandidateId,
+  );
+  return selectedItem
+    ? [...visibleItems.slice(0, 11), selectedItem]
+    : visibleItems;
 }
 
 function buildOpportunityRow(
