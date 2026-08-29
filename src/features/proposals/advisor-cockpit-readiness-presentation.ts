@@ -65,7 +65,10 @@ const READINESS_PRESENTATIONS: Record<
 
 const OPERATING_BOUNDARY_PRESENTATIONS: Record<
   string,
-  Omit<AdvisorCockpitOperatingBoundaryPresentation, "rawValue">
+  Omit<
+    AdvisorCockpitOperatingBoundaryPresentation,
+    "rawValue" | "isRecognized"
+  >
 > = {
   CLIENT_READY_PUBLICATION: {
     label: "Client publication unavailable",
