@@ -1639,12 +1639,14 @@ export async function validatePerformanceSummaryPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText(/Return history/i)).toBeVisible({
+  const returnHistoryTitle = page.getByText("Return history", { exact: true });
+  await expect(returnHistoryTitle).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByText(/\d+\s+periods?/i)).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await expect(returnHistoryTitle.locator("..")).toContainText(
+    /\d+\s+periods?/i,
+    { timeout: timeoutMs },
+  );
   await assertTableHasRows(
     tableByExactLabel(page, "Return path observation table"),
     4,
