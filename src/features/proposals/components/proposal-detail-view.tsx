@@ -60,10 +60,10 @@ import {
   evaluateProposalActionEvidence,
 } from "../proposal-action-evidence";
 import {
-  buildProposalLifecycleHref,
-  getProposalLifecycleModeDefinition,
-  type ProposalLifecycleMode,
-} from "../proposal-lifecycle-workspace-view-model";
+  buildProposalDetailReturnHref,
+  getProposalDetailReturnTitle,
+  type ProposalDetailOrigin,
+} from "../proposal-detail-return-navigation";
 import {
   buildReviewContextHref,
   type WorkspaceReviewContext,
@@ -79,7 +79,7 @@ type Props = {
   proposalId: string;
   returnPortfolioId?: string;
   returnReviewContext?: WorkspaceReviewContext;
-  returnMode?: ProposalLifecycleMode;
+  returnMode?: ProposalDetailOrigin;
 };
 
 type ProposalDetailWorkspaceProps = Props & {
@@ -144,14 +144,14 @@ function ProposalDetailWorkspace({
 }: ProposalDetailWorkspaceProps) {
   const fallbackReturnHref =
     returnPortfolioId && returnMode
-      ? buildProposalLifecycleHref({
+      ? buildProposalDetailReturnHref({
           portfolioId: returnPortfolioId,
           reviewContext: returnReviewContext,
-          mode: returnMode,
+          origin: returnMode,
         })
       : "/book";
   const returnLabel = returnPortfolioId && returnMode
-    ? `Return to ${getProposalLifecycleModeDefinition(returnMode).title}`
+    ? `Return to ${getProposalDetailReturnTitle(returnMode)}`
     : "Open My book";
   const proposalDraftHref = returnPortfolioId
     ? buildReviewContextHref("/proposals/simulate", {
@@ -597,14 +597,14 @@ function ProposalDetailWorkspace({
         ? { portfolioId: sourcePortfolioId }
         : undefined;
   const sourceReturnHref = sourcePortfolioId
-    ? buildProposalLifecycleHref({
+    ? buildProposalDetailReturnHref({
         portfolioId: sourcePortfolioId,
         reviewContext: sourceReturnReviewContext,
-        mode: returnMode ?? "approval-queue",
+        origin: returnMode ?? "approval-queue",
       })
     : fallbackReturnHref;
   const sourceReturnLabel = sourcePortfolioId
-    ? `Return to ${getProposalLifecycleModeDefinition(returnMode ?? "approval-queue").title}`
+    ? `Return to ${getProposalDetailReturnTitle(returnMode ?? "approval-queue")}`
     : returnLabel;
 
   return (

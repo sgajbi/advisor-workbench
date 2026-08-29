@@ -90,7 +90,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       screen.getByRole("link", { name: "Open proposal review" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=overview",
     );
     expect(
       screen.getByRole("listbox", {
@@ -202,7 +202,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       screen.getByRole("link", { name: "Open proposal review" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=overview",
     );
   });
 
@@ -243,7 +243,7 @@ describe("AdvisoryOverviewWorkspace", () => {
       screen.getByRole("link", { name: "Open proposal review" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001",
+      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=overview",
     );
   });
 

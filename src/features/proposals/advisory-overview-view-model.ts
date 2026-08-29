@@ -1,5 +1,4 @@
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
-import { buildReviewContextHref } from "@/shell/review-context";
 import { ADVISORY_OVERVIEW_COPY } from "@/copy/advisory-overview-copy";
 
 import type { AdvisoryJourneyReviewContext } from "./advisory-journey-navigation";
@@ -9,6 +8,7 @@ import {
   proposalStageTone,
 } from "./proposal-workflow-copy";
 import type { ProposalSummary } from "./types";
+import { buildProposalDetailHref } from "./proposal-lifecycle-workspace-view-model";
 
 export type AdvisoryOverviewProposalRow = {
   proposalId: string;
@@ -117,10 +117,11 @@ export function buildAdvisoryOverviewModel({
       recordedAt: formatTimestampValue(proposal.created_at, {
         nullDisplay: "Not reported",
       }),
-      href: buildReviewContextHref(
-        `/proposals/${encodeURIComponent(proposal.proposal_id)}`,
-        { portfolioId, ...workspaceContext },
-      ),
+      href: buildProposalDetailHref({
+        proposalId: proposal.proposal_id,
+        reviewContext: { portfolioId, ...workspaceContext },
+        fromMode: "overview",
+      }),
     }));
 
   return {
