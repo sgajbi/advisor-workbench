@@ -2713,9 +2713,11 @@ export async function validateDpmCommandCenterPanel(
   await expect(mandatePanel.getByText("Mandate health", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(mandatePanel.getByText("Data availability", { exact: true })).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await expect(
+    mandatePanel
+      .getByLabel("Mandate health summary")
+      .getByText("Data availability", { exact: true }),
+  ).toBeVisible({ timeout: timeoutMs });
   await expect(
     mandatePanel.getByRole("heading", { name: "Attention items", exact: true }),
   ).toBeVisible({
