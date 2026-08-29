@@ -765,6 +765,11 @@ describe("live validation browser workflow helpers", () => {
   it("binds Client Context proof to the exact Review Evidence heading", () => {
     const source = validateAdvisoryJourneyScreens.toString();
 
+    expect(source).toContain('getByRole("region", { name: "Review context" })');
+    expect(source).toContain('getByText("Mandate", { exact: true })');
+    expect(source).toContain('mandateFact.locator("dd")');
+    expect(source).toContain("not.toHaveText(/^\\s*$/u)");
+    expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain(
       'getByRole("heading", { name: "Review Evidence", exact: true })',
     );
