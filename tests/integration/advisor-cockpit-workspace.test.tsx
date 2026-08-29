@@ -49,7 +49,10 @@ const snapshotFixture: AdvisorCockpitSnapshotData = {
     data_product_posture: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
     client_ready_publication: "BLOCKED",
   },
-  unsupported_capabilities: ["EXTERNAL_CLIENT_COMMUNICATION"],
+  unsupported_capabilities: [
+    "CLIENT_READY_PUBLICATION",
+    "EXTERNAL_CLIENT_COMMUNICATION",
+  ],
 };
 const preparationPageFixture: AdvisorCockpitPreparationPacketPageData = {
   total_count: 1,
@@ -207,20 +210,31 @@ describe("AdvisorCockpitWorkspace", () => {
     expect(within(readiness).getAllByText("Available")).toHaveLength(4);
     expect(within(readiness).getByText("Blocked")).toBeInTheDocument();
     expect(
+      within(readiness).getByText("Client publication unavailable"),
+    ).toBeInTheDocument();
+    expect(
       within(readiness).getByText("Client communication unavailable"),
     ).toBeInTheDocument();
     expect(
       within(readiness).getByText("Order workflow unavailable"),
     ).toBeInTheDocument();
-    expect(within(readiness).queryByText(/OMS/i)).not.toBeVisible();
+    expect(within(readiness).queryByText(/OMS/i)).not.toBeInTheDocument();
     expect(within(readiness).queryByText(/RFC 0026/i)).not.toBeInTheDocument();
     const supportDetails = within(readiness).getByText("Support details").closest("details")!;
     expect(supportDetails).not.toHaveAttribute("open");
     fireEvent.click(within(supportDetails).getByText("Support details"));
-    expect(within(supportDetails).getByText("OMS_ORDER_LIFECYCLE")).toBeVisible();
     expect(
       within(supportDetails).getByText("SUPPORTED_BY_LOTUS_GATEWAY_RFC0026"),
     ).toBeVisible();
+    expect(
+      within(supportDetails).queryByText("CLIENT_READY_PUBLICATION"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(supportDetails).queryByText("EXTERNAL_CLIENT_COMMUNICATION"),
+    ).not.toBeInTheDocument();
+    expect(
+      within(supportDetails).queryByText("OMS_ORDER_LIFECYCLE"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(
       screen.queryByText("CLIENT_READY_PUBLICATION"),
@@ -261,7 +275,7 @@ describe("AdvisorCockpitWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps unknown readiness neutral and discloses raw values only as support detail", async () => {
+  it("keeps unknown readiness neutral without disclosing raw operating-boundary values", async () => {
     getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
       snapshot_id: "cockpit_snapshot_unknown",
       action_counts: {
@@ -294,12 +308,12 @@ describe("AdvisorCockpitWorkspace", () => {
       within(readiness).getByText("Additional workflow capability unavailable"),
     ).toBeInTheDocument();
     expect(within(readiness).queryByText("NEW_GATEWAY_POSTURE")).not.toBeVisible();
-    expect(within(readiness).queryByText("NEW_CAPABILITY")).not.toBeVisible();
+    expect(within(readiness).queryByText("NEW_CAPABILITY")).not.toBeInTheDocument();
 
     const supportDetails = within(readiness).getByText("Support details").closest("details")!;
     fireEvent.click(within(supportDetails).getByText("Support details"));
     expect(within(supportDetails).getByText("NEW_GATEWAY_POSTURE")).toBeVisible();
-    expect(within(supportDetails).getByText("NEW_CAPABILITY")).toBeVisible();
+    expect(within(supportDetails).queryByText("NEW_CAPABILITY")).not.toBeInTheDocument();
   });
 
   it("records acknowledgements through Gateway without clearing source-owned blockers locally", async () => {

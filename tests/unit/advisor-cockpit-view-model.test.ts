@@ -253,10 +253,12 @@ describe("advisor cockpit view model", () => {
           label: "Preparation data source value",
           value: "ACTIVE_ADVISOR_COCKPIT_PRODUCTS_RFC0026",
         },
-        {
-          label: "Operating boundary source value 2",
-          value: "OMS_ORDER_LIFECYCLE",
-        },
+      ]),
+    );
+    expect(model.supportDetails).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: "EXTERNAL_CLIENT_COMMUNICATION" }),
+        expect.objectContaining({ value: "OMS_ORDER_LIFECYCLE" }),
       ]),
     );
     expect(model.preparationRows[0]).toMatchObject({
@@ -476,10 +478,11 @@ describe("advisor cockpit view model", () => {
           label: "Client publication source value",
           value: "PENDING",
         },
-        {
-          label: "Operating boundary source value 1",
-          value: "NEW_CAPABILITY",
-        },
+      ]),
+    );
+    expect(model.supportDetails).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: "NEW_CAPABILITY" }),
       ]),
     );
     expect(model.operatingBoundaries).toEqual([

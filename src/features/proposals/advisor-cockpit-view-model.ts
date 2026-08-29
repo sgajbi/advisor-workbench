@@ -335,13 +335,7 @@ export function buildAdvisorCockpitModel({
     preparationRows: preparationPackets.map(toPreparationRow),
     supportabilityRows: supportabilityModel.rows,
     operatingBoundaries,
-    supportDetails: [
-      ...supportabilityModel.details,
-      ...operatingBoundaries.map((boundary, index) => ({
-        label: `Operating boundary source value ${index + 1}`,
-        value: boundary.rawValue,
-      })),
-    ],
+    supportDetails: supportabilityModel.details,
     actionCount: reportedActionCount,
     actionPosture,
     preparationCount: reportedPreparationCount,
