@@ -35,9 +35,13 @@ type ReviewContextStripProps = {
   className?: string;
 };
 
-type ContextFact = {
+type ContextValue = {
   label: string;
   value: string | null | undefined;
+};
+
+type ContextFact = ContextValue & {
+  slot: "business-date" | "currency" | "mandate" | "booking-centre";
 };
 
 type CopyState =
@@ -54,15 +58,16 @@ export default function ReviewContextStrip({
   const [copyState, setCopyState] = useState<CopyState>({ kind: "idle" });
   const sourceState = context.sourceState ?? "confirmed";
   const facts: ContextFact[] = [
-    { label: "Mandate", value: context.mandateType },
-    { label: "Booking centre", value: context.bookingCenter },
-    { label: "Business date", value: context.businessDate },
+    { slot: "business-date", label: "Business date", value: context.businessDate },
     {
+      slot: "currency",
       label: context.currency?.kind === "reporting" ? "Reporting currency" : "Base currency",
       value: context.currency?.value,
     },
+    { slot: "mandate", label: "Mandate", value: context.mandateType },
+    { slot: "booking-centre", label: "Booking centre", value: context.bookingCenter },
   ];
-  const identifiers: ContextFact[] = [
+  const identifiers: ContextValue[] = [
     { label: "Portfolio ID", value: context.portfolioId },
     { label: "Client ID", value: context.clientId },
   ];
@@ -90,12 +95,14 @@ export default function ReviewContextStrip({
     >
       <div className={styles.identity}>
         <span className={styles.eyebrow}>Review portfolio</span>
-        <strong className={styles.portfolioName}>{context.portfolioName}</strong>
+        <strong className={styles.portfolioName} data-context-slot="portfolio-name">
+          {context.portfolioName}
+        </strong>
       </div>
 
       <dl className={styles.facts}>
         {facts.map((fact) => (
-          <div className={styles.fact} key={fact.label}>
+          <div className={styles.fact} data-context-slot={fact.slot} key={fact.label}>
             <dt>{fact.label}</dt>
             <dd data-confirmed={Boolean(fact.value)}>{fact.value || NOT_CONFIRMED}</dd>
           </div>
@@ -116,7 +123,7 @@ export default function ReviewContextStrip({
       ) : null}
 
       <details className={styles.supportDetails}>
-        <summary>Support details</summary>
+        <summary data-context-slot="support-details">Support details</summary>
         <dl className={styles.identifiers}>
           {identifiers.map((identifier) => {
             const value = identifier.value || NOT_CONFIRMED;
