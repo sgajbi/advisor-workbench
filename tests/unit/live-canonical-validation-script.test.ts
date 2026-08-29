@@ -1795,14 +1795,22 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).not.toContain(
       'getByText("Source Evidence", { exact: true })',
     );
+    expect(browserWorkflowModule).toContain("return statefulIdeaJourney;");
     expect(browserWorkflowModule).toContain(
-      "await validateAdvisoryJourneyRoute(page, statefulIdeaJourney);",
+      "export async function validateCanonicalIdeaJourney",
     );
-    expect(
-      browserWorkflowModule.indexOf(
-        "await validateAdvisoryJourneyRoute(page, statefulIdeaJourney);",
-      ),
-    ).toBeGreaterThan(browserWorkflowModule.indexOf('key: "implementation"'));
+    const readOnlyJourneyIndex = script.indexOf(
+      "const preparedIdeaJourney = await validateAdvisoryJourneyScreens",
+    );
+    const finalReadOnlyPanelIndex = script.indexOf(
+      "await validateDpmCopilotWorkspace",
+    );
+    const statefulIdeaIndex = script.indexOf(
+      "await validateCanonicalIdeaJourney(page, preparedIdeaJourney);",
+    );
+    expect(readOnlyJourneyIndex).toBeGreaterThanOrEqual(0);
+    expect(finalReadOnlyPanelIndex).toBeGreaterThan(readOnlyJourneyIndex);
+    expect(statefulIdeaIndex).toBeGreaterThan(finalReadOnlyPanelIndex);
     expect(browserWorkflowModule).toContain("Record internal review");
     expect(browserWorkflowModule).toContain(
       '"APPROVED_FOR_INTERNAL_USE",',
