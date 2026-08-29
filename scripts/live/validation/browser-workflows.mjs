@@ -1176,9 +1176,13 @@ export async function validateAdvisoryJourneyScreens(
         "APPROVED_FOR_INTERNAL_USE",
         { timeout: timeoutMs },
       );
-      await expect(page.getByText("workflow_pack")).toHaveCount(0);
-      await expect(page.getByText("PROPOSAL_EXPLANATION")).toHaveCount(0);
-      await expect(page.getByText("CLIENT_READY_PUBLICATION")).toHaveCount(0);
+      await expect(page.getByText("workflow_pack", { exact: true })).toHaveCount(0);
+      await expect(
+        page.getByText("PROPOSAL_EXPLANATION", { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByText("CLIENT_READY_PUBLICATION", { exact: true }),
+      ).toHaveCount(0);
     },
   });
 

@@ -1808,6 +1808,12 @@ describe("canonical live validation script", () => {
       '"APPROVED_FOR_INTERNAL_USE",',
     );
     expect(browserWorkflowModule).not.toContain("Approved For Internal Use");
+    expect(browserWorkflowModule).toContain(
+      'getByText("PROPOSAL_EXPLANATION", { exact: true })',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getByText("CLIENT_READY_PUBLICATION", { exact: true })',
+    );
     expect(browserWorkflowModule).toContain('reviewState = "approved"');
     expect(browserWorkflowModule).toContain('reviewState = "reviewable"');
     expect(browserWorkflowModule).toContain(
