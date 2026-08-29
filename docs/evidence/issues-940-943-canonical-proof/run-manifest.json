@@ -1,0 +1,48 @@
+{
+  "schema_version": "lotus.workbench.diagnostic-browser-evidence.v1",
+  "capture_session_id": "workbench-live-validate-20260830T034935+0800-a59a1b72",
+  "repository": "sgajbi/lotus-workbench",
+  "branch": "fix/798-advisory-copilot-proof-semantics",
+  "head_sha": "a59a1b722515d5fe3e2976c8232fae2d90b15e01",
+  "command": "npm run live:validate",
+  "canonical_contract": {
+    "contract_id": "canonical-front-office-demo-data-contract",
+    "contract_version": "1.0.0",
+    "governed_by_rfc": "RFC-0076",
+    "source_path": "lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json"
+  },
+  "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+  "benchmark_code": "BMK_PB_GLOBAL_BALANCED_60_40",
+  "canonical_as_of_date": "2026-04-10",
+  "capture_window": {
+    "first_browser_capture_at": "2026-08-30T03:49:35+08:00",
+    "last_browser_capture_at": "2026-08-30T03:51:28+08:00"
+  },
+  "result": {
+    "status": "failed_after_browser_capture",
+    "stage": "final_panel_supportability_alignment",
+    "message": "performance.summary was source-reported as partial while the panel registry required ready",
+    "validation_summary_written": false,
+    "validation_summary_reason": "The validator writes its summary only after final panel-governance assertions pass."
+  },
+  "captures": [
+    {
+      "file": "diagnostic-outcome-review.png",
+      "panel_id": "dpm.outcome_review",
+      "captured_at": "2026-08-30T03:51:06.2981935+08:00",
+      "sha256": "113ea13514775f04d2bccac09bd637cd2c4e0360a8e95de28b200a6348941259"
+    },
+    {
+      "file": "diagnostic-pm-operating-quality.png",
+      "panel_id": "dpm.pm_operating_quality",
+      "captured_at": "2026-08-30T03:51:22.9017672+08:00",
+      "sha256": "0b6968da4774f152d9b41645a4d434ba8342acb69ea24ce710c4e8c10b323f02"
+    },
+    {
+      "file": "diagnostic-pm-copilot.png",
+      "panel_id": "dpm.copilot_workspace",
+      "captured_at": "2026-08-30T03:51:24.8834734+08:00",
+      "sha256": "a63f4dfd734dceff302aa984a61e5c04d1a8bb92a553b04d8c37c47d3d16d82d"
+    }
+  ]
+}
