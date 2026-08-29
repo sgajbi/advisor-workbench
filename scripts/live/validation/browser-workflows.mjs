@@ -1,6 +1,8 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
+import { assertExactSourceRenderProof } from "./source-render-proof.mjs";
+
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
 
 export async function navigateForBusinessProof(page, route, options) {
@@ -1912,6 +1914,22 @@ export async function validateRiskPanel(
   const constraintRows = mandateComparison.locator("[data-mandate-constraint]");
   await expect(constraintRows).toHaveCount(expectedMandateStates.length, {
     timeout: timeoutMs,
+  });
+  const renderedMandateStates = await constraintRows.evaluateAll((elements) =>
+    elements.map((element) => ({
+      source: element.getAttribute("data-mandate-constraint-source") ?? "",
+      identity: element.getAttribute("data-mandate-constraint") ?? "",
+      state: element.getAttribute("data-mandate-state") ?? "",
+    })),
+  );
+  assertExactSourceRenderProof({
+    screen: "Risk review",
+    expectedRows: expectedMandateStates.map(({ source, key, state }) => ({
+      source,
+      identity: key,
+      state,
+    })),
+    renderedRows: renderedMandateStates,
   });
   const mandateStates = [];
   for (const expected of expectedMandateStates) {
