@@ -685,6 +685,15 @@ function Invoke-CanonicalIdeaSeed {
   if ($decision -notin @("accepted", "replayed", "duplicate_candidate")) {
     throw "Canonical Lotus Idea seed did not persist an advisor queue candidate. Decision: $decision"
   }
+  $candidateId = [string]$response.persistence.candidateId
+  if ([string]::IsNullOrWhiteSpace($candidateId)) {
+    throw "Canonical Lotus Idea seed returned no persisted candidate identity."
+  }
+
+  & (Join-Path $PSScriptRoot "Invoke-IdeaCandidateLifecycleSeed.ps1") `
+    -IdeaBaseUrl $ideaBaseUrl `
+    -CandidateId $candidateId `
+    -GeneratedAtUtc $generatedAtUtc
 
   $queueHeaders = @{
     "X-Caller-Subject" = "canonical-front-office-validator"
