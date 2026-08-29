@@ -168,9 +168,11 @@ Current repository posture:
    attach book-level actions to an exception, generate remediation narrative locally, or call
    `lotus-manage`/`lotus-ai` directly. Overview must fail closed when the mandate risk profile or
    attention-window evidence is missing. A valid cursor-bounded exception view remains reviewable
-   when more source rows exist: show returned source-owned rows, label the visible count as a view
-   rather than a total, and require an explicit null continuation cursor before claiming exhaustive
-   or zero-attention posture. Browser continuation reads use the BFF, retain the last confirmed view
+   when more source rows exist. Identified rows under non-blocking but unconfirmed source
+   supportability also remain reviewable only as a bounded partial view: show returned source-owned
+   rows, label the visible count as a view rather than a total, and never promote an unconfirmed
+   state to exhaustive or zero-attention posture. Queue and selected-detail visibility must use the
+   same admitted evidence posture. Browser continuation reads use the BFF, retain the last confirmed view
    during failure, and fence response identity by portfolio, mandate, state, and requested cursor.
    Never fabricate an exception identity for selection. Governed unavailable risk-profile sentinels are missing
    evidence, not usable profiles: the business label and completeness decision must share one

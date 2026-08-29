@@ -84,7 +84,9 @@ investment approval, exception-resolution authority, or client-delivery authorit
 - Keeps monitoring-run, source-run, exception, mandate, correlation, and authority identifiers
   behind progressive disclosure.
 - Separates **complete**, **partial**, and **unavailable** exception evidence. Valid rows remain
-  reviewable when a continuation cursor exists.
+  reviewable as a bounded partial view when a continuation cursor exists or when the source returns
+  identified rows under a non-blocking but unconfirmed supportability state. Unconfirmed
+  supportability never becomes a complete or zero-attention conclusion.
 - Reuses governed source-window navigation for previous and next views. Browser continuation reads
   use `/api/bff/api/v1/...`; the browser does not call Manage directly.
 - Retains the last confirmed source view during continuation loading or failure, blocks repeated
@@ -96,7 +98,7 @@ investment approval, exception-resolution authority, or client-delivery authorit
 
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
-| Decide whether the attention view is reviewable | Supported Gateway response with an item collection and valid `next_cursor` metadata | None |
+| Decide whether the attention view is reviewable | Gateway response with an item collection, valid `next_cursor` metadata, and either confirmed supportability or identified rows under a non-blocking unconfirmed state | None; unconfirmed supportability remains partial |
 | Treat the visible view as exhaustive | `next_cursor` is explicitly `null` and every returned row has a source-owned exception identity | None |
 | Select an attention item | Valid source-owned exception identity belonging to the selected mandate and current source view | None; local review selection only; selection follows source identity rather than row position |
 | Inspect supporting lineage | Selected source exception | None; expands technical evidence |
@@ -125,6 +127,7 @@ Shared endpoint detail remains in [API Surface](API-Surface), and service owners
 | Initial loading | Selected-portfolio loading with no fabricated mandate result | Wait for the server-owned Gateway reads |
 | Complete populated view | Source-confirmed rows and **N open** for the selected mandate in the exhaustive response | Review the selected item |
 | Partial populated view | Valid rows, **N in this view**, and **More attention items are available** | Continue through source views before drawing a whole-queue conclusion |
+| Populated view with unconfirmed supportability | Identified rows, **N in this view**, and **Attention-item evidence is incomplete** | Review the bounded rows; do not infer a total, zero items, or complete queue posture |
 | Complete empty view | **No open attention items** only after the source confirms no continuation | Continue the mandate review; this is not an enterprise all-clear |
 | Partial view with no selected-mandate row | Explicit statement that this source view cannot support a zero-attention conclusion | Continue to the next source view |
 | Row missing source identity | Explicit count of unidentifiable source records; confirmed rows remain reviewable and the view stays partial | Validate the Manage source response; do not infer zero or completeness |
@@ -164,7 +167,8 @@ action and destination.
 ## Evidence And Validation
 
 - `tests/unit/manage-workspace-view-model.test.ts` proves source identity, mandate filtering,
-  malformed-row accounting, and fail-closed complete/partial/unavailable cursor posture.
+  malformed-row accounting, the confirmed/unconfirmed/blocked supportability matrix, and
+  fail-closed complete/partial/unavailable cursor posture.
 - `tests/unit/workbench-api.test.ts` proves server composition and browser continuation requests use
   the correct Gateway/BFF targets and request parameters.
 - `tests/unit/manage-workspace-components.test.tsx` proves partial rows remain reviewable, source
