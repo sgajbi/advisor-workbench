@@ -1104,8 +1104,12 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain('getByTestId("advisor-book-operating-evidence")');
     expect(source).toContain('.not.toHaveAttribute("open", "")');
     expect(source).toContain('.toHaveAttribute("open", "")');
-    expect(source).toContain('{ name: "Operating boundaries" }');
-    expect(source).toContain('{ name: "Support references" }');
+    expect(source).toMatch(
+      /getByRole\("heading",\s*{\s*name: "Operating boundaries",\s*exact: true,\s*}\)/,
+    );
+    expect(source).toMatch(
+      /getByRole\("heading",\s*{\s*name: "Support references",\s*exact: true,\s*}\)/,
+    );
     expect(source).not.toContain('{ name: "Operational details" }');
     expect(source).not.toContain('{ name: "Support details" }');
   });
