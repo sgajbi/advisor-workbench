@@ -703,6 +703,12 @@ describe("canonical live validation script", () => {
     );
     expect(validationScript).toContain("function Assert-IdeaQueueSeed");
     expect(validationScript).toContain("function Read-IdeaCandidateSeedEvidence");
+    expect(validationScript).toContain(
+      '$activeIdeaRunId = [string]$ideaVersion.build.ciRunId',
+    );
+    expect(validationScript).toContain(
+      "but the active Idea runtime identifies run '$activeIdeaRunId'",
+    );
     expect(validationScript).toContain("current-run candidate");
     expect(startScript).toContain("idea-candidate-seed-evidence.json");
     expect(startScript).toContain("$seededQueueItems.Count -ne 1");
