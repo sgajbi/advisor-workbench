@@ -51,39 +51,33 @@ function writeJson(response: ServerResponse, payload: unknown): void {
   response.end(JSON.stringify(payload));
 }
 
-async function runPowerShell(
+async function runLifecycleCommand(
   ideaBaseUrl: string,
 ): Promise<Omit<ScriptResult, "requests">> {
-  const executable = process.platform === "win32" ? "powershell.exe" : "pwsh";
-  const arguments_ = ["-NoLogo", "-NoProfile", "-NonInteractive"];
-  if (process.platform === "win32") {
-    arguments_.push("-ExecutionPolicy", "Bypass");
-  }
-  arguments_.push(
-    "-File",
+  const arguments_ = [
     join(
       process.cwd(),
       "scripts",
       "live",
-      "Invoke-IdeaCandidateLifecycleSeed.ps1",
+      "invoke-idea-candidate-lifecycle-seed.mjs",
     ),
-    "-IdeaBaseUrl",
+    "--idea-base-url",
     ideaBaseUrl,
-    "-CandidateId",
+    "--candidate-id",
     CANDIDATE_ID,
-    "-GeneratedAtUtc",
+    "--generated-at-utc",
     GENERATED_AT_UTC,
-    "-TenantId",
+    "--tenant-id",
     ACCESS_SCOPE.tenantId,
-    "-BookId",
+    "--book-id",
     ACCESS_SCOPE.bookId,
-    "-PortfolioId",
+    "--portfolio-id",
     ACCESS_SCOPE.portfolioId,
-    "-ClientId",
+    "--client-id",
     ACCESS_SCOPE.clientId,
-  );
+  ];
 
-  const child = spawn(executable, arguments_, {
+  const child = spawn(process.execPath, arguments_, {
     cwd: process.cwd(),
     windowsHide: true,
   });
@@ -163,7 +157,7 @@ async function runLifecycleSeed(
       stdout: "",
     };
     for (let run = 0; run < runs; run += 1) {
-      result = await runPowerShell(`http://127.0.0.1:${address.port}`);
+      result = await runLifecycleCommand(`http://127.0.0.1:${address.port}`);
       if (result.exitCode !== 0) {
         break;
       }
