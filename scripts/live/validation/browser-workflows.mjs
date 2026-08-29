@@ -372,7 +372,43 @@ export function classifyAdvisoryJourneyScreenshotState(state) {
   return state === "ready" ? "demo_ready" : "truthfully_degraded";
 }
 
-export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
+export function buildProposalListSourceRows(value, expectedPortfolioId) {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !value.data ||
+    typeof value.data !== "object" ||
+    !Array.isArray(value.data.items)
+  ) {
+    throw new Error("Canonical proposal list response was incomplete.");
+  }
+
+  return value.data.items.map((item, index) => {
+    if (
+      !item ||
+      typeof item !== "object" ||
+      typeof item.proposal_id !== "string" ||
+      !item.proposal_id ||
+      typeof item.current_state !== "string" ||
+      !item.current_state ||
+      item.portfolio_id !== expectedPortfolioId
+    ) {
+      throw new Error(
+        `Canonical proposal list row ${index + 1} did not preserve the requested portfolio, identity, and state.`,
+      );
+    }
+    return {
+      source: "proposal-list",
+      identity: item.proposal_id,
+      state: item.current_state,
+    };
+  });
+}
+
+export async function validateAdvisoryOverviewDecisionSurface(
+  page,
+  { timeoutMs, sourceRows },
+) {
   await expect(
     page.getByRole("heading", {
       level: 2,
@@ -401,6 +437,20 @@ export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
       "Advisory Overview returned no source-backed proposal rows for canonical proof.",
     );
   }
+  const renderedSourceRows = await proposalWorklist
+    .locator('[data-source-render-row="proposal-list"]')
+    .evaluateAll((elements) =>
+      elements.map((element) => ({
+        source: element.getAttribute("data-source") ?? "",
+        identity: element.getAttribute("data-source-identity") ?? "",
+        state: element.getAttribute("data-source-state") ?? "",
+      })),
+    );
+  assertExactSourceRenderProof({
+    screen: "Advisory Overview",
+    expectedRows: sourceRows,
+    renderedRows: renderedSourceRows,
+  });
 
   const selectedProposal = proposalWorklist.locator(
     '[role="option"][aria-selected="true"]',
@@ -413,6 +463,9 @@ export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
 
   const selectedDecisionId = await selectedDecision.getAttribute("id");
   const controlledDecisionId = await selectedProposal.getAttribute("aria-controls");
+  const selectedSourceIdentity = await selectedProposal.getAttribute(
+    "data-source-identity",
+  );
   if (
     !selectedDecisionId ||
     !controlledDecisionId ||
@@ -432,6 +485,11 @@ export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
   if (!proposalReference) {
     throw new Error(
       "Advisory Overview selected proposal has no source proposal reference.",
+    );
+  }
+  if (selectedSourceIdentity !== proposalReference) {
+    throw new Error(
+      "Advisory Overview selected proposal detail does not match its source-render identity.",
     );
   }
   const proposalReviewLink = selectedDecision.getByRole("link", {
@@ -456,6 +514,7 @@ export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
       visibleProposalCount,
       selectedProposalReference: proposalReference,
       selectedDecisionId,
+      sourceRowEvidence: sourceRows,
     },
   };
 }
@@ -626,6 +685,19 @@ export async function validateAdvisoryJourneyScreens(
     portfolioId,
     path: "/proposals/simulate",
   });
+  const advisoryOverviewResponsePromise = page.waitForResponse(
+    (response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === "GET" &&
+        url.pathname.endsWith("/api/bff/api/v1/proposals") &&
+        url.searchParams.get("portfolio_id") === portfolioId &&
+        url.searchParams.get("limit") === "8" &&
+        !url.searchParams.has("cursor")
+      );
+    },
+    { timeout: timeoutMs },
+  );
 
   await validateAdvisoryJourneyRoute(page, {
     summary,
@@ -641,10 +713,23 @@ export async function validateAdvisoryJourneyScreens(
     sourcePosture: "proposal-list-through-gateway",
     screenshotAdvisoryJourney,
     validate: async () => {
+      const advisoryOverviewResponse = await advisoryOverviewResponsePromise;
+      if (!advisoryOverviewResponse.ok()) {
+        throw new Error(
+          `Workbench Advisory Overview proposal request failed with HTTP ${advisoryOverviewResponse.status()}.`,
+        );
+      }
+      const sourceRows = buildProposalListSourceRows(
+        await advisoryOverviewResponse.json(),
+        portfolioId,
+      );
       await expect(page.getByLabel("Advisory journey screens")).toBeVisible({
         timeout: timeoutMs,
       });
-      return validateAdvisoryOverviewDecisionSurface(page, timeoutMs);
+      return validateAdvisoryOverviewDecisionSurface(page, {
+        timeoutMs,
+        sourceRows,
+      });
     },
   });
 

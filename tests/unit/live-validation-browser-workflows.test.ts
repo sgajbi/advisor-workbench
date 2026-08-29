@@ -8,6 +8,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 const {
   buildReportCentreProofPosture,
   buildMandateConstraintProofRows,
+  buildProposalListSourceRows,
   classifyAttributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
   classifyAdvisoryJourneyScreenshotState,
@@ -35,6 +36,10 @@ const {
     summary?: { constraints?: Array<{ key?: string; state?: string }> } | null;
     concentration?: { constraints?: Array<{ key?: string; state?: string }> } | null;
   }) => Array<{ source: string; key: string; state: string }>;
+  buildProposalListSourceRows: (
+    value: unknown,
+    expectedPortfolioId: string,
+  ) => Array<{ source: string; identity: string; state: string }>;
   classifyAttributionDetailEvidence: (counts: {
     detailTableCount: number;
     summaryTableCount: number;
@@ -131,6 +136,77 @@ const ACCEPTED_REVIEW_EVIDENCE: AdvisorBriefReviewEvidence = {
 };
 
 describe("live validation browser workflow helpers", () => {
+  it("derives exact proposal identities and states from the requested Gateway portfolio", () => {
+    expect(
+      buildProposalListSourceRows(
+        {
+          data: {
+            items: [
+              {
+                proposal_id: "PRP-RISK",
+                portfolio_id: "PB_SG_GLOBAL_BAL_001",
+                current_state: "RISK_REVIEW",
+              },
+              {
+                proposal_id: "PRP-READY",
+                portfolio_id: "PB_SG_GLOBAL_BAL_001",
+                current_state: "EXECUTION_READY",
+              },
+            ],
+          },
+        },
+        "PB_SG_GLOBAL_BAL_001",
+      ),
+    ).toEqual([
+      {
+        source: "proposal-list",
+        identity: "PRP-RISK",
+        state: "RISK_REVIEW",
+      },
+      {
+        source: "proposal-list",
+        identity: "PRP-READY",
+        state: "EXECUTION_READY",
+      },
+    ]);
+  });
+
+  it.each([
+    ["missing envelope", null],
+    ["missing item list", { data: {} }],
+    [
+      "wrong portfolio row",
+      {
+        data: {
+          items: [
+            {
+              proposal_id: "PRP-OTHER",
+              portfolio_id: "PB_OTHER",
+              current_state: "DRAFT",
+            },
+          ],
+        },
+      },
+    ],
+    [
+      "missing source state",
+      {
+        data: {
+          items: [
+            {
+              proposal_id: "PRP-RISK",
+              portfolio_id: "PB_SG_GLOBAL_BAL_001",
+            },
+          ],
+        },
+      },
+    ],
+  ])("rejects proposal proof with %s", (_case, response) => {
+    expect(() =>
+      buildProposalListSourceRows(response, "PB_SG_GLOBAL_BAL_001"),
+    ).toThrow(/proposal list/iu);
+  });
+
   it("derives exact mandate constraint proof from both Gateway reads", () => {
     expect(
       buildMandateConstraintProofRows({
