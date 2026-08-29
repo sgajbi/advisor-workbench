@@ -11,6 +11,11 @@ const items = [
     subtitle: "Version 1",
     facts: [{ label: "Evidence", value: "Complete" }],
     nextAction: "Review suitability evidence.",
+    sourceEvidence: {
+      source: "suitability-review",
+      identity: "review-1",
+      state: "READY",
+    },
   },
   {
     key: "review-2",
@@ -54,6 +59,13 @@ describe("WorkbenchRecordSelector", () => {
       screen.getByRole("listbox", { name: "Suitability reviews" }),
     ).toBeInTheDocument();
     expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(options[0]).toHaveAttribute(
+      "data-source-render-row",
+      "suitability-review",
+    );
+    expect(options[0]).toHaveAttribute("data-source", "suitability-review");
+    expect(options[0]).toHaveAttribute("data-source-identity", "review-1");
+    expect(options[0]).toHaveAttribute("data-source-state", "READY");
     expect(options[0]).toHaveTextContent("Selected");
     expect(
       options[0].querySelector("[data-workbench-record-facts]"),

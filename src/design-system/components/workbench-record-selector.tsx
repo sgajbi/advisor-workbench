@@ -18,6 +18,11 @@ export type WorkbenchRecordSelectorItem<T extends string> = {
   facts?: ReadonlyArray<WorkbenchRecordSelectorFact>;
   nextAction?: string;
   disabled?: boolean;
+  sourceEvidence?: {
+    source: string;
+    identity: string;
+    state: string;
+  };
 };
 
 type NavigationKey = "ArrowDown" | "ArrowUp" | "End" | "Home";
@@ -107,6 +112,10 @@ export default function WorkbenchRecordSelector<T extends string>({
             tabIndex={index === tabStopIndex ? 0 : -1}
             className={cx(styles.item, selected && styles.selected)}
             data-state={selected ? "selected" : "unselected"}
+            data-source-render-row={item.sourceEvidence?.source}
+            data-source={item.sourceEvidence?.source}
+            data-source-identity={item.sourceEvidence?.identity}
+            data-source-state={item.sourceEvidence?.state}
             onClick={() => {
               if (!item.disabled && item.key !== selectedKey)
                 onSelectionChange(item.key);
