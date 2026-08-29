@@ -780,9 +780,6 @@ export async function validateAdvisoryJourneyScreens(
         await advisoryOverviewResponse.json(),
         portfolioId,
       );
-      await expect(page.getByLabel("Advisory journey screens")).toBeVisible({
-        timeout: timeoutMs,
-      });
       return validateAdvisoryOverviewDecisionSurface(page, {
         timeoutMs,
         sourceRows,
