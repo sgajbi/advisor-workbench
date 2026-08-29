@@ -11,6 +11,7 @@ const {
   buildProposalListSourceRows,
   assertWorkspaceReviewContextPreserved,
   classifyAttributionDetailEvidence,
+  classifyContributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
   classifyAdvisoryJourneyScreenshotState,
   classifyDiscussionPackJourneyEvidence,
@@ -55,6 +56,11 @@ const {
     | "summary_fallback"
     | "governed_partial_fallback"
     | "ready_empty_state";
+  classifyContributionDetailEvidence: (evidence: {
+    positionTableVisible: boolean;
+    segmentTableVisible: boolean;
+    governedPartialVisible: boolean;
+  }) => "position_rows" | "segment_rows" | "governed_partial";
   classifyPerformanceEvidenceScreenshotState: (
     assuranceState: string | null,
   ) => "demo_ready" | "truthfully_degraded";
@@ -141,6 +147,61 @@ const ACCEPTED_REVIEW_EVIDENCE: AdvisorBriefReviewEvidence = {
 };
 
 describe("live validation browser workflow helpers", () => {
+  it.each([
+    [
+      "position rows",
+      {
+        positionTableVisible: true,
+        segmentTableVisible: false,
+        governedPartialVisible: false,
+      },
+      "position_rows",
+    ],
+    [
+      "aggregate segment rows",
+      {
+        positionTableVisible: false,
+        segmentTableVisible: true,
+        governedPartialVisible: false,
+      },
+      "segment_rows",
+    ],
+    [
+      "governed partial detail",
+      {
+        positionTableVisible: false,
+        segmentTableVisible: false,
+        governedPartialVisible: true,
+      },
+      "governed_partial",
+    ],
+  ])("classifies %s as source-backed contribution evidence", (_case, evidence, expected) => {
+    expect(classifyContributionDetailEvidence(evidence)).toBe(expected);
+  });
+
+  it.each([
+    [
+      "missing evidence",
+      {
+        positionTableVisible: false,
+        segmentTableVisible: false,
+        governedPartialVisible: false,
+      },
+    ],
+    [
+      "ambiguous evidence",
+      {
+        positionTableVisible: true,
+        segmentTableVisible: true,
+        governedPartialVisible: false,
+      },
+    ],
+  ])("rejects %s for contribution detail", (_case, evidence) => {
+    expect(() => classifyContributionDetailEvidence(evidence)).toThrow(
+      /invalid or ambiguous source state/iu,
+    );
+  });
+
   it("derives exact proposal identities and states from the requested Gateway portfolio", () => {
     expect(
       buildProposalListSourceRows(
@@ -665,24 +726,33 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain("not-currently-allowed");
   });
 
-  it("validates the canonical contribution analysis default and segment views", () => {
+  it("validates each canonical source-backed contribution detail state", () => {
     const source = browserWorkflowModule.validatePerformanceAnalysisPanel.toString();
 
     expect(source).toContain("contributionDimension=asset_class");
     expect(source).toContain("attributionDimension=asset_class");
     expect(source).toContain('page.locator("#performance-drivers").first()');
     expect(source).toContain("performanceDriversPanel.scrollIntoViewIfNeeded()");
+    expect(source).toContain("classifyContributionDetailEvidence({");
+    expect(source).toContain('contributionEvidence === "position_rows"');
+    expect(source).toContain('contributionEvidence === "segment_rows"');
+    expect(source).toContain("governedContributionPartial");
     expect(source).toContain("const positionsTab = performanceDriversPanel.getByRole");
-    expect(source).toContain("positionsTab.scrollIntoViewIfNeeded()");
     expect(source).toContain("Positions");
-    expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Position contribution table"]\')');
+    expect(source).toContain('table[aria-label="Position contribution table"]');
     expect(source).toContain("Segment Summary");
     expect(source).toContain('{ name: "Attribution Detail", exact: true }');
     expect(source).toContain("governed_partial_fallback");
     expect(source).toContain("recordUiCheck");
     expect(source).toContain("const segmentSummaryTab = performanceDriversPanel.getByRole");
     expect(source).toContain("segmentSummaryTab.scrollIntoViewIfNeeded()");
-    expect(source).toContain('performanceDriversPanel.locator(\'table[aria-label="Asset Class contribution table"]\')');
+    expect(source).toContain('table[aria-label="Asset Class contribution table"]');
+    const positionBranchIndex = source.indexOf(
+      'if (contributionEvidence === "position_rows")',
+    );
+    const positionProofIndex = source.indexOf("positionsTab).toBeVisible");
+    expect(positionBranchIndex).toBeGreaterThanOrEqual(0);
+    expect(positionProofIndex).toBeGreaterThan(positionBranchIndex);
   });
 
   it("keeps Advisor Cockpit browser proof aligned to business-facing readiness language", () => {
