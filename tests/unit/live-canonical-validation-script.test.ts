@@ -55,6 +55,51 @@ describe("canonical live validation script", () => {
     expect(nonExactHeadingNames).toEqual([]);
   });
 
+  it("keeps canonical PM Copilot proof aligned to the shipped business hierarchy", () => {
+    const componentSource = readNormalizedSource(
+      "src",
+      "features",
+      "workbench",
+      "components",
+      "dpm-copilot-workspace.tsx",
+    );
+    const screenRegistry = JSON.parse(
+      readNormalizedSource(
+        "docs",
+        "documentation",
+        "workbench-screen-registry.v1.json",
+      ),
+    ) as {
+      surfaces: Array<{ id: string; businessName: string }>;
+    };
+    const workflowStart = BROWSER_WORKFLOW_MODULE.indexOf(
+      "export async function validateDpmCopilotWorkspace",
+    );
+    const workflowEnd = BROWSER_WORKFLOW_MODULE.indexOf(
+      "export async function validateProofPackPanel",
+      workflowStart,
+    );
+    const workflowSource = BROWSER_WORKFLOW_MODULE.slice(workflowStart, workflowEnd);
+    const sectionTitle = componentSource.match(
+      /<SectionBlock\s+title="([^"]+)"\s+subtitle=/,
+    )?.[1];
+    const businessName = screenRegistry.surfaces.find(
+      (surface) => surface.id === "pm-copilot",
+    )?.businessName;
+
+    expect(workflowStart).toBeGreaterThanOrEqual(0);
+    expect(workflowEnd).toBeGreaterThan(workflowStart);
+    expect(businessName).toBe("PM Copilot");
+    expect(sectionTitle).toBe("Decision-support workflows");
+    expect(workflowSource).toContain(
+      `name: "${businessName}",\n      exact: true,\n      level: 1,`,
+    );
+    expect(workflowSource).toContain(
+      `name: "${sectionTitle}",\n      exact: true,`,
+    );
+    expect(workflowSource).not.toContain("PM Copilot Workspace");
+  });
+
   it("proves the shipped Advisory Overview decision surface instead of its retired summary", () => {
     const browserWorkflowModule = readNormalizedSource(
       "scripts",
