@@ -321,6 +321,8 @@ test.describe('Portfolio workbench smoke', () => {
 
       for (const viewport of [
         { width: 1440, height: 1000 },
+        { width: 1024, height: 1000 },
+        { width: 768, height: 1024 },
         { width: 519, height: 900 },
       ]) {
         await page.setViewportSize(viewport);
@@ -355,6 +357,32 @@ test.describe('Portfolio workbench smoke', () => {
             ),
           });
         }
+      }
+    }
+
+    for (const viewportWidth of [1440, 1024, 768, 519]) {
+      const stateEvidence = evidence.filter(({ viewport }) => viewport.width === viewportWidth);
+      expect(stateEvidence).toHaveLength(3);
+      const confirmedEvidence = stateEvidence.find(
+        ({ sourceState }) => sourceState === 'confirmed'
+      );
+      if (!confirmedEvidence) {
+        throw new Error(`Confirmed Review Context evidence is missing at ${viewportWidth}px.`);
+      }
+      const confirmedRows = confirmedEvidence.layout.slots.map((slot) => ({
+        slot: slot.slot,
+        relativeTop: slot.top - confirmedEvidence.layout.strip.top,
+      }));
+
+      for (const state of stateEvidence) {
+        expect(state.layout.domOrder).toEqual(confirmedEvidence.layout.domOrder);
+        expect(state.layout.strip.height).toBe(confirmedEvidence.layout.strip.height);
+        expect(
+          state.layout.slots.map((slot) => ({
+            slot: slot.slot,
+            relativeTop: slot.top - state.layout.strip.top,
+          }))
+        ).toEqual(confirmedRows);
       }
     }
 

@@ -26,8 +26,9 @@ It also records the six semantic context slots, their DOM order, bounding boxes,
 roles, and overflow dimensions.
 
 The separate source-state fixture passed 1/1 across confirmed, partial, and unavailable states at
-1440 and 519 pixels. All states retain the same semantic slot order and responsive geometry; only
-truthful content, value emphasis, and the existing source-state accent change.
+1440, 1024, 768, and 519 pixels. All states retain the same semantic slot order, strip height, and
+responsive row geometry; only truthful content, value emphasis, and the existing source-state
+accent change.
 
 ## Visual review
 
@@ -78,6 +79,12 @@ the surrounding screen uses that context rather than repeating it.
 | Confirmed | ![Confirmed review context at 1440 pixels](./diagnostic-confirmed-review-context-1440.png) | ![Confirmed review context at 519 pixels](./diagnostic-confirmed-review-context-519.png) |
 | Partial | ![Partial review context at 1440 pixels](./diagnostic-partial-review-context-1440.png) | ![Partial review context at 519 pixels](./diagnostic-partial-review-context-519.png) |
 | Unavailable | ![Unavailable review context at 1440 pixels](./diagnostic-unavailable-review-context-1440.png) | ![Unavailable review context at 519 pixels](./diagnostic-unavailable-review-context-519.png) |
+
+Intermediate responsive captures:
+
+- confirmed: [1024 pixels](./diagnostic-confirmed-review-context-1024.png), [768 pixels](./diagnostic-confirmed-review-context-768.png)
+- partial: [1024 pixels](./diagnostic-partial-review-context-1024.png), [768 pixels](./diagnostic-partial-review-context-768.png)
+- unavailable: [1024 pixels](./diagnostic-unavailable-review-context-1024.png), [768 pixels](./diagnostic-unavailable-review-context-768.png)
 
 Machine-readable measurements and keyboard evidence are in
 [`portfolio-review-accessibility-evidence.json`](./portfolio-review-accessibility-evidence.json).
