@@ -78,9 +78,9 @@ WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
 WORKBENCH_BFF_ROLE=advisor
 ```
 
-These values are injected only when a browser request does not provide explicit caller context.
-Use the overrides for scenario-specific validation, entitlement testing, or client-demo evidence
-capture that needs a named actor, tenant, region, booking center, or role.
+The BFF always removes browser-supplied authority before deriving trusted server context. Use the
+server-side overrides for scenario-specific validation that needs a named actor, tenant, region,
+booking centre, or role; browser headers never override them.
 
 ### Lotus Idea local authority fixture
 
@@ -90,10 +90,18 @@ candidate-action routes:
 ```txt
 LOTUS_ENVIRONMENT=dev
 WORKBENCH_IDEA_AUTH_MODE=development_configured
+WORKBENCH_IDEA_CALLER_SUBJECT=workbench-advisor
+WORKBENCH_IDEA_CALLER_ROLES=advisor
+WORKBENCH_IDEA_CALLER_TENANT_IDS=tenant-private-bank-sg
+WORKBENCH_IDEA_CALLER_BOOK_IDS=book-advisor-001
+WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+WORKBENCH_IDEA_CALLER_CLIENT_IDS=client-001
 ```
 
 The BFF discards browser-supplied Idea authority headers and may use the configured local subject,
-role, and `PB_SG_GLOBAL_BAL_001` entitlement only in explicitly declared `dev`, `development`, `local`, or `test`.
+role, tenant, book, portfolio, and client scope only in explicitly declared `dev`, `development`,
+`local`, or `test`. The defaults above match the governed canonical Idea candidate fixture; use
+server-side overrides together when validating a different scoped fixture.
 The fixture is rejected when the environment is unset or differs. Until the tracked authenticated session and token-claims resolver
 is implemented, non-development Idea requests fail closed with `401` before Gateway is called.
 
