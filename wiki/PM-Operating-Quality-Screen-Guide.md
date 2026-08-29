@@ -47,6 +47,8 @@ support and requires human review.
 Manage owns policy, score, segment, fairness, action, and invocation records. Lotus AI supplies
 bounded generated support through the governed source workflow. Workbench does not calculate
 scores or fairness and does not expose raw prompts or generated model output as authority.
+Canonical proof creates and reads these caller-scoped records under the same Workbench tenant;
+command-centre query scope remains a separate contract value.
 
 ## Screen States And Recovery
 

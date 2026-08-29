@@ -198,11 +198,10 @@ targeting that exact queue row. Earlier unconverted canonical candidates or stal
 therefore cannot make the browser select an arbitrary row or fabricate continuity with the current
 run.
 
-Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
-same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
-value fails startup; the validator must not create evidence in one tenant or date while the screen
-reads another. The server-owned BFF tenant header is bound to that same tenant so Gateway tenancy
-cannot silently diverge from the DPM query context.
+Canonical startup binds the server-owned BFF header and PM Operating Quality seed to the governed
+Workbench caller tenant. Command-centre reads retain their separate platform-contract query tenant,
+portfolio-manager book, and command-centre date. A missing value fails startup; the validator must
+not create caller-scoped evidence in one tenant while the screen reads another.
 
 ### Lotus Idea capacity evidence
 
@@ -528,7 +527,8 @@ client-publication posture without approval, client communication, order, fill, 
 claims.
 
 For DPM PM operating quality, validation creates and re-reads Manage-backed evidence through
-Gateway before classifying the panel as ready: score run, source-defined fairness analysis,
+Gateway under the governed Workbench caller tenant before classifying the panel as ready: score
+run, source-defined fairness analysis,
 bounded supervisory review action, and governed summary invocation. The browser proof then checks
 that the selected quality-run and fairness-review ids match those persisted through Gateway, that
 the source and authority remain Manage-owned, that source states are present, and that the screen
