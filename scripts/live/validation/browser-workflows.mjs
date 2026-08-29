@@ -1279,12 +1279,21 @@ export async function validateAdvisoryJourneyScreens(
       route,
       screenshotAdvisoryJourney,
       validate: async () => {
-        await expect(page.getByLabel("Proposal lifecycle counts")).toBeVisible({
-          timeout: timeoutMs,
-        });
-        await expect(
-          page.getByText("Adviser decision", { exact: true }),
-        ).toBeVisible({ timeout: timeoutMs });
+        if (lifecycle.key === "suitability") {
+          await expect(page.getByLabel("Suitability review counts")).toBeVisible({
+            timeout: timeoutMs,
+          });
+          await expect(
+            page.getByRole("heading", { name: "Adviser decision worklist" }),
+          ).toBeVisible({ timeout: timeoutMs });
+        } else {
+          await expect(page.getByLabel("Proposal lifecycle counts")).toBeVisible({
+            timeout: timeoutMs,
+          });
+          await expect(
+            page.getByText("Adviser decision", { exact: true }),
+          ).toBeVisible({ timeout: timeoutMs });
+        }
         return await lifecycle.validateEvidence?.();
       },
     });
