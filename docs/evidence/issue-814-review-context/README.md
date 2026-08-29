@@ -4,7 +4,7 @@
 
 This pack records the responsive review of the shared Workbench review-context strip and its
 surrounding Portfolio Review hierarchy. It was generated from product implementation head
-`8072d09c61305396d277ba2b8bc5a2f438e751ce` on 23 August 2026.
+`66325985edda5907c1ed0fd8fed4800b4d2985ed` on 30 August 2026.
 
 The run uses the repository-owned deterministic **degraded-state fixture**. It proves layout,
 interaction, source-limitation language, and fail-closed presentation; it is not canonical runtime
@@ -22,12 +22,18 @@ Result: 1/1 Playwright scenario passed across 1440, 1024, 768, 721, 720, 561, an
 519 pixel viewports. The machine-readable record confirms zero horizontal document overflow,
 all measured rail/header regions fit, each governed identity fact is owned by the strip, and all
 21 sequential keyboard targets sampled at 519 pixels are visible, unobscured, and focus-visible.
+It also records the six semantic context slots, their DOM order, bounding boxes, productive type
+roles, and overflow dimensions.
+
+The separate source-state fixture passed 1/1 across confirmed, partial, and unavailable states at
+1440 and 519 pixels. All states retain the same semantic slot order and responsive geometry; only
+truthful content, value emphasis, and the existing source-state accent change.
 
 ## Visual review
 
 | Viewport | Review result |
 | --- | --- |
-| 1440 | Context remains a single orientation row above the decision workspace. Shell rail, primary decision, action, and evidence regions remain aligned without overlap. Existing financial-value mid-number wrapping is visible in the six-column KPI band and is explicitly owned by typography follow-up #829. |
+| 1440 | Portfolio identity anchors the header; business date, currency, mandate, and booking centre form one content-sized fact group instead of equal-width islands. Support details remains a quiet, separate action. Shell rail, primary decision, action, and evidence regions remain aligned without overlap. |
 | 1024 | Context reflows without clipping; the navigation rail becomes a compact horizontal control and the business decision sequence remains review focus, controls, limitations, action, then evidence. |
 | 768 | Context and workspace navigation remain distinct, readable rows. Cards and controls reflow without horizontal scrolling or duplicated portfolio identity. |
 | 519 | Context becomes a compact two-column business summary; the page retains 16-pixel-equivalent reading flow, complete keyboard access, and neutral interaction state. No tooltip, control, or text overlaps the return metrics. |
@@ -65,5 +71,15 @@ the surrounding screen uses that context rather than repeating it.
 
 ![Diagnostic review context at 519 pixels](./diagnostic-review-context-close-up-519.png)
 
+## Source-state composition
+
+| State | 1440 pixels | 519 pixels |
+| --- | --- | --- |
+| Confirmed | ![Confirmed review context at 1440 pixels](./diagnostic-confirmed-review-context-1440.png) | ![Confirmed review context at 519 pixels](./diagnostic-confirmed-review-context-519.png) |
+| Partial | ![Partial review context at 1440 pixels](./diagnostic-partial-review-context-1440.png) | ![Partial review context at 519 pixels](./diagnostic-partial-review-context-519.png) |
+| Unavailable | ![Unavailable review context at 1440 pixels](./diagnostic-unavailable-review-context-1440.png) | ![Unavailable review context at 519 pixels](./diagnostic-unavailable-review-context-519.png) |
+
 Machine-readable measurements and keyboard evidence are in
 [`portfolio-review-accessibility-evidence.json`](./portfolio-review-accessibility-evidence.json).
+Source-state typography and layout evidence is in
+[`review-context-typography-states.json`](./review-context-typography-states.json).

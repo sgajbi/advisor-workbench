@@ -1,0 +1,1139 @@
+{
+  "proofType": "owned source-state fixture",
+  "evidence": [
+    {
+      "sourceState": "confirmed",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 37,
+          "top": 94,
+          "right": 1403,
+          "bottom": 185,
+          "width": 1366,
+          "height": 91
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 53,
+            "top": 138,
+            "right": 597,
+            "bottom": 158,
+            "width": 544,
+            "height": 20,
+            "scrollWidth": 544,
+            "clientWidth": 544,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 826,
+            "top": 121,
+            "right": 905,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 940,
+            "top": 121,
+            "right": 1020,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 1054,
+            "top": 121,
+            "right": 1110,
+            "bottom": 158,
+            "width": 56,
+            "height": 38,
+            "scrollWidth": 56,
+            "clientWidth": 56,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 1145,
+            "top": 121,
+            "right": 1229,
+            "bottom": 158,
+            "width": 84,
+            "height": 38,
+            "scrollWidth": 84,
+            "clientWidth": 84,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 1264,
+            "top": 106,
+            "right": 1386,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "sourceState": "confirmed",
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 25,
+          "top": 90,
+          "right": 494,
+          "bottom": 271,
+          "width": 469,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 134,
+            "right": 339,
+            "bottom": 154,
+            "width": 298,
+            "height": 20,
+            "scrollWidth": 298,
+            "clientWidth": 298,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 177,
+            "right": 251,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 267,
+            "top": 177,
+            "right": 477,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 222,
+            "right": 251,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 267,
+            "top": 222,
+            "right": 477,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 355,
+            "top": 103,
+            "right": 477,
+            "bottom": 169,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 519,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 519,
+          "scrollWidth": 519
+        }
+      }
+    },
+    {
+      "sourceState": "partial",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 37,
+          "top": 94,
+          "right": 1403,
+          "bottom": 185,
+          "width": 1366,
+          "height": 91
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 53,
+            "top": 138,
+            "right": 597,
+            "bottom": 158,
+            "width": 544,
+            "height": 20,
+            "scrollWidth": 544,
+            "clientWidth": 544,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 820,
+            "top": 121,
+            "right": 900,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 935,
+            "top": 121,
+            "right": 1014,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 1049,
+            "top": 121,
+            "right": 1105,
+            "bottom": 158,
+            "width": 56,
+            "height": 38,
+            "scrollWidth": 56,
+            "clientWidth": 56,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreNot confirmed",
+            "left": 1139,
+            "top": 121,
+            "right": 1229,
+            "bottom": 158,
+            "width": 90,
+            "height": 38,
+            "scrollWidth": 90,
+            "clientWidth": 90,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 1264,
+            "top": 106,
+            "right": 1386,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "sourceState": "partial",
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 25,
+          "top": 90,
+          "right": 494,
+          "bottom": 271,
+          "width": 469,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 134,
+            "right": 339,
+            "bottom": 154,
+            "width": 298,
+            "height": 20,
+            "scrollWidth": 298,
+            "clientWidth": 298,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 177,
+            "right": 251,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 267,
+            "top": 177,
+            "right": 477,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 222,
+            "right": 251,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreNot confirmed",
+            "left": 267,
+            "top": 222,
+            "right": 477,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 355,
+            "top": 103,
+            "right": 477,
+            "bottom": 169,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 519,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 519,
+          "scrollWidth": 519
+        }
+      }
+    },
+    {
+      "sourceState": "unavailable",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Not confirmed",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 37,
+          "top": 94,
+          "right": 1403,
+          "bottom": 185,
+          "width": 1366,
+          "height": 91
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Portfolio not confirmed",
+            "left": 53,
+            "top": 138,
+            "right": 597,
+            "bottom": 158,
+            "width": 544,
+            "height": 20,
+            "scrollWidth": 544,
+            "clientWidth": 544,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business dateNot confirmed",
+            "left": 766,
+            "top": 121,
+            "right": 856,
+            "bottom": 158,
+            "width": 90,
+            "height": 38,
+            "scrollWidth": 90,
+            "clientWidth": 90,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyNot confirmed",
+            "left": 890,
+            "top": 121,
+            "right": 980,
+            "bottom": 158,
+            "width": 90,
+            "height": 38,
+            "scrollWidth": 90,
+            "clientWidth": 90,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateNot confirmed",
+            "left": 1015,
+            "top": 121,
+            "right": 1105,
+            "bottom": 158,
+            "width": 90,
+            "height": 38,
+            "scrollWidth": 90,
+            "clientWidth": 90,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreNot confirmed",
+            "left": 1139,
+            "top": 121,
+            "right": 1229,
+            "bottom": 158,
+            "width": 90,
+            "height": 38,
+            "scrollWidth": 90,
+            "clientWidth": 90,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 1264,
+            "top": 106,
+            "right": 1386,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "document": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "sourceState": "unavailable",
+      "viewport": {
+        "width": 519,
+        "height": 900
+      },
+      "typography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "Not confirmed",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "layout": {
+        "strip": {
+          "left": 25,
+          "top": 90,
+          "right": 494,
+          "bottom": 271,
+          "width": 469,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Portfolio not confirmed",
+            "left": 41,
+            "top": 134,
+            "right": 339,
+            "bottom": 154,
+            "width": 298,
+            "height": 20,
+            "scrollWidth": 298,
+            "clientWidth": 298,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business dateNot confirmed",
+            "left": 41,
+            "top": 177,
+            "right": 251,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyNot confirmed",
+            "left": 267,
+            "top": 177,
+            "right": 477,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateNot confirmed",
+            "left": 41,
+            "top": 222,
+            "right": 251,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreNot confirmed",
+            "left": 267,
+            "top": 222,
+            "right": 477,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 355,
+            "top": 103,
+            "right": 477,
+            "bottom": 169,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
+      "measurements": {
+        "viewport": {
+          "width": 519,
+          "height": 900
+        },
+        "document": {
+          "clientWidth": 519,
+          "scrollWidth": 519
+        }
+      }
+    }
+  ]
+}

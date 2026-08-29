@@ -1,5 +1,5 @@
 {
-  "generatedAtUtc": "2026-08-23T10:34:09.945Z",
+  "generatedAtUtc": "2026-08-29T22:52:37.350Z",
   "proofType": "owned degraded-state fixture",
   "decision": "Performance evidence remains qualified and the source-owned action precedes adjacent workflows.",
   "viewports": [
@@ -21,7 +21,7 @@
           "display": "grid",
           "fits": true,
           "left": 76,
-          "top": 222
+          "top": 224
         },
         {
           "display": "none",
@@ -52,6 +52,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 37,
+          "top": 94,
+          "right": 1403,
+          "bottom": 185,
+          "width": 1366,
+          "height": 91
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 53,
+            "top": 138,
+            "right": 437,
+            "bottom": 158,
+            "width": 384,
+            "height": 20,
+            "scrollWidth": 384,
+            "clientWidth": 384,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 471,
+            "top": 121,
+            "right": 551,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 586,
+            "top": 121,
+            "right": 665,
+            "bottom": 158,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 700,
+            "top": 121,
+            "right": 756,
+            "bottom": 158,
+            "width": 56,
+            "height": 38,
+            "scrollWidth": 56,
+            "clientWidth": 56,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 790,
+            "top": 121,
+            "right": 875,
+            "bottom": 158,
+            "width": 84,
+            "height": 38,
+            "scrollWidth": 84,
+            "clientWidth": 84,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 1264,
+            "top": 106,
+            "right": 1386,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -102,8 +274,8 @@
           "href": "/recommendations?portfolioId=PB_SG_GLOBAL_BAL_001"
         },
         {
-          "key": "a:8:/reports?portfolioId=PB_SG_GLOBAL_BAL_001:Reporting Order and monitor reports",
-          "name": "Reporting Order and monitor reports",
+          "key": "a:8:/reports?portfolioId=PB_SG_GLOBAL_BAL_001:Report centre Order and monitor reports",
+          "name": "Report centre Order and monitor reports",
           "tag": "a",
           "href": "/reports?portfolioId=PB_SG_GLOBAL_BAL_001"
         },
@@ -120,14 +292,14 @@
           "href": null
         },
         {
-          "key": "button:11::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:11::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:12::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:12::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -144,8 +316,8 @@
           "href": null
         },
         {
-          "key": "select:15::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:15::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -230,13 +402,13 @@
           "display": "grid",
           "fits": true,
           "left": 62,
-          "top": 225
+          "top": 267
         },
         {
           "display": "grid",
           "fits": true,
           "left": 250,
-          "top": 221
+          "top": 263
         }
       ],
       "reviewContextOwnership": [
@@ -261,6 +433,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 29,
+          "top": 94,
+          "right": 995,
+          "bottom": 230,
+          "width": 965,
+          "height": 136
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 45,
+            "top": 138,
+            "right": 589,
+            "bottom": 158,
+            "width": 544,
+            "height": 20,
+            "scrollWidth": 544,
+            "clientWidth": 544,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 45,
+            "top": 181,
+            "right": 125,
+            "bottom": 218,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 150,
+            "top": 181,
+            "right": 229,
+            "bottom": 218,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 254,
+            "top": 181,
+            "right": 310,
+            "bottom": 218,
+            "width": 56,
+            "height": 38,
+            "scrollWidth": 56,
+            "clientWidth": 56,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 334,
+            "top": 181,
+            "right": 419,
+            "bottom": 218,
+            "width": 84,
+            "height": 38,
+            "scrollWidth": 84,
+            "clientWidth": 84,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 855,
+            "top": 106,
+            "right": 978,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -299,14 +643,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -323,8 +667,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -409,13 +753,13 @@
           "display": "grid",
           "fits": true,
           "left": 58,
-          "top": 225
+          "top": 267
         },
         {
           "display": "grid",
           "fits": true,
           "left": 352,
-          "top": 221
+          "top": 263
         }
       ],
       "reviewContextOwnership": [
@@ -440,6 +784,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 25,
+          "top": 94,
+          "right": 743,
+          "bottom": 230,
+          "width": 718,
+          "height": 136
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 138,
+            "right": 585,
+            "bottom": 158,
+            "width": 544,
+            "height": 20,
+            "scrollWidth": 544,
+            "clientWidth": 544,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 181,
+            "right": 121,
+            "bottom": 218,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 141,
+            "top": 181,
+            "right": 220,
+            "bottom": 218,
+            "width": 80,
+            "height": 38,
+            "scrollWidth": 80,
+            "clientWidth": 80,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 240,
+            "top": 181,
+            "right": 296,
+            "bottom": 218,
+            "width": 56,
+            "height": 38,
+            "scrollWidth": 56,
+            "clientWidth": 56,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 316,
+            "top": 181,
+            "right": 401,
+            "bottom": 218,
+            "width": 84,
+            "height": 38,
+            "scrollWidth": 84,
+            "clientWidth": 84,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 604,
+            "top": 106,
+            "right": 726,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -478,14 +994,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -502,8 +1018,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -588,13 +1104,13 @@
           "display": "grid",
           "fits": true,
           "left": 58,
-          "top": 299
+          "top": 312
         },
         {
           "display": "grid",
           "fits": true,
           "left": 331,
-          "top": 295
+          "top": 308
         }
       ],
       "reviewContextOwnership": [
@@ -619,6 +1135,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 25,
+          "top": 94,
+          "right": 696,
+          "bottom": 275,
+          "width": 671,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 138,
+            "right": 539,
+            "bottom": 158,
+            "width": 498,
+            "height": 20,
+            "scrollWidth": 498,
+            "clientWidth": 498,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 181,
+            "right": 281,
+            "bottom": 218,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 368,
+            "top": 181,
+            "right": 608,
+            "bottom": 218,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 225,
+            "right": 281,
+            "bottom": 263,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 368,
+            "top": 225,
+            "right": 608,
+            "bottom": 263,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 557,
+            "top": 106,
+            "right": 679,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -657,14 +1345,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -681,8 +1369,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -767,13 +1455,13 @@
           "display": "grid",
           "fits": true,
           "left": 56,
-          "top": 293
+          "top": 306
         },
         {
           "display": "grid",
           "fits": true,
           "left": 56,
-          "top": 353
+          "top": 366
         }
       ],
       "reviewContextOwnership": [
@@ -798,6 +1486,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 25,
+          "top": 94,
+          "right": 695,
+          "bottom": 275,
+          "width": 670,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 138,
+            "right": 538,
+            "bottom": 158,
+            "width": 498,
+            "height": 20,
+            "scrollWidth": 498,
+            "clientWidth": 498,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 181,
+            "right": 281,
+            "bottom": 218,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 368,
+            "top": 181,
+            "right": 608,
+            "bottom": 218,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 225,
+            "right": 281,
+            "bottom": 263,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 368,
+            "top": 225,
+            "right": 608,
+            "bottom": 263,
+            "width": 240,
+            "height": 38,
+            "scrollWidth": 240,
+            "clientWidth": 240,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 556,
+            "top": 106,
+            "right": 678,
+            "bottom": 173,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -836,14 +1696,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -860,8 +1720,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -946,13 +1806,13 @@
           "display": "grid",
           "fits": true,
           "left": 56,
-          "top": 289
+          "top": 302
         },
         {
           "display": "grid",
           "fits": true,
           "left": 56,
-          "top": 349
+          "top": 362
         }
       ],
       "reviewContextOwnership": [
@@ -977,6 +1837,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 25,
+          "top": 90,
+          "right": 536,
+          "bottom": 271,
+          "width": 511,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 134,
+            "right": 381,
+            "bottom": 154,
+            "width": 340,
+            "height": 20,
+            "scrollWidth": 340,
+            "clientWidth": 340,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 177,
+            "right": 272,
+            "bottom": 214,
+            "width": 231,
+            "height": 38,
+            "scrollWidth": 231,
+            "clientWidth": 231,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 288,
+            "top": 177,
+            "right": 519,
+            "bottom": 214,
+            "width": 231,
+            "height": 38,
+            "scrollWidth": 231,
+            "clientWidth": 231,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 222,
+            "right": 272,
+            "bottom": 259,
+            "width": 231,
+            "height": 38,
+            "scrollWidth": 231,
+            "clientWidth": 231,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 288,
+            "top": 222,
+            "right": 519,
+            "bottom": 259,
+            "width": 231,
+            "height": 38,
+            "scrollWidth": 231,
+            "clientWidth": 231,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 397,
+            "top": 103,
+            "right": 519,
+            "bottom": 169,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -1015,14 +2047,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -1039,8 +2071,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -1125,13 +2157,13 @@
           "display": "grid",
           "fits": true,
           "left": 48,
-          "top": 281
+          "top": 294
         },
         {
           "display": "grid",
           "fits": true,
           "left": 48,
-          "top": 327
+          "top": 340
         }
       ],
       "reviewContextOwnership": [
@@ -1156,6 +2188,178 @@
           "presentOutsideReviewContext": false
         }
       ],
+      "reviewContextTypography": {
+        "eyebrow": {
+          "text": "Review portfolio",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "600",
+          "lineHeight": "16px",
+          "letterSpacing": "0.48px",
+          "textTransform": "uppercase"
+        },
+        "factLabel": {
+          "text": "Business date",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "16px",
+          "letterSpacing": "0.12px",
+          "textTransform": "none"
+        },
+        "factValue": {
+          "text": "10 Apr 2026",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "500",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        },
+        "supportControl": {
+          "text": "Support details",
+          "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "600",
+          "lineHeight": "20px",
+          "letterSpacing": "normal",
+          "textTransform": "none"
+        }
+      },
+      "reviewContextLayout": {
+        "strip": {
+          "left": 25,
+          "top": 90,
+          "right": 494,
+          "bottom": 271,
+          "width": 469,
+          "height": 181
+        },
+        "domOrder": [
+          "portfolio-name",
+          "business-date",
+          "currency",
+          "mandate",
+          "booking-centre",
+          "support-details"
+        ],
+        "slots": [
+          {
+            "slot": "portfolio-name",
+            "text": "Global Balanced Mandate",
+            "left": 41,
+            "top": 134,
+            "right": 339,
+            "bottom": 154,
+            "width": 298,
+            "height": 20,
+            "scrollWidth": 298,
+            "clientWidth": 298,
+            "scrollHeight": 20,
+            "clientHeight": 20,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          {
+            "slot": "business-date",
+            "text": "Business date10 Apr 2026",
+            "left": 41,
+            "top": 177,
+            "right": 251,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "currency",
+            "text": "Base currencyUSD",
+            "left": 267,
+            "top": 177,
+            "right": 477,
+            "bottom": 214,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "mandate",
+            "text": "MandateAdvisory",
+            "left": 41,
+            "top": 222,
+            "right": 251,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "booking-centre",
+            "text": "Booking centreSingapore",
+            "left": 267,
+            "top": 222,
+            "right": 477,
+            "bottom": 259,
+            "width": 210,
+            "height": 38,
+            "scrollWidth": 210,
+            "clientWidth": 210,
+            "scrollHeight": 38,
+            "clientHeight": 38,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "13px",
+            "fontWeight": "400"
+          },
+          {
+            "slot": "support-details",
+            "text": "Support details",
+            "left": 355,
+            "top": 103,
+            "right": 477,
+            "bottom": 169,
+            "width": 123,
+            "height": 66,
+            "scrollWidth": 123,
+            "clientWidth": 123,
+            "scrollHeight": 66,
+            "clientHeight": 66,
+            "overflowX": "visible",
+            "overflowY": "visible",
+            "fontFamily": "ibmPlexSans, \"ibmPlexSans Fallback\", Arial, sans-serif, \"IBM Plex Sans\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        ]
+      },
       "focusableDomOrder": [
         {
           "key": "a:0:/:Lotus",
@@ -1194,14 +2398,14 @@
           "href": null
         },
         {
-          "key": "button:6::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:6::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null
         },
         {
-          "key": "button:7::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:7::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null
         },
@@ -1218,8 +2422,8 @@
           "href": null
         },
         {
-          "key": "select:10::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:10::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null
         },
@@ -1340,8 +2544,8 @@
           "withinViewport": true
         },
         {
-          "key": "button:24::AUM: 12,500,000 USD",
-          "name": "AUM: 12,500,000 USD",
+          "key": "button:24::Portfolio value: 12,500,000 USD",
+          "name": "Portfolio value: 12,500,000 USD",
           "tag": "button",
           "href": null,
           "focusVisible": true,
@@ -1349,8 +2553,8 @@
           "withinViewport": true
         },
         {
-          "key": "button:25::Invested Assets: 11,750,000 USD",
-          "name": "Invested Assets: 11,750,000 USD",
+          "key": "button:25::Invested assets: 11,750,000 USD",
+          "name": "Invested assets: 11,750,000 USD",
           "tag": "button",
           "href": null,
           "focusVisible": true,
@@ -1376,8 +2580,8 @@
           "withinViewport": true
         },
         {
-          "key": "select:28::Reporting Currency",
-          "name": "Reporting Currency",
+          "key": "select:28::Reporting currency",
+          "name": "Reporting currency",
           "tag": "select",
           "href": null,
           "focusVisible": true,
