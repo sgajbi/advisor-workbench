@@ -63,28 +63,6 @@ export function buildAdvisoryOpportunitiesModel({
   };
 }
 
-function selectVisibleOpportunityItems(
-  items: AdvisorIdeaQueueItem[],
-  selectedCandidateId: string | undefined,
-): AdvisorIdeaQueueItem[] {
-  const visibleItems = items.slice(0, 12);
-  if (
-    !selectedCandidateId ||
-    visibleItems.some(
-      (item) => item.candidate?.candidateId === selectedCandidateId,
-    )
-  ) {
-    return visibleItems;
-  }
-
-  const selectedItem = items.find(
-    (item) => item.candidate?.candidateId === selectedCandidateId,
-  );
-  return selectedItem
-    ? [...visibleItems.slice(0, 11), selectedItem]
-    : visibleItems;
-}
-
 function buildOpportunityRow(
   portfolioId: string,
   item: AdvisorIdeaQueueItem,
@@ -107,6 +85,28 @@ function buildOpportunityRow(
       `/recommendations?mode=opportunities&portfolioId=${encodeURIComponent(portfolioId)}` +
       `&candidateId=${encodeURIComponent(candidateId)}`,
   };
+}
+
+function selectVisibleOpportunityItems(
+  items: AdvisorIdeaQueueItem[],
+  selectedCandidateId: string | undefined,
+): AdvisorIdeaQueueItem[] {
+  const visibleItems = items.slice(0, 12);
+  if (
+    !selectedCandidateId ||
+    visibleItems.some(
+      (item) => item.candidate?.candidateId === selectedCandidateId,
+    )
+  ) {
+    return visibleItems;
+  }
+
+  const selectedItem = items.find(
+    (item) => item.candidate?.candidateId === selectedCandidateId,
+  );
+  return selectedItem
+    ? [...visibleItems.slice(0, 11), selectedItem]
+    : visibleItems;
 }
 
 function formatCandidateTitle(family: string | undefined, candidateId: string): string {
