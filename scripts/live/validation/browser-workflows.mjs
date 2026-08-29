@@ -18,7 +18,7 @@ const ADVISOR_BOOK_BROWSER_PAGE = Object.freeze({
  * fail closed.
  *
  * @param {{ sourceValue: string; renderedValue: string }} proof
- * @returns {string}
+ * @returns {{ sourceMandate: string; renderedMandate: string }}
  */
 export function assertClientContextMandateProof({ sourceValue, renderedValue }) {
   const source = requireClientContextMandateValue(sourceValue, "source");
@@ -30,7 +30,7 @@ export function assertClientContextMandateProof({ sourceValue, renderedValue }) 
       `Client Context: Mandate rendered ${rendered}, but Gateway supplied ${source}.`,
     );
   }
-  return source;
+  return { sourceMandate: source, renderedMandate: rendered };
 }
 
 function requireClientContextMandateValue(value, origin) {
@@ -852,7 +852,7 @@ export async function validateAdvisoryJourneyScreens(
       await expect(mandateValue).toHaveAttribute("data-confirmed", "true");
       const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;
       const renderedMandate = await mandateValue.textContent();
-      assertClientContextMandateProof({
+      const mandateEvidence = assertClientContextMandateProof({
         sourceValue: sourceMandate,
         renderedValue: renderedMandate,
       });
@@ -861,6 +861,10 @@ export async function validateAdvisoryJourneyScreens(
       ).toBeVisible({
         timeout: timeoutMs,
       });
+      return {
+        evidencePosture: "source-confirmed-mandate-through-gateway",
+        evidence: mandateEvidence,
+      };
     },
   });
 

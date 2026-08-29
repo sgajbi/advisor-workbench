@@ -152,6 +152,10 @@ describe("canonical live validation script", () => {
       "const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;",
     );
     expect(browserWorkflow).toContain("assertClientContextMandateProof({");
+    expect(browserWorkflow).toContain(
+      'evidencePosture: "source-confirmed-mandate-through-gateway"',
+    );
+    expect(browserWorkflow).toContain("evidence: mandateEvidence");
     expect(browserWorkflow).not.toContain(
       "await expect(mandateValue).not.toHaveText",
     );

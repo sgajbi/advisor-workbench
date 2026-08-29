@@ -32,7 +32,7 @@ const {
   assertClientContextMandateProof: (proof: {
     sourceValue: string;
     renderedValue: string;
-  }) => string;
+  }) => { sourceMandate: string; renderedMandate: string };
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
     panelState: "partial";
     outputFormat: "json" | "pdf";
@@ -159,7 +159,10 @@ describe("live validation browser workflow helpers", () => {
           sourceValue: "DISCRETIONARY_ADVISORY",
           renderedValue: "Discretionary Advisory",
         }),
-      ).toBe("DISCRETIONARY_ADVISORY");
+      ).toEqual({
+        sourceMandate: "DISCRETIONARY_ADVISORY",
+        renderedMandate: "Discretionary Advisory",
+      });
     });
 
     it("rejects a stale rendered fact even when both values are non-empty", () => {
@@ -814,6 +817,10 @@ describe("live validation browser workflow helpers", () => {
       "portfolioWorkspace?.profile?.portfolio_type",
     );
     expect(source).toContain("assertClientContextMandateProof");
+    expect(source).toContain(
+      'evidencePosture: "source-confirmed-mandate-through-gateway"',
+    );
+    expect(source).toContain("evidence: mandateEvidence");
     expect(source).not.toContain("not.toHaveText(/^\\s*$/u)");
     expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain(

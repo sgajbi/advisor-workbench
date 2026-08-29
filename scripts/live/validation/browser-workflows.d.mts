@@ -18,7 +18,7 @@ export function createBrowserValidationHelpers(input: {
 export function assertClientContextMandateProof(proof: {
   sourceValue: string;
   renderedValue: string;
-}): string;
+}): { sourceMandate: string; renderedMandate: string };
 
 export type AdvisorBriefReviewEvidence = {
   rowCount: number;
