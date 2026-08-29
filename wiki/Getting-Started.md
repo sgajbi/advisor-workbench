@@ -105,11 +105,13 @@ server-side overrides together when validating a different scoped fixture.
 The fixture is rejected when the environment is unset or differs. Until the tracked authenticated session and token-claims resolver
 is implemented, non-development Idea requests fail closed with `401` before Gateway is called.
 
-Canonical startup persists the high-cash candidate through Idea, then uses Idea's public lifecycle
-API to reach review readiness. Before and after every transition it reads the exact candidate with
-the complete scope above. An already confirmed state is safe to rerun; an identity mismatch,
-unexpected state, or missing source proof stops startup. This prepares test data only and does not
-move lifecycle policy into Workbench.
+Canonical startup gives each run a fresh, provenance-bound synthetic source observation and Idea
+candidate so a prior browser conversion cannot leave the next run without a reviewable item. A
+retry within that run keeps the same source and persistence identities. Startup then uses Idea's
+public lifecycle API to reach review readiness. Before and after every transition it reads the exact
+candidate with the complete scope above. An already confirmed state within the run is safe to
+replay; an identity mismatch, unexpected state, or missing source proof stops startup. This prepares
+test data only and does not move lifecycle policy into Workbench.
 
 ### Advisor book local authority fixture
 

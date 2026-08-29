@@ -182,10 +182,14 @@ The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` instead of
 duplicating date literals in Workbench automation. If the platform contract is missing the date
 policy, canonical startup fails closed before seeding Idea evidence.
-The seed reads candidate detail with the complete canonical entitlement scope before and after each
-Idea-owned lifecycle transition. It advances only the required next state, treats an already
-source-confirmed state as idempotent replay evidence, and fails on gaps, mismatched identity, or a
-state outside the seedable path. Workbench does not calculate or bypass Idea lifecycle policy.
+Each canonical startup run binds the synthetic source observation and persistence idempotency key
+to that run's provenance identity. The resulting candidate is fresh for the browser journey, while
+a retry inside the same run remains idempotent. This prevents a previously converted candidate from
+being reused as though it were still in the advisor queue. The seed reads candidate detail with the
+complete canonical entitlement scope before and after each Idea-owned lifecycle transition. It
+advances only the required next state, treats an already source-confirmed state within the same run
+as idempotent replay evidence, and fails on gaps, mismatched identity, or a state outside the
+seedable path. Workbench does not calculate or bypass Idea lifecycle policy.
 
 Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
 same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
