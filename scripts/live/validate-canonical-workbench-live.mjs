@@ -96,6 +96,10 @@ const dpmCommandCenterDefaults = {
     process.env.WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID ??
     canonicalContract.dpmCommandCenter?.tenantId ??
     "default",
+  workbenchCallerTenantId:
+    process.env.WORKBENCH_BFF_TENANT_ID ??
+    canonicalContract.dpmCommandCenter?.workbenchCallerTenantId ??
+    "tenant-sg",
   portfolioManagerId:
     process.env.WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID ??
     canonicalContract.dpmCommandCenter?.portfolioManagerId ??
@@ -407,7 +411,7 @@ function buildPmQualitySourceRef({
 
 function buildCanonicalPmQualityPolicy(asOfDate) {
   return {
-    tenant_id: dpmCommandCenterDefaults.tenantId,
+    tenant_id: dpmCommandCenterDefaults.workbenchCallerTenantId,
     policy_id: "pmq_canonical_dpm",
     policy_version: "2026.05",
     enabled: true,
@@ -577,7 +581,7 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
       method,
       body,
       headers: {
-        "X-Tenant-Id": dpmCommandCenterDefaults.tenantId,
+        "X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId,
       },
     });
   const scoreRunRequest = buildCanonicalPmQualityScoreRunRequest(asOfDate);
@@ -796,6 +800,7 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     reviewActionId,
     summaryInvocationId,
     asOfDate,
+    tenantId: dpmCommandCenterDefaults.workbenchCallerTenantId,
   };
 }
 
@@ -1920,6 +1925,7 @@ async function run() {
       reviewActionId: pmOperatingQualityEvidence.reviewActionId,
       summaryInvocationId: pmOperatingQualityEvidence.summaryInvocationId,
       asOfDate: pmOperatingQualityEvidence.asOfDate,
+      tenantId: pmOperatingQualityEvidence.tenantId,
     },
   );
   panelGovernance.recordPanelClassification(

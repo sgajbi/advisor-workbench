@@ -183,7 +183,7 @@ describe("canonical live validation script", () => {
     );
   });
 
-  it("seeds PM operating quality in the canonical DPM tenant", () => {
+  it("seeds PM operating quality in the governed Workbench caller tenant", () => {
     const script = readFileSync(
       join(
         process.cwd(),
@@ -194,7 +194,7 @@ describe("canonical live validation script", () => {
       "utf8",
     );
     expect(script).toContain(
-      "tenant_id: dpmCommandCenterDefaults.tenantId",
+      "tenant_id: dpmCommandCenterDefaults.workbenchCallerTenantId",
     );
     expect(script).toContain("enabled: true");
     expect(script).toContain("weights: [");
@@ -429,7 +429,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain("$requiredValues = @{");
     expect(script).not.toContain("$requiredValues = [ordered]@{");
     expect(script).toContain(
-      "WORKBENCH_BFF_TENANT_ID = [string]$context.tenant_id",
+      "WORKBENCH_BFF_TENANT_ID = [string]$context.workbench_caller_tenant_id",
     );
     expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_TENANT_ID");
     expect(script).toContain("WORKBENCH_DPM_COMMAND_CENTER_PORTFOLIO_MANAGER_ID");
@@ -815,10 +815,13 @@ describe("canonical live validation script", () => {
     expect(script).toContain("extractPmQualityFairnessAnalysisState");
     expect(script).toContain("const sendPmQualityJson");
     expect(script).toContain(
-      '"X-Tenant-Id": dpmCommandCenterDefaults.tenantId',
+      '"X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId',
     );
     expect(script).toContain(
-      "tenant_id: dpmCommandCenterDefaults.tenantId",
+      "tenant_id: dpmCommandCenterDefaults.workbenchCallerTenantId",
+    );
+    expect(script).toContain(
+      "tenantId: dpmCommandCenterDefaults.workbenchCallerTenantId",
     );
     expect(script).toContain('scoreRunState !== "READY"');
     expect(script).toContain('fairnessAnalysisState !== "READY"');
