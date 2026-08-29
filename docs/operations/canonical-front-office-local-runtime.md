@@ -134,7 +134,7 @@ That script performs:
 2. preview the canonical hosts block from `lotus-platform`
 3. `docker compose up -d` for `lotus-core` with `DEMO_DATA_PACK_ENABLED=false`
 4. `docker compose up -d` for `lotus-performance`, `lotus-risk`, `lotus-ai`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-idea`
-5. seed the governed Lotus Idea advisor queue through `lotus-idea` using a deterministic canonical high-cash candidate for `PB_SG_GLOBAL_BAL_001`
+5. seed the governed Lotus Idea advisor queue through `lotus-idea` using a deterministic canonical high-cash candidate for `PB_SG_GLOBAL_BAL_001`, then progress that exact candidate through Idea's public lifecycle API to source-confirmed review readiness
 6. start `lotus-archive` and `lotus-render`
 7. direct ingress restart on port `80` using `lotus-platform/platform-stack/dev-ingress/Caddyfile.direct-host`
 8. canonical `lotus-gateway` exposure on port `8100`
@@ -182,6 +182,10 @@ The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` instead of
 duplicating date literals in Workbench automation. If the platform contract is missing the date
 policy, canonical startup fails closed before seeding Idea evidence.
+The seed reads candidate detail with the complete canonical entitlement scope before and after each
+Idea-owned lifecycle transition. It advances only the required next state, treats an already
+source-confirmed state as idempotent replay evidence, and fails on gaps, mismatched identity, or a
+state outside the seedable path. Workbench does not calculate or bypass Idea lifecycle policy.
 
 Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
 same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
