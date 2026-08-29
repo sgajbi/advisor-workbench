@@ -1377,6 +1377,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain('source_type: "REBALANCE_RUN"');
     expect(browserWorkflowModule).toContain("screenshotRegisteredPanel");
     expect(browserWorkflowModule).toContain("validateAdvisorBookPanel");
+    expect(script).toMatch(
+      /validateAdvisorBookPanel\(page, \{\s+summary,\s+advisorBook,/,
+    );
     expect(browserWorkflowModule).toContain(
       'screenshotRegisteredPanel(page, "advisor.book_overview")',
     );
