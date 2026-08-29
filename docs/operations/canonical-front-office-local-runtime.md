@@ -83,11 +83,18 @@ Workbench local environment:
 BFF_BASE_URL=http://gateway.dev.lotus
 LOTUS_ENVIRONMENT=dev
 WORKBENCH_IDEA_AUTH_MODE=development_configured
+WORKBENCH_IDEA_CALLER_SUBJECT=workbench-advisor
+WORKBENCH_IDEA_CALLER_ROLES=advisor
+WORKBENCH_IDEA_CALLER_TENANT_IDS=tenant-private-bank-sg
+WORKBENCH_IDEA_CALLER_BOOK_IDS=book-advisor-001
+WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS=PB_SG_GLOBAL_BAL_001
+WORKBENCH_IDEA_CALLER_CLIENT_IDS=client-001
 ```
 
-The last two values are a local-development fixture posture for Lotus Idea BFF routes, not an
-identity-provider integration. The startup script injects them for both Docker and
-`-LocalApps workbench` runs. They are rejected outside `dev`, `development`, `local`, or `test`;
+The Idea values are a complete local-development caller fixture for Lotus Idea BFF routes, not an
+identity-provider integration. Workbench derives the subject, role, tenant, book, portfolio, and
+client scope after discarding browser authority; Docker forwards the same configurable defaults.
+They are rejected outside `dev`, `development`, `local`, or `test`;
 an unset environment and all other environments require an authenticated principal and the BFF returns `401` before calling
 Gateway until the session/claims resolver tracked in platform issue #563 and Workbench issue #436
 is delivered.

@@ -583,8 +583,11 @@ Current repository posture:
     advisory/report/archive/render services directly. `/recommendations?mode=opportunities`
     renders the Gateway-backed Lotus Idea advisor review queue. The Workbench BFF strips browser
     Idea authority, authorization, cookie, proxy-authorization, session, and upstream-auth identity
-    headers and applies configured subject, role, route capability, and portfolio entitlement only
-    in explicitly development-scoped `dev`/`development`/`local`/`test` runtime.
+    headers and applies configured subject, role, route capability, and complete tenant, book,
+    portfolio, and client entitlement scope only in explicitly development-scoped
+    `dev`/`development`/`local`/`test` runtime. Missing source-required scope must fail at the
+    configuration boundary rather than surfacing as an apparently supported action that Idea later
+    rejects.
     It fails closed before Gateway for an unset environment and every other environment until authenticated session principal
     resolution is available (platform #563, Workbench #436), consumes the
     `lotus-platform.bff-principal-session.v1` contract posture as non-certifying source-contract
