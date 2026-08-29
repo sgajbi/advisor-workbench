@@ -254,6 +254,18 @@ export function validateCanonicalAdvisorBookEvidence(
   };
 }
 
+export function buildAdvisorBookSourceRenderRows(advisorBook) {
+  if (!Array.isArray(advisorBook?.items)) {
+    throw new Error("Gateway advisor-book evidence returned no portfolio memberships.");
+  }
+
+  return advisorBook.items.map((item, index) => ({
+    source: "advisor-book",
+    identity: requireString(item?.portfolio_id, `portfolio identity for row ${index + 1}`),
+    state: requireString(item?.status, `portfolio lifecycle state for row ${index + 1}`),
+  }));
+}
+
 export function classifyCanonicalAdvisorBookPanelSupportState(evidence) {
   if (evidence?.proof !== AUTHORITATIVE_MEMBERSHIP_PROOF) {
     throw new Error(
