@@ -1299,9 +1299,14 @@ export async function validateAdvisoryJourneyScreens(
     });
   }
 
-  // Keep the single-use Idea mutation proof last so a failure on a read-only
-  // advisory surface does not consume the current-run candidate before retry.
-  await validateAdvisoryJourneyRoute(page, statefulIdeaJourney);
+  // The caller executes this single-use mutation proof only after every
+  // read-only browser check has passed. Returning the prepared journey keeps
+  // candidate identity and source assertions bound to this canonical run.
+  return statefulIdeaJourney;
+}
+
+export async function validateCanonicalIdeaJourney(page, preparedJourney) {
+  await validateAdvisoryJourneyRoute(page, preparedJourney);
 }
 
 export async function validatePortfolioPanels(

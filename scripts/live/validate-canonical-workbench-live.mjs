@@ -29,6 +29,7 @@ import {
 import {
   createBrowserValidationHelpers,
   validateAdvisoryJourneyScreens,
+  validateCanonicalIdeaJourney,
   validateAdvisorBriefPanel,
   validateAdvisorBookPanel,
   validateBankDemoProofPanel,
@@ -2126,7 +2127,7 @@ async function run() {
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
-    await validateAdvisoryJourneyScreens(page, {
+    const preparedIdeaJourney = await validateAdvisoryJourneyScreens(page, {
       summary,
       workbenchBaseUrl,
       portfolioId,
@@ -2214,6 +2215,7 @@ async function run() {
       timeoutMs,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
     });
+    await validateCanonicalIdeaJourney(page, preparedIdeaJourney);
   } finally {
     await browser.close();
   }
