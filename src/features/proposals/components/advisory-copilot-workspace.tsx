@@ -161,12 +161,20 @@ export default function AdvisoryCopilotWorkspace({
         </Alert>
       ) : null}
       <div className={styles.copilotHeader}>
-        <div className={styles.decisionPanel}>
+        <section
+          className={styles.decisionPanel}
+          aria-labelledby="advisory-copilot-decision-title"
+          data-testid="advisory-copilot-decision"
+        >
           <div>
             <Text variant="microLabel">
               {ADVISORY_COPILOT_COPY.decisionLabel}
             </Text>
-            <Text variant="subsectionTitle" as="h2">
+            <Text
+              variant="subsectionTitle"
+              as="h2"
+              id="advisory-copilot-decision-title"
+            >
               {ADVISORY_COPILOT_COPY.decisionTitle}
             </Text>
             <Text variant="secondary">
@@ -176,7 +184,7 @@ export default function AdvisoryCopilotWorkspace({
           <SemanticBadge tone="warn">
             {ADVISORY_COPILOT_COPY.clientBoundary}
           </SemanticBadge>
-        </div>
+        </section>
         <div
           className={styles.metricGrid}
           aria-label={ADVISORY_COPILOT_COPY.statusAriaLabel}
