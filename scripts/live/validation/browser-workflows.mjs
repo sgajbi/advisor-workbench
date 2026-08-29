@@ -2993,6 +2993,7 @@ export async function validateConstructionAlternativesPanel(
   await expect(
     constructionPanel.getByRole("heading", {
       name: "Construction Alternatives",
+      exact: true,
     }),
   ).toBeVisible({
     timeout: timeoutMs,
