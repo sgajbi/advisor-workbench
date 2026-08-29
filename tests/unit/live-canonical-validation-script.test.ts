@@ -917,6 +917,7 @@ describe("canonical live validation script", () => {
     expect(script).toContain(
       "const outcomeReviews = await fetchDpmCommandCenterJson(",
     );
+    expect(script).toContain("function sendDpmCommandCenterJson");
     expect(script).toContain("function fetchDpmCommandCenterJson");
     expect(script).toContain("function postDpmCommandCenterJson");
     expect(script).toContain(
@@ -940,6 +941,39 @@ describe("canonical live validation script", () => {
       ).toMatch(rawDpmCallPattern);
       expect(script).not.toMatch(rawDpmCallPattern);
     }
+    const dpmUrlAliases = [
+      ...script.matchAll(
+        /const\s+(\w+)\s*=\s*`\$\{gatewayBaseUrl\}\/api\/v1\/dpm\/command-center/gu,
+      ),
+    ].map((match) => match[1]);
+    expect(dpmUrlAliases).toEqual(["pmQualityBaseUrl"]);
+
+    const pmQualitySeamStart = script.indexOf("const sendPmQualityJson");
+    const pmQualitySeamEnd = script.indexOf(
+      "const scoreRunRequest",
+      pmQualitySeamStart,
+    );
+    expect(pmQualitySeamStart).toBeGreaterThanOrEqual(0);
+    expect(pmQualitySeamEnd).toBeGreaterThan(pmQualitySeamStart);
+    const pmQualitySeam = script.slice(pmQualitySeamStart, pmQualitySeamEnd);
+    expect(pmQualitySeam).toContain(
+      "sendDpmCommandCenterJson(url, description",
+    );
+    expect(pmQualitySeam).not.toContain("sendJson(");
+
+    const governedSeamStart = script.indexOf(
+      "const dpmCommandCenterCallerHeaders",
+    );
+    const governedSeamEnd = script.indexOf(
+      "async function run()",
+      governedSeamStart,
+    );
+    const governedSeam = script.slice(governedSeamStart, governedSeamEnd);
+    expect(governedSeam).toContain("function sendDpmCommandCenterJson");
+    expect(governedSeam).toContain("return sendJson(summary, url");
+    expect(governedSeam).toContain(
+      "headers: dpmCommandCenterCallerHeaders",
+    );
     expect(script).not.toContain("fetchOptionalJson");
   });
 
