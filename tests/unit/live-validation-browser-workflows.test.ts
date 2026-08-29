@@ -771,7 +771,11 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain(
       'mandateValue).toHaveAttribute("data-confirmed", "true")',
     );
-    expect(source).toContain("not.toHaveText(/^\\s*$/u)");
+    expect(source).toContain(
+      "portfolioWorkspace?.profile?.portfolio_type",
+    );
+    expect(source).toContain("assertSourceBusinessLabelProof");
+    expect(source).not.toContain("not.toHaveText(/^\\s*$/u)");
     expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain(
       'getByRole("heading", { name: "Review Evidence", exact: true })',
