@@ -382,6 +382,32 @@ describe("ProposalDetailView", () => {
     );
   });
 
+  it("returns Advisory Overview proposals to the originating decision worklist", async () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView
+          proposalId="pp-1"
+          returnPortfolioId="pf_1"
+          returnReviewContext={{
+            portfolioId: "pf_1",
+            asOfDate: "2026-08-21",
+            period: "YTD",
+            reportingCurrency: "SGD",
+          }}
+          returnMode="overview"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("link", { name: "Return to Advisory Overview" }),
+    ).toHaveAttribute(
+      "href",
+      "/recommendations?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD",
+    );
+  });
+
   it("preserves the originating worklist when proposal detail is unavailable", async () => {
     getProposalMock.mockRejectedValueOnce(
       new Error("Proposal detail failed (503): gateway unavailable"),

@@ -61,6 +61,22 @@ describe("app route wrappers", () => {
     });
   });
 
+  it("preserves Advisory Overview as the proposal return destination", async () => {
+    const route = await ProposalDetailPage({
+      params: Promise.resolve({ proposalId: "PR_1001" }),
+      searchParams: Promise.resolve({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        fromMode: "overview",
+      }),
+    });
+
+    expect(route.props).toMatchObject({
+      proposalId: "PR_1001",
+      returnPortfolioId: "PB_SG_GLOBAL_BAL_001",
+      returnMode: "overview",
+    });
+  });
+
   it("does not mount proposal detail when governed context is repeated", async () => {
     const route = await ProposalDetailPage({
       params: Promise.resolve({ proposalId: "PR_1001" }),

@@ -40,11 +40,15 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
     typeof resolvedSearchParams.fromMode === "string"
       ? resolvedSearchParams.fromMode
       : undefined;
-  const returnMode = requestedReturnMode
-    ? normalizeProposalLifecycleMode(
-        normalizeAdvisoryJourneyMode(requestedReturnMode),
-      )
+  const normalizedReturnMode = requestedReturnMode
+    ? normalizeAdvisoryJourneyMode(requestedReturnMode)
     : undefined;
+  const returnMode =
+    requestedReturnMode?.trim().toLowerCase() === "overview"
+      ? "overview"
+      : normalizedReturnMode
+        ? normalizeProposalLifecycleMode(normalizedReturnMode)
+        : undefined;
 
   return (
     <ProposalDetailView

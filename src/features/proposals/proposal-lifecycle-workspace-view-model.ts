@@ -250,7 +250,7 @@ export function buildProposalDetailHref({
   proposalId: string;
   reviewContext?: WorkspaceReviewContext;
   portfolioId?: string;
-  fromMode: ProposalLifecycleMode;
+  fromMode: ProposalLifecycleMode | "overview";
 }): string {
   return buildReviewContextHref(
     `/proposals/${encodeURIComponent(proposalId)}?fromMode=${encodeURIComponent(fromMode)}`,
