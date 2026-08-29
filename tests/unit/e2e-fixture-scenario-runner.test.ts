@@ -3,7 +3,10 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { parseRunnerArguments } from "../../scripts/testing/run-e2e-fixture-scenario.mjs";
+import {
+  normalizePlaywrightChildEnvironment,
+  parseRunnerArguments,
+} from "../../scripts/testing/run-e2e-fixture-scenario.mjs";
 
 describe("governed E2E fixture scenario runner", () => {
   const source = readFileSync(
@@ -31,6 +34,19 @@ describe("governed E2E fixture scenario runner", () => {
     ).toEqual({
       focusName: "risk-review",
       forwardedArguments: ["--workers", "1"],
+    });
+  });
+
+  it("removes the inherited no-colour conflict without dropping proof variables", () => {
+    expect(
+      normalizePlaywrightChildEnvironment({
+        NO_COLOR: "1",
+        FORCE_COLOR: "1",
+        WORKBENCH_E2E_SCENARIO_ID: "mandate-health",
+      }),
+    ).toEqual({
+      FORCE_COLOR: "1",
+      WORKBENCH_E2E_SCENARIO_ID: "mandate-health",
     });
   });
 

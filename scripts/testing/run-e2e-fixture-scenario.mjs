@@ -59,7 +59,7 @@ export async function runFixtureScenario({
   mkdirSync(evidenceDirectory, { recursive: true });
   rmSync(resultPath, { force: true });
 
-  const environment = {
+  const environment = normalizePlaywrightChildEnvironment({
     ...process.env,
     ...family.additional_environment,
     BFF_BASE_URL: `http://127.0.0.1:${fixturePort}`,
@@ -74,7 +74,7 @@ export async function runFixtureScenario({
     [family.fixture_port_environment]: String(fixturePort),
     [family.workbench_port_environment]: String(workbenchPort),
     ...environmentOverrides,
-  };
+  });
   if (family.proof_environment) {
     environment[family.proof_environment] = scenarioName;
   }
@@ -142,6 +142,12 @@ export async function runFixtureScenario({
     process.removeListener("SIGINT", stopForInterrupt);
     process.removeListener("SIGTERM", stopForTermination);
   }
+}
+
+export function normalizePlaywrightChildEnvironment(environment) {
+  const childEnvironment = { ...environment };
+  delete childEnvironment.NO_COLOR;
+  return childEnvironment;
 }
 
 export function parseRunnerArguments(arguments_) {
