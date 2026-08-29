@@ -239,6 +239,14 @@ describe("AdvisoryCopilotWorkspace", () => {
     ).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText("Blocked")).not.toBeInTheDocument();
     expect(screen.getByText("Live output • review required")).toBeInTheDocument();
+    expect(screen.getByTestId("advisory-copilot-output")).toHaveAttribute(
+      "data-output-section-count",
+      "1",
+    );
+    expect(screen.getByTestId("advisory-copilot-human-review")).toHaveAttribute(
+      "data-review-posture",
+      "REVIEW_REQUIRED",
+    );
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Prepared with AI assistance")).toBeInTheDocument();
     expect(screen.getByText("Limited source evidence")).toBeInTheDocument();
@@ -361,6 +369,10 @@ describe("AdvisoryCopilotWorkspace", () => {
     await waitFor(() => {
       expect(screen.getAllByText("Approved for internal use").length).toBeGreaterThan(0);
     });
+    expect(screen.getByTestId("advisory-copilot-human-review")).toHaveAttribute(
+      "data-review-posture",
+      "APPROVED_FOR_INTERNAL_USE",
+    );
     expect(screen.getByText(/Client use:/).parentElement).toHaveTextContent(
       "Not approved for client use",
     );

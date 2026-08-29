@@ -1129,15 +1129,21 @@ export async function validateAdvisoryJourneyScreens(
         timeout: timeoutMs,
       });
       await page.getByRole("button", { name: "Prepare review" }).first().click();
-      await expect(page.getByText("Source Evidence", { exact: true })).toBeVisible({
+      const generatedOutput = page.getByTestId("advisory-copilot-output");
+      await expect(generatedOutput).toBeVisible({ timeout: timeoutMs });
+      await expect(generatedOutput).toHaveAttribute(
+        "data-output-section-count",
+        /^[1-9]\d*$/,
+      );
+      await expect(generatedOutput.getByRole("heading").first()).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(page.getByText("Review Posture", { exact: true })).toBeVisible({
-        timeout: timeoutMs,
-      });
-      await expect(page.getByText("Run posture", { exact: true })).toBeVisible({
-        timeout: timeoutMs,
-      });
+      const humanReview = page.getByTestId("advisory-copilot-human-review");
+      await expect(humanReview).toBeVisible({ timeout: timeoutMs });
+      await expect(humanReview).toHaveAttribute(
+        "data-review-posture",
+        /^(REVIEW_REQUIRED|APPROVED_FOR_INTERNAL_USE)$/,
+      );
       const internalReviewButton = page.getByRole("button", {
         name: "Record internal review",
       });
