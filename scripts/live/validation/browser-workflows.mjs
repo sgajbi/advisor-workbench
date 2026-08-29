@@ -2940,7 +2940,10 @@ export async function validatePortfolioMemoryPanel(
   });
   const memoryPanel = workbenchPanelByClass(page, "portfolio-memory-panel");
   await expect(
-    memoryPanel.getByRole("heading", { name: "Portfolio Memory" }),
+    memoryPanel.getByRole("heading", {
+      name: "Portfolio Memory",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });

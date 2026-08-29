@@ -1361,7 +1361,9 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validatePmOperatingQualityPanel");
     expect(script).toContain("validateDpmCopilotWorkspace");
     expect(browserWorkflowModule).toContain("validateDpmCommandCenterPanel");
-    expect(browserWorkflowModule).toContain("Portfolio Memory");
+    expect(browserWorkflowModule).toContain(
+      'name: "Portfolio Memory",\n      exact: true',
+    );
     expect(browserWorkflowModule).toContain("Portfolio memory event timeline");
     expect(browserWorkflowModule).toContain("Historical Event Log");
     expect(browserWorkflowModule).toContain("Support Snapshot");
