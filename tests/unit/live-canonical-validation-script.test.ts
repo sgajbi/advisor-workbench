@@ -227,7 +227,6 @@ describe("canonical live validation script", () => {
       "Validate-LotusFrontOfficeCanonical.ps1",
       "Capture-LotusFrontOfficeEvidence.ps1",
       "Invoke-IdeaCapacitySeed.ps1",
-      "Invoke-IdeaCandidateLifecycleSeed.ps1",
     ]) {
       const script = readFileSync(
         join(process.cwd(), "scripts", "live", scriptName),
@@ -680,13 +679,16 @@ describe("canonical live validation script", () => {
     expect(validationScript).toContain('"--idea-capacity-seed-evidence"');
     expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
     expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
-    expect(startScript).toContain('"Invoke-IdeaCandidateLifecycleSeed.ps1"');
-    expect(startScript).toContain("-CandidateId $candidateId");
-    expect(startScript).toContain("-GeneratedAtUtc $generatedAtUtc");
-    expect(startScript).toContain("-TenantId $payload.accessScope.tenantId");
-    expect(startScript).toContain("-BookId $payload.accessScope.bookId");
-    expect(startScript).toContain("-PortfolioId $payload.accessScope.portfolioId");
-    expect(startScript).toContain("-ClientId $payload.accessScope.clientId");
+    expect(startScript).toContain('"invoke-idea-candidate-lifecycle-seed.mjs"');
+    expect(startScript).toContain("--candidate-id $candidateId");
+    expect(startScript).toContain("--generated-at-utc $generatedAtUtc");
+    expect(startScript).toContain("--tenant-id $payload.accessScope.tenantId");
+    expect(startScript).toContain("--book-id $payload.accessScope.bookId");
+    expect(startScript).toContain("--portfolio-id $payload.accessScope.portfolioId");
+    expect(startScript).toContain("--client-id $payload.accessScope.clientId");
+    expect(startScript).toContain(
+      'throw "Canonical Lotus Idea lifecycle preparation failed with exit code $LASTEXITCODE."',
+    );
     expect(startScript).toContain("function Get-CanonicalTextSha256");
     expect(startScript).toContain(
       '$sourceObservationIdentity = "$ProductId|$PortfolioId|$asOfDate|$ideaCanonicalRunId"',

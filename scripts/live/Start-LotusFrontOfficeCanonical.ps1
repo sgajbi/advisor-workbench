@@ -704,14 +704,17 @@ function Invoke-CanonicalIdeaSeed {
     throw "Canonical Lotus Idea seed returned no persisted candidate identity."
   }
 
-  & (Join-Path $PSScriptRoot "Invoke-IdeaCandidateLifecycleSeed.ps1") `
-    -IdeaBaseUrl $ideaBaseUrl `
-    -CandidateId $candidateId `
-    -GeneratedAtUtc $generatedAtUtc `
-    -TenantId $payload.accessScope.tenantId `
-    -BookId $payload.accessScope.bookId `
-    -PortfolioId $payload.accessScope.portfolioId `
-    -ClientId $payload.accessScope.clientId
+  & node (Join-Path $PSScriptRoot "invoke-idea-candidate-lifecycle-seed.mjs") `
+    --idea-base-url $ideaBaseUrl `
+    --candidate-id $candidateId `
+    --generated-at-utc $generatedAtUtc `
+    --tenant-id $payload.accessScope.tenantId `
+    --book-id $payload.accessScope.bookId `
+    --portfolio-id $payload.accessScope.portfolioId `
+    --client-id $payload.accessScope.clientId
+  if ($LASTEXITCODE -ne 0) {
+    throw "Canonical Lotus Idea lifecycle preparation failed with exit code $LASTEXITCODE."
+  }
 
   $queueHeaders = @{
     "X-Caller-Subject" = "canonical-front-office-validator"
