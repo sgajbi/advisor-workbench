@@ -1537,6 +1537,18 @@ describe("canonical live validation script", () => {
     );
     expect(contractModule).toContain("advisor-book-overview-live.png");
     expect(browserWorkflowModule).toContain("Evidence pack prepared.");
+    expect(browserWorkflowModule).toContain(
+      "buildPreparedProofPackSourceProof",
+    );
+    expect(browserWorkflowModule).toContain(
+      'pathname.endsWith("/api/bff/api/v1/dpm/command-center/proof-packs")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'proofPackPanel.getByText(state, { exact: true })',
+    );
+    expect(browserWorkflowModule).toContain(
+      "renderedSectionCount !== sourceProof.sectionCount",
+    );
     expect(browserWorkflowModule).toContain("Open advisor memo");
     expect(browserWorkflowModule).toContain("/^Advisor memo /");
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
