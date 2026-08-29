@@ -407,7 +407,7 @@ function AttentionReviewQueue({
           kind="partial"
           surface="portfolio"
           title="Attention-item evidence is incomplete"
-          body="The returned source records remain reviewable, but source supportability does not confirm a complete queue. No zero-attention or whole-queue conclusion has been inferred."
+          body="The available records can be reviewed, but the complete attention list has not been confirmed. Review each item shown and refresh before concluding that no further action is required."
         />
       ) : null}
       {hasAvailableEvidence && rows.length ? (
