@@ -106,8 +106,11 @@ discard focus and local interaction continuity.
 Performance, Mandate Management, Advice, and Reporting. Routine business facts use sentence-case
 productive labels and 14px values; only the short **Review portfolio** eyebrow is uppercase.
 Partial and unavailable values remain readable but visually quieter, while identifiers stay behind
-**Support details**. Consuming screens must pass a source-backed model and must not restyle the strip
-or recreate its typography locally.
+**Support details**. Portfolio identity anchors the strip; business date and currency lead the
+content-sized fact group, followed by mandate and booking centre. Important values wrap before
+truncating, and the same geometry is retained across confirmed, partial, and unavailable states.
+Consuming screens must pass a source-backed model and must not restyle the strip or recreate its
+typography locally.
 
 ## Product-surface map
 

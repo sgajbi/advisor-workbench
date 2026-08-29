@@ -1527,7 +1527,11 @@ Most relevant current governance:
     `ReviewContextStrip`. Route owners assemble its typed model only from exact Gateway-backed
     source responses; URL values are requests, not display truth. Keep portfolio and client
     references in the strip's support disclosure and keep mandate type, booking centre, business
-    date, and reporting currency in its compact scan path. Do not restore page-header identity
+    date, and reporting currency in its compact scan path. Compose the strip as a quiet
+    business-object header: portfolio name anchors the view; business date and currency precede
+    mandate and booking centre in DOM and responsive order; facts size to their content on wide
+    screens and wrap before truncating. Confirmed, partial, and unavailable states retain the same
+    geometry. Do not restore page-header identity
     pills, selected-portfolio rail blocks, right-rail context cards, or editable governed identity
     fields. A date or currency may recur only where it is a material term of a calculation,
     reporting request, or dated source record. Recovery must retain page identity, expose an
