@@ -811,10 +811,12 @@ export async function validateAdvisoryJourneyScreens(
       const mandateFact = reviewContext
         .getByText("Mandate", { exact: true })
         .locator("..");
-      await expect(mandateFact.locator("dd")).toBeVisible({
+      const mandateValue = mandateFact.locator("dd");
+      await expect(mandateValue).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(mandateFact.locator("dd")).not.toHaveText(/^\s*$/u);
+      await expect(mandateValue).toHaveAttribute("data-confirmed", "true");
+      await expect(mandateValue).not.toHaveText(/^\s*$/u);
       await expect(
         page.getByRole("heading", { name: "Review Evidence", exact: true }),
       ).toBeVisible({

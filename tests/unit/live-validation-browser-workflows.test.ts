@@ -767,7 +767,10 @@ describe("live validation browser workflow helpers", () => {
 
     expect(source).toContain('getByRole("region", { name: "Review context" })');
     expect(source).toContain('getByText("Mandate", { exact: true })');
-    expect(source).toContain('mandateFact.locator("dd")');
+    expect(source).toContain('const mandateValue = mandateFact.locator("dd")');
+    expect(source).toContain(
+      'mandateValue).toHaveAttribute("data-confirmed", "true")',
+    );
     expect(source).toContain("not.toHaveText(/^\\s*$/u)");
     expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain(
