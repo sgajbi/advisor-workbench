@@ -448,7 +448,9 @@ describe("canonical live validation script", () => {
       "DPM Core candidate-source wave preview",
     );
     expect(browserValidator).toContain("CORE_DPM_PORTFOLIO_UNIVERSE");
-    expect(browserValidator).toContain("postJsonExpectingStatus");
+    expect(browserValidator).toContain(
+      "postDpmCommandCenterJsonExpectingStatus",
+    );
     expect(browserValidator).toContain("dpm-core-candidate-source-preview");
     expect(browserValidator).toContain(
       "coreCandidateSourceInvalidRequestRejected",
@@ -467,7 +469,9 @@ describe("canonical live validation script", () => {
     expect(browserValidator).toContain(
       "/api/v1/dpm/command-center/mandates/by-portfolio/",
     );
-    expect(browserValidator).toContain("fetchOptionalJson");
+    expect(browserValidator).toContain(
+      "fetchOptionalDpmCommandCenterJson",
+    );
     expect(browserValidator).toContain('status: "seed_gap"');
     expect(browserValidator).toContain(
       "/api/v1/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health",
@@ -894,6 +898,34 @@ describe("canonical live validation script", () => {
     expect(script).toContain('fairnessAnalysisState !== "READY"');
     expect(script).toContain("scoreRunState,");
     expect(script).toContain("fairnessAnalysisState,");
+  });
+
+  it("binds every DPM command-center probe to the governed Workbench caller tenant", () => {
+    const script = readFileSync(
+      join(
+        process.cwd(),
+        "scripts",
+        "live",
+        "validate-canonical-workbench-live.mjs",
+      ),
+      "utf8",
+    );
+
+    expect(script).toContain(
+      '"X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId',
+    );
+    expect(script).toContain(
+      "const outcomeReviews = await fetchDpmCommandCenterJson(",
+    );
+    expect(script).toContain("function fetchDpmCommandCenterJson");
+    expect(script).toContain("function postDpmCommandCenterJson");
+    expect(script).toContain(
+      "function postDpmCommandCenterJsonExpectingStatus",
+    );
+    expect(script).not.toMatch(
+      /(?:fetchJson|postJson|postJsonExpectingStatus)\(\s*summary,[\s\S]{0,160}`\$\{gatewayBaseUrl\}\/api\/v1\/dpm\/command-center/u,
+    );
+    expect(script).not.toContain("fetchOptionalJson");
   });
 
   it("delegates isolated Idea capacity seeding without exposing credentials or client state", () => {
