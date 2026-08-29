@@ -412,7 +412,13 @@ function AdvisorBookSourceWorkspace({
               rows={model.rows.map((row) => ({
                 key: row.portfolioId,
                 cells: [
-                  <div key="portfolio" className={styles.portfolioCell}>
+                  <div
+                    key="portfolio"
+                    className={styles.portfolioCell}
+                    data-advisor-book-row="portfolio"
+                    data-portfolio-id={row.portfolioId}
+                    data-lifecycle-state={row.sourceLifecycleState}
+                  >
                     <Link
                       href={buildPortfolioContextHref({
                         pathname: "/book",
