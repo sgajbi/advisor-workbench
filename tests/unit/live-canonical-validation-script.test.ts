@@ -1462,7 +1462,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("portfolio_mandate_bindings");
     expect(browserWorkflowModule).toContain("mandate_type=discretionary");
     expect(browserWorkflowModule).toContain(
-      "Check launch readiness through Gateway.",
+      "Review launch readiness and any source-owned blockers.",
     );
     expect(browserWorkflowModule).toContain("NO_ORDER_GENERATION");
     expect(browserWorkflowModule).toContain("NO_OMS_EXECUTION_CLAIM");
