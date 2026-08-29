@@ -33,7 +33,7 @@
     "quality:bff-header-boundary": "node scripts/quality/check-bff-header-boundary.mjs",
     "quality:dependency-risk": "node scripts/quality/check-dependency-risk-inventory.mjs",
     "quality:font-assets": "node scripts/quality/check-font-asset-governance.mjs",
-    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=263 --max-unresolved=1721 --unresolved-digest=b23bacf4837d93b0fc2dec62580942b8039ca029db278eb2f3e4f1d64a805907",
+    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=263 --max-unresolved=1721 --unresolved-digest=82e6836d6c9dd8d52bc697e08a856fb831734f9d717d3751ed3caf2f11c93c2d",
     "quality:e2e-scenarios": "node scripts/quality/check-e2e-scenario-governance.mjs",
     "quality:portfolio-record-bundles": "node scripts/quality/check-portfolio-record-bundles.mjs",
     "scale:proof": "node scripts/scale/run-workbench-scale-proof.mjs",

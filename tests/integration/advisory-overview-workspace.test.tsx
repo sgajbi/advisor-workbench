@@ -95,6 +95,22 @@ describe("AdvisoryOverviewWorkspace", () => {
       }),
     ).toHaveAttribute("aria-orientation", "vertical");
     expect(screen.getAllByRole("option")).toHaveLength(2);
+    expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+      "data-source-identity",
+      "PRP-RISK",
+    );
+    expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+      "data-source-state",
+      "RISK_REVIEW",
+    );
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "data-source-identity",
+      "PRP-READY",
+    );
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "data-source-state",
+      "EXECUTION_READY",
+    );
     expect(
       screen.getByText("Technology concentration trim"),
     ).toBeInTheDocument();

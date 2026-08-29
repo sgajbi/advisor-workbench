@@ -12,6 +12,7 @@ import type { ProposalSummary } from "./types";
 
 export type AdvisoryOverviewProposalRow = {
   proposalId: string;
+  sourceState: string;
   title: string;
   status: string;
   statusTone: "default" | "warn" | "success";
@@ -107,6 +108,7 @@ export function buildAdvisoryOverviewModel({
     )
     .map((proposal) => ({
       proposalId: proposal.proposal_id,
+      sourceState: proposal.current_state,
       title: proposal.title || proposal.proposal_id,
       status: proposalDecisionStatus(proposal.current_state),
       statusTone: proposalStageTone(proposal.current_state),

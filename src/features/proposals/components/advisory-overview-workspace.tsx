@@ -390,6 +390,11 @@ export default function AdvisoryOverviewWorkspace({
               items={model.proposalRows.map((row) => ({
                 key: row.proposalId,
                 title: row.title,
+                sourceEvidence: {
+                  source: "proposal-list",
+                  identity: row.proposalId,
+                  state: row.sourceState,
+                },
                 status: (
                   <SemanticBadge tone={row.statusTone}>
                     {row.status}
