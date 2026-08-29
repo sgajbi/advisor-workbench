@@ -405,6 +405,33 @@ export function buildProposalListSourceRows(value, expectedPortfolioId) {
   });
 }
 
+const WORKSPACE_REVIEW_CONTEXT_QUERY_KEYS = [
+  "portfolioId",
+  "asOfDate",
+  "period",
+  "reportingCurrency",
+];
+
+export function assertWorkspaceReviewContextPreserved({
+  currentHref,
+  destinationHref,
+}) {
+  const currentUrl = new URL(currentHref, "http://workbench.local");
+  const destinationUrl = new URL(destinationHref, "http://workbench.local");
+  for (const key of WORKSPACE_REVIEW_CONTEXT_QUERY_KEYS) {
+    const currentValues = currentUrl.searchParams.getAll(key);
+    const destinationValues = destinationUrl.searchParams.getAll(key);
+    if (
+      currentValues.length !== destinationValues.length ||
+      currentValues.some((value, index) => value !== destinationValues[index])
+    ) {
+      throw new Error(
+        `Advisory Overview proposal review link did not preserve governed ${key} context.`,
+      );
+    }
+  }
+}
+
 export async function validateAdvisoryOverviewDecisionSurface(
   page,
   { timeoutMs, sourceRows },
@@ -437,15 +464,13 @@ export async function validateAdvisoryOverviewDecisionSurface(
       "Advisory Overview returned no source-backed proposal rows for canonical proof.",
     );
   }
-  const renderedSourceRows = await proposalWorklist
-    .locator('[data-source-render-row="proposal-list"]')
-    .evaluateAll((elements) =>
-      elements.map((element) => ({
-        source: element.getAttribute("data-source") ?? "",
-        identity: element.getAttribute("data-source-identity") ?? "",
-        state: element.getAttribute("data-source-state") ?? "",
-      })),
-    );
+  const renderedSourceRows = await proposalOptions.evaluateAll((elements) =>
+    elements.map((element) => ({
+      source: element.getAttribute("data-source") ?? "",
+      identity: element.getAttribute("data-source-identity") ?? "",
+      state: element.getAttribute("data-source-state") ?? "",
+    })),
+  );
   assertExactSourceRenderProof({
     screen: "Advisory Overview",
     expectedRows: sourceRows,
@@ -498,15 +523,23 @@ export async function validateAdvisoryOverviewDecisionSurface(
   await expect(proposalReviewLink).toBeVisible({ timeout: timeoutMs });
   const proposalHref = await proposalReviewLink.getAttribute("href");
   const expectedProposalPath = `/proposals/${encodeURIComponent(proposalReference)}`;
+  if (!proposalHref) {
+    throw new Error(
+      "Advisory Overview selected proposal detail has no review destination.",
+    );
+  }
   if (
-    !proposalHref ||
     new URL(proposalHref, "http://workbench.local").pathname !==
-      expectedProposalPath
+    expectedProposalPath
   ) {
     throw new Error(
       "Advisory Overview selected proposal detail does not link to its source proposal reference.",
     );
   }
+  assertWorkspaceReviewContextPreserved({
+    currentHref: page.url(),
+    destinationHref: proposalHref,
+  });
 
   return {
     evidencePosture: "selected-source-proposal-through-gateway",
