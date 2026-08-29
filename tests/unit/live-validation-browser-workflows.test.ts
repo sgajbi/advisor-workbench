@@ -8,6 +8,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 const {
   assertClientContextMandateProof,
   buildReportCentreProofPosture,
+  buildOutcomeReviewSourceEvidenceProof,
   buildMandateConstraintProofRows,
   buildProposalListSourceRows,
   assertWorkspaceReviewContextPreserved,
@@ -40,6 +41,12 @@ const {
     outputFormat: "json" | "pdf";
     pdfOutputState: "ready" | "unavailable";
     reason: string;
+  };
+  buildOutcomeReviewSourceEvidenceProof: (sourceReview: unknown) => {
+    expectedAvailability: "Available" | "Not available";
+    realizedAvailability: "Available" | "Not available";
+    proofPackAvailability: "Available" | "Not available";
+    sourceEvidenceStatus: "Available" | "Partial" | "Not available";
   };
   buildMandateConstraintProofRows: (comparisons: {
     summary?: { constraints?: Array<{ key?: string; state?: string }> } | null;
@@ -194,6 +201,53 @@ describe("live validation browser workflow helpers", () => {
           renderedValue: field === "renderedValue" ? value : "Discretionary",
         }),
       ).toThrow(message);
+    });
+  });
+
+  describe("Outcome Review source evidence proof", () => {
+    it("derives complete evidence from one Gateway review record", () => {
+      expect(
+        buildOutcomeReviewSourceEvidenceProof({
+          expected_snapshot: {
+            source_hashes: { expected: "sha256:expected" },
+          },
+          realized_snapshot: {
+            source_hashes: { realized: "sha256:realized" },
+          },
+          proof_pack_id: "proof-pack-1",
+          source_lineage: [{ source_system: "lotus-performance" }],
+        }),
+      ).toEqual({
+        expectedAvailability: "Available",
+        realizedAvailability: "Available",
+        proofPackAvailability: "Available",
+        sourceEvidenceStatus: "Available",
+      });
+    });
+
+    it("keeps missing and malformed source evidence explicit", () => {
+      expect(
+        buildOutcomeReviewSourceEvidenceProof({
+          expected_snapshot: {
+            source_hashes: { expected: "not-a-source-hash" },
+          },
+          proof_pack_id: "proof-pack-1",
+        }),
+      ).toEqual({
+        expectedAvailability: "Not available",
+        realizedAvailability: "Not available",
+        proofPackAvailability: "Available",
+        sourceEvidenceStatus: "Partial",
+      });
+    });
+
+    it("rejects proof without one atomic Gateway review record", () => {
+      expect(() => buildOutcomeReviewSourceEvidenceProof(null)).toThrow(
+        /requires one Gateway source record/i,
+      );
+      expect(() => buildOutcomeReviewSourceEvidenceProof([])).toThrow(
+        /requires one Gateway source record/i,
+      );
     });
   });
 

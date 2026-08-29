@@ -1544,6 +1544,10 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("tableByExactLabel");
     expect(browserWorkflowModule).toContain("workbenchPanelByClass");
     expect(browserWorkflowModule).toContain("outcome-review-panel");
+    expect(browserWorkflowModule).toContain(
+      "buildOutcomeReviewSourceEvidenceProof(sourceReview)",
+    );
+    expect(script).toContain("sourceReview: outcomeReviewItems[0]");
     expect(browserWorkflowModule).toContain("proof-pack-panel");
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Return history");

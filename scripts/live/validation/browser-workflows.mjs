@@ -2555,11 +2555,59 @@ export async function validateEvidencePanel(
   });
 }
 
+export function buildOutcomeReviewSourceEvidenceProof(sourceReview) {
+  if (
+    !sourceReview ||
+    typeof sourceReview !== "object" ||
+    Array.isArray(sourceReview)
+  ) {
+    throw new Error(
+      "Canonical Outcome Review proof requires one Gateway source record.",
+    );
+  }
+
+  const isSourceHash = (value) =>
+    typeof value === "string" && /^sha256:.+$/u.test(value.trim());
+  const expectedHash = sourceReview.expected_snapshot?.source_hashes?.expected;
+  const realizedHash = sourceReview.realized_snapshot?.source_hashes?.realized;
+  const proofPackAvailable =
+    typeof sourceReview.proof_pack_id === "string" &&
+    sourceReview.proof_pack_id.trim().length > 0;
+  const lineageAvailable =
+    Array.isArray(sourceReview.source_lineage) &&
+    sourceReview.source_lineage.length > 0;
+  const readyEvidenceCount = [
+    isSourceHash(expectedHash),
+    isSourceHash(realizedHash),
+    proofPackAvailable,
+    lineageAvailable,
+  ].filter(Boolean).length;
+
+  return {
+    expectedAvailability: isSourceHash(expectedHash)
+      ? "Available"
+      : "Not available",
+    realizedAvailability: isSourceHash(realizedHash)
+      ? "Available"
+      : "Not available",
+    proofPackAvailability: proofPackAvailable
+      ? "Available"
+      : "Not available",
+    sourceEvidenceStatus:
+      readyEvidenceCount >= 3
+        ? "Available"
+        : readyEvidenceCount > 0
+          ? "Partial"
+          : "Not available",
+  };
+}
+
 export async function validateOutcomeReviewPanel(
   page,
   {
     workbenchBaseUrl,
     portfolioId,
+    sourceReview,
     timeoutMs,
     assertTableHasRows,
     screenshotRegisteredPanel,
@@ -2580,9 +2628,27 @@ export async function validateOutcomeReviewPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(outcomeReviewPanel.getByText("Evidence available")).toBeVisible({
-    timeout: timeoutMs,
-  });
+  const sourceEvidence = buildOutcomeReviewSourceEvidenceProof(sourceReview);
+  const readiness = outcomeReviewPanel.getByLabel(
+    "Selected outcome review readiness",
+  );
+  await expect(readiness).toContainText(
+    `Source evidence${sourceEvidence.sourceEvidenceStatus}`,
+    { timeout: timeoutMs },
+  );
+  const evidenceAvailability = outcomeReviewPanel.getByLabel(
+    "Outcome review evidence availability",
+  );
+  for (const [label, state] of [
+    ["Expected outcome", sourceEvidence.expectedAvailability],
+    ["Realised outcome", sourceEvidence.realizedAvailability],
+    ["Evidence pack", sourceEvidence.proofPackAvailability],
+    ["Source evidence", sourceEvidence.sourceEvidenceStatus],
+  ]) {
+    await expect(
+      evidenceAvailability.getByText(`${label} ${state}`, { exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+  }
   await assertTableHasRows(
     tableByExactLabel(page, "Outcome reviews"),
     1,
