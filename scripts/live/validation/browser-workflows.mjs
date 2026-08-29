@@ -896,7 +896,7 @@ export async function validateAdvisoryJourneyScreens(
     },
   });
 
-  await validateAdvisoryJourneyRoute(page, {
+  const statefulIdeaJourney = {
     summary,
     workbenchBaseUrl,
     portfolioId,
@@ -1054,7 +1054,7 @@ export async function validateAdvisoryJourneyScreens(
         ],
       });
     },
-  });
+  };
 
   await validateAdvisoryJourneyRoute(page, {
     summary,
@@ -1282,6 +1282,10 @@ export async function validateAdvisoryJourneyScreens(
       },
     });
   }
+
+  // Keep the single-use Idea mutation proof last so a failure on a read-only
+  // advisory surface does not consume the current-run candidate before retry.
+  await validateAdvisoryJourneyRoute(page, statefulIdeaJourney);
 }
 
 export async function validatePortfolioPanels(
