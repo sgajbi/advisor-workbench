@@ -162,7 +162,9 @@ guide does not turn a supported screen into a claim of bank approval or producti
   recovery without a fabricated request.
 - `docs/evidence/issue-811-decision-worklists/advisor-book/` contains reviewed diagnostic desktop,
   tablet, and compact decision-first screenshots. They are not canonical runtime proof.
-- `scripts/live/validation/browser-workflows.mjs` validates the browser workflow through Gateway.
+- `scripts/live/validation/browser-workflows.mjs` derives every expected portfolio identity and
+  lifecycle state from the validated Gateway response, then requires exact rendered parity through
+  the shared source-render proof. Missing, extra, duplicate, malformed, or mismatched rows fail.
 - Canonical proof uses `PB_SG_GLOBAL_BAL_001` and requires exactly one canonical portfolio,
   `PortfolioManagerBookMembership:v1`, a governed role-assignment basis, current accepted snapshot
   and content evidence, the exact business-date scope, complete internally consistent paging, and

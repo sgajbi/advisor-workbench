@@ -225,8 +225,9 @@ bank approval or competitor superiority.
   constraint family, key, and state from the exact Gateway summary and concentration responses,
   addresses each rendered row by source family and constraint key, rejects duplicate source
   ownership and extra, missing, duplicated, or state-mismatched rendered rows, records
-  machine-readable comparison proof, rejects retired first-scan classifications, and proves page
-  reflow at 1440, 1024, and 519 pixels.
+  machine-readable comparison proof through the same exact source-render harness used by Advisor
+  Book, rejects retired first-scan classifications, and proves page reflow at 1440, 1024, and 519
+  pixels. Risk retains its own mandate vocabulary and source adapter.
 - Canonical screenshots remain evidence only after API and calculation validation pass; a
   screenshot alone is not source, entitlement, mandate, identity, suitability, or readiness proof.
 - Protected PR checks, exact-main releasability, wiki publication, strict parity, and clean branch
