@@ -3176,51 +3176,132 @@ export async function validateProofPackPanel(
   });
   const proofPackPanel = workbenchPanelByClass(page, "proof-pack-panel");
   await expect(
-    proofPackPanel.getByRole("heading", { name: "Evidence Pack" }),
+    proofPackPanel.getByRole("heading", {
+      name: "Evidence Pack",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    proofPackPanel.getByText(/Summary (Available|Unavailable)/),
+    proofPackPanel.getByRole("button", {
+      name: "Prepare evidence",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(
-    proofPackPanel.getByText(/Report (Available|Unavailable)/),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(
-    proofPackPanel.getByText(/Memo (Available|Unavailable)/),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await expect(
-    proofPackPanel.getByRole("button", { name: "Open advisor memo" }).first(),
-  ).toBeVisible({
-    timeout: timeoutMs,
-  });
-  await proofPackPanel.getByRole("button", { name: "Prepare evidence" }).click({
-    timeout: timeoutMs,
-  });
+  const generationResponsePromise = page.waitForResponse(
+    (response) => {
+      const request = response.request();
+      const pathname = new URL(response.url()).pathname;
+      return (
+        request.method() === "POST" &&
+        pathname.endsWith("/api/bff/api/v1/dpm/command-center/proof-packs")
+      );
+    },
+    { timeout: timeoutMs },
+  );
+  await proofPackPanel
+    .getByRole("button", { name: "Prepare evidence", exact: true })
+    .click({ timeout: timeoutMs });
+  const generationResponse = await generationResponsePromise;
+  if (!generationResponse.ok()) {
+    throw new Error(
+      `Evidence-pack generation failed through Workbench BFF with HTTP ${generationResponse.status()}.`,
+    );
+  }
+  const sourceProof = buildPreparedProofPackSourceProof(
+    await generationResponse.json(),
+  );
   await expect(proofPackPanel.getByText("Evidence pack prepared.")).toBeVisible(
     {
       timeout: timeoutMs,
     },
   );
-  await proofPackPanel
-    .getByRole("button", { name: "Open advisor memo" })
-    .first()
-    .click({
-      timeout: timeoutMs,
-    });
+  for (const state of [
+    "Summary Available",
+    "Report Available",
+    "Memo Available",
+  ]) {
+    await expect(
+      proofPackPanel.getByText(state, { exact: true }),
+    ).toBeVisible({ timeout: timeoutMs });
+  }
+  const advisorMemoButton = proofPackPanel
+    .getByRole("button", { name: "Open advisor memo", exact: true })
+    .first();
+  await expect(advisorMemoButton).toBeEnabled({ timeout: timeoutMs });
+  await advisorMemoButton.click({ timeout: timeoutMs });
   await expect(proofPackPanel.getByText(/^Advisor memo /)).toBeVisible({
     timeout: timeoutMs,
   });
+  const evidenceAreas = tableByExactLabel(page, "Evidence areas");
   await assertTableHasRows(
-    tableByExactLabel(page, "Evidence areas"),
-    1,
+    evidenceAreas,
+    sourceProof.sectionCount,
     "Evidence areas",
   );
+  const renderedSectionCount = await evidenceAreas.locator("tbody tr").count();
+  if (renderedSectionCount !== sourceProof.sectionCount) {
+    throw new Error(
+      `Evidence Pack rendered ${renderedSectionCount} areas, but Gateway returned ${sourceProof.sectionCount}.`,
+    );
+  }
   await screenshotRegisteredPanel(page, "dpm.proof_pack");
+}
+
+export function buildPreparedProofPackSourceProof(sourceResponse) {
+  if (
+    !sourceResponse ||
+    typeof sourceResponse !== "object" ||
+    Array.isArray(sourceResponse)
+  ) {
+    throw new Error(
+      "Canonical Evidence Pack proof requires one Gateway response record.",
+    );
+  }
+
+  if (sourceResponse.source_service !== "lotus-manage") {
+    throw new Error(
+      "Canonical Evidence Pack generation did not return lotus-manage source authority.",
+    );
+  }
+
+  const proofPack = sourceResponse.data?.proof_pack;
+  const proofPackId = proofPack?.proof_pack_id;
+  const supportability = sourceResponse.supportability;
+  if (typeof proofPackId !== "string" || proofPackId.trim().length === 0) {
+    throw new Error(
+      "Canonical Evidence Pack generation returned no proof-pack identity.",
+    );
+  }
+  if (supportability?.proof_pack_id !== proofPackId) {
+    throw new Error(
+      "Canonical Evidence Pack generation returned mismatched source and supportability identity.",
+    );
+  }
+
+  const sections = proofPack?.sections;
+  if (!Array.isArray(sections) || sections.length === 0) {
+    throw new Error(
+      "Canonical Evidence Pack generation returned no reviewable evidence areas.",
+    );
+  }
+  for (const [field, label] of [
+    ["markdown_available", "summary"],
+    ["report_input_available", "report"],
+    ["ai_evidence_input_available", "memo"],
+  ]) {
+    if (supportability?.[field] !== true) {
+      throw new Error(
+        `Canonical Evidence Pack generation did not prove ${label} availability.`,
+      );
+    }
+  }
+
+  return {
+    proofPackId,
+    sectionCount: sections.length,
+  };
 }

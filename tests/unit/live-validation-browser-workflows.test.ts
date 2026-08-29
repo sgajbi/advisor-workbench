@@ -7,6 +7,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 
 const {
   assertClientContextMandateProof,
+  buildPreparedProofPackSourceProof,
   buildReportCentreProofPosture,
   buildOutcomeReviewSourceEvidenceProof,
   buildMandateConstraintProofRows,
@@ -36,6 +37,10 @@ const {
     sourceValue: string;
     renderedValue: string;
   }) => { sourceMandate: string; renderedMandate: string };
+  buildPreparedProofPackSourceProof: (sourceResponse: unknown) => {
+    proofPackId: string;
+    sectionCount: number;
+  };
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
     panelState: "partial";
     outputFormat: "json" | "pdf";
@@ -248,6 +253,71 @@ describe("live validation browser workflow helpers", () => {
       expect(() => buildOutcomeReviewSourceEvidenceProof([])).toThrow(
         /requires one Gateway source record/i,
       );
+    });
+  });
+
+  describe("Evidence Pack generation source proof", () => {
+    const sourceResponse = {
+      source_service: "lotus-manage",
+      supportability: {
+        proof_pack_id: "dpp_123",
+        markdown_available: true,
+        report_input_available: true,
+        ai_evidence_input_available: true,
+      },
+      data: {
+        proof_pack: {
+          proof_pack_id: "dpp_123",
+          sections: [{ section_id: "decision" }, { section_id: "lineage" }],
+        },
+      },
+    };
+
+    it("binds one Manage-owned response identity to its rendered section count", () => {
+      expect(buildPreparedProofPackSourceProof(sourceResponse)).toEqual({
+        proofPackId: "dpp_123",
+        sectionCount: 2,
+      });
+    });
+
+    it.each([
+      [
+        "wrong source authority",
+        { ...sourceResponse, source_service: "lotus-workbench" },
+        /lotus-manage source authority/i,
+      ],
+      [
+        "mismatched identity",
+        {
+          ...sourceResponse,
+          supportability: {
+            ...sourceResponse.supportability,
+            proof_pack_id: "dpp_other",
+          },
+        },
+        /mismatched source and supportability identity/i,
+      ],
+      [
+        "missing sections",
+        {
+          ...sourceResponse,
+          data: { proof_pack: { proof_pack_id: "dpp_123", sections: [] } },
+        },
+        /no reviewable evidence areas/i,
+      ],
+      [
+        "memo unavailable",
+        {
+          ...sourceResponse,
+          supportability: {
+            ...sourceResponse.supportability,
+            ai_evidence_input_available: false,
+          },
+        },
+        /memo availability/i,
+      ],
+    ])("rejects %s", (_case, response, message) => {
+      expect(() => buildPreparedProofPackSourceProof(response)).toThrow(message);
     });
   });
 
