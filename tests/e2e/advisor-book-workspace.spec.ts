@@ -154,6 +154,15 @@ test("supports a keyboard-complete own-book review and portfolio handoff", async
   ).toBe(4);
   expect((await summaryStrip.boundingBox())?.height).toBeLessThan(150);
   await expect(page.getByRole("table", { name: "Portfolios in my book" })).toBeVisible();
+  const sourceRows = page.locator('[data-advisor-book-row="portfolio"]');
+  await expect(sourceRows).toHaveCount(advisorBookResponse.items.length);
+  for (const sourceItem of advisorBookResponse.items) {
+    const sourceRow = page.locator(
+      `[data-advisor-book-row="portfolio"][data-portfolio-id="${sourceItem.portfolio_id}"]`,
+    );
+    await expect(sourceRow).toHaveCount(1);
+    await expect(sourceRow).toHaveAttribute("data-lifecycle-state", sourceItem.status);
+  }
   const supportDisclosure = page.locator("details").filter({
     hasText: "Book scope and operating evidence",
   });

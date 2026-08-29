@@ -82,6 +82,7 @@ describe("advisor-book workspace view model", () => {
         portfolioReferenceLabel: "Portfolio reference",
         clientReference: "CIF_001",
         mandateLabel: "Discretionary mandate",
+        sourceLifecycleState: "ACTIVE",
         membershipLabel: "Legacy advisor assignment",
       }),
     );

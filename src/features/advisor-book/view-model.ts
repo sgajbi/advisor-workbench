@@ -28,6 +28,7 @@ export type AdvisorBookPortfolioRow = {
   clientReference: string;
   mandateLabel: string;
   currencyLabel: string;
+  sourceLifecycleState: string;
   statusLabel: string;
   membershipLabel: string;
 };
@@ -173,6 +174,7 @@ function toPortfolioRow(item: AdvisorBookPortfolio): AdvisorBookPortfolioRow {
     clientReference: item.client_id,
     mandateLabel: mandateLabel(item.mandate_type),
     currencyLabel: item.base_currency,
+    sourceLifecycleState: item.status,
     statusLabel: lifecycleLabel(item.status),
     membershipLabel:
       item.membership_basis === "governed_role_assignment"
