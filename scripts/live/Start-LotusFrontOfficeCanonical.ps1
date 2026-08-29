@@ -617,6 +617,19 @@ function Invoke-DpmCommandCenterSeed {
   Invoke-RepoCommand $platformRepo $dpmSeedCommand
 }
 
+function Get-CanonicalTextSha256 {
+  param([Parameter(Mandatory = $true)][string]$Value)
+
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+    return ([System.BitConverter]::ToString($sha256.ComputeHash($bytes))).Replace("-", "").ToLowerInvariant()
+  }
+  finally {
+    $sha256.Dispose()
+  }
+}
+
 function Invoke-CanonicalIdeaSeed {
   $ideaBaseUrl = "http://127.0.0.1:8330"
   $datePolicy = Get-CanonicalFrontOfficeDatePolicy
@@ -635,6 +648,7 @@ function Invoke-CanonicalIdeaSeed {
 
   $sourceRef = {
     param([string]$ProductId)
+    $sourceObservationIdentity = "$ProductId|$PortfolioId|$asOfDate|$ideaCanonicalRunId"
     return @{
       productId = $ProductId
       sourceSystem = "lotus-core"
@@ -642,7 +656,7 @@ function Invoke-CanonicalIdeaSeed {
       route = "/source/$ProductId"
       asOfDate = $asOfDate
       generatedAtUtc = $generatedAtUtc
-      contentHash = "sha256:$($ProductId):canonical-workbench-seed"
+      contentHash = "sha256:$(Get-CanonicalTextSha256 -Value $sourceObservationIdentity)"
       dataQualityStatus = "complete"
       freshness = "current"
     }
@@ -670,7 +684,7 @@ function Invoke-CanonicalIdeaSeed {
     "X-Caller-Subject" = "canonical-front-office-seed"
     "X-Caller-Capabilities" = "idea.candidate.persist"
     "X-Correlation-Id" = "corr-canonical-idea-seed"
-    "Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$generatedAtUtc"
+    "Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$ideaCanonicalRunId"
   }
 
   Write-Host "Seeding governed Lotus Idea advisor queue candidate for $PortfolioId ..."

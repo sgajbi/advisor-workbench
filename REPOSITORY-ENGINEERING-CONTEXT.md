@@ -329,12 +329,14 @@ Current repository posture:
     posture. It must not construct the resource directly, reuse the canonical client portfolio,
     expose resource identifiers or credentials, or interpret this integration proof as load, soak,
     capacity-certification, or supported-feature evidence.
-    Canonical Idea seeding must progress the exact persisted candidate through Idea's public
-    lifecycle-transition contract before advisor-action proof. Source detail with complete tenant,
-    book, portfolio, and client scope is the authority before and after each transition; reruns may
-    skip only a state already confirmed there. Never infer readiness from queue inclusion, trust a
-    generic replay summary without refreshed detail, or reproduce Idea lifecycle rules in browser
-    code.
+    Canonical Idea seeding must bind its synthetic source observation and persistence identity to the
+    fresh canonical run, then progress that exact persisted candidate through Idea's public
+    lifecycle-transition contract before advisor-action proof. Retries within the run retain those
+    identities; later runs must not reuse a previously converted candidate as a reviewable item.
+    Source detail with complete tenant, book, portfolio, and client scope is the authority before and
+    after each transition; reruns may skip only a state already confirmed there. Never infer
+    readiness from queue inclusion, trust a generic replay summary without refreshed detail, or
+    reproduce Idea lifecycle rules in browser code.
 20. `/recommendations`, `/proposals`, `/proposals/simulate`, and `/proposals/{proposalId}` are
     active Gateway-backed advisory lifecycle surfaces. The advisory shell uses a governed journey
     model across overview, RFC-0026 advisor cockpit, RFC-0027 advisory copilot, RFC-0028

@@ -11,6 +11,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+trap {
+  [Console]::Error.WriteLine($_.Exception.Message)
+  exit 1
+}
 $invariantCulture = [System.Globalization.CultureInfo]::InvariantCulture
 $dateStyles = [System.Globalization.DateTimeStyles]::AssumeUniversal -bor [System.Globalization.DateTimeStyles]::AdjustToUniversal
 $generatedAt = [DateTimeOffset]::Parse($GeneratedAtUtc, $invariantCulture, $dateStyles)
