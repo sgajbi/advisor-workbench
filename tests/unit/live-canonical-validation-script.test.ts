@@ -33,6 +33,65 @@ const OWNERSHIP_CONTRACT = readFileSync(
 );
 
 describe("canonical live validation script", () => {
+  it("proves the shipped Advisory Overview decision surface instead of its retired summary", () => {
+    const browserWorkflowModule = readNormalizedSource(
+      "scripts",
+      "live",
+      "validation",
+      "browser-workflows.mjs",
+    );
+    const decisionProofStart = browserWorkflowModule.indexOf(
+      "export async function validateAdvisoryOverviewDecisionSurface",
+    );
+    const decisionProofEnd = browserWorkflowModule.indexOf(
+      "async function validateAdvisoryJourneyRoute",
+      decisionProofStart,
+    );
+    const overviewJourneyStart = browserWorkflowModule.indexOf(
+      'key: "overview"',
+    );
+    const overviewJourneyEnd = browserWorkflowModule.indexOf(
+      'key: "client-context"',
+      overviewJourneyStart,
+    );
+    const decisionSurfaceProof = browserWorkflowModule.slice(
+      decisionProofStart,
+      decisionProofEnd,
+    );
+    const overviewJourney = browserWorkflowModule.slice(
+      overviewJourneyStart,
+      overviewJourneyEnd,
+    );
+
+    expect(decisionProofStart).toBeGreaterThanOrEqual(0);
+    expect(decisionProofEnd).toBeGreaterThan(decisionProofStart);
+    expect(overviewJourneyStart).toBeGreaterThanOrEqual(0);
+    expect(overviewJourneyEnd).toBeGreaterThan(overviewJourneyStart);
+    expect(browserWorkflowModule).not.toContain("Advisory overview summary");
+    expect(overviewJourney).toContain(
+      "return validateAdvisoryOverviewDecisionSurface(page, timeoutMs)",
+    );
+    for (const stableEvidence of [
+      'name: "Adviser priorities"',
+      'getByTestId("advisory-decision-brief")',
+      'getByTestId("advisory-priority-worklist")',
+      'getByTestId("advisory-source-window-posture")',
+      'name: "Advisory proposal decision worklist"',
+      'name: "Selected advisory proposal"',
+      'aria-selected="true"',
+      'getAttribute("aria-controls")',
+      'name: "Open proposal review"',
+    ]) {
+      expect(decisionSurfaceProof).toContain(stableEvidence);
+    }
+    expect(decisionSurfaceProof).toContain(
+      "selected-source-proposal-through-gateway",
+    );
+    expect(browserWorkflowModule).toContain(
+      "validation.evidence ? { evidence: validation.evidence } : {}",
+    );
+  });
+
   it("passes exact Gateway mandate evidence to the Risk browser proof", () => {
     const script = readNormalizedSource(
       "scripts",
