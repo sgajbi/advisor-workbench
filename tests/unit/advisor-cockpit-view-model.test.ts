@@ -236,11 +236,13 @@ describe("advisor cockpit view model", () => {
         label: "Client communication unavailable",
         detail: "Client outreach remains outside this workspace.",
         rawValue: "EXTERNAL_CLIENT_COMMUNICATION",
+        isRecognized: true,
       },
       {
         label: "Order workflow unavailable",
         detail: "Order routing and lifecycle actions remain outside this workspace.",
         rawValue: "OMS_ORDER_LIFECYCLE",
+        isRecognized: true,
       },
     ]);
     expect(model.supportDetails).toEqual(
@@ -480,17 +482,17 @@ describe("advisor cockpit view model", () => {
         },
       ]),
     );
-    expect(model.supportDetails).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ value: "NEW_CAPABILITY" }),
-      ]),
-    );
+    expect(model.supportDetails).toContainEqual({
+      label: "Unrecognized operating boundary source value",
+      value: "NEW_CAPABILITY",
+    });
     expect(model.operatingBoundaries).toEqual([
       {
         label: "Additional workflow capability unavailable",
         detail:
           "The source reports another unsupported capability; see Support details.",
         rawValue: "NEW_CAPABILITY",
+        isRecognized: false,
       },
     ]);
   });

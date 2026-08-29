@@ -275,7 +275,7 @@ describe("AdvisorCockpitWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps unknown readiness neutral without disclosing raw operating-boundary values", async () => {
+  it("keeps unknown readiness neutral and confines its source value to support details", async () => {
     getAdvisorCockpitSnapshotMock.mockResolvedValueOnce({
       snapshot_id: "cockpit_snapshot_unknown",
       action_counts: {
@@ -308,12 +308,12 @@ describe("AdvisorCockpitWorkspace", () => {
       within(readiness).getByText("Additional workflow capability unavailable"),
     ).toBeInTheDocument();
     expect(within(readiness).queryByText("NEW_GATEWAY_POSTURE")).not.toBeVisible();
-    expect(within(readiness).queryByText("NEW_CAPABILITY")).not.toBeInTheDocument();
+    expect(within(readiness).queryByText("NEW_CAPABILITY")).not.toBeVisible();
 
     const supportDetails = within(readiness).getByText("Support details").closest("details")!;
     fireEvent.click(within(supportDetails).getByText("Support details"));
     expect(within(supportDetails).getByText("NEW_GATEWAY_POSTURE")).toBeVisible();
-    expect(within(supportDetails).queryByText("NEW_CAPABILITY")).not.toBeInTheDocument();
+    expect(within(supportDetails).getByText("NEW_CAPABILITY")).toBeVisible();
   });
 
   it("records acknowledgements through Gateway without clearing source-owned blockers locally", async () => {

@@ -335,7 +335,15 @@ export function buildAdvisorCockpitModel({
     preparationRows: preparationPackets.map(toPreparationRow),
     supportabilityRows: supportabilityModel.rows,
     operatingBoundaries,
-    supportDetails: supportabilityModel.details,
+    supportDetails: [
+      ...supportabilityModel.details,
+      ...operatingBoundaries
+        .filter((boundary) => !boundary.isRecognized)
+        .map((boundary) => ({
+          label: "Unrecognized operating boundary source value",
+          value: boundary.rawValue,
+        })),
+    ],
     actionCount: reportedActionCount,
     actionPosture,
     preparationCount: reportedPreparationCount,

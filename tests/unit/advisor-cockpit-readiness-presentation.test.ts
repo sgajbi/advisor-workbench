@@ -93,6 +93,7 @@ describe("advisor cockpit readiness presentation", () => {
       label,
       detail,
       rawValue,
+      isRecognized: true,
     });
   });
 
@@ -101,6 +102,7 @@ describe("advisor cockpit readiness presentation", () => {
       label: "Additional workflow capability unavailable",
       detail: "The source reports another unsupported capability; see Support details.",
       rawValue: "NEW_CAPABILITY",
+      isRecognized: false,
     });
   });
 });
