@@ -1855,6 +1855,8 @@ describe("canonical live validation script", () => {
       "advisor-cockpit-actions-through-gateway",
     );
     expect(browserWorkflowModule).toContain("Proposal lifecycle counts");
+    expect(browserWorkflowModule).toContain("Suitability review counts");
+    expect(browserWorkflowModule).toContain("Adviser decision worklist");
     expect(runbook).toContain("advisoryJourneyChecks");
     expect(runbook).toContain(
       "Advisory Overview, Client Context, Advisor Cockpit, Opportunities and Ideas",
