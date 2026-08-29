@@ -613,7 +613,9 @@ describe("live validation browser workflow helpers", () => {
     const source = browserWorkflowModule.validateAdvisorBookPanel.toString();
 
     expect(source).toContain("navigateForBusinessProof");
-    expect(source).toContain("buildAdvisorBookSourceRenderRows");
+    expect(source).toContain("waitForResponse");
+    expect(source).toContain("validateAdvisorBookRenderPageEvidence");
+    expect(source).toContain("sourcePageEvidence");
     expect(source).toContain("assertExactSourceRenderProof");
     expect(source).toContain('screen: "Advisor Book"');
     expect(source).toContain('element.getAttribute("data-portfolio-id")');

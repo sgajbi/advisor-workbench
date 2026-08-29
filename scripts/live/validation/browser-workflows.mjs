@@ -1,10 +1,16 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
-import { buildAdvisorBookSourceRenderRows } from "./advisor-book-proof.mjs";
+import { validateAdvisorBookRenderPageEvidence } from "./advisor-book-proof.mjs";
 import { assertExactSourceRenderProof } from "./source-render-proof.mjs";
 
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
+const ADVISOR_BOOK_BROWSER_PAGE = Object.freeze({
+  offset: 0,
+  limit: 25,
+  sortBy: "portfolio_id",
+  sortOrder: "asc",
+});
 
 export async function navigateForBusinessProof(page, route, options) {
   const response = await page.goto(route, {
@@ -1156,7 +1162,6 @@ export async function validateAdvisorBookPanel(
   page,
   {
     summary,
-    advisorBook,
     workbenchBaseUrl,
     portfolioId,
     canonicalAsOfDate,
@@ -1165,9 +1170,40 @@ export async function validateAdvisorBookPanel(
     screenshotRegisteredPanel,
   },
 ) {
+  const advisorBookPageResponsePromise = page.waitForResponse(
+    (response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === "GET" &&
+        url.pathname.endsWith("/api/bff/api/v1/advisor-book/portfolios") &&
+        url.searchParams.get("asOfDate") === canonicalAsOfDate &&
+        url.searchParams.get("offset") === String(ADVISOR_BOOK_BROWSER_PAGE.offset) &&
+        url.searchParams.get("limit") === String(ADVISOR_BOOK_BROWSER_PAGE.limit) &&
+        url.searchParams.get("sortBy") === ADVISOR_BOOK_BROWSER_PAGE.sortBy &&
+        url.searchParams.get("sortOrder") === ADVISOR_BOOK_BROWSER_PAGE.sortOrder
+      );
+    },
+    { timeout: timeoutMs },
+  );
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/book?asOfDate=${canonicalAsOfDate}`, {
     timeout: timeoutMs,
   });
+  const advisorBookPageResponse = await advisorBookPageResponsePromise;
+  if (!advisorBookPageResponse.ok()) {
+    throw new Error(
+      `Workbench Advisor Book page request failed with HTTP ${advisorBookPageResponse.status()}.`,
+    );
+  }
+  const advisorBookPage = validateAdvisorBookRenderPageEvidence(
+    await advisorBookPageResponse.json(),
+    {
+      expectedAsOfDate: canonicalAsOfDate,
+      expectedOffset: ADVISOR_BOOK_BROWSER_PAGE.offset,
+      expectedLimit: ADVISOR_BOOK_BROWSER_PAGE.limit,
+      expectedSortBy: ADVISOR_BOOK_BROWSER_PAGE.sortBy,
+      expectedSortOrder: ADVISOR_BOOK_BROWSER_PAGE.sortOrder,
+    },
+  );
   await expect(page.getByRole("heading", { name: "My book", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1176,7 +1212,7 @@ export async function validateAdvisorBookPanel(
   });
   const bookTable = tableByExactLabel(page, "Portfolios in my book");
   await assertTableHasRows(bookTable, 1, "Portfolios in my book");
-  const expectedBookRows = buildAdvisorBookSourceRenderRows(advisorBook);
+  const expectedBookRows = advisorBookPage.sourceRows;
   const renderedBookRows = bookTable.locator('[data-advisor-book-row="portfolio"]');
   await expect(renderedBookRows).toHaveCount(expectedBookRows.length, {
     timeout: timeoutMs,
@@ -1200,6 +1236,15 @@ export async function validateAdvisorBookPanel(
     description: "Exact Gateway-owned Advisor Book rows",
     kind: "advisor-book-source-render-proof",
     portfolioId,
+    sourcePageEvidence: {
+      asOfDate: advisorBookPage.asOfDate,
+      totalCount: advisorBookPage.totalCount,
+      offset: advisorBookPage.offset,
+      limit: advisorBookPage.limit,
+      returnedCount: advisorBookPage.returnedCount,
+      sortBy: advisorBookPage.sortBy,
+      sortOrder: advisorBookPage.sortOrder,
+    },
     sourceRowEvidence: expectedBookRows,
     browserPolicyCalculation: "none",
   });

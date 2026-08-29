@@ -21,6 +21,21 @@ type BuildAdvisorBookSourceRenderRows = (advisorBook: unknown) => Array<{
   state: string;
 }>;
 
+type ValidateAdvisorBookRenderPageEvidence = (
+  advisorBook: unknown,
+  expected: {
+    expectedAsOfDate: string;
+    expectedOffset: number;
+    expectedLimit: number;
+    expectedSortBy: string;
+    expectedSortOrder: string;
+  },
+) => {
+  totalCount: number;
+  returnedCount: number;
+  sourceRows: Array<{ source: string; identity: string; state: string }>;
+};
+
 type Membership = {
   portfolio_id: string;
   status: string;
@@ -36,6 +51,8 @@ type AdvisorBookPayload = {
     offset: number;
     limit: number;
     returned_count: number;
+    sort_by?: string;
+    sort_order?: string;
   };
   items: Membership[];
   supportability: {
@@ -64,6 +81,7 @@ type AdvisorBookPayload = {
 let validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
 let classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
 let buildAdvisorBookSourceRenderRows: BuildAdvisorBookSourceRenderRows;
+let validateAdvisorBookRenderPageEvidence: ValidateAdvisorBookRenderPageEvidence;
 
 function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPayload {
   return {
@@ -116,11 +134,14 @@ describe("authoritative advisor-book live proof", () => {
       validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
       classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
       buildAdvisorBookSourceRenderRows: BuildAdvisorBookSourceRenderRows;
+      validateAdvisorBookRenderPageEvidence: ValidateAdvisorBookRenderPageEvidence;
     };
     validateCanonicalAdvisorBookEvidence = proofModule.validateCanonicalAdvisorBookEvidence;
     classifyCanonicalAdvisorBookPanelSupportState =
       proofModule.classifyCanonicalAdvisorBookPanelSupportState;
     buildAdvisorBookSourceRenderRows = proofModule.buildAdvisorBookSourceRenderRows;
+    validateAdvisorBookRenderPageEvidence =
+      proofModule.validateAdvisorBookRenderPageEvidence;
   });
 
   it("adapts exact Gateway portfolio identities and lifecycle states for render proof", () => {
@@ -139,6 +160,76 @@ describe("authoritative advisor-book live proof", () => {
     );
     expect(() => buildAdvisorBookSourceRenderRows({})).toThrow(
       "returned no portfolio memberships",
+    );
+  });
+
+  it("binds render proof to the exact first Gateway page without requiring the whole book", () => {
+    const items = Array.from({ length: 25 }, (_, index) => ({
+      portfolio_id: `PB_${String(index + 1).padStart(3, "0")}`,
+      status: index === 0 ? "CLOSED" : "ACTIVE",
+      membership_source: "PortfolioManagerBookMembership:v1",
+      membership_reference: `assignment:${index + 1}`,
+      membership_basis: "governed_role_assignment",
+    }));
+    const evidence = validateAdvisorBookRenderPageEvidence(
+      advisorBook({
+        items,
+        page: {
+          total_count: 26,
+          offset: 0,
+          limit: 25,
+          returned_count: 25,
+          sort_by: "portfolio_id",
+          sort_order: "asc",
+        },
+      }),
+      {
+        expectedAsOfDate: AS_OF_DATE,
+        expectedOffset: 0,
+        expectedLimit: 25,
+        expectedSortBy: "portfolio_id",
+        expectedSortOrder: "asc",
+      },
+    );
+
+    expect(evidence).toEqual(
+      expect.objectContaining({
+        totalCount: 26,
+        returnedCount: 25,
+        sourceRows: expect.arrayContaining([
+          { source: "advisor-book", identity: "PB_001", state: "CLOSED" },
+          { source: "advisor-book", identity: "PB_025", state: "ACTIVE" },
+        ]),
+      }),
+    );
+  });
+
+  it("rejects an incomplete or differently shaped browser source page", () => {
+    const payload = advisorBook({
+      page: {
+        total_count: 26,
+        offset: 0,
+        limit: 25,
+        returned_count: 2,
+        sort_by: "portfolio_id",
+        sort_order: "asc",
+      },
+    });
+    const expectedPage = {
+      expectedAsOfDate: AS_OF_DATE,
+      expectedOffset: 0,
+      expectedLimit: 25,
+      expectedSortBy: "portfolio_id",
+      expectedSortOrder: "asc",
+    };
+
+    expect(() => validateAdvisorBookRenderPageEvidence(payload, expectedPage)).toThrow(
+      "did not return the complete requested source window",
+    );
+    payload.page.total_count = 2;
+    payload.page.sort_order = "desc";
+    expect(() => validateAdvisorBookRenderPageEvidence(payload, expectedPage)).toThrow(
+      "did not preserve the browser page request",
     );
   });
 

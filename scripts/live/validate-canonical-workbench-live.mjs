@@ -2016,7 +2016,6 @@ async function run() {
   try {
     await validateAdvisorBookPanel(page, {
       summary,
-      advisorBook,
       workbenchBaseUrl,
       portfolioId,
       canonicalAsOfDate: advisorBookAsOfDate,
