@@ -31,8 +31,30 @@ const OWNERSHIP_CONTRACT = readFileSync(
   ),
   "utf8",
 );
+const BROWSER_WORKFLOW_MODULE = readNormalizedSource(
+  "scripts",
+  "live",
+  "validation",
+  "browser-workflows.mjs",
+);
 
 describe("canonical live validation script", () => {
+  it("binds literal heading proof to exact accessible names", () => {
+    const literalHeadingOptions = [
+      ...BROWSER_WORKFLOW_MODULE.matchAll(
+        /getByRole\("heading",\s*\{([^}]*)\}\)/g,
+      ),
+    ]
+      .map((match) => match[1])
+      .filter((options) => /name:\s*"[^"]+"/.test(options));
+    const nonExactHeadingNames = literalHeadingOptions
+      .filter((options) => !/exact:\s*true/.test(options))
+      .map((options) => options.match(/name:\s*"([^"]+)"/)?.[1]);
+
+    expect(literalHeadingOptions.length).toBeGreaterThan(0);
+    expect(nonExactHeadingNames).toEqual([]);
+  });
+
   it("proves the shipped Advisory Overview decision surface instead of its retired summary", () => {
     const browserWorkflowModule = readNormalizedSource(
       "scripts",

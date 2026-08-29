@@ -1284,7 +1284,10 @@ export async function validateAdvisoryJourneyScreens(
             timeout: timeoutMs,
           });
           await expect(
-            page.getByRole("heading", { name: "Adviser decision worklist" }),
+            page.getByRole("heading", {
+              name: "Adviser decision worklist",
+              exact: true,
+            }),
           ).toBeVisible({ timeout: timeoutMs });
         } else {
           await expect(page.getByLabel("Proposal lifecycle counts")).toBeVisible({
@@ -1369,12 +1372,12 @@ export async function validatePortfolioPanels(
     decisionReview.getByText("Reporting coverage", { exact: true }),
   ).toBeVisible({ timeout: timeoutMs });
   await expect(
-    page.getByRole("heading", { name: "Review Evidence" }),
+    page.getByRole("heading", { name: "Review Evidence", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Performance Snapshot" }),
+    page.getByRole("heading", { name: "Performance Snapshot", exact: true }),
   ).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "Summary" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "Detailed" })).toHaveCount(0);
@@ -1419,7 +1422,7 @@ export async function validateReportCentrePanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Approved report", exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
   const structuredDataRadio = page.getByRole("radio", {
@@ -1463,7 +1466,10 @@ export async function validateReportCentrePanel(
     name: "Report request readiness",
   });
   await expect(
-    requestReadiness.getByRole("heading", { name: "Report request accepted" }),
+    requestReadiness.getByRole("heading", {
+      name: "Report request accepted",
+      exact: true,
+    }),
   ).toBeVisible({ timeout: timeoutMs });
   await expect(requestReadiness.getByRole("status")).toContainText(
     "Reporting recorded the request.",
@@ -1593,10 +1599,16 @@ export async function validateAdvisorBookPanel(
   await operatingEvidence.locator("summary").click();
   await expect(operatingEvidence).toHaveAttribute("open", "");
   await expect(
-    operatingEvidence.getByRole("heading", { name: "Operating boundaries" }),
+    operatingEvidence.getByRole("heading", {
+      name: "Operating boundaries",
+      exact: true,
+    }),
   ).toBeVisible({ timeout: timeoutMs });
   await expect(
-    operatingEvidence.getByRole("heading", { name: "Support references" }),
+    operatingEvidence.getByRole("heading", {
+      name: "Support references",
+      exact: true,
+    }),
   ).toBeVisible({ timeout: timeoutMs });
   await screenshotRegisteredPanel(page, "advisor.book_overview");
 }
@@ -1635,7 +1647,7 @@ export async function validatePerformanceSummaryPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Performance Drivers" }),
+    page.getByRole("heading", { name: "Performance Drivers", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -1743,7 +1755,7 @@ export async function validatePerformanceAnalysisPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Performance Drivers" }),
+    page.getByRole("heading", { name: "Performance Drivers", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -2056,6 +2068,7 @@ export async function validateProposalNarrativePosturePanel(
   await expect(
     narrativePanel.getByRole("heading", {
       name: "Narrative review and discussion pack",
+      exact: true,
     }),
   ).toBeVisible({
     timeout: timeoutMs,
@@ -2138,7 +2151,10 @@ export async function validateProposalMemoEvidencePackPanel(
   const memoPanel = page.locator("#proposal-memo-evidence-pack");
   await expect(memoPanel).toBeVisible({ timeout: timeoutMs });
   await expect(
-    memoPanel.getByRole("heading", { name: "Advisor memo and evidence pack" }),
+    memoPanel.getByRole("heading", {
+      name: "Advisor memo and evidence pack",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -2515,7 +2531,7 @@ export async function validateEvidencePanel(
   );
   await assertRailModeActive(page, /^Evidence/, timeoutMs);
   await expect(
-    page.getByRole("heading", { name: "Calculation assurance" }),
+    page.getByRole("heading", { name: "Calculation assurance", exact: true }),
   ).toBeVisible({ timeout: timeoutMs });
   const assuranceWorkspace = page.getByTestId("performance-evidence-assurance");
   let screenshotState = "truthfully_degraded";
@@ -2526,10 +2542,16 @@ export async function validateEvidencePanel(
       /^(ready|attention|incomplete|unavailable)$/,
     );
     await expect(
-      assuranceWorkspace.getByRole("heading", { name: "Control exceptions" }),
+      assuranceWorkspace.getByRole("heading", {
+        name: "Control exceptions",
+        exact: true,
+      }),
     ).toBeVisible({ timeout: timeoutMs });
     await expect(
-      assuranceWorkspace.getByRole("heading", { name: "Calculation coverage" }),
+      assuranceWorkspace.getByRole("heading", {
+        name: "Calculation coverage",
+        exact: true,
+      }),
     ).toBeVisible({ timeout: timeoutMs });
     const assuranceState = await assuranceWorkspace.getAttribute("data-assurance-state");
     summary.uiChecks.push({
@@ -2700,7 +2722,7 @@ export async function validateDpmCommandCenterPanel(
     timeout: timeoutMs,
   });
   await expect(
-    page.getByRole("heading", { name: "Mandate Health" }).first(),
+    page.getByRole("heading", { name: "Mandate Health", exact: true }).first(),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -2814,7 +2836,7 @@ export async function validateDpmWaveCommandCenterPanel(
     timeout: timeoutMs,
   });
   await expect(
-    wavePanel.getByRole("heading", { name: "Proposed Changes" }),
+    wavePanel.getByRole("heading", { name: "Proposed Changes", exact: true }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -3055,7 +3077,10 @@ export async function validatePmOperatingQualityPanel(
     "pm-operating-quality-panel",
   );
   await expect(
-    qualityPanel.getByRole("heading", { name: "PM Operating Quality" }),
+    qualityPanel.getByRole("heading", {
+      name: "PM Operating Quality",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
@@ -3149,7 +3174,10 @@ export async function validateDpmCopilotWorkspace(
   });
   const copilotWorkspace = workbenchPanelByClass(page, "dpm-copilot-workspace");
   await expect(
-    copilotWorkspace.getByRole("heading", { name: "PM Copilot Workspace" }),
+    copilotWorkspace.getByRole("heading", {
+      name: "PM Copilot Workspace",
+      exact: true,
+    }),
   ).toBeVisible({
     timeout: timeoutMs,
   });
