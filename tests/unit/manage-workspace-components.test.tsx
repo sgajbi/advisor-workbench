@@ -205,6 +205,52 @@ describe("manage workspace split components", () => {
 
   });
 
+  it("keeps identified rows reviewable as a bounded view when source supportability is unconfirmed", () => {
+    const data = buildManageWorkspaceData();
+    if (!data.commandCenterExceptions) {
+      throw new Error("Fixture command-center exceptions are required");
+    }
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions,
+      supportability: {
+        ...data.commandCenterExceptions.supportability,
+        state: "UNKNOWN",
+      },
+      data: { ...data.commandCenterExceptions.data, next_cursor: null },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("2 in this view")).toBeInTheDocument();
+    expect(screen.getByText("Attention-item evidence is incomplete")).toBeInTheDocument();
+    expect(screen.queryByText("More attention items are available")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Benchmark mapping requires review" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Selected mandate review item")).toBeInTheDocument();
+    expect(screen.queryByText("No open items")).not.toBeInTheDocument();
+  });
+
+  it("hides both queue rows and selected detail when source supportability blocks evidence", () => {
+    const data = buildManageWorkspaceData();
+    if (!data.commandCenterExceptions) {
+      throw new Error("Fixture command-center exceptions are required");
+    }
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions,
+      supportability: {
+        ...data.commandCenterExceptions.supportability,
+        state: "BLOCKED",
+      },
+    };
+
+    render(<ManageMandateHealth data={data} />);
+
+    expect(screen.getByText("Attention items are temporarily unavailable")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Mandate attention items")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Selected mandate review item")).not.toBeInTheDocument();
+  });
+
   it("keeps a valid partial exception window reviewable without claiming a whole queue", () => {
     const data = buildManageWorkspaceData();
     data.commandCenterExceptions = {

@@ -187,7 +187,7 @@ export default function ManageMandateHealth({ data }: Props) {
           onNext={() => void exceptionSource.showNext()}
           onRetry={() => void exceptionSource.retry()}
         />
-        {selectedException ? (
+        {hasAvailableExceptionEvidence && selectedException ? (
           <SelectedReviewItem
             row={selectedException}
           />
@@ -395,12 +395,19 @@ function AttentionReviewQueue({
           title="Attention items are temporarily unavailable"
           body="The mandate summary remains visible, but the source exception queue could not be confirmed. No zero-attention conclusion has been inferred."
         />
-      ) : evidencePosture === "partial" && !navigationFailure ? (
+      ) : evidencePosture === "partial" && !navigationFailure && hasNext ? (
         <ScreenStatePanel
           kind="partial"
           surface="portfolio"
           title="More attention items are available"
           body={`Source window ${currentWindow} is reviewable but does not represent the complete attention queue. Continue through the source views before drawing a whole-queue conclusion.`}
+        />
+      ) : evidencePosture === "partial" && !navigationFailure ? (
+        <ScreenStatePanel
+          kind="partial"
+          surface="portfolio"
+          title="Attention-item evidence is incomplete"
+          body="The returned source records remain reviewable, but source supportability does not confirm a complete queue. No zero-attention or whole-queue conclusion has been inferred."
         />
       ) : null}
       {hasAvailableEvidence && rows.length ? (

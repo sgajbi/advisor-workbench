@@ -191,27 +191,40 @@ export function getManageExceptionEvidencePosture(
   const supportabilityState = exceptions.supportability.state
     .trim()
     .toUpperCase();
-  if (!["COMPLETE", "READY", "SUPPORTED"].includes(supportabilityState)) {
-    return "unavailable";
-  }
   const responseData = asRecord(exceptions.data);
-  const hasExceptionRows =
-    Array.isArray(responseData.items) || Array.isArray(responseData.exceptions);
+  const exceptionRecords = Array.isArray(responseData.items)
+    ? responseData.items
+    : Array.isArray(responseData.exceptions)
+      ? responseData.exceptions
+      : null;
   if (
-    !hasExceptionRows ||
+    !exceptionRecords ||
     !Object.prototype.hasOwnProperty.call(responseData, "next_cursor")
   ) {
     return "unavailable";
+  }
+  const nextCursorIsValid =
+    responseData.next_cursor === null ||
+    (typeof responseData.next_cursor === "string" &&
+      Boolean(responseData.next_cursor.trim()));
+  if (!nextCursorIsValid) {
+    return "unavailable";
+  }
+
+  const confirmedStates = ["COMPLETE", "READY", "SUPPORTED"];
+  if (!confirmedStates.includes(supportabilityState)) {
+    const boundedPartialStates = ["UNKNOWN", "PARTIAL", "DEGRADED", "STALE"];
+    return boundedPartialStates.includes(supportabilityState) &&
+      (exceptionRecords.length > 0 || typeof responseData.next_cursor === "string")
+      ? "partial"
+      : "unavailable";
   }
   if (responseData.next_cursor === null) {
     return buildManageExceptionRowsResult(exceptions).rejectedRowCount > 0
       ? "partial"
       : "complete";
   }
-  return typeof responseData.next_cursor === "string" &&
-    responseData.next_cursor.trim()
-    ? "partial"
-    : "unavailable";
+  return "partial";
 }
 
 export function getManageExceptionNextCursor(
