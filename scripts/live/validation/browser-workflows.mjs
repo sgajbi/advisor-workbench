@@ -806,9 +806,15 @@ export async function validateAdvisoryJourneyScreens(
       ).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(page.getByText("Balanced Mandate")).toBeVisible({
+      const reviewContext = page.getByRole("region", { name: "Review context" });
+      await expect(reviewContext).toBeVisible({ timeout: timeoutMs });
+      const mandateFact = reviewContext
+        .getByText("Mandate", { exact: true })
+        .locator("..");
+      await expect(mandateFact.locator("dd")).toBeVisible({
         timeout: timeoutMs,
       });
+      await expect(mandateFact.locator("dd")).not.toHaveText(/^\s*$/u);
       await expect(
         page.getByRole("heading", { name: "Review Evidence", exact: true }),
       ).toBeVisible({
