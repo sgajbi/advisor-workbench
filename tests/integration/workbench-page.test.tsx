@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
 
 describe("WorkbenchPage", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -311,6 +312,7 @@ describe("WorkbenchPage", () => {
   });
 
   it("renders wave lifecycle and proof-pack evidence as a dedicated manage surface", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error");
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_3001" }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -326,6 +328,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getByRole("heading", { name: "Campaign administration" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
     expect(screen.getAllByText("Apple and Tesla holdings review").length).toBeGreaterThan(0);
+    expect(await screen.findByText("Source evidence current")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Governance action" }));
     expect(screen.getByRole("heading", { name: "Governance action" })).toBeInTheDocument();
     expect(screen.getByText("Operating Queue")).toBeInTheDocument();
@@ -367,6 +370,11 @@ describe("WorkbenchPage", () => {
         input.toString().includes("/api/v1/dpm/command-center/outcome-reviews?portfolio_id=PF_3001")
       )
     ).toBe(true);
+    expect(
+      consoleErrorSpy.mock.calls.some((call) =>
+        call.some((value) => String(value).includes("not wrapped in act")),
+      ),
+    ).toBe(false);
   });
 
   it("renders outcome reviews from Gateway-backed manage data", async () => {
