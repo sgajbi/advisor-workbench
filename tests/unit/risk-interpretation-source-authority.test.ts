@@ -75,6 +75,11 @@ describe("Risk Review interpretation authority", () => {
     expect(browserWorkflow).toContain(
       "buildMandateConstraintProofRows(mandateComparisons)",
     );
+    expect(browserWorkflow).toContain("assertExactSourceRenderProof({");
+    expect(browserWorkflow).toContain('screen: "Risk review"');
+    expect(browserWorkflow).toContain(
+      'element.getAttribute("data-mandate-state")',
+    );
     expect(browserWorkflow).toContain(
       "for (const expected of expectedMandateStates)",
     );
