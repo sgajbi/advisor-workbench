@@ -68,8 +68,10 @@ describe("canonical live validation script", () => {
     expect(overviewJourneyStart).toBeGreaterThanOrEqual(0);
     expect(overviewJourneyEnd).toBeGreaterThan(overviewJourneyStart);
     expect(browserWorkflowModule).not.toContain("Advisory overview summary");
+    expect(overviewJourney).toContain("await advisoryOverviewResponsePromise");
+    expect(overviewJourney).toContain("buildProposalListSourceRows(");
     expect(overviewJourney).toContain(
-      "return validateAdvisoryOverviewDecisionSurface(page, timeoutMs)",
+      "return validateAdvisoryOverviewDecisionSurface(page, {",
     );
     for (const stableEvidence of [
       'name: "Adviser priorities"',
@@ -80,7 +82,9 @@ describe("canonical live validation script", () => {
       'name: "Selected advisory proposal"',
       'aria-selected="true"',
       'getAttribute("aria-controls")',
+      'getAttribute("data-source-identity")',
       'name: "Open proposal review"',
+      "assertExactSourceRenderProof({",
     ]) {
       expect(decisionSurfaceProof).toContain(stableEvidence);
     }
@@ -89,6 +93,12 @@ describe("canonical live validation script", () => {
     );
     expect(browserWorkflowModule).toContain(
       "validation.evidence ? { evidence: validation.evidence } : {}",
+    );
+    expect(browserWorkflowModule).toContain(
+      'url.pathname.endsWith("/api/bff/api/v1/proposals")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'url.searchParams.get("portfolio_id") === portfolioId',
     );
   });
 
