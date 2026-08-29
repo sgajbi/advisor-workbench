@@ -22,9 +22,12 @@ test("construction alternatives lab renders and exercises Gateway-backed generat
   const panelHeader = panel.getByRole("group", {
     name: "Construction Alternatives section header",
   });
-  await expect(panel.getByRole("heading", { name: "Construction Alternatives" })).toBeVisible({
-    timeout: 60_000,
-  });
+  await expect(
+    panel.getByRole("heading", {
+      name: "Construction Alternatives",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: 60_000 });
   await expect(
     panel.getByText("Construction alternatives have not been generated")
   ).toBeVisible();
