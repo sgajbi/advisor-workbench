@@ -732,6 +732,24 @@ describe("canonical live validation script", () => {
     }
   });
 
+  it("forwards complete canonical Idea caller scope through the Docker boundary", () => {
+    const compose = readFileSync(
+      join(process.cwd(), "docker-compose.yml"),
+      "utf8",
+    );
+
+    for (const [variable, fallback] of [
+      ["WORKBENCH_IDEA_CALLER_SUBJECT", "workbench-advisor"],
+      ["WORKBENCH_IDEA_CALLER_ROLES", "advisor"],
+      ["WORKBENCH_IDEA_CALLER_TENANT_IDS", "tenant-private-bank-sg"],
+      ["WORKBENCH_IDEA_CALLER_BOOK_IDS", "book-advisor-001"],
+      ["WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS", "PB_SG_GLOBAL_BAL_001"],
+      ["WORKBENCH_IDEA_CALLER_CLIENT_IDS", "client-001"],
+    ] as const) {
+      expect(compose).toContain(`- ${variable}=\${${variable}:-${fallback}}`);
+    }
+  });
+
   it("requires the exact canonical PM quality records to be ready", () => {
     const script = readFileSync(
       join(
