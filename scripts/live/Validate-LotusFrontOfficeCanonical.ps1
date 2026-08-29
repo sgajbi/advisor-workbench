@@ -115,6 +115,17 @@ function Read-IdeaCandidateSeedEvidence {
   if ([string]::IsNullOrWhiteSpace([string]$evidence.runId)) {
     throw "Canonical Lotus Idea candidate seed evidence has no run identity."
   }
+  $ideaVersion = Invoke-RestMethod -Uri "http://idea.dev.lotus/version" -TimeoutSec 45
+  $activeIdeaRunId = [string]$ideaVersion.build.ciRunId
+  if ([string]::IsNullOrWhiteSpace($activeIdeaRunId)) {
+    throw "Active Lotus Idea runtime exposes no build run identity."
+  }
+  if ([string]$evidence.runId -ne $activeIdeaRunId) {
+    throw (
+      "Canonical Lotus Idea candidate seed evidence belongs to run '$($evidence.runId)', " +
+      "but the active Idea runtime identifies run '$activeIdeaRunId'."
+    )
+  }
   return $evidence
 }
 

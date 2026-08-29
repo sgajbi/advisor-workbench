@@ -296,7 +296,8 @@ concurrency group.
     duplicating date literals in Workbench startup automation.
     Startup records the exact current-run review-ready candidate in
     `output/canonical-front-office/idea-candidate-seed-evidence.json`; validation proves the same
-    identity through Gateway before targeting its exact queue row. A broad title match or an older
+    identity through Gateway and matches the artifact's run ID to the active Idea `/version` build
+    identity before targeting its exact queue row. A broad title match, stale artifact, or older
     unconverted canonical candidate cannot stand in for current-run evidence.
 - RFC or mainline certification runs must invoke the canonical startup script with
   `-RequireMainlineSources`. The preflight writes a source-safe provenance manifest and fails
