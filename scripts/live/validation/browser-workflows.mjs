@@ -1,6 +1,7 @@
 import path from "node:path";
 import { expect } from "@playwright/test";
 
+import { buildAdvisorBookSourceRenderRows } from "./advisor-book-proof.mjs";
 import { assertExactSourceRenderProof } from "./source-render-proof.mjs";
 
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
@@ -1154,6 +1155,8 @@ export async function validateReportCentrePanel(
 export async function validateAdvisorBookPanel(
   page,
   {
+    summary,
+    advisorBook,
     workbenchBaseUrl,
     portfolioId,
     canonicalAsOfDate,
@@ -1173,6 +1176,33 @@ export async function validateAdvisorBookPanel(
   });
   const bookTable = tableByExactLabel(page, "Portfolios in my book");
   await assertTableHasRows(bookTable, 1, "Portfolios in my book");
+  const expectedBookRows = buildAdvisorBookSourceRenderRows(advisorBook);
+  const renderedBookRows = bookTable.locator('[data-advisor-book-row="portfolio"]');
+  await expect(renderedBookRows).toHaveCount(expectedBookRows.length, {
+    timeout: timeoutMs,
+  });
+  for (let index = 0; index < expectedBookRows.length; index += 1) {
+    await expect(renderedBookRows.nth(index)).toBeVisible({ timeout: timeoutMs });
+  }
+  const renderedBookEvidence = await renderedBookRows.evaluateAll((elements) =>
+    elements.map((element) => ({
+      source: "advisor-book",
+      identity: element.getAttribute("data-portfolio-id") ?? "",
+      state: element.getAttribute("data-lifecycle-state") ?? "",
+    })),
+  );
+  assertExactSourceRenderProof({
+    screen: "Advisor Book",
+    expectedRows: expectedBookRows,
+    renderedRows: renderedBookEvidence,
+  });
+  summary.uiChecks.push({
+    description: "Exact Gateway-owned Advisor Book rows",
+    kind: "advisor-book-source-render-proof",
+    portfolioId,
+    sourceRowEvidence: expectedBookRows,
+    browserPolicyCalculation: "none",
+  });
   const canonicalPortfolioLink = bookTable
     .locator(`a[href*="portfolioId=${encodeURIComponent(portfolioId)}"]`)
     .first();
