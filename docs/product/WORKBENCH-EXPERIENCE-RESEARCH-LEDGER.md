@@ -7052,3 +7052,57 @@ Workbench #919 owns this shared accessibility correction. The Outcome reviews gu
 keyboard-operating truth changed and therefore requires wiki publication after merge. No Gateway,
 Manage, Lotus AI, API, calculation, copy, CSS, dependency, identity, entitlement, or runtime
 topology contract changes.
+
+## 2026-08-30 — Review-context business-object composition (#814)
+
+### Business workflow question
+
+How should one shell-owned review header orient an adviser across Portfolio, Performance, Mandate
+Management, Advice, and Reporting without spreading short facts across an empty wide card or
+hiding important context when space narrows?
+
+### Evidence consulted
+
+1. [SAP Fiori Object Page](https://experience.sap.com/fiori-design-web/object-page/) sizes header
+   facets to their content and uses the business-object title as the persistent anchor.
+2. [SAP Fiori Dynamic Page](https://experience.sap.com/fiori-design-web/dynamic-page-layout/)
+   retains important header information while letting the working content remain the focus and
+   adapts the header across large, medium, and small layouts.
+3. [IBM Carbon productive typography](https://carbondesignsystem.com/elements/typography/style-strategies/)
+   prioritises condensed, consistent task-oriented hierarchy for users completing complex work.
+4. The governed Workbench source-state and viewport fixtures measure typography, slot geometry,
+   overflow, DOM order, keyboard reachability, and identity ownership rather than relying on a
+   screenshot alone.
+
+### Adopted decisions
+
+1. Treat the portfolio name as the dominant business identity and keep the compact source facts
+   visually associated with it rather than distributing them into equal fractional tracks.
+2. Order facts by decision value: business date, currency, mandate, then booking centre. Preserve
+   that order in the DOM so responsive reflow and keyboard reading order agree.
+3. Size wide-screen facts to their content with bounded optical gaps. Reflow them below the
+   identity at workstation widths and into two stable columns on narrow screens.
+4. Wrap portfolio identity and business facts before truncating them. Keep operational identifiers
+   in the existing keyboard-accessible **Support details** disclosure.
+5. Preserve identical confirmed, partial, and unavailable geometry. State changes alter truthful
+   content and the existing source-state accent, not layout structure.
+6. Record semantic slot order, bounding boxes, typography, and overflow in browser evidence so
+   future visual drift becomes a deterministic regression.
+
+### Rejected decisions
+
+1. Replacing IBM Plex Sans, enlarging the header into an expressive hero, or adding animation.
+2. Increasing shadows, borders, badges, or decorative colour to compensate for weak alignment.
+3. Truncating the portfolio name, business date, or currency without a reveal path.
+4. Implementing a pin/snap header, generic overflow menu, or new component dependency without a
+   demonstrated workflow need.
+5. Styling or deriving business behavior from the semantic evidence attributes.
+
+### Validation and publication decision
+
+Workbench #814 owns this reusable composition refinement. Component and browser proof covers
+source-state parity and the governed 1440/1024/768/721/720/561/519 matrix. Repository context,
+architecture wiki, research ledger, and rendered diagnostic evidence change; individual screen
+guides do not change because source fields, actions, and workflow ownership are unchanged. No
+Gateway, API, calculation, authentication, entitlement, dependency, or runtime topology change is
+required.
