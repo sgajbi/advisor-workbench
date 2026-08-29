@@ -12,6 +12,7 @@ export const DEFAULT_CANONICAL_CONTRACT = {
     portfolioManagerId: "PM_SG_DPM_001",
     bookId: "BOOK_SG_BALANCED_DPM",
     tenantId: "default",
+    workbenchCallerTenantId: "tenant-sg",
     commandCenterAsOfDate: "2026-05-03",
     multiPortfolioWaveScenario: {
       scenarioId: "RFC41_MULTI_PORTFOLIO_EXPLICIT_LIST_CANONICAL",
@@ -794,6 +795,9 @@ export async function loadCanonicalContractMetadata(cwd = process.cwd()) {
           tenantId:
             payload.dpm_command_center?.tenant_id ??
             DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.tenantId,
+          workbenchCallerTenantId:
+            payload.dpm_command_center?.workbench_caller_tenant_id ??
+            DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.workbenchCallerTenantId,
           commandCenterAsOfDate:
             payload.dpm_command_center?.command_center_as_of_date ??
             DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.commandCenterAsOfDate,
