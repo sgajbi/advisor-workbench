@@ -52,6 +52,41 @@ export function assertExactSourceRenderProof({
   return expected;
 }
 
+/**
+ * Proves that a business label is a presentation of one source-owned text value. The comparison
+ * permits only case and word-separator presentation differences; it does not infer aliases or
+ * substitute missing values.
+ *
+ * @param {object} proof
+ * @param {string} proof.screen
+ * @param {string} proof.fact
+ * @param {string} proof.sourceValue
+ * @param {string} proof.renderedValue
+ * @returns {string}
+ */
+export function assertSourceBusinessLabelProof({
+  screen,
+  fact,
+  sourceValue,
+  renderedValue,
+}) {
+  const screenName = requireText(screen, "screen", "proof");
+  const factName = requireText(fact, "fact", "proof", screenName);
+  const source = requireText(sourceValue, "source value", factName, screenName);
+  const rendered = requireText(
+    renderedValue,
+    "rendered value",
+    factName,
+    screenName,
+  );
+  if (normalizeBusinessLabel(rendered) !== normalizeBusinessLabel(source)) {
+    throw new Error(
+      `${screenName}: ${factName} rendered ${rendered}, but Gateway supplied ${source}.`,
+    );
+  }
+  return source;
+}
+
 function normalizeRows(screen, side, rows) {
   if (!Array.isArray(rows)) {
     throw new Error(`${screen}: ${side} proof rows were not an array.`);
@@ -89,6 +124,10 @@ function indexRows(screen, side, rows) {
 
 function rowKey(row) {
   return `${row.source}\u0000${row.identity}`;
+}
+
+function normalizeBusinessLabel(value) {
+  return value.replaceAll("_", " ").replace(/\s+/gu, " ").toLocaleLowerCase("en");
 }
 
 function requireText(value, field, location, screen = "Source render proof") {

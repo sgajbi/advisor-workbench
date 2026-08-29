@@ -9,3 +9,10 @@ export function assertExactSourceRenderProof(proof: {
   expectedRows: SourceRenderProofRow[];
   renderedRows: SourceRenderProofRow[];
 }): SourceRenderProofRow[];
+
+export function assertSourceBusinessLabelProof(proof: {
+  screen: string;
+  fact: string;
+  sourceValue: string;
+  renderedValue: string;
+}): string;
