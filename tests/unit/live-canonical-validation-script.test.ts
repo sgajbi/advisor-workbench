@@ -1805,8 +1805,9 @@ describe("canonical live validation script", () => {
     ).toBeGreaterThan(browserWorkflowModule.indexOf('key: "implementation"'));
     expect(browserWorkflowModule).toContain("Record internal review");
     expect(browserWorkflowModule).toContain(
-      'getByText("Approved For Internal Use",',
+      '"APPROVED_FOR_INTERNAL_USE",',
     );
+    expect(browserWorkflowModule).not.toContain("Approved For Internal Use");
     expect(browserWorkflowModule).toContain('reviewState = "approved"');
     expect(browserWorkflowModule).toContain('reviewState = "reviewable"');
     expect(browserWorkflowModule).toContain(

@@ -1147,17 +1147,12 @@ export async function validateAdvisoryJourneyScreens(
       const internalReviewButton = page.getByRole("button", {
         name: "Record internal review",
       });
-      const approvedPosture = page.getByText("Approved For Internal Use", {
-        exact: true,
-      });
       const reviewReadyDeadline = Date.now() + timeoutMs;
       let reviewState = "pending";
       while (Date.now() < reviewReadyDeadline) {
         if (
-          await approvedPosture
-            .first()
-            .isVisible()
-            .catch(() => false)
+          (await humanReview.getAttribute("data-review-posture")) ===
+          "APPROVED_FOR_INTERNAL_USE"
         ) {
           reviewState = "approved";
           break;
@@ -1176,9 +1171,11 @@ export async function validateAdvisoryJourneyScreens(
       if (reviewState === "reviewable") {
         await internalReviewButton.click();
       }
-      await expect(approvedPosture.first()).toBeVisible({
-        timeout: timeoutMs,
-      });
+      await expect(humanReview).toHaveAttribute(
+        "data-review-posture",
+        "APPROVED_FOR_INTERNAL_USE",
+        { timeout: timeoutMs },
+      );
       await expect(page.getByText("workflow_pack")).toHaveCount(0);
       await expect(page.getByText("PROPOSAL_EXPLANATION")).toHaveCount(0);
       await expect(page.getByText("CLIENT_READY_PUBLICATION")).toHaveCount(0);
