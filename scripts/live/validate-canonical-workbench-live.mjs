@@ -19,8 +19,8 @@ import {
   fetchJsonUntil,
   fetchText,
   postJson,
-  postJsonExpectingStatus,
   sendJson,
+  sendJsonExpectingStatus,
 } from "./validation/probes.mjs";
 import {
   assertPerformanceCalculationSanity,
@@ -192,22 +192,6 @@ function canonicalRiskQuery(extra = {}) {
     query.set(key, value);
   }
   return query.toString();
-}
-
-async function fetchOptionalJson(description, url) {
-  try {
-    return await fetchJson(summary, url, description, timeoutMs);
-  } catch (error) {
-    summary.apiChecks.push({
-      description,
-      url,
-      status: "seed_gap",
-      kind: "json",
-      method: "GET",
-      warning: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
 }
 
 function readSupportabilityState(supportability) {
@@ -804,6 +788,60 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
   };
 }
 
+const dpmCommandCenterCallerHeaders = Object.freeze({
+  "X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId,
+});
+
+function fetchDpmCommandCenterJson(url, description) {
+  return sendJson(summary, url, description, timeoutMs, {
+    headers: dpmCommandCenterCallerHeaders,
+  });
+}
+
+function postDpmCommandCenterJson(url, description, body) {
+  return sendJson(summary, url, description, timeoutMs, {
+    method: "POST",
+    body,
+    headers: dpmCommandCenterCallerHeaders,
+  });
+}
+
+function postDpmCommandCenterJsonExpectingStatus(
+  url,
+  description,
+  expectedStatus,
+  body,
+) {
+  return sendJsonExpectingStatus(
+    summary,
+    url,
+    description,
+    timeoutMs,
+    expectedStatus,
+    {
+      method: "POST",
+      body,
+      headers: dpmCommandCenterCallerHeaders,
+    },
+  );
+}
+
+async function fetchOptionalDpmCommandCenterJson(description, url) {
+  try {
+    return await fetchDpmCommandCenterJson(url, description);
+  } catch (error) {
+    summary.apiChecks.push({
+      description,
+      url,
+      status: "seed_gap",
+      kind: "json",
+      method: "GET",
+      warning: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 async function run() {
   await ensureDirectory(outputDir);
 
@@ -1133,11 +1171,9 @@ async function run() {
     },
   };
 
-  const outcomeReviews = await fetchJson(
-    summary,
+  const outcomeReviews = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/outcome-reviews?portfolio_id=${portfolioId}&limit=5`,
     "DPM outcome reviews",
-    timeoutMs,
   );
   const outcomeReviewItems =
     outcomeReviews?.data?.items ?? outcomeReviews?.items ?? [];
@@ -1181,11 +1217,9 @@ async function run() {
     "wb-proof-pack",
     proofPackRequestBody,
   );
-  const generatedProofPack = await postJson(
-    summary,
+  const generatedProofPack = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs`,
     "Generate DPM proof-pack evidence",
-    timeoutMs,
     {
       idempotency_key: proofPackIdempotencyKey,
       body: proofPackRequestBody,
@@ -1197,11 +1231,9 @@ async function run() {
       "DPM proof-pack generation returned no proof-pack reference.",
     );
   }
-  const proofPack = await fetchJson(
-    summary,
+  const proofPack = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}`,
     "DPM proof-pack evidence",
-    timeoutMs,
   );
   const proofPackPayload =
     proofPack?.data?.proof_pack ?? proofPack?.data ?? proofPack;
@@ -1231,11 +1263,9 @@ async function run() {
       `DPM proof-pack evidence returned non-reviewable state: ${proofPackSupportability.state}.`,
     );
   }
-  const proofPackAiPmMemo = await postJson(
-    summary,
+  const proofPackAiPmMemo = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/proof-packs/${encodeURIComponent(proofPackId)}/ai-pm-memo`,
     "DPM proof-pack AI PM memo",
-    timeoutMs,
     {
       requested_outputs: ["pm_memo", "rationale_summary", "evidence_gaps"],
       audience: ["portfolio_manager", "investment_control"],
@@ -1280,11 +1310,9 @@ async function run() {
     as_of_date: dpmCommandCenterDefaults.asOfDate,
     limit: "25",
   });
-  const dpmCommandCenter = await fetchJson(
-    summary,
+  const dpmCommandCenter = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center?${commandCenterParams.toString()}`,
     "DPM command-center summary",
-    timeoutMs,
   );
   const dpmCommandCenterPayload = dpmCommandCenter?.data ?? dpmCommandCenter;
   if (!dpmCommandCenterPayload?.supportability) {
@@ -1301,11 +1329,9 @@ async function run() {
     );
   }
 
-  const portfolioMemory = await fetchJson(
-    summary,
+  const portfolioMemory = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/portfolios/${encodeURIComponent(portfolioId)}/memory?limit=100`,
     "DPM portfolio memory",
-    timeoutMs,
   );
   const portfolioMemorySupportability = portfolioMemory?.supportability;
   const portfolioMemoryPayload = portfolioMemory?.data ?? portfolioMemory;
@@ -1339,15 +1365,13 @@ async function run() {
     throw new Error("DPM portfolio memory returned no content hash.");
   }
 
-  const dpmExceptions = await fetchJson(
-    summary,
+  const dpmExceptions = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/exceptions?tenant_id=${encodeURIComponent(
       dpmCommandCenterDefaults.tenantId,
     )}&portfolio_manager_id=${encodeURIComponent(
       dpmCommandCenterDefaults.portfolioManagerId,
     )}&limit=25&state=ACTIVE`,
     "DPM command-center active exceptions",
-    timeoutMs,
   );
   const dpmExceptionItems =
     dpmExceptions?.data?.items ??
@@ -1358,7 +1382,7 @@ async function run() {
     throw new Error("DPM command-center exceptions returned no list envelope.");
   }
 
-  const dpmMandate = await fetchOptionalJson(
+  const dpmMandate = await fetchOptionalDpmCommandCenterJson(
     "DPM command-center mandate by portfolio",
     `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/by-portfolio/${portfolioId}`,
   );
@@ -1371,11 +1395,9 @@ async function run() {
 
   let mandateHealthObserved = false;
   if (mandateId) {
-    const dpmMandateHealth = await fetchJson(
-      summary,
+    const dpmMandateHealth = await fetchDpmCommandCenterJson(
       `${gatewayBaseUrl}/api/v1/dpm/command-center/mandates/${encodeURIComponent(mandateId)}/health`,
       "DPM command-center mandate health",
-      timeoutMs,
     );
     const dpmMandateHealthPayload = dpmMandateHealth?.data ?? dpmMandateHealth;
     if (
@@ -1395,11 +1417,9 @@ async function run() {
     limit: "10",
     offset: "0",
   });
-  const dpmWaves = await fetchJson(
-    summary,
+  const dpmWaves = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves?${dpmWaveParams.toString()}`,
     "DPM rebalance waves",
-    timeoutMs,
   );
   const dpmWaveSupportability = dpmWaves?.supportability;
   if (!readSupportabilityState(dpmWaveSupportability)) {
@@ -1409,11 +1429,9 @@ async function run() {
   }
   const dpmWavePayload = dpmWaves?.data ?? dpmWaves;
   let dpmWaveId = extractDpmWaveId(dpmWavePayload);
-  const dpmWavePreview = await postJson(
-    summary,
+  const dpmWavePreview = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
     "DPM rebalance-wave preview",
-    timeoutMs,
     {
       body: {
         trigger_type: "EXPLICIT_PORTFOLIO_LIST",
@@ -1440,11 +1458,9 @@ async function run() {
   const multiPortfolioWaveScenario =
     canonicalContract.dpmCommandCenter?.multiPortfolioWaveScenario ??
     DEFAULT_CANONICAL_CONTRACT.dpmCommandCenter.multiPortfolioWaveScenario;
-  const multiPortfolioWavePreview = await postJson(
-    summary,
+  const multiPortfolioWavePreview = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
     "DPM rebalance-wave multi-portfolio preview",
-    timeoutMs,
     {
       body: {
         trigger_type: multiPortfolioWaveScenario.triggerType,
@@ -1490,11 +1506,9 @@ async function run() {
     include_inactive_mandates: false,
     campaign_candidate_page_size: 500,
   };
-  const coreCandidateSourcePreview = await postJson(
-    summary,
+  const coreCandidateSourcePreview = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
     "DPM Core candidate-source wave preview",
-    timeoutMs,
     {
       body: coreCandidateSourcePreviewBody,
     },
@@ -1522,11 +1536,9 @@ async function run() {
       "DPM Core candidate-source preview did not preserve lotus-core DpmPortfolioUniverseCandidate source refs.",
     );
   }
-  const coreCandidateSourceRejected = await postJsonExpectingStatus(
-    summary,
+  const coreCandidateSourceRejected = await postDpmCommandCenterJsonExpectingStatus(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/preview`,
     "DPM Core candidate-source rejects caller portfolios",
-    timeoutMs,
     422,
     {
       body: {
@@ -1566,11 +1578,9 @@ async function run() {
     ],
   });
   if (!dpmWaveId) {
-    const dpmWaveCreate = await postJson(
-      summary,
+    const dpmWaveCreate = await postDpmCommandCenterJson(
       `${gatewayBaseUrl}/api/v1/dpm/command-center/waves`,
       "DPM rebalance-wave create",
-      timeoutMs,
       {
         idempotency_key: [
           "workbench-live-validation-wave",
@@ -1595,11 +1605,9 @@ async function run() {
       "DPM rebalance-wave create returned no manage-owned wave id.",
     );
   }
-  const dpmWaveReportInput = await fetchJson(
-    summary,
+  const dpmWaveReportInput = await fetchDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/${encodeURIComponent(dpmWaveId)}/report-input`,
     "DPM rebalance-wave report input",
-    timeoutMs,
   );
   const dpmWaveReportInputPayload =
     dpmWaveReportInput?.data ?? dpmWaveReportInput;
@@ -1611,11 +1619,9 @@ async function run() {
       "DPM rebalance-wave report input returned no report input evidence ref.",
     );
   }
-  const dpmWaveAiPmMemo = await postJson(
-    summary,
+  const dpmWaveAiPmMemo = await postDpmCommandCenterJson(
     `${gatewayBaseUrl}/api/v1/dpm/command-center/waves/${encodeURIComponent(dpmWaveId)}/ai-pm-memo`,
     "DPM rebalance-wave AI PM memo",
-    timeoutMs,
     {
       requested_outputs: [
         "wave_pm_memo",
