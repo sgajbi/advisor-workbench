@@ -1662,6 +1662,16 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "buildOutcomeReviewSourceEvidenceProof(sourceReview)",
     );
+    expect(browserWorkflowModule).toMatch(
+      /getByTestId\(\s*"selected-outcome-review-detail",?\s*\)/u,
+    );
+    for (const attribute of [
+      "data-outcome-review-id",
+      "data-expected-snapshot-hash",
+      "data-realized-snapshot-hash",
+    ]) {
+      expect(browserWorkflowModule).toContain(attribute);
+    }
     expect(script).toContain("sourceReview: outcomeReviewItems[0]");
     expect(browserWorkflowModule).toContain("proof-pack-panel");
     expect(browserWorkflowModule).toContain("requireVisible");

@@ -27,7 +27,14 @@ export default function OutcomeReviewDetailPanel({
   onRequestReportJob,
 }: Props) {
   return (
-    <div className="outcome-review-detail-panel" id="outcome-review-detail">
+    <div
+      className="outcome-review-detail-panel"
+      id="outcome-review-detail"
+      data-testid="selected-outcome-review-detail"
+      data-outcome-review-id={primaryReview.outcomeReviewId}
+      data-expected-snapshot-hash={primaryReview.expectedSnapshotHash}
+      data-realized-snapshot-hash={primaryReview.realizedSnapshotHash}
+    >
       <OutcomeReviewDetailHeader
         reviewLabel={primaryReview.reviewLabel}
         reportJobAvailable={reportJobAvailable}
