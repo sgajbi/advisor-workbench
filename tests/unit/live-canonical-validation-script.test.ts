@@ -922,9 +922,24 @@ describe("canonical live validation script", () => {
     expect(script).toContain(
       "function postDpmCommandCenterJsonExpectingStatus",
     );
-    expect(script).not.toMatch(
-      /(?:fetchJson|postJson|postJsonExpectingStatus)\(\s*summary,[\s\S]{0,160}`\$\{gatewayBaseUrl\}\/api\/v1\/dpm\/command-center/u,
-    );
+    for (const rawProbe of [
+      "fetchJson",
+      "fetchJsonUntil",
+      "fetchText",
+      "postJson",
+      "postJsonExpectingStatus",
+      "sendJson",
+      "sendJsonExpectingStatus",
+    ]) {
+      const rawDpmCallPattern = new RegExp(
+        `\\b${rawProbe}\\(\\s*summary,\\s*\`\\$\\{gatewayBaseUrl\\}/api/v1/dpm/command-center`,
+        "u",
+      );
+      expect(
+        `${rawProbe}(summary, \`\${gatewayBaseUrl}/api/v1/dpm/command-center/outcome-reviews\`)`,
+      ).toMatch(rawDpmCallPattern);
+      expect(script).not.toMatch(rawDpmCallPattern);
+    }
     expect(script).not.toContain("fetchOptionalJson");
   });
 
