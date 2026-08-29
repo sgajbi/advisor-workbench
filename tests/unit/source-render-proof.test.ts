@@ -1,16 +1,9 @@
-import * as sourceRenderProofModule from "../../scripts/live/validation/source-render-proof.mjs";
+import {
+  assertExactSourceRenderProof,
+  type SourceRenderProofRow,
+} from "../../scripts/live/validation/source-render-proof.mjs";
 
-type ProofRow = { source: string; identity: string; state: string };
-
-const { assertExactSourceRenderProof } = sourceRenderProofModule as unknown as {
-  assertExactSourceRenderProof: (proof: {
-    screen: string;
-    expectedRows: ProofRow[];
-    renderedRows: ProofRow[];
-  }) => ProofRow[];
-};
-
-const expectedRows: ProofRow[] = [
+const expectedRows: SourceRenderProofRow[] = [
   { source: "summary", identity: "cash_band", state: "within" },
   { source: "concentration", identity: "issuer_max_weight", state: "breach" },
 ];
