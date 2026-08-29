@@ -87,4 +87,23 @@ describe("exact Gateway-to-render proof", () => {
       }),
     ).toThrow("Advisor Book: source row 1 returned no identity.");
   });
+
+  it.each(["source", "identity", "state"] as const)(
+    "rejects normalized %s evidence because exact proof must preserve source values",
+    (field) => {
+      expect(() =>
+        assertExactSourceRenderProof({
+          screen: "Advisor Book",
+          expectedRows: [
+            {
+              source: field === "source" ? " advisor-book" : "advisor-book",
+              identity: field === "identity" ? "PB_001 " : "PB_001",
+              state: field === "state" ? " ACTIVE " : "ACTIVE",
+            },
+          ],
+          renderedRows: [],
+        }),
+      ).toThrow(`returned ${field} with surrounding whitespace`);
+    },
+  );
 });

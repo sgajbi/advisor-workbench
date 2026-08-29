@@ -92,9 +92,13 @@ function rowKey(row) {
 }
 
 function requireText(value, field, location, screen = "Source render proof") {
-  const normalized = typeof value === "string" ? value.trim() : "";
-  if (!normalized) {
+  if (typeof value !== "string" || !value) {
     throw new Error(`${screen}: ${location} returned no ${field}.`);
   }
-  return normalized;
+  if (value !== value.trim()) {
+    throw new Error(
+      `${screen}: ${location} returned ${field} with surrounding whitespace.`,
+    );
+  }
+  return value;
 }
