@@ -2165,6 +2165,7 @@ async function run() {
     await validateOutcomeReviewPanel(page, {
       workbenchBaseUrl,
       portfolioId,
+      sourceReview: outcomeReviewItems[0],
       timeoutMs,
       assertTableHasRows: browserHelpers.assertTableHasRows,
       screenshotRegisteredPanel: browserHelpers.screenshotRegisteredPanel,
