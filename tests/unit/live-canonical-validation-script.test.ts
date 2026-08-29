@@ -677,6 +677,8 @@ describe("canonical live validation script", () => {
     );
     expect(validationScript).toContain("idea-capacity-seed-evidence.json");
     expect(validationScript).toContain('"--idea-capacity-seed-evidence"');
+    expect(validationScript).toContain("idea-candidate-seed-evidence.json");
+    expect(validationScript).toContain('"--idea-candidate-id"');
     expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
     expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
     expect(startScript).toContain('"invoke-idea-candidate-lifecycle-seed.mjs"');
@@ -700,7 +702,10 @@ describe("canonical live validation script", () => {
       '"Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$ideaCanonicalRunId"',
     );
     expect(validationScript).toContain("function Assert-IdeaQueueSeed");
-    expect(validationScript).toContain("Gateway Idea review queue contains");
+    expect(validationScript).toContain("function Read-IdeaCandidateSeedEvidence");
+    expect(validationScript).toContain("current-run candidate");
+    expect(startScript).toContain("idea-candidate-seed-evidence.json");
+    expect(startScript).toContain("$seededQueueItems.Count -ne 1");
     expect(browserValidator).toContain(
       'checkDns(summary, "archive.dev.lotus")',
     );
@@ -1701,8 +1706,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "resolveHighCashIdeaCandidateId",
     );
+    expect(browserWorkflowModule).toContain("requireHighCashIdeaCandidateId");
     expect(browserWorkflowModule).toContain(
-      "^High Cash - idea_high_cash_[0-9a-f]{16}$",
+      "name: `High Cash - ${expectedIdeaCandidateId}`",
     );
     expect(browserWorkflowModule).not.toContain("idea_high_cash_001");
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');

@@ -34,6 +34,7 @@ export function resolveValidationConfig(argv, cwd = process.cwd()) {
     timeoutMs: Number(args.get("timeout-ms") ?? "60000"),
     canonicalStartDate: args.get("start-date") ?? "2025-03-31",
     canonicalAsOfDate: args.get("as-of-date") ?? "2026-04-10",
+    ideaCandidateId: args.get("idea-candidate-id") ?? null,
     ideaCapacitySeedEvidencePath: path.resolve(
       cwd,
       args.get("idea-capacity-seed-evidence") ??

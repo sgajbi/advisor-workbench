@@ -8,6 +8,7 @@ param(
   [string]$GatewayBaseUrl = "http://gateway.dev.lotus",
   [string]$ScreenshotDirectory = "",
   [string]$CanonicalEvidenceDirectory = "",
+  [string]$IdeaCandidateSeedEvidencePath = "",
   [string]$IdeaCapacitySeedEvidencePath = "",
   [string]$MainlineSourceProvenancePath = ""
 )
@@ -25,6 +26,11 @@ $ideaCapacitySeedEvidencePath = if ([string]::IsNullOrWhiteSpace($IdeaCapacitySe
   Join-Path $canonicalEvidenceRoot "idea-capacity-seed-evidence.json"
 } else {
   $IdeaCapacitySeedEvidencePath
+}
+$ideaCandidateSeedEvidencePath = if ([string]::IsNullOrWhiteSpace($IdeaCandidateSeedEvidencePath)) {
+  Join-Path $canonicalEvidenceRoot "idea-candidate-seed-evidence.json"
+} else {
+  $IdeaCandidateSeedEvidencePath
 }
 $canonicalCallerContextHeaders = @{
   "X-Actor-Id" = "workbench-system"
@@ -89,7 +95,32 @@ function Test-Endpoint {
   throw "$lastError after $Attempts attempts."
 }
 
+function Read-IdeaCandidateSeedEvidence {
+  if (-not (Test-Path -LiteralPath $ideaCandidateSeedEvidencePath)) {
+    throw "Canonical Lotus Idea candidate seed evidence is missing: $ideaCandidateSeedEvidencePath"
+  }
+  $evidence = Get-Content -LiteralPath $ideaCandidateSeedEvidencePath -Raw | ConvertFrom-Json
+  if ($evidence.schemaVersion -ne "lotus-workbench.idea-candidate-seed-evidence.v1") {
+    throw "Canonical Lotus Idea candidate seed evidence has an unsupported schema version."
+  }
+  if ([string]$evidence.portfolioId -ne $PortfolioId) {
+    throw "Canonical Lotus Idea candidate seed evidence does not match portfolio $PortfolioId."
+  }
+  if ([string]$evidence.candidateId -notmatch '^idea_high_cash_[0-9a-f]{16}$') {
+    throw "Canonical Lotus Idea candidate seed evidence has an invalid candidate identity."
+  }
+  if ([string]$evidence.lifecycleStatus -ne "ready_for_review") {
+    throw "Canonical Lotus Idea candidate seed evidence is not ready for advisor review."
+  }
+  if ([string]::IsNullOrWhiteSpace([string]$evidence.runId)) {
+    throw "Canonical Lotus Idea candidate seed evidence has no run identity."
+  }
+  return $evidence
+}
+
 function Assert-IdeaQueueSeed {
+  param([string]$ExpectedCandidateId)
+
   $headers = @{
     "X-Caller-Subject" = "canonical-front-office-validator"
     "X-Caller-Roles" = "advisor"
@@ -98,10 +129,16 @@ function Assert-IdeaQueueSeed {
   }
   $url = "$GatewayBaseUrl/api/v1/ideas/review-queues/advisor"
   $queue = Invoke-RestMethod -Uri $url -Headers $headers -TimeoutSec 45
-  if ($queue.page.returnedItemCount -lt 1) {
-    throw "Gateway Idea review queue is empty for $PortfolioId. Run canonical stack startup to seed Lotus Idea before validation."
+  $matchingItems = @($queue.items | Where-Object {
+      [string]$_.candidate.candidateId -eq $ExpectedCandidateId
+    })
+  if ($matchingItems.Count -ne 1) {
+    throw (
+      "Gateway Idea review queue did not expose current-run candidate '$ExpectedCandidateId' " +
+      "exactly once for $PortfolioId. Matches: $($matchingItems.Count)."
+    )
   }
-  Write-Host "[ok] Gateway Idea review queue contains $($queue.page.returnedItemCount) item(s) -> $url"
+  Write-Host "[ok] Gateway Idea review queue contains current-run candidate $ExpectedCandidateId -> $url"
 }
 
 Test-CanonicalHost "workbench.dev.lotus"
@@ -135,7 +172,8 @@ Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/overview" "Gateway 
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/summary?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway performance summary" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/risk/summary?period=EXPLICIT&detail_basis=NET&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate&as_of_date=$AsOfDate" "Gateway risk summary" -Headers $canonicalCallerContextHeaders
 Test-Endpoint "$GatewayBaseUrl/api/v1/workbench/$PortfolioId/performance/advisor-brief?period=EXPLICIT&chart_frequency=monthly&detail_basis=NET&contribution_dimension=asset_class&attribution_dimension=asset_class&benchmark_code=$BenchmarkCode&report_start_date=$StartDate&report_end_date=$AsOfDate" "Gateway advisor brief" -Headers $canonicalCallerContextHeaders
-Assert-IdeaQueueSeed
+$ideaCandidateSeedEvidence = Read-IdeaCandidateSeedEvidence
+Assert-IdeaQueueSeed -ExpectedCandidateId $ideaCandidateSeedEvidence.candidateId
 if (-not (Test-Path $ideaCapacitySeedEvidencePath)) {
   throw "Canonical Lotus Idea capacity seed evidence is missing: $ideaCapacitySeedEvidencePath"
 }
@@ -157,7 +195,9 @@ try {
     "--gateway-base-url",
     $GatewayBaseUrl,
     "--idea-capacity-seed-evidence",
-    $ideaCapacitySeedEvidencePath
+    $ideaCapacitySeedEvidencePath,
+    "--idea-candidate-id",
+    $ideaCandidateSeedEvidence.candidateId
   )
   if (-not [string]::IsNullOrWhiteSpace($ScreenshotDirectory)) {
     $validatorArguments += @("--output-dir", $ScreenshotDirectory)

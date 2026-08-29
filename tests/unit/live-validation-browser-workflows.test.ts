@@ -25,6 +25,7 @@ const {
   waitForAdvisorBriefReviewConfirmation,
   navigateForBusinessProof,
   resolveHighCashIdeaCandidateId,
+  requireHighCashIdeaCandidateId,
   validateAdvisorBriefPanel,
   validateAdvisoryJourneyScreens,
   validatePmOperatingQualityPanel,
@@ -130,6 +131,7 @@ const {
     candidateHref: string | null,
     workbenchBaseUrl: string,
   ) => string;
+  requireHighCashIdeaCandidateId: (candidateId: string | null) => string;
   validateAdvisorBriefPanel: (...args: unknown[]) => Promise<void>;
   validateAdvisoryJourneyScreens: (...args: unknown[]) => Promise<void>;
   validatePmOperatingQualityPanel: (...args: unknown[]) => Promise<void>;
@@ -849,6 +851,18 @@ describe("live validation browser workflow helpers", () => {
         "http://workbench.dev.lotus",
       ),
     ).toBe("idea_high_cash_ef02ad8793485081");
+  });
+
+  it("requires the candidate identity bound to the current canonical run", () => {
+    expect(
+      requireHighCashIdeaCandidateId("idea_high_cash_ef02ad8793485081"),
+    ).toBe("idea_high_cash_ef02ad8793485081");
+    expect(() => requireHighCashIdeaCandidateId(null)).toThrow(
+      /current-run high-cash candidate/i,
+    );
+    expect(() => requireHighCashIdeaCandidateId("idea_high_cash_001")).toThrow(
+      /current-run high-cash candidate/i,
+    );
   });
 
   it.each([

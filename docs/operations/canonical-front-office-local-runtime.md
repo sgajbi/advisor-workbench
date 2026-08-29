@@ -190,6 +190,11 @@ complete canonical entitlement scope before and after each Idea-owned lifecycle 
 advances only the required next state, treats an already source-confirmed state within the same run
 as idempotent replay evidence, and fails on gaps, mismatched identity, or a state outside the
 seedable path. Workbench does not calculate or bypass Idea lifecycle policy.
+After the source queue returns that candidate exactly once, startup records
+`output/canonical-front-office/idea-candidate-seed-evidence.json`. Validation rejects a missing,
+mismatched, or non-reviewable artifact, proves Gateway exposes the same current-run candidate, and
+targets that exact queue row. Earlier unconverted canonical candidates therefore cannot make the
+browser select an arbitrary row or fabricate continuity with the current run.
 
 Canonical startup also binds both the PM Operating Quality seed and the Workbench DPM reader to the
 same platform-contract tenant, portfolio-manager book and command-centre date. A missing DPM context
