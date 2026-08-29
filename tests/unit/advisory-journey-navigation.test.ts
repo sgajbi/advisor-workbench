@@ -123,6 +123,9 @@ describe("advisory journey navigation", () => {
     expect(getAdvisoryJourneyDefinition("suitability").title).toBe(
       "Suitability review",
     );
+    expect(getAdvisoryJourneyDefinition("risk-impact").title).toBe(
+      "Risk and Impact",
+    );
     expect(getAdvisoryJourneyDefinition("overview")).toMatchObject({
       detail: "Adviser priorities",
       description:
