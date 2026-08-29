@@ -24,6 +24,7 @@ export type AdvisorCockpitOperatingBoundaryPresentation = {
   label: string;
   detail: string;
   rawValue: string;
+  isRecognized: boolean;
 };
 
 const READINESS_PRESENTATIONS: Record<
@@ -114,6 +115,7 @@ export function presentAdvisorCockpitOperatingBoundary(
       detail: "The source reports another unsupported capability; see Support details.",
     }),
     rawValue,
+    isRecognized: presentation !== undefined,
   };
 }
 
