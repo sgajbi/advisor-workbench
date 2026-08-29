@@ -266,6 +266,67 @@ export function buildAdvisorBookSourceRenderRows(advisorBook) {
   }));
 }
 
+export function validateAdvisorBookRenderPageEvidence(
+  advisorBook,
+  { expectedAsOfDate, expectedOffset, expectedLimit, expectedSortBy, expectedSortOrder },
+) {
+  if (readString(advisorBook?.scope?.kind) !== "own_book") {
+    throw new Error("Gateway advisor-book render page did not preserve own-book scope.");
+  }
+  const responseAsOfDate = requireString(
+    advisorBook?.scope?.as_of_date,
+    "render-page scope as-of date",
+  );
+  if (responseAsOfDate !== expectedAsOfDate) {
+    throw new Error(
+      `Gateway advisor-book render-page date ${responseAsOfDate} did not match ${expectedAsOfDate}.`,
+    );
+  }
+
+  const items = Array.isArray(advisorBook?.items) ? advisorBook.items : [];
+  const page = advisorBook?.page;
+  const integerFields = ["total_count", "offset", "limit", "returned_count"];
+  if (
+    !page ||
+    typeof page !== "object" ||
+    integerFields.some((field) => !Number.isInteger(page[field]) || page[field] < 0) ||
+    page.limit < 1
+  ) {
+    throw new Error("Gateway advisor-book render page returned malformed paging metadata.");
+  }
+  if (
+    page.offset !== expectedOffset ||
+    page.limit !== expectedLimit ||
+    readString(page.sort_by) !== expectedSortBy ||
+    readString(page.sort_order) !== expectedSortOrder
+  ) {
+    throw new Error("Gateway advisor-book render page did not preserve the browser page request.");
+  }
+  const expectedReturnedCount = Math.min(
+    page.limit,
+    Math.max(page.total_count - page.offset, 0),
+  );
+  if (
+    page.returned_count !== items.length ||
+    page.returned_count !== expectedReturnedCount
+  ) {
+    throw new Error(
+      "Gateway advisor-book render page did not return the complete requested source window.",
+    );
+  }
+
+  return {
+    asOfDate: responseAsOfDate,
+    totalCount: page.total_count,
+    offset: page.offset,
+    limit: page.limit,
+    returnedCount: page.returned_count,
+    sortBy: expectedSortBy,
+    sortOrder: expectedSortOrder,
+    sourceRows: buildAdvisorBookSourceRenderRows(advisorBook),
+  };
+}
+
 export function classifyCanonicalAdvisorBookPanelSupportState(evidence) {
   if (evidence?.proof !== AUTHORITATIVE_MEMBERSHIP_PROOF) {
     throw new Error(
