@@ -135,7 +135,7 @@ export const ADVISORY_JOURNEY_DEFINITIONS: AdvisoryJourneyDefinition[] = [
     key: "risk-impact",
     label: "Risk Impact",
     detail: "Risk and allocation",
-    title: "Risk And Impact",
+    title: "Risk and Impact",
     description:
       "Concentration, risk, allocation, liquidity, and performance impact.",
     primaryDecision: "Is the risk and performance trade-off acceptable?",

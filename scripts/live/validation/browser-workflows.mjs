@@ -1235,7 +1235,7 @@ export async function validateAdvisoryJourneyScreens(
     },
     {
       key: "risk-impact",
-      title: "Risk And Impact",
+      title: "Risk and Impact",
       screenshotName: "advisory-risk-impact-live.png",
       panel: "advisory.risk_impact",
       sourcePosture: "risk-review-proposals-through-gateway",
