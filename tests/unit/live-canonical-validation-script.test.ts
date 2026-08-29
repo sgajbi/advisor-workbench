@@ -227,6 +227,7 @@ describe("canonical live validation script", () => {
       "Validate-LotusFrontOfficeCanonical.ps1",
       "Capture-LotusFrontOfficeEvidence.ps1",
       "Invoke-IdeaCapacitySeed.ps1",
+      "Invoke-IdeaCandidateLifecycleSeed.ps1",
     ]) {
       const script = readFileSync(
         join(process.cwd(), "scripts", "live", scriptName),
@@ -679,6 +680,9 @@ describe("canonical live validation script", () => {
     expect(validationScript).toContain('"--idea-capacity-seed-evidence"');
     expect(startScript).toContain("function Invoke-CanonicalIdeaSeed");
     expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
+    expect(startScript).toContain('"Invoke-IdeaCandidateLifecycleSeed.ps1"');
+    expect(startScript).toContain("-CandidateId $candidateId");
+    expect(startScript).toContain("-GeneratedAtUtc $generatedAtUtc");
     expect(startScript).toContain(
       '"Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$generatedAtUtc"',
     );
