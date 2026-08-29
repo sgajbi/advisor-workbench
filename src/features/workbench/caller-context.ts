@@ -35,13 +35,19 @@ const CALLER_CONTEXT_ENV_OVERRIDES: Record<
 const IDEA_CALLER_CONTEXT_ENV_OVERRIDES = {
   subject: "WORKBENCH_IDEA_CALLER_SUBJECT",
   roles: "WORKBENCH_IDEA_CALLER_ROLES",
+  tenantIds: "WORKBENCH_IDEA_CALLER_TENANT_IDS",
+  bookIds: "WORKBENCH_IDEA_CALLER_BOOK_IDS",
   portfolioIds: "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
+  clientIds: "WORKBENCH_IDEA_CALLER_CLIENT_IDS",
 } as const;
 
 const DEFAULT_IDEA_CALLER_CONTEXT = {
   subject: "workbench-advisor",
   roles: "advisor",
+  tenantIds: "tenant-private-bank-sg",
+  bookIds: "book-advisor-001",
   portfolioIds: "PB_SG_GLOBAL_BAL_001",
+  clientIds: "client-001",
 } as const;
 
 export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
@@ -55,9 +61,10 @@ export const SERVER_DERIVED_CALLER_AUTHORITY_HEADERS = [
   "X-Caller-Subject",
   "X-Caller-Roles",
   "X-Caller-Capabilities",
+  "X-Caller-Tenant-Ids",
+  "X-Caller-Book-Ids",
   "X-Caller-Portfolio-Ids",
   "X-Caller-Client-Ids",
-  "X-Caller-Book-Ids",
   "X-Capabilities",
   "X-Service-Identity",
   "X-Principal-Status",
@@ -277,9 +284,24 @@ export function applyIdeaRouteCallerContextHeaders(
   );
   headers.set("X-Caller-Capabilities", capability);
   headers.set(
+    "X-Caller-Tenant-Ids",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.tenantIds]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.tenantIds,
+  );
+  headers.set(
+    "X-Caller-Book-Ids",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.bookIds]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.bookIds,
+  );
+  headers.set(
     "X-Caller-Portfolio-Ids",
     process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.portfolioIds]?.trim() ||
       DEFAULT_IDEA_CALLER_CONTEXT.portfolioIds,
+  );
+  headers.set(
+    "X-Caller-Client-Ids",
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.clientIds]?.trim() ||
+      DEFAULT_IDEA_CALLER_CONTEXT.clientIds,
   );
 
   return { status: "applied", mode: authorityMode };

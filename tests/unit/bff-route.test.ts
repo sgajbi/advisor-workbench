@@ -19,7 +19,10 @@ describe("BFF proxy route", () => {
     "WORKBENCH_BFF_ROLE",
     "WORKBENCH_IDEA_CALLER_SUBJECT",
     "WORKBENCH_IDEA_CALLER_ROLES",
+    "WORKBENCH_IDEA_CALLER_TENANT_IDS",
+    "WORKBENCH_IDEA_CALLER_BOOK_IDS",
     "WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS",
+    "WORKBENCH_IDEA_CALLER_CLIENT_IDS",
     "WORKBENCH_IDEA_AUTH_MODE",
     "WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS",
     "WORKBENCH_REPORTING_CALLER_ROLE",
@@ -91,6 +94,10 @@ describe("BFF proxy route", () => {
       expect.arrayContaining([
         "X-Actor-Id",
         "X-Caller-Capabilities",
+        "X-Caller-Tenant-Ids",
+        "X-Caller-Book-Ids",
+        "X-Caller-Portfolio-Ids",
+        "X-Caller-Client-Ids",
         "X-Capabilities",
         "X-Service-Identity",
         "X-Authorized-Proposal-Id",
@@ -359,6 +366,8 @@ describe("BFF proxy route", () => {
           "X-Caller-Subject": "spoofed-subject",
           "X-Caller-Roles": "compliance",
           "X-Caller-Capabilities": "idea.conversion.intent.record",
+          "X-Caller-Tenant-Ids": "UNENTITLED_TENANT",
+          "X-Caller-Book-Ids": "UNENTITLED_BOOK",
           "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
           "X-Caller-Client-Ids": "UNENTITLED_CLIENT",
           "X-Principal-Status": "SUSPENDED",
@@ -398,15 +407,53 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
       "idea.review.record",
     );
+    expect(upstreamHeaders.get("X-Caller-Tenant-Ids")).toBe(
+      "tenant-private-bank-sg",
+    );
+    expect(upstreamHeaders.get("X-Caller-Book-Ids")).toBe("book-advisor-001");
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
-    expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBeNull();
+    expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBe("client-001");
     expect(upstreamHeaders.get("X-Principal-Status")).toBeNull();
     expect(upstreamHeaders.get("Authorization")).toBeNull();
     expect(upstreamHeaders.get("Cookie")).toBeNull();
     expect(upstreamHeaders.get("Proxy-Authorization")).toBeNull();
     expect(upstreamHeaders.get("X-Session-Id")).toBeNull();
+  });
+
+  it("derives explicitly configured complete Idea scope at the BFF", async () => {
+    process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-ch";
+    process.env.WORKBENCH_IDEA_CALLER_BOOK_IDS = "book-rm-ch-007";
+    process.env.WORKBENCH_IDEA_CALLER_PORTFOLIO_IDS = "PB_CH_BAL_007";
+    process.env.WORKBENCH_IDEA_CALLER_CLIENT_IDS = "client-ch-007";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_001/feedback",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reasonCodes: ["feedback_recorded"] }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "ideas", "candidates", "idea_001", "feedback"],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Caller-Tenant-Ids")).toBe("tenant-ch");
+    expect(upstreamHeaders.get("X-Caller-Book-Ids")).toBe("book-rm-ch-007");
+    expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe("PB_CH_BAL_007");
+    expect(upstreamHeaders.get("X-Caller-Client-Ids")).toBe("client-ch-007");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "idea.feedback.record",
+    );
   });
 
   it.each([
