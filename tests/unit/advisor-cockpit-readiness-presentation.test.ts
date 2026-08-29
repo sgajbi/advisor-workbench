@@ -105,4 +105,17 @@ describe("advisor cockpit readiness presentation", () => {
       isRecognized: false,
     });
   });
+
+  it.each(["toString", "constructor", "__proto__"])(
+    "does not recognize the inherited %s property as an operating boundary",
+    (rawValue) => {
+      expect(presentAdvisorCockpitOperatingBoundary(rawValue)).toEqual({
+        label: "Additional workflow capability unavailable",
+        detail:
+          "The source reports another unsupported capability; see Support details.",
+        rawValue,
+        isRecognized: false,
+      });
+    },
+  );
 });

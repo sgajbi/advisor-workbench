@@ -110,7 +110,13 @@ export function presentAdvisorCockpitOperatingBoundary(
   value: string,
 ): AdvisorCockpitOperatingBoundaryPresentation {
   const rawValue = value.trim();
-  const presentation = OPERATING_BOUNDARY_PRESENTATIONS[rawValue];
+  const isRecognized = Object.hasOwn(
+    OPERATING_BOUNDARY_PRESENTATIONS,
+    rawValue,
+  );
+  const presentation = isRecognized
+    ? OPERATING_BOUNDARY_PRESENTATIONS[rawValue]
+    : undefined;
 
   return {
     ...(presentation ?? {
@@ -118,7 +124,7 @@ export function presentAdvisorCockpitOperatingBoundary(
       detail: "The source reports another unsupported capability; see Support details.",
     }),
     rawValue,
-    isRecognized: presentation !== undefined,
+    isRecognized,
   };
 }
 
