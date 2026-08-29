@@ -120,6 +120,7 @@
 .supportDetails {
   position: relative;
   grid-column: 4;
+  grid-row: 1;
   justify-self: end;
   font-family: var(--font-ui);
 }
