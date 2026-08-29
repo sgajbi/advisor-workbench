@@ -143,8 +143,11 @@ describe("canonical live validation script", () => {
       "validation",
       "browser-workflows.mjs",
     );
+    const advisoryJourneyInvocation = script.match(
+      /await validateAdvisoryJourneyScreens\(page, \{\n([\s\S]*?)\n    \}\);/,
+    )?.[1];
 
-    expect(script).toContain("portfolioWorkspace,");
+    expect(advisoryJourneyInvocation).toContain("portfolioWorkspace,");
     expect(browserWorkflow).toContain(
       "const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;",
     );
