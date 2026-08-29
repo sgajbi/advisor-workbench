@@ -260,3 +260,54 @@ export async function collectReviewContextTypographyEvidence(page: Page) {
     );
   });
 }
+
+export async function collectReviewContextLayoutEvidence(page: Page) {
+  return page.evaluate(() => {
+    const reviewContext = document.querySelector<HTMLElement>(
+      '[data-testid="review-context-strip"]'
+    );
+    if (!reviewContext) {
+      throw new Error('Review Context is not rendered.');
+    }
+
+    const slots = Array.from(
+      reviewContext.querySelectorAll<HTMLElement>('[data-context-slot]')
+    );
+    const stripBounds = reviewContext.getBoundingClientRect();
+
+    return {
+      strip: {
+        left: Math.round(stripBounds.left),
+        top: Math.round(stripBounds.top),
+        right: Math.round(stripBounds.right),
+        bottom: Math.round(stripBounds.bottom),
+        width: Math.round(stripBounds.width),
+        height: Math.round(stripBounds.height),
+      },
+      domOrder: slots.map((element) => element.dataset.contextSlot ?? ''),
+      slots: slots.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          slot: element.dataset.contextSlot ?? '',
+          text: element.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+          left: Math.round(bounds.left),
+          top: Math.round(bounds.top),
+          right: Math.round(bounds.right),
+          bottom: Math.round(bounds.bottom),
+          width: Math.round(bounds.width),
+          height: Math.round(bounds.height),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+          overflowX: style.overflowX,
+          overflowY: style.overflowY,
+          fontFamily: style.fontFamily,
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+        };
+      }),
+    };
+  });
+}

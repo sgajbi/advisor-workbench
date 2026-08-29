@@ -6,6 +6,7 @@ import {
   measureGrid,
 } from './workbench-smoke-helpers';
 import {
+  collectReviewContextLayoutEvidence,
   collectReviewContextOwnershipEvidence,
   collectReviewContextTypographyEvidence,
   collectFocusableDomOrder,
@@ -133,6 +134,54 @@ async function expectProductiveReviewContextTypography(
     )
   ).toBe(true);
   return typography;
+}
+
+function expectReviewContextLayout(
+  layout: Awaited<ReturnType<typeof collectReviewContextLayoutEvidence>>,
+  viewportWidth: number
+) {
+  expect(layout.domOrder).toEqual([
+    'portfolio-name',
+    'business-date',
+    'currency',
+    'mandate',
+    'booking-centre',
+    'support-details',
+  ]);
+  expect(layout.slots.every((slot) => slot.slot.length > 0)).toBe(true);
+  expect(
+    layout.slots.every(
+      (slot) =>
+        slot.scrollWidth <= slot.clientWidth + 1 &&
+        slot.scrollHeight <= slot.clientHeight + 1
+    )
+  ).toBe(true);
+
+  const slots = Object.fromEntries(layout.slots.map((slot) => [slot.slot, slot]));
+  const businessDate = slots['business-date'];
+  const currency = slots.currency;
+  const mandate = slots.mandate;
+  const bookingCentre = slots['booking-centre'];
+
+  if (!businessDate || !currency || !mandate || !bookingCentre) {
+    throw new Error('Review Context business slots are incomplete.');
+  }
+
+  if (viewportWidth >= 1200) {
+    const facts = [businessDate, currency, mandate, bookingCentre];
+    expect(new Set(facts.map((slot) => slot.top)).size).toBe(1);
+    for (let index = 1; index < facts.length; index += 1) {
+      const horizontalGap = facts[index].left - facts[index - 1].right;
+      expect(horizontalGap).toBeGreaterThanOrEqual(16);
+      expect(horizontalGap).toBeLessThanOrEqual(48);
+    }
+  }
+
+  if (viewportWidth <= 760 && viewportWidth > 360) {
+    expect(businessDate.top).toBe(currency.top);
+    expect(mandate.top).toBe(bookingCentre.top);
+    expect(mandate.top).toBeGreaterThan(businessDate.top);
+  }
 }
 
 async function openIncomePortfolio(
@@ -289,12 +338,14 @@ test.describe('Portfolio workbench smoke', () => {
           );
         }
         const typography = await expectProductiveReviewContextTypography(page, sourceState);
+        const layout = await collectReviewContextLayoutEvidence(page);
+        expectReviewContextLayout(layout, viewport.width);
         const measurements = await measureViewportEvidence(page);
         expect(measurements.document.scrollWidth).toBeLessThanOrEqual(
           measurements.document.clientWidth + 1
         );
 
-        evidence.push({ sourceState, viewport, typography, measurements });
+        evidence.push({ sourceState, viewport, typography, layout, measurements });
         if (evidenceDirectory) {
           await mkdir(evidenceDirectory, { recursive: true });
           await reviewContext.screenshot({
@@ -525,6 +576,8 @@ test.describe('Portfolio workbench smoke', () => {
       expect(identityOwnership.every((fact) => fact.presentInReviewContext)).toBe(true);
       expect(identityOwnership.every((fact) => !fact.presentOutsideReviewContext)).toBe(true);
       const typography = await expectProductiveReviewContextTypography(page, 'confirmed');
+      const reviewContextLayout = await collectReviewContextLayoutEvidence(page);
+      expectReviewContextLayout(reviewContextLayout, viewport.width);
       await expect(reviewContext.getByText('Business date', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Base currency', { exact: true })).toBeVisible();
       await expect(reviewContext.getByText('Reporting currency', { exact: true })).toHaveCount(0);
@@ -612,6 +665,7 @@ test.describe('Portfolio workbench smoke', () => {
         railHeaderRegions,
         reviewContextOwnership: identityOwnership,
         reviewContextTypography: typography,
+        reviewContextLayout,
         focusableDomOrder,
         keyboardEvidence,
       });
