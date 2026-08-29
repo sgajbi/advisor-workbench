@@ -235,7 +235,7 @@ describe("manage overview model", () => {
     expect(model.blockedSurfaces).toContain("Mandate attention items");
   });
 
-  it("does not treat a degraded exception response as complete evidence", () => {
+  it("keeps identified rows reviewable without treating degraded evidence as complete", () => {
     const base = buildManageWorkspaceData();
     const model = buildManageOverviewModel(
       buildManageWorkspaceData({
@@ -250,9 +250,25 @@ describe("manage overview model", () => {
     );
 
     expect(model.hasCompleteExceptionEvidence).toBe(false);
+    expect(model.hasAvailableExceptionEvidence).toBe(true);
+    expect(model.exceptionEvidencePosture).toBe("partial");
     expect(
       model.postureItems.find((item) => item.key === "attention")?.value,
-    ).toBe("Not available");
+    ).toBe("2 shown");
+    expect(
+      model.postureItems.find((item) => item.key === "attention")?.support,
+    ).toBe("Bounded source view; total not confirmed");
+    expect(model.decisionItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "attention:more-available",
+          subtitle: "Complete source coverage is not confirmed",
+          facts: expect.arrayContaining([
+            { label: "Coverage", value: "Bounded source view" },
+          ]),
+        }),
+      ]),
+    );
   });
 
   it("keeps attention counts unknown when the portfolio exception page is truncated", () => {

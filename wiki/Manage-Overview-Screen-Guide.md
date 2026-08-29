@@ -162,7 +162,7 @@ remains in [API Surface](API-Surface), and ownership flow remains in
 | Action required | Source evidence is usable and one or more active attention items are reported | Review the worklist and open Mandate Health |
 | Evidence incomplete | One or more named overview facts or source surfaces are missing or failed | Use the named partial-state list and open the relevant focused mode when available |
 | Attention evidence unavailable | No zero-attention conclusion; the worklist explains the missing evidence | Re-establish the source response or follow the support path |
-| Partial first source view | Returned items remain visible with **N shown; more available** rather than a total | Open Mandate Health and continue through the source views |
+| Partial source view | Returned items remain visible as **N shown**, with the bounded source view and unconfirmed total stated explicitly | Open Mandate Health to review the available evidence; continue through source views when pagination is available |
 | Empty attention worklist | Source-confirmed statement that the current window has no active items | Continue the review without inferring enterprise-wide absence |
 | Missing or unavailable risk profile | **Not reported** plus a named incomplete surface | Review the Manage mandate source; do not assume a balanced profile or treat an unavailable sentinel as evidence |
 | Wave supportability identity mismatch | Row-confirmed evidence only; unmatched response-level state, counts, readiness, and reason are not borrowed | Open Rebalance Waves and reconcile the source wave identity |
