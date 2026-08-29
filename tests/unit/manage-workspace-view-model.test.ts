@@ -224,4 +224,37 @@ describe("manage workspace business presentation", () => {
       "unavailable"
     );
   });
+
+  it.each([
+    ["UNKNOWN", [{ exception_id: "exception-1" }], null, "partial"],
+    ["DEGRADED", [{ exception_id: "exception-1" }], null, "partial"],
+    ["STALE", [{ exception_id: "exception-1" }], "window-2", "partial"],
+    ["UNKNOWN", [], null, "unavailable"],
+    ["BLOCKED", [{ exception_id: "exception-1" }], null, "unavailable"],
+    ["UNAVAILABLE", [{ exception_id: "exception-1" }], null, "unavailable"],
+    ["SUPPORTED", [], null, "complete"],
+    ["SUPPORTED", [{ exception_id: "exception-1" }], "window-2", "partial"],
+    ["SUPPORTED", [{ exception_id: "exception-1" }], 2, "unavailable"],
+  ] as const)(
+    "classifies %s supportability with %s row(s) and cursor %s as %s",
+    (state, items, nextCursor, expectedPosture) => {
+      const response = {
+        correlation_id: "corr-exceptions",
+        contract_version: "v1",
+        source_service: "lotus-manage",
+        upstream_status: 200,
+        supportability: {
+          source_service: "lotus-manage",
+          authority: "lotus-manage:exceptions",
+          state,
+          partial_readiness_reasons: [],
+        },
+        data: { items: [...items], next_cursor: nextCursor },
+      };
+
+      expect(getManageExceptionEvidencePosture(response, null)).toBe(
+        expectedPosture,
+      );
+    },
+  );
 });
