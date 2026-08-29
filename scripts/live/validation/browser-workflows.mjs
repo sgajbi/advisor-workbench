@@ -3232,10 +3232,33 @@ export async function validateProofPackPanel(
     .getByRole("button", { name: "Open advisor memo", exact: true })
     .first();
   await expect(advisorMemoButton).toBeEnabled({ timeout: timeoutMs });
+  const memoResponsePromise = page.waitForResponse(
+    (response) => {
+      const request = response.request();
+      return (
+        request.method() === "POST" &&
+        new URL(response.url()).pathname.endsWith("/ai-pm-memo")
+      );
+    },
+    { timeout: timeoutMs },
+  );
   await advisorMemoButton.click({ timeout: timeoutMs });
-  await expect(proofPackPanel.getByText(/^Advisor memo /)).toBeVisible({
-    timeout: timeoutMs,
-  });
+  const memoResponse = await memoResponsePromise;
+  if (!memoResponse.ok()) {
+    throw new Error(
+      `Evidence Pack decision memo failed through Workbench BFF with HTTP ${memoResponse.status()}.`,
+    );
+  }
+  buildProofPackMemoSourceProof(
+    await memoResponse.json(),
+    sourceProof.proofPackId,
+  );
+  await expect(
+    proofPackPanel.getByRole("heading", {
+      name: "Portfolio decision memo",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
   const evidenceAreas = tableByExactLabel(page, "Evidence areas");
   await assertTableHasRows(
     evidenceAreas,
@@ -3304,4 +3327,54 @@ export function buildPreparedProofPackSourceProof(sourceResponse) {
     proofPackId,
     sectionCount: sections.length,
   };
+}
+
+export function buildProofPackMemoSourceProof(
+  sourceResponse,
+  expectedProofPackId,
+) {
+  if (
+    !sourceResponse ||
+    typeof sourceResponse !== "object" ||
+    Array.isArray(sourceResponse)
+  ) {
+    throw new Error(
+      "Canonical Evidence Pack memo proof requires one Gateway response record.",
+    );
+  }
+  if (
+    sourceResponse.source_service !== "lotus-ai" ||
+    sourceResponse.evidence_source_service !== "lotus-manage"
+  ) {
+    throw new Error(
+      "Canonical Evidence Pack memo did not preserve AI and evidence source authority.",
+    );
+  }
+
+  const sourceProofPackIds = [
+    sourceResponse.supportability?.proof_pack_id,
+    sourceResponse.ai_evidence_input?.proof_pack_id,
+    sourceResponse.data?.execution?.result?.structured_output?.proof_pack_id,
+  ];
+  if (
+    typeof expectedProofPackId !== "string" ||
+    expectedProofPackId.length === 0 ||
+    sourceProofPackIds.some((proofPackId) => proofPackId !== expectedProofPackId)
+  ) {
+    throw new Error(
+      "Canonical Evidence Pack memo was not bound to the prepared proof-pack identity.",
+    );
+  }
+
+  const workflowPackRunId = sourceResponse.data?.workflow_pack_run?.run_id;
+  if (
+    typeof workflowPackRunId !== "string" ||
+    workflowPackRunId.trim().length === 0
+  ) {
+    throw new Error(
+      "Canonical Evidence Pack memo returned no workflow-pack run identity.",
+    );
+  }
+
+  return { proofPackId: expectedProofPackId, workflowPackRunId };
 }

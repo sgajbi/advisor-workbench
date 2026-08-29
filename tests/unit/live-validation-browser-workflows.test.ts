@@ -8,6 +8,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 const {
   assertClientContextMandateProof,
   buildPreparedProofPackSourceProof,
+  buildProofPackMemoSourceProof,
   buildReportCentreProofPosture,
   buildOutcomeReviewSourceEvidenceProof,
   buildMandateConstraintProofRows,
@@ -41,6 +42,10 @@ const {
     proofPackId: string;
     sectionCount: number;
   };
+  buildProofPackMemoSourceProof: (
+    sourceResponse: unknown,
+    expectedProofPackId: string,
+  ) => { proofPackId: string; workflowPackRunId: string };
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
     panelState: "partial";
     outputFormat: "json" | "pdf";
@@ -318,6 +323,63 @@ describe("live validation browser workflow helpers", () => {
       ],
     ])("rejects %s", (_case, response, message) => {
       expect(() => buildPreparedProofPackSourceProof(response)).toThrow(message);
+    });
+  });
+
+  describe("Evidence Pack memo source proof", () => {
+    const sourceResponse = {
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      supportability: { proof_pack_id: "dpp_123" },
+      ai_evidence_input: { proof_pack_id: "dpp_123" },
+      data: {
+        execution: {
+          result: { structured_output: { proof_pack_id: "dpp_123" } },
+        },
+        workflow_pack_run: { run_id: "packrun_123" },
+      },
+    };
+
+    it("binds the AI workflow run to the exact prepared evidence pack", () => {
+      expect(
+        buildProofPackMemoSourceProof(sourceResponse, "dpp_123"),
+      ).toEqual({
+        proofPackId: "dpp_123",
+        workflowPackRunId: "packrun_123",
+      });
+    });
+
+    it.each([
+      [
+        "wrong evidence authority",
+        { ...sourceResponse, evidence_source_service: "lotus-workbench" },
+        /preserve AI and evidence source authority/i,
+      ],
+      [
+        "mismatched generated output",
+        {
+          ...sourceResponse,
+          data: {
+            ...sourceResponse.data,
+            execution: {
+              result: { structured_output: { proof_pack_id: "dpp_other" } },
+            },
+          },
+        },
+        /not bound to the prepared proof-pack identity/i,
+      ],
+      [
+        "missing workflow run",
+        {
+          ...sourceResponse,
+          data: { ...sourceResponse.data, workflow_pack_run: {} },
+        },
+        /no workflow-pack run identity/i,
+      ],
+    ])("rejects %s", (_case, response, message) => {
+      expect(() =>
+        buildProofPackMemoSourceProof(response, "dpp_123"),
+      ).toThrow(message);
     });
   });
 
