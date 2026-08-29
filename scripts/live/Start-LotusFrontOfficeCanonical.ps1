@@ -725,9 +725,29 @@ function Invoke-CanonicalIdeaSeed {
   $queue = Invoke-RestMethod `
     -Uri "$ideaBaseUrl/api/v1/review-queues/advisor" `
     -Headers $queueHeaders
-  if ($queue.page.returnedItemCount -lt 1) {
-    throw "Canonical Lotus Idea advisor queue seed completed but returned no reviewable items."
+  $seededQueueItems = @($queue.items | Where-Object {
+      [string]$_.candidate.candidateId -eq $candidateId
+    })
+  if ($seededQueueItems.Count -ne 1) {
+    throw (
+      "Canonical Lotus Idea advisor queue did not return the current run candidate " +
+      "'$candidateId' exactly once. Matches: $($seededQueueItems.Count)."
+    )
   }
+
+  New-Item -ItemType Directory -Force -Path $canonicalEvidenceRoot | Out-Null
+  $candidateEvidence = [ordered]@{
+    schemaVersion = "lotus-workbench.idea-candidate-seed-evidence.v1"
+    runId = $ideaCanonicalRunId
+    candidateId = $candidateId
+    portfolioId = $PortfolioId
+    lifecycleStatus = "ready_for_review"
+    generatedAtUtc = $generatedAtUtc
+    queuePolicyVersion = [string]$queue.policyVersion
+  }
+  $candidateEvidencePath = Join-Path $canonicalEvidenceRoot "idea-candidate-seed-evidence.json"
+  $candidateEvidence | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $candidateEvidencePath -Encoding utf8
+  Write-Host "Recorded current-run Lotus Idea candidate evidence: $candidateEvidencePath"
 }
 
 function Invoke-CanonicalIdeaCapacitySeed {

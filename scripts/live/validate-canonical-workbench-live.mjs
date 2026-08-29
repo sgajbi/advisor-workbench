@@ -83,6 +83,7 @@ const {
   timeoutMs,
   canonicalStartDate,
   canonicalAsOfDate,
+  ideaCandidateId,
   ideaCapacitySeedEvidencePath,
   mainlineSourceProvenancePath,
 } = resolveValidationConfig(process.argv.slice(2));
@@ -2129,6 +2130,7 @@ async function run() {
       summary,
       workbenchBaseUrl,
       portfolioId,
+      canonicalIdeaCandidateId: ideaCandidateId,
       portfolioWorkspace,
       timeoutMs,
       screenshotAdvisoryJourney: browserHelpers.screenshotAdvisoryJourney,

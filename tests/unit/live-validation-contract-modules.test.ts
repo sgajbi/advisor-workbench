@@ -25,6 +25,8 @@ describe("live validation contract modules", () => {
         "http://gateway.dev.lotus//",
         "--timeout-ms",
         "45000",
+        "--idea-candidate-id",
+        "idea_high_cash_ef02ad8793485081",
       ],
       "C:\\lotus-workbench"
     );
@@ -35,6 +37,7 @@ describe("live validation contract modules", () => {
     expect(config.gatewayBaseUrl).toBe("http://gateway.dev.lotus");
     expect(config.ideaBaseUrl).toBe("http://127.0.0.1:8330");
     expect(config.timeoutMs).toBe(45000);
+    expect(config.ideaCandidateId).toBe("idea_high_cash_ef02ad8793485081");
     expect(config.outputDir).toContain("output");
     expect(config.outputDir).toContain("live-canonical");
     expect(config.ideaCapacitySeedEvidencePath).toContain(

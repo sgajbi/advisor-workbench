@@ -292,8 +292,12 @@ concurrency group.
   copy remains supporting evidence and may evolve without weakening persistence or refresh proof.
   It also proves no reranking, no auto-proposal creation, no suitability
   authority, no execution authority, and no client-publication claims.
-  The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
-  duplicating date literals in Workbench startup automation.
+    The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
+    duplicating date literals in Workbench startup automation.
+    Startup records the exact current-run review-ready candidate in
+    `output/canonical-front-office/idea-candidate-seed-evidence.json`; validation proves the same
+    identity through Gateway before targeting its exact queue row. A broad title match or an older
+    unconverted canonical candidate cannot stand in for current-run evidence.
 - RFC or mainline certification runs must invoke the canonical startup script with
   `-RequireMainlineSources`. The preflight writes a source-safe provenance manifest and fails
   before Docker, seeding, or screenshots when any canonical participant is dirty or not exactly at

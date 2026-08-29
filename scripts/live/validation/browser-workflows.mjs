@@ -78,6 +78,15 @@ export function resolveHighCashIdeaCandidateId(candidateHref, workbenchBaseUrl) 
   return candidateId;
 }
 
+export function requireHighCashIdeaCandidateId(candidateId) {
+  if (!candidateId || !HIGH_CASH_IDEA_CANDIDATE_PATTERN.test(candidateId)) {
+    throw new Error(
+      `Canonical validation received an invalid current-run high-cash candidate id: ${candidateId ?? "missing"}.`,
+    );
+  }
+  return candidateId;
+}
+
 function normalizeAdvisorBriefReviewEvidenceValue(value) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -740,12 +749,16 @@ export async function validateAdvisoryJourneyScreens(
     summary,
     workbenchBaseUrl,
     portfolioId,
+    canonicalIdeaCandidateId,
     portfolioWorkspace,
     timeoutMs,
     screenshotAdvisoryJourney,
     assertTableHasRows,
   },
 ) {
+  const expectedIdeaCandidateId = requireHighCashIdeaCandidateId(
+    canonicalIdeaCandidateId,
+  );
   const recommendationsRoute = advisoryJourneyRoute({
     workbenchBaseUrl,
     portfolioId,
@@ -905,13 +918,19 @@ export async function validateAdvisoryJourneyScreens(
         "Idea candidate review queue",
       );
       const canonicalCandidateLink = candidateTable.getByRole("link", {
-        name: /^High Cash - idea_high_cash_[0-9a-f]{16}$/,
+        name: `High Cash - ${expectedIdeaCandidateId}`,
+        exact: true,
       });
       await expect(canonicalCandidateLink).toBeVisible({ timeout: timeoutMs });
       const canonicalCandidateId = resolveHighCashIdeaCandidateId(
         await canonicalCandidateLink.getAttribute("href"),
         workbenchBaseUrl,
       );
+      if (canonicalCandidateId !== expectedIdeaCandidateId) {
+        throw new Error(
+          `Idea queue selected '${canonicalCandidateId}' instead of current-run candidate '${expectedIdeaCandidateId}'.`,
+        );
+      }
       await canonicalCandidateLink.click();
       await expect(page).toHaveURL(
         new RegExp(

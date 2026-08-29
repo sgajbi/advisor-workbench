@@ -17,6 +17,7 @@ export interface ValidationConfig {
   outputDir: string;
   timeoutMs: number;
   canonicalAsOfDate: string;
+  ideaCandidateId: string | null;
   ideaCapacitySeedEvidencePath: string;
   mainlineSourceProvenancePath: string | null;
 }
