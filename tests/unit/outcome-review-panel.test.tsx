@@ -49,8 +49,12 @@ const readyResponse: DpmOutcomeReviewGatewayResponse = {
         portfolio_id: "PB_SG_GLOBAL_BAL_001",
         rebalance_run_id: "rr_1",
         proof_pack_id: "ppack_1",
-        expected_snapshot_hash: "sha256:expected",
-        realized_snapshot_hash: "sha256:realized",
+        expected_snapshot: {
+          source_hashes: { expected: "sha256:expected" },
+        },
+        realized_snapshot: {
+          source_hashes: { realized: "sha256:realized" },
+        },
         created_at: "2026-05-13T09:35:00Z",
         review_window: { start: "2026-05-01", end: "2026-05-13" },
         variance_summary: { drift_improvement_pct: 72.4 },

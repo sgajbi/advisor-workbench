@@ -127,8 +127,12 @@ describe("outcome review view model", () => {
             rebalance_run_id: "rr_1",
             wave_id: "wave_1",
             proof_pack_id: "ppack_1",
-            expected_snapshot_hash: "sha256:expected",
-            realized_snapshot_hash: "sha256:realized",
+            expected_snapshot: {
+              source_hashes: { expected: "sha256:expected" },
+            },
+            realized_snapshot: {
+              source_hashes: { realized: "sha256:realized" },
+            },
             retain_until: "2033-02-24",
             updated_at: "2026-02-24T10:00:00Z",
             dimension_results: [
@@ -186,6 +190,66 @@ describe("outcome review view model", () => {
       })
     );
   });
+
+  it.each([
+    {
+      name: "both source snapshots",
+      expectedHash: "sha256:expected",
+      realizedHash: "sha256:realized",
+      expectedMappedHash: "sha256:expected",
+      realizedMappedHash: "sha256:realized",
+    },
+    {
+      name: "only the expected source snapshot",
+      expectedHash: "sha256:expected",
+      realizedHash: undefined,
+      expectedMappedHash: "sha256:expected",
+      realizedMappedHash: "N/A",
+    },
+    {
+      name: "no source snapshots",
+      expectedHash: undefined,
+      realizedHash: undefined,
+      expectedMappedHash: "N/A",
+      realizedMappedHash: "N/A",
+    },
+    {
+      name: "blank and malformed source hashes",
+      expectedHash: "   ",
+      realizedHash: "not-a-source-hash",
+      expectedMappedHash: "N/A",
+      realizedMappedHash: "N/A",
+    },
+  ])(
+    "fails closed while mapping $name",
+    ({
+      expectedHash,
+      realizedHash,
+      expectedMappedHash,
+      realizedMappedHash,
+    }) => {
+      const model = buildOutcomeReviewPanelModel(
+        response({
+          items: [
+            {
+              outcome_review_id: "or_snapshot_evidence",
+              expected_snapshot: {
+                source_hashes: { expected: expectedHash },
+              },
+              realized_snapshot: {
+                source_hashes: { realized: realizedHash },
+              },
+            },
+          ],
+        }),
+      );
+
+      expect(model.items[0]).toMatchObject({
+        expectedSnapshotHash: expectedMappedHash,
+        realizedSnapshotHash: realizedMappedHash,
+      });
+    },
+  );
 
   it("fails closed when outcome audit and retention dates are not valid source values", () => {
     const model = buildOutcomeReviewPanelModel(
