@@ -131,6 +131,29 @@ describe("canonical live validation script", () => {
     expect(summaryInvocation).not.toContain("mandateComparisons");
   });
 
+  it("binds the Client Context mandate label to the fetched Gateway workspace", () => {
+    const script = readNormalizedSource(
+      "scripts",
+      "live",
+      "validate-canonical-workbench-live.mjs",
+    );
+    const browserWorkflow = readNormalizedSource(
+      "scripts",
+      "live",
+      "validation",
+      "browser-workflows.mjs",
+    );
+
+    expect(script).toContain("portfolioWorkspace,");
+    expect(browserWorkflow).toContain(
+      "const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;",
+    );
+    expect(browserWorkflow).toContain("assertSourceBusinessLabelProof({");
+    expect(browserWorkflow).not.toContain(
+      "await expect(mandateValue).not.toHaveText",
+    );
+  });
+
   it("seeds PM operating quality in the canonical DPM tenant", () => {
     const script = readFileSync(
       join(

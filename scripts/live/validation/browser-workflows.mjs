@@ -2,7 +2,10 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 
 import { validateAdvisorBookRenderPageEvidence } from "./advisor-book-proof.mjs";
-import { assertExactSourceRenderProof } from "./source-render-proof.mjs";
+import {
+  assertExactSourceRenderProof,
+  assertSourceBusinessLabelProof,
+} from "./source-render-proof.mjs";
 
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
 const ADVISOR_BOOK_BROWSER_PAGE = Object.freeze({
@@ -707,6 +710,7 @@ export async function validateAdvisoryJourneyScreens(
     summary,
     workbenchBaseUrl,
     portfolioId,
+    portfolioWorkspace,
     timeoutMs,
     screenshotAdvisoryJourney,
     assertTableHasRows,
@@ -816,7 +820,14 @@ export async function validateAdvisoryJourneyScreens(
         timeout: timeoutMs,
       });
       await expect(mandateValue).toHaveAttribute("data-confirmed", "true");
-      await expect(mandateValue).not.toHaveText(/^\s*$/u);
+      const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;
+      const renderedMandate = await mandateValue.textContent();
+      assertSourceBusinessLabelProof({
+        screen: "Client Context",
+        fact: "Mandate",
+        sourceValue: sourceMandate,
+        renderedValue: renderedMandate,
+      });
       await expect(
         page.getByRole("heading", { name: "Review Evidence", exact: true }),
       ).toBeVisible({

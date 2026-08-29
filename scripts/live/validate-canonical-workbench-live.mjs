@@ -2129,6 +2129,7 @@ async function run() {
       summary,
       workbenchBaseUrl,
       portfolioId,
+      portfolioWorkspace,
       timeoutMs,
       screenshotAdvisoryJourney: browserHelpers.screenshotAdvisoryJourney,
       assertTableHasRows: browserHelpers.assertTableHasRows,
