@@ -67,4 +67,52 @@ describe("buildAdvisoryOpportunitiesModel", () => {
     expect(model.rows).toEqual([]);
     expect(model.recommendedAction).toMatch(/No Idea-owned candidates/);
   });
+
+  it("keeps an addressable source candidate inside the bounded worklist", () => {
+    const items = Array.from({ length: 13 }, (_, index) => ({
+      rank: index + 1,
+      candidate: {
+        candidateId: `idea_high_cash_${String(index + 1).padStart(3, "0")}`,
+        family: "high_cash",
+      },
+    }));
+    const selectedCandidateId = "idea_high_cash_013";
+
+    const model = buildAdvisoryOpportunitiesModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      queue: { items },
+      selectedCandidateId,
+    });
+
+    expect(model.rows).toHaveLength(12);
+    expect(model.rows.at(-1)?.candidateId).toBe(selectedCandidateId);
+    expect(
+      model.rows.filter((row) => row.candidateId === selectedCandidateId),
+    ).toHaveLength(1);
+    expect(
+      model.rows.some((row) => row.candidateId === "idea_high_cash_012"),
+    ).toBe(false);
+  });
+
+  it("does not synthesize a selected candidate absent from the source queue", () => {
+    const model = buildAdvisoryOpportunitiesModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      queue: {
+        items: [
+          {
+            rank: 1,
+            candidate: {
+              candidateId: "idea_high_cash_001",
+              family: "high_cash",
+            },
+          },
+        ],
+      },
+      selectedCandidateId: "idea_high_cash_missing",
+    });
+
+    expect(model.rows.map((row) => row.candidateId)).toEqual([
+      "idea_high_cash_001",
+    ]);
+  });
 });

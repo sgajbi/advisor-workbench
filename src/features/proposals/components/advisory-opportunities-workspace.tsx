@@ -60,8 +60,13 @@ export default function AdvisoryOpportunitiesWorkspace({
   });
 
   const model = useMemo(
-    () => buildAdvisoryOpportunitiesModel({ portfolioId, queue: data }),
-    [portfolioId, data],
+    () =>
+      buildAdvisoryOpportunitiesModel({
+        portfolioId,
+        queue: data,
+        selectedCandidateId: selectedCandidate,
+      }),
+    [portfolioId, data, selectedCandidate],
   );
   const selectedQueueItem = useMemo(
     () => findQueueItemByCandidateId(data?.items, selectedCandidate),
