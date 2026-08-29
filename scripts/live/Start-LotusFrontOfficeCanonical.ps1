@@ -693,7 +693,11 @@ function Invoke-CanonicalIdeaSeed {
   & (Join-Path $PSScriptRoot "Invoke-IdeaCandidateLifecycleSeed.ps1") `
     -IdeaBaseUrl $ideaBaseUrl `
     -CandidateId $candidateId `
-    -GeneratedAtUtc $generatedAtUtc
+    -GeneratedAtUtc $generatedAtUtc `
+    -TenantId $payload.accessScope.tenantId `
+    -BookId $payload.accessScope.bookId `
+    -PortfolioId $payload.accessScope.portfolioId `
+    -ClientId $payload.accessScope.clientId
 
   $queueHeaders = @{
     "X-Caller-Subject" = "canonical-front-office-validator"

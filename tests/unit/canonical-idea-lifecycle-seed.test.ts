@@ -10,6 +10,12 @@ import { describe, expect, it } from "vitest";
 
 const CANDIDATE_ID = "idea_high_cash_contract_001";
 const GENERATED_AT_UTC = "2026-04-10T10:00:00.000Z";
+const ACCESS_SCOPE = {
+  bookId: "book-advisor-001",
+  clientId: "client-001",
+  portfolioId: "PB_SG_GLOBAL_BAL_001",
+  tenantId: "tenant-private-bank-sg",
+} as const;
 const EXPECTED_STATUSES = [
   "enriched",
   "scored",
@@ -40,56 +46,105 @@ function readRequestBody(request: IncomingMessage): Promise<string> {
   });
 }
 
-function respondWithPersistence(
-  response: ServerResponse,
-  body: Record<string, unknown>,
-  requestIndex: number,
-  persistedStatus: string,
-): void {
+function writeJson(response: ServerResponse, payload: unknown): void {
   response.writeHead(200, { "Content-Type": "application/json" });
-  response.end(
-    JSON.stringify({
-      persistence: {
-        candidateId: CANDIDATE_ID,
-        decision: requestIndex % 2 === 0 ? "accepted" : "replayed",
-        lifecycleStatus: persistedStatus,
-      },
-      transition: {
-        candidateId: CANDIDATE_ID,
-        lifecycleStatus: body.targetLifecycleStatus,
-      },
-    }),
+  response.end(JSON.stringify(payload));
+}
+
+async function runPowerShell(
+  ideaBaseUrl: string,
+): Promise<Omit<ScriptResult, "requests">> {
+  const executable = process.platform === "win32" ? "powershell.exe" : "pwsh";
+  const arguments_ = ["-NoLogo", "-NoProfile", "-NonInteractive"];
+  if (process.platform === "win32") {
+    arguments_.push("-ExecutionPolicy", "Bypass");
+  }
+  arguments_.push(
+    "-File",
+    join(
+      process.cwd(),
+      "scripts",
+      "live",
+      "Invoke-IdeaCandidateLifecycleSeed.ps1",
+    ),
+    "-IdeaBaseUrl",
+    ideaBaseUrl,
+    "-CandidateId",
+    CANDIDATE_ID,
+    "-GeneratedAtUtc",
+    GENERATED_AT_UTC,
+    "-TenantId",
+    ACCESS_SCOPE.tenantId,
+    "-BookId",
+    ACCESS_SCOPE.bookId,
+    "-PortfolioId",
+    ACCESS_SCOPE.portfolioId,
+    "-ClientId",
+    ACCESS_SCOPE.clientId,
   );
+
+  const child = spawn(executable, arguments_, {
+    cwd: process.cwd(),
+    windowsHide: true,
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => {
+    stdout += chunk;
+  });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => {
+    stderr += chunk;
+  });
+
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", resolve);
+  });
+  return { exitCode, stderr, stdout };
 }
 
 async function runLifecycleSeed(
-  persistedStatusForRequest: (
-    requestIndex: number,
+  persistedStatusForTransition: (
+    transitionIndex: number,
     requestedStatus: string,
   ) => string,
+  runs = 1,
 ): Promise<ScriptResult> {
   const requests: ObservedRequest[] = [];
+  let sourceStatus = "generated";
+  let transitionCount = 0;
   const server = createServer(async (request, response) => {
-    const body = JSON.parse(await readRequestBody(request)) as Record<
-      string,
-      unknown
-    >;
-    const requestIndex = requests.length;
+    const bodyText = await readRequestBody(request);
+    const body = bodyText
+      ? (JSON.parse(bodyText) as Record<string, unknown>)
+      : {};
     requests.push({
       body,
       headers: request.headers,
       method: request.method,
       url: request.url,
     });
-    respondWithPersistence(
-      response,
-      body,
-      requestIndex,
-      persistedStatusForRequest(
-        requestIndex,
-        String(body.targetLifecycleStatus),
-      ),
+
+    if (request.method === "GET") {
+      writeJson(response, {
+        candidate: { candidateId: CANDIDATE_ID, lifecycleStatus: sourceStatus },
+      });
+      return;
+    }
+
+    const requestedStatus = String(body.targetLifecycleStatus);
+    sourceStatus = persistedStatusForTransition(
+      transitionCount,
+      requestedStatus,
     );
+    transitionCount += 1;
+    writeJson(response, {
+      persistence: {
+        candidateId: CANDIDATE_ID,
+        decision: "accepted",
+        lifecycleStatus: sourceStatus,
+      },
+    });
   });
 
   await new Promise<void>((resolve, reject) => {
@@ -102,46 +157,18 @@ async function runLifecycleSeed(
     if (!address || typeof address === "string") {
       throw new Error("Lifecycle contract server did not expose a TCP port.");
     }
-
-    const executable = process.platform === "win32" ? "powershell.exe" : "pwsh";
-    const arguments_ = ["-NoLogo", "-NoProfile", "-NonInteractive"];
-    if (process.platform === "win32") {
-      arguments_.push("-ExecutionPolicy", "Bypass");
+    let result: Omit<ScriptResult, "requests"> = {
+      exitCode: null,
+      stderr: "",
+      stdout: "",
+    };
+    for (let run = 0; run < runs; run += 1) {
+      result = await runPowerShell(`http://127.0.0.1:${address.port}`);
+      if (result.exitCode !== 0) {
+        break;
+      }
     }
-    arguments_.push(
-      "-File",
-      join(
-        process.cwd(),
-        "scripts",
-        "live",
-        "Invoke-IdeaCandidateLifecycleSeed.ps1",
-      ),
-      "-IdeaBaseUrl",
-      `http://127.0.0.1:${address.port}`,
-      "-CandidateId",
-      CANDIDATE_ID,
-      "-GeneratedAtUtc",
-      GENERATED_AT_UTC,
-    );
-
-    const child = spawn(executable, arguments_, {
-      cwd: process.cwd(),
-      windowsHide: true,
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.setEncoding("utf8").on("data", (chunk: string) => {
-      stdout += chunk;
-    });
-    child.stderr.setEncoding("utf8").on("data", (chunk: string) => {
-      stderr += chunk;
-    });
-
-    const exitCode = await new Promise<number | null>((resolve, reject) => {
-      child.once("error", reject);
-      child.once("close", resolve);
-    });
-    return { exitCode, requests, stderr, stdout };
+    return { ...result, requests };
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
@@ -149,26 +176,45 @@ async function runLifecycleSeed(
   }
 }
 
+function expectCompleteDetailScope(request: ObservedRequest): void {
+  expect(request.headers["x-caller-capabilities"]).toBe(
+    "idea.candidate.detail.read",
+  );
+  expect(request.headers["x-caller-tenant-ids"]).toBe(ACCESS_SCOPE.tenantId);
+  expect(request.headers["x-caller-book-ids"]).toBe(ACCESS_SCOPE.bookId);
+  expect(request.headers["x-caller-portfolio-ids"]).toBe(
+    ACCESS_SCOPE.portfolioId,
+  );
+  expect(request.headers["x-caller-client-ids"]).toBe(ACCESS_SCOPE.clientId);
+}
+
 describe("canonical Idea lifecycle seed", () => {
-  it("progresses the source candidate through every prerequisite with deterministic authority", async () => {
+  it("progresses and replays from source-owned detail without duplicate transitions", async () => {
     const result = await runLifecycleSeed(
       (_index, requestedStatus) => requestedStatus,
+      2,
     );
 
     expect(result.exitCode, result.stderr).toBe(0);
-    expect(result.requests).toHaveLength(4);
+    const detailRequests = result.requests.filter(
+      ({ method }) => method === "GET",
+    );
+    const transitionRequests = result.requests.filter(
+      ({ method }) => method === "POST",
+    );
+    expect(detailRequests).toHaveLength(6);
+    expect(transitionRequests).toHaveLength(4);
+    for (const request of detailRequests) {
+      expectCompleteDetailScope(request);
+    }
     expect(
-      result.requests.map(({ body }) => body.targetLifecycleStatus),
+      transitionRequests.map(({ body }) => body.targetLifecycleStatus),
     ).toEqual(EXPECTED_STATUSES);
-    for (const [index, request] of result.requests.entries()) {
+    for (const [index, request] of transitionRequests.entries()) {
       const status = EXPECTED_STATUSES[index];
       const identity = `canonical-idea-lifecycle:${CANDIDATE_ID}:${status}:${GENERATED_AT_UTC}`;
-      expect(request.method).toBe("POST");
       expect(request.url).toBe(
         `/api/v1/idea-candidates/${CANDIDATE_ID}/lifecycle-transitions`,
-      );
-      expect(request.headers["x-caller-subject"]).toBe(
-        "canonical-front-office-lifecycle-seed",
       );
       expect(request.headers["x-caller-capabilities"]).toBe(
         "idea.candidate.lifecycle.transition",
@@ -182,19 +228,21 @@ describe("canonical Idea lifecycle seed", () => {
       });
     }
     expect(result.stdout).toContain(
-      "source lifecycle 'ready_for_review' (replayed)",
+      "already has source lifecycle 'ready_for_review'",
     );
   }, 30_000);
 
-  it("fails closed when Idea does not prove the requested source state", async () => {
+  it("fails closed when refreshed Idea detail does not prove the requested state", async () => {
     const result = await runLifecycleSeed((index, requestedStatus) =>
-      index === 1 ? "generated" : requestedStatus,
+      index === 1 ? "enriched" : requestedStatus,
     );
 
     expect(result.exitCode).not.toBe(0);
-    expect(result.requests).toHaveLength(2);
+    expect(
+      result.requests.filter(({ method }) => method === "POST"),
+    ).toHaveLength(2);
     expect(result.stderr).toContain(
-      "returned state 'generated' instead of 'scored'",
+      "returned state 'enriched' instead of 'scored' after persistence",
     );
   }, 30_000);
 });

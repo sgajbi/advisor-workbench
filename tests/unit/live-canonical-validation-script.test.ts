@@ -683,6 +683,10 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain('"Invoke-IdeaCandidateLifecycleSeed.ps1"');
     expect(startScript).toContain("-CandidateId $candidateId");
     expect(startScript).toContain("-GeneratedAtUtc $generatedAtUtc");
+    expect(startScript).toContain("-TenantId $payload.accessScope.tenantId");
+    expect(startScript).toContain("-BookId $payload.accessScope.bookId");
+    expect(startScript).toContain("-PortfolioId $payload.accessScope.portfolioId");
+    expect(startScript).toContain("-ClientId $payload.accessScope.clientId");
     expect(startScript).toContain(
       '"Idempotency-Key" = "canonical-idea-high-cash:$($PortfolioId):$generatedAtUtc"',
     );
