@@ -190,7 +190,8 @@ test("keeps advisor readiness business-facing and support evidence on demand", a
   }
   await readiness.getByText("Support details", { exact: true }).click();
   await expect(readiness.getByText("SUPPORTED_BY_LOTUS_GATEWAY_RFC0026")).toBeVisible();
-  await expect(readiness.getByText("OMS_ORDER_LIFECYCLE")).toBeVisible();
+  await expect(readiness.getByText("OMS_ORDER_LIFECYCLE")).toHaveCount(0);
+  await expect(readiness.getByText("Order workflow unavailable")).toBeVisible();
 
   await expect(page.getByText("Unsupported Claims", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Source Readiness", { exact: true })).toHaveCount(0);
