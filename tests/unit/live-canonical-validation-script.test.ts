@@ -1540,6 +1540,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "buildPreparedProofPackSourceProof",
     );
+    expect(browserWorkflowModule).toContain("buildProofPackMemoSourceProof");
     expect(browserWorkflowModule).toContain(
       'pathname.endsWith("/api/bff/api/v1/dpm/command-center/proof-packs")',
     );
@@ -1550,7 +1551,9 @@ describe("canonical live validation script", () => {
       "renderedSectionCount !== sourceProof.sectionCount",
     );
     expect(browserWorkflowModule).toContain("Open advisor memo");
-    expect(browserWorkflowModule).toContain("/^Advisor memo /");
+    expect(browserWorkflowModule).toContain(
+      'name: "Portfolio decision memo"',
+    );
     expect(browserWorkflowModule).toContain("resolveRegistryRoute");
     expect(browserWorkflowModule).toContain("assertRailModeActive");
     expect(browserWorkflowModule).toContain("tableByExactLabel");
