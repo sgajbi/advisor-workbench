@@ -993,10 +993,10 @@ Use these commands as the primary local contract:
    Canonical startup rebuilds only the Lotus Idea Compose project on each run because its isolated
    capacity proof binds `/version` to a fresh build-time run identity. Do not remove that targeted
    build or replace the exact commit, branch, and run comparison with reusable-image assumptions.
-   The same startup path injects the platform demo-data contract's DPM tenant, portfolio-manager,
-   book, and command-centre date into Workbench and the PM Operating Quality seed; do not reintroduce
-   separate validator or UI defaults for canonical proof. The server-owned BFF tenant header must
-   remain bound to the same canonical tenant because Gateway scopes PM evidence by that authority.
+   The same startup path injects the platform demo-data contract's Workbench caller tenant into the
+   server-owned BFF header and PM Operating Quality seed, while preserving the separate DPM
+   command-centre query tenant, portfolio-manager, book, and date. Do not reintroduce separate
+   validator or UI defaults: Gateway scopes PM evidence by caller authority.
 10. hermetic stateless scale regression
     `npm run scale:proof`
 
