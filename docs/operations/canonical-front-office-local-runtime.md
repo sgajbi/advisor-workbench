@@ -699,6 +699,10 @@ powershell -ExecutionPolicy Bypass -File ..\\..\\lotus-manage\\scripts\\Start-Ca
 
 For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
 
+- Advisor Book:
+  - complete own-book source membership and paging evidence is valid
+  - rendered portfolio identities and lifecycle states exactly match every Gateway row
+  - missing, extra, duplicated, malformed, or state-mismatched rendered rows fail the proof
 - Portfolio summary:
   - portfolio shell renders
   - top holdings chart contains ranked rows
@@ -742,9 +746,16 @@ For `PB_SG_GLOBAL_BAL_001`, the validator confirms:
   - drawdown has underwater-series evidence
   - rolling risk has all configured windows and enough computable windows for the current horizon
   - historical attribution contributors reconcile with a negligible residual
+  - rendered mandate-constraint identities and states exactly match the complete summary and
+    concentration Gateway evidence without a browser-owned state list
 - Evidence:
   - Evidence mode opens
   - evidence support strip or truthful degraded state renders
+
+Exact row proof uses `scripts/live/validation/source-render-proof.mjs`. Screen adapters retain
+domain meaning and DOM extraction; the shared helper compares only source, identity, and state. Do
+not replace a source adapter with a generic field mapper or change expected evidence merely to make
+canonical validation pass.
 
 ## Current local limitation
 

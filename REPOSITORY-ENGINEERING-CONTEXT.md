@@ -1647,6 +1647,16 @@ Most relevant current governance:
     source evidence. Correlate versioned package evidence to the active reviewed narrative hash.
     For repeatable actions whose aggregate posture may already be recorded, require the exact event
     id returned by the mutation to appear in the refreshed owning audit or replay evidence.
+22. Gateway-backed row and state claims in canonical browser proof must use
+    `scripts/live/validation/source-render-proof.mjs` for exact source-to-render conformance once a
+    screen exposes stable evidence attributes. Each domain keeps its own source adapter, identity,
+    state vocabulary, visibility checks, and business assertions; the shared helper owns only
+    malformed, duplicate, missing, extra, and state-mismatch detection. Feed it rows derived from
+    the exact Gateway response and rows read from the rendered document. Do not hard-code expected
+    business states, calculate policy in the browser, or generalize a source adapter until a second
+    real consumer proves the same mechanics. Risk Review and Advisor Book are the reference
+    consumers. A new screen must include unit diagnostics and fixture/browser proof before claiming
+    exact source rendering.
 
 ## Context Maintenance Rule
 
