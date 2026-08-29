@@ -232,8 +232,16 @@ function buildOutcomeReviewListItem(
     rebalanceRunId: readString(record, "rebalance_run_id") || "N/A",
     waveId: readString(record, "wave_id") || "N/A",
     proofPackId: readString(record, "proof_pack_id") || "N/A",
-    expectedSnapshotHash: readString(record, "expected_snapshot_hash") || "N/A",
-    realizedSnapshotHash: readString(record, "realized_snapshot_hash") || "N/A",
+    expectedSnapshotHash: readOutcomeSnapshotHash(
+      record,
+      "expected_snapshot",
+      "expected",
+    ),
+    realizedSnapshotHash: readOutcomeSnapshotHash(
+      record,
+      "realized_snapshot",
+      "realized",
+    ),
     retentionUntil: formatBusinessDateValue(
       readString(record, "retain_until") || readString(record, "retention_until"),
       { nullDisplay: "Not reported" },
@@ -430,6 +438,17 @@ function readString(record: Record<string, unknown>, key: string): string {
     return String(value);
   }
   return "";
+}
+
+function readOutcomeSnapshotHash(
+  record: Record<string, unknown>,
+  snapshotKey: "expected_snapshot" | "realized_snapshot",
+  hashKey: "expected" | "realized",
+): string {
+  const snapshot = readRecord(record, snapshotKey);
+  const sourceHashes = readRecord(snapshot, "source_hashes");
+  const hash = readString(sourceHashes, hashKey).trim();
+  return /^sha256:.+$/u.test(hash) ? hash : "N/A";
 }
 
 function readBoolean(record: Record<string, unknown>, key: string): boolean {

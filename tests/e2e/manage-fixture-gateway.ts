@@ -653,8 +653,16 @@ function outcomeReviewEnvelope(proofPackId = "proof-pack-2026-05-13") {
           rebalance_run_id: "rebalance-run-2026-05-03",
           wave_id: waveId,
           proof_pack_id: proofPackId,
-          expected_snapshot_hash: "sha256:expected-review-snapshot",
-          realized_snapshot_hash: "sha256:realised-review-snapshot",
+          expected_snapshot: {
+            source_hashes: {
+              expected: "sha256:expected-review-snapshot",
+            },
+          },
+          realized_snapshot: {
+            source_hashes: {
+              realized: "sha256:realised-review-snapshot",
+            },
+          },
           retain_until: "2033-05-13",
           created_at: "2026-05-13T09:35:00Z",
           updated_at: "2026-05-13T10:05:00Z",

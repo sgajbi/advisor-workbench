@@ -83,7 +83,17 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
     await expect(readiness).toContainText("Review window");
     await expect(readiness).toContainText("Report preparation");
     await expect(readiness).toContainText("AI-assisted review summary");
-    await expect(readiness).toContainText("Source evidence");
+    await expect(readiness).toContainText("Source evidenceAvailable");
+
+    const evidenceAvailability = page.getByLabel(
+      "Outcome review evidence availability",
+    );
+    await expect(evidenceAvailability).toContainText(
+      "Expected outcome Available",
+    );
+    await expect(evidenceAvailability).toContainText(
+      "Realised outcome Available",
+    );
 
     await expect(
       page.getByRole("heading", { name: "Recommended actions" }),
