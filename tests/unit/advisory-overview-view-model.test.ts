@@ -101,7 +101,7 @@ describe("buildAdvisoryOverviewModel", () => {
 
     expect(model.recommendedAction).toMatch(/Submit ready adviser drafts/);
     expect(model.proposalRows[0]).toMatchObject({
-      href: "/proposals/PRP-DRAFT?asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
+      href: "/proposals/PRP-DRAFT?portfolioId=PB+SG%2F001&asOfDate=2026-06-30&period=YTD&reportingCurrency=SGD",
       status: "Adviser draft",
     });
   });

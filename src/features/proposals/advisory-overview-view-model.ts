@@ -119,7 +119,7 @@ export function buildAdvisoryOverviewModel({
       }),
       href: buildReviewContextHref(
         `/proposals/${encodeURIComponent(proposal.proposal_id)}`,
-        workspaceContext,
+        { portfolioId, ...workspaceContext },
       ),
     }));
 
