@@ -406,6 +406,18 @@ describe("design-system components", () => {
     expect(screen.getByText("10 Apr 2026")).toBeVisible();
     expect(screen.getByText("USD")).toBeVisible();
     expect(screen.getByText("Support details").closest("details")).not.toHaveAttribute("open");
+    expect(
+      Array.from(strip.querySelectorAll<HTMLElement>("[data-context-slot]"), (element) =>
+        element.getAttribute("data-context-slot"),
+      ),
+    ).toEqual([
+      "portfolio-name",
+      "business-date",
+      "currency",
+      "mandate",
+      "booking-centre",
+      "support-details",
+    ]);
   });
 
   it("keeps missing context explicit and copies only confirmed identifiers", async () => {
