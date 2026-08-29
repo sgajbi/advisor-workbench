@@ -3174,8 +3174,17 @@ export async function validateDpmCopilotWorkspace(
   });
   const copilotWorkspace = workbenchPanelByClass(page, "dpm-copilot-workspace");
   await expect(
+    page.getByRole("heading", {
+      name: "PM Copilot",
+      exact: true,
+      level: 1,
+    }),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
     copilotWorkspace.getByRole("heading", {
-      name: "PM Copilot Workspace",
+      name: "Decision-support workflows",
       exact: true,
     }),
   ).toBeVisible({
