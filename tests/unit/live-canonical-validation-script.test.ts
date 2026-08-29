@@ -1373,6 +1373,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'screenshotRegisteredPanel(page, "dpm.portfolio_memory")',
     );
+    expect(browserWorkflowModule).toContain(
+      'name: "Active Rebalance",\n      exact: true',
+    );
     expect(script).toContain("DPM portfolio memory");
     expect(script).toContain("/memory?limit=100");
     expect(script).toContain(

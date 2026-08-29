@@ -2804,9 +2804,12 @@ export async function validateDpmWaveCommandCenterPanel(
   await expect(readinessStrip.getByText("Approval Readiness")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(wavePanel.getByText("Active Rebalance")).toBeVisible({
-    timeout: timeoutMs,
-  });
+  await expect(
+    wavePanel.getByRole("heading", {
+      name: "Active Rebalance",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
   await expect(wavePanel.getByText("Recommended Actions")).toBeVisible({
     timeout: timeoutMs,
   });
