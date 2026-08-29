@@ -151,7 +151,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflow).toContain(
       "const sourceMandate = portfolioWorkspace?.profile?.portfolio_type;",
     );
-    expect(browserWorkflow).toContain("assertSourceBusinessLabelProof({");
+    expect(browserWorkflow).toContain("assertClientContextMandateProof({");
     expect(browserWorkflow).not.toContain(
       "await expect(mandateValue).not.toHaveText",
     );

@@ -1,6 +1,5 @@
 import {
   assertExactSourceRenderProof,
-  assertSourceBusinessLabelProof,
   type SourceRenderProofRow,
 } from "../../scripts/live/validation/source-render-proof.mjs";
 
@@ -107,44 +106,4 @@ describe("exact Gateway-to-render proof", () => {
       ).toThrow(`returned ${field} with surrounding whitespace`);
     },
   );
-});
-
-describe("source business-label proof", () => {
-  it("accepts presentation-only case and source separator differences", () => {
-    expect(
-      assertSourceBusinessLabelProof({
-        screen: "Client Context",
-        fact: "Mandate",
-        sourceValue: "DISCRETIONARY_ADVISORY",
-        renderedValue: "Discretionary Advisory",
-      }),
-    ).toBe("DISCRETIONARY_ADVISORY");
-  });
-
-  it("rejects a stale rendered fact even when both values are non-empty", () => {
-    expect(() =>
-      assertSourceBusinessLabelProof({
-        screen: "Client Context",
-        fact: "Mandate",
-        sourceValue: "DISCRETIONARY",
-        renderedValue: "Advisory",
-      }),
-    ).toThrow(
-      "Client Context: Mandate rendered Advisory, but Gateway supplied DISCRETIONARY.",
-    );
-  });
-
-  it.each([
-    ["sourceValue", "", "Client Context: Mandate returned no source value."],
-    ["renderedValue", "", "Client Context: Mandate returned no rendered value."],
-  ] as const)("rejects missing %s", (field, value, message) => {
-    expect(() =>
-      assertSourceBusinessLabelProof({
-        screen: "Client Context",
-        fact: "Mandate",
-        sourceValue: field === "sourceValue" ? value : "DISCRETIONARY",
-        renderedValue: field === "renderedValue" ? value : "Discretionary",
-      }),
-    ).toThrow(message);
-  });
 });

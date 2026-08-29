@@ -15,6 +15,11 @@ export function createBrowserValidationHelpers(input: {
   panelRegistryById: Map<string, Pick<PanelRegistryEntry, "screenshotName" | "route">>;
 }): BrowserValidationHelpers;
 
+export function assertClientContextMandateProof(proof: {
+  sourceValue: string;
+  renderedValue: string;
+}): string;
+
 export type AdvisorBriefReviewEvidence = {
   rowCount: number;
   reviewState: string | null;
