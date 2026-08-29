@@ -3193,12 +3193,20 @@ export async function validateDpmCopilotWorkspace(
   await expect(page.getByLabel("Portfolio manager copilot status")).toBeVisible({
     timeout: timeoutMs,
   });
+  await expect(copilotWorkspace.getByText("Human review governed", { exact: true })).toBeVisible({
+    timeout: timeoutMs,
+  });
+  await expect(
+    copilotWorkspace.getByLabel("Status Internal decision support"),
+  ).toBeVisible({
+    timeout: timeoutMs,
+  });
   for (const label of [
-    "Gateway only",
-    "No prompt storage",
-    "Evidence Owner",
-    "Workflow Owner",
-    "Forbidden Uses",
+    "Decision Authority",
+    "Portfolio manager and investment control",
+    "Permitted Use",
+    "Restricted Use",
+    "Client communication and order execution",
     "Operating boundaries",
   ]) {
     await expect(

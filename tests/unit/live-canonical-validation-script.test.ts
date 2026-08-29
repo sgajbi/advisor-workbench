@@ -98,6 +98,28 @@ describe("canonical live validation script", () => {
       `name: "${sectionTitle}",\n      exact: true,`,
     );
     expect(workflowSource).not.toContain("PM Copilot Workspace");
+    for (const businessControl of [
+      "Human review governed",
+      "Internal decision support",
+      "Decision Authority",
+      "Portfolio manager and investment control",
+      "Permitted Use",
+      "Restricted Use",
+      "Client communication and order execution",
+      "Operating boundaries",
+    ]) {
+      expect(componentSource).toContain(businessControl);
+      expect(workflowSource).toContain(businessControl);
+    }
+    for (const retiredTechnicalCopy of [
+      "Gateway only",
+      "No prompt storage",
+      "Evidence Owner",
+      "Workflow Owner",
+      "Forbidden Uses",
+    ]) {
+      expect(workflowSource).not.toContain(retiredTechnicalCopy);
+    }
   });
 
   it("proves the shipped Advisory Overview decision surface instead of its retired summary", () => {
