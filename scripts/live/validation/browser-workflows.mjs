@@ -1113,9 +1113,15 @@ export async function validateAdvisoryJourneyScreens(
     sourcePosture: "advisory-copilot-through-gateway",
     screenshotAdvisoryJourney,
     validate: async () => {
-      await expect(page.getByText("Advisor Decision", { exact: true })).toBeVisible({
-        timeout: timeoutMs,
-      });
+      const decisionRegion = page.getByTestId("advisory-copilot-decision");
+      await expect(decisionRegion).toBeVisible({ timeout: timeoutMs });
+      await expect(
+        decisionRegion.getByRole("heading", { level: 2 }),
+      ).toBeVisible({ timeout: timeoutMs });
+      await expect(decisionRegion).toHaveAttribute(
+        "aria-labelledby",
+        "advisory-copilot-decision-title",
+      );
       await expect(page.getByLabel("Advisory copilot posture")).toBeVisible({
         timeout: timeoutMs,
       });
