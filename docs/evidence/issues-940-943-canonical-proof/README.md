@@ -1,7 +1,10 @@
 # Canonical DPM Proof — Issues 940–943
 
-These diagnostic captures come from the governed `PB_SG_GLOBAL_BAL_001` browser journey on
-30 August 2026. They show the Workbench rendering Gateway-backed DPM evidence after the source
+These diagnostic captures come from capture session
+`workbench-live-validate-20260830T034935+0800-a59a1b72` on 30 August 2026. The
+[run manifest](./run-manifest.json) binds the images to Workbench head `a59a1b72`, the
+`canonical-front-office-demo-data-contract` version `1.0.0`, RFC-0076, exact timestamps, and
+SHA-256 digests. They show the Workbench rendering Gateway-backed DPM evidence after the source
 mapping, caller-scope, and exact-heading corrections in this delivery slice.
 
 | Screen | What the capture proves | Owning issue |
@@ -12,10 +15,14 @@ mapping, caller-scope, and exact-heading corrections in this delivery slice.
 
 ## Evidence boundary
 
-These are diagnostic review artifacts, not client-demo certification. The full cross-screen run
-continued beyond these panels and later stopped because `performance.summary` was source-reported
-as partial while canonical panel governance required ready. Workbench did not upgrade that state or
-weaken the assertion. The upstream calculation gap remains tracked by
+These are diagnostic review artifacts, not client-demo certification. The browser journey captured
+Performance before these DPM panels, then completed the DPM captures shown here. After the browser
+closed, final panel-governance reconciliation rejected `performance.summary` because it had been
+source-reported as partial while the registry required ready. The validation summary writer runs
+after that reconciliation, so no current-run summary was produced; the manifest records this failed
+terminal stage instead of reusing the stale summary already present in the output directory.
+Workbench did not upgrade that state or weaken the assertion. The upstream calculation gap remains
+tracked by
 [lotus-core#1069](https://github.com/sgajbi/lotus-core/issues/1069) and
 [lotus-performance#250](https://github.com/sgajbi/lotus-performance/issues/250).
 
