@@ -34,7 +34,7 @@ export function classifyAdvisorBriefAcceptProofPosture(
 export function assertClientContextMandateProof(proof: {
   sourceValue: string;
   renderedValue: string;
-}): string;
+}): { sourceMandate: string; renderedMandate: string };
 
 export function createBrowserValidationHelpers(args: {
   outputDir: string;
