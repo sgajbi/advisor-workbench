@@ -1785,6 +1785,17 @@ describe("canonical live validation script", () => {
       'getByTestId("advisory-copilot-status")',
     );
     expect(browserWorkflowModule).toContain(
+      'getByTestId("advisory-copilot-output")',
+    );
+    expect(browserWorkflowModule).toContain("data-output-section-count");
+    expect(browserWorkflowModule).toContain(
+      'getByTestId("advisory-copilot-human-review")',
+    );
+    expect(browserWorkflowModule).toContain("data-review-posture");
+    expect(browserWorkflowModule).not.toContain(
+      'getByText("Source Evidence", { exact: true })',
+    );
+    expect(browserWorkflowModule).toContain(
       "await validateAdvisoryJourneyRoute(page, statefulIdeaJourney);",
     );
     expect(

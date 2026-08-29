@@ -257,7 +257,11 @@ export default function AdvisoryCopilotWorkspace({
         title={ADVISORY_COPILOT_COPY.reviewTitle}
         subtitle={ADVISORY_COPILOT_COPY.reviewSubtitle}
       >
-        <div className={styles.reviewPanel}>
+        <div
+          className={styles.reviewPanel}
+          data-testid="advisory-copilot-human-review"
+          data-review-posture={latestRun?.run?.review_posture ?? "NOT_PREPARED"}
+        >
           <div className={styles.reviewHeader}>
             <div>
               <Text variant="microLabel">
@@ -285,7 +289,11 @@ export default function AdvisoryCopilotWorkspace({
           </div>
           <AiAssistanceDisclosure disclosure={model.aiDisclosure} />
           {model.runSections.length > 0 ? (
-            <div className={styles.sectionList}>
+            <div
+              className={styles.sectionList}
+              data-testid="advisory-copilot-output"
+              data-output-section-count={model.runSections.length}
+            >
               {model.runSections.map((section) => (
                 <article key={section.title}>
                   <h3>{section.title}</h3>
