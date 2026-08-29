@@ -149,7 +149,7 @@ export function buildManageOverviewModel(
         tone: activeExceptionCount === 0 ? "success" : "warn",
         support:
           exceptionEvidencePosture === "partial"
-            ? "First source view; more available"
+            ? "Bounded source view; total not confirmed"
             : exceptionEvidencePosture === "unavailable"
               ? "No zero-attention conclusion inferred"
               : "Selected mandate",
@@ -250,14 +250,14 @@ function buildManageOverviewDecisions({
               key: "attention:more-available",
               kind: "evidence-gap",
               title: "Continue the mandate attention review",
-              subtitle: "More source records are available",
+              subtitle: "Complete source coverage is not confirmed",
               status: "Partial",
               tone: "warn",
               facts: [
                 { label: "Visible now", value: String(exceptionRows.length) },
-                { label: "Coverage", value: "First source view" },
+                { label: "Coverage", value: "Bounded source view" },
               ],
-              nextAction: "Open mandate health to continue through the source worklist",
+              nextAction: "Open mandate health to review the available source evidence",
               evidence: [
                 { label: "Evidence state", value: "Partial" },
                 {

@@ -277,7 +277,9 @@ describe("manage workspace split components", () => {
       <ManageOverview data={data} reviewContext={{ portfolioId: "PF_1001" }} />,
     );
     expect(screen.getByText("2 shown")).toBeInTheDocument();
-    expect(screen.getByText("First source view; more available")).toBeInTheDocument();
+    expect(
+      screen.getByText("Bounded source view; total not confirmed"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("option", { name: /Continue the mandate attention review/i }),
     ).toBeInTheDocument();
