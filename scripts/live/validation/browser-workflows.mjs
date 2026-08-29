@@ -372,6 +372,94 @@ export function classifyAdvisoryJourneyScreenshotState(state) {
   return state === "ready" ? "demo_ready" : "truthfully_degraded";
 }
 
+export async function validateAdvisoryOverviewDecisionSurface(page, timeoutMs) {
+  await expect(
+    page.getByRole("heading", {
+      level: 2,
+      name: "Adviser priorities",
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: timeoutMs });
+  await expect(page.getByTestId("advisory-decision-brief")).toBeVisible({
+    timeout: timeoutMs,
+  });
+
+  const priorityWorklist = page.getByTestId("advisory-priority-worklist");
+  await expect(priorityWorklist).toBeVisible({ timeout: timeoutMs });
+  await expect(
+    priorityWorklist.getByTestId("advisory-source-window-posture"),
+  ).toBeVisible({ timeout: timeoutMs });
+
+  const proposalWorklist = priorityWorklist.getByRole("listbox", {
+    name: "Advisory proposal decision worklist",
+  });
+  await expect(proposalWorklist).toBeVisible({ timeout: timeoutMs });
+  const proposalOptions = proposalWorklist.getByRole("option");
+  const visibleProposalCount = await proposalOptions.count();
+  if (visibleProposalCount < 1) {
+    throw new Error(
+      "Advisory Overview returned no source-backed proposal rows for canonical proof.",
+    );
+  }
+
+  const selectedProposal = proposalWorklist.locator(
+    '[role="option"][aria-selected="true"]',
+  );
+  await expect(selectedProposal).toHaveCount(1, { timeout: timeoutMs });
+  const selectedDecision = page.getByRole("region", {
+    name: "Selected advisory proposal",
+  });
+  await expect(selectedDecision).toBeVisible({ timeout: timeoutMs });
+
+  const selectedDecisionId = await selectedDecision.getAttribute("id");
+  const controlledDecisionId = await selectedProposal.getAttribute("aria-controls");
+  if (
+    !selectedDecisionId ||
+    !controlledDecisionId ||
+    selectedDecisionId !== controlledDecisionId
+  ) {
+    throw new Error(
+      "Advisory Overview selected proposal is not associated with its decision detail.",
+    );
+  }
+
+  const proposalReference = (
+    await selectedDecision
+      .locator('dl[aria-label="Selected proposal evidence"] dd')
+      .first()
+      .textContent()
+  )?.trim();
+  if (!proposalReference) {
+    throw new Error(
+      "Advisory Overview selected proposal has no source proposal reference.",
+    );
+  }
+  const proposalReviewLink = selectedDecision.getByRole("link", {
+    name: "Open proposal review",
+  });
+  await expect(proposalReviewLink).toBeVisible({ timeout: timeoutMs });
+  const proposalHref = await proposalReviewLink.getAttribute("href");
+  const expectedProposalPath = `/proposals/${encodeURIComponent(proposalReference)}`;
+  if (
+    !proposalHref ||
+    new URL(proposalHref, "http://workbench.local").pathname !==
+      expectedProposalPath
+  ) {
+    throw new Error(
+      "Advisory Overview selected proposal detail does not link to its source proposal reference.",
+    );
+  }
+
+  return {
+    evidencePosture: "selected-source-proposal-through-gateway",
+    evidence: {
+      visibleProposalCount,
+      selectedProposalReference: proposalReference,
+      selectedDecisionId,
+    },
+  };
+}
+
 async function validateAdvisoryJourneyRoute(
   page,
   {
@@ -414,6 +502,7 @@ async function validateAdvisoryJourneyRoute(
     ...(validation.evidencePosture
       ? { evidencePosture: validation.evidencePosture }
       : {}),
+    ...(validation.evidence ? { evidence: validation.evidence } : {}),
   });
 }
 
@@ -552,19 +641,10 @@ export async function validateAdvisoryJourneyScreens(
     sourcePosture: "proposal-list-through-gateway",
     screenshotAdvisoryJourney,
     validate: async () => {
-      await expect(page.getByLabel("Advisory overview summary")).toBeVisible({
-        timeout: timeoutMs,
-      });
       await expect(page.getByLabel("Advisory journey screens")).toBeVisible({
         timeout: timeoutMs,
       });
-      await expect(
-        page.getByRole("heading", {
-          level: 2,
-          name: "Adviser priorities",
-          exact: true,
-        }),
-      ).toBeVisible({ timeout: timeoutMs });
+      return validateAdvisoryOverviewDecisionSurface(page, timeoutMs);
     },
   });
 
