@@ -39,7 +39,9 @@ export default function EmptyStatePanel({
         </div>
       ) : null}
       <div className="portfolio-empty-state-header">
-        <strong>{title}</strong>
+        <strong role="heading" aria-level={3}>
+          {title}
+        </strong>
         {why ? <StateInfoHint body={why.body} title={why.title} label={why.label} /> : null}
       </div>
       <p className="muted">{body}</p>
