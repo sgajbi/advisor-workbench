@@ -127,7 +127,7 @@ Shared endpoint detail remains in [API Surface](API-Surface), and service owners
 | Initial loading | Selected-portfolio loading with no fabricated mandate result | Wait for the server-owned Gateway reads |
 | Complete populated view | Source-confirmed rows and **N open** for the selected mandate in the exhaustive response | Review the selected item |
 | Partial populated view | Valid rows, **N in this view**, and **More attention items are available** | Continue through source views before drawing a whole-queue conclusion |
-| Populated view with unconfirmed supportability | Identified rows, **N in this view**, and **Attention-item evidence is incomplete** | Review the bounded rows; do not infer a total, zero items, or complete queue posture |
+| Populated view with incomplete source confirmation | Identified rows, **N in this view**, and **Attention-item evidence is incomplete** | Review the available rows and refresh before concluding that no further action is required |
 | Complete empty view | **No open attention items** only after the source confirms no continuation | Continue the mandate review; this is not an enterprise all-clear |
 | Partial view with no selected-mandate row | Explicit statement that this source view cannot support a zero-attention conclusion | Continue to the next source view |
 | Row missing source identity | Explicit count of unidentifiable source records; confirmed rows remain reviewable and the view stays partial | Validate the Manage source response; do not infer zero or completeness |
