@@ -15,8 +15,15 @@ type ClassifyCanonicalAdvisorBookPanelSupportState = (
   evidence: Record<string, unknown>,
 ) => "partial";
 
+type BuildAdvisorBookSourceRenderRows = (advisorBook: unknown) => Array<{
+  source: string;
+  identity: string;
+  state: string;
+}>;
+
 type Membership = {
   portfolio_id: string;
+  status: string;
   membership_source: string;
   membership_reference: string;
   membership_basis: string;
@@ -56,6 +63,7 @@ type AdvisorBookPayload = {
 
 let validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
 let classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
+let buildAdvisorBookSourceRenderRows: BuildAdvisorBookSourceRenderRows;
 
 function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPayload {
   return {
@@ -64,12 +72,14 @@ function advisorBook(overrides: Partial<AdvisorBookPayload> = {}): AdvisorBookPa
     items: [
       {
         portfolio_id: "PB_OTHER",
+        status: "CLOSED",
         membership_source: "PortfolioManagerBookMembership:v1",
         membership_reference: "assignment:other",
         membership_basis: "legacy_advisor_projection",
       },
       {
         portfolio_id: PORTFOLIO_ID,
+        status: "ACTIVE",
         membership_source: "PortfolioManagerBookMembership:v1",
         membership_reference: "assignment:canonical",
         membership_basis: "governed_role_assignment",
@@ -105,10 +115,31 @@ describe("authoritative advisor-book live proof", () => {
     const proofModule = (await import(PROOF_MODULE_PATH)) as {
       validateCanonicalAdvisorBookEvidence: ValidateCanonicalAdvisorBookEvidence;
       classifyCanonicalAdvisorBookPanelSupportState: ClassifyCanonicalAdvisorBookPanelSupportState;
+      buildAdvisorBookSourceRenderRows: BuildAdvisorBookSourceRenderRows;
     };
     validateCanonicalAdvisorBookEvidence = proofModule.validateCanonicalAdvisorBookEvidence;
     classifyCanonicalAdvisorBookPanelSupportState =
       proofModule.classifyCanonicalAdvisorBookPanelSupportState;
+    buildAdvisorBookSourceRenderRows = proofModule.buildAdvisorBookSourceRenderRows;
+  });
+
+  it("adapts exact Gateway portfolio identities and lifecycle states for render proof", () => {
+    expect(buildAdvisorBookSourceRenderRows(advisorBook())).toEqual([
+      { source: "advisor-book", identity: "PB_OTHER", state: "CLOSED" },
+      { source: "advisor-book", identity: PORTFOLIO_ID, state: "ACTIVE" },
+    ]);
+  });
+
+  it("rejects malformed render-proof source rows with their source position", () => {
+    const malformed = advisorBook();
+    malformed.items[1].status = "";
+
+    expect(() => buildAdvisorBookSourceRenderRows(malformed)).toThrow(
+      "no portfolio lifecycle state for row 2",
+    );
+    expect(() => buildAdvisorBookSourceRenderRows({})).toThrow(
+      "returned no portfolio memberships",
+    );
   });
 
   it("selects the canonical item and records authoritative machine-readable evidence", () => {
