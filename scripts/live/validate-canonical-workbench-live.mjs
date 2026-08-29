@@ -561,12 +561,9 @@ async function ensureCanonicalPmOperatingQualityEvidence() {
     description,
     { method = "GET", body } = {},
   ) =>
-    sendJson(summary, url, description, timeoutMs, {
+    sendDpmCommandCenterJson(url, description, {
       method,
       body,
-      headers: {
-        "X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId,
-      },
     });
   const scoreRunRequest = buildCanonicalPmQualityScoreRunRequest(asOfDate);
   const scoreRunResponse = await sendPmQualityJson(
@@ -792,17 +789,26 @@ const dpmCommandCenterCallerHeaders = Object.freeze({
   "X-Tenant-Id": dpmCommandCenterDefaults.workbenchCallerTenantId,
 });
 
-function fetchDpmCommandCenterJson(url, description) {
+function sendDpmCommandCenterJson(
+  url,
+  description,
+  { method = "GET", body } = {},
+) {
   return sendJson(summary, url, description, timeoutMs, {
+    method,
+    body,
     headers: dpmCommandCenterCallerHeaders,
   });
 }
 
+function fetchDpmCommandCenterJson(url, description) {
+  return sendDpmCommandCenterJson(url, description);
+}
+
 function postDpmCommandCenterJson(url, description, body) {
-  return sendJson(summary, url, description, timeoutMs, {
+  return sendDpmCommandCenterJson(url, description, {
     method: "POST",
     body,
-    headers: dpmCommandCenterCallerHeaders,
   });
 }
 
