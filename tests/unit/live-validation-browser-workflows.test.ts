@@ -6,6 +6,7 @@ import * as browserWorkflowModule from "../../scripts/live/validation/browser-wo
 import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-metadata.mjs";
 
 const {
+  assertClientContextMandateProof,
   buildReportCentreProofPosture,
   buildMandateConstraintProofRows,
   buildProposalListSourceRows,
@@ -28,6 +29,10 @@ const {
   validateAdvisoryJourneyScreens,
   validatePmOperatingQualityPanel,
 } = browserWorkflowModule as unknown as {
+  assertClientContextMandateProof: (proof: {
+    sourceValue: string;
+    renderedValue: string;
+  }) => string;
   buildReportCentreProofPosture: (pdfOutputReady: boolean) => {
     panelState: "partial";
     outputFormat: "json" | "pdf";
@@ -147,6 +152,40 @@ const ACCEPTED_REVIEW_EVIDENCE: AdvisorBriefReviewEvidence = {
 };
 
 describe("live validation browser workflow helpers", () => {
+  describe("Client Context mandate proof", () => {
+    it("accepts presentation-only case and source separator differences", () => {
+      expect(
+        assertClientContextMandateProof({
+          sourceValue: "DISCRETIONARY_ADVISORY",
+          renderedValue: "Discretionary Advisory",
+        }),
+      ).toBe("DISCRETIONARY_ADVISORY");
+    });
+
+    it("rejects a stale rendered fact even when both values are non-empty", () => {
+      expect(() =>
+        assertClientContextMandateProof({
+          sourceValue: "DISCRETIONARY",
+          renderedValue: "Advisory",
+        }),
+      ).toThrow(
+        "Client Context: Mandate rendered Advisory, but Gateway supplied DISCRETIONARY.",
+      );
+    });
+
+    it.each([
+      ["sourceValue", "", "Client Context: Mandate returned no source value."],
+      ["renderedValue", "", "Client Context: Mandate returned no rendered value."],
+    ] as const)("rejects missing %s", (field, value, message) => {
+      expect(() =>
+        assertClientContextMandateProof({
+          sourceValue: field === "sourceValue" ? value : "DISCRETIONARY",
+          renderedValue: field === "renderedValue" ? value : "Discretionary",
+        }),
+      ).toThrow(message);
+    });
+  });
+
   it.each([
     [
       "position rows",
@@ -774,7 +813,7 @@ describe("live validation browser workflow helpers", () => {
     expect(source).toContain(
       "portfolioWorkspace?.profile?.portfolio_type",
     );
-    expect(source).toContain("assertSourceBusinessLabelProof");
+    expect(source).toContain("assertClientContextMandateProof");
     expect(source).not.toContain("not.toHaveText(/^\\s*$/u)");
     expect(source).not.toContain("Balanced Mandate");
     expect(source).toContain(

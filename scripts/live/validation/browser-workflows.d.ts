@@ -31,6 +31,11 @@ export function classifyAdvisorBriefAcceptProofPosture(
   | "review-action-available"
   | "review-action-unavailable";
 
+export function assertClientContextMandateProof(proof: {
+  sourceValue: string;
+  renderedValue: string;
+}): string;
+
 export function createBrowserValidationHelpers(args: {
   outputDir: string;
   summary: {
