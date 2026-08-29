@@ -1548,6 +1548,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Return history");
     expect(browserWorkflowModule).toContain(
+      'page.getByText("Return history", { exact: true })',
+    );
+    expect(browserWorkflowModule).toContain(
+      'returnHistoryTitle.locator("..")).toContainText',
+    );
+    expect(browserWorkflowModule).toContain(
       'name: "Report centre", exact: true',
     );
     expect(browserWorkflowModule).toMatch(
