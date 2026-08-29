@@ -84,10 +84,16 @@ describe("canonical live validation script", () => {
       'getAttribute("aria-controls")',
       'getAttribute("data-source-identity")',
       'name: "Open proposal review"',
+      "proposalOptions.evaluateAll",
       "assertExactSourceRenderProof({",
+      "assertWorkspaceReviewContextPreserved({",
+      "currentHref: page.url()",
     ]) {
       expect(decisionSurfaceProof).toContain(stableEvidence);
     }
+    expect(decisionSurfaceProof).not.toContain(
+      'locator(\'[data-source-render-row="proposal-list"]\')',
+    );
     expect(decisionSurfaceProof).toContain(
       "selected-source-proposal-through-gateway",
     );

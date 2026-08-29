@@ -9,6 +9,7 @@ const {
   buildReportCentreProofPosture,
   buildMandateConstraintProofRows,
   buildProposalListSourceRows,
+  assertWorkspaceReviewContextPreserved,
   classifyAttributionDetailEvidence,
   classifyPerformanceEvidenceScreenshotState,
   classifyAdvisoryJourneyScreenshotState,
@@ -40,6 +41,10 @@ const {
     value: unknown,
     expectedPortfolioId: string,
   ) => Array<{ source: string; identity: string; state: string }>;
+  assertWorkspaceReviewContextPreserved: (input: {
+    currentHref: string;
+    destinationHref: string;
+  }) => void;
   classifyAttributionDetailEvidence: (counts: {
     detailTableCount: number;
     summaryTableCount: number;
@@ -205,6 +210,40 @@ describe("live validation browser workflow helpers", () => {
     expect(() =>
       buildProposalListSourceRows(response, "PB_SG_GLOBAL_BAL_001"),
     ).toThrow(/proposal list/iu);
+  });
+
+  it("preserves every active workspace review-context field in proposal navigation", () => {
+    expect(() =>
+      assertWorkspaceReviewContextPreserved({
+        currentHref:
+          "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+        destinationHref:
+          "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    [
+      "missing portfolio",
+      "/proposals/PRP-RISK?asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+    ],
+    [
+      "substituted portfolio",
+      "/proposals/PRP-RISK?portfolioId=PB_OTHER&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+    ],
+    [
+      "dropped business date",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&reportingCurrency=SGD",
+    ],
+  ])("rejects proposal navigation with %s", (_case, destinationHref) => {
+    expect(() =>
+      assertWorkspaceReviewContextPreserved({
+        currentHref:
+          "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD",
+        destinationHref,
+      }),
+    ).toThrow(/did not preserve governed/iu);
   });
 
   it("derives exact mandate constraint proof from both Gateway reads", () => {
