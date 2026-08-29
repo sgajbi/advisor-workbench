@@ -1,5 +1,11 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -165,6 +171,21 @@ describe("AdvisoryCopilotWorkspace", () => {
       await screen.findByText(
         "AI-assisted preparation for proposal review, with proposal evidence and mandatory human review before any client use.",
       ),
+    ).toBeInTheDocument();
+    const decisionRegion = screen.getByTestId("advisory-copilot-decision");
+    expect(decisionRegion).toHaveAccessibleName(
+      "Prepare an evidence-led proposal review",
+    );
+    expect(
+      screen.getByRole("region", {
+        name: "Prepare an evidence-led proposal review",
+      }),
+    ).toBe(decisionRegion);
+    expect(within(decisionRegion).getByText("Adviser decision")).toBeInTheDocument();
+    expect(
+      within(decisionRegion).getByRole("heading", {
+        name: "Prepare an evidence-led proposal review",
+      }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Not approved for client use").length).toBeGreaterThan(0);
     expect(
