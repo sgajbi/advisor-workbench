@@ -409,6 +409,21 @@ function advisoryJourneyRoute({ workbenchBaseUrl, portfolioId, path }) {
   return `${workbenchBaseUrl}${path}${separator}portfolioId=${encodeURIComponent(portfolioId)}`;
 }
 
+export function canonicalIdeaOpportunitiesRoute({
+  workbenchBaseUrl,
+  portfolioId,
+  candidateId,
+}) {
+  const expectedCandidateId = requireHighCashIdeaCandidateId(candidateId);
+  return advisoryJourneyRoute({
+    workbenchBaseUrl,
+    portfolioId,
+    path:
+      "/recommendations?mode=opportunities" +
+      `&candidateId=${encodeURIComponent(expectedCandidateId)}`,
+  });
+}
+
 function recordAdvisoryJourneyCheck(summary, payload) {
   summary.advisoryJourneyChecks ??= [];
   summary.advisoryJourneyChecks.push({
@@ -764,10 +779,10 @@ export async function validateAdvisoryJourneyScreens(
     portfolioId,
     path: "/recommendations",
   });
-  const opportunitiesRoute = advisoryJourneyRoute({
+  const opportunitiesRoute = canonicalIdeaOpportunitiesRoute({
     workbenchBaseUrl,
     portfolioId,
-    path: "/recommendations?mode=opportunities",
+    candidateId: expectedIdeaCandidateId,
   });
   const cockpitRoute = advisoryJourneyRoute({
     workbenchBaseUrl,

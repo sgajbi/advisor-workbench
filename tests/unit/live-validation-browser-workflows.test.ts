@@ -17,6 +17,7 @@ const {
   classifyAdvisoryJourneyScreenshotState,
   classifyDiscussionPackJourneyEvidence,
   classifyRegisteredPanelScreenshotState,
+  canonicalIdeaOpportunitiesRoute,
   createBrowserValidationHelpers,
   classifyAdvisorBriefAcceptProofPosture,
   hasAcceptedAdvisorBriefReviewPosture,
@@ -81,6 +82,11 @@ const {
     panelState: string | null,
     requiredSupportState: string | null,
   ) => "demo_ready" | "truthfully_degraded";
+  canonicalIdeaOpportunitiesRoute: (input: {
+    workbenchBaseUrl: string;
+    portfolioId: string;
+    candidateId: string;
+  }) => string;
   createBrowserValidationHelpers: typeof import("../../scripts/live/validation/browser-workflows.mjs").createBrowserValidationHelpers;
   classifyAdvisorBriefAcceptProofPosture: (
     evidence: AdvisorBriefReviewEvidence,
@@ -862,6 +868,20 @@ describe("live validation browser workflow helpers", () => {
     );
     expect(() => requireHighCashIdeaCandidateId("idea_high_cash_001")).toThrow(
       /current-run high-cash candidate/i,
+    );
+  });
+
+  it("opens the current-run candidate in the initial opportunities route", () => {
+    expect(
+      canonicalIdeaOpportunitiesRoute({
+        workbenchBaseUrl: "http://workbench.dev.lotus",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        candidateId: "idea_high_cash_ef02ad8793485081",
+      }),
+    ).toBe(
+      "http://workbench.dev.lotus/recommendations?mode=opportunities" +
+        "&candidateId=idea_high_cash_ef02ad8793485081" +
+        "&portfolioId=PB_SG_GLOBAL_BAL_001",
     );
   });
 
