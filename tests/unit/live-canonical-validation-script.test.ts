@@ -1772,6 +1772,15 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       "advisory-copilot-through-gateway",
     );
+    expect(browserWorkflowModule).toContain(
+      'getByTestId("advisory-copilot-decision")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'decisionRegion.getByRole("heading", { level: 2 })',
+    );
+    expect(browserWorkflowModule).toContain(
+      '"advisory-copilot-decision-title"',
+    );
     expect(browserWorkflowModule).toContain("Advisory copilot posture");
     expect(browserWorkflowModule).toContain("Record internal review");
     expect(browserWorkflowModule).toContain(
