@@ -2860,7 +2860,10 @@ export async function validateDpmWaveCommandCenterPanel(
     timeout: timeoutMs,
   });
   await expect(
-    candidateSourceReview.getByText("Check launch readiness through Gateway."),
+    candidateSourceReview.getByText(
+      "Review launch readiness and any source-owned blockers.",
+      { exact: true },
+    ),
   ).toBeVisible({
     timeout: timeoutMs,
   });
