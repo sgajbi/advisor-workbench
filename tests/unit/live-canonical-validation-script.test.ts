@@ -1558,6 +1558,9 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("assertRailModeActive");
     expect(browserWorkflowModule).toContain("tableByExactLabel");
     expect(browserWorkflowModule).toContain("workbenchPanelByClass");
+    expect(browserWorkflowModule).toContain(
+      'getByLabel("Mandate health summary")',
+    );
     expect(browserWorkflowModule).toContain("outcome-review-panel");
     expect(browserWorkflowModule).toContain(
       "buildOutcomeReviewSourceEvidenceProof(sourceReview)",
