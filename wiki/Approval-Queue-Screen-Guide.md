@@ -81,7 +81,8 @@ These roles describe business use, not authenticated production entitlement.
   then re-reads that exact Gateway window on return. Workbench validates the address shape but does
   not interpret the cursor as queue order or business evidence. Browser Back and Forward reconcile
   the worklist to the addressed window; a source-owned portfolio correction discards a cursor that
-  belonged to the stale addressed portfolio.
+  belonged to the stale addressed portfolio. A malformed or repeated continuation cursor rejects
+  the source window instead of creating false navigation history.
 - Uses the shared `WorkbenchWorklist` composition with one keyboard-operable source list, one
   selected decision region, stable accessibility relationships, and visible selected state.
 - Admits a URL `selectedRecordId` only when the exact proposal is present in the current Gateway
