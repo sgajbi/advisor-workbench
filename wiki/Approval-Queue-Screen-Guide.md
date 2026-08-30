@@ -68,8 +68,8 @@ These roles describe business use, not authenticated production entitlement.
 | Direction | Adjacent workspace | Context preserved |
 | --- | --- | --- |
 | Inbound | Advisor Book, Advisory Overview, or Proposal Builder | Selected portfolio |
-| Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, URL-backed selection, and Approval Queue origin |
-| Return | Approval Queue through **Return to Approval Queue** | Source proposal portfolio, selected proposal, and Approval Queue mode |
+| Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, URL-backed selection, active source window, and Approval Queue origin |
+| Return | Approval Queue through **Return to Approval Queue** | Source proposal portfolio, selected proposal, active source window, and Approval Queue mode |
 | Later lifecycle | Suitability, Risk and Impact, Discussion Pack, or [Implementation Status](Implementation-Status-Screen-Guide) | Portfolio only; each workspace must prove its own source-backed decision evidence |
 
 ## Implemented Capabilities
@@ -77,6 +77,9 @@ These roles describe business use, not authenticated production entitlement.
 - Reads proposal summaries only through the Workbench BFF and Gateway.
 - Keeps proposal count and attention posture explicitly scoped to the current source window.
 - Provides previous and next source-window navigation without claiming global completeness.
+- Persists the opaque page-local cursor and visible window number when moving into Proposal Detail,
+  then re-reads that exact Gateway window on return. Workbench validates the address shape but does
+  not interpret the cursor as queue order or business evidence.
 - Uses the shared `WorkbenchWorklist` composition with one keyboard-operable source list, one
   selected decision region, stable accessibility relationships, and visible selected state.
 - Admits a URL `selectedRecordId` only when the exact proposal is present in the current Gateway
@@ -102,8 +105,8 @@ These roles describe business use, not authenticated production entitlement.
   rail, and the selected posture becomes restricted rather than source-current.
 - Keeps the selected decision pane beside the worklist where its container supports the dense
   two-column review, and after it in logical DOM order at compact widths.
-- Preserves portfolio, selected proposal, and originating lifecycle mode when entering Proposal
-  Detail and returning to the queue.
+- Preserves portfolio, selected proposal, active source window, and originating lifecycle mode when
+  entering Proposal Detail and returning to the queue.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;
   route context does not replace source proposal identity.
 - Keeps approval and evidence actions out of the summary queue.
