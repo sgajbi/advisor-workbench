@@ -13,6 +13,7 @@ interface CssBudget {
 
 interface CssBaseline {
   forbiddenSelectorPrefixes?: string[];
+  retiredSelectorPrefixes?: string[];
   cssModuleEscapes: {
     root: string;
     defaultMaxGlobalEscapes: number;
@@ -842,6 +843,37 @@ describe("CSS global governance gate", () => {
           baseline: baselineWithForbiddenSelector,
         }),
       ).toThrow(/Migrated component selectors must not return/);
+    } finally {
+      rmSync(repoRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects retired selector substitution inside an exact-budget CSS module", async () => {
+    const { repoRoot, baseline } = createFixture();
+    const { validateCssGlobalGovernance } = await governanceModulePromise;
+    const modulePath = "src/features/example/example.module.css";
+
+    try {
+      writeFixtureFile(
+        repoRoot,
+        modulePath,
+        ".root :global(.portfolio-screen-rail-link) {\n  color: inherit;\n}\n",
+      );
+      const baselineWithRetiredSelector: CssBaseline = {
+        ...baseline,
+        retiredSelectorPrefixes: ["portfolio-screen-rail"],
+        cssModuleEscapes: {
+          ...baseline.cssModuleEscapes,
+          exceptions: [{ path: modulePath, maxGlobalEscapes: 1 }],
+        },
+      };
+
+      expect(() =>
+        validateCssGlobalGovernance({
+          repoRoot,
+          baseline: baselineWithRetiredSelector,
+        }),
+      ).toThrow(/Retired component selectors must not return.*example\.module\.css/);
     } finally {
       rmSync(repoRoot, { recursive: true, force: true });
     }

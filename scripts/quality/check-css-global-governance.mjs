@@ -241,24 +241,30 @@ function assertNoModuleImports(repoRoot, moduleBudget) {
   }
 }
 
-function assertForbiddenSelectorPrefixes(repoRoot, moduleBudgets, prefixes = []) {
+function assertSelectorPrefixesAbsent({
+  repoRoot,
+  cssPaths,
+  prefixes = [],
+  configurationName,
+  failureMessage,
+}) {
   if (
     !Array.isArray(prefixes) ||
     prefixes.some((prefix) => typeof prefix !== "string" || !prefix)
   ) {
     throw new Error(
-      "CSS global governance forbiddenSelectorPrefixes must be an array of non-empty strings.",
+      `CSS global governance ${configurationName} must be an array of non-empty strings.`,
     );
   }
 
   const findings = [];
-  for (const moduleBudget of moduleBudgets) {
-    const text = fileText(repoRoot, moduleBudget.path);
-    const root = parseCssRoot(text, moduleBudget.path);
+  for (const cssPath of cssPaths) {
+    const text = fileText(repoRoot, cssPath);
+    const root = parseCssRoot(text, cssPath);
     root.walkRules((rule) => {
       for (const prefix of prefixes) {
         if (rule.selector.includes(`.${prefix}`)) {
-          findings.push(`${moduleBudget.path}: ${rule.selector}`);
+          findings.push(`${cssPath}: ${rule.selector}`);
         }
       }
     });
@@ -266,10 +272,29 @@ function assertForbiddenSelectorPrefixes(repoRoot, moduleBudgets, prefixes = [])
 
   if (findings.length > 0) {
     throw new Error(
-      "Migrated component selectors must not return to governed global CSS: " +
-        findings.join(", "),
+      `${failureMessage}: ${findings.join(", ")}`,
     );
   }
+}
+
+function assertForbiddenSelectorPrefixes(repoRoot, cssPaths, prefixes = []) {
+  assertSelectorPrefixesAbsent({
+    repoRoot,
+    cssPaths,
+    prefixes,
+    configurationName: "forbiddenSelectorPrefixes",
+    failureMessage: "Migrated component selectors must not return to governed global CSS",
+  });
+}
+
+function assertRetiredSelectorPrefixes(repoRoot, cssPaths, prefixes = []) {
+  assertSelectorPrefixesAbsent({
+    repoRoot,
+    cssPaths,
+    prefixes,
+    configurationName: "retiredSelectorPrefixes",
+    failureMessage: "Retired component selectors must not return to governed CSS",
+  });
 }
 
 function assertCssModuleEscapeBudgetShape(baseline) {
@@ -358,13 +383,16 @@ function findCssModulePaths(directoryPath) {
   return modulePaths;
 }
 
-function assertCssModuleEscapeBudgets(repoRoot, baseline) {
+function discoverCssModulePaths(repoRoot, baseline) {
   assertCssModuleEscapeBudgetShape(baseline);
 
   const rootPath = resolve(repoRoot, baseline.root);
-  const modulePaths = findCssModulePaths(rootPath)
+  return findCssModulePaths(rootPath)
     .map((modulePath) => repoRelativePath(repoRoot, modulePath))
     .sort();
+}
+
+function assertCssModuleEscapeBudgets(repoRoot, baseline, modulePaths) {
   const modulePathSet = new Set(modulePaths);
   const exceptionsByPath = new Map(
     baseline.exceptions.map((exception) => [exception.path, exception.maxGlobalEscapes]),
@@ -492,16 +520,30 @@ export function validateCssGlobalGovernance({
     assertWithinBudget(effectiveRepoRoot, moduleBudget);
   }
 
+  const cssModulePaths = discoverCssModulePaths(
+    effectiveRepoRoot,
+    effectiveBaseline.cssModuleEscapes,
+  );
+
   assertForbiddenSelectorPrefixes(
     effectiveRepoRoot,
-    effectiveBaseline.modules,
+    effectiveBaseline.modules.map((moduleBudget) => moduleBudget.path),
     effectiveBaseline.forbiddenSelectorPrefixes,
+  );
+  assertRetiredSelectorPrefixes(
+    effectiveRepoRoot,
+    [
+      ...effectiveBaseline.modules.map((moduleBudget) => moduleBudget.path),
+      ...cssModulePaths,
+    ],
+    effectiveBaseline.retiredSelectorPrefixes,
   );
 
   return {
     cssModuleEscapes: assertCssModuleEscapeBudgets(
       effectiveRepoRoot,
       effectiveBaseline.cssModuleEscapes,
+      cssModulePaths,
     ),
   };
 }
