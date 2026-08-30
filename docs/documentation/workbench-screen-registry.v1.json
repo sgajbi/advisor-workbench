@@ -963,12 +963,15 @@
       "implementationEvidence": [
         "src/apps/recommendations/page.tsx",
         "src/features/proposals/components/advisory-opportunities-workspace.tsx",
+        "src/features/proposals/components/advisory-opportunity-grid.tsx",
         "src/features/proposals/components/idea-candidate-action-panel.tsx",
         "src/features/proposals/advisory-opportunities-view-model.ts",
+        "src/features/proposals/use-idea-presentation-receipts.ts",
         "tests/integration/advisory-opportunities-workspace.test.tsx"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",
+        "tests/e2e/idea-candidate-presentation.spec.ts",
         "tests/e2e/idea-candidate-actions.spec.ts"
       ],
       "supportOwner": "lotus-workbench",
