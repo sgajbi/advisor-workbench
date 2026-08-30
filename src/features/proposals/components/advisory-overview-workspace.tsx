@@ -69,6 +69,9 @@ export default function AdvisoryOverviewWorkspace({
     () => proposalQuery.data?.items ?? [],
     [proposalQuery.data?.items],
   );
+  const sourceHasMoreProposalResults = Boolean(
+    proposalQuery.data?.next_cursor,
+  );
   const hasNextProposalWindow = sourceWindow.canShowNext(
     proposalQuery.data?.next_cursor,
   );
@@ -77,15 +80,15 @@ export default function AdvisoryOverviewWorkspace({
       buildAdvisoryOverviewModel({
         reviewContext,
         proposals,
-        hasMoreResults: hasNextProposalWindow,
+        hasMoreResults: sourceHasMoreProposalResults,
         hasPreviousResults: sourceWindow.hasPrevious,
         windowNumber: sourceWindow.windowNumber,
       }),
     [
       reviewContext,
-      hasNextProposalWindow,
       proposals,
       sourceWindow.hasPrevious,
+      sourceHasMoreProposalResults,
       sourceWindow.windowNumber,
     ],
   );
@@ -132,7 +135,7 @@ export default function AdvisoryOverviewWorkspace({
         hasUnavailableEvidence: false,
         hasProposalRefreshFailure: sourcePosture.hasRefreshFailure,
         hasSupportingEvidenceRefreshFailure: false,
-        hasMoreResults: hasNextProposalWindow,
+        hasMoreResults: sourceHasMoreProposalResults,
         hasPreviousResults: sourceWindow.hasPrevious,
         windowNumber: sourceWindow.windowNumber,
         totalCount: model.visibleProposalCount,
@@ -144,13 +147,13 @@ export default function AdvisoryOverviewWorkspace({
     [
       model,
       portfolioId,
-      hasNextProposalWindow,
       sourcePosture.hasRefreshFailure,
       sourcePosture.isInitialLoading,
       sourcePosture.isPermissionBlocked,
       sourcePosture.isRefreshing,
       sourcePosture.isUnavailable,
       sourceWindow.hasPrevious,
+      sourceHasMoreProposalResults,
       sourceWindow.windowNumber,
     ],
   );

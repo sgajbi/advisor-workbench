@@ -176,6 +176,7 @@ export default function ProposalLifecycleWorkspace({
   });
 
   const proposals = useMemo(() => data?.items ?? [], [data?.items]);
+  const sourceHasMoreProposalResults = Boolean(data?.next_cursor);
   const hasNextProposalWindow = sourceWindow.canShowNext(data?.next_cursor);
   const model = useMemo(
     () =>
@@ -184,7 +185,7 @@ export default function ProposalLifecycleWorkspace({
         reviewContext,
         mode,
         proposals,
-        hasMoreResults: hasNextProposalWindow,
+        hasMoreResults: sourceHasMoreProposalResults,
         hasPreviousResults: sourceWindow.hasPrevious,
         sourceWindow: {
           cursor: sourceWindow.cursor,
@@ -192,11 +193,11 @@ export default function ProposalLifecycleWorkspace({
         },
       }),
     [
-      hasNextProposalWindow,
       mode,
       portfolioId,
       proposals,
       reviewContext,
+      sourceHasMoreProposalResults,
       sourceWindow.hasPrevious,
       sourceWindow.cursor,
       sourceWindow.windowNumber,

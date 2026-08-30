@@ -2956,6 +2956,12 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       await screen.findByRole("button", { name: "Next proposals" }),
     ).toBeDisabled();
+    expect(
+      screen.getByText("No matching proposals in this view"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No proposals in the approval queue"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Proposal view 3")).toBeInTheDocument();
   });
 
@@ -2982,15 +2988,13 @@ describe("ProposalLifecycleWorkspace", () => {
     );
 
     expect(
-      await screen.findByRole("heading", {
-        name: "No proposals in the approval queue",
-      }),
+      await screen.findByText("No matching proposals in this view"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Next proposals" }),
     ).toBeDisabled();
     expect(
-      screen.queryByText("More proposals available"),
+      screen.queryByText("No proposals in the approval queue"),
     ).not.toBeInTheDocument();
     expect(routerPushMock).not.toHaveBeenCalled();
   });
