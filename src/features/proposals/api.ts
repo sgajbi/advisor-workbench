@@ -367,28 +367,29 @@ export async function recordAdvisorIdeaReviewAction(
 export async function recordAdvisorIdeaFeedback(
   input: AdvisorIdeaCandidateActionInput<AdvisorIdeaFeedbackRequest>,
 ): Promise<AdvisorIdeaCandidateActionData> {
-  const data = await observeWorkbenchMutation(
+  return await observeWorkbenchMutation(
     "idea.candidate.feedback",
-    async () =>
-      await postAdvisorIdeaCandidateAction({
+    async () => {
+      const data = await postAdvisorIdeaCandidateAction({
         ...input,
         pathSuffix: "feedback",
         capability: "idea.feedback.record",
         errorLabel: "Advisor idea feedback",
-      }),
+      });
+      if (
+        !matchesAdvisorIdeaFeedbackEvidence({
+          candidateId: input.candidateId,
+          event: data.feedbackEvent,
+          request: input.request,
+        })
+      ) {
+        throw new Error(
+          "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
+        );
+      }
+      return data;
+    },
   );
-  if (
-    !matchesAdvisorIdeaFeedbackEvidence({
-      candidateId: input.candidateId,
-      event: data.feedbackEvent,
-      request: input.request,
-    })
-  ) {
-    throw new Error(
-      "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
-    );
-  }
-  return data;
 }
 
 export async function recordAdvisorIdeaConversionIntent(
