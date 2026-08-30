@@ -53,7 +53,9 @@ mutations. `WorkbenchApiError` is the only client authority for HTTP status; fea
 recover status from message text, read an upstream response body directly, or present a transport
 exception as advisor-facing copy. A screen may translate a typed status into bounded business
 guidance, while unknown failures retain the screen's explicit safe fallback and operational detail
-remains outside the primary interface.
+remains outside the primary interface. A validated source correlation header may be presented as a
+request reference only inside the shared collapsed Support details pattern. Missing or malformed
+headers resolve to no reference and must never mask the typed HTTP status or become primary copy.
 
 `npm run quality:feature-transport` is a blocking ratchet over feature source. It permits the two
 intentional transport primitives in `src/features/workbench/api-client.ts`, requires Proposals to
