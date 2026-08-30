@@ -246,6 +246,7 @@ describe("report ordering view model", () => {
         ...alternateFamily.sections[0],
         sectionId: "CONDENSED_PROFILE",
         businessLabel: "Condensed client profile",
+        dependencyFieldIds: ["advisor_brief_run_id"],
       },
     ];
     const response = parseReportOrderingResponse({
