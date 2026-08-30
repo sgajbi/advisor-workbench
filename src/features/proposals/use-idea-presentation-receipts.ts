@@ -21,10 +21,18 @@ import type { AdvisorIdeaReviewQueueData } from "./types";
 
 const VISIBILITY_THRESHOLD = 0.5;
 const MARKER_SELECTOR = "[data-idea-presentation-candidate]";
-const subscribeToStaticBrowserCapability = () => () => undefined;
-const getIntersectionObserverSupport = () =>
-  "IntersectionObserver" in globalThis;
-const getServerIntersectionObserverSupport = () => true;
+
+function subscribeToStaticBrowserCapability() {
+  return () => undefined;
+}
+
+function getIntersectionObserverSupport() {
+  return "IntersectionObserver" in globalThis;
+}
+
+function getServerIntersectionObserverSupport() {
+  return true;
+}
 
 type ReceiptTransaction = {
   candidateId: string;
@@ -293,7 +301,7 @@ export function useIdeaPresentationReceipts({
 
   const currentSummary =
     summary.snapshotKey === snapshotKey
-      ? summary
+      ? { status: summary.status, failedCount: summary.failedCount }
       : { status: "ready" as const, failedCount: 0 };
   return {
     ...currentSummary,
