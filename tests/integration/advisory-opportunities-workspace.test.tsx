@@ -6,6 +6,58 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdvisoryOpportunitiesWorkspace from "../../src/features/proposals/components/advisory-opportunities-workspace";
 import type { WorkspaceReviewContext } from "../../src/shell/review-context";
 
+type MockGridRow = Record<string, unknown> & { candidateId: string };
+
+type MockGridColumn = {
+  cellRenderer?: React.ComponentType<{
+    data: MockGridRow;
+    value: unknown;
+  }>;
+  field?: string;
+  headerName?: string;
+  hide?: boolean;
+};
+
+vi.mock("ag-grid-react", () => ({
+  AgGridReact: ({
+    rowData = [],
+    columnDefs = [],
+  }: {
+    rowData?: MockGridRow[];
+    columnDefs?: MockGridColumn[];
+  }) => {
+    const visibleColumns = columnDefs.filter((column) => !column.hide);
+    return (
+      <div role="grid" aria-label="Idea candidate review queue">
+        <div role="row">
+          {visibleColumns.map((column) => (
+            <div role="columnheader" key={column.field ?? column.headerName}>
+              {column.headerName}
+            </div>
+          ))}
+        </div>
+        {rowData.map((row) => (
+          <div role="row" key={row.candidateId}>
+            {visibleColumns.map((column) => {
+              const value = column.field ? row[column.field] : undefined;
+              const CellRenderer = column.cellRenderer;
+              return (
+                <div role="gridcell" key={column.field ?? column.headerName}>
+                  {CellRenderer ? (
+                    <CellRenderer data={row} value={value} />
+                  ) : (
+                    String(value ?? "")
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  },
+}));
+
 function reviewContext(portfolioId: string): WorkspaceReviewContext {
   return {
     portfolioId,
