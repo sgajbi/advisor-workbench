@@ -122,6 +122,16 @@ export function buildReportOrderingResponse() {
               { value: "currency", businessLabel: "Currency" },
             ],
           },
+          {
+            fieldId: "advisor_brief_run_id",
+            businessLabel: "Accepted advisor brief",
+            description: "Accepted advisor brief run included as reviewed commentary evidence.",
+            inputType: "text",
+            requirement: "conditional",
+            defaultingPolicy: "caller_required_when_section_selected",
+            valueSource: "caller",
+            options: [],
+          },
         ],
         sections: [
           {
@@ -141,6 +151,15 @@ export function buildReportOrderingResponse() {
             selectionPosture: "optional",
             defaultSelected: true,
             dependencyFieldIds: [],
+          },
+          {
+            sectionId: "ADVISOR_COMMENTARY",
+            businessLabel: "Advisor commentary",
+            description: "Reviewed advisor commentary for the client conversation.",
+            displayOrder: 25,
+            selectionPosture: "optional",
+            defaultSelected: false,
+            dependencyFieldIds: ["advisor_brief_run_id"],
           },
           {
             sectionId: "PERFORMANCE",
