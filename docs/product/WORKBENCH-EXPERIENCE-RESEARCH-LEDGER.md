@@ -220,6 +220,30 @@ visibility, one control bar, default column truth, keyboard focus, intentional c
 and zero page overflow. The reviewed evidence is under
 `docs/evidence/issue-812-performance-control-bar/`.
 
+### Review-window dialog focus and recovery follow-up
+
+Research was rechecked for issue #900 on 2026-08-31 against the
+[W3C WAI-ARIA modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/),
+[W3C modal dialog technique H102](https://www.w3.org/WAI/WCAG21/Techniques/html/H102), and the
+[Material UI Dialog API](https://mui.com/material-ui/api/dialog/).
+
+Adopted:
+
+1. Retain MUI's established modal semantics and the existing Workbench dialog composition.
+2. Return focus to the initiating **Review window** control when dismissal leaves focus unclaimed,
+   while preserving a deliberate focus move made during the exit transition.
+3. Bind rejected-refresh Retry to the actual Review window control identity rather than a label for
+   a submit button inside the portalled dialog.
+4. Release the submitting state immediately when the parent reports that no source refresh was
+   dispatched, preserving the last confirmed date range.
+
+Rejected:
+
+1. A custom focus trap or replacement dialog dependency.
+2. Unconditional post-transition focus restoration that overwrites the advisor's newer focus.
+3. A compatibility alias for the removed in-region **Apply** target.
+4. A permanently locked Cancel/Escape path when the requested dates resolve to existing cache keys.
+
 ## Advisor workstation build continuity: complete client assets during validation
 
 ### Business job
