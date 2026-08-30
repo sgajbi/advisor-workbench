@@ -1,4 +1,7 @@
-import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
+import {
+  getWorkbenchApiErrorEvidence,
+  getWorkbenchApiErrorStatus,
+} from "@/features/workbench/api-client";
 
 export type ProposalActionFailureContext =
   | "create_version"
@@ -12,6 +15,11 @@ export class ProposalActionBusinessError extends Error {
     this.name = "ProposalActionBusinessError";
   }
 }
+
+export type ProposalActionFailure = Readonly<{
+  message: string;
+  supportEvidence: string | null;
+}>;
 
 const UNAVAILABLE_COPY: Record<ProposalActionFailureContext, string> = {
   create_version:
@@ -44,4 +52,24 @@ export function proposalActionFailureCopy(
     return "The source proposal changed before this action completed. Refresh current evidence before trying again.";
   }
   return UNAVAILABLE_COPY[context];
+}
+
+export function proposalActionFailure(
+  error: unknown,
+  context: ProposalActionFailureContext,
+): ProposalActionFailure {
+  return {
+    message: proposalActionFailureCopy(error, context),
+    supportEvidence: proposalActionFailureSupportEvidence(error),
+  };
+}
+
+export function proposalActionFailureSupportEvidence(error: unknown): string | null {
+  const evidence = getWorkbenchApiErrorEvidence(error);
+  if (!evidence) {
+    return null;
+  }
+  return evidence.requestReference
+    ? `${evidence.label} ${evidence.value}. Request reference ${evidence.requestReference}.`
+    : `${evidence.label} ${evidence.value}.`;
 }

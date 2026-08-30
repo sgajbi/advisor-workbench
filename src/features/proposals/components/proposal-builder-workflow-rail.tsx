@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   ActionButton,
   SemanticBadge,
+  SupportDetails,
   Text,
   WorkbenchRailCard,
 } from "@/design-system";
@@ -23,6 +24,7 @@ type ProposalBuilderWorkflowRailProps = {
   isEvaluating: boolean;
   isSaving: boolean;
   error: string | null;
+  errorSupportEvidence: string | null;
   onSaveDraft: () => void;
 };
 
@@ -58,6 +60,7 @@ export default function ProposalBuilderWorkflowRail({
   isEvaluating,
   isSaving,
   error,
+  errorSupportEvidence,
   onSaveDraft,
 }: ProposalBuilderWorkflowRailProps) {
   const isActionPending = isEvaluating || isSaving;
@@ -161,15 +164,22 @@ export default function ProposalBuilderWorkflowRail({
         </p>
 
         {error ? (
-          <div
-            className={`${styles.feedback} ${styles.feedbackError}`}
-            role="alert"
-            aria-label="Proposal action failure"
-            aria-atomic="true"
-          >
-            <strong>Proposal action not completed</strong>
-            <span>{error}</span>
-          </div>
+          <>
+            <div
+              className={`${styles.feedback} ${styles.feedbackError}`}
+              role="alert"
+              aria-label="Proposal action failure"
+              aria-atomic="true"
+            >
+              <strong>Proposal action not completed</strong>
+              <span>{error}</span>
+            </div>
+            {errorSupportEvidence ? (
+              <SupportDetails context="Source request evidence">
+                <Text variant="secondary">{errorSupportEvidence}</Text>
+              </SupportDetails>
+            ) : null}
+          </>
         ) : isSaving ? (
           <div
             className={styles.feedback}

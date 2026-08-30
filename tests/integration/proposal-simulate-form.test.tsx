@@ -861,7 +861,11 @@ describe("ProposalSimulateForm", () => {
 
   it("retains construction-only posture when draft persistence fails", async () => {
     advisoryApiMocks.handoffAdvisoryWorkspace.mockRejectedValueOnce(
-      new WorkbenchApiError("advisory workspace request", 403)
+      new WorkbenchApiError(
+        "advisory workspace request",
+        403,
+        "corr-handoff-denied-001"
+      )
     );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
@@ -878,6 +882,13 @@ describe("ProposalSimulateForm", () => {
     expect(screen.getByRole("alert", { name: "Proposal action failure" })).toHaveTextContent(
       "Proposal action not completed"
     );
+    expect(screen.getByText(/Request reference corr-handoff-denied-001/)).not.toBeVisible();
+    fireEvent.click(
+      within(screen.getByTestId("proposal-builder-workflow-rail")).getByText(
+        "Support details"
+      )
+    );
+    expect(screen.getByText(/Request reference corr-handoff-denied-001/)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Draft not yet persisted" })
     ).toBeInTheDocument();

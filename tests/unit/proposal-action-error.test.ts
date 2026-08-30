@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ProposalActionBusinessError,
+  proposalActionFailure,
   proposalActionFailureCopy,
 } from "../../src/features/proposals/proposal-action-error";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
@@ -57,5 +58,20 @@ describe("proposal action failure copy", () => {
         "evaluate_draft",
       ),
     ).toBe("Review the current portfolio evidence.");
+  });
+
+  it("keeps source request evidence out of primary business copy", () => {
+    const failure = proposalActionFailure(
+      new WorkbenchApiError("proposal request", 403, "corr-proposal-denied-001"),
+      "save_draft",
+    );
+
+    expect(failure.message).toBe(
+      "This proposal action is not available for your current access. No proposal change was recorded.",
+    );
+    expect(failure.message).not.toContain("corr-proposal-denied-001");
+    expect(failure.supportEvidence).toBe(
+      "HTTP status 403. Request reference corr-proposal-denied-001.",
+    );
   });
 });
