@@ -8,6 +8,7 @@ import {
   SemanticBadge,
   SourceRefreshAction,
   Text,
+  WorkbenchWorklist,
   WorkbenchRefreshStatus,
   useSourceRefreshAction,
   type SourceRefreshState,
@@ -15,7 +16,7 @@ import {
 
 import type { ProposalApprovalEvidenceModel } from "../proposal-approval-evidence-view-model";
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
-import ProposalLifecycleWorklist from "./proposal-lifecycle-worklist";
+import { buildProposalLifecycleWorklistItems } from "./proposal-lifecycle-worklist";
 import styles from "./proposal-lifecycle-workspace.module.css";
 
 export default function ProposalLifecycleDecisionWorkspace({
@@ -61,137 +62,144 @@ export default function ProposalLifecycleDecisionWorkspace({
   const contextLabel = `${selectedProposal.title} · ${selectedProposal.version}`;
 
   return (
-    <div
-      className={styles.decisionWorkspace}
-      data-testid="proposal-approval-decision-workspace"
-    >
-      <ProposalLifecycleWorklist
+    <div data-testid="proposal-approval-decision-workspace">
+      <WorkbenchWorklist
         ariaLabel="Approval Queue proposals"
-        rows={rows}
-        selectedProposalId={selectedProposal.proposalId}
-        onSelectProposal={(proposalId) => {
+        relationshipIdBase="proposal-approval-queue"
+        eyebrow="Review worklist"
+        title="Proposals in this view"
+        description="Use arrow keys to move between proposals. Press Enter to review source evidence and Escape to return."
+        items={buildProposalLifecycleWorklistItems({
+          rows,
+          selectedProposalId: selectedProposal.proposalId,
+        })}
+        selectedKey={selectedProposal.proposalId}
+        onSelectionChange={(proposalId) => {
           resetRefresh();
           onSelectProposal(proposalId);
         }}
-      />
-
-      <section
-        className={styles.selectedProposalPane}
-        aria-label="Selected proposal decision"
-      >
-        <p
-          className="sr-only"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          Selected proposal: {selectedProposal.title}. Source evidence is being
-          checked for {selectedProposal.version}.
-        </p>
-        <div className={styles.selectedProposalHeader}>
-          <div>
-            <Text variant="microLabel">Selected proposal</Text>
-            <Text variant="subsectionTitle" as="h3">
-              {selectedProposal.title}
-            </Text>
-            <Text variant="metadata">{selectedProposal.proposalId}</Text>
-          </div>
-          <SemanticBadge tone={selectedProposal.stageTone} emphasis="strong">
-            {selectedProposal.stage}
-          </SemanticBadge>
-        </div>
-
-        {refreshState ? (
-          <ApprovalEvidenceRefreshStatus
-            state={refreshState}
-            requestedContext={contextLabel}
-            confirmedContext={evidence ? contextLabel : "Not confirmed"}
-            hasConfirmedEvidence={Boolean(evidence)}
-          />
-        ) : null}
-
-        {isPermissionBlocked ? (
-          <ScreenStatePanel
-            kind="permission_blocked"
-            title="Approval evidence is restricted"
-            body="Your current role cannot view the selected proposal's approval, workflow, or lineage evidence. No maker-checker posture is inferred."
-            surface="default"
-          />
-        ) : isLoading && !evidence ? (
-          <ScreenStatePanel
-            kind="loading"
-            title="Checking maker-checker evidence"
-            body="Retrieving the selected proposal's current detail, workflow, approval register, and active-version lineage through Gateway."
-            rows={4}
-            surface="default"
-          />
-        ) : hasError && !evidence ? (
-          <ScreenStatePanel
-            kind="error"
-            title="Approval evidence is unavailable"
-            body="The selected proposal's source evidence could not be confirmed. Lifecycle state alone is not shown as maker-checker readiness."
-            action={
-              <SourceRefreshAction
-                ref={refreshActionRef}
-                refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
-                idleLabel="Retry approval evidence"
-                busyLabel="Retrying approval evidence…"
-                isRefreshing={isRefreshing}
-                onRefresh={refresh}
-              />
-            }
-            surface="default"
-          />
-        ) : !evidence ? (
-          <ScreenStatePanel
-            kind="error"
-            title="Approval evidence is incomplete"
-            body="Gateway did not return one complete selected-proposal evidence set. Refresh before relying on this review."
-            action={
-              <SourceRefreshAction
-                ref={refreshActionRef}
-                refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
-                idleLabel="Refresh approval evidence"
-                busyLabel="Refreshing approval evidence…"
-                isRefreshing={isRefreshing}
-                onRefresh={refresh}
-              />
-            }
-            surface="default"
-          />
-        ) : evidence.agreement.issue ? (
-          <div className={styles.approvalEvidenceConflict}>
-            <ScreenStatePanel
-              kind="error"
-              title={evidence.posture.title}
-              body={evidence.posture.summary}
-              action={
-                <SourceRefreshAction
-                  ref={refreshActionRef}
-                  refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
-                  idleLabel="Recheck source evidence"
-                  busyLabel="Rechecking source evidence…"
-                  isRefreshing={isRefreshing}
-                  onRefresh={refresh}
-                />
-              }
-              surface="default"
-            />
-            <p className={styles.evidenceBoundary}>
-              Approval records remain hidden while proposal identity, workflow
-              state, and active-version lineage do not agree.
+        decisionLabel="Selected proposal decision"
+        decisionClassName={styles.selectedProposalPane}
+        decision={
+          <>
+            <p
+              className="sr-only"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              Selected proposal: {selectedProposal.title}. Source evidence is
+              being checked for {selectedProposal.version}.
             </p>
-          </div>
-        ) : (
-          <ApprovalEvidenceDecision
-            evidence={evidence}
-            proposalHref={selectedProposal.href}
-            isRefreshing={isRefreshing}
-            onRefresh={refresh}
-            refreshActionRef={refreshActionRef}
-          />
-        )}
-      </section>
+            <div className={styles.selectedProposalHeader}>
+              <div>
+                <Text variant="microLabel">Selected proposal</Text>
+                <Text variant="subsectionTitle" as="h3">
+                  {selectedProposal.title}
+                </Text>
+                <Text variant="metadata">{selectedProposal.proposalId}</Text>
+              </div>
+              <SemanticBadge
+                tone={selectedProposal.stageTone}
+                emphasis="strong"
+              >
+                {selectedProposal.stage}
+              </SemanticBadge>
+            </div>
+
+            {refreshState ? (
+              <ApprovalEvidenceRefreshStatus
+                state={refreshState}
+                requestedContext={contextLabel}
+                confirmedContext={evidence ? contextLabel : "Not confirmed"}
+                hasConfirmedEvidence={Boolean(evidence)}
+              />
+            ) : null}
+
+            {isPermissionBlocked ? (
+              <ScreenStatePanel
+                kind="permission_blocked"
+                title="Approval evidence is restricted"
+                body="Your current role cannot view the selected proposal's approval, workflow, or lineage evidence. No maker-checker posture is inferred."
+                surface="default"
+              />
+            ) : isLoading && !evidence ? (
+              <ScreenStatePanel
+                kind="loading"
+                title="Checking maker-checker evidence"
+                body="Retrieving the selected proposal's current detail, workflow, approval register, and active-version lineage through Gateway."
+                rows={4}
+                surface="default"
+              />
+            ) : hasError && !evidence ? (
+              <ScreenStatePanel
+                kind="error"
+                title="Approval evidence is unavailable"
+                body="The selected proposal's source evidence could not be confirmed. Lifecycle state alone is not shown as maker-checker readiness."
+                action={
+                  <SourceRefreshAction
+                    ref={refreshActionRef}
+                    refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
+                    idleLabel="Retry approval evidence"
+                    busyLabel="Retrying approval evidence…"
+                    isRefreshing={isRefreshing}
+                    onRefresh={refresh}
+                  />
+                }
+                surface="default"
+              />
+            ) : !evidence ? (
+              <ScreenStatePanel
+                kind="error"
+                title="Approval evidence is incomplete"
+                body="Gateway did not return one complete selected-proposal evidence set. Refresh before relying on this review."
+                action={
+                  <SourceRefreshAction
+                    ref={refreshActionRef}
+                    refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
+                    idleLabel="Refresh approval evidence"
+                    busyLabel="Refreshing approval evidence…"
+                    isRefreshing={isRefreshing}
+                    onRefresh={refresh}
+                  />
+                }
+                surface="default"
+              />
+            ) : evidence.agreement.issue ? (
+              <div className={styles.approvalEvidenceConflict}>
+                <ScreenStatePanel
+                  kind="error"
+                  title={evidence.posture.title}
+                  body={evidence.posture.summary}
+                  action={
+                    <SourceRefreshAction
+                      ref={refreshActionRef}
+                      refreshScope={`proposal-approval:${selectedProposal.proposalId}`}
+                      idleLabel="Recheck source evidence"
+                      busyLabel="Rechecking source evidence…"
+                      isRefreshing={isRefreshing}
+                      onRefresh={refresh}
+                    />
+                  }
+                  surface="default"
+                />
+                <p className={styles.evidenceBoundary}>
+                  Approval records remain hidden while proposal identity,
+                  workflow state, and active-version lineage do not agree.
+                </p>
+              </div>
+            ) : (
+              <ApprovalEvidenceDecision
+                evidence={evidence}
+                proposalHref={selectedProposal.href}
+                isRefreshing={isRefreshing}
+                onRefresh={refresh}
+                refreshActionRef={refreshActionRef}
+              />
+            )}
+          </>
+        }
+      />
     </div>
   );
 }
@@ -308,7 +316,7 @@ function ApprovalEvidenceDecision({
         <summary>
           Workflow evidence
           <span>
-            {evidence.workflow.eventCount} source {" "}
+            {evidence.workflow.eventCount} source{" "}
             {evidence.workflow.eventCount === 1 ? "event" : "events"}
           </span>
         </summary>
@@ -331,8 +339,8 @@ function ApprovalEvidenceDecision({
           <p>No workflow events were returned for this proposal.</p>
         )}
         <p className={styles.evidenceBoundary}>
-          Active version {evidence.lineage.activeVersion} is confirmed across {" "}
-          {evidence.lineage.versionCount} lineage {" "}
+          Active version {evidence.lineage.activeVersion} is confirmed across{" "}
+          {evidence.lineage.versionCount} lineage{" "}
           {evidence.lineage.versionCount === 1 ? "record" : "records"}.
         </p>
       </details>

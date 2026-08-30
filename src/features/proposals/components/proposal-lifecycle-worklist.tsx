@@ -2,10 +2,54 @@
 
 import { useId } from "react";
 
-import { SemanticBadge, Text, WorkbenchRecordSelector } from "@/design-system";
+import {
+  SemanticBadge,
+  Text,
+  WorkbenchRecordSelector,
+  type WorkbenchWorklistItem,
+} from "@/design-system";
 
 import type { ProposalLifecycleRow } from "../proposal-lifecycle-workspace-view-model";
 import styles from "./proposal-lifecycle-workspace.module.css";
+
+type SelectedProposalPresentation = {
+  label: string;
+  tone: "default" | "success" | "warn" | "danger";
+  nextAction: string;
+};
+
+export function buildProposalLifecycleWorklistItems({
+  rows,
+  selectedProposalId,
+  defaultNextAction,
+  selectedPresentation,
+}: {
+  rows: ProposalLifecycleRow[];
+  selectedProposalId: string;
+  defaultNextAction?: string;
+  selectedPresentation?: SelectedProposalPresentation;
+}): WorkbenchWorklistItem<string>[] {
+  return rows.map((row) => {
+    const presentation =
+      row.proposalId === selectedProposalId ? selectedPresentation : undefined;
+    return {
+      key: row.proposalId,
+      title: row.title,
+      subtitle: `${row.proposalId} · ${row.version}`,
+      status: (
+        <SemanticBadge tone={presentation?.tone ?? row.stageTone}>
+          {presentation?.label ?? row.stage}
+        </SemanticBadge>
+      ),
+      facts: [
+        { label: "Creator record", value: row.creator },
+        { label: "Recorded", value: row.createdOn },
+      ],
+      nextAction:
+        presentation?.nextAction ?? defaultNextAction ?? row.nextAction,
+    };
+  });
+}
 
 export default function ProposalLifecycleWorklist({
   ariaLabel,
@@ -22,11 +66,7 @@ export default function ProposalLifecycleWorklist({
   selectedProposalId: string;
   onSelectProposal: (proposalId: string) => void;
   defaultNextAction?: string;
-  selectedPresentation?: {
-    label: string;
-    tone: "default" | "success" | "warn" | "danger";
-    nextAction: string;
-  };
+  selectedPresentation?: SelectedProposalPresentation;
   className?: string;
   layout?: "list" | "grid";
 }) {
@@ -50,27 +90,11 @@ export default function ProposalLifecycleWorklist({
         layout={layout}
         selectedKey={selectedProposalId}
         onSelectionChange={onSelectProposal}
-        items={rows.map((row) => {
-          const presentation =
-            row.proposalId === selectedProposalId
-              ? selectedPresentation
-              : undefined;
-          return {
-            key: row.proposalId,
-            title: row.title,
-            subtitle: `${row.proposalId} · ${row.version}`,
-            status: (
-              <SemanticBadge tone={presentation?.tone ?? row.stageTone}>
-                {presentation?.label ?? row.stage}
-              </SemanticBadge>
-            ),
-            facts: [
-              { label: "Creator record", value: row.creator },
-              { label: "Recorded", value: row.createdOn },
-            ],
-            nextAction:
-              presentation?.nextAction ?? defaultNextAction ?? row.nextAction,
-          };
+        items={buildProposalLifecycleWorklistItems({
+          rows,
+          selectedProposalId,
+          defaultNextAction,
+          selectedPresentation,
         })}
       />
     </section>
