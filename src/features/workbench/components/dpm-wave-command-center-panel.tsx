@@ -166,9 +166,10 @@ export default function DpmWaveCommandCenterPanel({
 
   return (
     <SectionBlock
+      id="rebalance-workspace"
       title="Rebalance"
       subtitle="Proposed rebalance, advisor review, and approval readiness."
-      className="dpm-wave-command-center-panel rebalance-workspace"
+      className="rebalance-workspace"
       actions={
         <div className="rebalance-context-row" aria-label="Rebalance source context">
           <span>{header.mandateLabel}</span>
