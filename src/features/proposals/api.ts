@@ -82,6 +82,7 @@ import {
 } from "./proposal-discussion-pack-contract";
 import {
   fetchWorkbenchJson,
+  fetchWorkbenchMutation,
   observeWorkbenchMutation,
 } from "@/features/workbench/api-client";
 
@@ -121,30 +122,18 @@ type AdvisorIdeaCandidateActionInput<TRequest> = {
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<BankDemoProofEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory/bank-demo-proof/scenario-contract`,
+    "bank demo scenario contract",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Bank demo scenario contract failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as BankDemoProofEnvelopeResponse;
   return envelope.data as unknown as BankDemoScenarioContractData;
 }
 
 export async function getBankDemoSupportedClaimRegister(): Promise<BankDemoSupportedClaimRegisterData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<BankDemoProofEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory/bank-demo-proof/supported-claim-register`,
+    "bank demo supported-claim register",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Bank demo supported-claim register failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as BankDemoProofEnvelopeResponse;
   return envelope.data as unknown as BankDemoSupportedClaimRegisterData;
 }
 
@@ -164,16 +153,10 @@ export async function createAdvisoryWorkspace(
 export async function getAdvisoryWorkspace(
   workspaceId: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  const response = await fetch(
+  return await fetchWorkbenchJson<AdvisoryWorkspaceEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-workspaces/${workspaceId}`,
+    "advisory workspace",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory workspace fetch failed (${response.status}): ${body}`,
-    );
-  }
-  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
 }
 
 export async function applyAdvisoryWorkspaceDraftAction(
@@ -302,16 +285,13 @@ export async function listProposals(
     params.set("cursor", filters.cursor);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(`${BFF_PROXY_BASE}/proposals${query}`);
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal list failed (${response.status}): ${body}`);
-  }
-  const proposalList = parseProposalListEnvelope(await response.json());
-  if (
-    filters.cursor
-    && proposalList.next_cursor === filters.cursor
-  ) {
+  const proposalList = parseProposalListEnvelope(
+    await fetchWorkbenchJson<unknown>(
+      `${BFF_PROXY_BASE}/proposals${query}`,
+      "proposal list",
+    ),
+  );
+  if (filters.cursor && proposalList.next_cursor === filters.cursor) {
     throw new Error("Proposal list response was incomplete.");
   }
   return proposalList;
@@ -332,16 +312,10 @@ export async function getAdvisoryPolicyReviewQueue({
     params.set("portfolio_id", portfolioId);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<AdvisoryPolicyEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/review-queue${query}`,
+    "advisory policy review queue",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory policy review queue failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyReviewQueueData;
 }
 
@@ -355,14 +329,11 @@ export async function getAdvisorIdeaReviewQueue({
     params.set("evaluatedAtUtc", evaluatedAtUtc);
   }
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await fetch(
+  const payload = await fetchWorkbenchJson<unknown>(
     `${BFF_PROXY_BASE}/ideas/review-queues/advisor${query}`,
+    "advisor idea queue",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Advisor idea queue failed (${response.status}): ${body}`);
-  }
-  return unwrapGatewayData<AdvisorIdeaReviewQueueData>(await response.json());
+  return unwrapGatewayData<AdvisorIdeaReviewQueueData>(payload);
 }
 
 export async function getAdvisorIdeaCandidateDetail({
@@ -370,18 +341,11 @@ export async function getAdvisorIdeaCandidateDetail({
   portfolioId,
 }: AdvisorIdeaCandidateDetailFilters): Promise<AdvisorIdeaCandidateDetailData> {
   requireSelectedIdeaPortfolio(portfolioId);
-  const response = await fetch(
+  const payload = await fetchWorkbenchJson<unknown>(
     `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}`,
+    "advisor idea candidate detail",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisor idea candidate detail failed (${response.status}): ${body}`,
-    );
-  }
-  return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(
-    await response.json(),
-  );
+  return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(payload);
 }
 
 export async function recordAdvisorIdeaReviewAction(
@@ -432,50 +396,32 @@ export async function recordAdvisorIdeaConversionIntent(
 export async function getAdvisoryPolicyEvaluation(
   evaluationId: string,
 ): Promise<AdvisoryPolicyEvaluationData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<AdvisoryPolicyEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}`,
+    "advisory policy evaluation",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory policy evaluation failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyEvaluationData;
 }
 
 export async function getAdvisoryPolicySignOffPackage(
   evaluationId: string,
 ): Promise<AdvisoryPolicySignOffPackageData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<AdvisoryPolicyEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
       evaluationId,
     )}/sign-off-package`,
+    "advisory policy sign-off package",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory policy sign-off package failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicySignOffPackageData;
 }
 
 export async function getAdvisoryPolicyWorkflow(
   evaluationId: string,
 ): Promise<AdvisoryPolicyWorkflowData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<AdvisoryPolicyEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(evaluationId)}/workflow`,
+    "advisory policy workflow",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory policy workflow failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicyWorkflowData;
 }
 
@@ -490,23 +436,17 @@ export async function recordAdvisoryPolicySignOffDecision(
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  const response = await fetch(
+  const envelope = await fetchWorkbenchMutation<AdvisoryPolicyEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-policy-evaluations/${encodeURIComponent(
       evaluationId,
     )}/sign-off-decisions`,
+    "advisory policy sign-off decision",
     {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
     },
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory policy sign-off decision failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryPolicyEnvelopeResponse;
   return envelope.data as unknown as AdvisoryPolicySignOffDecisionData;
 }
 
@@ -578,16 +518,10 @@ export async function reviewAdvisoryCopilotRun(
 }
 
 export async function getAdvisoryCopilotSupportability(): Promise<AdvisoryCopilotSupportabilityData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<AdvisoryCopilotEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisory-copilot/supportability`,
+    "advisory copilot supportability",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory copilot supportability failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisoryCopilotEnvelopeResponse;
   return envelope.data as unknown as AdvisoryCopilotSupportabilityData;
 }
 
@@ -602,10 +536,11 @@ export async function acknowledgeAdvisorCockpitAction(
     idempotencyKey: string;
   },
 ): Promise<AdvisorCockpitAcknowledgeData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchMutation<AdvisorCockpitEnvelopeResponse>(
     `${BFF_PROXY_BASE}/advisor-cockpit/actions/${encodeURIComponent(
       actionItemId,
     )}/acknowledgements${buildAdvisorCockpitQuery(filters)}`,
+    "advisor cockpit acknowledgement",
     {
       method: "POST",
       headers: {
@@ -615,13 +550,6 @@ export async function acknowledgeAdvisorCockpitAction(
       body: JSON.stringify(payload),
     },
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisor cockpit acknowledgement failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisorCockpitEnvelopeResponse;
   return envelope.data as unknown as AdvisorCockpitAcknowledgeData;
 }
 
@@ -630,14 +558,10 @@ export async function getProposal(
   includeEvidence = false,
 ): Promise<ProposalDetailData> {
   const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}${query}`,
+    "proposal detail",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal detail failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDetailData;
 }
 
@@ -689,14 +613,10 @@ export async function getProposalVersion(
   includeEvidence = false,
 ): Promise<ProposalVersionData> {
   const query = `?include_evidence=${includeEvidence ? "true" : "false"}`;
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/versions/${versionNo}${query}`,
+    "proposal version",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal version failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalVersionData;
 }
 
@@ -764,14 +684,10 @@ export async function getProposalIdempotencyRecord(
 export async function getProposalLineage(
   proposalId: string,
 ): Promise<ProposalLineageData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/lineage`,
+    "proposal lineage",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal lineage failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalLineageData;
 }
 
@@ -843,32 +759,20 @@ export async function createProposalExecutionHandoff(
 export async function getProposalDeliverySummary(
   proposalId: string,
 ): Promise<ProposalDeliverySummaryData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-summary`,
+    "proposal delivery summary",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Proposal delivery summary failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDeliverySummaryData;
 }
 
 export async function getProposalDeliveryEvents(
   proposalId: string,
 ): Promise<ProposalDeliveryEventsData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/delivery-events`,
+    "proposal delivery events",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Proposal delivery events failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalDeliveryEventsData;
 }
 
@@ -1086,28 +990,20 @@ export async function recordClientConsent(
 export async function getProposalWorkflowEvents(
   proposalId: string,
 ): Promise<ProposalWorkflowEventsData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/workflow-events`,
+    "proposal workflow events",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Workflow events failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalWorkflowEventsData;
 }
 
 export async function getProposalApprovals(
   proposalId: string,
 ): Promise<ProposalApprovalsData> {
-  const response = await fetch(
+  const envelope = await fetchWorkbenchJson<ProposalEnvelopeResponse>(
     `${BFF_PROXY_BASE}/proposals/${proposalId}/approvals`,
+    "proposal approvals",
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Approvals fetch failed (${response.status}): ${body}`);
-  }
-  const envelope = (await response.json()) as ProposalEnvelopeResponse;
   return envelope.data as unknown as ProposalApprovalsData;
 }
 
@@ -1116,46 +1012,37 @@ async function postJson(
   payload: unknown,
   idempotencyKey?: string,
 ): Promise<ProposalEnvelopeResponse> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  const response = await fetch(`${BFF_PROXY_BASE}${path}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal request failed (${response.status}): ${body}`);
-  }
-  return (await response.json()) as ProposalEnvelopeResponse;
+  return await fetchWorkbenchMutation<ProposalEnvelopeResponse>(
+    `${BFF_PROXY_BASE}${path}`,
+    "proposal request",
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 async function getProposalEnvelope(
   path: string,
 ): Promise<ProposalEnvelopeResponse> {
-  const response = await fetch(`${BFF_PROXY_BASE}${path}`);
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Proposal request failed (${response.status}): ${body}`);
-  }
-  return (await response.json()) as ProposalEnvelopeResponse;
+  return await fetchWorkbenchJson<ProposalEnvelopeResponse>(
+    `${BFF_PROXY_BASE}${path}`,
+    "proposal request",
+  );
 }
 
 async function getAdvisoryWorkspaceJson(
   path: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces${path}`);
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory workspace request failed (${response.status}): ${body}`,
-    );
-  }
-  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
+  return await fetchWorkbenchJson<AdvisoryWorkspaceEnvelopeResponse>(
+    `${BFF_PROXY_BASE}/advisory-workspaces${path}`,
+    "advisory workspace request",
+  );
 }
 
 async function postAdvisoryWorkspaceJson(
@@ -1163,37 +1050,28 @@ async function postAdvisoryWorkspaceJson(
   payload: unknown,
   idempotencyKey?: string,
 ): Promise<AdvisoryWorkspaceEnvelopeResponse> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-workspaces${path}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisory workspace request failed (${response.status}): ${body}`,
-    );
-  }
-  return (await response.json()) as AdvisoryWorkspaceEnvelopeResponse;
+  return await fetchWorkbenchMutation<AdvisoryWorkspaceEnvelopeResponse>(
+    `${BFF_PROXY_BASE}/advisory-workspaces${path}`,
+    "advisory workspace request",
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 async function getAdvisorCockpitData(
   path: string,
 ): Promise<Record<string, unknown>> {
-  const response = await fetch(`${BFF_PROXY_BASE}/advisor-cockpit${path}`);
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Advisor cockpit request failed (${response.status}): ${body}`,
-    );
-  }
-  const envelope = (await response.json()) as AdvisorCockpitEnvelopeResponse;
+  const envelope = await fetchWorkbenchJson<AdvisorCockpitEnvelopeResponse>(
+    `${BFF_PROXY_BASE}/advisor-cockpit${path}`,
+    "advisor cockpit request",
+  );
   return envelope.data;
 }
 
@@ -1202,24 +1080,19 @@ async function postAdvisoryCopilotJson(
   body: unknown,
   idempotencyKey?: string,
 ): Promise<AdvisoryCopilotEnvelopeResponse> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  const response = await fetch(`${BFF_PROXY_BASE}/advisory-copilot${path}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ body }),
-  });
-  if (!response.ok) {
-    const responseBody = await response.text();
-    throw new Error(
-      `Advisory copilot request failed (${response.status}): ${responseBody}`,
-    );
-  }
-  return (await response.json()) as AdvisoryCopilotEnvelopeResponse;
+  return await fetchWorkbenchMutation<AdvisoryCopilotEnvelopeResponse>(
+    `${BFF_PROXY_BASE}/advisory-copilot${path}`,
+    "advisory copilot request",
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ body }),
+    },
+  );
 }
 
 function buildAdvisorCockpitQuery(filters: AdvisorCockpitFilters): string {
@@ -1258,21 +1131,16 @@ async function postAdvisorIdeaCandidateAction<TRequest>({
   const headers = new Headers();
   headers.set("Content-Type", "application/json");
   headers.set("Idempotency-Key", idempotencyKey);
-  const response = await fetch(
+  const payload = await fetchWorkbenchMutation<unknown>(
     `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(candidateId)}/${pathSuffix}`,
+    errorLabel.toLowerCase(),
     {
       method: "POST",
       headers,
       body: JSON.stringify(request),
     },
   );
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`${errorLabel} failed (${response.status}): ${body}`);
-  }
-  const data = unwrapGatewayData<AdvisorIdeaCandidateActionData>(
-    await response.json(),
-  );
+  const data = unwrapGatewayData<AdvisorIdeaCandidateActionData>(payload);
   const persistenceDecision = data.persistence?.decision;
   if (
     persistenceDecision !== "accepted" &&

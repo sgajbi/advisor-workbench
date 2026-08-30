@@ -70,12 +70,41 @@ import {
 } from "../../src/features/proposals/api";
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const expectedBaseUrl = "/api/bff/api/v1";
+
+function expectNoStoreRequest(
+  fetchMock: ReturnType<typeof vi.fn>,
+  url: string,
+) {
+  expect(fetchMock).toHaveBeenCalledWith(url, { cache: "no-store" });
+}
 
 describe("proposal api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("keeps raw Gateway failure bodies out of proposal transport errors", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response('{"detail":"internal policy and service identifiers"}', {
+            status: 403,
+          }),
+      ),
+    );
+
+    const error = await listProposals().catch((failure: unknown) => failure);
+
+    expect(error).toBeInstanceOf(WorkbenchApiError);
+    expect(error).toMatchObject({
+      message: "Failed to fetch proposal list (403)",
+      status: 403,
+    });
+    expect((error as Error).message).not.toContain("internal policy");
   });
 
   it("calls submit endpoint", async () => {
@@ -209,10 +238,12 @@ describe("proposal api", () => {
     await getProposalApprovals("pp_1");
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals/pp_1/workflow-events`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals/pp_1/approvals`,
     );
   });
@@ -243,7 +274,8 @@ describe("proposal api", () => {
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals?portfolio_id=pf_1&state=DRAFT&created_by=advisor_1`,
     );
   });
@@ -422,9 +454,9 @@ describe("proposal api", () => {
       ),
     );
 
-    await expect(
-      listProposals({ cursor: "cursor-window-2" }),
-    ).rejects.toThrow("Proposal list response was incomplete.");
+    await expect(listProposals({ cursor: "cursor-window-2" })).rejects.toThrow(
+      "Proposal list response was incomplete.",
+    );
   });
 
   it("loads the Gateway-backed advisory policy review queue", async () => {
@@ -452,7 +484,8 @@ describe("proposal api", () => {
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory-policy-evaluations/review-queue?evaluation_status=PENDING_REVIEW&portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(result.items?.[0]?.evaluation_id).toBe("pev_1");
@@ -486,7 +519,8 @@ describe("proposal api", () => {
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/ideas/review-queues/advisor?evaluatedAtUtc=2026-06-21T10%3A10%3A00Z`,
     );
     expect(result.items?.[0]?.candidate?.candidateId).toBe(
@@ -519,7 +553,8 @@ describe("proposal api", () => {
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/ideas/review-queues/advisor`,
     );
   });
@@ -588,7 +623,8 @@ describe("proposal api", () => {
     });
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001`,
     );
     expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
@@ -839,10 +875,12 @@ describe("proposal api", () => {
     const claimRegister = await getBankDemoSupportedClaimRegister();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory/bank-demo-proof/scenario-contract`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory/bank-demo-proof/supported-claim-register`,
     );
     expect(scenario.scenario_id).toBe(
@@ -882,10 +920,12 @@ describe("proposal api", () => {
     const signOffPackage = await getAdvisoryPolicySignOffPackage("pev_1");
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory-policy-evaluations/pev_1`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory-policy-evaluations/pev_1/sign-off-package`,
     );
     expect(evaluation.evaluation_id).toBe("pev_1");
@@ -934,7 +974,8 @@ describe("proposal api", () => {
     );
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory-policy-evaluations/pev_1/workflow`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
@@ -1006,16 +1047,20 @@ describe("proposal api", () => {
     );
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisor-cockpit/actions?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisor-cockpit/preparation-packets?portfolio_id=PB_SG_GLOBAL_BAL_001&limit=25`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisor-cockpit/snapshot?portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisor-cockpit/supportability?portfolio_id=PB_SG_GLOBAL_BAL_001`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
@@ -1137,7 +1182,8 @@ describe("proposal api", () => {
         }),
       }),
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/advisory-copilot/supportability`,
     );
     expect(JSON.stringify(fetchMock.mock.calls)).not.toContain(
@@ -1340,13 +1386,16 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/proposals/pp_1/versions/2/narrative/regenerate`,
       expect.objectContaining({ method: "POST" }),
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals/pp_1/versions/2/narrative`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals/pp_1/delivery-summary`,
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expectNoStoreRequest(
+      fetchMock,
       `${expectedBaseUrl}/proposals/pp_1/delivery-events`,
     );
     expect(fetchMock).toHaveBeenCalledWith(
@@ -1417,7 +1466,9 @@ describe("proposal api", () => {
                   },
                 },
                 review_event: { event_type: "MEMO_REVIEW_RECORDED" },
-                report_package_event: { event_type: "MEMO_REPORT_PACKAGE_RECORDED" },
+                report_package_event: {
+                  event_type: "MEMO_REPORT_PACKAGE_RECORDED",
+                },
                 report: { status: "ARCHIVED" },
                 ai_event: { event_type: "MEMO_AI_REFERENCE_RECORDED" },
                 commentary: {
@@ -1503,8 +1554,12 @@ describe("proposal api", () => {
     expect(reportResult.report_package_event?.event_type).toBe(
       "MEMO_REPORT_PACKAGE_RECORDED",
     );
-    expect(commentaryResult.ai_event?.event_type).toBe("MEMO_AI_REFERENCE_RECORDED");
-    expect(commentaryResult.commentary?.authoritative_for_memo_status).toBe(false);
+    expect(commentaryResult.ai_event?.event_type).toBe(
+      "MEMO_AI_REFERENCE_RECORDED",
+    );
+    expect(commentaryResult.commentary?.authoritative_for_memo_status).toBe(
+      false,
+    );
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
@@ -1588,17 +1643,20 @@ describe("proposal api", () => {
     ["projection", () => getProposalMemoProjection("pp_1", 2, "ADVISOR")],
     ["lineage", () => getProposalMemoLineage("pp_1")],
     ["replay evidence", () => getProposalMemoReplayEvidence("pp_1", 2)],
-  ])("preserves the HTTP status for a missing proposal memo %s read", async (_label, request) => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("not found", { status: 404 })),
-    );
+  ])(
+    "preserves the HTTP status for a missing proposal memo %s read",
+    async (_label, request) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response("not found", { status: 404 })),
+      );
 
-    await expect(request()).rejects.toMatchObject({
-      name: "WorkbenchApiError",
-      status: 404,
-    });
-  });
+      await expect(request()).rejects.toMatchObject({
+        name: "WorkbenchApiError",
+        status: 404,
+      });
+    },
+  );
 
   it("calls full advisory workspace support endpoints", async () => {
     vi.stubGlobal(
