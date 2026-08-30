@@ -89,6 +89,23 @@ describe("report ordering contracts", () => {
     expect(() => parseReportOrderingResponse(response)).toThrow();
   });
 
+  it("rejects a report section dependency without an admitted configuration field", () => {
+    const response = buildReportOrderingResponse();
+    response.reportFamilies[0].sections[0].dependencyFieldIds = ["missing_evidence"];
+
+    expect(() => parseReportOrderingResponse(response)).toThrow();
+  });
+
+  it("rejects duplicate dependency identities within a report section", () => {
+    const response = buildReportOrderingResponse();
+    response.reportFamilies[0].sections[2].dependencyFieldIds = [
+      "advisor_brief_run_id",
+      "advisor_brief_run_id",
+    ];
+
+    expect(() => parseReportOrderingResponse(response)).toThrow();
+  });
+
   it.each(["gateway_eligible_benchmark", "report_catalogue"])(
     "rejects an editable text field owned by %s",
     (valueSource) => {
@@ -134,6 +151,41 @@ describe("report ordering contracts", () => {
       expect(() => parseReportOrderingResponse(response)).toThrow();
     },
   );
+
+  it.each([
+    ["as_of_date", "portfolio_date_when_omitted"],
+    ["reporting_currency", "caller_required"],
+    ["benchmark_code", "caller_required"],
+    ["allocation_dimensions", "caller_required"],
+  ])(
+    "rejects the dedicated %s control with incompatible %s defaulting policy",
+    (fieldId, defaultingPolicy) => {
+      const response = buildReportOrderingResponse();
+      const field = response.reportFamilies[0].configurationFields.find(
+        (candidate) => candidate.fieldId === fieldId,
+      );
+      if (!field) throw new Error(`Fixture field ${fieldId} is missing`);
+      field.defaultingPolicy = defaultingPolicy;
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it.each([
+    ["status", undefined],
+    ["status", null],
+    ["status", ""],
+    ["currentStep", undefined],
+    ["currentStep", null],
+    ["currentStep", ""],
+  ])("admits missing lifecycle evidence for fail-closed row rendering: %s=%s", (key, value) => {
+    const response = buildReportJobListResponse();
+    const item = response.items[0] as Record<string, unknown>;
+    if (value === undefined) delete item[key];
+    else item[key] = value;
+
+    expect(parseReportJobListResponse(response).items).toHaveLength(1);
+  });
 
   it("rejects duplicate configuration field identifiers", () => {
     const response = buildReportOrderingResponse();

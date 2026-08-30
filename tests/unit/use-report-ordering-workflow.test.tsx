@@ -184,6 +184,29 @@ describe("useReportOrderingWorkflow", () => {
     }
   });
 
+  it("does not poll a terminal lifecycle published with mixed case", async () => {
+    const completedHistory = buildReportJobListResponse();
+    completedHistory.items[0].status = "COMPLETED";
+    completedHistory.items[0].currentStep = "COMPLETED";
+    historyMock.mockResolvedValue(completedHistory);
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      const { result } = renderHook(() =>
+        useReportOrderingWorkflow({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      );
+
+      await waitFor(() => expect(result.current.historyState).toBe("ready"));
+      expect(result.current.historyRows[0].statusLabel).toBe("Report data complete");
+      expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(false);
+    } finally {
+      timerSpy.mockRestore();
+    }
+  });
+
   it("retains confirmed request evidence when an automatic refresh fails", async () => {
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
@@ -374,6 +397,10 @@ describe("useReportOrderingWorkflow", () => {
     payload.reportFamilies[0].configurationFields = payload.reportFamilies[0].configurationFields.filter(
       (field) => field.fieldId === "as_of_date",
     );
+    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map((section) => ({
+      ...section,
+      dependencyFieldIds: [],
+    }));
     optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({

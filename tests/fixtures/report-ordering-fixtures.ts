@@ -128,7 +128,7 @@ export function buildReportOrderingResponse() {
             description: "Accepted advisor brief run included as reviewed commentary evidence.",
             inputType: "text",
             requirement: "conditional",
-            defaultingPolicy: "caller_required_when_section_selected",
+            defaultingPolicy: "caller_required",
             valueSource: "caller",
             options: [],
           },

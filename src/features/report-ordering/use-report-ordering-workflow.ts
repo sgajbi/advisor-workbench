@@ -24,6 +24,7 @@ import {
   type ReportOrderingCatalogueState,
   type ReportOrderingSubmissionState,
 } from "./report-ordering-screen-state";
+import { isTerminalReportJobStatus } from "./report-job-lifecycle";
 import {
   applyReportScopeReadiness,
   buildReportOrderingViewModel,
@@ -842,14 +843,6 @@ function submissionErrorCopy(error: unknown): string {
 function isTerminalBatchStatus(status: ReportBatchStatus["status"]): boolean {
   return status === "completed" ||
     status === "completed_with_failures" ||
-    status === "failed" ||
-    status === "cancelled";
-}
-
-function isTerminalReportJobStatus(status: string): boolean {
-  return status === "completed" ||
-    status === "archived" ||
-    status === "completed_with_warnings" ||
     status === "failed" ||
     status === "cancelled";
 }
