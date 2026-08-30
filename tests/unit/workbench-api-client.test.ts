@@ -80,6 +80,23 @@ describe("workbench API error classification", () => {
     expect((failure as Error).message).not.toContain("INTERNAL_SOURCE_DETAIL");
   });
 
+  it("preserves typed status evidence when an adapter response omits headers", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 403 } as Response)
+    );
+
+    const failure = await fetchWorkbenchJson("/api/bff/proposals/1", "proposal")
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(WorkbenchApiError);
+    expect(failure).toMatchObject({ status: 403, requestReference: null });
+    expect(getWorkbenchApiErrorEvidence(failure)).toEqual({
+      label: "HTTP status",
+      value: "403",
+    });
+  });
+
   it("drops malformed response references instead of presenting untrusted support text", () => {
     const evidence = getWorkbenchApiErrorEvidence(
       new WorkbenchApiError("proposal", 403, "reference with spaces")

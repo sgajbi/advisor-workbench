@@ -61,7 +61,11 @@ function normalizeRequestReference(value?: string | null): string | null {
 }
 
 function responseRequestReference(response: Response): string | null {
-  return normalizeRequestReference(response.headers.get("X-Correlation-Id"));
+  const headers = response.headers;
+  if (!headers || typeof headers.get !== "function") {
+    return null;
+  }
+  return normalizeRequestReference(headers.get("X-Correlation-Id"));
 }
 
 export function isWorkbenchPermissionBlockedError(error: unknown): boolean {
