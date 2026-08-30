@@ -1,5 +1,10 @@
 import { execFile, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
@@ -47,7 +52,8 @@ function evaluateRepository(files: Record<string, string>) {
       join(configDirectory, "product-copy-exceptions.v1.json"),
       JSON.stringify({
         entries: [],
-        governingIssue: "https://github.com/sgajbi/lotus-workbench/issues/798",
+        governingIssue:
+          "https://github.com/sgajbi/lotus-workbench/issues/798",
         schemaVersion: "product-copy-exceptions.v1",
       }),
       "utf8",
@@ -99,11 +105,9 @@ function runCliWithBaseline(
   );
 
   try {
-    const unresolvedDigest =
-      expectedUnresolvedDigest ??
-      productCopyUnresolvedDigest(
-        evaluateProductCopyRepository(temporaryRepository)
-          .unresolvedExpressions,
+    const unresolvedDigest = expectedUnresolvedDigest
+      ?? productCopyUnresolvedDigest(
+        evaluateProductCopyRepository(temporaryRepository).unresolvedExpressions,
       );
     return spawnSync(
       process.execPath,
@@ -540,13 +544,10 @@ describe("product-copy governance", () => {
       "transport-gateway",
       "auditor-posture",
     ]);
-    expect(
-      findings.every(
-        (finding) =>
-          finding.filePath === "src/screen.tsx" &&
-          finding.context === "JSX title",
-      ),
-    ).toBe(true);
+    expect(findings.every((finding) =>
+      finding.filePath === "src/screen.tsx"
+      && finding.context === "JSX title"
+    )).toBe(true);
   });
 
   it("includes repository object writes in imported productive copy", () => {
@@ -607,13 +608,10 @@ describe("product-copy governance", () => {
       "transport-gateway",
       "auditor-posture",
     ]);
-    expect(
-      findings.every(
-        (finding) =>
-          finding.filePath === "src/screen.tsx" &&
-          finding.context === "JSX title",
-      ),
-    ).toBe(true);
+    expect(findings.every((finding) =>
+      finding.filePath === "src/screen.tsx"
+      && finding.context === "JSX title"
+    )).toBe(true);
   });
 
   it("retains dynamic nested namespace and inserted repository write candidates", () => {
@@ -1626,9 +1624,7 @@ describe("product-copy governance", () => {
 
     expect(evaluation.findings).toEqual([]);
     expect(evaluation.unresolvedExpressions).toHaveLength(16);
-    expect(
-      evaluation.unresolvedExpressions.map(({ context }) => context),
-    ).toEqual([
+    expect(evaluation.unresolvedExpressions.map(({ context }) => context)).toEqual([
       "JSX title",
       "JSX title",
       "JSX title",
@@ -1952,10 +1948,10 @@ describe("product-copy governance", () => {
     });
 
     expect(findings.map((finding) => finding.ruleId)).toEqual(
-      Array.from({ length: 20 }, () => [
-        "transport-gateway",
-        "auditor-posture",
-      ]).flat(),
+      Array.from(
+        { length: 20 },
+        () => ["transport-gateway", "auditor-posture"],
+      ).flat(),
     );
   });
 
@@ -2035,10 +2031,10 @@ describe("product-copy governance", () => {
     });
 
     expect(findings.map((finding) => finding.ruleId)).toEqual(
-      Array.from({ length: 8 }, () => [
-        "transport-gateway",
-        "auditor-posture",
-      ]).flat(),
+      Array.from(
+        { length: 8 },
+        () => ["transport-gateway", "auditor-posture"],
+      ).flat(),
     );
   });
 
@@ -2151,13 +2147,10 @@ describe("product-copy governance", () => {
       "transport-gateway",
       "auditor-posture",
     ]);
-    expect(
-      findings.every(
-        (finding) =>
-          finding.filePath === "src/screen.tsx" &&
-          finding.context === "JSX title",
-      ),
-    ).toBe(true);
+    expect(findings.every((finding) =>
+      finding.filePath === "src/screen.tsx"
+      && finding.context === "JSX title"
+    )).toBe(true);
   });
 
   it("preserves values returned by enumerable assignment-source getters", () => {
@@ -2254,13 +2247,10 @@ describe("product-copy governance", () => {
       "transport-gateway",
       "auditor-posture",
     ]);
-    expect(
-      findings.every(
-        (finding) =>
-          finding.filePath === "src/screen.tsx" &&
-          finding.context === "JSX title",
-      ),
-    ).toBe(true);
+    expect(findings.every((finding) =>
+      finding.filePath === "src/screen.tsx"
+      && finding.context === "JSX title"
+    )).toBe(true);
   });
 
   it("retains dynamic computed mutation values as conservative candidates", () => {
@@ -3456,9 +3446,7 @@ describe("product-copy governance", () => {
       "transport-gateway",
       "auditor-posture",
     ]);
-    expect(
-      findings.every((finding) => finding.text === "Gateway posture"),
-    ).toBe(true);
+    expect(findings.every((finding) => finding.text === "Gateway posture")).toBe(true);
   });
 
   it("fails safely for dynamic template interpolations", () => {
@@ -4182,9 +4170,7 @@ describe("product-copy governance", () => {
         }
       `);
 
-      expect(findings.map((finding) => finding.ruleId)).toEqual(
-        expectedRuleIds,
-      );
+      expect(findings.map((finding) => finding.ruleId)).toEqual(expectedRuleIds);
     }
   });
 
@@ -4492,56 +4478,52 @@ describe("product-copy governance", () => {
     );
   });
 
-  it(
-    "distinguishes identical unresolved expressions across structural and named scopes",
-    () => {
-      const baselineSource = `
+  it("distinguishes identical unresolved expressions across structural and named scopes", () => {
+    const baselineSource = `
       declare const copy: string;
       const First = () => <Panel title={copy} />;
       const Second = () => <Panel title="Client review" />;
     `;
-      const baselineDigest = productCopyUnresolvedDigest(
-        evaluateProductCopySource({
-          filePath: "src/example.tsx",
-          sourceText: baselineSource,
-        }).unresolvedExpressions,
-      );
-      const structuralMove = runCliWithBaseline(
-        `
+    const baselineDigest = productCopyUnresolvedDigest(
+      evaluateProductCopySource({
+        filePath: "src/example.tsx",
+        sourceText: baselineSource,
+      }).unresolvedExpressions,
+    );
+    const structuralMove = runCliWithBaseline(
+      `
         declare const copy: string;
         const First = () => <Panel title="Client review" />;
         const Second = () => <Panel title={copy} />;
       `,
-        0,
-        [],
-        1,
-        baselineDigest,
-      );
+      0,
+      [],
+      1,
+      baselineDigest,
+    );
 
-      expect(structuralMove.status).toBe(1);
-      expect(structuralMove.stderr).toContain(
-        "unresolved-expression identity set changed while the count remained 1",
-      );
+    expect(structuralMove.status).toBe(1);
+    expect(structuralMove.stderr).toContain(
+      "unresolved-expression identity set changed while the count remained 1",
+    );
 
-      const namedScopeMove = runCliWithBaseline(
-        `
+    const namedScopeMove = runCliWithBaseline(
+      `
         declare const copy: string;
         const Second = () => <Panel title={copy} />;
         const First = () => <Panel title="Client review" />;
       `,
-        0,
-        [],
-        1,
-        baselineDigest,
-      );
+      0,
+      [],
+      1,
+      baselineDigest,
+    );
 
-      expect(namedScopeMove.status).toBe(1);
-      expect(namedScopeMove.stderr).toContain(
-        "unresolved-expression identity set changed while the count remained 1",
-      );
-    },
-    STATIC_CLI_TEST_TIMEOUT_MS,
-  );
+    expect(namedScopeMove.status).toBe(1);
+    expect(namedScopeMove.stderr).toContain(
+      "unresolved-expression identity set changed while the count remained 1",
+    );
+  }, STATIC_CLI_TEST_TIMEOUT_MS);
 
   it("passes only when both measured baselines match", () => {
     const result = runCliWithBaseline(
@@ -4552,8 +4534,6 @@ describe("product-copy governance", () => {
     );
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain(
-      "0 finding(s) and 1 unresolved expression(s)",
-    );
+    expect(result.stdout).toContain("0 finding(s) and 1 unresolved expression(s)");
   });
 });
