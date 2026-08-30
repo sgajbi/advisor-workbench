@@ -4,6 +4,7 @@ import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import IdeaCandidateActionPanel from "../../src/features/proposals/components/idea-candidate-action-panel";
+import { NOT_USEFUL_REASON_OPTIONS } from "../../src/features/proposals/idea-feedback";
 
 const ideaApi = vi.hoisted(() => ({
   recordAdvisorIdeaConversionIntent: vi.fn(),
@@ -37,6 +38,13 @@ function renderPanel(onRecorded: () => Promise<boolean>) {
 describe("IdeaCandidateActionPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    ideaApi.recordAdvisorIdeaFeedback.mockImplementation(
+      async ({ candidateId, request }) => ({
+        feedbackEvent: { ...request, candidateId },
+        persistence: { decision: "accepted" },
+        durableStorageBacked: true,
+      }),
+    );
   });
 
   it("shows persisted success only after source detail and queue refresh complete", async () => {
@@ -47,15 +55,18 @@ describe("IdeaCandidateActionPanel", () => {
           completeRefresh = resolve;
         }),
     );
-    ideaApi.recordAdvisorIdeaFeedback.mockResolvedValue({
-      durableStorageBacked: true,
-    });
     renderPanel(onRecorded);
 
-    const feedbackBasis = screen.getByLabelText("Feedback basis");
-    expect(feedbackBasis).toHaveValue("high_cash_ratio");
-    expect(feedbackBasis).not.toHaveAttribute("tabindex", "-1");
-    fireEvent.change(feedbackBasis, { target: { value: "review_required" } });
+    expect(
+      screen.getByRole("radiogroup", { name: "Feedback usefulness" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Useful" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(
+      screen.getByTestId("idea-feedback-reason-summary"),
+    ).toHaveTextContent("Relevant to this client");
     fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
 
     await waitFor(() => expect(onRecorded).toHaveBeenCalledTimes(1));
@@ -68,7 +79,8 @@ describe("IdeaCandidateActionPanel", () => {
         portfolioId: "PB_SG_GLOBAL_BAL_001",
         request: expect.objectContaining({
           outcome: "useful",
-          reasonCodes: ["feedback_recorded", "review_required"],
+          taxonomyVersion: "idea-feedback-taxonomy-v1",
+          reason: "relevant",
         }),
       }),
     );
@@ -80,9 +92,50 @@ describe("IdeaCandidateActionPanel", () => {
       "recorded-and-refreshed",
     );
     expect(status).toHaveTextContent(
-      "Feedback recorded through Gateway. Source-owned detail and queue posture have been refreshed.",
+      "Feedback saved. Opportunity detail and worklist are current.",
     );
   });
+
+  it("requires a reason for not-useful feedback and focuses the missing field", () => {
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Not useful" }));
+    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+
+    const reason = screen.getByLabelText("Why was it not useful?");
+    expect(reason).toHaveFocus();
+    expect(reason).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Select the reason this opportunity was not useful.",
+    );
+    expect(ideaApi.recordAdvisorIdeaFeedback).not.toHaveBeenCalled();
+  });
+
+  it.each(NOT_USEFUL_REASON_OPTIONS)(
+    "submits the canonical $value reason selected by the adviser",
+    async ({ label, value }) => {
+      renderPanel(async () => true);
+
+      fireEvent.click(screen.getByRole("radio", { name: "Not useful" }));
+      fireEvent.change(screen.getByLabelText("Why was it not useful?"), {
+        target: { value },
+      });
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+
+      await waitFor(() =>
+        expect(ideaApi.recordAdvisorIdeaFeedback).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({
+              taxonomyVersion: "idea-feedback-taxonomy-v1",
+              outcome: "not_useful",
+              reason: value,
+            }),
+          }),
+        ),
+      );
+    },
+  );
 
   it("keeps failure explicit and reuses the original payload and idempotency key", async () => {
     const onRecorded = vi.fn(async () => true);
@@ -94,7 +147,9 @@ describe("IdeaCandidateActionPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
     const error = await screen.findByTestId("idea-action-error");
     expect(error).toHaveAttribute("data-action-state", "not-recorded");
-    expect(error).toHaveTextContent("could not be recorded through Gateway");
+    expect(error).toHaveTextContent(
+      "could not confirm that the adviser action was saved",
+    );
     expect(onRecorded).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));

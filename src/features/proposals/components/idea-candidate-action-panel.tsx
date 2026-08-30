@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, type FormEvent } from "react";
 import { Alert } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 
-import { ActionButton, Text } from "@/design-system";
+import { ActionButton, Text, WorkbenchChoiceGroup } from "@/design-system";
 
 import {
   recordAdvisorIdeaConversionIntent,
@@ -16,8 +16,16 @@ import {
   buildIdeaBusinessReasonOptions,
   type IdeaBusinessReasonOption,
 } from "../idea-action-reasons";
+import {
+  IDEA_FEEDBACK_TAXONOMY_VERSION,
+  NOT_USEFUL_REASON_OPTIONS,
+  resolveAdvisorIdeaFeedbackReason,
+  usefulFeedbackReasonOption,
+} from "../idea-feedback";
 import type {
   AdvisorIdeaConversionIntentRequest,
+  AdvisorIdeaFeedbackOutcome,
+  AdvisorIdeaFeedbackReason,
   AdvisorIdeaFeedbackRequest,
   AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
@@ -55,6 +63,11 @@ const REVIEW_ACTIONS: Array<{ value: AdvisorIdeaReviewAction; label: string }> =
     { value: "escalate_to_compliance", label: "Escalate to compliance" },
   ];
 
+const FEEDBACK_OUTCOME_OPTIONS = [
+  { key: "useful", label: "Useful" },
+  { key: "not_useful", label: "Not useful" },
+] satisfies Array<{ key: AdvisorIdeaFeedbackOutcome; label: string }>;
+
 export default function IdeaCandidateActionPanel({
   candidateId,
   candidateReasonCodes,
@@ -69,6 +82,7 @@ export default function IdeaCandidateActionPanel({
   const retryableSubmissions = useRef<
     Partial<Record<IdeaActionKind, IdeaActionSubmission>>
   >({});
+  const feedbackReasonRef = useRef<HTMLSelectElement>(null);
   const [reviewAction, setReviewAction] = useState<AdvisorIdeaReviewAction>(
     "approve_for_conversion",
   );
@@ -77,20 +91,25 @@ export default function IdeaCandidateActionPanel({
     [candidateReasonCodes],
   );
   const defaultBusinessReason = businessReasonOptions[0].value;
-  const [reviewReason, setReviewReason] =
-    useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
+  const [reviewReason, setReviewReason] = useState<AdvisorIdeaReasonCode>(
+    defaultBusinessReason,
+  );
   const [suppressionReason, setSuppressionReason] =
     useState<NonNullable<AdvisorIdeaReviewActionRequest["suppressionReason"]>>(
       "manual_suppression",
     );
   const [snoozedUntil, setSnoozedUntil] = useState("");
-  const [feedbackOutcome, setFeedbackOutcome] = useState("useful");
-  const [feedbackReason, setFeedbackReason] =
-    useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
+  const [feedbackOutcome, setFeedbackOutcome] =
+    useState<AdvisorIdeaFeedbackOutcome>("useful");
+  const [feedbackReason, setFeedbackReason] = useState<
+    AdvisorIdeaFeedbackReason | ""
+  >("relevant");
   const [conversionTarget, setConversionTarget] = useState("advise_proposal");
   const [conversionReason, setConversionReason] =
     useState<AdvisorIdeaReasonCode>(defaultBusinessReason);
   const [validationMessage, setValidationMessage] = useState<string>();
+  const [feedbackValidationMessage, setFeedbackValidationMessage] =
+    useState<string>();
   const [latestRecordedKind, setLatestRecordedKind] =
     useState<IdeaActionKind>();
   const [sourceRefreshFailed, setSourceRefreshFailed] = useState(false);
@@ -180,20 +199,49 @@ export default function IdeaCandidateActionPanel({
 
   function submitFeedback(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const reason = resolveAdvisorIdeaFeedbackReason(
+      feedbackOutcome,
+      feedbackReason,
+    );
+    if (!reason) {
+      setFeedbackValidationMessage(
+        "Select the reason this opportunity was not useful.",
+      );
+      feedbackReasonRef.current?.focus();
+      return;
+    }
+    setFeedbackValidationMessage(undefined);
     setValidationMessage(undefined);
     recordSubmission({
       kind: "feedback",
       idempotencyKey: newIdempotencyKey("feedback"),
       request: {
         feedbackId: `ui-idea-feedback-${candidateId}-${Date.now()}`,
-        outcome: feedbackOutcome as AdvisorIdeaFeedbackRequest["outcome"],
-        reasonCodes: buildIdeaActionReasonCodes({
-          basis: feedbackReason,
-          kind: "feedback",
-        }),
+        taxonomyVersion: IDEA_FEEDBACK_TAXONOMY_VERSION,
+        outcome: feedbackOutcome,
+        reason,
         recordedAtUtc: new Date().toISOString(),
       },
     });
+  }
+
+  function changeFeedbackOutcome(outcome: AdvisorIdeaFeedbackOutcome) {
+    clearFeedbackRetry();
+    setFeedbackOutcome(outcome);
+    setFeedbackReason(outcome === "useful" ? "relevant" : "");
+  }
+
+  function changeFeedbackReason(reason: AdvisorIdeaFeedbackReason) {
+    clearFeedbackRetry();
+    setFeedbackReason(reason);
+  }
+
+  function clearFeedbackRetry() {
+    delete retryableSubmissions.current.feedback;
+    setFeedbackValidationMessage(undefined);
+    if (actionMutation.variables?.kind === "feedback") {
+      actionMutation.reset();
+    }
   }
 
   function submitConversion(event: FormEvent<HTMLFormElement>) {
@@ -223,9 +271,9 @@ export default function IdeaCandidateActionPanel({
       <div>
         <Text variant="microLabel">Advisor Actions</Text>
         <Text variant="secondary">
-          Record a source-owned review, feedback, or conversion intent through
-          Gateway. These records do not create a proposal, grant downstream
-          authority, or change supported-feature posture.
+          Record a review decision, usefulness feedback, or a request to
+          continue in another workflow. These records do not create or approve a
+          proposal, contact a client, or place an order.
         </Text>
       </div>
       <div className={styles.actionForms}>
@@ -299,30 +347,83 @@ export default function IdeaCandidateActionPanel({
           </ActionButton>
         </form>
 
-        <form className={styles.actionForm} onSubmit={submitFeedback}>
+        <form
+          className={styles.actionForm}
+          noValidate
+          onSubmit={submitFeedback}
+        >
           <h4>Record feedback</h4>
-          <label>
-            Feedback outcome
-            <select
+          <fieldset
+            className={styles.feedbackOutcomeGroup}
+            aria-describedby="idea-feedback-outcome-hint"
+          >
+            <legend>Was this opportunity useful?</legend>
+            <span id="idea-feedback-outcome-hint" className={styles.fieldHint}>
+              Record how well it supported your client review.
+            </span>
+            <WorkbenchChoiceGroup
               value={feedbackOutcome}
-              onChange={(event) => setFeedbackOutcome(event.target.value)}
+              onChange={changeFeedbackOutcome}
+              options={FEEDBACK_OUTCOME_OPTIONS.map((option) => ({
+                ...option,
+                disabled: actionMutation.isPending,
+              }))}
+              ariaLabel="Feedback usefulness"
+              density="compact"
+            />
+          </fieldset>
+          {feedbackOutcome === "useful" ? (
+            <div
+              className={styles.feedbackReasonSummary}
+              data-testid="idea-feedback-reason-summary"
             >
-              <option value="useful">Useful</option>
-              <option value="not_useful">Not useful</option>
-              <option value="duplicate">Duplicate</option>
-              <option value="too_late">Too late</option>
-              <option value="missing_context">Missing context</option>
-              <option value="unsupported_claim">Unsupported claim</option>
-            </select>
-          </label>
-          <IdeaBusinessReasonSelect
-            id="idea-feedback-business-reason"
-            label="Feedback basis"
-            options={businessReasonOptions}
-            value={feedbackReason}
-            disabled={actionMutation.isPending}
-            onChange={setFeedbackReason}
-          />
+              <span>Reason</span>
+              <strong>{usefulFeedbackReasonOption().label}</strong>
+            </div>
+          ) : (
+            <div className={styles.actionField}>
+              <label htmlFor="idea-feedback-reason">
+                Why was it not useful?
+              </label>
+              <select
+                ref={feedbackReasonRef}
+                id="idea-feedback-reason"
+                value={feedbackReason}
+                disabled={actionMutation.isPending}
+                required
+                aria-invalid={feedbackValidationMessage ? true : undefined}
+                aria-describedby={
+                  feedbackValidationMessage
+                    ? "idea-feedback-reason-error idea-feedback-reason-hint"
+                    : "idea-feedback-reason-hint"
+                }
+                onChange={(event) =>
+                  changeFeedbackReason(
+                    event.target.value as AdvisorIdeaFeedbackReason,
+                  )
+                }
+              >
+                <option value="">Select a reason</option>
+                {NOT_USEFUL_REASON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span id="idea-feedback-reason-hint" className={styles.fieldHint}>
+                Choose the reason that best reflects this client review.
+              </span>
+              {feedbackValidationMessage ? (
+                <span
+                  id="idea-feedback-reason-error"
+                  className={styles.fieldError}
+                  role="alert"
+                >
+                  {feedbackValidationMessage}
+                </span>
+              ) : null}
+            </div>
+          )}
           <ActionButton
             priority="secondary"
             type="submit"
@@ -369,9 +470,9 @@ export default function IdeaCandidateActionPanel({
         </form>
       </div>
       <Text variant="secondary">
-        Business reasons use the source-supported vocabulary, with the selected
-        candidate&apos;s published reasons shown first. Workbench adds the matching
-        audit reason for each action.
+        Feedback helps improve the relevance and timing of future opportunities.
+        It does not approve, suppress, convert, or change policy for this
+        opportunity.
       </Text>
       {validationMessage ? (
         <Alert severity="warning">{validationMessage}</Alert>
@@ -382,8 +483,8 @@ export default function IdeaCandidateActionPanel({
           data-testid="idea-action-error"
           data-action-state="not-recorded"
         >
-          The advisor action could not be recorded through Gateway. No local
-          review or conversion state has been created.
+          We could not confirm that the adviser action was saved. The displayed
+          opportunity remains unchanged.
         </Alert>
       ) : null}
       {latestRecordedKind && sourceRefreshFailed ? (
@@ -393,10 +494,9 @@ export default function IdeaCandidateActionPanel({
           data-testid={`idea-action-${latestRecordedKind}-status`}
           data-action-state="recorded-refresh-failed"
         >
-          {formatActionKind(latestRecordedKind)} was recorded through Gateway,
-          but source-owned detail or queue posture could not be refreshed. The
-          displayed posture may be stale; retry the page refresh before taking
-          a further action.
+          {formatActionKind(latestRecordedKind)} was saved, but the latest
+          opportunity detail and worklist could not be loaded. Review the
+          refreshed record before taking another action.
         </Alert>
       ) : null}
       {latestRecordedKind && !sourceRefreshFailed ? (
@@ -406,8 +506,8 @@ export default function IdeaCandidateActionPanel({
           data-testid={`idea-action-${latestRecordedKind}-status`}
           data-action-state="recorded-and-refreshed"
         >
-          {formatActionKind(latestRecordedKind)} recorded through Gateway.
-          Source-owned detail and queue posture have been refreshed.
+          {formatActionKind(latestRecordedKind)} saved. Opportunity detail and
+          worklist are current.
         </Alert>
       ) : null}
     </section>
@@ -449,7 +549,7 @@ function IdeaBusinessReasonSelect({
         ))}
       </select>
       <span id={descriptionId} className={styles.fieldHint}>
-        Candidate-backed reason, or the governed review fallback when none is
+        Candidate reason, or Adviser review required when no reason is
         available.
       </span>
     </div>
