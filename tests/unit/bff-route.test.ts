@@ -435,7 +435,13 @@ describe("BFF proxy route", () => {
       {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ reasonCodes: ["feedback_recorded"] }),
+        body: JSON.stringify({
+          feedbackId: "feedback_001",
+          taxonomyVersion: "idea-feedback-taxonomy-v1",
+          outcome: "useful",
+          reason: "relevant",
+          recordedAtUtc: "2026-08-31T10:15:00Z",
+        }),
       },
     );
 

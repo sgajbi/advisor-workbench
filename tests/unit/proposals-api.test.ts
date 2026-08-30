@@ -731,6 +731,14 @@ describe("proposal api", () => {
         async () =>
           new Response(
             JSON.stringify({
+              feedbackEvent: {
+                feedbackId: "feedback_001",
+                candidateId: "idea_high_cash_001",
+                taxonomyVersion: "idea-feedback-taxonomy-v1",
+                outcome: "useful",
+                reason: "relevant",
+                recordedAtUtc: "2026-07-17T08:00:00Z",
+              },
               persistence: { decision: "accepted" },
               durableStorageBacked: true,
               supportedFeaturePromoted: false,
@@ -746,8 +754,9 @@ describe("proposal api", () => {
       idempotencyKey: "ui-idea-feedback-001",
       request: {
         feedbackId: "feedback_001",
+        taxonomyVersion: "idea-feedback-taxonomy-v1",
         outcome: "useful",
-        reasonCodes: ["feedback_recorded", "high_cash_ratio"],
+        reason: "relevant",
         recordedAtUtc: "2026-07-17T08:00:00Z",
       },
     });
@@ -757,20 +766,29 @@ describe("proposal api", () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/feedback`,
     );
+    expect(init.body).toBe(
+      JSON.stringify({
+        feedbackId: "feedback_001",
+        taxonomyVersion: "idea-feedback-taxonomy-v1",
+        outcome: "useful",
+        reason: "relevant",
+        recordedAtUtc: "2026-07-17T08:00:00Z",
+      }),
+    );
     expect((init.headers as Headers).get("X-Caller-Capabilities")).toBeNull();
     expect((init.headers as Headers).get("Idempotency-Key")).toBe(
       "ui-idea-feedback-001",
     );
   });
 
-  it("rejects a successful HTTP response without source-owned Idea persistence proof", async () => {
+  it("rejects persistence success without matching source-owned feedback event evidence", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(
         async () =>
           new Response(
             JSON.stringify({
-              persistence: { decision: "not_recorded" },
+              persistence: { decision: "accepted" },
               durableStorageBacked: true,
             }),
             { status: 200, headers: { "Content-Type": "application/json" } },
@@ -785,13 +803,14 @@ describe("proposal api", () => {
         idempotencyKey: "ui-idea-feedback-no-proof-001",
         request: {
           feedbackId: "feedback_no_proof_001",
+          taxonomyVersion: "idea-feedback-taxonomy-v1",
           outcome: "useful",
-          reasonCodes: ["feedback_recorded", "high_cash_ratio"],
+          reason: "relevant",
           recordedAtUtc: "2026-07-17T08:00:00Z",
         },
       }),
     ).rejects.toThrow(
-      "Advisor idea feedback did not return source-owned persistence proof. No success was recorded in Workbench.",
+      "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
     );
   });
 

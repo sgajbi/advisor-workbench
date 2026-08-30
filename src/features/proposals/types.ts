@@ -2,11 +2,18 @@ import type {
   AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
 } from "./idea-action-reasons";
+import type { AdvisorIdeaFeedbackEvent } from "./idea-feedback";
 
 export type {
   AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
 } from "./idea-action-reasons";
+export type {
+  AdvisorIdeaFeedbackEvent,
+  AdvisorIdeaFeedbackOutcome,
+  AdvisorIdeaFeedbackReason,
+  AdvisorIdeaFeedbackRequest,
+} from "./idea-feedback";
 
 export type ProposalSimulateResponse = {
   correlation_id: string;
@@ -675,19 +682,6 @@ export type AdvisorIdeaReviewActionRequest = {
   snoozedUntilUtc?: string;
 };
 
-export type AdvisorIdeaFeedbackRequest = {
-  feedbackId: string;
-  outcome:
-    | "useful"
-    | "not_useful"
-    | "duplicate"
-    | "too_late"
-    | "missing_context"
-    | "unsupported_claim";
-  reasonCodes: AdvisorIdeaReasonCode[];
-  recordedAtUtc: string;
-};
-
 export type AdvisorIdeaConversionIntentRequest = {
   conversionIntentId: string;
   target: "advise_proposal" | "manage_review" | "report_evidence";
@@ -696,6 +690,7 @@ export type AdvisorIdeaConversionIntentRequest = {
 };
 
 export type AdvisorIdeaCandidateActionData = {
+  feedbackEvent?: AdvisorIdeaFeedbackEvent;
   persistence?: {
     decision?: string;
     lifecycleStatus?: string;
