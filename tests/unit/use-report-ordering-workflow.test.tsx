@@ -207,6 +207,50 @@ describe("useReportOrderingWorkflow", () => {
     }
   });
 
+  it.each([undefined, null, "", "SOMETHING_NEW"])(
+    "does not poll a submitted request when its lifecycle is not reported: %s",
+    async (status) => {
+      const unreportedHistory = buildReportJobListResponse();
+      unreportedHistory.items[0] = {
+        ...unreportedHistory.items[0],
+        reportJobId: "rjob_2",
+        reportRequestId: "rrq_2",
+      };
+      const item = unreportedHistory.items[0] as unknown as Record<string, unknown>;
+      if (status === undefined) {
+        delete item.status;
+        delete item.currentStep;
+      } else {
+        item.status = status;
+        item.currentStep = status;
+      }
+      historyMock
+        .mockResolvedValueOnce(buildReportJobListResponse())
+        .mockResolvedValueOnce(unreportedHistory);
+      const timerSpy = vi.spyOn(window, "setTimeout");
+      try {
+        const { result } = renderHook(() =>
+          useReportOrderingWorkflow({
+            portfolioId: "PB_SG_GLOBAL_BAL_001",
+            asOfDate: "2026-04-22",
+            reportingCurrency: "SGD",
+          }),
+        );
+        await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
+        act(() => expect(result.current.reviewRequest()).toBe(true));
+        await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+        await act(async () => expect(await result.current.submitRequest()).toBe(true));
+        await waitFor(() =>
+          expect(result.current.historyRows[0].statusLabel).toBe("Status not reported"),
+        );
+
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(false);
+      } finally {
+        timerSpy.mockRestore();
+      }
+    },
+  );
+
   it("retains confirmed request evidence when an automatic refresh fails", async () => {
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({

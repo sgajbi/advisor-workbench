@@ -1571,7 +1571,9 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
     expect(
-      await screen.findByText(/latest lifecycle check did not complete/i),
+      await screen.findByText(
+        "The latest lifecycle check did not complete. Previously confirmed requests remain visible; use Refresh to check again.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getAllByText("rjob_1")).toHaveLength(2);
     expect(screen.queryByText("Recent requests unavailable")).not.toBeInTheDocument();
