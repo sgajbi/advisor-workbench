@@ -1302,7 +1302,8 @@ Important validation expectations:
     keyboard-focusable region; set governed widths and pinned offsets through `AnalyticsTable`
     instead of a new global selector. Gate the shared control bar against the actual centre-pane
     inline size, not only the browser viewport: its 1440px canonical workstation proof must keep
-    the bar at or below 220px, place the Return Path stage at or above the fold boundary of 700px,
+    the bar at or below 190px, retaining measured headroom above the 149.125px shipped geometry,
+    place the Return Path stage at or above the fold boundary of 700px,
     and prevent page-level horizontal overflow. Use the registered `control-bar` focus in the
     populated Performance fixture for this geometry and dialog transaction proof. Use
     `npm run test:e2e:performance:analysis-controls` for the

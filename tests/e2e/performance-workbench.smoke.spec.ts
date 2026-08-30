@@ -713,7 +713,7 @@ test.describe('Performance workbench smoke', () => {
         expect(
           controlBarBounds?.height ?? Number.POSITIVE_INFINITY,
           'desktop default control-bar height',
-        ).toBeLessThanOrEqual(220);
+        ).toBeLessThanOrEqual(190);
         expect(
           returnPathBounds?.y ?? Number.POSITIVE_INFINITY,
           'desktop return-path stage top',
