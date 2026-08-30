@@ -79,4 +79,28 @@ describe("useSourceWindow", () => {
       hasPrevious: false,
     });
   });
+
+  it("rehydrates an addressed source cursor without inventing prior history", () => {
+    const { result } = renderHook(() =>
+      useSourceWindow("portfolio-a", {
+        cursor: "cursor-window-4",
+        windowNumber: 4,
+      }),
+    );
+
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-4",
+      previousCursor: undefined,
+      windowNumber: 4,
+      hasPrevious: false,
+    });
+
+    act(() => result.current.showNext("cursor-window-5"));
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-5",
+      previousCursor: "cursor-window-4",
+      windowNumber: 5,
+      hasPrevious: true,
+    });
+  });
 });

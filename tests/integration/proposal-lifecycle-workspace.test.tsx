@@ -1831,6 +1831,48 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(getProposalApprovalsMock).toHaveBeenCalledWith("PRP-READY");
   });
 
+  it("rehydrates a URL-selected proposal from its addressed source window", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue&selectedRecordId=PRP-READY&cursor=cursor-window-2&sourceWindow=2",
+    );
+    listProposalsMock.mockResolvedValueOnce({
+      items: [proposalListFixture.items[1]],
+      next_cursor: null,
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          selectedRecordId: "PRP-READY",
+        }}
+        initialSourceWindow={{
+          cursor: "cursor-window-2",
+          windowNumber: 2,
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    const selectedOption = await screen.findByRole("option", {
+      name: /Execution handoff/,
+    });
+    expect(selectedOption).toHaveAttribute("aria-selected", "true");
+    expect(listProposalsMock).toHaveBeenCalledWith({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      cursor: "cursor-window-2",
+    });
+    expect(
+      await screen.findByRole("link", { name: "Open full proposal review" }),
+    ).toHaveAttribute(
+      "href",
+      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=PRP-READY&fromMode=approval-queue&cursor=cursor-window-2&sourceWindow=2",
+    );
+  });
+
   it("rejects a URL-selected proposal that is absent from the source window", async () => {
     window.history.replaceState(
       {},
@@ -2293,6 +2335,10 @@ describe("ProposalLifecycleWorkspace", () => {
       name: /Consent evidence review/,
     });
     expect(nextWindowProposal).toHaveAttribute("aria-selected", "true");
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue&cursor=cursor-window-2&sourceWindow=2",
+      { scroll: false },
+    );
     expect(
       screen.queryByRole("option", { name: /Execution handoff/ }),
     ).not.toBeInTheDocument();
