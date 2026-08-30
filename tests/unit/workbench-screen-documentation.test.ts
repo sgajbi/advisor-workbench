@@ -1162,6 +1162,10 @@ describe("Workbench screen documentation governance", () => {
     expect(guide).toContain(
       "does not combine clients or hide partial\ncompletion",
     );
+    expect(guide).toContain(
+      "Recognized active requests otherwise follow bounded automatic refresh; terminal or unreported requests do not",
+    );
+    expect(guide).not.toContain("Use **Try again** or allow the next bounded refresh");
     expect(guide).toContain("multi-portfolio canonical seed remains required");
     expect(guide).toContain(
       "it is not a claim of bank approval or competitor superiority",
