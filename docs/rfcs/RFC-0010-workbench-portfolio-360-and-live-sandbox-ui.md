@@ -1,6 +1,6 @@
 # RFC-0010: Workbench Portfolio 360 and Live Sandbox UI
 
-- Status: IMPLEMENTED
+- Status: SUPERSEDED IN PART — INTERACTIVE SANDBOX CONTROL RETIRED UNDER #780
 - Date: 2026-02-24
 - Owners: Advisor Workbench UI
 
@@ -22,6 +22,17 @@ Implement Portfolio 360 and live sandbox in Workbench UI:
 2. Add sandbox controls to create session and apply simple change intents.
 3. Display current vs projected positions and projected summary deltas.
 4. Surface optional policy feedback from sandbox updates.
+
+## Current Implementation Status
+
+The Gateway-backed Portfolio 360 read remains in use where current product workflows need its
+portfolio context. The generic interactive sandbox control, its browser mutation wrappers, and its
+projected-position presentation had no production route consumer and were retired under #780.
+
+This RFC is retained as historical design context. It is not evidence that Workbench currently
+offers a live sandbox editor. Any future simulation workflow requires a separate issue, a supported
+Gateway contract, a defined business owner, and production-route validation; the retired control
+must not be restored as a compatibility layer.
 
 ## Architectural Impact
 

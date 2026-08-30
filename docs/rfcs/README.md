@@ -15,11 +15,11 @@ Governance boundary:
 | RFC-0007 | Portfolio-First Domain UX and Lifecycle Workspace Navigation | PROPOSED | `docs/rfcs/RFC-0007-portfolio-first-domain-ux-and-lifecycle-workspace-navigation.md` |
 | RFC-0008 | Advisory Iterative Intent Builder for Proposal Simulation | IMPLEMENTED | `docs/rfcs/RFC-0008-advisory-iterative-intent-builder-for-proposal-simulation.md` |
 | RFC-0009 | Decision Console Fallback Routing Resilience | SUPERSEDED — EXPLICIT MY BOOK ENTRY UNDER #779 | `docs/rfcs/RFC-0009-decision-console-fallback-routing-resilience.md` |
-| RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | IMPLEMENTED | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
-| RFC-0011 | Workbench Split View and Constraint Rail | IMPLEMENTED | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
-| RFC-0012 | Workbench Analytics Controls and Delta Panel | IMPLEMENTED | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
+| RFC-0010 | Workbench Portfolio 360 and Live Sandbox UI | SUPERSEDED IN PART — INTERACTIVE SANDBOX CONTROL RETIRED UNDER #780 | `docs/rfcs/RFC-0010-workbench-portfolio-360-and-live-sandbox-ui.md` |
+| RFC-0011 | Workbench Split View and Constraint Rail | SUPERSEDED — UNREACHABLE PRESENTATION RETIRED UNDER #780 | `docs/rfcs/RFC-0011-workbench-split-view-and-constraint-rail.md` |
+| RFC-0012 | Workbench Analytics Controls and Delta Panel | SUPERSEDED — GENERIC PRESENTATION RETIRED UNDER #780 | `docs/rfcs/RFC-0012-workbench-analytics-controls-and-delta-panel.md` |
 | RFC-0013 | Workbench Exception Queue and Advisor Summary | SUPERSEDED — SOURCE-BACKED MANDATE ATTENTION WORKLIST UNDER #799 | `docs/rfcs/RFC-0013-workbench-exception-queue-and-advisor-summary.md` |
-| RFC-0014 | Workbench Backend Analytics Consumption | IMPLEMENTED | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
+| RFC-0014 | Workbench Backend Analytics Consumption | SUPERSEDED — SOURCE-SPECIFIC ANALYTICS SURFACES REPLACED THE GENERIC PANEL | `docs/rfcs/RFC-0014-workbench-backend-analytics-consumption.md` |
 | RFC-0015 | Valuation-Ready Default Routing and Workbench Readiness | SUPERSEDED IN PART — EXPLICIT REVIEW CONTEXT UNDER #779 | `docs/rfcs/RFC-0015-valuation-ready-default-routing-and-workbench-readiness.md` |
 | RFC-0016 | Workbench Application Shell and Design-System Foundation | IMPLEMENTED | `docs/rfcs/RFC-0016-workbench-application-shell-and-design-system-foundation.md` |
 | RFC-0017 | Foundation App First-Production Surface | IMPLEMENTED | `docs/rfcs/RFC-0017-foundation-app-first-production-surface.md` |

@@ -1,6 +1,6 @@
 # RFC-0011: Workbench Split View and Constraint Rail
 
-- Status: IMPLEMENTED
+- Status: SUPERSEDED — UNREACHABLE PRESENTATION RETIRED UNDER #780
 - Date: 2026-02-24
 - Owners: Advisor Workbench UI
 
@@ -21,6 +21,17 @@ Implement a dense, domain-oriented split workspace:
 1. Left pane: current portfolio 360 positions (baseline).
 2. Right pane: live sandbox controls, projected summary, projected positions.
 3. Constraint rail: policy gate status, workflow readiness, and warning indicators.
+
+## Supersession Note
+
+The split-view, generic position table, and local constraint rail had no production route consumer.
+They and their orphaned global selectors were retired under #780. Current Workbench workflows use
+screen-owned, Gateway-backed decision surfaces and shared workstation primitives instead of this
+pre-BFF layout.
+
+This RFC is historical context, not a supported-feature claim. A future simulation workspace must
+establish source authority and a live business workflow rather than revive these selectors or the
+retired component tree.
 
 ## Architectural Impact
 
