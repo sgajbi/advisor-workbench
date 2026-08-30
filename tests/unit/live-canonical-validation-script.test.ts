@@ -1935,6 +1935,8 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).not.toContain("idea_high_cash_001");
     expect(browserWorkflowModule).toContain('getByLabel("Idea candidates")');
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
+    expect(browserWorkflowModule).toContain("assertGridHasRows");
+    expect(browserWorkflowModule).toContain('page.getByRole("grid"');
     expect(browserWorkflowModule).toContain("canonicalCandidateLink");
     expect(browserWorkflowModule).toContain(
       "candidateId=${encodeURIComponent(canonicalCandidateId)}",
