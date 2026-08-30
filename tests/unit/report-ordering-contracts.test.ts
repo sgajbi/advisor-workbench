@@ -48,17 +48,63 @@ describe("report ordering contracts", () => {
     );
   });
 
-  it.each(["business_date", "currency", "benchmark", "multi_select"])(
+  it.each([
+    ["as_of_date", "business_date"],
+    ["reporting_currency", "currency"],
+    ["benchmark_code", "benchmark"],
+    ["allocation_dimensions", "multi_select"],
+  ])(
     "rejects a conditional %s field that the ordering form cannot collect",
-    (inputType) => {
+    (fieldId, inputType) => {
       const response = buildReportOrderingResponse();
       response.reportFamilies[0].configurationFields.push({
-        fieldId: `conditional_${inputType}`,
+        fieldId,
         businessLabel: "Unsupported conditional evidence",
         description: "Evidence that must not be silently omitted.",
         inputType,
         requirement: "conditional",
         defaultingPolicy: "caller_required_when_section_selected",
+        valueSource: "caller",
+        options: [],
+      });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it.each([
+    ["benchmark_code", "benchmark"],
+    ["allocation_dimensions", "multi_select"],
+  ])(
+    "rejects a required %s field whose empty state the form cannot enforce",
+    (fieldId, inputType) => {
+      const response = buildReportOrderingResponse();
+      const field = response.reportFamilies[0].configurationFields.find(
+        (candidate) => candidate.fieldId === fieldId,
+      );
+      if (!field) throw new Error(`Fixture field ${fieldId} is missing`);
+      field.inputType = inputType;
+      field.requirement = "required";
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it.each([
+    ["valuation_date", "business_date"],
+    ["settlement_currency", "currency"],
+    ["grouping_dimensions", "multi_select"],
+  ])(
+    "rejects an unimplemented non-text catalogue field %s",
+    (fieldId, inputType) => {
+      const response = buildReportOrderingResponse();
+      response.reportFamilies[0].configurationFields.push({
+        fieldId,
+        businessLabel: "Unimplemented field",
+        description: "A field without a matching Workbench control.",
+        inputType,
+        requirement: "optional",
+        defaultingPolicy: "caller_optional",
         valueSource: "caller",
         options: [],
       });

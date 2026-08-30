@@ -69,8 +69,30 @@ const configurationFieldSchema = z.union([
     .strict(),
   configurationFieldBaseSchema
     .extend({
-      inputType: z.enum(["business_date", "currency", "benchmark", "multi_select"]),
+      fieldId: z.literal("as_of_date"),
+      inputType: z.literal("business_date"),
       requirement: z.enum(["required", "optional"]),
+    })
+    .strict(),
+  configurationFieldBaseSchema
+    .extend({
+      fieldId: z.literal("reporting_currency"),
+      inputType: z.literal("currency"),
+      requirement: z.enum(["required", "optional"]),
+    })
+    .strict(),
+  configurationFieldBaseSchema
+    .extend({
+      fieldId: z.literal("benchmark_code"),
+      inputType: z.literal("benchmark"),
+      requirement: z.literal("optional"),
+    })
+    .strict(),
+  configurationFieldBaseSchema
+    .extend({
+      fieldId: z.literal("allocation_dimensions"),
+      inputType: z.literal("multi_select"),
+      requirement: z.literal("optional"),
     })
     .strict(),
 ]);
