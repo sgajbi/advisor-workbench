@@ -60,6 +60,8 @@ export const PERFORMANCE_EVIDENCE_LABELS = {
   needsAttention: "Needs attention",
 } as const;
 
+export { PERFORMANCE_EVIDENCE_COPY } from "@/copy/performance-evidence-copy";
+
 export function getPerformanceFeeBasisLabel(basis: string | null | undefined): string {
   if (basis?.trim().toUpperCase() === "NET") {
     return PERFORMANCE_FEE_BASIS_LABELS.net;

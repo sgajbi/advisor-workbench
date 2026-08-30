@@ -1,5 +1,8 @@
 import { parseCanonicalPerformancePeriod } from "@/apps/performance/periods";
-import { PERFORMANCE_EVIDENCE_LABELS } from "@/apps/performance/performance-terminology";
+import {
+  PERFORMANCE_EVIDENCE_COPY,
+  PERFORMANCE_EVIDENCE_LABELS,
+} from "@/apps/performance/performance-terminology";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import type {
   PerformanceCalculationEvidenceView,
@@ -492,9 +495,7 @@ function buildExceptions(
   if (!calculationVersions.length) {
     exceptions.push({
       key: "calculation-versions-unconfirmed",
-      title: "Calculation version not confirmed",
-      detail: "The package does not identify a governed contract or analytics version for its calculations.",
-      action: "Obtain versioned calculation evidence before relying on the assurance conclusion.",
+      ...PERFORMANCE_EVIDENCE_COPY.exceptions.calculationVersionMissing,
       tone: "warn",
     });
   }
@@ -723,9 +724,7 @@ function buildExceptions(
   if (!sourceSupportability.length) {
     exceptions.push({
       key: "source-supportability-missing",
-      title: "Source supportability not confirmed",
-      detail: "The package does not identify the supportability posture of its source calculation.",
-      action: "Obtain source supportability evidence before relying on the package.",
+      ...PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityMissing,
       tone: "warn",
     });
   }
@@ -739,10 +738,7 @@ function buildExceptions(
     ) {
       exceptions.push({
         key: `source-supportability-identity-${index}`,
-        title: "Source supportability identity not confirmed",
-        detail:
-          "A supportability assessment does not identify both its responsible source and calculation reference.",
-        action: "Obtain source-owned supportability evidence before relying on the assurance conclusion.",
+        ...PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityIdentityMissing,
         tone: "warn",
       });
     }
@@ -771,13 +767,15 @@ function buildExceptions(
     const actionRequired = ACTION_REQUIRED_SUPPORTABILITY_STATES.includes(state);
     exceptions.push({
       key: `source-supportability-${sourceReference}`,
-      title: actionRequired ? "Source calculation unavailable" : "Source assurance qualified",
+      title: actionRequired
+        ? "Source calculation unavailable"
+        : "Calculation available with limitations",
       detail:
         actionRequired
           ? "A source calculation required by this evidence package is unavailable."
           : PARTIAL_SUPPORTABILITY_STATES.includes(state)
-            ? "A source calculation has qualified assurance posture."
-            : "The source calculation assurance posture is not recognised.",
+            ? PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityQualified
+            : PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityUnknown,
       action: "Review the source reason in support details and obtain refreshed evidence.",
       tone: actionRequired ? "danger" : "warn",
     });
@@ -805,9 +803,7 @@ function buildExceptions(
   if (!safeStrings(evidence.methodology_references).length) {
     exceptions.push({
       key: "methodology-reference-missing",
-      title: "Methodology reference not confirmed",
-      detail: "The source did not publish a governed methodology reference for this package.",
-      action: "Obtain the applicable methodology reference before relying on the calculation evidence.",
+      ...PERFORMANCE_EVIDENCE_COPY.exceptions.methodologyMissing,
       tone: "warn",
     });
   }
@@ -973,8 +969,14 @@ function buildSupportGroups(
 ): PerformanceEvidenceSupportGroup[] {
   const groups: PerformanceEvidenceSupportGroup[] = [];
   const sourceRows = [
-    { label: "Gateway evidence state", value: displayValue(evidence.state) },
-    { label: "Gateway capability state", value: capability.state },
+    {
+      label: PERFORMANCE_EVIDENCE_COPY.support.evidenceStateLabel,
+      value: displayValue(evidence.state),
+    },
+    {
+      label: PERFORMANCE_EVIDENCE_COPY.support.capabilityStateLabel,
+      value: capability.state,
+    },
     { label: "Evidence reason", value: displayValue(evidence.reason ?? capability.reason) },
     { label: "Calculation scope", value: displayValue(evidence.calculation_scope) },
     { label: "Benchmark code", value: displayValue(evidence.benchmark_code, "Not assigned") },
@@ -1018,7 +1020,7 @@ function buildSupportGroups(
   if (sourceSupportabilityRows.length) {
     groups.push({
       key: "source-supportability",
-      title: "Source supportability",
+      title: PERFORMANCE_EVIDENCE_COPY.support.availabilityGroupTitle,
       rows: sourceSupportabilityRows,
     });
   }
@@ -1114,3 +1116,5 @@ function safeStrings(value: string[] | null | undefined): string[] {
 function dedupeByKey(items: PerformanceEvidenceException[]) {
   return items.filter((item, index) => items.findIndex((candidate) => candidate.key === item.key) === index);
 }
+
+export { PERFORMANCE_EVIDENCE_COPY };
