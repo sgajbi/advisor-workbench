@@ -568,7 +568,9 @@ Current repository posture:
     being opened, including a source-ranked fallback selection. Validate cursor transport shape,
     but never interpret the token as business or ordering truth. Reconcile browser-history navigation
     to the addressed window, reject malformed or non-advancing continuation cursors at the response
-    boundary, and discard a cursor when source proposal evidence corrects the addressed portfolio. Use Enter to
+    boundary, and reject a continuation already visited in the active history unless it is the
+    retained next window after returning. Stop at the governed source-window maximum before state
+    or address mutation, and discard a cursor when source proposal evidence corrects the addressed portfolio. Use Enter to
     focus decision evidence, and use Escape to restore focus to the selected source row. Load detail,
     workflow, approvals, and lineage for the selected proposal only and reconcile the selected
     worklist portfolio/state/version, proposal identity, workflow state, and active version before

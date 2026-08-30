@@ -91,7 +91,10 @@ These roles describe business use; they do not grant authority or replace source
   client consent, draft, implementation-ready, then other source states.
 - Combines stage and readiness into one closed business status for each visible row; the selected
   pane owns the next action and proposal-detail navigation.
-- Labels cursor-based result windows explicitly and keeps earlier/later navigation visible.
+- Labels cursor-based result windows explicitly and keeps earlier/later navigation visible. The
+  shared navigation authority permits a retained forward window after returning, rejects cycles
+  through any other visited cursor, and disables movement at the governed maximum before changing
+  visible state.
 - Withholds the queue on initial source failure and never substitutes fallback proposals.
 - Retains earlier proposals after a background refresh failure, labels the failed update, and keeps
   an exact source retry available.
