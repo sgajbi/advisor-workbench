@@ -23,6 +23,7 @@ describe("proposal source-window navigation", () => {
       "sourceWindow=2",
       "cursor=a&cursor=b&sourceWindow=2",
       "cursor=opaque-window-2&sourceWindow=02",
+      "cursor=opaque-window-1&sourceWindow=1",
       "cursor=opaque-window-2&sourceWindow=0",
       `cursor=${"x".repeat(2_049)}&sourceWindow=2`,
     ]) {
@@ -30,6 +31,15 @@ describe("proposal source-window navigation", () => {
         parseProposalSourceWindowContext(new URLSearchParams(search)),
       ).toEqual({ status: "invalid" });
     }
+  });
+
+  it("refuses to serialize a cursor-bearing first-window address", () => {
+    expect(() =>
+      buildProposalSourceWindowHref("/proposals", {
+        cursor: "opaque-window-1",
+        windowNumber: 1,
+      }),
+    ).toThrow("Invalid proposal source-window context.");
   });
 
   it("preserves governed and page-local state while replacing the source window", () => {
