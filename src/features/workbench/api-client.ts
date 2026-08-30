@@ -35,14 +35,7 @@ export type WorkbenchApiErrorEvidence = Readonly<{
 }>;
 
 export function getWorkbenchApiErrorStatus(error: unknown): number | null {
-  if (error instanceof WorkbenchApiError) {
-    return error.status;
-  }
-  if (error instanceof Error) {
-    const match = error.message.match(/\((\d{3})\)(?:\s*:\s*.*)?$/s);
-    return match ? Number(match[1]) : null;
-  }
-  return null;
+  return error instanceof WorkbenchApiError ? error.status : null;
 }
 
 export function getWorkbenchApiErrorEvidence(

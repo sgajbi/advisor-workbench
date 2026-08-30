@@ -19,6 +19,7 @@ import { buildNeutralProposalWorkflowContext } from "../../src/features/proposal
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalImplementationStatusFixture } from "../fixtures/proposal-implementation-status";
 import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 import type {
   AdvisoryPolicyEvaluationData,
   AdvisoryPolicySignOffPackageData,
@@ -631,7 +632,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
   it("keeps implementation evidence permission failure distinct and does not infer progress", async () => {
     getProposalExecutionStatusMock.mockRejectedValueOnce(
-      new Error("Proposal implementation status failed (403): forbidden"),
+      new WorkbenchApiError("proposal implementation status", 403),
     );
 
     renderWithQueryClient(
@@ -1649,7 +1650,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
   it("keeps permission-blocked evidence distinct from service failure", async () => {
     getProposalRiskImpactMock.mockRejectedValueOnce(
-      new Error("Proposal risk and impact failed (403): forbidden"),
+      new WorkbenchApiError("proposal risk and impact", 403),
     );
 
     renderWithQueryClient(
@@ -2061,7 +2062,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
   it("keeps restricted approval evidence distinct in the selected pane and shared rail", async () => {
     getProposalApprovalsMock.mockRejectedValueOnce(
-      new Error("Proposal approvals failed (403): forbidden"),
+      new WorkbenchApiError("proposal approvals", 403),
     );
 
     renderWithQueryClient(
@@ -2139,7 +2140,7 @@ describe("ProposalLifecycleWorkspace", () => {
           selectedProposalEvidence(proposalId).approvals,
       )
       .mockRejectedValueOnce(
-        new Error("Proposal approvals failed (403): forbidden"),
+        new WorkbenchApiError("proposal approvals", 403),
       );
 
     renderWithQueryClient(
@@ -2663,9 +2664,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
   it("keeps policy evidence hidden when its source denies access", async () => {
     getAdvisoryPolicyReviewQueueMock.mockRejectedValueOnce(
-      new Error(
-        'Policy queue failed (403): {"detail":"portfolio access denied"}',
-      ),
+      new WorkbenchApiError("policy queue", 403),
     );
 
     renderWithQueryClient(
@@ -2698,9 +2697,7 @@ describe("ProposalLifecycleWorkspace", () => {
 
   it("keeps the shared suitability posture restricted when selected evidence denies access", async () => {
     getAdvisoryPolicyEvaluationMock.mockRejectedValueOnce(
-      new Error(
-        'Policy evaluation failed (403): {"detail":"evaluation access denied"}',
-      ),
+      new WorkbenchApiError("policy evaluation", 403),
     );
 
     renderWithQueryClient(
@@ -3062,11 +3059,9 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
   });
 
-  it("publishes restricted posture for proposal API authorization responses with response detail", async () => {
+  it("publishes restricted posture for typed proposal authorization responses", async () => {
     listProposalsMock.mockRejectedValueOnce(
-      new Error(
-        'Proposal list failed (403): {"detail":"portfolio access denied"}',
-      ),
+      new WorkbenchApiError("proposal list", 403),
     );
 
     renderWithQueryClient(
@@ -3884,9 +3879,7 @@ describe("ProposalLifecycleWorkspace", () => {
         next_cursor: null,
       })
       .mockRejectedValueOnce(
-        new Error(
-          'Proposal list failed (403): {"detail":"portfolio access denied"}',
-        ),
+        new WorkbenchApiError("proposal list", 403),
       );
     getProposalDiscussionPackMock.mockResolvedValueOnce(
       proposalDiscussionPackFixture(),
