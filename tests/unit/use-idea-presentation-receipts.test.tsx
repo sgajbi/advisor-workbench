@@ -332,6 +332,48 @@ describe("useIdeaPresentationReceipts", () => {
     digest.mockRestore();
   });
 
+  it("does not emit a pending draft after the source queue snapshot changes", async () => {
+    let resolveDigest!: (value: ArrayBuffer) => void;
+    const digest = vi
+      .spyOn(globalThis.crypto.subtle, "digest")
+      .mockImplementation(
+        () =>
+          new Promise<ArrayBuffer>((resolve) => {
+            resolveDigest = resolve;
+          }),
+      );
+    const view = render(<Harness candidateIds={["idea-025"]} />);
+    const visibilityObserver = await observer();
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => expect(digest).toHaveBeenCalledTimes(1));
+
+    view.rerender(
+      <Harness
+        candidateIds={["idea-025"]}
+        sourceQueue={{ ...queue, evaluatedAtUtc: "2026-08-31T10:16:00Z" }}
+      />,
+    );
+    await waitFor(() => {
+      expect(TestIntersectionObserver.instances).toHaveLength(2);
+    });
+    await act(async () => {
+      resolveDigest(new ArrayBuffer(32));
+      await Promise.resolve();
+    });
+
+    expect(recordReceipt).not.toHaveBeenCalled();
+    digest.mockRestore();
+  });
+
   it("retries the frozen payload and idempotency key after an explicit failure", async () => {
     recordReceipt.mockRejectedValueOnce(new Error("unavailable"));
     render(<Harness candidateIds={["idea-025"]} />);
