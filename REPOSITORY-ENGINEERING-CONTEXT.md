@@ -142,7 +142,16 @@ Current repository posture:
    report date, requested time, and keyboard/touch-accessible support reference remain discoverable
    without nested horizontal scrolling. Loading, empty, restricted, and error posture must remain
    explicit in both presentations. During background refresh, retain the last source-confirmed rows
-   with one shared live status; never hide a business field merely to make a compact layout fit.
+   with one shared live status; active single-report requests refresh on a bounded cadence and a
+   transient failure must disclose that the retained evidence is not current. Never hide a business
+   field merely to make a compact layout fit. Map only the exact Report lifecycle vocabulary;
+   missing or unfamiliar status and step values remain **Status not reported** and must not fall
+   through to a preparing, successful, or failed posture.
+   Report date and reporting-currency controls must reuse the source-confirmed portfolio workspace
+   limits and published currency set. Catalogue `conditional` fields render only when their named
+   report section is selected, participate in field-associated validation and review invalidation,
+   and are submitted by their published key without aliases or browser defaults. Do not expose a
+   benchmark override when the catalogue publishes only a source-owned benchmark default.
    Output readiness is source-owned by format; structured data may be ready while governed PDF
    creation is unavailable. Report-data completion does not imply archive, advisor approval, client
    delivery, or communication. The Workbench BFF strips browser reporting authority headers and
