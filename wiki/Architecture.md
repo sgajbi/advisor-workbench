@@ -143,7 +143,8 @@ typography locally.
    upstream response bodies are not product copy.
 4. Typed `WorkbenchApiError` status is the sole client-side HTTP classification authority. Screens
    translate only known statuses into bounded business guidance and use an explicit safe fallback
-   for everything else.
+   for everything else. A validated source correlation header may appear only as a request reference
+   inside collapsed Support details; absence or malformed values do not replace typed status evidence.
 5. The blocking feature-transport ratchet keeps Proposals at zero raw fetches, prevents growth in
    six exact-baselined historical feature owners, and requires the baseline to fall as #791 removes
    them. The two raw fetches in the shared API client are the intentional transport primitives.
