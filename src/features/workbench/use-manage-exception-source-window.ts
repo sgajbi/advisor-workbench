@@ -88,7 +88,10 @@ export function useManageExceptionSourceWindow({
 
   const loadWindow = useCallback(
     async (cursor: string | undefined, direction: NavigationDirection) => {
-      if (isLoading) {
+      if (
+        isLoading ||
+        (direction === "next" && !sourceWindow.canShowNext(cursor))
+      ) {
         return;
       }
       const initiatingScope = viewScopeKey;
@@ -146,6 +149,7 @@ export function useManageExceptionSourceWindow({
   );
 
   const nextCursor = getManageExceptionNextCursor(activeWindow.response);
+  const canShowNext = sourceWindow.canShowNext(nextCursor);
   const showNext = useCallback(
     async () => await loadWindow(nextCursor ?? undefined, "next"),
     [loadWindow, nextCursor]
@@ -171,6 +175,7 @@ export function useManageExceptionSourceWindow({
       activeWindow.sourceError
     ),
     nextCursor,
+    canShowNext,
     currentWindow: sourceWindow.windowNumber,
     hasPrevious: sourceWindow.hasPrevious,
     isLoading,

@@ -346,6 +346,77 @@ describe("manage workspace split components", () => {
     );
   });
 
+  it("rejects a cyclic exception cursor before fetching or replacing confirmed rows", async () => {
+    const data = buildManageWorkspaceData();
+    data.commandCenterExceptions = {
+      ...data.commandCenterExceptions!,
+      data: {
+        ...data.commandCenterExceptions!.data,
+        next_cursor: "attention-window-2",
+      },
+    };
+    vi.mocked(getDpmCommandCenterExceptions)
+      .mockResolvedValueOnce({
+        ...data.commandCenterExceptions,
+        correlation_id: "corr_attention_window_2",
+        data: {
+          next_cursor: "attention-window-3",
+          items: [
+            {
+              exception_id: "exc_window_2",
+              mandate_id: "mandate_001",
+              severity: "HIGH",
+              title: "Concentration threshold requires review",
+              state: "ACTIVE",
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        ...data.commandCenterExceptions,
+        correlation_id: "corr_attention_window_3",
+        data: {
+          next_cursor: "attention-window-2",
+          items: [
+            {
+              exception_id: "exc_window_3",
+              mandate_id: "mandate_001",
+              severity: "MEDIUM",
+              title: "Valuation evidence requires review",
+              state: "ACTIVE",
+            },
+          ],
+        },
+      });
+
+    render(<ManageMandateHealth data={data} />);
+    fireEvent.click(screen.getByRole("button", { name: "Next attention items" }));
+    expect(
+      await screen.findByRole("button", {
+        name: "Concentration threshold requires review",
+      }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Next attention items" }));
+    expect(
+      await screen.findByRole("button", {
+        name: "Valuation evidence requires review",
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText("Attention-item source view 3")).toBeInTheDocument();
+    const nextAction = screen.getByRole("button", {
+      name: "Next attention items",
+    });
+    expect(nextAction).toBeDisabled();
+    fireEvent.click(nextAction);
+    expect(getDpmCommandCenterExceptions).toHaveBeenCalledTimes(2);
+    expect(
+      screen.queryByRole("button", {
+        name: "Concentration threshold requires review",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it("retains the last confirmed exception window when continuation loading fails", async () => {
     const data = buildManageWorkspaceData();
     data.commandCenterExceptions = {

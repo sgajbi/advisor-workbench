@@ -178,6 +178,7 @@ export default function ManageMandateHealth({ data }: Props) {
           currentWindow={exceptionSource.currentWindow}
           hasPrevious={exceptionSource.hasPrevious}
           hasNext={Boolean(exceptionSource.nextCursor)}
+          canNext={exceptionSource.canShowNext}
           isLoading={exceptionSource.isLoading}
           navigationFailure={exceptionSource.navigationFailure}
           rejectedRowCount={exceptionRowsResult.rejectedRowCount}
@@ -311,6 +312,7 @@ function AttentionReviewQueue({
   currentWindow,
   hasPrevious,
   hasNext,
+  canNext,
   isLoading,
   navigationFailure,
   rejectedRowCount,
@@ -326,6 +328,7 @@ function AttentionReviewQueue({
   currentWindow: number;
   hasPrevious: boolean;
   hasNext: boolean;
+  canNext: boolean;
   isLoading: boolean;
   navigationFailure: {
     direction: "next" | "previous";
@@ -469,6 +472,7 @@ function AttentionReviewQueue({
           currentWindow={currentWindow}
           hasPrevious={hasPrevious}
           hasNext={hasNext}
+          canNext={canNext}
           isLoading={isLoading}
           itemLabel="attention items"
           viewLabel="Attention-item source view"
