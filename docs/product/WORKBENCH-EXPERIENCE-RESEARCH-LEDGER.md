@@ -7238,3 +7238,49 @@ architecture wiki, research ledger, and rendered diagnostic evidence change; ind
 guides do not change because source fields, actions, and workflow ownership are unchanged. No
 Gateway, API, calculation, authentication, entitlement, dependency, or runtime topology change is
 required.
+
+## 2026-08-31 — Rebalance presentation ownership (#958)
+
+### Business workflow question
+
+How should the Rebalance workspace retain a dense, responsive portfolio-manager decision flow when
+an earlier command-centre class system still competes with the current shared primitives and active
+feature composition?
+
+### Evidence consulted
+
+1. [Next.js CSS Modules](https://nextjs.org/docs/13/app/building-your-application/styling/css-modules)
+   recommends locally scoped component styles when feature-specific presentation is required.
+2. [WCAG 2.2 Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) requires information
+   and functionality to remain available without unnecessary two-dimensional page scrolling.
+3. [WCAG 2.2 Focus Order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) requires
+   sequential navigation to preserve meaning and operability as layouts adapt.
+4. Current-main consumer mapping showed 38 `dpm-wave-command-center-*` escape arms, 13 unconsumed
+   class names, and one shell class duplicating `SectionBlock`/`Panel`, `AnalyticsTable`, and the
+   active `rebalance-*` composition.
+
+### Adopted decisions
+
+1. Delete the complete obsolete class family instead of moving dead CSS into a new module.
+2. Keep the shared design-system primitives and current Rebalance composition as the only
+   presentation authorities.
+3. Replace the browser validator's presentation-class locator with the stable
+   `rebalance-workspace` product-surface id.
+4. Lower the exact escape baseline and forbid the retired prefix so the duplicate authority cannot
+   return silently.
+5. Preserve Gateway-backed data, actions, DOM order, focus order, and business language unchanged.
+
+### Rejected decisions
+
+1. Copying the legacy family into a CSS Module to make the file location look compliant.
+2. Keeping an obsolete class as a compatibility layer for a test locator.
+3. Restyling shared panel or table internals through a new feature escape.
+4. Introducing CSS-in-JS, a new dependency, cascade-order changes, or a broad Rebalance redesign.
+
+### Validation and publication decision
+
+Workbench #958 owns the bounded deletion and recurrence guard. Component, CSS-governance, and
+production-browser proof cover the governed workstation widths, reflow, overflow, and keyboard
+order. Architecture context and the research ledger change. No business capability, source
+contract, calculation, screen guide, supported-feature statement, or operator workflow changes, so
+repo-local wiki source does not change and no wiki publication is required.
