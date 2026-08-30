@@ -171,6 +171,75 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
+test("uses source-governed ordering controls and focuses conditional evidence", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: 15_000,
+  });
+  const reportDate = page.getByLabel("Report date");
+  await expect(reportDate).toHaveAttribute("min", "2026-04-01");
+  await expect(reportDate).toHaveAttribute("max", "2026-04-22");
+  const reportingCurrency = page.getByLabel("Reporting currency");
+  await expect(reportingCurrency.locator("option")).toHaveText(["SGD", "USD"]);
+  await expect(page.getByLabel("Comparison benchmark")).toHaveCount(0);
+
+  await page.getByText("Review report contents", { exact: true }).click();
+  await page.getByRole("checkbox", { name: /Advisor commentary/ }).check();
+  const advisorBrief = page.getByLabel("Accepted advisor brief");
+  await expect(advisorBrief).toBeVisible();
+  await page.getByRole("button", { name: "Review Request" }).click();
+  await expect(advisorBrief).toBeFocused();
+  await expect(advisorBrief).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page.getByText(
+      "Accepted advisor brief is required when Advisor commentary is included.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+
+  await advisorBrief.fill("abr_e2e_reviewed_1");
+  await page.getByRole("button", { name: "Review Request" }).click();
+  await expect(page.getByRole("button", { name: "Submit Report Request" })).toBeEnabled();
+  await captureDiagnosticScreenshot(page, "governed-configuration-1440");
+});
+
+test("fails closed when Reporting publishes an unfamiliar lifecycle", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(
+    `/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.unknownLifecycle}`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  const history = page.getByRole("table", { name: "Recent portfolio report requests" });
+  await expect(history.getByText("Status not reported")).toBeVisible({ timeout: 15_000 });
+  await expect(
+    history.getByText("Reporting returned a lifecycle state that this screen cannot safely interpret."),
+  ).toBeVisible();
+  await expect(history.getByText("Queued", { exact: true })).toHaveCount(0);
+});
+
+test("retains confirmed active requests when automatic refresh fails", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(
+    `/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.refreshFailure}`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  const history = page.getByRole("table", { name: "Recent portfolio report requests" });
+  await expect(history.getByText("Queued", { exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByText(
+      "The latest lifecycle check did not complete. Previously confirmed requests remain visible and another check is scheduled.",
+      { exact: true },
+    ),
+  ).toBeVisible({ timeout: 12_000 });
+  await expect(history.getByText("Queued", { exact: true })).toBeVisible();
+});
+
 test("orders a reviewed portfolio bundle and renders source-owned outcomes", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
