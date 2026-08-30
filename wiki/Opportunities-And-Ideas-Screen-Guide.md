@@ -34,7 +34,9 @@ completed or an explicit refresh-failed posture is shown.
 
 - Reads the Idea queue and candidate detail through Gateway.
 - Presents rank, score, reasons, source signals, lineage, and support posture.
-- Records review, feedback, and conversion intent with idempotency.
+- Records review, governed adviser feedback, and conversion intent with idempotency.
+- Captures usefulness first, then the canonical business reason; candidate signals never become the
+  adviser's feedback reason.
 - Refreshes queue and detail after persistence and distinguishes refresh failure.
 
 ## Decisions And Actions
@@ -42,13 +44,16 @@ completed or an explicit refresh-failed posture is shown.
 | Action | Persisted effect |
 | --- | --- |
 | Record review | Stores the source-owned candidate review |
-| Record feedback | Stores typed feedback through Gateway |
+| Record feedback | Stores useful/not-useful feedback and one governed reason; it does not approve, suppress, convert, or change policy |
 | Record conversion intent | Stores intent only; it does not create a proposal |
 
 ## Information And Source Authority
 
 Lotus Idea owns candidate identity, ranking, score, reasons, signals, detail, durable-storage
-posture, and action persistence. Workbench formats those facts and carries only BFF-governed calls.
+posture, action persistence, and `idea-feedback-taxonomy-v1`. Workbench formats those facts and
+carries only BFF-governed calls. Useful feedback is recorded as relevant; not-useful feedback
+requires one explicit source-owned reason. Workbench accepts success only when the returned feedback
+event matches the submitted candidate, taxonomy, outcome, reason, and time.
 The current journey metadata that suggests direct proposal promotion is an overclaim tracked in
 #798; Advise, Performance, and Risk are not sources for this screen's current queue/detail contract.
 
@@ -60,7 +65,7 @@ The current journey metadata that suggests direct proposal promotion is an overc
 | Empty | No candidate is fabricated |
 | Unsupported portfolio | Return to the canonical supported portfolio |
 | Queue or detail failure | Retry the failed source read |
-| Mutation failure | Review the explicit error; no success is shown |
+| Mutation or evidence failure | Review the explicit error; no success is shown and the displayed opportunity remains unchanged |
 | Persisted, refresh failed | Persistence is acknowledged while stale detail is withheld |
 | Persisted and refreshed | Review the updated queue and detail posture |
 

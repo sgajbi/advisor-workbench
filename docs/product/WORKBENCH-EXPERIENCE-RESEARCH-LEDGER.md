@@ -7284,3 +7284,63 @@ production-browser proof cover the governed workstation widths, reflow, overflow
 order. Architecture context and the research ledger change. No business capability, source
 contract, calculation, screen guide, supported-feature statement, or operator workflow changes, so
 repo-local wiki source does not change and no wiki publication is required.
+
+## 2026-08-31 — Governed adviser feedback decision transaction (#953)
+
+### Business workflow question
+
+How should an adviser tell the opportunity service whether a candidate helped the client review,
+without confusing candidate evidence with the adviser's judgment or turning feedback into an
+approval, suppression, conversion, or policy action?
+
+### Evidence consulted
+
+1. [W3C Labels or Instructions](https://www.w3.org/WAI/WCAG22/Understanding/labels-or-instructions.html)
+   requires visible, descriptive labels and programmatic grouping for related choices without
+   cluttering the task with unnecessary instruction.
+2. [GOV.UK Radios](https://design-system.service.gov.uk/components/radios/) recommends radios for a
+   small mutually exclusive choice, a conditionally revealed related question, and specific inline
+   errors when the revealed answer is missing.
+3. [WCAG 2.2](https://www.w3.org/TR/WCAG22/) requires input errors to be identified in text and
+   asynchronous status to remain programmatically determinable.
+4. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   positions advisor nudges as targeted opportunities that help advisers act quickly across their
+   book; feedback should therefore capture whether the opportunity was useful to the client review,
+   not expose transport or model vocabulary.
+5. Exact Idea main `cdc9fbc0` and Gateway main `22f67430` publish the closed
+   `idea-feedback-taxonomy-v1` request and matching persisted-event response contract.
+
+### Adopted decisions
+
+1. Ask the business question first: **Was this opportunity useful?** Reuse the existing compact,
+   keyboard-operable `WorkbenchChoiceGroup` for useful/not useful rather than adding another choice
+   implementation.
+2. Display **Relevant to this client** as the fixed useful reason. Reveal the seven canonical
+   not-useful reasons only after **Not useful** is selected, require one explicit choice, and focus
+   that field when it is missing.
+3. Keep the typed consumer vocabulary and exact response-evidence matcher in one feature module;
+   the component renders the contract and does not infer reasons from candidate signals.
+4. Preserve the complete request and idempotency key for an unchanged retry. Changing the outcome
+   or reason abandons that retry and creates a new submission.
+5. Show success only after the returned event matches candidate, feedback identity, taxonomy,
+   outcome, reason, and time and the owning queue/detail reads refresh.
+6. Use adviser language—opportunity, usefulness, reason, saved, worklist—while keeping service and
+   contract identifiers in implementation evidence.
+
+### Rejected decisions
+
+1. Retaining six overloaded outcomes or translating them into the new taxonomy.
+2. Reusing candidate signal, ranking, review, or conversion reasons as adviser feedback.
+3. Free text, auto-submission, optimistic success, or browser-owned feedback interpretation.
+4. A new generic conditional-form abstraction without a second proven workflow consumer.
+5. Treating HTTP or persistence status alone as sufficient evidence of the submitted feedback.
+
+### Validation and publication decision
+
+Workbench #953 owns this product correction. Table-driven tests cover all eight reasons, invalid
+combinations, exact event evidence, missing-reason focus, retry identity, and refresh-gated success.
+The optimized browser journey must prove the exact Gateway request plus responsive and keyboard
+behavior; canonical runtime proof follows exact-main merge. The Opportunities and Ideas guide and
+repository context change because the business workflow and source contract changed, so wiki
+publication is required after merge. No authentication, identity-provider, ranking, learning,
+proposal, approval, suppression, conversion, or policy capability is added.
