@@ -197,70 +197,70 @@
   line-height: 1.35;
 }
 
-.tableWrap {
+.queueFilter {
+  display: grid;
+  gap: 4px;
+  max-width: 340px;
+}
+
+.queueFilter input {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
-  overflow-x: auto;
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  min-height: 36px;
+  padding: 6px 10px;
 }
 
-.ideaTable {
+.receiptAlert {
+  margin-bottom: 8px;
+}
+
+.opportunityGrid {
+  --ag-font-family: inherit;
+  --ag-font-size: 12px;
+  --ag-header-background-color: var(--panel-alt);
+  --ag-header-foreground-color: var(--text-muted);
+  --ag-row-hover-color: color-mix(in srgb, var(--brand) 5%, transparent);
+  --ag-selected-row-background-color: color-mix(in srgb, var(--brand) 8%, transparent);
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.86rem;
 }
 
-.ideaTable th {
-  background: var(--panel-alt);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 9px 12px;
-  text-align: left;
-  text-transform: uppercase;
+.presentationMarker,
+.compactCell {
+  align-content: center;
+  display: grid;
+  height: 100%;
+  line-height: 1.25;
+  min-width: 0;
 }
 
-.ideaTable td {
-  border-top: 1px solid var(--border);
+.presentationMarker a,
+.compactCell strong {
   color: var(--text);
-  padding: 10px 12px;
-  vertical-align: top;
-}
-
-.ideaTable tbody tr:hover {
-  background: #fbfcfd;
-  box-shadow: inset 3px 0 0 #765a17;
-}
-
-.ideaTable td:first-child {
-  min-width: 260px;
-}
-
-.ideaTable td:first-child a {
-  color: var(--text);
-  display: block;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.presentationMarker a {
   text-decoration: none;
 }
 
-.ideaTable td:first-child a:hover {
+.presentationMarker a:hover,
+.presentationMarker a:focus-visible {
   text-decoration: underline;
 }
 
-.ideaTable td:first-child span {
+.presentationMarker span,
+.compactCell span {
   color: var(--text-muted);
-  display: block;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   margin-top: 3px;
-}
-
-.ideaTable td:nth-child(6) span {
-  color: var(--text-muted);
-  display: block;
-  font-size: 0.78rem;
-  max-width: 280px;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
@@ -287,7 +287,7 @@
     grid-template-columns: 1fr;
   }
 
-  .ideaTable {
-    min-width: 980px;
+  .queueFilter {
+    max-width: none;
   }
 }

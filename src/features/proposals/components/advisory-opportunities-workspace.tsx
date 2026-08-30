@@ -21,6 +21,7 @@ import type {
   AdvisorIdeaCandidateDetailData,
   AdvisorIdeaQueueItem,
 } from "../types";
+import AdvisoryOpportunityGrid from "./advisory-opportunity-grid";
 import IdeaCandidateActionPanel from "./idea-candidate-action-panel";
 import styles from "./advisory-opportunities-workspace.module.css";
 
@@ -215,45 +216,13 @@ export default function AdvisoryOpportunitiesWorkspace({
           }
           surface="default"
         />
-      ) : (
-        <div className={styles.tableWrap}>
-          <table
-            className={styles.ideaTable}
-            aria-label="Idea candidate review queue"
-          >
-            <thead>
-              <tr>
-                <th>Candidate</th>
-                <th>Rank</th>
-                <th>Score</th>
-                <th>Priority</th>
-                <th>Review Posture</th>
-                <th>Source Evidence</th>
-                <th>Next Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {model.rows.map((row) => (
-                <tr key={row.candidateId}>
-                  <td>
-                    <Link href={row.href}>{row.title}</Link>
-                    <span>ID: {row.candidateId}</span>
-                  </td>
-                  <td>{row.rank}</td>
-                  <td>{row.score}</td>
-                  <td>{row.priority}</td>
-                  <td>{row.reviewPosture}</td>
-                  <td>
-                    <span>{row.sourceSignals}</span>
-                    <span>{row.reasonCodes}</span>
-                  </td>
-                  <td>{row.nextAction}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      ) : data ? (
+        <AdvisoryOpportunityGrid
+          portfolioId={portfolioId}
+          queue={data}
+          rows={model.rows}
+        />
+      ) : null}
     </SectionBlock>
   );
 }

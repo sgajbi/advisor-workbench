@@ -29,6 +29,9 @@ const getAdvisorIdeaReviewQueueMock = vi.fn(async (_filters?: unknown) => ({
       reasonCodes: ["high_cash_ratio", "review_required"],
       candidate: {
         candidateId: "idea_high_cash_001",
+        materialVersion: 1,
+        evidenceVersion: 1,
+        scorePolicyVersion: "idle-liquidity-v1",
         family: "high_cash",
         reviewPosture: "advisor_review_required",
         score: "82",
@@ -69,6 +72,10 @@ const recordAdvisorIdeaConversionIntentMock = vi.fn(
     supportedFeaturePromoted: false,
   }),
 );
+const recordAdvisorIdeaPresentationReceiptMock = vi.fn(async (_input?: unknown) => ({
+  persistenceDecision: "accepted",
+  durableStorageBacked: true,
+}));
 
 vi.mock("../../src/features/proposals/api", () => ({
   getAdvisorIdeaCandidateDetail: (filters: unknown) =>
@@ -81,6 +88,8 @@ vi.mock("../../src/features/proposals/api", () => ({
     recordAdvisorIdeaFeedbackMock(input),
   recordAdvisorIdeaConversionIntent: (input: unknown) =>
     recordAdvisorIdeaConversionIntentMock(input),
+  recordAdvisorIdeaPresentationReceipt: (input: unknown) =>
+    recordAdvisorIdeaPresentationReceiptMock(input),
 }));
 
 function renderWithQueryClient(ui: React.ReactElement) {
@@ -103,6 +112,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     recordAdvisorIdeaReviewActionMock.mockClear();
     recordAdvisorIdeaFeedbackMock.mockClear();
     recordAdvisorIdeaConversionIntentMock.mockClear();
+    recordAdvisorIdeaPresentationReceiptMock.mockClear();
   });
 
   it("loads Gateway-backed Lotus Idea candidates", async () => {
@@ -135,7 +145,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       screen.getByText("High Cash - idea_high_cash_001"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("table", { name: "Idea candidate review queue" }),
+      await screen.findByRole("grid", { name: "Idea candidate review queue" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "High Cash - idea_high_cash_001" }),
