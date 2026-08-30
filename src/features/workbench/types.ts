@@ -73,12 +73,6 @@ export type WorkbenchProjectedSummary = {
   net_delta_quantity: number;
 };
 
-export type WorkbenchPolicyFeedback = {
-  status: string;
-  detail?: string | null;
-  raw?: Record<string, unknown> | null;
-};
-
 export type WorkbenchPortfolio360 = {
   correlation_id: string;
   contract_version: string;
@@ -91,19 +85,6 @@ export type WorkbenchPortfolio360 = {
   projected_positions: WorkbenchProjectedPositionView[];
   projected_summary: WorkbenchProjectedSummary | null;
   active_session_id: string | null;
-  warnings: string[];
-  partial_failures: WorkbenchOverview["partial_failures"];
-};
-
-export type WorkbenchSandboxState = {
-  correlation_id: string;
-  contract_version: string;
-  portfolio_id: string;
-  session_id: string;
-  session_version: number;
-  projected_positions: WorkbenchProjectedPositionView[];
-  projected_summary: WorkbenchProjectedSummary;
-  policy_feedback: WorkbenchPolicyFeedback | null;
   warnings: string[];
   partial_failures: WorkbenchOverview["partial_failures"];
 };
