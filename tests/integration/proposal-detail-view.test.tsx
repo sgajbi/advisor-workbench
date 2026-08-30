@@ -482,10 +482,10 @@ describe("ProposalDetailView", () => {
         name: "Proposal review is restricted",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/no approval or workflow posture is inferred/i)).toBeInTheDocument();
-    expect(screen.getByText(/Request reference corr-proposal-denied-001/)).not.toBeVisible();
+    expect(screen.getByText(/contact your access administrator/i)).toBeInTheDocument();
+    expect(screen.getByText("corr-proposal-denied-001")).not.toBeVisible();
     fireEvent.click(screen.getByText("Support details"));
-    expect(screen.getByText(/Request reference corr-proposal-denied-001/)).toBeInTheDocument();
+    expect(screen.getByText("corr-proposal-denied-001")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Return to Approval Queue" }),
     ).toHaveAttribute(
@@ -912,7 +912,7 @@ describe("ProposalDetailView", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Failed to fetch proposal request (403)"))
       .not.toBeInTheDocument();
-    expect(screen.getByText(/Request reference corr-version-denied-001/)).not.toBeVisible();
+    expect(screen.getByText("corr-version-denied-001")).not.toBeVisible();
   });
 
   it("keeps mutation failure explicit without exposing the raw downstream response", async () => {

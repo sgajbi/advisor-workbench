@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   ProposalActionBusinessError,
-  proposalActionFailure,
   proposalActionFailureCopy,
+  proposalActionFailureSupportEvidence,
 } from "../../src/features/proposals/proposal-action-error";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
@@ -61,17 +61,21 @@ describe("proposal action failure copy", () => {
   });
 
   it("keeps source request evidence out of primary business copy", () => {
-    const failure = proposalActionFailure(
-      new WorkbenchApiError("proposal request", 403, "corr-proposal-denied-001"),
-      "save_draft",
+    const error = new WorkbenchApiError(
+      "proposal request",
+      403,
+      "corr-proposal-denied-001",
     );
 
-    expect(failure.message).toBe(
+    expect(proposalActionFailureCopy(error, "save_draft")).toBe(
       "This proposal action is not available for your current access. No proposal change was recorded.",
     );
-    expect(failure.message).not.toContain("corr-proposal-denied-001");
-    expect(failure.supportEvidence).toBe(
-      "HTTP status 403. Request reference corr-proposal-denied-001.",
+    expect(proposalActionFailureCopy(error, "save_draft")).not.toContain(
+      "corr-proposal-denied-001",
     );
+    expect(proposalActionFailureSupportEvidence(error)).toEqual({
+      requestReference: "corr-proposal-denied-001",
+      status: "403",
+    });
   });
 });

@@ -3,10 +3,11 @@ import Link from "next/link";
 import {
   ActionButton,
   SemanticBadge,
-  SupportDetails,
   Text,
   WorkbenchRailCard,
 } from "@/design-system";
+import type { ProposalActionSupportEvidence } from "../proposal-action-error";
+import ProposalActionSupportDetails from "./proposal-action-support-details";
 import styles from "./proposal-builder-workflow-rail.module.css";
 
 type ProposalBuilderWorkflowRailProps = {
@@ -24,7 +25,7 @@ type ProposalBuilderWorkflowRailProps = {
   isEvaluating: boolean;
   isSaving: boolean;
   error: string | null;
-  errorSupportEvidence: string | null;
+  errorSupportEvidence: ProposalActionSupportEvidence | null;
   onSaveDraft: () => void;
 };
 
@@ -175,9 +176,7 @@ export default function ProposalBuilderWorkflowRail({
               <span>{error}</span>
             </div>
             {errorSupportEvidence ? (
-              <SupportDetails context="Source request evidence">
-                <Text variant="secondary">{errorSupportEvidence}</Text>
-              </SupportDetails>
+              <ProposalActionSupportDetails evidence={errorSupportEvidence} />
             ) : null}
           </>
         ) : isSaving ? (

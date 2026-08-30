@@ -32,7 +32,6 @@ import {
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
-  SupportDetails,
   Text,
   modePanelId,
   modeTabId,
@@ -50,6 +49,7 @@ import {
 } from "../types";
 import ProposalNarrativePosturePanel from "./proposal-narrative-posture-panel";
 import ProposalMemoPosturePanel from "./proposal-memo-posture-panel";
+import ProposalActionSupportDetails from "./proposal-action-support-details";
 import detailStyles from "./proposal-detail-view.module.css";
 import {
   buildProposalActionIdempotencyKey,
@@ -58,8 +58,9 @@ import {
   proposalStageLabel,
 } from "../proposal-workflow-copy";
 import {
-  proposalActionFailure,
+  proposalActionFailureCopy,
   proposalActionFailureSupportEvidence,
+  type ProposalActionSupportEvidence,
 } from "../proposal-action-error";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
@@ -173,7 +174,9 @@ function ProposalDetailWorkspace({
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorSupportEvidence, setErrorSupportEvidence] = useState<string | null>(null);
+  const [errorSupportEvidence, setErrorSupportEvidence] = useState<
+    ProposalActionSupportEvidence | null
+  >(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState<ProposalReviewMode>("narrative");
   const [includeEvidence, setIncludeEvidence] = useState(false);
@@ -181,7 +184,7 @@ function ProposalDetailWorkspace({
   const [versionLookup, setVersionLookup] = useState<ProposalVersionData | null>(null);
   const [versionActionError, setVersionActionError] = useState<string | null>(null);
   const [versionActionErrorSupportEvidence, setVersionActionErrorSupportEvidence] = useState<
-    string | null
+    ProposalActionSupportEvidence | null
   >(null);
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
@@ -443,9 +446,8 @@ function ProposalDetailWorkspace({
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
       setVersionLookup(data);
     } catch (err) {
-      const failure = proposalActionFailure(err, "load_version");
-      setVersionActionError(failure.message);
-      setVersionActionErrorSupportEvidence(failure.supportEvidence);
+      setVersionActionError(proposalActionFailureCopy(err, "load_version"));
+      setVersionActionErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     }
   }
 
@@ -500,9 +502,8 @@ function ProposalDetailWorkspace({
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
         return;
       }
-      const failure = proposalActionFailure(err, "create_version");
-      setVersionActionError(failure.message);
-      setVersionActionErrorSupportEvidence(failure.supportEvidence);
+      setVersionActionError(proposalActionFailureCopy(err, "create_version"));
+      setVersionActionErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     } finally {
       if (activeVersionCreationRef.current?.token === versionContext.token) {
         activeVersionCreationRef.current = null;
@@ -551,9 +552,7 @@ function ProposalDetailWorkspace({
           ) : null}
         </Stack>
         {supportEvidence ? (
-          <SupportDetails context="Source request evidence">
-            <Text variant="secondary">{supportEvidence}</Text>
-          </SupportDetails>
+          <ProposalActionSupportDetails evidence={supportEvidence} />
         ) : null}
       </SectionBlock>
     );
@@ -573,8 +572,8 @@ function ProposalDetailWorkspace({
           }
           body={
             permissionBlocked
-              ? "Your current role cannot view this proposal record. No approval or workflow posture is inferred."
-              : "The source proposal record is unavailable. Return to the originating worklist and retry when Gateway recovers."
+              ? "Your current role cannot view this proposal record. Return to the proposal worklist or contact your access administrator if review is required."
+              : "The proposal record is temporarily unavailable. Return to the originating worklist and retry."
           }
           action={
             <Link href={fallbackReturnHref} className="nav-link">
@@ -584,9 +583,7 @@ function ProposalDetailWorkspace({
           surface="default"
         />
         {supportEvidence ? (
-          <SupportDetails context="Source request evidence">
-            <Text variant="secondary">{supportEvidence}</Text>
-          </SupportDetails>
+          <ProposalActionSupportDetails evidence={supportEvidence} />
         ) : null}
       </SectionBlock>
     );
@@ -673,9 +670,7 @@ function ProposalDetailWorkspace({
         <>
           <Alert severity="error" role="alert">{error}</Alert>
           {errorSupportEvidence ? (
-            <SupportDetails context="Source request evidence">
-              <Text variant="secondary">{errorSupportEvidence}</Text>
-            </SupportDetails>
+            <ProposalActionSupportDetails evidence={errorSupportEvidence} />
           ) : null}
         </>
       ) : null}

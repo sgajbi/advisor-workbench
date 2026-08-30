@@ -889,17 +889,17 @@ test.describe("proposal memo posture", () => {
       });
       await expect(page.getByText(new RegExp(failure.businessCopy))).toBeVisible();
       await expect(page.getByText("INTERNAL_SOURCE_DETAIL")).toHaveCount(0);
+      const supportDetails = page.locator("details").filter({
+        hasText: "Source request evidence",
+      });
       await expect(
-        page.getByText(
-          `HTTP status ${failure.status}. Request reference corr-proposal-detail-${failure.status}.`,
-        ),
+        supportDetails.getByText(`corr-proposal-detail-${failure.status}`),
       ).not.toBeVisible();
 
-      await page.getByText("Support details").click();
+      await supportDetails.getByText("Support details").click();
+      await expect(supportDetails.getByText(String(failure.status), { exact: true })).toBeVisible();
       await expect(
-        page.getByText(
-          `HTTP status ${failure.status}. Request reference corr-proposal-detail-${failure.status}.`,
-        ),
+        supportDetails.getByText(`corr-proposal-detail-${failure.status}`),
       ).toBeVisible();
     });
   }

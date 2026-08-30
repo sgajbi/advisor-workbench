@@ -63,7 +63,9 @@ import ProposalBuilderWorkflowRail from "./proposal-builder-workflow-rail";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import {
   ProposalActionBusinessError,
-  proposalActionFailure,
+  proposalActionFailureCopy,
+  proposalActionFailureSupportEvidence,
+  type ProposalActionSupportEvidence,
 } from "../proposal-action-error";
 import styles from "./proposal-simulate-form.module.css";
 
@@ -163,7 +165,8 @@ export default function ProposalSimulateForm({
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorSupportEvidence, setErrorSupportEvidence] = useState<string | null>(null);
+  const [errorSupportEvidence, setErrorSupportEvidence] =
+    useState<ProposalActionSupportEvidence | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [workspaceEnvelope, setWorkspaceEnvelope] =
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
@@ -570,9 +573,8 @@ export default function ProposalSimulateForm({
       );
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
     } catch (err) {
-      const failure = proposalActionFailure(err, "evaluate_draft");
-      setError(failure.message);
-      setErrorSupportEvidence(failure.supportEvidence);
+      setError(proposalActionFailureCopy(err, "evaluate_draft"));
+      setErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     } finally {
       setLoading(false);
     }
@@ -633,9 +635,8 @@ export default function ProposalSimulateForm({
       }
       setSavedDraft({ proposalId, portfolioId: values.portfolioId });
     } catch (err) {
-      const failure = proposalActionFailure(err, "save_draft");
-      setError(failure.message);
-      setErrorSupportEvidence(failure.supportEvidence);
+      setError(proposalActionFailureCopy(err, "save_draft"));
+      setErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     } finally {
       setSavingDraft(false);
     }
