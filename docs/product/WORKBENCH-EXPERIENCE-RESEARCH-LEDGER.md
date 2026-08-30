@@ -5,6 +5,62 @@
 - Scope: screen-by-screen private-banking product experience decisions
 - Audience: product, design, engineering, QA, and regulated front-office reviewers
 
+## 2026-08-30 — Source-governed Report Centre ordering and lifecycle (#795)
+
+### Business workflow question
+
+How should an adviser prepare a repeatable portfolio report without inventing policy in the
+browser, losing the source context of the review, or mistaking an unfamiliar processing state for
+normal progress?
+
+### Evidence consulted
+
+1. [W3C WCAG error identification](https://www.w3.org/WAI/WCAG21/Understanding/error-identification)
+   requires input errors to be identified and described in text, not only summarized elsewhere.
+2. [BlackRock Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360)
+   positions report generation inside the analysed portfolio context rather than as a detached
+   technical job console.
+3. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   and its [client-engagement workflow](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/engage-clients-holistically)
+   emphasize a connected workflow and consistent language across current and proposed portfolios.
+4. [Temenos Wealth Management](https://www.temenos.com/products/wealth-management/) describes a
+   configurable adviser workflow, while its
+   [wealth-management provider catalogue](https://www.temenos.com/provider_category/wealth-management/)
+   distinguishes report creation, production, validation, distribution, and archive stages.
+5. [Avaloq data and analytics](https://www.avaloq.com/platform/data-analytics) emphasizes governed,
+   consistent data access as a control against manual inconsistency.
+
+### Adopted decisions
+
+1. Keep report preparation embedded in the confirmed portfolio-review context.
+2. Source the allowable report date and currencies from the existing portfolio workspace and the
+   report-specific fields, sections, outputs, and requirements from the Gateway catalogue.
+3. Associate each validation message with its control, focus the first invalid field, and retain a
+   concise review summary as secondary orientation.
+4. Keep review-before-submit and request lifecycle as distinct business stages. Map only published
+   lifecycle states and show unfamiliar states as **Status not reported**.
+5. Refresh active request evidence automatically while retaining the last confirmed rows through a
+   transient failure with an explicit current-evidence warning.
+
+### Rejected decisions
+
+1. Free-text currency, unbounded dates, browser-owned thresholds, or hidden configuration defaults.
+2. A benchmark override when the catalogue publishes only the source-owned default.
+3. Preview, template, frequency, scheduling, channel, distribution, or archive controls without a
+   supporting source contract.
+4. A marketing-card dashboard, technical worker vocabulary, direct Report calls, or competitor
+   visual imitation.
+5. Treating an unknown lifecycle as preparing, complete, failed, or otherwise reassuring.
+
+### Validation and publication decision
+
+Workbench #795 owns this convergence slice. Contract, form, API, state, hook, integration, and
+production-browser tests must prove the governed controls, conditional field, exact lifecycle,
+refresh, failure, accessibility, and responsive behavior. The Report Centre guide and repository
+context change because supported workflow and recovery truth changed; the wiki must be published
+after merge. No Gateway, Report, authentication, entitlement, dependency, or runtime-topology
+change is required.
+
 ## Mandate Health review continuity: source identity before row position
 
 ### Business job
