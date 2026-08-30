@@ -7339,8 +7339,9 @@ approval, suppression, conversion, or policy action?
 
 Workbench #953 owns this product correction. Table-driven tests cover all eight reasons, invalid
 combinations, exact event evidence, missing-reason focus, retry identity, and refresh-gated success.
-The optimized browser journey must prove the exact Gateway request plus responsive and keyboard
-behavior; canonical runtime proof follows exact-main merge. The Opportunities and Ideas guide and
+The isolated optimized-production browser journey proves the exact Gateway request for all eight
+governed reasons, keyboard selection, and compact 820-pixel action-form reflow; canonical runtime
+proof follows exact-main merge. The Opportunities and Ideas guide and
 repository context change because the business workflow and source contract changed, so wiki
 publication is required after merge. No authentication, identity-provider, ranking, learning,
 proposal, approval, suppression, conversion, or policy capability is added.
