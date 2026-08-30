@@ -51,10 +51,6 @@ export const NOT_USEFUL_REASON_OPTIONS: readonly AdvisorIdeaFeedbackReasonOption
     },
   ];
 
-const notUsefulReasons = new Set<AdvisorIdeaFeedbackReason>(
-  NOT_USEFUL_REASON_OPTIONS.map(({ value }) => value),
-);
-
 const TIMEZONE_AWARE_TIMESTAMP = /(?:Z|[+-]\d{2}:\d{2})$/i;
 
 export function resolveAdvisorIdeaFeedbackReason(
@@ -64,7 +60,10 @@ export function resolveAdvisorIdeaFeedbackReason(
   if (outcome === "useful") {
     return USEFUL_REASON.value;
   }
-  return selectedReason && notUsefulReasons.has(selectedReason)
+  return (
+    selectedReason &&
+    NOT_USEFUL_REASON_OPTIONS.some(({ value }) => value === selectedReason)
+  )
     ? selectedReason
     : undefined;
 }
