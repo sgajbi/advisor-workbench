@@ -1,0 +1,196 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  buildIdeaPresentationReceiptDraft,
+  digestVisibleCandidateIds,
+  matchesIdeaPresentationReceiptEvidence,
+  readIdeaPresentationSource,
+  type IdeaPresentationReceiptDraft,
+  type IdeaPresentationReceiptResponse,
+} from "../../src/features/proposals/idea-presentation-receipt";
+import type {
+  AdvisorIdeaQueueItem,
+  AdvisorIdeaReviewQueueData,
+} from "../../src/features/proposals/types";
+
+const request: IdeaPresentationReceiptDraft = {
+  presentedAtUtc: "2026-08-31T10:15:00.000Z",
+  rankAtPresentation: 25,
+  visibleCandidateCount: 1,
+  queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+  queuePolicyVersion: "idea-deterministic-ranking-v1",
+  rankingPolicyVersion: "idle-liquidity-v1",
+  candidateMaterialVersion: 2,
+  candidateEvidenceVersion: 3,
+};
+
+function response(
+  overrides: Partial<IdeaPresentationReceiptResponse["receipt"]> = {},
+): IdeaPresentationReceiptResponse {
+  return {
+    receipt: {
+      ...request,
+      tenantId: "tenant-private-bank-sg",
+      receiptId: "receipt-idea-025",
+      candidateId: "idea-025",
+      schemaVersion: "lotus-idea.candidate-presentation-receipt.v1",
+      surface: "advisor_review_queue",
+      producer: "lotus-workbench",
+      ...overrides,
+    },
+    persistenceDecision: "accepted",
+    durableStorageBacked: true,
+  };
+}
+
+describe("Idea presentation receipt contract", () => {
+  it("reads exact source-owned rank, policies, and candidate versions", () => {
+    expect(
+      readIdeaPresentationSource(
+        { policyVersion: "queue-v4" },
+        {
+          rank: 25,
+          candidate: {
+            candidateId: "idea-025",
+            materialVersion: 2,
+            evidenceVersion: 3,
+            scorePolicyVersion: "ranking-v7",
+          },
+        },
+      ),
+    ).toEqual({
+      candidateId: "idea-025",
+      rank: 25,
+      queuePolicyVersion: "queue-v4",
+      rankingPolicyVersion: "ranking-v7",
+      candidateMaterialVersion: 2,
+      candidateEvidenceVersion: 3,
+    });
+  });
+
+  it.each([
+    [{}, { rank: 1, candidate: { candidateId: "idea-001" } }],
+    [
+      { policyVersion: "queue-v4" },
+      {
+        rank: 1,
+        candidate: {
+          candidateId: "idea-001",
+          materialVersion: 1,
+          evidenceVersion: 1,
+        },
+      },
+    ],
+    [
+      { policyVersion: "queue-v4" },
+      {
+        rank: true,
+        candidate: {
+          candidateId: "idea-001",
+          materialVersion: 1,
+          evidenceVersion: 1,
+          scorePolicyVersion: "ranking-v7",
+        },
+      },
+    ],
+  ])("rejects incomplete or coerced source evidence", (queue, item) => {
+    expect(
+      readIdeaPresentationSource(
+        queue as AdvisorIdeaReviewQueueData,
+        item as unknown as AdvisorIdeaQueueItem,
+      ),
+    ).toBeNull();
+  });
+
+  it("builds a rank-25 receipt for one genuinely visible candidate", async () => {
+    const draft = await buildIdeaPresentationReceiptDraft({
+      presentedAtUtc: request.presentedAtUtc,
+      source: {
+        candidateId: "idea-025",
+        rank: 25,
+        queuePolicyVersion: request.queuePolicyVersion,
+        rankingPolicyVersion: request.rankingPolicyVersion,
+        candidateMaterialVersion: 2,
+        candidateEvidenceVersion: 3,
+      },
+      visibleCandidateIds: ["idea-025"],
+    });
+
+    expect(draft).toMatchObject({
+      rankAtPresentation: 25,
+      visibleCandidateCount: 1,
+    });
+    expect(draft.queueSnapshotDigest).toMatch(/^sha256:[0-9a-f]{64}$/);
+  });
+
+  it("digests the exact ordered visible set", async () => {
+    const first = await digestVisibleCandidateIds(["idea-001", "idea-002"]);
+    const reordered = await digestVisibleCandidateIds(["idea-002", "idea-001"]);
+
+    expect(first).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(reordered).not.toBe(first);
+  });
+
+  it.each([
+    { candidateIds: [] },
+    { candidateIds: [""] },
+    { candidateIds: ["idea-001", "idea-001"] },
+    {
+      candidateIds: Array.from(
+        { length: 101 },
+        (_, index) => `idea-${index + 1}`,
+      ),
+    },
+  ])(
+    "rejects an invalid visible candidate set",
+    async ({ candidateIds }) => {
+      await expect(digestVisibleCandidateIds(candidateIds)).rejects.toThrow(
+        "Visible Idea candidate evidence is incomplete or inconsistent.",
+      );
+    },
+  );
+
+  it.each(["accepted", "replayed"])(
+    "accepts exact durable %s source evidence",
+    (persistenceDecision) => {
+      expect(
+        matchesIdeaPresentationReceiptEvidence({
+          candidateId: "idea-025",
+          request,
+          response: { ...response(), persistenceDecision },
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it.each([
+    ["candidateId", "idea-026"],
+    ["rankAtPresentation", 24],
+    ["visibleCandidateCount", 2],
+    ["queueSnapshotDigest", `sha256:${"b".repeat(64)}`],
+    ["queuePolicyVersion", "queue-v5"],
+    ["rankingPolicyVersion", "ranking-v8"],
+    ["candidateMaterialVersion", 4],
+    ["candidateEvidenceVersion", 5],
+    ["surface", "candidate_detail"],
+    ["producer", "lotus-gateway"],
+  ])("rejects mismatched persisted %s evidence", (field, value) => {
+    expect(
+      matchesIdeaPresentationReceiptEvidence({
+        candidateId: "idea-025",
+        request,
+        response: response({ [field]: value }),
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects success without durable source proof", () => {
+    expect(
+      matchesIdeaPresentationReceiptEvidence({
+        candidateId: "idea-025",
+        request,
+        response: { ...response(), durableStorageBacked: false },
+      }),
+    ).toBe(false);
+  });
+});
