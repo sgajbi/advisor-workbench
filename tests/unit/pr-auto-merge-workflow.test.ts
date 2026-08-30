@@ -47,12 +47,24 @@ describe("PR auto-merge workflow", () => {
     expect(dispatchWorkflow).toContain("github.event.pull_request.base.ref == 'main'");
     expect(dispatchWorkflow).toContain("permissions:");
     expect(dispatchWorkflow).toContain("actions: write");
-    expect(dispatchWorkflow).toContain("contents: read");
+    expect(dispatchWorkflow).toContain("contents: write");
     expect(dispatchWorkflow).toContain("gh workflow run main-releasability.yml");
-    expect(dispatchWorkflow).toContain("--ref main");
+    expect(dispatchWorkflow).toContain(
+      "MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}",
+    );
+    expect(dispatchWorkflow).toContain('dispatch_ref="main-releasability-${MERGE_COMMIT_SHA}"');
+    expect(dispatchWorkflow).toContain('-f expected_sha="$MERGE_COMMIT_SHA"');
 
     expect(mainReleasabilityWorkflow).toContain("concurrency:");
-    expect(mainReleasabilityWorkflow).toContain("group: ${{ github.workflow }}-${{ github.ref }}");
+    expect(mainReleasabilityWorkflow).toContain(
+      "group: ${{ github.workflow }}-${{ inputs.expected_sha || github.sha }}",
+    );
     expect(mainReleasabilityWorkflow).toContain("cancel-in-progress: true");
+    expect(mainReleasabilityWorkflow).toContain("expected_sha:");
+    expect(mainReleasabilityWorkflow).toContain('actual_sha="$(git rev-parse HEAD)"');
+    expect(mainReleasabilityWorkflow.split("concurrency:", 1)[0]).not.toContain("push:");
+    expect(mainReleasabilityWorkflow).toMatch(
+      /name: Main Releasability \/ Workflow Lint\r?\n    needs: \[exact-revision-assertion\]/,
+    );
   });
 });

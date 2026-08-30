@@ -1022,8 +1022,12 @@ Use these commands as the primary local contract:
 
 Auto-merge is queued by rebase through `LOTUS_AUTOMERGE_TOKEN`, not the default `GITHUB_TOKEN`, so
 the resulting main update is not suppressed from downstream releasability automation. Merged PRs
-dispatch `main-releasability.yml` for exact-main evidence, with main-branch concurrency preventing
-ambiguous duplicate push/dispatch runs.
+create or verify an immutable `main-releasability-<merge_sha>` tag and dispatch
+`main-releasability.yml` with `expected_sha` plus the originating PR number. Main Releasability has
+no automatic `push` trigger; it rejects a different checkout before Workflow Lint and the complete
+quality chain can start. Concurrency is keyed by the expected merge SHA (falling back to
+`github.sha` only for manual operator dispatch), so retries for one revision cannot cancel or be
+confused with evidence for another.
 
 Important validation expectations:
 
