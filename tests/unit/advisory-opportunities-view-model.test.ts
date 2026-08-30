@@ -68,7 +68,7 @@ describe("buildAdvisoryOpportunitiesModel", () => {
     expect(model.recommendedAction).toMatch(/No Idea-owned candidates/);
   });
 
-  it("keeps an addressable source candidate inside the bounded worklist", () => {
+  it("keeps the complete source queue available through the virtualized worklist", () => {
     const items = Array.from({ length: 13 }, (_, index) => ({
       rank: index + 1,
       candidate: {
@@ -84,14 +84,14 @@ describe("buildAdvisoryOpportunitiesModel", () => {
       selectedCandidateId,
     });
 
-    expect(model.rows).toHaveLength(12);
+    expect(model.rows).toHaveLength(13);
     expect(model.rows.at(-1)?.candidateId).toBe(selectedCandidateId);
     expect(
       model.rows.filter((row) => row.candidateId === selectedCandidateId),
     ).toHaveLength(1);
     expect(
       model.rows.some((row) => row.candidateId === "idea_high_cash_012"),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("does not synthesize a selected candidate absent from the source queue", () => {

@@ -32,7 +32,6 @@ export type AdvisoryOpportunitiesModel = {
 export function buildAdvisoryOpportunitiesModel({
   portfolioId,
   queue,
-  selectedCandidateId,
 }: {
   portfolioId: string;
   queue?: AdvisorIdeaReviewQueueData | null;
@@ -41,10 +40,7 @@ export function buildAdvisoryOpportunitiesModel({
   const candidateItems = (queue?.items ?? []).filter(
     (item) => item.candidate?.candidateId,
   );
-  const rows = selectVisibleOpportunityItems(
-    candidateItems,
-    selectedCandidateId,
-  ).map((item) => buildOpportunityRow(portfolioId, item));
+  const rows = candidateItems.map((item) => buildOpportunityRow(portfolioId, item));
 
   return {
     portfolioId,
@@ -80,33 +76,11 @@ function buildOpportunityRow(
     reviewPosture: formatCode(candidate.reviewPosture ?? "review_posture_pending"),
     sourceSignals: sourceSignals.length > 0 ? sourceSignals.join(", ") : "Source signal pending",
     reasonCodes: reasonCodes.length > 0 ? reasonCodes.map(formatCode).join(", ") : "Reason pending",
-    nextAction: "Open source-safe candidate detail through Gateway.",
+    nextAction: "Review the evidence and record the next advisory decision.",
     href:
       `/recommendations?mode=opportunities&portfolioId=${encodeURIComponent(portfolioId)}` +
       `&candidateId=${encodeURIComponent(candidateId)}`,
   };
-}
-
-function selectVisibleOpportunityItems(
-  items: AdvisorIdeaQueueItem[],
-  selectedCandidateId: string | undefined,
-): AdvisorIdeaQueueItem[] {
-  const visibleItems = items.slice(0, 12);
-  if (
-    !selectedCandidateId ||
-    visibleItems.some(
-      (item) => item.candidate?.candidateId === selectedCandidateId,
-    )
-  ) {
-    return visibleItems;
-  }
-
-  const selectedItem = items.find(
-    (item) => item.candidate?.candidateId === selectedCandidateId,
-  );
-  return selectedItem
-    ? [...visibleItems.slice(0, 11), selectedItem]
-    : visibleItems;
 }
 
 function formatCandidateTitle(family: string | undefined, candidateId: string): string {
