@@ -47,7 +47,7 @@ inspection alone, are the regression gate.
 - runtime, BFF, source-authority, dependency, font, product-copy, E2E registration, CSS,
   architecture, and screen-documentation fitness functions passed;
 - ESLint and TypeScript passed;
-- 448 test files / 4,288 tests passed;
+- 448 test files / 4,289 tests passed on the corrected review head;
 - 94.16% statements and lines, 86.38% branches, and 93.6% functions;
 - optimized 25-route production build and portfolio-record bundle budgets passed.
 
