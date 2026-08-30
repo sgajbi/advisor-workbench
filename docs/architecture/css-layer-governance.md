@@ -94,6 +94,16 @@ than migrated. The resulting exact ratchets are 98 lines and 1,940 normalized by
 `legacy-global.css`. The retired families are forbidden from returning; future product work must
 use the active Workbench container and source-backed screen architecture.
 
+Issue #958 applied consumer-first deletion to the superseded DPM wave command-centre presentation.
+The current Rebalance workspace already uses the shared `SectionBlock`/`Panel` and
+`AnalyticsTable` primitives plus the active `rebalance-*` composition, while 13 of the 14
+`dpm-wave-command-center-*` class names had no production consumer. The remaining panel class
+duplicated presentation already owned by those primitives and its header selectors could not match
+the current `SectionHeader` markup. All 38 escape arms and the obsolete class emission were removed,
+lowering the exact `manage-workspace.module.css` baseline from 660 to 622. The retired prefix is
+forbidden from returning. Future Rebalance presentation must extend the owning primitive or active
+feature composition; it must not recreate a compatibility selector family.
+
 ## Ratchet gate
 
 `npm run lint` and `make lint` run `npm run lint:css-global` before the repository ESLint gate.

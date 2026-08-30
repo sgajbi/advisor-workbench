@@ -323,6 +323,11 @@ Current repository posture:
     zero. Manage Review Evidence
     rail presentation belongs to `manage-evidence-rail.module.css`; do not restore its retired
     global class contract inside `manage-workspace.module.css`.
+    The Rebalance workspace is owned by the shared `SectionBlock`/`Panel` and `AnalyticsTable`
+    primitives plus its active `rebalance-*` composition. The superseded
+    `dpm-wave-command-center-*` selector family has no presentation authority and is forbidden from
+    returning; do not introduce a compatibility module when an existing primitive already owns the
+    required shell or table behavior.
     `PortfolioScreenRail` owns its presentation in a colocated CSS Module; route shells own only its
     placement and must not reintroduce global or page-scoped rail color and spacing repairs.
     `WorkspaceMenuNav` owns its disclosure, list, active, unavailable, and compact presentation in
