@@ -329,6 +329,30 @@ describe("proposal api", () => {
         data: { items: [], next_cursor: 2 },
       },
     },
+    {
+      label: "empty continuation cursor",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: { items: [], next_cursor: "" },
+      },
+    },
+    {
+      label: "control-containing continuation cursor",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: { items: [], next_cursor: "window-2\u0000" },
+      },
+    },
+    {
+      label: "unbounded continuation cursor",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: { items: [], next_cursor: "x".repeat(2_049) },
+      },
+    },
   ])(
     "rejects $label instead of confirming an empty worklist",
     async ({ envelope }) => {
