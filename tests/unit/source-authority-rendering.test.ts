@@ -71,10 +71,16 @@ const RISK_RENDER_CASES = [
   },
 ] as const;
 
-const RENDER_PROOF_CASES_BY_CONTRACT = {
-  "advisor-book-portfolios": ADVISOR_BOOK_RENDER_CASES,
-  "risk-mandate-comparison": RISK_RENDER_CASES,
-} as const;
+type RenderProofCase = Readonly<{
+  identity: string;
+  state: string;
+}>;
+
+type ExecutableRenderProof = Readonly<{
+  contractId: string;
+  cases: readonly RenderProofCase[];
+  renderCase(testCase: RenderProofCase): Promise<unknown>;
+}>;
 
 function advisorBookResponse(
   portfolioId: string,
@@ -132,6 +138,17 @@ function extractDeclaredRenderedRows(contract: SourceAuthorityContract) {
   }));
 }
 
+async function renderAdvisorBookCase({ identity, state }: RenderProofCase) {
+  if (state !== "ACTIVE" && state !== "CLOSED") {
+    throw new Error(`Unsupported Advisor Book proof state ${state}.`);
+  }
+  const response = advisorBookResponse(identity, state);
+  getAdvisorBookMock.mockResolvedValue(response);
+  render(createElement(AdvisorBookWorkspace));
+  await screen.findByRole("table", { name: "Portfolios in my book" });
+  return response;
+}
+
 function riskPayload(
   identity: string,
   state: "breach" | "measure_unavailable",
@@ -160,6 +177,28 @@ function renderRiskMandateComparison(payload: ReturnType<typeof riskPayload>) {
   );
 }
 
+async function renderRiskCase({ identity, state }: RenderProofCase) {
+  if (state !== "breach" && state !== "measure_unavailable") {
+    throw new Error(`Unsupported Risk proof state ${state}.`);
+  }
+  const payload = riskPayload(identity, state);
+  renderRiskMandateComparison(payload);
+  return payload;
+}
+
+const EXECUTABLE_RENDER_PROOFS = [
+  {
+    contractId: "advisor-book-portfolios",
+    cases: ADVISOR_BOOK_RENDER_CASES,
+    renderCase: renderAdvisorBookCase,
+  },
+  {
+    contractId: "risk-mandate-comparison",
+    cases: RISK_RENDER_CASES,
+    renderCase: renderRiskCase,
+  },
+] as const satisfies readonly ExecutableRenderProof[];
+
 describe("source-authority production mapping", () => {
   beforeEach(() => {
     getAdvisorBookMock.mockReset();
@@ -168,47 +207,32 @@ describe("source-authority production mapping", () => {
   it("registers identity-and-state render cases for every enrolled contract", () => {
     const contractIds = SOURCE_AUTHORITY_CONTRACTS.map((contract) => contract.id).sort();
     const proofIds = [...SOURCE_AUTHORITY_RENDER_PROOF_IDS].sort();
-    const exercisedIds = Object.keys(RENDER_PROOF_CASES_BY_CONTRACT).sort();
+    const executableIds = EXECUTABLE_RENDER_PROOFS.map((proof) => proof.contractId).sort();
 
     expect(proofIds).toEqual(contractIds);
-    expect(exercisedIds).toEqual(contractIds);
-    for (const cases of Object.values(RENDER_PROOF_CASES_BY_CONTRACT)) {
-      expect(new Set(cases.map((entry) => entry.identity)).size).toBeGreaterThan(1);
-      expect(new Set(cases.map((entry) => entry.state)).size).toBeGreaterThan(1);
+    expect(executableIds).toEqual(contractIds);
+    for (const proof of EXECUTABLE_RENDER_PROOFS) {
+      expect(new Set(proof.cases.map((entry) => entry.identity)).size).toBeGreaterThan(1);
+      expect(new Set(proof.cases.map((entry) => entry.state)).size).toBeGreaterThan(1);
     }
   });
 
-  it.each(ADVISOR_BOOK_RENDER_CASES)(
-    "preserves Advisor Book identity $identity and lifecycle state $state through the rendered workspace",
-    async ({ identity, state }) => {
-      const contract = sourceContract("advisor-book-portfolios");
-      const response = advisorBookResponse(identity, state);
-      getAdvisorBookMock.mockResolvedValue(response);
-      render(createElement(AdvisorBookWorkspace));
-      await screen.findByRole("table", { name: "Portfolios in my book" });
-      expect(
-        assertExactSourceRenderProof({
-          screen: "Advisor Book",
-          expectedRows: contract.buildExpectedRows(response),
-          renderedRows: extractDeclaredRenderedRows(contract),
-        }),
-      ).toHaveLength(1);
-    },
-  );
-
-  it.each(RISK_RENDER_CASES)(
-    "preserves Risk identity $identity and constraint state $state through the rendered comparison",
-    ({ identity, state }) => {
-      const contract = sourceContract("risk-mandate-comparison");
-      const payload = riskPayload(identity, state);
-      renderRiskMandateComparison(payload);
-      expect(
-        assertExactSourceRenderProof({
-          screen: "Risk review",
-          expectedRows: contract.buildExpectedRows(payload),
-          renderedRows: extractDeclaredRenderedRows(contract),
-        }),
-      ).toHaveLength(4);
-    },
-  );
+  for (const proof of EXECUTABLE_RENDER_PROOFS) {
+    const testCases: RenderProofCase[] = [...proof.cases];
+    it.each(testCases)(
+      `preserves ${proof.contractId} source identity $identity and state $state through its rendered component`,
+      async (testCase: RenderProofCase) => {
+        const contract = sourceContract(proof.contractId);
+        const sourcePayload = await proof.renderCase(testCase);
+        const expectedRows = contract.buildExpectedRows(sourcePayload);
+        expect(
+          assertExactSourceRenderProof({
+            screen: contract.screen,
+            expectedRows,
+            renderedRows: extractDeclaredRenderedRows(contract),
+          }),
+        ).toHaveLength(expectedRows.length);
+      },
+    );
+  }
 });
