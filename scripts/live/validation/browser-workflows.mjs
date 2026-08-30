@@ -2803,10 +2803,7 @@ export async function validateDpmWaveCommandCenterPanel(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=waves`, {
     timeout: timeoutMs,
   });
-  const wavePanel = workbenchPanelByClass(
-    page,
-    "dpm-wave-command-center-panel",
-  );
+  const wavePanel = page.locator("#rebalance-workspace");
   await expect(
     wavePanel.getByRole("heading", { name: "Rebalance", exact: true }),
   ).toBeVisible({

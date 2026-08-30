@@ -320,7 +320,10 @@ describe("DpmWaveCommandCenterPanel", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Rebalance" })).toBeInTheDocument();
+    const workspace = screen.getByRole("heading", { name: "Rebalance" }).closest("article");
+    expect(workspace).toHaveAttribute("id", "rebalance-workspace");
+    expect(workspace).toHaveClass("rebalance-workspace");
+    expect(workspace).not.toHaveClass("dpm-wave-command-center-panel");
     expect(screen.getByText("Proposed rebalance, advisor review, and approval readiness.")).toBeInTheDocument();
     expect(screen.getByLabelText("Rebalance source context")).toHaveTextContent(
       "Discretionary Global BalancedSGDAs of 03 May 2026Evidence not requested",
