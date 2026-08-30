@@ -34,5 +34,8 @@ dispatch. If `LOTUS_AUTOMERGE_TOKEN` is not configured, the helper emits a warni
 ownership to an authorized human or release actor.
 
 After a PR merges to `main`, `.github/workflows/merged-pr-main-releasability.yml` dispatches
-`main-releasability.yml` for exact-main evidence. The main releasability workflow uses the
-repository-wide main-branch concurrency group to avoid ambiguous duplicate push/dispatch evidence.
+`main-releasability.yml` from a created-or-verified immutable
+`main-releasability-<merge_sha>` tag, passing the expected merge SHA and originating PR number. The
+gate has no automatic `push` trigger and rejects a different checkout before Workflow Lint and the
+quality chain start. Concurrency is revision-aware: it keys on the expected merge SHA, with
+`github.sha` used only when an operator dispatches the gate without an expected SHA.

@@ -31,8 +31,11 @@ PR auto-merge uses the repository `LOTUS_AUTOMERGE_TOKEN` secret for rebase auto
 resulting main update is not suppressed as a default `GITHUB_TOKEN` push. When the secret is absent,
 the workflow records a warning and skips queueing auto-merge instead of making a false readiness
 claim. A merged-PR dispatcher triggers `main-releasability.yml` for exact-main evidence, and the
-main releasability workflow deduplicates main-branch push and dispatch events through its
-concurrency group.
+dispatcher creates or verifies an immutable `main-releasability-<merge_sha>` tag before supplying
+`expected_sha` and the originating PR number. Main Releasability has no automatic `push` trigger:
+it rejects a different checkout before the remaining gate chain starts. Its concurrency key uses
+the expected merge SHA (or `github.sha` for manual operator dispatch), preventing one revision's
+retry from cancelling or masquerading as another revision's evidence.
 
 ## Local command mapping
 
