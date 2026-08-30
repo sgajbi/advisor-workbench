@@ -285,7 +285,7 @@ stage alone.
 
 ### Current-product and professional-standard research
 
-Research was reviewed on 2026-08-21 from official sources:
+Research was reviewed on 2026-08-21 and refreshed on 2026-08-30 from official sources:
 
 1. [BlackRock Aladdin Wealth proposal generation](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth/proposal-generation)
    describes one identify, construct, deliver, and implement lifecycle with whole-portfolio,
@@ -295,9 +295,13 @@ Research was reviewed on 2026-08-21 from official sources:
    core banking.
 3. [Temenos Wealth Management](https://www.temenos.com/products/wealth-management/) joins
    profiling, risk, compliance, and performance in configurable front-office workflows.
-4. [W3C table guidance](https://www.w3.org/WAI/ARIA/apg/patterns/table/) and
-   [WCAG 2.2](https://www.w3.org/TR/WCAG22/) require native or complete composite semantics,
-   meaningful focus order, visible focus, status evidence, operable targets, and reflow.
+4. [W3C listbox guidance](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) and
+   [keyboard-interface guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
+   require a single roving tab stop, standard Arrow/Home/End movement, a clear distinction between
+   focus and selection, and predictable movement between composite worklist and decision region.
+5. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   emphasizes alerts, targeted advisor nudges, exception-based review, and connected proposal
+   lifecycle workflows rather than a generic metric dashboard.
 
 ### Adopted
 
@@ -305,16 +309,20 @@ Research was reviewed on 2026-08-21 from official sources:
   alongside it at wide desktop widths.
 - Keep source stage, version, recorded date, posture, and next action together; open Proposal Detail
   for approval and evidence verification rather than duplicating regulated actions.
-- Preserve bounded source-window wording and portfolio/lifecycle return context.
-- Stack worklist before selected detail in DOM and focus order for tablet, narrow, and zoomed use.
-- Reuse the shared Workbench record selector and feature-owned CSS instead of a queue-only UI stack.
+- Preserve bounded source-window wording plus portfolio, selected proposal, and lifecycle return
+  context in the URL.
+- Use Enter to move from a selected row into its decision evidence and Escape to restore focus to
+  that exact row; retain split composition while the component has enough capacity and stack in
+  the same DOM order when it does not.
+- Reuse the shared `WorkbenchWorklist` composition and its container-aware layout instead of a
+  queue-only UI stack.
 
 ### Rejected
 
 - Decorative proposal cards, optimistic stage timelines, or approval/readiness claims unsupported
   by the selected proposal's owning evidence.
 - Invented client, household, owner, priority, materiality, SLA, due-date, or whole-book facts.
-- A 920-pixel mobile table, partial ARIA data-grid behavior, query-owned proposal identity, or
+- A 920-pixel mobile table, nested actions inside listbox options, unadmitted query identity, or
   another global CSS expansion.
 
 ### Implementation and validation
@@ -326,6 +334,14 @@ metadata, keyboard selection, bounded windows, failure states, and source-owned 
 optimized production-browser proof covers 1440, 1280, 1024, 720, and 390 pixels with no horizontal
 overflow. Later Risk Impact, Discussion Pack, and Implementation evidence work remain separate
 screen-specific slices.
+
+Workbench issue #809 completes the shared-pattern adoption: Approval Queue consumes
+`WorkbenchWorklist`, proposal row presentation has one feature-owned mapping, URL selection is
+admitted only from the returned source window, Enter and Escape form a complete focus loop, and
+Proposal Detail return restores the admitted selected proposal. The shared composition uses two
+columns only when its business lane has sufficient capacity. Persistent navigation and context
+rails make the lane stack at 1280 pixels; after those rails reflow at 1024 pixels, the wider main
+lane supports the split again. Neither composition changes DOM or business order.
 
 ## Proposal Builder: evidence before persistent action
 

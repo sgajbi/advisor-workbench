@@ -29,9 +29,9 @@ Approval Queue helps an advisor answer four questions without opening every prop
    approval register, and active-version lineage agree?
 4. Which exception or next business action requires the full proposal record?
 
-At wide desktop widths the worklist and selected proposal remain visible together. The worklist
-stacks before the decision pane on tablet, narrow, and zoomed layouts so selection always precedes
-the evidence and action handoff in document and keyboard order.
+Where the working area can support both columns, the worklist and selected proposal remain visible
+together. The shared workspace stacks before the decision pane when its own container becomes too
+narrow, so shell width and zoom cannot reverse the evidence and action order.
 
 ## Who Uses This Screen
 
@@ -54,7 +54,8 @@ These roles describe business use, not authenticated production entitlement.
 2. Confirm the portfolio and current source-window posture in the page and workflow context.
 3. Review the visible **In view** and **Not execution-ready** measures. These are lifecycle-window
    orientation, not approval counts.
-4. Move through proposals with pointer or Up/Down/Home/End keys.
+4. Move through proposals with pointer or Up/Down/Home/End keys. Press Enter to move into the
+   selected decision evidence and Escape to return to that proposal in the worklist.
 5. Read the selected proposal's source stage, version, creator-record posture, recorded date,
    approval register, workflow evidence, active-version lineage, and next business action.
 6. Select **Open full proposal review** to inspect source-owned changes, impact, review gates,
@@ -67,8 +68,8 @@ These roles describe business use, not authenticated production entitlement.
 | Direction | Adjacent workspace | Context preserved |
 | --- | --- | --- |
 | Inbound | Advisor Book, Advisory Overview, or Proposal Builder | Selected portfolio |
-| Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, and Approval Queue origin |
-| Return | Approval Queue through **Return to Approval Queue** | Source proposal portfolio where available and Approval Queue mode |
+| Outbound | Proposal Detail through **Open proposal review** | Selected proposal, portfolio, URL-backed selection, and Approval Queue origin |
+| Return | Approval Queue through **Return to Approval Queue** | Source proposal portfolio, selected proposal, and Approval Queue mode |
 | Later lifecycle | Suitability, Risk and Impact, Discussion Pack, or [Implementation Status](Implementation-Status-Screen-Guide) | Portfolio only; each workspace must prove its own source-backed decision evidence |
 
 ## Implemented Capabilities
@@ -76,7 +77,11 @@ These roles describe business use, not authenticated production entitlement.
 - Reads proposal summaries only through the Workbench BFF and Gateway.
 - Keeps proposal count and attention posture explicitly scoped to the current source window.
 - Provides previous and next source-window navigation without claiming global completeness.
-- Shows a keyboard-operable single-record worklist with visible selected state.
+- Uses the shared `WorkbenchWorklist` composition with one keyboard-operable source list, one
+  selected decision region, stable accessibility relationships, and visible selected state.
+- Admits a URL `selectedRecordId` only when the exact proposal is present in the current Gateway
+  window. A stale or foreign identity falls back to the first source-ranked row and never triggers
+  selected-evidence reads for the absent record.
 - Presents source-supported proposal title, identity, lifecycle stage, active version,
   creator-record posture, recorded date, and bounded next action where supplied.
 - Loads detail, workflow, approval records, and lineage for the selected proposal only; it does not
@@ -95,8 +100,10 @@ These roles describe business use, not authenticated production entitlement.
 - Rejects a failed compound refresh before cache promotion; if access is revoked, cached approval
   records and selected-record facts are hidden from both the decision pane and persistent workflow
   rail, and the selected posture becomes restricted rather than source-current.
-- Keeps the selected decision pane beside the worklist at desktop and after it at compact widths.
-- Preserves portfolio and originating lifecycle mode when entering Proposal Detail.
+- Keeps the selected decision pane beside the worklist where its container supports the dense
+  two-column review, and after it in logical DOM order at compact widths.
+- Preserves portfolio, selected proposal, and originating lifecycle mode when entering Proposal
+  Detail and returning to the queue.
 - Uses the portfolio returned by Proposal Detail as the authority for the routine return path;
   route context does not replace source proposal identity.
 - Keeps approval and evidence actions out of the summary queue.
@@ -107,12 +114,12 @@ These roles describe business use, not authenticated production entitlement.
 
 | User decision or action | Required evidence or gate | Persisted business change |
 | --- | --- | --- |
-| Select a proposal | Proposal is present in the current source window | None; changes the visible decision context only |
+| Select a proposal | Proposal is present in the current source window | None; updates the URL-backed local decision context only |
 | Move to next or previous proposal window | Source supplies a cursor or a prior window is retained | None; reads another bounded Gateway window |
 | Build Proposal | Selected portfolio context | Opens Proposal Builder; nothing is approved or executed |
 | Refresh evidence | Selected worklist record plus the four Gateway-backed selected-evidence reads | None; replaces posture only after every refreshed source agrees |
 | Open full proposal review | Selected proposal identity and supported detail route | None; opens the full source-backed review record |
-| Return to Approval Queue | Source proposal portfolio where available, otherwise bounded route context | None; restores the originating queue route |
+| Return to Approval Queue | Source proposal portfolio where available, otherwise bounded route context | None; restores the originating queue route and admitted selected proposal |
 
 ## Information And Source Authority
 
@@ -122,7 +129,7 @@ These roles describe business use, not authenticated production entitlement.
 | Stage and bounded next action | Business copy derived from source lifecycle state; not maker-checker proof | Workbench presentation over the source state |
 | In-view and attention counts | Count only rows in the current source window | Workbench view model over Gateway rows |
 | More or earlier proposals | Shown only from source cursor and retained window history | Gateway cursor plus Workbench navigation history |
-| Selected proposal | Advisor's current browser selection within the returned window | Workbench interaction state; not a source mutation |
+| Selected proposal | Advisor's URL-backed selection, admitted only when present in the returned window | Workbench interaction state; not a source mutation |
 | Selected worklist record, detail, workflow, approvals, and active-version lineage | Portfolio, proposal, lifecycle state, and active version are reconciled as one maker-checker evidence set | Gateway over Advise list, detail, and evidence contracts |
 | Proposed changes, allocation impact, narrative, memo, and governed actions | Available only after opening Proposal Detail | Gateway over Advise detail, review, and evidence contracts |
 
@@ -149,10 +156,13 @@ whole-book count, or global sort authority. Workbench does not invent them.
 
 - The worklist is a labelled single-selection control with visible focus and selected state.
 - Up/Down keys move between proposals; Home and End move to the first and last enabled proposal.
-- Selection changes are announced without moving focus to the decision pane.
-- At wide desktop widths, worklist and selected decision are simultaneous.
-- At tablet, narrow, and 200%-zoom-equivalent widths, the decision pane follows the worklist in
-  logical DOM order and the page has no two-dimensional workflow scroll.
+- Arrow selection is announced without moving focus; Enter moves focus to the selected decision
+  region and Escape returns it to the same source row.
+- At 1440 pixels, available container capacity keeps worklist and decision simultaneous. The full
+  navigation and context rails narrow that lane enough to stack at 1280 pixels; after those rails
+  reflow at 1024 pixels, the main lane supports the split again. Narrower or 200%-zoom-equivalent
+  container widths place the decision after the worklist in logical DOM order, and the page has no
+  two-dimensional workflow scroll.
 - Refresh restores the initiating control only when the advisor has not moved elsewhere; late
   results from another selection are discarded.
 - The full-review and return links retain visible focus and an operable target.
@@ -183,9 +193,10 @@ The workflow direction was reviewed against official sources on 2026-08-21:
   client-book facts from core banking.
 - [Temenos Wealth Management](https://www.temenos.com/products/wealth-management/) describes
   structured front-office workflows joining profiling, risk, compliance, and performance.
-- [W3C table and grid guidance](https://www.w3.org/WAI/ARIA/apg/patterns/table/) and
-  [WCAG 2.2](https://www.w3.org/TR/WCAG22/) informed native semantics, managed selection, focus
-  order, status evidence, target size, and responsive reflow.
+- [W3C listbox guidance](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/),
+  [keyboard-interface guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/),
+  and [WCAG 2.2](https://www.w3.org/TR/WCAG22/) informed roving focus, separate focus and selected
+  state, predictable focus return, target size, and responsive reflow.
 
 These sources guide workflow principles only. Lotus retains its own contracts, design system,
 private-banking vocabulary, access boundaries, and validation evidence.
@@ -200,14 +211,15 @@ private-banking vocabulary, access boundaries, and validation evidence.
 - `tests/unit/use-source-refresh-action.test.tsx` proves source completion, compound-query failure,
   background refresh posture, and late-result fencing for the shared refresh lifecycle.
 - `tests/integration/proposal-lifecycle-workspace.test.tsx` proves selected-only reads, worklist
-  selection, keyboard focus, approval-register truth, stale-worklist and selected-source conflict,
-  restricted/failure states, refresh confirmation only after compound agreement, source-window
-  transitions, and shared-rail consistency.
+  selection, exact/stale URL identity admission, Enter/Escape focus continuity, approval-register
+  truth, stale-worklist and selected-source conflict, restricted/failure states, refresh
+  confirmation only after compound agreement, source-window transitions, and shared-rail
+  consistency.
 - `tests/integration/proposal-detail-view.test.tsx` proves routine return context uses the
   source-owned proposal portfolio rather than trusting the incoming query.
 - `tests/e2e/proposal-workflow-context.spec.ts` runs against an optimized production Workbench and
-  proves the split desktop desk, stacked compact flow, keyboard selection, context-preserving
-  handoff, zero horizontal overflow, and clean browser runtime.
+  proves the shared split/stacked composition, URL-backed selection, complete keyboard focus loop,
+  context-preserving handoff and return, zero horizontal overflow, and clean browser runtime.
 - Canonical runtime validation uses `PB_SG_GLOBAL_BAL_001`; direct browser proof does not promote
   the capability-disabled global Proposal workspace.
 - Use [Validation and CI](Validation-and-CI) for protected and exact-main evidence.
