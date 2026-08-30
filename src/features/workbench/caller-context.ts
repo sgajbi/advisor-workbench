@@ -129,12 +129,18 @@ const SUPPORTED_ADVISOR_BOOK_ROLES = new Set([
 const SUPPORTED_REPORTING_ROLES = ["client_advisor", "portfolio_manager"] as const;
 type IdeaAuthorityResolution =
   | { status: "not_applicable" }
-  | { status: "applied"; mode: "development_configured" }
+  | {
+      status: "applied";
+      mode: "development_configured";
+      bodyText?: string;
+    }
   | {
       status: "rejected";
       reason:
         | "authenticated_principal_required"
         | "development_authority_not_allowed"
+        | "invalid_idea_configuration"
+        | "invalid_idea_request"
         | "invalid_authority_mode"
         | "unsupported_idea_route";
     };
@@ -249,7 +255,7 @@ export function applyDefaultCallerContextHeaders(headers: Headers) {
 
 export function applyIdeaRouteCallerContextHeaders(
   headers: Headers,
-  request: { method: string; upstreamPath: string },
+  request: { method: string; upstreamPath: string; bodyText?: string },
 ): IdeaAuthorityResolution {
   if (!request.upstreamPath.startsWith("api/v1/ideas/")) {
     return { status: "not_applicable" };
@@ -283,11 +289,8 @@ export function applyIdeaRouteCallerContextHeaders(
       DEFAULT_IDEA_CALLER_CONTEXT.roles,
   );
   headers.set("X-Caller-Capabilities", capability);
-  headers.set(
-    "X-Caller-Tenant-Ids",
-    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.tenantIds]?.trim() ||
-      DEFAULT_IDEA_CALLER_CONTEXT.tenantIds,
-  );
+  const tenantIds = configuredIdeaCallerTenantIds();
+  headers.set("X-Caller-Tenant-Ids", tenantIds.join(","));
   headers.set(
     "X-Caller-Book-Ids",
     process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.bookIds]?.trim() ||
@@ -304,7 +307,61 @@ export function applyIdeaRouteCallerContextHeaders(
       DEFAULT_IDEA_CALLER_CONTEXT.clientIds,
   );
 
-  return { status: "applied", mode: authorityMode };
+  const preparedBody = prepareIdeaPresentationReceiptBody(request, tenantIds);
+  if (preparedBody.status === "rejected") {
+    return preparedBody;
+  }
+
+  return {
+    status: "applied",
+    mode: authorityMode,
+    bodyText: preparedBody.bodyText,
+  };
+}
+
+function configuredIdeaCallerTenantIds(): string[] {
+  const configured =
+    process.env[IDEA_CALLER_CONTEXT_ENV_OVERRIDES.tenantIds]?.trim() ||
+    DEFAULT_IDEA_CALLER_CONTEXT.tenantIds;
+  return [...new Set(configured.split(",").map((tenantId) => tenantId.trim()).filter(Boolean))];
+}
+
+function prepareIdeaPresentationReceiptBody(
+  request: { method: string; upstreamPath: string; bodyText?: string },
+  tenantIds: string[],
+):
+  | { status: "ready"; bodyText?: string }
+  | { status: "rejected"; reason: "invalid_idea_configuration" | "invalid_idea_request" } {
+  const isPresentationReceipt =
+    request.method === "POST" &&
+    /^api\/v1\/ideas\/candidates\/[^/]+\/presentation-receipts$/.test(
+      request.upstreamPath,
+    );
+  if (!isPresentationReceipt) {
+    return { status: "ready", bodyText: request.bodyText };
+  }
+  if (tenantIds.length !== 1) {
+    return { status: "rejected", reason: "invalid_idea_configuration" };
+  }
+  if (!request.bodyText) {
+    return { status: "rejected", reason: "invalid_idea_request" };
+  }
+  try {
+    const body = JSON.parse(request.bodyText) as unknown;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return { status: "rejected", reason: "invalid_idea_request" };
+    }
+    const requestFields = body as Record<string, unknown>;
+    if ("tenantId" in requestFields || "tenant_id" in requestFields) {
+      return { status: "rejected", reason: "invalid_idea_request" };
+    }
+    return {
+      status: "ready",
+      bodyText: JSON.stringify({ ...requestFields, tenantId: tenantIds[0] }),
+    };
+  } catch {
+    return { status: "rejected", reason: "invalid_idea_request" };
+  }
 }
 
 function configuredIdeaCallerSubject(): string {
@@ -508,9 +565,10 @@ function resolveIdeaRouteCapability({
     "review-actions": "idea.review.record",
     feedback: "idea.feedback.record",
     "conversion-intents": "idea.conversion.intent.record",
+    "presentation-receipts": "idea.presentation-receipt.record",
   } as const;
   const actionMatch = upstreamPath.match(
-    /^api\/v1\/ideas\/candidates\/[^/]+\/(review-actions|feedback|conversion-intents)$/,
+    /^api\/v1\/ideas\/candidates\/[^/]+\/(review-actions|feedback|conversion-intents|presentation-receipts)$/,
   );
   return method === "POST" && actionMatch
     ? actionCapability[actionMatch[1] as keyof typeof actionCapability]

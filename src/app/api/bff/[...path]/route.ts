@@ -20,7 +20,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const url = `${gatewayBaseUrl}/${upstreamPath}${search}`;
 
   const headers = buildGatewayBffRequestHeaders(request.headers);
-  const requestBody =
+  let requestBody =
     request.method === "GET" || request.method === "HEAD"
       ? undefined
       : await request.text();
@@ -38,28 +38,23 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const ideaAuthority = applyIdeaRouteCallerContextHeaders(headers, {
     method: request.method,
     upstreamPath,
+    bodyText: requestBody,
   });
   if (ideaAuthority.status === "rejected") {
+    const rejection = ideaAuthorityRejection(ideaAuthority.reason);
     return NextResponse.json(
       {
-        code:
-          ideaAuthority.reason === "authenticated_principal_required"
-            ? "idea_authenticated_principal_required"
-            : ideaAuthority.reason === "unsupported_idea_route"
-              ? "idea_route_not_supported"
-            : "idea_authority_configuration_rejected",
+        code: rejection.code,
         status: "rejected",
       },
       {
-        status:
-          ideaAuthority.reason === "authenticated_principal_required"
-            ? 401
-            : ideaAuthority.reason === "unsupported_idea_route"
-              ? 404
-              : 500,
+        status: rejection.status,
         headers: { "cache-control": "no-store" },
       },
     );
+  }
+  if (ideaAuthority.status === "applied") {
+    requestBody = ideaAuthority.bodyText;
   }
   const advisorCockpitAuthority = applyAdvisorCockpitCallerContextHeaders(headers, {
     method: request.method,
@@ -135,6 +130,26 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     status: response.status,
     headers: responseHeaders,
   });
+}
+
+function ideaAuthorityRejection(
+  reason: Exclude<
+    ReturnType<typeof applyIdeaRouteCallerContextHeaders>,
+    { status: "not_applicable" } | { status: "applied" }
+  >["reason"],
+): { code: string; status: number } {
+  switch (reason) {
+    case "authenticated_principal_required":
+      return { code: "idea_authenticated_principal_required", status: 401 };
+    case "unsupported_idea_route":
+      return { code: "idea_route_not_supported", status: 404 };
+    case "invalid_idea_request":
+      return { code: "idea_request_invalid", status: 422 };
+    case "development_authority_not_allowed":
+    case "invalid_authority_mode":
+    case "invalid_idea_configuration":
+      return { code: "idea_authority_configuration_rejected", status: 500 };
+  }
 }
 
 function advisorCockpitAuthorityRejection(
@@ -251,4 +266,3 @@ export async function DELETE(
 ) {
   return proxy(request, await params);
 }
-

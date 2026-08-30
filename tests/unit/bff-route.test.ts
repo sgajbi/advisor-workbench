@@ -508,6 +508,131 @@ describe("BFF proxy route", () => {
     },
   );
 
+  it("injects the single entitled tenant into an exact Idea presentation receipt", async () => {
+    process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-private-bank-sg";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"persistenceDecision":"accepted"}', { status: 201 }));
+    const body = {
+      presentedAtUtc: "2026-08-31T10:15:00Z",
+      rankAtPresentation: 25,
+      visibleCandidateCount: 1,
+      queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+      queuePolicyVersion: "idea-deterministic-ranking-v1",
+      rankingPolicyVersion: "idle-liquidity-v1",
+      candidateMaterialVersion: 2,
+      candidateEvidenceVersion: 3,
+    };
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_025/presentation-receipts",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": "presentation-idea-025",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea_025",
+          "presentation-receipts",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    const upstreamRequest = fetchMock.mock.calls[0][1];
+    const upstreamHeaders = upstreamRequest?.headers as Headers;
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "idea.presentation-receipt.record",
+    );
+    expect(upstreamHeaders.get("X-Caller-Tenant-Ids")).toBe(
+      "tenant-private-bank-sg",
+    );
+    expect(upstreamHeaders.get("Idempotency-Key")).toBe(
+      "presentation-idea-025",
+    );
+    expect(JSON.parse(String(upstreamRequest?.body))).toEqual({
+      ...body,
+      tenantId: "tenant-private-bank-sg",
+    });
+  });
+
+  it.each(["tenantId", "tenant_id"])(
+    "rejects browser-owned Idea presentation authority in %s",
+    async (tenantField) => {
+      const fetchMock = vi.mocked(fetch);
+      const request = new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_001/presentation-receipts",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ [tenantField]: "spoofed-tenant" }),
+        },
+      );
+
+      const response = await POST(request, {
+        params: Promise.resolve({
+          path: [
+            "api",
+            "v1",
+            "ideas",
+            "candidates",
+            "idea_001",
+            "presentation-receipts",
+          ],
+        }),
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toEqual({
+        code: "idea_request_invalid",
+        status: "rejected",
+      });
+    },
+  );
+
+  it("fails closed when presentation authority resolves more than one tenant", async () => {
+    process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-a,tenant-b";
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_001/presentation-receipts",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea_001",
+          "presentation-receipts",
+        ],
+      }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_authority_configuration_rejected",
+      status: "rejected",
+    });
+  });
+
   it("requires an authenticated Idea principal outside development before proxying", async () => {
     process.env.LOTUS_ENVIRONMENT = "uat";
     const fetchMock = vi.mocked(fetch);
