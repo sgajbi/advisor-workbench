@@ -186,7 +186,7 @@ export default function ProposalLifecycleWorkspace({
         mode,
         proposals,
         hasMoreResults: sourceHasMoreProposalResults,
-        hasPreviousResults: sourceWindow.hasPrevious,
+        hasPreviousResults: sourceWindow.hasEarlierWindows,
         sourceWindow: {
           cursor: sourceWindow.cursor,
           windowNumber: sourceWindow.windowNumber,
@@ -198,7 +198,7 @@ export default function ProposalLifecycleWorkspace({
       proposals,
       reviewContext,
       sourceHasMoreProposalResults,
-      sourceWindow.hasPrevious,
+      sourceWindow.hasEarlierWindows,
       sourceWindow.cursor,
       sourceWindow.windowNumber,
     ],
@@ -839,7 +839,7 @@ export default function ProposalLifecycleWorkspace({
           (implementationStatusPosture.hasRefreshFailure ||
             implementationCompoundRefreshState === "failed")),
       hasMoreResults: Boolean(data?.next_cursor),
-      hasPreviousResults: sourceWindow.hasPrevious,
+      hasPreviousResults: sourceWindow.hasEarlierWindows,
       windowNumber: sourceWindow.windowNumber,
       totalCount: model.totalCount,
       attentionCount: model.attentionCount,
@@ -906,7 +906,7 @@ export default function ProposalLifecycleWorkspace({
     selectedDiscussionWorkflowContext,
     selectedRiskProposal,
     selectedPolicyWorkflowContext,
-    sourceWindow.hasPrevious,
+    sourceWindow.hasEarlierWindows,
     sourceWindow.windowNumber,
   ]);
   usePublishProposalWorkflowContext(workflowContextModel);
@@ -927,7 +927,7 @@ export default function ProposalLifecycleWorkspace({
         mode,
         proposals: refreshedWindow.items,
         hasMoreResults: Boolean(refreshedWindow.next_cursor),
-        hasPreviousResults: sourceWindow.hasPrevious,
+        hasPreviousResults: sourceWindow.hasEarlierWindows,
       });
       const refreshedProposal = refreshedModel.rows.find(
         (row) => row.proposalId === selectedImplementationProposal?.proposalId,
@@ -979,7 +979,7 @@ export default function ProposalLifecycleWorkspace({
         mode,
         proposals: refreshedWindow.items,
         hasMoreResults: Boolean(refreshedWindow.next_cursor),
-        hasPreviousResults: sourceWindow.hasPrevious,
+        hasPreviousResults: sourceWindow.hasEarlierWindows,
       });
       const refreshedProposal = refreshedModel.rows.find(
         (row) => row.proposalId === selectedDiscussionProposal?.proposalId,
