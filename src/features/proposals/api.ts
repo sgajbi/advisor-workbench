@@ -307,7 +307,14 @@ export async function listProposals(
     const body = await response.text();
     throw new Error(`Proposal list failed (${response.status}): ${body}`);
   }
-  return parseProposalListEnvelope(await response.json());
+  const proposalList = parseProposalListEnvelope(await response.json());
+  if (
+    filters.cursor
+    && proposalList.next_cursor === filters.cursor
+  ) {
+    throw new Error("Proposal list response was incomplete.");
+  }
+  return proposalList;
 }
 
 export async function getAdvisoryPolicyReviewQueue({
