@@ -662,7 +662,17 @@ Current repository posture:
     completes only after source-owned detail and queue refresh; persistence, evidence, and refresh
     failures remain distinct. The canonical browser validator proves those states through stable
     action test ids and `recorded-and-refreshed`, with product copy as supporting evidence rather
-    than the sole assertion. Workbench must not synthesize
+    than the sole assertion. Candidate presentation must not be inferred from queue fetch,
+    component mount, AG Grid row-buffer membership, or a
+    hidden document. The Opportunities worklist keeps the complete returned source window in one
+    bounded virtualized grid and observes candidate content against that grid's scroll viewport.
+    A presentation receipt copies Idea-owned global rank, queue/ranking policies, and candidate
+    material/evidence versions; Workbench contributes only the UTC observation time, exact ordered
+    visible-set count and digest. The browser cannot author tenant scope. The BFF requires exactly
+    one development-entitled Idea tenant, rejects browser tenant fields, and supplies scope before
+    Gateway. Receipt success requires accepted/replayed durable evidence matching the complete
+    frozen request. Retry preserves the same payload and idempotency key; failure stays visible but
+    does not block candidate review or imply a viewing confirmation. Workbench must not synthesize
     review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
     opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
     proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a

@@ -7345,3 +7345,81 @@ proof follows exact-main merge. The Opportunities and Ideas guide and
 repository context change because the business workflow and source contract changed, so wiki
 publication is required after merge. No authentication, identity-provider, ranking, learning,
 proposal, approval, suppression, conversion, or policy capability is added.
+
+## 2026-08-31 — Adviser opportunity presentation evidence (#954)
+
+### Business workflow question
+
+How should an adviser process a potentially larger source-ranked opportunity queue without an
+arbitrary display limit, while Lotus records only candidates genuinely presented for review and
+never mistakes fetch, filtering, render buffering, or a hidden browser tab for adviser attention?
+
+### Evidence consulted
+
+1. [SAP Fiori Worklist Floorplan](https://experience.sap.com/fiori-design-web/v1-50/work-list/)
+   makes processing items the worklist's primary purpose and supports table filtering plus direct
+   navigation to the related business object.
+2. [AG Grid DOM Virtualisation](https://www.ag-grid.com/javascript-data-grid/dom-virtualisation/)
+   documents viewport-only row rendering and the additional row buffer; buffer membership is
+   therefore render optimization, not evidence that a user saw a row.
+3. [AG Grid Accessibility](https://www.ag-grid.com/javascript-data-grid/accessibility/) recommends
+   deterministic DOM order and disabling row animation, and explains the accessibility/performance
+   trade-off between row virtualization, pagination, and rendering every row.
+4. [WAI-ARIA Grid Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) defines an interactive
+   data grid as a composite keyboard surface with one page-tab stop and directional cell
+   navigation; interactive cell content must remain programmatically discoverable.
+5. [MDN Intersection Observer API](https://developer.mozilla.org/docs/Web/API/Intersection_Observer_API)
+   and [Page Visibility API](https://developer.mozilla.org/docs/Web/API/Page_Visibility_API)
+   distinguish asynchronous root intersection from document visibility. Registration or an
+   initial non-intersecting callback is not a presentation event.
+6. Exact Idea main `4c8c63a5` publishes independent positive global rank and visible-count
+   semantics. Gateway #692 owns transparent transport of those facts; Workbench owns only the
+   viewing interaction and presentation.
+
+### Adopted decisions
+
+1. Replace the first-12 truncation and plain table with one bounded, filterable AG Grid over the
+   complete returned source window. Keep five decision-oriented columns: opportunity, queue
+   position, review priority, decision evidence, and next decision.
+2. Preserve Idea's global rank even when filtering leaves one visible candidate. Workbench never
+   renumbers the queue or inflates visible count; rank 25 with visible count 1 is valid.
+3. Observe exact candidate content against the bounded grid viewport at 50% intersection and only
+   while the document is visible. A small render buffer remains a scrolling optimization and is
+   explicitly excluded from presentation evidence.
+4. Coalesce the currently visible set into visual order, hash the exact identity array once, and
+   freeze each candidate's UTC observation, source versions, payload, and idempotency key across
+   retry.
+5. Keep the grid named, deterministic in DOM order, non-animated, and keyboard navigable. Render
+   all five columns in the accessibility tree while retaining row virtualization for the bounded
+   processing window.
+6. Show a compact, non-blocking warning when evidence cannot be recorded. Candidate review remains
+   available, success is not implied, and retry resubmits the unchanged observation.
+7. Keep tenant authority at the BFF. Browser-owned tenant fields fail before Gateway; Workbench
+   accepts persistence only when the returned durable receipt matches every frozen observation
+   field.
+
+### Rejected decisions
+
+1. Treating queue fetch, component mount, AG Grid rendered-row APIs, row-buffer membership, focus,
+   or scrolling intent as presentation.
+2. Keeping the 12-row cut-off, rendering a long card stack, or creating a separate summary tile for
+   facts already present in the worklist.
+3. Browser-owned rank, policy, candidate versions, tenant, effectiveness result, or reassuring
+   success after a transport-only response.
+4. One observer per row, a generic analytics dependency, background-tab recording, or a changed
+   payload under the same idempotency key.
+5. Pagination for the current bounded source window because it adds processing clicks and divides
+   one ranked queue. Revisit this trade-off if assistive-technology testing shows that virtual row
+   discovery is inadequate; do not disable accessibility checks to preserve virtualization.
+
+### Validation and publication decision
+
+Workbench #954 owns this bounded workflow and authority correction. Unit tests cover strict source
+facts, ordered digest, exact accepted/replayed evidence, hidden/off-screen/rerender behavior, and
+unchanged retry. The focused production-browser test uses 25 candidates to prove that render-buffer
+rows do not emit, filtering to global rank 25 records rank 25 with visible count 1, browser tenant
+fields remain absent, and a failed write retries with the identical body and idempotency key.
+Canonical `PB_SG_GLOBAL_BAL_001` proof follows Gateway #692 exact-main merge. The Opportunities and
+Ideas screen guide and repository context change, so repo-local wiki publication is required after
+merge. No ranking, suitability, proposal, approval, execution, authentication, or effectiveness
+authority is added to Workbench.
