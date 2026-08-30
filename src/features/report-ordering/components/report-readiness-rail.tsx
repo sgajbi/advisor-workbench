@@ -98,7 +98,7 @@ export function ReportReadinessRail({
             <ActionButton
               priority="secondary"
               onClick={onReview}
-              disabled={!model?.canSubmit || submissionState === "submitting"}
+              disabled={!model?.canReview || submissionState === "submitting"}
             >
               {preflightReviewed
                 ? "Reviewed"

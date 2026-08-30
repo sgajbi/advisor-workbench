@@ -17,10 +17,18 @@ export type ReportOrderingConfiguration = {
   modeId: string;
   asOfDate: string;
   reportingCurrency: string;
-  benchmarkCode: string;
   allocationDimensions: string[];
+  configurationValues: Record<string, string>;
   selectedSections: string[];
   outputFormat: "json" | "pdf";
+};
+
+export type ReportOrderingSourceContext = {
+  asOfDate: string;
+  reportingCurrency: string;
+  earliestReportDate: string;
+  latestReportDate: string;
+  reportingCurrencies: string[];
 };
 
 export type ReportOrderingScopeMode = "single_portfolio" | "explicit_portfolio_batch";
@@ -57,7 +65,16 @@ export type ReportOrderingViewModel = {
   }>;
   audienceLabel: string;
   clientReleaseLabel: string;
+  sourceContext: ReportOrderingSourceContext;
   canSubmit: boolean;
+  canReview: boolean;
+  formIssues: string[];
+};
+
+export type ReportOrderingFieldErrors = {
+  asOfDate?: string;
+  reportingCurrency?: string;
+  configurationValues: Record<string, string>;
 };
 
 export type ReportRequestRow = {
@@ -73,7 +90,7 @@ export type ReportRequestRow = {
 
 export function createReportOrderingConfiguration(
   response: ReportOrderingResponse,
-  context: { asOfDate: string; reportingCurrency: string },
+  context: ReportOrderingSourceContext,
 ): ReportOrderingConfiguration {
   const family = firstEligibleFamily(response);
   const mode = family ? firstSupportedMode(family) : null;
@@ -84,8 +101,8 @@ export function createReportOrderingConfiguration(
     modeId: mode?.modeId ?? "",
     asOfDate: context.asOfDate,
     reportingCurrency: context.reportingCurrency,
-    benchmarkCode: "",
     allocationDimensions: [],
+    configurationValues: family ? defaultConfigurationValues(family) : {},
     selectedSections: family ? defaultSelectedSectionIds(family) : [],
     outputFormat,
   };
@@ -111,8 +128,8 @@ export function selectReportOrderingFamily(
     ...current,
     familyId: family.reportFamilyId,
     modeId: mode.modeId,
-    benchmarkCode: "",
     allocationDimensions: [],
+    configurationValues: defaultConfigurationValues(family),
     selectedSections: defaultSelectedSectionIds(family),
     outputFormat: resolveReadyOutputFormat(family, mode),
   };
@@ -121,6 +138,7 @@ export function selectReportOrderingFamily(
 export function buildReportOrderingViewModel(
   response: ReportOrderingResponse,
   configuration: ReportOrderingConfiguration,
+  sourceContext: ReportOrderingSourceContext,
 ): ReportOrderingViewModel {
   const eligibleFamilies = response.reportFamilies.filter(
     (family) => family.eligibility.state === "ready" && firstSupportedMode(family),
@@ -138,6 +156,7 @@ export function buildReportOrderingViewModel(
     family,
     findSinglePortfolioMode(family),
     configuration,
+    sourceContext,
     "single_portfolio",
   );
   const batchReadiness = evaluateReadiness(
@@ -145,6 +164,7 @@ export function buildReportOrderingViewModel(
     family,
     findPortfolioReviewBatchMode(family),
     configuration,
+    sourceContext,
     "explicit_portfolio_batch",
   );
   const sectionChoices = family
@@ -153,6 +173,12 @@ export function buildReportOrderingViewModel(
         .sort(byDisplayOrder)
         .map((section) => toSectionChoice(section, family, configuration))
     : [];
+  const fieldErrors = reportOrderingFieldErrors(family, configuration, sourceContext);
+  const formIssues = [
+    fieldErrors.asOfDate,
+    fieldErrors.reportingCurrency,
+    ...Object.values(fieldErrors.configurationValues),
+  ].filter((issue): issue is string => Boolean(issue));
 
   return {
     family,
@@ -168,7 +194,12 @@ export function buildReportOrderingViewModel(
     clientReleaseLabel: family
       ? clientReleaseLabel(family.clientReleasePosture)
       : "Client release posture is unavailable.",
+    sourceContext,
     canSubmit: readiness.state === "ready",
+    canReview:
+      readiness.state === "ready" ||
+      (readiness.issues.length > 0 && readiness.issues.every((issue) => formIssues.includes(issue))),
+    formIssues,
   };
 }
 
@@ -202,6 +233,7 @@ export function applyReportScopeReadiness(
         issues: [],
       },
       canSubmit: true,
+      canReview: true,
     };
   }
   return {
@@ -213,6 +245,8 @@ export function applyReportScopeReadiness(
       issues: [...new Set(issues)],
     },
     canSubmit: false,
+    canReview:
+      issues.length > 0 && issues.every((issue) => model.formIssues.includes(issue)),
   };
 }
 
@@ -236,13 +270,91 @@ export function configurationFingerprint(configuration: ReportOrderingConfigurat
   return JSON.stringify({
     ...configuration,
     allocationDimensions: [...configuration.allocationDimensions].sort(),
+    configurationValues: Object.fromEntries(
+      Object.entries(configuration.configurationValues).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    ),
     selectedSections: [...configuration.selectedSections].sort(),
   });
 }
 
+export function selectedReportConfigurationValues(
+  family: ReportFamily | null,
+  configuration: ReportOrderingConfiguration,
+): Record<string, string> {
+  if (!family) return {};
+
+  return Object.fromEntries(
+    family.configurationFields.flatMap((field) => {
+      if (field.inputType !== "text") return [];
+      const value = configuration.configurationValues[field.fieldId]?.trim();
+      if (!value) return [];
+      const isRelevant =
+        field.requirement !== "conditional" ||
+        family.sections.some(
+          (section) =>
+            configuration.selectedSections.includes(section.sectionId) &&
+            section.dependencyFieldIds.includes(field.fieldId),
+        );
+      return isRelevant ? [[field.fieldId, value] as const] : [];
+    }),
+  );
+}
+
+export function reportOrderingFieldErrors(
+  family: ReportFamily | null,
+  configuration: Pick<
+    ReportOrderingConfiguration,
+    "asOfDate" | "reportingCurrency" | "configurationValues" | "selectedSections"
+  >,
+  sourceContext: ReportOrderingSourceContext,
+): ReportOrderingFieldErrors {
+  const errors: ReportOrderingFieldErrors = { configurationValues: {} };
+  if (!isBusinessDateValue(configuration.asOfDate)) {
+    errors.asOfDate = "Select a valid report date.";
+  } else if (
+    configuration.asOfDate < sourceContext.earliestReportDate ||
+    configuration.asOfDate > sourceContext.latestReportDate
+  ) {
+    errors.asOfDate =
+      `Select a report date from ${formatBusinessDateValue(sourceContext.earliestReportDate)} to ${formatBusinessDateValue(sourceContext.latestReportDate)}.`;
+  }
+
+  if (
+    family?.configurationFields.some((field) => field.fieldId === "reporting_currency") &&
+    !sourceContext.reportingCurrencies.includes(configuration.reportingCurrency)
+  ) {
+    errors.reportingCurrency = "Select a reporting currency confirmed for this portfolio.";
+  }
+
+  for (const field of family?.configurationFields ?? []) {
+    if (field.inputType !== "text") continue;
+    const dependentSections = (family?.sections ?? []).filter(
+      (section) =>
+        configuration.selectedSections.includes(section.sectionId) &&
+        section.dependencyFieldIds.includes(field.fieldId),
+    );
+    const required =
+      field.requirement === "required" ||
+      (field.requirement === "conditional" && dependentSections.length > 0);
+    if (required && !configuration.configurationValues[field.fieldId]?.trim()) {
+      const dependency = dependentSections.map((section) => section.businessLabel).join(" and ");
+      errors.configurationValues[field.fieldId] = dependency
+        ? `${field.businessLabel} is required when ${dependency} is included.`
+        : `${field.businessLabel} is required.`;
+    }
+  }
+  return errors;
+}
+
 export function toReportRequestRows(items: ReportJobListItem[]): ReportRequestRow[] {
   return items.map((item) => {
-    const lifecycle = reportLifecycleCopy(item.status, item.currentStep);
+    const lifecycle = reportLifecycleCopy(
+      item.status,
+      item.currentStep,
+      item.failureCategory,
+    );
     return {
       key: item.reportJobId,
       reportLabel: "Portfolio review",
@@ -261,6 +373,7 @@ function evaluateReadiness(
   family: ReportFamily | null,
   mode: ReportOrderingMode | null,
   configuration: ReportOrderingConfiguration,
+  sourceContext: ReportOrderingSourceContext,
   scopeMode: ReportOrderingScopeMode,
 ): ReportOrderingReadiness {
   const issues: string[] = [];
@@ -282,18 +395,13 @@ function evaluateReadiness(
   } else if (!mode) {
     issues.push("Portfolio bundle ordering is not currently published for this report.");
   }
-  if (!isBusinessDateValue(configuration.asOfDate)) {
-    issues.push("Select a valid report date.");
-  }
-  if (
-    family?.configurationFields.some(
-      (field) => field.fieldId === "reporting_currency",
-    ) &&
-    configuration.reportingCurrency &&
-    !/^[A-Z]{3}$/.test(configuration.reportingCurrency)
-  ) {
-    issues.push("Enter a three-letter reporting currency, such as SGD or USD.");
-  }
+  const fieldErrors = reportOrderingFieldErrors(family, configuration, sourceContext);
+  issues.push(
+    ...[fieldErrors.asOfDate, fieldErrors.reportingCurrency].filter(
+      (issue): issue is string => Boolean(issue),
+    ),
+    ...Object.values(fieldErrors.configurationValues),
+  );
 
   const output = family?.outputFormats.find(
     (candidate) => candidate.formatId === configuration.outputFormat,
@@ -355,6 +463,14 @@ function defaultSelectedSectionIds(family: ReportFamily): string[] {
     .filter((section) => section.selectionPosture === "required" || section.defaultSelected)
     .sort(byDisplayOrder)
     .map((section) => section.sectionId);
+}
+
+function defaultConfigurationValues(family: ReportFamily): Record<string, string> {
+  return Object.fromEntries(
+    family.configurationFields
+      .filter((field) => field.inputType === "text")
+      .map((field) => [field.fieldId, ""]),
+  );
 }
 
 function findSinglePortfolioMode(family: ReportFamily | null): ReportOrderingMode | null {
@@ -449,19 +565,54 @@ function clientReleaseLabel(posture: ReportFamily["clientReleasePosture"]): stri
     : "For internal control use only. Client distribution is not supported.";
 }
 
-function reportLifecycleCopy(status: string, currentStep: string) {
+const REPORT_JOB_LIFECYCLE_VALUES = new Set([
+  "accepted",
+  "queued",
+  "collecting_data",
+  "data_ready",
+  "rendering",
+  "completed",
+  "archiving",
+  "archived",
+  "completed_with_warnings",
+  "failed",
+  "cancelled",
+]);
+
+function reportLifecycleCopy(
+  status: string,
+  currentStep: string,
+  failureCategory: string | null,
+) {
   const normalized = status.toLowerCase();
-  if (normalized === "completed" || normalized === "succeeded") {
+  if (
+    !REPORT_JOB_LIFECYCLE_VALUES.has(normalized) ||
+    !REPORT_JOB_LIFECYCLE_VALUES.has(currentStep.toLowerCase())
+  ) {
+    return {
+      label: "Status not reported",
+      detail: "Reporting returned a lifecycle state that this screen cannot safely interpret.",
+      tone: "default" as const,
+    };
+  }
+  if (normalized === "completed" || normalized === "data_ready") {
     return {
       label: "Report data complete",
       detail: "Report data is complete. Archive and client delivery remain separate states.",
       tone: "success" as const,
     };
   }
+  if (normalized === "archived") {
+    return {
+      label: "Archived",
+      detail: "The report is held in the governed archive. Client delivery remains separate.",
+      tone: "success" as const,
+    };
+  }
   if (normalized === "failed") {
     return {
       label: "Request failed",
-      detail: "The report request needs operational review before it can be retried.",
+      detail: reportFailureCopy(failureCategory),
       tone: "danger" as const,
     };
   }
@@ -472,7 +623,7 @@ function reportLifecycleCopy(status: string, currentStep: string) {
       tone: "default" as const,
     };
   }
-  if (normalized.includes("partial")) {
+  if (normalized === "completed_with_warnings") {
     return {
       label: "Completed with attention items",
       detail: "Some report evidence needs review before the result can be used.",
@@ -486,14 +637,40 @@ function reportLifecycleCopy(status: string, currentStep: string) {
       tone: "warn" as const,
     };
   }
+  if (normalized === "archiving") {
+    return {
+      label: "Archiving report",
+      detail: "Report data is complete and the governed archive record is being prepared.",
+      tone: "warn" as const,
+    };
+  }
   return {
     label: "Preparing report data",
-    detail:
-      currentStep.toLowerCase() === "accepted"
-        ? "The request is recorded and waiting to be prepared."
-        : "Reporting is preparing the selected evidence and sections.",
+    detail: "Reporting is preparing the selected evidence and sections.",
     tone: "warn" as const,
   };
+}
+
+function reportFailureCopy(failureCategory: string | null): string {
+  if (failureCategory === "data_incomplete") {
+    return "Report data could not be completed from its sources; the request was not resumed.";
+  }
+  if (failureCategory === "upstream_data_failed") {
+    return "Required source evidence was unavailable. Reporting may permit an operational retry.";
+  }
+  if (failureCategory === "timeout") {
+    return "Report preparation did not complete within the governed time limit.";
+  }
+  if (failureCategory === "render_validation_failed" || failureCategory === "render_conflict") {
+    return "The governed document could not be created from the completed report data.";
+  }
+  if (failureCategory === "archive_storage_failed" || failureCategory === "archive_execution_failed") {
+    return "The report could not be placed in the governed archive.";
+  }
+  if (failureCategory) {
+    return "Reporting recorded a failure that requires operational review before any retry.";
+  }
+  return "The report request failed without a confirmed reason. Use the support reference for review.";
 }
 
 function byDisplayOrder(left: ReportSection, right: ReportSection): number {

@@ -330,16 +330,14 @@
   min-width: 0;
 }
 
-.sourceDefault {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  padding: 0 11px;
-  border: 1px solid #d9dfe6;
-  border-radius: 6px;
-  background: #f7f8fa;
-  color: #394854;
-  font-size: 0.84rem;
+.fieldInput[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+
+.fieldGroup .fieldError {
+  color: var(--danger);
+  font-weight: 650;
 }
 
 .optionFieldset {

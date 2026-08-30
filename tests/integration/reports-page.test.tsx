@@ -20,6 +20,9 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       asOfDate: string;
       sourceBaseCurrency: string;
       reportingCurrency: string;
+      earliestReportDate: string;
+      latestReportDate: string;
+      reportingCurrencies: string[];
     };
     initialBatchId?: string;
     reviewContext: {
@@ -38,6 +41,9 @@ vi.mock("@/features/report-ordering/components/report-ordering-workspace", () =>
       <span data-testid="review-currency-value">{reviewContext.currency?.value}</span>
       <span data-testid="source-base-currency">{portfolio.sourceBaseCurrency}</span>
       <span data-testid="reporting-currency">{portfolio.reportingCurrency}</span>
+      <span data-testid="earliest-report-date">{portfolio.earliestReportDate}</span>
+      <span data-testid="latest-report-date">{portfolio.latestReportDate}</span>
+      <span data-testid="reporting-currencies">{portfolio.reportingCurrencies.join(",")}</span>
       <span data-testid="initial-batch-id">{initialBatchId ?? "New report"}</span>
       {reviewContext.notice ? (
         <aside aria-label={reviewContext.notice.label}>{reviewContext.notice.message}</aside>
