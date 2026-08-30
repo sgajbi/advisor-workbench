@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const {
   createProposalVersionMock,
@@ -463,7 +464,7 @@ describe("ProposalDetailView", () => {
 
   it("keeps restricted proposal detail distinct and preserves return context", async () => {
     getProposalMock.mockRejectedValueOnce(
-      new Error("Proposal detail failed (403): forbidden"),
+      new WorkbenchApiError("proposal detail", 403),
     );
     const queryClient = new QueryClient();
     render(
@@ -492,7 +493,7 @@ describe("ProposalDetailView", () => {
 
   it("preserves the originating worklist when a proposal is not found", async () => {
     getProposalMock.mockRejectedValueOnce(
-      new Error("Proposal detail failed (404): not found"),
+      new WorkbenchApiError("proposal detail", 404),
     );
     const queryClient = new QueryClient();
     render(

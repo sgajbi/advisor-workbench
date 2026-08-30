@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisoryOverviewWorkspace from "../../src/features/proposals/components/advisory-overview-workspace";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const defaultProposalList = {
   items: [
@@ -721,7 +722,7 @@ describe("AdvisoryOverviewWorkspace", () => {
 
   it("keeps restricted proposal posture behind the source entitlement boundary", async () => {
     listProposalsMock.mockRejectedValueOnce(
-      new Error("Proposal list failed (403): forbidden"),
+      new WorkbenchApiError("proposal list", 403),
     );
 
     renderWithQueryClient(

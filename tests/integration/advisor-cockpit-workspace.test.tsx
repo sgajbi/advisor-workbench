@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdvisorCockpitWorkspace from "../../src/features/proposals/components/advisor-cockpit-workspace";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 import type {
   AdvisorCockpitActionPageData,
   AdvisorCockpitPreparationPacketPageData,
@@ -513,7 +514,7 @@ describe("AdvisorCockpitWorkspace", () => {
       name: "Acknowledge review",
     });
     getAdvisorCockpitSupportabilityMock.mockRejectedValueOnce(
-      new Error("Advisor cockpit supportability failed (403): forbidden"),
+      new WorkbenchApiError("advisor cockpit supportability", 403),
     );
 
     fireEvent.click(acknowledgeButton);

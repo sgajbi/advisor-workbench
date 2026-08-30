@@ -36,7 +36,10 @@ import {
   modePanelId,
   modeTabId,
 } from "@/design-system";
-import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
+import {
+  getWorkbenchApiErrorStatus,
+  isWorkbenchPermissionBlockedError,
+} from "@/features/workbench/api-client";
 import {
   ProposalApprovalsData,
   ProposalDetailData,
@@ -96,10 +99,7 @@ function proposalRefreshGenerationKey(proposalId: string) {
 }
 
 function isNotFound(error: unknown): boolean {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-  return /\(404\)/.test(error.message) || /not found/i.test(error.message);
+  return getWorkbenchApiErrorStatus(error) === 404;
 }
 
 export default function ProposalDetailView({
