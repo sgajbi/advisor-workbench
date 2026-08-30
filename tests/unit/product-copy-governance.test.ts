@@ -4370,7 +4370,7 @@ describe("product-copy governance", () => {
         process.execPath,
         [
           productCopyChecker,
-          "--max=263",
+          "--max=249",
           "--max-unresolved=1720",
           "--unresolved-digest=b94d91fa63b59b943f3825423ac0023ea49c43539a4771a455081c2d8611733e",
         ],
@@ -4383,7 +4383,7 @@ describe("product-copy governance", () => {
 
       expect(stderr).toBe("");
       expect(stdout).toContain(
-        "measured inventory matches the checked-in baselines at 263 finding(s) and 1720 unresolved expression(s)",
+        "measured inventory matches the checked-in baselines at 249 finding(s) and 1720 unresolved expression(s)",
       );
       expect(stdout).toContain(
         "b94d91fa63b59b943f3825423ac0023ea49c43539a4771a455081c2d8611733e",
