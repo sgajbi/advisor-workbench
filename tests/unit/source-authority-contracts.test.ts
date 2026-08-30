@@ -97,7 +97,7 @@ describe("source-authority CI fitness function", () => {
     ].map((path) => readFileSync(resolve(path), "utf8"));
 
     expect(packageJson.scripts["quality:source-authority"]).toBe(
-      "node scripts/quality/check-source-authority-contracts.mjs",
+      "node scripts/quality/check-source-authority-contracts.mjs && node node_modules/vitest/vitest.mjs run tests/unit/source-authority-rendering.test.ts --coverage=false",
     );
     expect(packageJson.scripts.lint).toContain("npm run quality:source-authority");
     expect(makefile).toMatch(/^lint:\r?\n\tnpm run lint$/mu);

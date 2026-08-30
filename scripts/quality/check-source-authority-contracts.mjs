@@ -30,6 +30,28 @@ function rejectsExactProof(screen, expectedRows, renderedRows) {
   }
 }
 
+function validateSourceRows(contract, rows, errors) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    errors.push(`${contract.id}: source adapter returned no proof rows.`);
+    return;
+  }
+
+  const identities = new Set();
+  for (const [index, row] of rows.entries()) {
+    if (!isText(row?.source) || !isText(row?.identity) || !isText(row?.state)) {
+      errors.push(`${contract.id}: source adapter row ${index + 1} is malformed.`);
+      continue;
+    }
+    const identity = `${row.source}\u0000${row.identity}`;
+    if (identities.has(identity)) {
+      errors.push(
+        `${contract.id}: source adapter duplicated ${row.source} identity ${row.identity}.`,
+      );
+    }
+    identities.add(identity);
+  }
+}
+
 function validateImplementationEvidence(contract, repoRoot, errors) {
   if (!Array.isArray(contract.implementationEvidence) || contract.implementationEvidence.length === 0) {
     errors.push(`${contract.id}: no production implementation evidence is declared.`);
@@ -170,15 +192,11 @@ export function validateSourceAuthorityContracts(
     let expectedRows;
     try {
       expectedRows = contract.buildExpectedRows(clone(contract.sampleGatewayResponse));
-      assertExactSourceRenderProof({
-        screen: contract.screen,
-        expectedRows,
-        renderedRows: expectedRows.map((row) => ({ ...row })),
-      });
     } catch (error) {
-      errors.push(`${contract.id}: exact source proof failed: ${error.message}`);
+      errors.push(`${contract.id}: source adapter proof failed: ${error.message}`);
       continue;
     }
+    validateSourceRows(contract, expectedRows, errors);
     const unknownState = expectedRows.find((row) => !contract.allowedStates.includes(row.state));
     if (unknownState) {
       errors.push(`${contract.id}: undeclared Gateway state ${unknownState.state}.`);

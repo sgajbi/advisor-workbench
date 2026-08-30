@@ -44,16 +44,19 @@ and source-service support still requires the governed live-validation path.
 blocking static-analysis lane. It enrolls critical Gateway-backed surfaces through domain-local
 source adapters and stable rendered identity/state attributes. Each enrollment proves that:
 
-1. Gateway identity and state survive a controlled source mutation unchanged;
+1. Gateway identity and state survive a controlled source mutation through the production view
+   model unchanged;
 2. exact rendered evidence rejects omitted, extra, duplicated, substituted, or mismatched rows;
 3. a plausible reassuring fallback, such as Risk `breach` rendered as `within`, fails;
-4. the production adapter, component evidence attributes, and browser extraction remain wired; and
+4. the production view-model mapping, component evidence attributes, and browser extraction remain
+   wired; and
 5. an empty or single-surface registry fails closed.
 
 Risk mandate comparison and Advisor Book are the reference enrollments. Add a new surface only when
-its Gateway contract owns the facts and the screen has a domain adapter plus deterministic browser
-evidence. Presentation-only labels and formatting remain outside this control; do not turn the gate
-into a literal scanner or a second domain model.
+its Gateway contract owns the facts and the screen has a domain adapter, executable production
+mapping proof, and deterministic browser evidence. A cloned adapter row is not rendered proof.
+Presentation-only labels and formatting remain outside this control; do not turn the gate into a
+literal scanner or a second domain model.
 
 ## Coverage ratchet
 
