@@ -73,7 +73,7 @@ describe("Risk Review interpretation authority", () => {
     expect(browserWorkflow).toContain('"data-mandate-availability"');
     expect(browserWorkflow).toContain('"risk-mandate-comparison"');
     expect(browserWorkflow).toContain(
-      "buildMandateConstraintProofRows(mandateComparisons)",
+      "buildRiskMandateSourceRenderRows(mandateComparisons)",
     );
     expect(browserWorkflow).toContain("assertExactSourceRenderProof({");
     expect(browserWorkflow).toContain('screen: "Risk review"');
@@ -84,12 +84,15 @@ describe("Risk Review interpretation authority", () => {
       "for (const expected of expectedMandateStates)",
     );
     expect(browserWorkflow).toContain(
-      '`risk-mandate-constraint-${expected.source}-${expected.key}`',
+      '`risk-mandate-constraint-${expected.source}-${expected.identity}`',
     );
     expect(browserWorkflow).not.toContain(
       'mandateComparison.getByText("Cash allocation", { exact: true })',
     );
-    expect(browserWorkflow).toContain(
+    const sourceAdapter = readSource(
+      "scripts/live/validation/risk-mandate-proof.mjs",
+    );
+    expect(sourceAdapter).toContain(
       "published by both ${previousSource} and ${source}",
     );
     expect(browserWorkflow).toContain('"Realised volatility"');

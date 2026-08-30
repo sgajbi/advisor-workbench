@@ -2,6 +2,7 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 
 import { validateAdvisorBookRenderPageEvidence } from "./advisor-book-proof.mjs";
+import { buildRiskMandateSourceRenderRows } from "./risk-mandate-proof.mjs";
 import { assertExactSourceRenderProof } from "./source-render-proof.mjs";
 
 const HIGH_CASH_IDEA_CANDIDATE_PATTERN = /^idea_high_cash_[0-9a-f]{16}$/;
@@ -2386,7 +2387,7 @@ export async function validateRiskPanel(
   await expect(mandateComparison.getByText("Source evidence supplied", { exact: true })).toBeVisible({
     timeout: timeoutMs,
   });
-  const expectedMandateStates = buildMandateConstraintProofRows(mandateComparisons);
+  const expectedMandateStates = buildRiskMandateSourceRenderRows(mandateComparisons);
   const constraintRows = mandateComparison.locator("[data-mandate-constraint]");
   await expect(constraintRows).toHaveCount(expectedMandateStates.length, {
     timeout: timeoutMs,
@@ -2400,17 +2401,13 @@ export async function validateRiskPanel(
   );
   assertExactSourceRenderProof({
     screen: "Risk review",
-    expectedRows: expectedMandateStates.map(({ source, key, state }) => ({
-      source,
-      identity: key,
-      state,
-    })),
+    expectedRows: expectedMandateStates,
     renderedRows: renderedMandateStates,
   });
   const mandateStates = [];
   for (const expected of expectedMandateStates) {
     const rendered = mandateComparison.getByTestId(
-      `risk-mandate-constraint-${expected.source}-${expected.key}`,
+      `risk-mandate-constraint-${expected.source}-${expected.identity}`,
     );
     await expect(rendered).toHaveCount(1, { timeout: timeoutMs });
     await expect(rendered).toBeVisible({ timeout: timeoutMs });
@@ -2421,7 +2418,7 @@ export async function validateRiskPanel(
     );
     await expect(rendered).toHaveAttribute(
       "data-mandate-constraint",
-      expected.key,
+      expected.identity,
       { timeout: timeoutMs },
     );
     await expect(rendered).toHaveAttribute(
@@ -2471,41 +2468,6 @@ export async function validateRiskPanel(
   }
   await page.setViewportSize(originalViewport);
   await screenshotRegisteredPanel(page, "performance.risk.snapshot");
-}
-
-export function buildMandateConstraintProofRows(mandateComparisons) {
-  const sources = [
-    ["summary", mandateComparisons?.summary],
-    ["concentration", mandateComparisons?.concentration],
-  ];
-  const rows = [];
-  const sourceByConstraint = new Map();
-
-  for (const [source, comparison] of sources) {
-    if (!comparison || !Array.isArray(comparison.constraints)) {
-      throw new Error(`Risk ${source} returned no mandate constraint evidence.`);
-    }
-    for (const constraint of comparison.constraints) {
-      const key = typeof constraint?.key === "string" ? constraint.key.trim() : "";
-      const state = typeof constraint?.state === "string" ? constraint.state.trim() : "";
-      if (!key || !state) {
-        throw new Error(`Risk ${source} returned malformed mandate constraint evidence.`);
-      }
-      const previousSource = sourceByConstraint.get(key);
-      if (previousSource) {
-        throw new Error(
-          `Risk mandate constraint ${key} is published by both ${previousSource} and ${source}.`,
-        );
-      }
-      sourceByConstraint.set(key, source);
-      rows.push({ source, key, state });
-    }
-  }
-
-  if (rows.length === 0) {
-    throw new Error("Risk sources returned no mandate constraint rows.");
-  }
-  return rows;
 }
 
 export function classifyPerformanceEvidenceScreenshotState(assuranceState) {
