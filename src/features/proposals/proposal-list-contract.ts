@@ -1,4 +1,5 @@
 import type { ProposalListData } from "./types";
+import { isValidProposalSourceCursor } from "./proposal-source-window-navigation";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -37,7 +38,7 @@ export function parseProposalListEnvelope(value: unknown): ProposalListData {
     || !(
       value.data.next_cursor === undefined
       || value.data.next_cursor === null
-      || typeof value.data.next_cursor === "string"
+      || isValidProposalSourceCursor(value.data.next_cursor)
     )
   ) {
     throw new Error("Proposal list response was incomplete.");

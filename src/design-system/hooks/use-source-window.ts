@@ -6,6 +6,8 @@ type SourceWindowHistory = {
   scopeKey: string;
   cursors: Array<string | undefined>;
   baseWindowNumber: number;
+  addressedCursor?: string;
+  addressedWindowNumber: number;
   index: number;
 };
 
@@ -22,8 +24,40 @@ function createInitialHistory(
     scopeKey,
     cursors: [initial?.cursor],
     baseWindowNumber: initial?.windowNumber ?? 1,
+    addressedCursor: initial?.cursor,
+    addressedWindowNumber: initial?.windowNumber ?? 1,
     index: 0,
   };
+}
+
+function reconcileAddressedHistory(
+  history: SourceWindowHistory,
+  scopeKey: string,
+  initial?: InitialSourceWindow,
+): SourceWindowHistory {
+  if (history.scopeKey !== scopeKey) {
+    return createInitialHistory(scopeKey, initial);
+  }
+
+  const addressedCursor = initial?.cursor;
+  const addressedWindowNumber = initial?.windowNumber ?? 1;
+  if (
+    history.addressedCursor === addressedCursor
+    && history.addressedWindowNumber === addressedWindowNumber
+  ) {
+    return history;
+  }
+
+  const activeCursor = history.cursors[history.index];
+  const activeWindowNumber = history.baseWindowNumber + history.index;
+  if (
+    activeCursor === addressedCursor
+    && activeWindowNumber === addressedWindowNumber
+  ) {
+    return { ...history, addressedCursor, addressedWindowNumber };
+  }
+
+  return createInitialHistory(scopeKey, initial);
 }
 
 /**
@@ -39,12 +73,13 @@ export function useSourceWindow(
   const [sourceHistory, setSourceHistory] = useState<SourceWindowHistory>(() =>
     createInitialHistory(scopeKey, initial)
   );
-  const activeHistory =
-    sourceHistory.scopeKey === scopeKey
-      ? sourceHistory
-      : createInitialHistory(scopeKey, initial);
+  const activeHistory = reconcileAddressedHistory(
+    sourceHistory,
+    scopeKey,
+    initial,
+  );
 
-  if (sourceHistory.scopeKey !== scopeKey) {
+  if (sourceHistory !== activeHistory) {
     setSourceHistory(activeHistory);
   }
 
@@ -54,10 +89,11 @@ export function useSourceWindow(
         return;
       }
       setSourceHistory((current) => {
-        const scopedHistory =
-          current.scopeKey === scopeKey
-            ? current
-            : createInitialHistory(scopeKey, initial);
+        const scopedHistory = reconcileAddressedHistory(
+          current,
+          scopeKey,
+          initial,
+        );
         if (scopedHistory.cursors[scopedHistory.index] === nextCursor) {
           return scopedHistory;
         }
@@ -76,10 +112,11 @@ export function useSourceWindow(
 
   const showPrevious = useCallback(() => {
     setSourceHistory((current) => {
-      const scopedHistory =
-        current.scopeKey === scopeKey
-          ? current
-          : createInitialHistory(scopeKey, initial);
+      const scopedHistory = reconcileAddressedHistory(
+        current,
+        scopeKey,
+        initial,
+      );
       return {
         ...scopedHistory,
         index: Math.max(0, scopedHistory.index - 1),

@@ -607,7 +607,10 @@ function ProposalDetailWorkspace({
         portfolioId: sourcePortfolioId,
         reviewContext: sourceReturnReviewContext,
         origin: returnMode ?? "approval-queue",
-        sourceWindow: returnSourceWindow,
+        sourceWindow:
+          addressedPortfolioId === sourcePortfolioId
+            ? returnSourceWindow
+            : undefined,
       })
     : fallbackReturnHref;
   const sourceReturnLabel = sourcePortfolioId
