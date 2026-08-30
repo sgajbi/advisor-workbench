@@ -4383,7 +4383,7 @@ describe("product-copy governance", () => {
 
       expect(stderr).toBe("");
       expect(stdout).toContain(
-        "measured inventory matches the checked-in baselines at 249 finding(s) and 1720 unresolved expression(s)",
+        "measured inventory matches the checked-in baselines at 247 finding(s) and 1720 unresolved expression(s)",
       );
       expect(stdout).toContain(
         "ee9cce3ad2c354e170e0d4f52a919c330a23ba2351db45cba8a9427e15104cd7",
