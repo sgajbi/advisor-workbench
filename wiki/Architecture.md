@@ -137,10 +137,18 @@ typography locally.
 
 ## Boundary notes
 
-1. workbench consumes gateway-shaped contracts
-2. domain truth stays upstream
-3. shell and design-system primitives should be preferred over page-local hacks
-4. legacy compatibility routes should not be documented as the main active topology
+1. Workbench consumes Gateway-shaped contracts.
+2. Domain truth stays upstream.
+3. Feature clients use the governed Workbench JSON transport for BFF reads and mutations; raw
+   upstream response bodies are not product copy.
+4. Typed `WorkbenchApiError` status is the sole client-side HTTP classification authority. Screens
+   translate only known statuses into bounded business guidance and use an explicit safe fallback
+   for everything else.
+5. The blocking feature-transport ratchet keeps Proposals at zero raw fetches, prevents growth in
+   six exact-baselined historical feature owners, and requires the baseline to fall as #791 removes
+   them. The two raw fetches in the shared API client are the intentional transport primitives.
+6. Shell and design-system primitives should be preferred over page-local hacks.
+7. Legacy compatibility routes should not be documented as the main active topology.
 
 ## Functional Architecture
 
