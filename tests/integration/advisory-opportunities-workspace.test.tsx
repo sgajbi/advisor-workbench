@@ -268,11 +268,16 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
         }),
       );
     });
-    expect(
-      await screen.findByText(
-        /Review recorded through Gateway. Source-owned detail and queue posture have been refreshed/,
-      ),
-    ).toBeInTheDocument();
+    const recordedStatus = await screen.findByTestId(
+      "idea-action-review-status",
+    );
+    expect(recordedStatus).toHaveAttribute(
+      "data-action-state",
+      "recorded-and-refreshed",
+    );
+    expect(recordedStatus).toHaveTextContent(
+      "Review saved. Opportunity detail and worklist are current.",
+    );
     expect(recordAdvisorIdeaConversionIntentMock).not.toHaveBeenCalled();
   });
 
@@ -291,16 +296,19 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Record review" }));
 
-    expect(
-      await screen.findByText(
-        /Review was recorded through Gateway, but source-owned detail or queue posture could not be refreshed/,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText(
-        /Review recorded through Gateway. Source-owned detail and queue posture have been refreshed/,
-      ),
-    ).not.toBeInTheDocument();
+    const refreshStatus = await screen.findByTestId(
+      "idea-action-review-status",
+    );
+    expect(refreshStatus).toHaveAttribute(
+      "data-action-state",
+      "recorded-refresh-failed",
+    );
+    expect(refreshStatus).toHaveTextContent(
+      "Review was saved, but the latest opportunity detail and worklist could not be loaded.",
+    );
+    expect(refreshStatus).not.toHaveTextContent(
+      "Opportunity detail and worklist are current.",
+    );
   });
 
   it("shows an explicit failure state when Gateway cannot record an action", async () => {
@@ -318,11 +326,11 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     await screen.findByLabelText("Idea candidate advisor actions");
     fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
 
-    expect(
-      await screen.findByText(
-        "The advisor action could not be recorded through Gateway. No local review or conversion state has been created.",
-      ),
-    ).toBeInTheDocument();
+    const error = await screen.findByTestId("idea-action-error");
+    expect(error).toHaveAttribute("data-action-state", "not-recorded");
+    expect(error).toHaveTextContent(
+      "Workbench could not verify the saved feedback against source evidence.",
+    );
   });
 
   it("retries a failed advisor action with the original idempotent submission", async () => {
@@ -347,8 +355,10 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       reviewControls.getByRole("button", { name: "Record review" }),
     );
 
-    await screen.findByText(
-      "The advisor action could not be recorded through Gateway. No local review or conversion state has been created.",
+    const error = await screen.findByTestId("idea-action-error");
+    expect(error).toHaveAttribute("data-action-state", "not-recorded");
+    expect(error).toHaveTextContent(
+      "We could not confirm that the adviser action was saved.",
     );
     const firstSubmission = recordAdvisorIdeaReviewActionMock.mock.calls[0][0];
     fireEvent.change(reviewControls.getByLabelText("Review action"), {
