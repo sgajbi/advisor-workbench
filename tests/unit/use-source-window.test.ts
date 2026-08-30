@@ -103,4 +103,36 @@ describe("useSourceWindow", () => {
       hasPrevious: true,
     });
   });
+
+  it("reconciles browser navigation to the source window in the address", () => {
+    const { result, rerender } = renderHook(
+      ({ initial }) => useSourceWindow("portfolio-a", initial),
+      {
+        initialProps: {
+          initial: { cursor: undefined, windowNumber: 1 } as {
+            cursor?: string;
+            windowNumber: number;
+          },
+        },
+      },
+    );
+
+    act(() => result.current.showNext("cursor-window-2"));
+    rerender({
+      initial: { cursor: "cursor-window-2", windowNumber: 2 },
+    });
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-2",
+      windowNumber: 2,
+      hasPrevious: true,
+    });
+
+    rerender({ initial: { cursor: undefined, windowNumber: 1 } });
+    expect(result.current).toMatchObject({
+      cursor: undefined,
+      previousCursor: undefined,
+      windowNumber: 1,
+      hasPrevious: false,
+    });
+  });
 });

@@ -1696,6 +1696,29 @@ test("keeps proposal counts scoped to the current source window", async ({
     page.getByRole("button", { name: "Next proposals" }),
   ).toBeDisabled();
 
+  await page.goBack();
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&mode=approval-queue`,
+  );
+  await expect(page.getByText("0 proposals in current view")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Next proposals" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("option", { name: /Cross-asset concentration review/ }),
+  ).toHaveCount(0);
+
+  await page.goForward();
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&mode=approval-queue&cursor=cursor-window-2&sourceWindow=2`,
+  );
+  await expect(
+    page.getByRole("option", { name: /Cross-asset concentration review/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Next proposals" }),
+  ).toHaveCount(0);
+
   const secondWindowProposal = page.getByRole("option", {
     name: /Income allocation review/,
   });

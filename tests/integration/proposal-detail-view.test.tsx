@@ -345,6 +345,10 @@ describe("ProposalDetailView", () => {
             reportingCurrency: "SGD",
           }}
           returnMode="risk-impact"
+          returnSourceWindow={{
+            cursor: "query-context-window-2",
+            windowNumber: 2,
+          }}
         />
       </QueryClientProvider>
     );
@@ -370,6 +374,10 @@ describe("ProposalDetailView", () => {
             reportingCurrency: "SGD",
           }}
           returnMode="risk-impact"
+          returnSourceWindow={{
+            cursor: "source-window-2",
+            windowNumber: 2,
+          }}
         />
       </QueryClientProvider>
     );
@@ -378,7 +386,7 @@ describe("ProposalDetailView", () => {
       await screen.findByRole("link", { name: "Return to Risk and Impact" }),
     ).toHaveAttribute(
       "href",
-      "/proposals?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk-impact",
+      "/proposals?portfolioId=pf_1&asOfDate=2026-08-21&period=YTD&reportingCurrency=SGD&mode=risk-impact&cursor=source-window-2&sourceWindow=2",
     );
   });
 
