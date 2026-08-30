@@ -5,6 +5,7 @@ import { Alert } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 
 import { ActionButton, Text, WorkbenchChoiceGroup } from "@/design-system";
+import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 
 import {
   recordAdvisorIdeaConversionIntent,
@@ -483,8 +484,10 @@ export default function IdeaCandidateActionPanel({
           data-testid="idea-action-error"
           data-action-state="not-recorded"
         >
-          We could not confirm that the adviser action was saved. The displayed
-          opportunity remains unchanged.
+          {ideaActionFailureCopy(
+            actionMutation.error,
+            actionMutation.variables?.kind,
+          )}
         </Alert>
       ) : null}
       {latestRecordedKind && sourceRefreshFailed ? (
@@ -512,6 +515,27 @@ export default function IdeaCandidateActionPanel({
       ) : null}
     </section>
   );
+}
+
+function ideaActionFailureCopy(
+  error: unknown,
+  actionKind: IdeaActionKind | undefined,
+): string {
+  if (actionKind !== "feedback") {
+    return "We could not confirm that the adviser action was saved. The displayed opportunity remains unchanged.";
+  }
+
+  const status = getWorkbenchApiErrorStatus(error);
+  if (status === 401 || status === 403) {
+    return "Feedback is not available for your current access. No feedback was saved.";
+  }
+  if (status === 409) {
+    return "The opportunity changed or conflicts with existing feedback. Refresh it before recording new feedback; no feedback was shown as saved.";
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return "The feedback service is unavailable. Your exact selection is retained for retry, and no feedback was shown as saved.";
+  }
+  return "Workbench could not verify the saved feedback against source evidence. Your exact selection is retained for retry, and the opportunity remains unchanged.";
 }
 
 function IdeaBusinessReasonSelect({

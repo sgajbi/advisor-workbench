@@ -2,6 +2,15 @@ import { expect, test } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const candidateId = "idea_high_cash_001";
+const notUsefulFeedbackReasons = [
+  "not_relevant",
+  "already_known",
+  "wrong_timing",
+  "insufficient_evidence",
+  "wrong_priority",
+  "duplicate",
+  "client_specific_constraint",
+] as const;
 
 async function mockIdeaCandidateActions(page: import("@playwright/test").Page) {
   await page.route(
@@ -100,7 +109,9 @@ test("records a source-owned Idea review without creating a proposal", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Record review" }).click();
 
-  await expect(page.getByText(/Review recorded through Gateway/)).toBeVisible();
+  await expect(
+    page.getByText("Review saved. Opportunity detail and worklist are current."),
+  ).toBeVisible();
   expect(recordedRequest?.headers["idempotency-key"]).toMatch(
     /^ui-idea-review-/,
   );
@@ -118,22 +129,28 @@ test("records a source-owned Idea review without creating a proposal", async ({
   await expect(page.getByText(/proposal created/i)).toHaveCount(0);
 });
 
-test("records the adviser-selected governed feedback reason through Gateway", async ({
+test("records every adviser-selected governed feedback reason through Gateway", async ({
   page,
 }) => {
   await mockIdeaCandidateActions(page);
-  let recordedRequest:
-    | { headers: Record<string, string>; body: Record<string, string> }
-    | undefined;
+  const recordedRequests: Array<{
+    headers: Record<string, string>;
+    body: Record<string, string>;
+  }> = [];
   await page.route(
     `**/api/bff/api/v1/ideas/candidates/${candidateId}/feedback`,
     async (route) => {
       const body = route.request().postDataJSON() as Record<string, string>;
-      recordedRequest = { headers: route.request().headers(), body };
+      recordedRequests.push({ headers: route.request().headers(), body });
       await route.fulfill({
         json: {
           data: {
-            feedbackEvent: { ...body, candidateId },
+            feedbackEvent: {
+              ...body,
+              candidateId,
+              evidencePacketId: "evidence_high_cash_001",
+              actorRole: "advisor",
+            },
             persistence: { decision: "accepted" },
             durableStorageBacked: true,
             supportedFeaturePromoted: false,
@@ -148,10 +165,10 @@ test("records the adviser-selected governed feedback reason through Gateway", as
     { waitUntil: "domcontentloaded" },
   );
 
-  await page.getByRole("radio", { name: "Not useful" }).click();
-  await page
-    .getByLabel("Why was it not useful?")
-    .selectOption("insufficient_evidence");
+  await expect(
+    page.getByTestId("idea-feedback-reason-summary"),
+  ).toContainText("Relevant to this client");
+  await expect(page.getByLabel("Why was it not useful?")).toHaveCount(0);
   await page.getByRole("button", { name: "Record feedback" }).click();
 
   const status = page.getByTestId("idea-action-feedback-status");
@@ -162,15 +179,50 @@ test("records the adviser-selected governed feedback reason through Gateway", as
   await expect(status).toContainText(
     "Feedback saved. Opportunity detail and worklist are current.",
   );
-  expect(recordedRequest?.headers["idempotency-key"]).toMatch(
-    /^ui-idea-feedback-/,
-  );
-  expect(recordedRequest?.body).toEqual({
-    feedbackId: expect.stringMatching(/^ui-idea-feedback-/),
-    taxonomyVersion: "idea-feedback-taxonomy-v1",
-    outcome: "not_useful",
-    reason: "insufficient_evidence",
-    recordedAtUtc: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+  expect(recordedRequests[0]).toMatchObject({
+    headers: { "idempotency-key": expect.stringMatching(/^ui-idea-feedback-/) },
+    body: {
+      feedbackId: expect.stringMatching(/^ui-idea-feedback-/),
+      taxonomyVersion: "idea-feedback-taxonomy-v1",
+      outcome: "useful",
+      reason: "relevant",
+      recordedAtUtc: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+    },
   });
-  expect(recordedRequest?.body).not.toHaveProperty("reasonCodes");
+
+  await page.getByRole("radio", { name: "Not useful" }).click();
+  const reasonSelect = page.getByLabel("Why was it not useful?");
+  await expect(reasonSelect).toBeVisible();
+  expect(
+    await reasonSelect.locator("option").evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value),
+    ),
+  ).toEqual(["", ...notUsefulFeedbackReasons]);
+
+  for (const [index, reason] of notUsefulFeedbackReasons.entries()) {
+    await reasonSelect.selectOption(reason);
+    await page.getByRole("button", { name: "Record feedback" }).click();
+    await expect.poll(() => recordedRequests.length).toBe(index + 2);
+    await expect(status).toHaveAttribute(
+      "data-action-state",
+      "recorded-and-refreshed",
+    );
+    const request = recordedRequests[index + 1]!;
+    expect(request.headers["idempotency-key"]).toMatch(/^ui-idea-feedback-/);
+    expect(request.body).toEqual({
+      feedbackId: expect.stringMatching(/^ui-idea-feedback-/),
+      taxonomyVersion: "idea-feedback-taxonomy-v1",
+      outcome: "not_useful",
+      reason,
+      recordedAtUtc: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+    });
+    expect(request.body).not.toHaveProperty("reasonCodes");
+  }
+
+  expect(
+    new Set(
+      recordedRequests.map(({ headers }) => headers["idempotency-key"]),
+    ).size,
+  ).toBe(recordedRequests.length);
+  expect(recordedRequests).toHaveLength(1 + notUsefulFeedbackReasons.length);
 });

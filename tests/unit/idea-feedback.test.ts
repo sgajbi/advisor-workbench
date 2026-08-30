@@ -57,6 +57,8 @@ describe("governed adviser feedback contract", () => {
     const event = {
       ...REQUEST,
       candidateId: "idea-001",
+      evidencePacketId: "evidence-001",
+      actorRole: "advisor",
       recordedAtUtc: "2026-08-31T10:15:00Z",
     };
     expect(
@@ -74,6 +76,9 @@ describe("governed adviser feedback contract", () => {
       { outcome: "useful" },
       { reason: "wrong_timing" },
       { recordedAtUtc: "2026-08-31T10:15:01Z" },
+      { recordedAtUtc: "2026-08-31T10:15:00" },
+      { evidencePacketId: "" },
+      { actorRole: "" },
     ]) {
       expect(
         matchesAdvisorIdeaFeedbackEvidence({
