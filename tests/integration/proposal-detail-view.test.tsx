@@ -862,6 +862,55 @@ describe("ProposalDetailView", () => {
     expect(evidenceMode).toBeEnabled();
   });
 
+  it("renders a typed missing-version posture without transport copy", async () => {
+    getProposalVersionMock.mockRejectedValueOnce(
+      new WorkbenchApiError("proposal version", 404)
+    );
+    renderWithQueryClient();
+
+    fireEvent.click(
+      (await screen.findByTestId("proposal-evidence-disclosure")).querySelector(
+        "summary"
+      )!
+    );
+    const loadVersion = await screen.findByRole("button", {
+      name: "Load version",
+    });
+    await waitFor(() => expect(loadVersion).toBeEnabled());
+    await act(async () => {
+      fireEvent.click(loadVersion);
+    });
+
+    expect(
+      await screen.findByText(
+        "That proposal version is not available in the current history."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch proposal version (404)"))
+      .not.toBeInTheDocument();
+  });
+
+  it("keeps version creation permission failure explicit and business-safe", async () => {
+    createProposalVersionMock.mockRejectedValueOnce(
+      new WorkbenchApiError("proposal request", 403)
+    );
+    renderWithQueryClient();
+
+    const createVersion = await screen.findByRole("button", {
+      name: "Create next version",
+    });
+    await waitFor(() => expect(createVersion).toBeEnabled());
+    fireEvent.click(createVersion);
+
+    expect(
+      await screen.findByText(
+        "This proposal action is not available for your current access. No proposal change was recorded."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch proposal request (403)"))
+      .not.toBeInTheDocument();
+  });
+
   it("keeps mutation failure explicit without exposing the raw downstream response", async () => {
     submitProposalMock.mockRejectedValueOnce(
       new Error("Proposal request failed (500): internal downstream detail")

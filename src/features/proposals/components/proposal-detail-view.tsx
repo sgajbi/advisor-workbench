@@ -56,6 +56,7 @@ import {
   proposalStageDescription,
   proposalStageLabel,
 } from "../proposal-workflow-copy";
+import { proposalActionFailureCopy } from "../proposal-action-error";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
 import {
@@ -431,8 +432,7 @@ function ProposalDetailWorkspace({
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
       setVersionLookup(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setVersionActionError(message);
+      setVersionActionError(proposalActionFailureCopy(err, "load_version"));
     }
   }
 
@@ -485,8 +485,7 @@ function ProposalDetailWorkspace({
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
         return;
       }
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setVersionActionError(message);
+      setVersionActionError(proposalActionFailureCopy(err, "create_version"));
     } finally {
       if (activeVersionCreationRef.current?.token === versionContext.token) {
         activeVersionCreationRef.current = null;

@@ -61,6 +61,10 @@ import {
 } from "./proposal-builder-domain-panels";
 import ProposalBuilderWorkflowRail from "./proposal-builder-workflow-rail";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
+import {
+  ProposalActionBusinessError,
+  proposalActionFailureCopy,
+} from "../proposal-action-error";
 import styles from "./proposal-simulate-form.module.css";
 
 const schema = z.object({
@@ -112,7 +116,7 @@ function decimalString(value: number, digits: number): string {
 function signedCashAmount(item: ProposalDraftCashFlowIntent): string {
   const minorUnits = proposalCashFlowToMinorUnits(item);
   if (minorUnits === null) {
-    throw new Error(
+    throw new ProposalActionBusinessError(
       "Cash movement amount must use no more than 2 decimal places and remain within the reliable draft range."
     );
   }
@@ -466,7 +470,7 @@ export default function ProposalSimulateForm({
   function syncEvaluationFromWorkspace(envelope: AdvisoryWorkspaceEnvelopeResponse) {
     const evaluationResult = buildAdvisoryWorkspaceEvaluationResult(envelope);
     if (!evaluationResult) {
-      throw new Error(
+      throw new ProposalActionBusinessError(
         "Proposal evaluation returned incomplete evidence. Review the draft and try again."
       );
     }
@@ -500,7 +504,9 @@ export default function ProposalSimulateForm({
     });
     const workspaceId = extractAdvisoryWorkspaceId(workspaceResponse);
     if (!workspaceId) {
-      throw new Error("Advisory workspace was created without a workspace identifier.");
+      throw new ProposalActionBusinessError(
+        "Advisory workspace was created without a workspace identifier."
+      );
     }
 
     let latestResponse = workspaceResponse;
@@ -561,8 +567,7 @@ export default function ProposalSimulateForm({
       );
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
+      setError(proposalActionFailureCopy(err, "evaluate_draft"));
     } finally {
       setLoading(false);
     }
@@ -597,7 +602,9 @@ export default function ProposalSimulateForm({
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
       const workspaceId = extractAdvisoryWorkspaceId(evaluatedWorkspace);
       if (!workspaceId) {
-        throw new Error("Advisory workspace cannot be handed off without a workspace identifier.");
+        throw new ProposalActionBusinessError(
+          "Advisory workspace cannot be handed off without a workspace identifier."
+        );
       }
       const handoffResponse = await handoffAdvisoryWorkspace(
         workspaceId,
@@ -614,12 +621,13 @@ export default function ProposalSimulateForm({
       );
       const proposalId = extractHandoffProposalId(handoffResponse);
       if (!proposalId) {
-        throw new Error("The advisory service retained no proposal identity for this draft.");
+        throw new ProposalActionBusinessError(
+          "The advisory service retained no proposal identity for this draft."
+        );
       }
       setSavedDraft({ proposalId, portfolioId: values.portfolioId });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
+      setError(proposalActionFailureCopy(err, "save_draft"));
     } finally {
       setSavingDraft(false);
     }
