@@ -137,6 +137,7 @@ describe("useSourceWindow", () => {
       previousCursor: undefined,
       windowNumber: 4,
       hasPrevious: false,
+      hasEarlierWindows: true,
     });
 
     act(() => result.current.showNext("cursor-window-5"));
@@ -145,6 +146,7 @@ describe("useSourceWindow", () => {
       previousCursor: "cursor-window-4",
       windowNumber: 5,
       hasPrevious: true,
+      hasEarlierWindows: true,
     });
   });
 

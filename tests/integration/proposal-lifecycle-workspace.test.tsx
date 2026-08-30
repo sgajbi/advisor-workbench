@@ -1873,6 +1873,34 @@ describe("ProposalLifecycleWorkspace", () => {
     );
   });
 
+  it("keeps an empty rehydrated later window partial without inventing previous navigation", async () => {
+    listProposalsMock.mockResolvedValueOnce({
+      items: [],
+      next_cursor: null,
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        initialSourceWindow={{
+          cursor: "cursor-window-2",
+          windowNumber: 2,
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByText("No matching proposals in this view"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No proposals in the approval queue"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Previous proposals" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("rejects a URL-selected proposal that is absent from the source window", async () => {
     window.history.replaceState(
       {},

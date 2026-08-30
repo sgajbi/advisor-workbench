@@ -165,6 +165,8 @@ export function useSourceWindow(
         : undefined,
     windowNumber: activeHistory.baseWindowNumber + activeHistory.index,
     hasPrevious: activeHistory.index > 0,
+    hasEarlierWindows:
+      activeHistory.baseWindowNumber + activeHistory.index > 1,
     canShowNext,
     showNext,
     showPrevious,
