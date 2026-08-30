@@ -10,7 +10,6 @@ import {
 import { buildPortfolioReviewContextStrip } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
-import { getPortfolioCurrencyOptions } from "@/apps/portfolio/view-model";
 import {
   AppPageShell,
   buildWorkbenchUnsupportedReviewContextNotice,
@@ -91,10 +90,21 @@ export async function ReportOrderingPage({
       historicalSnapshots.earliest_available_as_of_date &&
       historicalSnapshots.latest_available_as_of_date,
   );
+  const reportingCurrencyCapability =
+    workspace.control_capabilities?.reporting_currency_restatement;
   const reportingCurrencies =
-    workspace.control_capabilities?.reporting_currency_restatement.state === "supported"
-      ? getPortfolioCurrencyOptions(workspace)
+    reportingCurrencyCapability?.state === "supported"
+      ? [...new Set(reportingCurrencyCapability.supported_currencies.filter(Boolean))]
       : [controlResolution.controls.reportingCurrency];
+  if (!reportingCurrencies.includes(controlResolution.controls.reportingCurrency)) {
+    return (
+      <ReportOrderingUnavailable
+        confirmedPortfolioId={workspace.portfolio.portfolio_id}
+        reviewContext={buildPortfolioReviewContextStrip(workspace)}
+        reason="The selected reporting currency is not available for report preparation. No report catalogue was requested."
+      />
+    );
+  }
 
   return (
     <ReportOrderingWorkspace
@@ -125,10 +135,7 @@ export async function ReportOrderingPage({
         latestReportDate: hasGovernedReportDateRange
           ? historicalSnapshots?.latest_available_as_of_date ?? controlResolution.controls.asOfDate
           : controlResolution.controls.asOfDate,
-        reportingCurrencies: [...new Set([
-          controlResolution.controls.reportingCurrency,
-          ...reportingCurrencies,
-        ])],
+        reportingCurrencies,
       }}
     />
   );

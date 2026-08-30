@@ -153,6 +153,110 @@ describe("reports page", () => {
     expect(screen.getByTestId("review-currency-value")).toHaveTextContent("USD");
   });
 
+  it("offers only the reporting currencies published by the restatement capability", async () => {
+    shellMock.mockResolvedValueOnce({
+      as_of_date: "2026-04-22",
+      portfolio: {
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        display_name: "Global Balanced Mandate",
+        client_id: "CLIENT_001",
+        base_currency: "SGD",
+        booking_center_code: "SG",
+      },
+      profile: {
+        status: "ACTIVE",
+        portfolio_type: "DISCRETIONARY",
+        risk_exposure: null,
+        investment_time_horizon: null,
+        objective: null,
+        is_leverage_allowed: null,
+      },
+      income_summary: { reporting_currency: "EUR" },
+      cash_balances: [{ currency: "HKD" }],
+      control_capabilities: {
+        historical_snapshots: {
+          state: "supported",
+          reason: "available",
+          requested_as_of_date: "2026-04-22",
+          effective_as_of_date: "2026-04-22",
+          module_capabilities: [],
+        },
+        reporting_currency_restatement: {
+          state: "supported",
+          reason: "available",
+          requested_reporting_currency: "USD",
+          effective_reporting_currency: "USD",
+          supported_currencies: ["SGD", "USD"],
+          module_capabilities: [],
+        },
+      },
+    } as unknown as Awaited<ReturnType<typeof getPortfolioWorkspaceShell>>);
+
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          reportingCurrency: "USD",
+        }),
+      }),
+    );
+
+    expect(screen.getByTestId("reporting-currencies")).toHaveTextContent("SGD,USD");
+    expect(screen.getByTestId("reporting-currencies")).not.toHaveTextContent("EUR");
+    expect(screen.getByTestId("reporting-currencies")).not.toHaveTextContent("HKD");
+  });
+
+  it("fails closed when carried review context is outside the published restatement set", async () => {
+    shellMock.mockResolvedValueOnce({
+      as_of_date: "2026-04-22",
+      portfolio: {
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        display_name: "Global Balanced Mandate",
+        client_id: "CLIENT_001",
+        base_currency: "SGD",
+        booking_center_code: "SG",
+      },
+      profile: {
+        status: "ACTIVE",
+        portfolio_type: "DISCRETIONARY",
+        risk_exposure: null,
+        investment_time_horizon: null,
+        objective: null,
+        is_leverage_allowed: null,
+      },
+      cash_balances: [{ currency: "HKD" }],
+      control_capabilities: {
+        historical_snapshots: {
+          state: "supported",
+          reason: "available",
+          requested_as_of_date: "2026-04-22",
+          effective_as_of_date: "2026-04-22",
+          module_capabilities: [],
+        },
+        reporting_currency_restatement: {
+          state: "supported",
+          reason: "available",
+          requested_reporting_currency: "HKD",
+          effective_reporting_currency: "HKD",
+          supported_currencies: ["SGD", "USD"],
+          module_capabilities: [],
+        },
+      },
+    } as unknown as Awaited<ReturnType<typeof getPortfolioWorkspaceShell>>);
+
+    render(
+      await ReportOrderingPage({
+        searchParams: Promise.resolve({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          reportingCurrency: "HKD",
+        }),
+      }),
+    );
+
+    expect(screen.getByText(/selected reporting currency is not available/i)).toBeInTheDocument();
+    expect(screen.queryByText("Report Centre Workspace")).not.toBeInTheDocument();
+  });
+
   it("discloses that a carried review period does not filter report ordering", async () => {
     render(
       await ReportOrderingPage({
