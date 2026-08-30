@@ -63,5 +63,8 @@ describe("PR auto-merge workflow", () => {
     expect(mainReleasabilityWorkflow).toContain("expected_sha:");
     expect(mainReleasabilityWorkflow).toContain('actual_sha="$(git rev-parse HEAD)"');
     expect(mainReleasabilityWorkflow.split("concurrency:", 1)[0]).not.toContain("push:");
+    expect(mainReleasabilityWorkflow).toMatch(
+      /name: Main Releasability \/ Workflow Lint\r?\n    needs: \[exact-revision-assertion\]/,
+    );
   });
 });
