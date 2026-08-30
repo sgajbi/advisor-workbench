@@ -3,8 +3,7 @@ import {
   validateSourceAuthorityContracts,
 } from "../../scripts/quality/check-source-authority-contracts.mjs";
 import { SOURCE_AUTHORITY_CONTRACTS } from "../../scripts/quality/source-authority-contracts.mjs";
-
-type SourceAuthorityContract = (typeof SOURCE_AUTHORITY_CONTRACTS)[number];
+import type { SourceAuthorityContract } from "../../scripts/quality/source-authority-contracts.mjs";
 
 function replaceContract(
   id: string,
