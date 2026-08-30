@@ -110,7 +110,9 @@ test("records a source-owned Idea review without creating a proposal", async ({
   await page.getByRole("button", { name: "Record review" }).click();
 
   await expect(
-    page.getByText("Review saved. Opportunity detail and worklist are current."),
+    page.getByText(
+      "Review saved. Opportunity detail and worklist are current.",
+    ),
   ).toBeVisible();
   expect(recordedRequest?.headers["idempotency-key"]).toMatch(
     /^ui-idea-review-/,
@@ -165,9 +167,26 @@ test("records every adviser-selected governed feedback reason through Gateway", 
     { waitUntil: "domcontentloaded" },
   );
 
-  await expect(
-    page.getByTestId("idea-feedback-reason-summary"),
-  ).toContainText("Relevant to this client");
+  await expect(page.getByTestId("idea-feedback-reason-summary")).toContainText(
+    "Relevant to this client",
+  );
+  await expect(page.getByLabel("Why was it not useful?")).toHaveCount(0);
+  const usefulChoice = page.getByRole("radio", {
+    name: "Useful",
+    exact: true,
+  });
+  const notUsefulChoice = page.getByRole("radio", {
+    name: "Not useful",
+    exact: true,
+  });
+  await usefulChoice.focus();
+  await usefulChoice.press("ArrowRight");
+  await expect(notUsefulChoice).toBeFocused();
+  await expect(notUsefulChoice).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByLabel("Why was it not useful?")).toBeVisible();
+  await notUsefulChoice.press("ArrowLeft");
+  await expect(usefulChoice).toBeFocused();
+  await expect(usefulChoice).toHaveAttribute("aria-checked", "true");
   await expect(page.getByLabel("Why was it not useful?")).toHaveCount(0);
   await page.getByRole("button", { name: "Record feedback" }).click();
 
@@ -194,9 +213,11 @@ test("records every adviser-selected governed feedback reason through Gateway", 
   const reasonSelect = page.getByLabel("Why was it not useful?");
   await expect(reasonSelect).toBeVisible();
   expect(
-    await reasonSelect.locator("option").evaluateAll((options) =>
-      options.map((option) => (option as HTMLOptionElement).value),
-    ),
+    await reasonSelect
+      .locator("option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      ),
   ).toEqual(["", ...notUsefulFeedbackReasons]);
 
   for (const [index, reason] of notUsefulFeedbackReasons.entries()) {
@@ -220,9 +241,35 @@ test("records every adviser-selected governed feedback reason through Gateway", 
   }
 
   expect(
-    new Set(
-      recordedRequests.map(({ headers }) => headers["idempotency-key"]),
-    ).size,
+    new Set(recordedRequests.map(({ headers }) => headers["idempotency-key"]))
+      .size,
   ).toBe(recordedRequests.length);
   expect(recordedRequests).toHaveLength(1 + notUsefulFeedbackReasons.length);
+
+  await page.setViewportSize({ width: 820, height: 1_180 });
+  const reviewForm = page
+    .getByRole("heading", { name: "Record review" })
+    .locator("..");
+  const feedbackForm = page
+    .getByRole("heading", { name: "Record feedback" })
+    .locator("..");
+  const conversionForm = page
+    .getByRole("heading", { name: "Record conversion intent" })
+    .locator("..");
+  const [reviewBox, feedbackBox, conversionBox] = await Promise.all([
+    reviewForm.boundingBox(),
+    feedbackForm.boundingBox(),
+    conversionForm.boundingBox(),
+  ]);
+  expect(reviewBox).not.toBeNull();
+  expect(feedbackBox).not.toBeNull();
+  expect(conversionBox).not.toBeNull();
+  expect(feedbackBox!.x).toBeCloseTo(reviewBox!.x, 0);
+  expect(conversionBox!.x).toBeCloseTo(reviewBox!.x, 0);
+  expect(feedbackBox!.y).toBeGreaterThanOrEqual(
+    reviewBox!.y + reviewBox!.height,
+  );
+  expect(conversionBox!.y).toBeGreaterThanOrEqual(
+    feedbackBox!.y + feedbackBox!.height,
+  );
 });
