@@ -24,7 +24,7 @@ async function mockIdeaQueue(page: Page) {
             policyVersion: "idea-deterministic-ranking-v1",
             evaluatedAtUtc: "2026-08-31T07:00:00Z",
             durableStorageBacked: true,
-            supportedFeaturePromoted: true,
+            supportedFeaturePromoted: false,
             exclusions: [],
             items: Array.from({ length: candidateCount }, (_, index) => {
               const rank = index + 1;
@@ -126,9 +126,23 @@ test("records only presented Idea rows and retries the same failed evidence", as
   const centreRows = grid.locator('.ag-center-cols-container [role="row"]');
   const firstQueuePositionCell = centreRows.first().getByRole("gridcell").first();
   const secondQueuePositionCell = centreRows.nth(1).getByRole("gridcell").first();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  const presentationsBeforeKeyboardNavigation = structuredClone(presentations);
   await firstQueuePositionCell.click();
   await firstQueuePositionCell.press("ArrowDown");
   await expect(secondQueuePositionCell).toBeFocused();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  expect(presentations).toEqual(presentationsBeforeKeyboardNavigation);
   expect(presentations.some(({ candidateId: id }) => id === targetCandidateId)).toBe(
     false,
   );

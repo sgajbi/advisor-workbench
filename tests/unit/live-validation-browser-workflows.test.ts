@@ -1129,7 +1129,7 @@ describe("live validation browser workflow helpers", () => {
           },
         },
       ],
-    ])("rejects %s", (_case, request, response, key = "presentation-001") => {
+    ])("rejects %s", (_case, request, response, key: string | null = "presentation-001") => {
       expect(() =>
         assertCanonicalIdeaPresentationReceiptEvidence({
           expectedCandidateId: "idea_high_cash_ef02ad8793485081",

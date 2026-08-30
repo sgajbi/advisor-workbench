@@ -298,6 +298,40 @@ describe("useIdeaPresentationReceipts", () => {
     expect(recordReceipt).toHaveBeenCalledTimes(1);
   });
 
+  it("does not emit when an observed row unmounts while its receipt draft is pending", async () => {
+    let resolveDigest!: (value: ArrayBuffer) => void;
+    const digest = vi
+      .spyOn(globalThis.crypto.subtle, "digest")
+      .mockImplementation(
+        () =>
+          new Promise<ArrayBuffer>((resolve) => {
+            resolveDigest = resolve;
+          }),
+      );
+    const view = render(<Harness candidateIds={["idea-025"]} />);
+    const visibilityObserver = await observer();
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => expect(digest).toHaveBeenCalledTimes(1));
+
+    view.unmount();
+    await act(async () => {
+      resolveDigest(new ArrayBuffer(32));
+      await Promise.resolve();
+    });
+
+    expect(recordReceipt).not.toHaveBeenCalled();
+    digest.mockRestore();
+  });
+
   it("retries the frozen payload and idempotency key after an explicit failure", async () => {
     recordReceipt.mockRejectedValueOnce(new Error("unavailable"));
     render(<Harness candidateIds={["idea-025"]} />);

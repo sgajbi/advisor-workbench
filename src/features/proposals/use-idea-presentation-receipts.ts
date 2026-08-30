@@ -47,6 +47,7 @@ export function useIdeaPresentationReceipts({
 }): IdeaPresentationReceiptState {
   const transactions = useRef(new Map<string, ReceiptTransaction>());
   const draftingCandidates = useRef(new Set<string>());
+  const observationGeneration = useRef(0);
   const [summary, setSummary] = useState<
     Pick<IdeaPresentationReceiptState, "status" | "failedCount">
   >({ status: "ready", failedCount: 0 });
@@ -112,7 +113,7 @@ export function useIdeaPresentationReceipts({
   );
 
   const emitVisibleSet = useCallback(
-    async (visibleCandidateIds: string[]) => {
+    async (visibleCandidateIds: string[], generation: number) => {
       const pendingCandidateIds = visibleCandidateIds.filter(
         (candidateId) =>
           !transactions.current.has(candidateId) &&
@@ -132,10 +133,16 @@ export function useIdeaPresentationReceipts({
           visibleCandidateIds,
         });
       } catch {
+        if (observationGeneration.current !== generation) {
+          return;
+        }
         for (const candidateId of pendingCandidateIds) {
           draftingCandidates.current.delete(candidateId);
         }
         setSummary({ status: "unavailable", failedCount: pendingCandidateIds.length });
+        return;
+      }
+      if (observationGeneration.current !== generation) {
         return;
       }
       const newTransactions = drafts
@@ -157,6 +164,7 @@ export function useIdeaPresentationReceipts({
   );
 
   useEffect(() => {
+    observationGeneration.current += 1;
     transactions.current.clear();
     draftingCandidates.current.clear();
     setSummary({ status: "ready", failedCount: 0 });
@@ -172,6 +180,8 @@ export function useIdeaPresentationReceipts({
       return;
     }
 
+    const generation = ++observationGeneration.current;
+    const activeDraftingCandidates = draftingCandidates.current;
     const observed = new Set<Element>();
     const intersecting = new Map<Element, boolean>();
     let flushScheduled = false;
@@ -191,7 +201,7 @@ export function useIdeaPresentationReceipts({
         ),
       ];
       if (visibleCandidateIds.length > 0) {
-        void emitVisibleSet(visibleCandidateIds);
+        void emitVisibleSet(visibleCandidateIds, generation);
       }
     };
     const scheduleFlush = () => {
@@ -233,6 +243,10 @@ export function useIdeaPresentationReceipts({
     document.addEventListener("visibilitychange", scheduleFlush);
 
     return () => {
+      if (observationGeneration.current === generation) {
+        observationGeneration.current += 1;
+        activeDraftingCandidates.clear();
+      }
       document.removeEventListener("visibilitychange", scheduleFlush);
       mutationObserver.disconnect();
       intersectionObserver.disconnect();
