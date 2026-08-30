@@ -121,9 +121,22 @@ async function mockProposalPortfolioEvidence(
   );
 }
 
-async function mockProposalBuilderEvaluation(page: Page) {
+async function mockProposalBuilderEvaluation(
+  page: Page,
+  { failureStatus }: { failureStatus?: 403 | 404 } = {},
+) {
   await mockProposalPortfolioEvidence(page);
   await page.route("**/api/bff/api/v1/advisory-workspaces**", async (route) => {
+    if (failureStatus) {
+      await route.fulfill({
+        status: failureStatus,
+        body: "INTERNAL_SOURCE_DETAIL",
+        headers: {
+          "X-Correlation-Id": `corr-proposal-builder-${failureStatus}`,
+        },
+      });
+      return;
+    }
     const url = new URL(route.request().url());
     const evaluated = url.pathname.endsWith("/evaluate");
     await route.fulfill({
@@ -1988,6 +2001,45 @@ test("keeps additional-cash validation and workflow admission aligned", async ({
     contentType: "image/png",
   });
 });
+
+for (const failure of [
+  {
+    status: 403 as const,
+    businessCopy:
+      "This proposal action is not available for your current access. No proposal change was recorded.",
+  },
+  {
+    status: 404 as const,
+    businessCopy:
+      "The proposal workspace is no longer available. Return to the proposal worklist and reopen it.",
+  },
+]) {
+  test(`keeps Proposal Builder ${failure.status} source evidence behind support details`, async ({
+    page,
+  }, testInfo) => {
+    testInfo.setTimeout(60_000);
+    await mockProposalBuilderEvaluation(page, { failureStatus: failure.status });
+    await page.goto(buildProposalBuilderUrl(), { waitUntil: "domcontentloaded" });
+
+    const rail = page.getByTestId("proposal-builder-workflow-rail");
+    await rail.getByRole("button", { name: "Evaluate Workspace" }).click();
+
+    await expect(rail.getByText(failure.businessCopy)).toBeVisible();
+    await expect(page.getByText("INTERNAL_SOURCE_DETAIL")).toHaveCount(0);
+    await expect(
+      rail.getByText(
+        `HTTP status ${failure.status}. Request reference corr-proposal-builder-${failure.status}.`,
+      ),
+    ).not.toBeVisible();
+
+    await rail.getByText("Support details").click();
+    await expect(
+      rail.getByText(
+        `HTTP status ${failure.status}. Request reference corr-proposal-builder-${failure.status}.`,
+      ),
+    ).toBeVisible();
+  });
+}
 
 test("uses the source-confirmed advisory date instead of stale route context", async ({
   page,

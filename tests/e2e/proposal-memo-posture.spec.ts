@@ -17,6 +17,7 @@ const memoRecoveryEvidenceDirectory = process.env.ISSUE_877_EVIDENCE_DIR
 type ProposalMockOptions = {
   actionFailure?: boolean;
   blocked?: boolean;
+  detailFailureStatus?: 403 | 404;
   memoCreateFailure?: boolean;
   memoInitialState?: "not-prepared" | "unreviewed" | "reviewed" | "complete";
   memoCommentaryInitiallyRecorded?: boolean;
@@ -55,6 +56,16 @@ async function mockProposalDetail(
     ? "memo-ai-event-prior"
     : null;
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
+    if (options.detailFailureStatus) {
+      await route.fulfill({
+        status: options.detailFailureStatus,
+        body: "INTERNAL_SOURCE_DETAIL",
+        headers: {
+          "X-Correlation-Id": `corr-proposal-detail-${options.detailFailureStatus}`,
+        },
+      });
+      return;
+    }
     await route.fulfill({
       json: {
         correlation_id: "corr-detail",
@@ -853,6 +864,45 @@ test.describe("proposal memo posture", () => {
     await expect(page.getByText("Review evidence partially available")).toBeVisible();
     await expect(page.getByText(/Workflow history could not be refreshed/)).toBeVisible();
   });
+
+  for (const failure of [
+    {
+      status: 403 as const,
+      heading: "Proposal review is restricted",
+      businessCopy: "Your current role cannot view this proposal record.",
+    },
+    {
+      status: 404 as const,
+      heading: "Proposal Not Found",
+      businessCopy: "was not found in the active advisory pipeline",
+    },
+  ]) {
+    test(`keeps proposal detail ${failure.status} source evidence behind support details`, async ({
+      page,
+    }, testInfo) => {
+      testInfo.setTimeout(60_000);
+      await mockProposalDetail(page, { detailFailureStatus: failure.status });
+      await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+
+      await expect(page.getByRole("heading", { name: failure.heading })).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByText(new RegExp(failure.businessCopy))).toBeVisible();
+      await expect(page.getByText("INTERNAL_SOURCE_DETAIL")).toHaveCount(0);
+      await expect(
+        page.getByText(
+          `HTTP status ${failure.status}. Request reference corr-proposal-detail-${failure.status}.`,
+        ),
+      ).not.toBeVisible();
+
+      await page.getByText("Support details").click();
+      await expect(
+        page.getByText(
+          `HTTP status ${failure.status}. Request reference corr-proposal-detail-${failure.status}.`,
+        ),
+      ).toBeVisible();
+    });
+  }
 
   test("confirms an action only after refreshed source posture is coherent", async ({ page }) => {
     await mockProposalDetail(page);
