@@ -1,6 +1,6 @@
 import { Alert, Button, Divider, FormControlLabel, Switch } from "@mui/material";
 
-import { SemanticBadge, Text } from "@/design-system";
+import { SemanticBadge, SupportDetails, Text } from "@/design-system";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import {
   querySourceAvailability,
@@ -114,6 +114,7 @@ export function ProposalEvidenceControlsPanel({
   createdVersionNo,
   versionLookup,
   versionActionError,
+  versionActionErrorSupportEvidence,
 }: {
   includeEvidence: boolean;
   controlsDisabled: boolean;
@@ -126,6 +127,7 @@ export function ProposalEvidenceControlsPanel({
   createdVersionNo: number | null;
   versionLookup: ProposalVersionData | null;
   versionActionError: string | null;
+  versionActionErrorSupportEvidence: string | null;
 }) {
   return (
     <section className={detailStyles.railPanel}>
@@ -185,7 +187,16 @@ export function ProposalEvidenceControlsPanel({
           <Text variant="metadata">Artifact hash: {String(versionLookup.artifact_hash ?? "N/A")}</Text>
         </div>
       ) : null}
-      {versionActionError ? <Alert severity="warning">{versionActionError}</Alert> : null}
+      {versionActionError ? (
+        <>
+          <Alert severity="warning">{versionActionError}</Alert>
+          {versionActionErrorSupportEvidence ? (
+            <SupportDetails context="Source request evidence">
+              <Text variant="secondary">{versionActionErrorSupportEvidence}</Text>
+            </SupportDetails>
+          ) : null}
+        </>
+      ) : null}
     </section>
   );
 }

@@ -21,17 +21,20 @@ export type WorkbenchObservedOperation =
 
 export class WorkbenchApiError extends Error {
   readonly status: number;
+  readonly requestReference: string | null;
 
-  constructor(errorLabel: string, status: number) {
+  constructor(errorLabel: string, status: number, requestReference?: string | null) {
     super(`Failed to fetch ${errorLabel} (${status})`);
     this.name = "WorkbenchApiError";
     this.status = status;
+    this.requestReference = normalizeRequestReference(requestReference);
   }
 }
 
 export type WorkbenchApiErrorEvidence = Readonly<{
   label: "HTTP status";
   value: string;
+  requestReference?: string;
 }>;
 
 export function getWorkbenchApiErrorStatus(error: unknown): number | null {
@@ -42,7 +45,23 @@ export function getWorkbenchApiErrorEvidence(
   error: unknown
 ): WorkbenchApiErrorEvidence | null {
   const status = getWorkbenchApiErrorStatus(error);
-  return status === null ? null : { label: "HTTP status", value: String(status) };
+  if (status === null) {
+    return null;
+  }
+  const requestReference =
+    error instanceof WorkbenchApiError ? error.requestReference : null;
+  return requestReference
+    ? { label: "HTTP status", value: String(status), requestReference }
+    : { label: "HTTP status", value: String(status) };
+}
+
+function normalizeRequestReference(value?: string | null): string | null {
+  const normalized = value?.trim() ?? "";
+  return /^[A-Za-z0-9._:-]{1,128}$/.test(normalized) ? normalized : null;
+}
+
+function responseRequestReference(response: Response): string | null {
+  return normalizeRequestReference(response.headers.get("X-Correlation-Id"));
 }
 
 export function isWorkbenchPermissionBlockedError(error: unknown): boolean {
@@ -57,7 +76,11 @@ export async function fetchWorkbenchJson<T>(
 ): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   if (!response.ok) {
-    throw new WorkbenchApiError(errorLabel, response.status);
+    throw new WorkbenchApiError(
+      errorLabel,
+      response.status,
+      responseRequestReference(response)
+    );
   }
   return (await response.json()) as T;
 }
@@ -69,7 +92,11 @@ export async function fetchWorkbenchMutation<T>(
 ): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...withJsonMutationHeaders(init) });
   if (!response.ok) {
-    throw new WorkbenchApiError(errorLabel, response.status);
+    throw new WorkbenchApiError(
+      errorLabel,
+      response.status,
+      responseRequestReference(response)
+    );
   }
   return (await response.json()) as T;
 }

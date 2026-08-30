@@ -1,13 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   getWorkbenchApiErrorEvidence,
   getWorkbenchApiErrorStatus,
+  fetchWorkbenchJson,
   isWorkbenchPermissionBlockedError,
   WorkbenchApiError,
 } from "@/features/workbench/api-client";
 
 describe("workbench API error classification", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it.each([401, 403])("recognizes typed permission response %s", (status) => {
     expect(
       isWorkbenchPermissionBlockedError(
@@ -46,5 +51,40 @@ describe("workbench API error classification", () => {
 
   it("returns no operational evidence when the error has no HTTP status", () => {
     expect(getWorkbenchApiErrorEvidence(new Error("network unavailable"))).toBeNull();
+  });
+
+  it("retains a validated source request reference without reading the response body", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response('{"detail":"INTERNAL_SOURCE_DETAIL"}', {
+          status: 403,
+          headers: { "X-Correlation-Id": "corr-proposal-denied-001" },
+        })
+      )
+    );
+
+    const failure = await fetchWorkbenchJson("/api/bff/proposals/1", "proposal")
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(WorkbenchApiError);
+    expect(failure).toMatchObject({
+      status: 403,
+      requestReference: "corr-proposal-denied-001",
+    });
+    expect(getWorkbenchApiErrorEvidence(failure)).toEqual({
+      label: "HTTP status",
+      value: "403",
+      requestReference: "corr-proposal-denied-001",
+    });
+    expect((failure as Error).message).not.toContain("INTERNAL_SOURCE_DETAIL");
+  });
+
+  it("drops malformed response references instead of presenting untrusted support text", () => {
+    const evidence = getWorkbenchApiErrorEvidence(
+      new WorkbenchApiError("proposal", 403, "reference with spaces")
+    );
+
+    expect(evidence).toEqual({ label: "HTTP status", value: "403" });
   });
 });

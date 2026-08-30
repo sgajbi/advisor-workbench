@@ -63,7 +63,7 @@ import ProposalBuilderWorkflowRail from "./proposal-builder-workflow-rail";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import {
   ProposalActionBusinessError,
-  proposalActionFailureCopy,
+  proposalActionFailure,
 } from "../proposal-action-error";
 import styles from "./proposal-simulate-form.module.css";
 
@@ -163,6 +163,7 @@ export default function ProposalSimulateForm({
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorSupportEvidence, setErrorSupportEvidence] = useState<string | null>(null);
   const [result, setResult] = useState<ProposalSimulateResponse | null>(null);
   const [workspaceEnvelope, setWorkspaceEnvelope] =
     useState<AdvisoryWorkspaceEnvelopeResponse | null>(null);
@@ -437,6 +438,7 @@ export default function ProposalSimulateForm({
     setError(
       "Confirm current portfolio holdings and cash before evaluating or saving this advisor draft."
     );
+    setErrorSupportEvidence(null);
     return false;
   }
 
@@ -550,6 +552,7 @@ export default function ProposalSimulateForm({
 
   async function onSubmit(values: FormInput) {
     setError(null);
+    setErrorSupportEvidence(null);
     setSavedDraft(null);
     if (!confirmPortfolioEvidence()) {
       return;
@@ -567,7 +570,9 @@ export default function ProposalSimulateForm({
       );
       setEvaluatedPortfolioEvidenceUpdatedAt(portfolioEvidenceUpdatedAt);
     } catch (err) {
-      setError(proposalActionFailureCopy(err, "evaluate_draft"));
+      const failure = proposalActionFailure(err, "evaluate_draft");
+      setError(failure.message);
+      setErrorSupportEvidence(failure.supportEvidence);
     } finally {
       setLoading(false);
     }
@@ -589,6 +594,7 @@ export default function ProposalSimulateForm({
     const values = parsedValues.data;
     const portfolioEvidenceUpdatedAt = portfolioBookQuery.dataUpdatedAt;
     setError(null);
+    setErrorSupportEvidence(null);
     setSavingDraft(true);
     try {
       const evaluatedWorkspace = await createEvaluatedWorkspace(values);
@@ -627,7 +633,9 @@ export default function ProposalSimulateForm({
       }
       setSavedDraft({ proposalId, portfolioId: values.portfolioId });
     } catch (err) {
-      setError(proposalActionFailureCopy(err, "save_draft"));
+      const failure = proposalActionFailure(err, "save_draft");
+      setError(failure.message);
+      setErrorSupportEvidence(failure.supportEvidence);
     } finally {
       setSavingDraft(false);
     }
@@ -841,6 +849,7 @@ export default function ProposalSimulateForm({
               isEvaluating={loading}
               isSaving={savingDraft}
               error={error}
+              errorSupportEvidence={errorSupportEvidence}
               onSaveDraft={() => void onSaveDraft()}
             />
           }

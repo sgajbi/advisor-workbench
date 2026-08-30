@@ -34,6 +34,7 @@ describe("proposal detail audit-time presentation", () => {
             created_at: "2026-05-25T09:00:00+08:00",
           }}
           versionActionError={null}
+          versionActionErrorSupportEvidence={null}
         />
         <ProposalLineageAuditPanel
           artifactHash="sha256:artifact"

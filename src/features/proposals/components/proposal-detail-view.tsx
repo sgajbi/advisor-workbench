@@ -32,6 +32,7 @@ import {
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
+  SupportDetails,
   Text,
   modePanelId,
   modeTabId,
@@ -56,7 +57,10 @@ import {
   proposalStageDescription,
   proposalStageLabel,
 } from "../proposal-workflow-copy";
-import { proposalActionFailureCopy } from "../proposal-action-error";
+import {
+  proposalActionFailure,
+  proposalActionFailureSupportEvidence,
+} from "../proposal-action-error";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
 import {
@@ -169,12 +173,16 @@ function ProposalDetailWorkspace({
   const [acting, setActing] = useState(false);
   const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorSupportEvidence, setErrorSupportEvidence] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState<ProposalReviewMode>("narrative");
   const [includeEvidence, setIncludeEvidence] = useState(false);
   const [versionLookupNo, setVersionLookupNo] = useState<number>(1);
   const [versionLookup, setVersionLookup] = useState<ProposalVersionData | null>(null);
   const [versionActionError, setVersionActionError] = useState<string | null>(null);
+  const [versionActionErrorSupportEvidence, setVersionActionErrorSupportEvidence] = useState<
+    string | null
+  >(null);
   const [creatingVersion, setCreatingVersion] = useState(false);
   const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
   const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
@@ -323,6 +331,7 @@ function ProposalDetailWorkspace({
     activeActionRef.current = actionContext;
     setActing(true);
     setError(null);
+    setErrorSupportEvidence(null);
     setActionMessage(null);
     let sourceActionCompleted = false;
     try {
@@ -343,6 +352,7 @@ function ProposalDetailWorkspace({
           ? message
           : "The proposal action could not be completed. Review the current posture and try again."
       );
+      setErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     } finally {
       if (activeActionRef.current?.token === actionContext.token) {
         activeActionRef.current = null;
@@ -428,11 +438,14 @@ function ProposalDetailWorkspace({
       return;
     }
     setVersionActionError(null);
+    setVersionActionErrorSupportEvidence(null);
     try {
       const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
       setVersionLookup(data);
     } catch (err) {
-      setVersionActionError(proposalActionFailureCopy(err, "load_version"));
+      const failure = proposalActionFailure(err, "load_version");
+      setVersionActionError(failure.message);
+      setVersionActionErrorSupportEvidence(failure.supportEvidence);
     }
   }
 
@@ -452,13 +465,15 @@ function ProposalDetailWorkspace({
     const simulateRequest = (currentVersionData?.simulate_request as Record<string, unknown> | undefined) ?? null;
     if (!simulateRequest) {
       setVersionActionError(
-        "Current version simulate_request is not present in response. Enable evidence or verify backend payload shape."
+        "Current proposal evidence does not include the source inputs required to create a new version. Refresh the full evidence record before trying again."
       );
+      setVersionActionErrorSupportEvidence(null);
       return;
     }
     const versionContext = { proposalId, token: Symbol("proposal-version") };
     activeVersionCreationRef.current = versionContext;
     setVersionActionError(null);
+    setVersionActionErrorSupportEvidence(null);
     setCreatingVersion(true);
     setCreatedVersionNo(null);
     try {
@@ -485,7 +500,9 @@ function ProposalDetailWorkspace({
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
         return;
       }
-      setVersionActionError(proposalActionFailureCopy(err, "create_version"));
+      const failure = proposalActionFailure(err, "create_version");
+      setVersionActionError(failure.message);
+      setVersionActionErrorSupportEvidence(failure.supportEvidence);
     } finally {
       if (activeVersionCreationRef.current?.token === versionContext.token) {
         activeVersionCreationRef.current = null;
@@ -517,6 +534,7 @@ function ProposalDetailWorkspace({
   }
 
   if (!detailQuery.data?.proposal && detailQuery.error && isNotFound(detailQuery.error)) {
+    const supportEvidence = proposalActionFailureSupportEvidence(detailQuery.error);
     return (
       <SectionBlock title="Proposal Not Found">
         <Text variant="secondary" className="muted">
@@ -532,12 +550,18 @@ function ProposalDetailWorkspace({
             </Link>
           ) : null}
         </Stack>
+        {supportEvidence ? (
+          <SupportDetails context="Source request evidence">
+            <Text variant="secondary">{supportEvidence}</Text>
+          </SupportDetails>
+        ) : null}
       </SectionBlock>
     );
   }
 
   if (queryError && !detailQuery.data?.proposal) {
     const permissionBlocked = isWorkbenchPermissionBlockedError(queryError);
+    const supportEvidence = proposalActionFailureSupportEvidence(queryError);
     return (
       <SectionBlock title={permissionBlocked ? "Proposal Access Restricted" : "Proposal Unavailable"}>
         <ScreenStatePanel
@@ -559,6 +583,11 @@ function ProposalDetailWorkspace({
           }
           surface="default"
         />
+        {supportEvidence ? (
+          <SupportDetails context="Source request evidence">
+            <Text variant="secondary">{supportEvidence}</Text>
+          </SupportDetails>
+        ) : null}
       </SectionBlock>
     );
   }
@@ -640,7 +669,16 @@ function ProposalDetailWorkspace({
         </div>
       </header>
 
-      {error ? <Alert severity="error" role="alert">{error}</Alert> : null}
+      {error ? (
+        <>
+          <Alert severity="error" role="alert">{error}</Alert>
+          {errorSupportEvidence ? (
+            <SupportDetails context="Source request evidence">
+              <Text variant="secondary">{errorSupportEvidence}</Text>
+            </SupportDetails>
+          ) : null}
+        </>
+      ) : null}
       {actionMessage ? (
         <Alert severity="success" role="status" data-testid="proposal-action-status">
           {actionMessage}
@@ -774,6 +812,7 @@ function ProposalDetailWorkspace({
             createdVersionNo={createdVersionNo}
             versionLookup={versionLookup}
             versionActionError={versionActionError}
+            versionActionErrorSupportEvidence={versionActionErrorSupportEvidence}
           />
           <ProposalLineageAuditPanel
             artifactHash={evidenceModel.artifactHash}
