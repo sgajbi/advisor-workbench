@@ -10,6 +10,7 @@ import {
   parseReviewContext,
   type ReviewContextSearchParams,
 } from "@/shell/review-context";
+import { parseProposalSourceWindowContext } from "@/features/proposals/proposal-source-window-navigation";
 
 export default async function ProposalsPage({
   searchParams,
@@ -17,6 +18,8 @@ export default async function ProposalsPage({
   searchParams?: Promise<
     ReviewContextSearchParams & {
       mode?: string | readonly string[];
+      cursor?: string | readonly string[];
+      sourceWindow?: string | readonly string[];
     }
   >;
 }) {
@@ -49,6 +52,21 @@ export default async function ProposalsPage({
     );
   }
 
+  const sourceWindowResult =
+    parseProposalSourceWindowContext(resolvedSearchParams);
+  if (sourceWindowResult.status === "invalid") {
+    return (
+      <ReviewContextPageRecovery
+        pageKey="proposal"
+        pageTitle="Proposal Lifecycle"
+        pageSubtitle="Review proposal readiness, decisions, and permitted handoffs."
+        body="The proposal-worklist address contains an unsupported source window. No proposal queue was requested."
+        href="/book"
+        actionLabel="Select a portfolio from My book"
+      />
+    );
+  }
+
   const requestedMode =
     typeof resolvedSearchParams.mode === "string"
       ? resolvedSearchParams.mode
@@ -72,6 +90,7 @@ export default async function ProposalsPage({
         portfolioId={portfolioId}
         reviewContext={{ ...reviewContextResult.context, portfolioId }}
         mode={lifecycleMode}
+        initialSourceWindow={sourceWindowResult.context}
       />
     </ProposalWorkspaceShell>
   );

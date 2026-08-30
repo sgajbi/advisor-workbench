@@ -17,6 +17,10 @@ import {
 } from "./proposal-workflow-copy";
 import { SUITABILITY_WORKFLOW_LABELS } from "./suitability-terminology";
 import type { ProposalSummary } from "./types";
+import {
+  buildProposalSourceWindowHref,
+  type ProposalSourceWindowContext,
+} from "./proposal-source-window-navigation";
 
 export type ProposalLifecycleMode =
   | "approval-queue"
@@ -172,6 +176,7 @@ export function buildProposalLifecycleWorkspaceModel({
   proposals,
   hasMoreResults = false,
   hasPreviousResults = false,
+  sourceWindow,
 }: {
   portfolioId: string;
   reviewContext?: WorkspaceReviewContext;
@@ -179,6 +184,7 @@ export function buildProposalLifecycleWorkspaceModel({
   proposals: ProposalSummary[];
   hasMoreResults?: boolean;
   hasPreviousResults?: boolean;
+  sourceWindow?: ProposalSourceWindowContext;
 }): ProposalLifecycleModel {
   const definition = MODE_DEFINITIONS[mode];
   const rows = filterByMode(proposals, mode).map((proposal) => ({
@@ -214,6 +220,7 @@ export function buildProposalLifecycleWorkspaceModel({
       proposalId: proposal.proposal_id,
       reviewContext: { ...reviewContext, portfolioId },
       fromMode: mode,
+      sourceWindow,
     }),
   }));
 
@@ -246,27 +253,40 @@ export function buildProposalDetailHref({
   reviewContext,
   portfolioId,
   fromMode,
+  sourceWindow,
 }: {
   proposalId: string;
   reviewContext?: WorkspaceReviewContext;
   portfolioId?: string;
   fromMode: ProposalLifecycleMode | "overview";
+  sourceWindow?: ProposalSourceWindowContext;
 }): string {
-  return buildReviewContextHref(
+  const href = buildReviewContextHref(
     `/proposals/${encodeURIComponent(proposalId)}?fromMode=${encodeURIComponent(fromMode)}`,
     reviewContext ?? (portfolioId ? { portfolioId } : {}),
   );
+  return sourceWindow
+    ? buildProposalSourceWindowHref(href, sourceWindow)
+    : href;
 }
 
 export function buildProposalLifecycleHref({
   portfolioId,
   reviewContext,
   mode,
+  sourceWindow,
 }: {
   portfolioId: string;
   reviewContext?: WorkspaceReviewContext;
   mode: ProposalLifecycleMode;
+  sourceWindow?: ProposalSourceWindowContext;
 }): string {
   const href = mode === "approval-queue" ? "/proposals" : `/proposals?mode=${mode}`;
-  return buildReviewContextHref(href, { ...reviewContext, portfolioId });
+  const contextualHref = buildReviewContextHref(href, {
+    ...reviewContext,
+    portfolioId,
+  });
+  return sourceWindow
+    ? buildProposalSourceWindowHref(contextualHref, sourceWindow)
+    : contextualHref;
 }

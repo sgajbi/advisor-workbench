@@ -5,11 +5,25 @@ import { useCallback, useState } from "react";
 type SourceWindowHistory = {
   scopeKey: string;
   cursors: Array<string | undefined>;
+  baseWindowNumber: number;
   index: number;
 };
 
-function createInitialHistory(scopeKey: string): SourceWindowHistory {
-  return { scopeKey, cursors: [undefined], index: 0 };
+type InitialSourceWindow = Readonly<{
+  cursor?: string;
+  windowNumber?: number;
+}>;
+
+function createInitialHistory(
+  scopeKey: string,
+  initial?: InitialSourceWindow,
+): SourceWindowHistory {
+  return {
+    scopeKey,
+    cursors: [initial?.cursor],
+    baseWindowNumber: initial?.windowNumber ?? 1,
+    index: 0,
+  };
 }
 
 /**
@@ -18,12 +32,17 @@ function createInitialHistory(scopeKey: string): SourceWindowHistory {
  * Fetching and evidence identity remain with the consumer so domain workflows
  * can fence late responses and retain the last confirmed source window.
  */
-export function useSourceWindow(scopeKey: string) {
+export function useSourceWindow(
+  scopeKey: string,
+  initial?: InitialSourceWindow,
+) {
   const [sourceHistory, setSourceHistory] = useState<SourceWindowHistory>(() =>
-    createInitialHistory(scopeKey)
+    createInitialHistory(scopeKey, initial)
   );
   const activeHistory =
-    sourceHistory.scopeKey === scopeKey ? sourceHistory : createInitialHistory(scopeKey);
+    sourceHistory.scopeKey === scopeKey
+      ? sourceHistory
+      : createInitialHistory(scopeKey, initial);
 
   if (sourceHistory.scopeKey !== scopeKey) {
     setSourceHistory(activeHistory);
@@ -36,7 +55,9 @@ export function useSourceWindow(scopeKey: string) {
       }
       setSourceHistory((current) => {
         const scopedHistory =
-          current.scopeKey === scopeKey ? current : createInitialHistory(scopeKey);
+          current.scopeKey === scopeKey
+            ? current
+            : createInitialHistory(scopeKey, initial);
         if (scopedHistory.cursors[scopedHistory.index] === nextCursor) {
           return scopedHistory;
         }
@@ -50,19 +71,21 @@ export function useSourceWindow(scopeKey: string) {
         };
       });
     },
-    [scopeKey]
+    [initial, scopeKey]
   );
 
   const showPrevious = useCallback(() => {
     setSourceHistory((current) => {
       const scopedHistory =
-        current.scopeKey === scopeKey ? current : createInitialHistory(scopeKey);
+        current.scopeKey === scopeKey
+          ? current
+          : createInitialHistory(scopeKey, initial);
       return {
         ...scopedHistory,
         index: Math.max(0, scopedHistory.index - 1),
       };
     });
-  }, [scopeKey]);
+  }, [initial, scopeKey]);
 
   return {
     cursor: activeHistory.cursors[activeHistory.index],
@@ -70,7 +93,7 @@ export function useSourceWindow(scopeKey: string) {
       activeHistory.index > 0
         ? activeHistory.cursors[activeHistory.index - 1]
         : undefined,
-    windowNumber: activeHistory.index + 1,
+    windowNumber: activeHistory.baseWindowNumber + activeHistory.index,
     hasPrevious: activeHistory.index > 0,
     showNext,
     showPrevious,
