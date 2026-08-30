@@ -15,7 +15,7 @@ export type ProposalSourceWindowParseResult =
 const CURSOR_QUERY_KEY = "cursor";
 const WINDOW_QUERY_KEY = "sourceWindow";
 const MAXIMUM_CURSOR_LENGTH = 2_048;
-const MAXIMUM_WINDOW_NUMBER = 100_000;
+export const MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER = 100_000;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 
 /**
@@ -43,7 +43,7 @@ export function parseProposalSourceWindowContext(
     !isValidProposalSourceCursor(cursor) ||
     !Number.isSafeInteger(windowNumber) ||
     windowNumber < 1 ||
-    windowNumber > MAXIMUM_WINDOW_NUMBER ||
+    windowNumber > MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER ||
     String(windowNumber) !== windowValues[0]
   ) {
     return { status: "invalid" };
@@ -68,7 +68,7 @@ export function buildProposalSourceWindowHref(
     (context.cursor !== undefined && !isValidProposalSourceCursor(context.cursor)) ||
     !Number.isSafeInteger(context.windowNumber) ||
     context.windowNumber < 1 ||
-    context.windowNumber > MAXIMUM_WINDOW_NUMBER
+    context.windowNumber > MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER
   ) {
     throw new TypeError("Invalid proposal source-window context.");
   }

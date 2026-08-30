@@ -10,6 +10,7 @@ export default function SourceWindowNavigation({
   currentWindow,
   hasPrevious,
   hasNext,
+  canNext = hasNext,
   isLoading = false,
   itemLabel,
   viewLabel,
@@ -20,6 +21,7 @@ export default function SourceWindowNavigation({
   currentWindow: number;
   hasPrevious: boolean;
   hasNext: boolean;
+  canNext?: boolean;
   isLoading?: boolean;
   itemLabel: string;
   viewLabel: string;
@@ -77,8 +79,8 @@ export default function SourceWindowNavigation({
       <ActionButton
         ref={nextRef}
         priority="quiet"
-        disabled={!hasNext}
-        aria-disabled={!hasNext || isLoading}
+        disabled={!canNext}
+        aria-disabled={!canNext || isLoading}
         onClick={() => {
           pendingFocusDirection.current = "next";
           onNext();

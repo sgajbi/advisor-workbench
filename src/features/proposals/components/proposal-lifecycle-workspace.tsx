@@ -64,6 +64,7 @@ import {
 import { SUITABILITY_WORKFLOW_LABELS } from "../suitability-terminology";
 import {
   buildProposalSourceWindowHref,
+  MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER,
   type ProposalSourceWindowContext,
 } from "../proposal-source-window-navigation";
 import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
@@ -121,7 +122,9 @@ export default function ProposalLifecycleWorkspace({
   ] = useState<SourceRefreshTransaction | null>(null);
   const [discussionRefreshTransaction, setDiscussionRefreshTransaction] =
     useState<SourceRefreshTransaction | null>(null);
-  const sourceWindow = useSourceWindow(portfolioId, initialSourceWindow);
+  const sourceWindow = useSourceWindow(portfolioId, initialSourceWindow, {
+    maximumWindowNumber: MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER,
+  });
   const activeReviewContext: AdvisoryJourneyReviewContext = {
     ...reviewContext,
     portfolioId,
@@ -173,6 +176,7 @@ export default function ProposalLifecycleWorkspace({
   });
 
   const proposals = useMemo(() => data?.items ?? [], [data?.items]);
+  const hasNextProposalWindow = sourceWindow.canShowNext(data?.next_cursor);
   const model = useMemo(
     () =>
       buildProposalLifecycleWorkspaceModel({
@@ -180,7 +184,7 @@ export default function ProposalLifecycleWorkspace({
         reviewContext,
         mode,
         proposals,
-        hasMoreResults: Boolean(data?.next_cursor),
+        hasMoreResults: hasNextProposalWindow,
         hasPreviousResults: sourceWindow.hasPrevious,
         sourceWindow: {
           cursor: sourceWindow.cursor,
@@ -188,7 +192,7 @@ export default function ProposalLifecycleWorkspace({
         },
       }),
     [
-      data?.next_cursor,
+      hasNextProposalWindow,
       mode,
       portfolioId,
       proposals,
@@ -254,7 +258,7 @@ export default function ProposalLifecycleWorkspace({
   }
 
   function showNextProposalWindow(nextCursor?: string | null) {
-    if (!nextCursor) return;
+    if (!nextCursor || !sourceWindow.canShowNext(nextCursor)) return;
     const nextWindow = sourceWindow.windowNumber + 1;
     sourceWindow.showNext(nextCursor);
     updateSourceWindowAddress({ cursor: nextCursor, windowNumber: nextWindow });
@@ -1462,6 +1466,7 @@ export default function ProposalLifecycleWorkspace({
           currentWindow={sourceWindow.windowNumber}
           hasPrevious={sourceWindow.hasPrevious}
           hasNext={Boolean(data?.next_cursor)}
+          canNext={hasNextProposalWindow}
           isLoading={proposalQuery.isFetching}
           itemLabel="proposals"
           viewLabel="Proposal view"
