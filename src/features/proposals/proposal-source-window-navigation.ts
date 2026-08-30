@@ -42,7 +42,7 @@ export function parseProposalSourceWindowContext(
   if (
     !isValidProposalSourceCursor(cursor) ||
     !Number.isSafeInteger(windowNumber) ||
-    windowNumber < 1 ||
+    windowNumber < 2 ||
     windowNumber > MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER ||
     String(windowNumber) !== windowValues[0]
   ) {
@@ -65,6 +65,7 @@ export function buildProposalSourceWindowHref(
   }
   if (
     (context.cursor === undefined && context.windowNumber !== 1) ||
+    (context.cursor !== undefined && context.windowNumber < 2) ||
     (context.cursor !== undefined && !isValidProposalSourceCursor(context.cursor)) ||
     !Number.isSafeInteger(context.windowNumber) ||
     context.windowNumber < 1 ||
