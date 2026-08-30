@@ -67,6 +67,7 @@ import {
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "./types";
+import { matchesAdvisorIdeaFeedbackEvidence } from "./idea-feedback";
 import { parseProposalListEnvelope } from "./proposal-list-contract";
 import {
   parseProposalRiskImpactEnvelope,
@@ -366,7 +367,7 @@ export async function recordAdvisorIdeaReviewAction(
 export async function recordAdvisorIdeaFeedback(
   input: AdvisorIdeaCandidateActionInput<AdvisorIdeaFeedbackRequest>,
 ): Promise<AdvisorIdeaCandidateActionData> {
-  return await observeWorkbenchMutation(
+  const data = await observeWorkbenchMutation(
     "idea.candidate.feedback",
     async () =>
       await postAdvisorIdeaCandidateAction({
@@ -376,6 +377,18 @@ export async function recordAdvisorIdeaFeedback(
         errorLabel: "Advisor idea feedback",
       }),
   );
+  if (
+    !matchesAdvisorIdeaFeedbackEvidence({
+      candidateId: input.candidateId,
+      event: data.feedbackEvent,
+      request: input.request,
+    })
+  ) {
+    throw new Error(
+      "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
+    );
+  }
+  return data;
 }
 
 export async function recordAdvisorIdeaConversionIntent(
