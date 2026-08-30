@@ -30,6 +30,14 @@ import type {
   ProposalWorkflowEventsData,
 } from "../../src/features/proposals/types";
 
+const routerPushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => window.location.pathname,
+  useRouter: () => ({ push: routerPushMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+
 const proposalListFixture: {
   items: ProposalSummary[];
   next_cursor: string | null;
@@ -350,6 +358,12 @@ function renderWithQueryClient(ui: React.ReactElement) {
 
 describe("ProposalLifecycleWorkspace", () => {
   beforeEach(() => {
+    window.history.replaceState(
+      {},
+      "",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue",
+    );
+    routerPushMock.mockClear();
     listProposalsMock.mockReset();
     listProposalsMock.mockImplementation(
       async (_filters?: unknown) => proposalListFixture,
@@ -671,9 +685,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("heading", { name: "Accepted for implementation" }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Not reported").length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/references are missing/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/references are missing/)).toBeInTheDocument();
   });
 
   it("announces implementation refresh success only after list and evidence reconfirmation", async () => {
@@ -1096,7 +1108,9 @@ describe("ProposalLifecycleWorkspace", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Gateway unavailable")).not.toBeInTheDocument();
     expect(screen.queryByText("Requires Risk Review")).not.toBeInTheDocument();
-    const retry = screen.getByRole("button", { name: "Retry proposal evidence" });
+    const retry = screen.getByRole("button", {
+      name: "Retry proposal evidence",
+    });
     retry.focus();
     fireEvent.click(retry);
 
@@ -1165,9 +1179,7 @@ describe("ProposalLifecycleWorkspace", () => {
       expect(refreshStatus).toHaveAttribute("data-state", "pending");
     });
     expect(
-      within(refreshStatus).getByText(
-        "Checking selected proposal evidence",
-      ),
+      within(refreshStatus).getByText("Checking selected proposal evidence"),
     ).toBeInTheDocument();
 
     await act(async () => {
@@ -1677,7 +1689,9 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("region", { name: "Proposals in this view" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "Proposal information is restricted" }),
+      screen.queryByRole("heading", {
+        name: "Proposal information is restricted",
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -1779,6 +1793,70 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(getProposalWorkflowEventsMock).toHaveBeenCalledTimes(2);
     expect(getProposalApprovalsMock).toHaveBeenCalledTimes(2);
     expect(getProposalLineageMock).toHaveBeenCalledTimes(2);
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=PRP-READY&mode=approval-queue",
+      { scroll: false },
+    );
+
+    fireEvent.keyDown(options[1], { key: "Enter" });
+    expect(selectedProposal).toHaveFocus();
+    fireEvent.keyDown(selectedProposal, { key: "Escape" });
+    expect(options[1]).toHaveFocus();
+  });
+
+  it("admits an exact URL-selected proposal from the current source window", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue&selectedRecordId=PRP-READY",
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          selectedRecordId: "PRP-READY",
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    const selectedOption = await screen.findByRole("option", {
+      name: /Execution handoff/,
+    });
+    expect(selectedOption).toHaveAttribute("aria-selected", "true");
+    expect(getProposalMock).toHaveBeenCalledTimes(1);
+    expect(getProposalMock).toHaveBeenCalledWith("PRP-READY", true);
+    expect(getProposalApprovalsMock).toHaveBeenCalledWith("PRP-READY");
+  });
+
+  it("rejects a URL-selected proposal that is absent from the source window", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue&selectedRecordId=PRP-FOREIGN",
+    );
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        reviewContext={{
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          selectedRecordId: "PRP-FOREIGN",
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    const selectedOption = await screen.findByRole("option", {
+      name: /Technology concentration trim/,
+    });
+    expect(selectedOption).toHaveAttribute("aria-selected", "true");
+    expect(getProposalMock).toHaveBeenCalledTimes(1);
+    expect(getProposalMock).toHaveBeenCalledWith("PRP-RISK", true);
+    expect(getProposalMock).not.toHaveBeenCalledWith("PRP-FOREIGN", true);
+    expect(getProposalApprovalsMock).not.toHaveBeenCalledWith("PRP-FOREIGN");
   });
 
   it("does not interpret an empty approval register as approval not required", async () => {
@@ -2995,7 +3073,9 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByText("Independent checker required"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Within review deadline, 2 open")).toBeInTheDocument();
+    expect(
+      screen.getByText("Within review deadline, 2 open"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Request more evidence")).toBeInTheDocument();
     expect(screen.queryByText("PENDING_REVIEW")).not.toBeInTheDocument();
     expect(
@@ -3624,9 +3704,7 @@ describe("ProposalLifecycleWorkspace", () => {
       await screen.findByRole("button", { name: "Refresh discussion pack" }),
     );
 
-    expect(
-      await screen.findByText("Update failed"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Update failed")).toBeInTheDocument();
     expect(
       await screen.findByText(
         "The latest supporting-evidence refresh did not complete.",

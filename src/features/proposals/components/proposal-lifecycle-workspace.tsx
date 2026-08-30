@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
@@ -15,6 +16,7 @@ import {
   Text,
   WorkbenchContextNotice,
   buildWorkbenchUnsupportedReviewContextNotice,
+  useAdmittedSourceSelection,
   useSourceWindow,
 } from "@/design-system";
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
@@ -23,7 +25,7 @@ import {
   projectQuerySourcePosture,
 } from "@/features/platform-runtime/query-source-posture";
 import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api-client";
-import type { WorkspaceReviewContext } from "@/shell/review-context";
+import { buildReviewContextNavigationHref } from "@/shell/review-context";
 
 import {
   getAdvisoryPolicyEvaluation,
@@ -88,19 +90,18 @@ export default function ProposalLifecycleWorkspace({
   mode,
 }: {
   portfolioId: string;
-  reviewContext?: WorkspaceReviewContext;
+  reviewContext?: AdvisoryJourneyReviewContext;
   mode: ProposalLifecycleMode;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [policySelection, setPolicySelection] = useState<{
     portfolioId: string;
     evaluationId: string;
   } | null>(null);
   const [riskSelection, setRiskSelection] = useState<{
-    portfolioId: string;
-    proposalId: string;
-  } | null>(null);
-  const [approvalSelection, setApprovalSelection] = useState<{
     portfolioId: string;
     proposalId: string;
   } | null>(null);
@@ -176,7 +177,14 @@ export default function ProposalLifecycleWorkspace({
         hasMoreResults: Boolean(data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
       }),
-    [data?.next_cursor, mode, portfolioId, proposals, reviewContext, sourceWindow.hasPrevious],
+    [
+      data?.next_cursor,
+      mode,
+      portfolioId,
+      proposals,
+      reviewContext,
+      sourceWindow.hasPrevious,
+    ],
   );
   const riskSelectionIsCurrent =
     riskSelection?.portfolioId === portfolioId &&
@@ -189,17 +197,26 @@ export default function ProposalLifecycleWorkspace({
     ) ??
     model.rows[0] ??
     null;
-  const approvalSelectionIsCurrent =
-    approvalSelection?.portfolioId === portfolioId &&
-    model.rows.some((row) => row.proposalId === approvalSelection.proposalId);
+  const [selectedApprovalProposalId, selectApprovalProposal] =
+    useAdmittedSourceSelection({
+      scopeKey: `${portfolioId}:${sourceWindow.cursor ?? "first"}:${reviewContext?.selectedRecordId ?? ""}`,
+      requestedKey: reviewContext?.selectedRecordId,
+      admittedKeys: model.rows.map((row) => row.proposalId),
+      sourceResolved: data !== undefined,
+    });
   const selectedApprovalProposal =
-    model.rows.find(
-      (row) =>
-        row.proposalId ===
-        (approvalSelectionIsCurrent ? approvalSelection.proposalId : null),
-    ) ??
-    model.rows[0] ??
+    model.rows.find((row) => row.proposalId === selectedApprovalProposalId) ??
     null;
+
+  function updateApprovalSelection(proposalId: string) {
+    selectApprovalProposal(proposalId);
+    const href = buildReviewContextNavigationHref({
+      pathname,
+      searchParams,
+      patch: { portfolioId, selectedRecordId: proposalId },
+    });
+    if (href) router.push(href, { scroll: false });
+  }
   const approvalEvidenceQueryKey = [
     "proposal-approval-evidence",
     portfolioId,
@@ -495,7 +512,9 @@ export default function ProposalLifecycleWorkspace({
           ...policyEvidenceModel.sourceGaps,
           ...policyEvidenceModel.workflowBlockers,
         ].slice(0, 4)
-      : ["Selected suitability review identity does not agree across source evidence."];
+      : [
+          "Selected suitability review identity does not agree across source evidence.",
+        ];
 
     return {
       proposalId: policyEvidenceModel.proposalId,
@@ -1054,9 +1073,9 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Suitability decision desk"
             : mode === "discussion-pack"
-               ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle
-               : mode === "implementation"
-                 ? PROPOSAL_IMPLEMENTATION_COPY.workspaceTitle
+              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceTitle
+              : mode === "implementation"
+                ? PROPOSAL_IMPLEMENTATION_COPY.workspaceTitle
                 : model.title
       }
       subtitle={
@@ -1065,16 +1084,13 @@ export default function ProposalLifecycleWorkspace({
           : mode === "suitability"
             ? "Select a suitability review, confirm its client and product constraints, and resolve the next evidence requirement."
             : mode === "discussion-pack"
-               ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle
-               : mode === "implementation"
-                 ? PROPOSAL_IMPLEMENTATION_COPY.workspaceSubtitle
+              ? PROPOSAL_DISCUSSION_PACK_COPY.workspaceSubtitle
+              : mode === "implementation"
+                ? PROPOSAL_IMPLEMENTATION_COPY.workspaceSubtitle
                 : model.subtitle
       }
       actions={
-        <Link
-          className="nav-link"
-          href={proposalBuilderHref}
-        >
+        <Link className="nav-link" href={proposalBuilderHref}>
           Build Proposal
         </Link>
       }
@@ -1198,10 +1214,7 @@ export default function ProposalLifecycleWorkspace({
           title={model.emptyTitle}
           body={model.emptyBody}
           action={
-            <Link
-              className="nav-link"
-              href={proposalBuilderHref}
-            >
+            <Link className="nav-link" href={proposalBuilderHref}>
               Build proposal
             </Link>
           }
@@ -1212,9 +1225,7 @@ export default function ProposalLifecycleWorkspace({
           key={`${portfolioId}:${sourceWindow.cursor ?? "first"}`}
           rows={model.rows}
           selectedProposal={selectedApprovalProposal}
-          onSelectProposal={(proposalId) =>
-            setApprovalSelection({ portfolioId, proposalId })
-          }
+          onSelectProposal={updateApprovalSelection}
           evidence={approvalEvidenceModel}
           isLoading={approvalEvidencePosture.isInitialLoading}
           isRefreshing={approvalEvidencePosture.isRefreshing}
