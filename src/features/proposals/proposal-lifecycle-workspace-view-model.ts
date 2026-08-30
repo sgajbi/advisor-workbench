@@ -263,7 +263,10 @@ export function buildProposalDetailHref({
 }): string {
   const href = buildReviewContextHref(
     `/proposals/${encodeURIComponent(proposalId)}?fromMode=${encodeURIComponent(fromMode)}`,
-    reviewContext ?? (portfolioId ? { portfolioId } : {}),
+    {
+      ...(reviewContext ?? (portfolioId ? { portfolioId } : {})),
+      selectedRecordId: proposalId,
+    },
   );
   return sourceWindow
     ? buildProposalSourceWindowHref(href, sourceWindow)
