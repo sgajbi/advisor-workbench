@@ -24,7 +24,7 @@ import {
   type ReportOrderingCatalogueState,
   type ReportOrderingSubmissionState,
 } from "./report-ordering-screen-state";
-import { isActiveReportJobStatus } from "./report-job-lifecycle";
+import { isActiveReportJobLifecycle } from "./report-job-lifecycle";
 import {
   applyReportScopeReadiness,
   buildReportOrderingViewModel,
@@ -408,7 +408,7 @@ export function useReportOrderingWorkflow({
     ) return;
     const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
     const hasActiveHistory = history?.items.some(
-      (item) => isActiveReportJobStatus(item.status),
+      (item) => isActiveReportJobLifecycle(item.status, item.currentStep),
     ) ?? false;
     const submittedLifecycleObserved = Boolean(
       submittedHandle &&

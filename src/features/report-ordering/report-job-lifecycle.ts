@@ -32,7 +32,13 @@ export function isTerminalReportJobStatus(value: string | null | undefined): boo
     normalized === "cancelled";
 }
 
-export function isActiveReportJobStatus(value: string | null | undefined): boolean {
-  const normalized = normalizeReportJobLifecycleValue(value);
-  return normalized !== null && !isTerminalReportJobStatus(normalized);
+export function isActiveReportJobLifecycle(
+  status: string | null | undefined,
+  currentStep: string | null | undefined,
+): boolean {
+  const normalizedStatus = normalizeReportJobLifecycleValue(status);
+  const normalizedStep = normalizeReportJobLifecycleValue(currentStep);
+  return normalizedStatus !== null &&
+    normalizedStep !== null &&
+    !isTerminalReportJobStatus(normalizedStatus);
 }
