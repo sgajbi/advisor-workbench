@@ -1672,8 +1672,20 @@ Most relevant current governance:
     the exact Gateway response and rows read from the rendered document. Do not hard-code expected
     business states, calculate policy in the browser, or generalize a source adapter until a second
     real consumer proves the same mechanics. Risk Review and Advisor Book are the reference
-    consumers. A new screen must include unit diagnostics and fixture/browser proof before claiming
+    consumers and are enrolled in `scripts/quality/source-authority-contracts.mjs`. A new critical
+    Gateway-backed surface must add its domain adapter, stable rendered identity/state evidence,
+    executable source mutation, controlled reassuring-fallback proof, and production wiring
+    evidence to that registry. `npm run quality:source-authority` fails closed for empty or
+    single-surface enrollment and runs in every blocking lint lane. It governs source-owned
+    identity and business state, not labels, number/date formatting, or other presentation-only
+    fields. A new screen must include unit diagnostics and fixture/browser proof before claiming
     exact source rendering.
+23. Global function coverage is a measured non-regression ratchet, not a target for shallow tests.
+    `vitest.config.ts` banks the exact 2026-08-30 main-derived measurement at 93.29% after meaningful
+    source-authority, failure, and mismatch proof. Do not lower the floor, add source exclusions, or
+    exercise functions without asserting advisor-visible behavior. Raise the floor when exact-head
+    measurement improves; any controlled threshold failure must remain diagnostic and must never
+    rewrite the checked-in threshold.
 
 ## Context Maintenance Rule
 

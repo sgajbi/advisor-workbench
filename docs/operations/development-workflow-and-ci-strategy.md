@@ -37,3 +37,29 @@ node scripts/testing/run-e2e-fixture-family.mjs --family performance
 Do not add raw `--grep` aliases to `package.json`; register the scenario and its optional focus
 selector centrally. Fixture evidence proves deterministic Workbench behavior. Canonical Gateway
 and source-service support still requires the governed live-validation path.
+
+## Source-authority fitness gate
+
+`npm run quality:source-authority` executes before dependency and presentation linting in every
+blocking static-analysis lane. It enrolls critical Gateway-backed surfaces through domain-local
+source adapters and stable rendered identity/state attributes. Each enrollment proves that:
+
+1. Gateway identity and state survive a controlled source mutation unchanged;
+2. exact rendered evidence rejects omitted, extra, duplicated, substituted, or mismatched rows;
+3. a plausible reassuring fallback, such as Risk `breach` rendered as `within`, fails;
+4. the production adapter, component evidence attributes, and browser extraction remain wired; and
+5. an empty or single-surface registry fails closed.
+
+Risk mandate comparison and Advisor Book are the reference enrollments. Add a new surface only when
+its Gateway contract owns the facts and the screen has a domain adapter plus deterministic browser
+evidence. Presentation-only labels and formatting remain outside this control; do not turn the gate
+into a literal scanner or a second domain model.
+
+## Coverage ratchet
+
+`npm run test:coverage` measures all governed application roots with V8 and blocks the protected
+quality lanes below the checked-in thresholds. Function coverage is banked at the exact 2026-08-30
+measurement of 93.29% (3,115 of 3,339 functions), up from the stale 70% floor. The ratchet is
+monotonic: improve behavior tests and raise it when coverage grows; never lower it, add exclusions,
+or add assertion-free tests to recover a green build. A threshold failure reports actual versus
+required coverage through Vitest.
