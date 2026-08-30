@@ -16,6 +16,8 @@ export const REPORT_CENTRE_FIXTURE_PORTFOLIOS = {
   recovery: RECOVERY_PORTFOLIO_ID,
   restricted: "PB_REPORT_RESTRICTED_001",
   empty: "PB_REPORT_EMPTY_001",
+  unknownLifecycle: "PB_REPORT_UNKNOWN_LIFECYCLE_001",
+  refreshFailure: "PB_REPORT_REFRESH_FAILURE_001",
 } as const;
 
 export type ReportCentreFixtureGateway = {
@@ -30,6 +32,7 @@ export async function startReportCentreFixtureGateway({
 }): Promise<ReportCentreFixtureGateway> {
   let recoveryAttempts = 0;
   let acceptedRequestCount = 0;
+  let refreshHistoryAttempts = 0;
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
 
@@ -98,7 +101,28 @@ export async function startReportCentreFixtureGateway({
     }
 
     if (requestUrl.pathname === "/api/v1/report-jobs") {
-      sendJson(response, buildReportJobListResponse());
+      const portfolioId = requestUrl.searchParams.get("portfolioId") ?? "";
+      if (
+        portfolioId === REPORT_CENTRE_FIXTURE_PORTFOLIOS.refreshFailure &&
+        refreshHistoryAttempts++ > 0
+      ) {
+        sendJson(response, { code: "report_history_temporarily_unavailable" }, 503);
+        return;
+      }
+      const history = buildReportJobListResponse();
+      sendJson(response, {
+        ...history,
+        appliedFilters: { ...history.appliedFilters, portfolioId },
+        items: history.items.map((item) => {
+          if (portfolioId === REPORT_CENTRE_FIXTURE_PORTFOLIOS.unknownLifecycle) {
+            return { ...item, status: "future_lifecycle", currentStep: "future_step" };
+          }
+          if (portfolioId === REPORT_CENTRE_FIXTURE_PORTFOLIOS.refreshFailure) {
+            return { ...item, status: "queued", currentStep: "queued" };
+          }
+          return item;
+        }),
+      });
       return;
     }
 
@@ -260,6 +284,25 @@ function buildWorkspaceResponse(portfolioId: string) {
     cashflow_outlook: null,
     performance: null,
     rebalance: null,
+    control_capabilities: {
+      historical_snapshots: {
+        state: "supported",
+        reason: "Historical report dates are source-confirmed.",
+        requested_as_of_date: "2026-04-22",
+        effective_as_of_date: "2026-04-22",
+        earliest_available_as_of_date: "2026-04-01",
+        latest_available_as_of_date: "2026-04-22",
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "Reporting currencies are source-confirmed.",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "SGD",
+        supported_currencies: ["SGD", "USD"],
+        module_capabilities: [],
+      },
+    },
     workflow_cues: [],
     warnings: [],
     partial_failures: [],
