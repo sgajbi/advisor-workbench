@@ -589,7 +589,8 @@
         "src/apps/performance/performance-workspace-modes.ts",
         "src/apps/performance/components/performance-workspace-view.tsx",
         "src/apps/performance/evidence/performance-evidence-assurance-view-model.ts",
-        "src/apps/performance/evidence/performance-evidence-assurance-workspace.tsx"
+        "src/apps/performance/evidence/performance-evidence-assurance-workspace.tsx",
+        "src/copy/performance-evidence-copy.ts"
       ],
       "runtimeEvidence": [
         "scripts/live/validation/browser-workflows.mjs",

@@ -5244,9 +5244,37 @@ Research was reviewed on 2026-08-14 from primary industry and standards sources:
 6. Copying a competitor's layout, language, navigation, or visual identity instead of applying the
    bounded exception-control principle to Lotus-owned source truth.
 
+### Business-language convergence refresh (2026-08-30)
+
+Primary-source review refreshed the language boundary without changing the screen's contract or
+states:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   frames advisor productivity through connected whole-portfolio insight. Lotus adopts a concise
+   decision-first review hierarchy, not BlackRock's product claims, visual identity, or breadth.
+2. [CFA Institute Standard III(D)](https://www.cfainstitute.org/standards/professionals/code-ethics-standards/standards-of-practice-iii-d)
+   requires performance information to be fair, accurate, and complete. Lotus keeps qualifications
+   visible beside the review decision and does not imply verification, compliance, or client-release
+   approval.
+3. [WAI-ARIA Disclosure Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) supports the
+   existing keyboard-operable collapsed Support detail for implementation evidence that is not part
+   of the advisor's first scan.
+
+The refresh adopts **Review status**, **Calculation availability**, **Calculation reference**, and
+**Source availability** for advisor-facing decisions. It retains exact source values, identifiers,
+and availability checks only inside Support detail. It rejects competitor-style claims, GIPS or
+client-approval language, a new component or dependency, and any new browser-owned inference.
+
+The Performance Evidence inventory moved from 14 technical-copy findings to zero. The repository
+ratchet moved from 263 to 249 findings while the unresolved-expression count remained 1,720 with
+the same identity digest and zero exceptions. The screen's ready, attention, incomplete, and
+unavailable states, source authority, routes, calculations, and persistence behavior did not
+change.
+
 ### Validation and publication decision
 
-Workbench #699 owns this slice. Focused model and component tests prove readiness admission,
+Workbench #699 owns the original screen and #798 owns the 2026-08-30 business-language refresh.
+Focused model and component tests prove readiness admission,
 partial, pending, failed, stale, unknown, fallback, limitation, source-supportability, empty,
 artifact, archive, business-language, and technical-containment behavior. Parent integration tests
 prove mode composition. An isolated optimized-production browser journey on owned ports proves the
