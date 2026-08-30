@@ -269,9 +269,14 @@ describe("ReportOrderingWorkspace", () => {
     expect(acceptedBrief).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getAllByText(
+        "Complete this required report evidence before review.",
+      ),
+    ).toHaveLength(1);
+    expect(
+      screen.getByText(
         "Accepted advisor brief is required when Advisor commentary is included.",
       ),
-    ).toHaveLength(2);
+    ).toBeInTheDocument();
 
     fireEvent.change(acceptedBrief, { target: { value: "abr_accepted_1" } });
     fireEvent.click(review);
@@ -1667,7 +1672,10 @@ describe("ReportOrderingWorkspace", () => {
     const date = screen.getByLabelText("Report date");
     await waitFor(() => expect(date).toHaveFocus());
     expect(date).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getAllByText("Select a valid report date.")).toHaveLength(2);
+    expect(screen.getByText("Select a valid report date.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Choose a report date within the available portfolio history."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
   });
 

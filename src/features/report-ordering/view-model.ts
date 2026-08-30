@@ -609,16 +609,12 @@ function reportLifecycleCopy(
   if (normalized === "archived") {
     return {
       label: "Archived",
-      detail: "The report is held in the governed archive. Client delivery remains separate.",
+      detail: "The report is held in the document archive. Client delivery remains separate.",
       tone: "success" as const,
     };
   }
   if (normalized === "failed") {
-    return {
-      label: "Request failed",
-      detail: reportFailureCopy(failureCategory),
-      tone: "danger" as const,
-    };
+    return reportFailureLifecycleCopy(failureCategory);
   }
   if (normalized === "cancelled") {
     return {
@@ -644,7 +640,7 @@ function reportLifecycleCopy(
   if (normalized === "archiving") {
     return {
       label: "Archiving report",
-      detail: "Report data is complete and the governed archive record is being prepared.",
+      detail: "Report data is complete and the archive record is being prepared.",
       tone: "warn" as const,
     };
   }
@@ -655,26 +651,54 @@ function reportLifecycleCopy(
   };
 }
 
-function reportFailureCopy(failureCategory: string | null): string {
+function reportFailureLifecycleCopy(failureCategory: string | null) {
   if (failureCategory === "data_incomplete") {
-    return "Report data could not be completed from its sources; the request was not resumed.";
+    return {
+      label: "Request failed",
+      detail: "Report data could not be completed from its sources; the request was not resumed.",
+      tone: "danger" as const,
+    };
   }
   if (failureCategory === "upstream_data_failed") {
-    return "Required source evidence was unavailable. Reporting may permit an operational retry.";
+    return {
+      label: "Request failed",
+      detail: "Required source evidence was unavailable. Reporting may permit an operational retry.",
+      tone: "danger" as const,
+    };
   }
   if (failureCategory === "timeout") {
-    return "Report preparation did not complete within the governed time limit.";
+    return {
+      label: "Request failed",
+      detail: "Report preparation did not complete within the allowed time.",
+      tone: "danger" as const,
+    };
   }
   if (failureCategory === "render_validation_failed" || failureCategory === "render_conflict") {
-    return "The governed document could not be created from the completed report data.";
+    return {
+      label: "Request failed",
+      detail: "The requested document could not be created from the completed report data.",
+      tone: "danger" as const,
+    };
   }
   if (failureCategory === "archive_storage_failed" || failureCategory === "archive_execution_failed") {
-    return "The report could not be placed in the governed archive.";
+    return {
+      label: "Request failed",
+      detail: "The report could not be placed in the document archive.",
+      tone: "danger" as const,
+    };
   }
   if (failureCategory) {
-    return "Reporting recorded a failure that requires operational review before any retry.";
+    return {
+      label: "Request failed",
+      detail: "Reporting recorded a failure that requires operational review before any retry.",
+      tone: "danger" as const,
+    };
   }
-  return "The report request failed without a confirmed reason. Use the support reference for review.";
+  return {
+    label: "Request failed",
+    detail: "The report request failed without a confirmed reason. Use the support reference for review.",
+    tone: "danger" as const,
+  };
 }
 
 function byDisplayOrder(left: ReportSection, right: ReportSection): number {

@@ -196,7 +196,7 @@ test("uses source-governed ordering controls and focuses conditional evidence", 
   await expect(advisorBrief).toHaveAttribute("aria-invalid", "true");
   await expect(
     page.getByText(
-      "Accepted advisor brief is required when Advisor commentary is included.",
+      "Complete this required report evidence before review.",
       { exact: true },
     ),
   ).toBeVisible();

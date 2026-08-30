@@ -8,6 +8,9 @@ import { FieldLabel, SectionBlock, SemanticBadge } from "@/design-system";
 
 import {
   buildReportOrderingFormSchema,
+  REPORT_CURRENCY_FORM_ERROR,
+  REPORT_DATE_FORM_ERROR,
+  REPORT_REQUIRED_EVIDENCE_FORM_ERROR,
   type ReportOrderingFormValues,
 } from "../report-ordering-form";
 import type { ReportOrderingConfiguration, ReportOrderingViewModel } from "../view-model";
@@ -163,8 +166,11 @@ export function ReportConfigurationPanel({
               render={({ field, fieldState }) => (
                 <>
                   <input
-                    {...field}
                     id="report-ordering-as-of-date"
+                    name={field.name}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                     className={`${styles.fieldInput} workbench-input`}
                     type="date"
                     min={model.sourceContext.earliestReportDate}
@@ -184,7 +190,9 @@ export function ReportConfigurationPanel({
                   <small id="report-ordering-as-of-help">
                     Available from {model.sourceContext.earliestReportDate} to {model.sourceContext.latestReportDate}, as confirmed by the portfolio record.
                   </small>
-                  <FieldError id="report-ordering-as-of-error" message={fieldState.error?.message} />
+                  <FieldError id="report-ordering-as-of-error" visible={Boolean(fieldState.error)}>
+                    {REPORT_DATE_FORM_ERROR}
+                  </FieldError>
                 </>
               )}
             />
@@ -200,8 +208,11 @@ export function ReportConfigurationPanel({
                 render={({ field, fieldState }) => (
                   <>
                     <select
-                      {...field}
                       id="report-ordering-currency"
+                      name={field.name}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
                       className={`${styles.fieldInput} workbench-input`}
                       disabled={disabled || model.sourceContext.reportingCurrencies.length === 0}
                       onChange={(event) => {
@@ -224,8 +235,10 @@ export function ReportConfigurationPanel({
                     </small>
                     <FieldError
                       id="report-ordering-currency-error"
-                      message={fieldState.error?.message}
-                    />
+                      visible={Boolean(fieldState.error)}
+                    >
+                      {REPORT_CURRENCY_FORM_ERROR}
+                    </FieldError>
                   </>
                 )}
               />
@@ -244,8 +257,10 @@ export function ReportConfigurationPanel({
                   render={({ field, fieldState }) => (
                     <>
                       <input
-                        {...field}
                         id={fieldId}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
                         className={`${styles.fieldInput} workbench-input`}
                         type="text"
                         value={field.value ?? ""}
@@ -263,7 +278,9 @@ export function ReportConfigurationPanel({
                         aria-describedby={fieldState.error ? `${helpId} ${errorId}` : helpId}
                       />
                       <small id={helpId}>{fieldDefinition.description}</small>
-                      <FieldError id={errorId} message={fieldState.error?.message} />
+                      <FieldError id={errorId} visible={Boolean(fieldState.error)}>
+                        {REPORT_REQUIRED_EVIDENCE_FORM_ERROR}
+                      </FieldError>
                     </>
                   )}
                 />
@@ -386,8 +403,16 @@ export function ReportConfigurationPanel({
   );
 }
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  return message ? <small id={id} className={styles.fieldError}>{message}</small> : null;
+function FieldError({
+  id,
+  visible,
+  children,
+}: {
+  id: string;
+  visible: boolean;
+  children: string;
+}) {
+  return visible ? <small id={id} className={styles.fieldError}>{children}</small> : null;
 }
 
 function toDomId(value: string): string {
