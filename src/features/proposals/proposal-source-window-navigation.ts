@@ -40,7 +40,7 @@ export function parseProposalSourceWindowContext(
   const cursor = cursorValues[0];
   const windowNumber = Number(windowValues[0]);
   if (
-    !isValidCursor(cursor) ||
+    !isValidProposalSourceCursor(cursor) ||
     !Number.isSafeInteger(windowNumber) ||
     windowNumber < 1 ||
     windowNumber > MAXIMUM_WINDOW_NUMBER ||
@@ -65,7 +65,7 @@ export function buildProposalSourceWindowHref(
   }
   if (
     (context.cursor === undefined && context.windowNumber !== 1) ||
-    (context.cursor !== undefined && !isValidCursor(context.cursor)) ||
+    (context.cursor !== undefined && !isValidProposalSourceCursor(context.cursor)) ||
     !Number.isSafeInteger(context.windowNumber) ||
     context.windowNumber < 1 ||
     context.windowNumber > MAXIMUM_WINDOW_NUMBER
@@ -107,8 +107,11 @@ function getSearchParamValues(
   return typeof value === "string" ? [value] : value;
 }
 
-function isValidCursor(value: string): boolean {
+export function isValidProposalSourceCursor(
+  value: unknown,
+): value is string {
   return (
+    typeof value === "string" &&
     value.length > 0 &&
     value.length <= MAXIMUM_CURSOR_LENGTH &&
     value === value.trim() &&
