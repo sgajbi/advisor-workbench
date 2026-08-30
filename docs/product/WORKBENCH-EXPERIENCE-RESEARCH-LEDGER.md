@@ -341,7 +341,9 @@ admitted only from the returned source window, Enter and Escape form a complete 
 Proposal Detail return restores the admitted selected proposal from the same page-local Gateway
 cursor window. Workbench carries the opaque cursor and window ordinal without interpreting
 either as business evidence, reconciles browser Back/Forward navigation to that address, and drops
-the cursor if source proposal evidence corrects the portfolio identity. The shared composition uses two columns only when its business lane
+the cursor if source proposal evidence corrects the portfolio identity. Every Proposal Detail
+handoff binds the exact proposal being opened, including the source-ranked fallback row. The shared
+composition uses two columns only when its business lane
 has sufficient capacity. Persistent navigation and context rails make the lane stack at 1280
 pixels; after those rails reflow at 1024 pixels, the wider main lane supports the split again.
 Neither composition changes DOM or business order.

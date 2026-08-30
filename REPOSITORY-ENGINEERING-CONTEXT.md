@@ -564,11 +564,12 @@ Current repository posture:
     `selectedRecordId` only from the current source window, push user selection without losing the
     surrounding review context, and carry the opaque page-local cursor plus window ordinal
     through Proposal Detail and its return link so a later-window selection is rehydrated from the
-    same Gateway window. Validate cursor transport shape, but never interpret the token as business
-    or ordering truth. Reconcile browser-history navigation to the addressed window, reject malformed
-    continuation cursors at the response boundary, and discard a cursor when source proposal evidence
-    corrects the addressed portfolio. Use Enter to focus decision evidence, and use Escape to restore focus to the
-    selected source row. Load detail,
+    same Gateway window. Every detail handoff must overwrite route selection with the exact proposal
+    being opened, including a source-ranked fallback selection. Validate cursor transport shape,
+    but never interpret the token as business or ordering truth. Reconcile browser-history navigation
+    to the addressed window, reject malformed continuation cursors at the response boundary, and
+    discard a cursor when source proposal evidence corrects the addressed portfolio. Use Enter to
+    focus decision evidence, and use Escape to restore focus to the selected source row. Load detail,
     workflow, approvals, and lineage for the selected proposal only and reconcile the selected
     worklist portfolio/state/version, proposal identity, workflow state, and active version before
     publishing maker-checker posture. A refresh confirms only after the queue record and all four

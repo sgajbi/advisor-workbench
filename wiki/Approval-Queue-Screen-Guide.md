@@ -87,6 +87,8 @@ These roles describe business use, not authenticated production entitlement.
 - Admits a URL `selectedRecordId` only when the exact proposal is present in the current Gateway
   window. A stale or foreign identity falls back to the first source-ranked row and never triggers
   selected-evidence reads for the absent record.
+- Binds every Proposal Detail handoff to the exact proposal being opened, including a source-ranked
+  fallback row, so a changed queue order cannot redirect the return selection.
 - Presents source-supported proposal title, identity, lifecycle stage, active version,
   creator-record posture, recorded date, and bounded next action where supplied.
 - Loads detail, workflow, approval records, and lineage for the selected proposal only; it does not
