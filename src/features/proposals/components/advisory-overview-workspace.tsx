@@ -34,6 +34,7 @@ import {
 } from "../advisory-journey-navigation";
 import { buildAdvisoryOverviewModel } from "../advisory-overview-view-model";
 import { buildProposalQueueWorkflowContext } from "../proposal-workflow-context-view-model";
+import { MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER } from "../proposal-source-window-navigation";
 import { usePublishProposalWorkflowContext } from "./proposal-workflow-context";
 import styles from "./advisory-overview-workspace.module.css";
 
@@ -49,7 +50,9 @@ export default function AdvisoryOverviewWorkspace({
   reviewContext: AdvisoryJourneyReviewContext;
 }) {
   const { portfolioId } = reviewContext;
-  const sourceWindow = useSourceWindow(portfolioId);
+  const sourceWindow = useSourceWindow(portfolioId, undefined, {
+    maximumWindowNumber: MAXIMUM_PROPOSAL_SOURCE_WINDOW_NUMBER,
+  });
   const [sourceRefreshOutcome, setSourceRefreshOutcome] =
     useState<SourceRefreshOutcome | null>(null);
   const proposalQuery = useQuery({
@@ -66,18 +69,21 @@ export default function AdvisoryOverviewWorkspace({
     () => proposalQuery.data?.items ?? [],
     [proposalQuery.data?.items],
   );
+  const hasNextProposalWindow = sourceWindow.canShowNext(
+    proposalQuery.data?.next_cursor,
+  );
   const model = useMemo(
     () =>
       buildAdvisoryOverviewModel({
         reviewContext,
         proposals,
-        hasMoreResults: Boolean(proposalQuery.data?.next_cursor),
+        hasMoreResults: hasNextProposalWindow,
         hasPreviousResults: sourceWindow.hasPrevious,
         windowNumber: sourceWindow.windowNumber,
       }),
     [
       reviewContext,
-      proposalQuery.data?.next_cursor,
+      hasNextProposalWindow,
       proposals,
       sourceWindow.hasPrevious,
       sourceWindow.windowNumber,
@@ -126,7 +132,7 @@ export default function AdvisoryOverviewWorkspace({
         hasUnavailableEvidence: false,
         hasProposalRefreshFailure: sourcePosture.hasRefreshFailure,
         hasSupportingEvidenceRefreshFailure: false,
-        hasMoreResults: Boolean(proposalQuery.data?.next_cursor),
+        hasMoreResults: hasNextProposalWindow,
         hasPreviousResults: sourceWindow.hasPrevious,
         windowNumber: sourceWindow.windowNumber,
         totalCount: model.visibleProposalCount,
@@ -138,7 +144,7 @@ export default function AdvisoryOverviewWorkspace({
     [
       model,
       portfolioId,
-      proposalQuery.data?.next_cursor,
+      hasNextProposalWindow,
       sourcePosture.hasRefreshFailure,
       sourcePosture.isInitialLoading,
       sourcePosture.isPermissionBlocked,
@@ -418,6 +424,7 @@ export default function AdvisoryOverviewWorkspace({
             currentWindow={sourceWindow.windowNumber}
             hasPrevious={sourceWindow.hasPrevious}
             hasNext={Boolean(proposalQuery.data?.next_cursor)}
+            canNext={hasNextProposalWindow}
             isLoading={proposalQuery.isFetching}
             itemLabel="proposals"
             viewLabel="Proposal view"

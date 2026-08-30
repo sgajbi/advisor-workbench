@@ -16,6 +16,10 @@ type InitialSourceWindow = Readonly<{
   windowNumber?: number;
 }>;
 
+type SourceWindowOptions = Readonly<{
+  maximumWindowNumber?: number;
+}>;
+
 function createInitialHistory(
   scopeKey: string,
   initial?: InitialSourceWindow,
@@ -69,7 +73,10 @@ function reconcileAddressedHistory(
 export function useSourceWindow(
   scopeKey: string,
   initial?: InitialSourceWindow,
+  options?: SourceWindowOptions,
 ) {
+  const maximumWindowNumber =
+    options?.maximumWindowNumber ?? Number.MAX_SAFE_INTEGER;
   const [sourceHistory, setSourceHistory] = useState<SourceWindowHistory>(() =>
     createInitialHistory(scopeKey, initial)
   );
@@ -83,6 +90,23 @@ export function useSourceWindow(
     setSourceHistory(activeHistory);
   }
 
+  const canShowNext = useCallback(
+    (nextCursor?: string | null) => {
+      if (
+        !nextCursor ||
+        activeHistory.baseWindowNumber + activeHistory.index >=
+          maximumWindowNumber
+      ) {
+        return false;
+      }
+      return (
+        activeHistory.cursors[activeHistory.index + 1] === nextCursor ||
+        !activeHistory.cursors.includes(nextCursor)
+      );
+    },
+    [activeHistory, maximumWindowNumber],
+  );
+
   const showNext = useCallback(
     (nextCursor?: string | null) => {
       if (!nextCursor) {
@@ -94,7 +118,16 @@ export function useSourceWindow(
           scopeKey,
           initial,
         );
-        if (scopedHistory.cursors[scopedHistory.index] === nextCursor) {
+        if (
+          scopedHistory.baseWindowNumber + scopedHistory.index >=
+          maximumWindowNumber
+        ) {
+          return scopedHistory;
+        }
+        if (scopedHistory.cursors[scopedHistory.index + 1] === nextCursor) {
+          return { ...scopedHistory, index: scopedHistory.index + 1 };
+        }
+        if (scopedHistory.cursors.includes(nextCursor)) {
           return scopedHistory;
         }
         return {
@@ -107,7 +140,7 @@ export function useSourceWindow(
         };
       });
     },
-    [initial, scopeKey]
+    [initial, maximumWindowNumber, scopeKey]
   );
 
   const showPrevious = useCallback(() => {
@@ -132,6 +165,7 @@ export function useSourceWindow(
         : undefined,
     windowNumber: activeHistory.baseWindowNumber + activeHistory.index,
     hasPrevious: activeHistory.index > 0,
+    canShowNext,
     showNext,
     showPrevious,
   };
