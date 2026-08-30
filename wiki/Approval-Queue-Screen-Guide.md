@@ -77,9 +77,11 @@ These roles describe business use, not authenticated production entitlement.
 - Reads proposal summaries only through the Workbench BFF and Gateway.
 - Keeps proposal count and attention posture explicitly scoped to the current source window.
 - Provides previous and next source-window navigation without claiming global completeness.
-- Persists the opaque page-local cursor and visible window number when moving into Proposal Detail,
+- Persists the opaque page-local cursor and window ordinal when moving into Proposal Detail,
   then re-reads that exact Gateway window on return. Workbench validates the address shape but does
-  not interpret the cursor as queue order or business evidence.
+  not interpret the cursor as queue order or business evidence. Browser Back and Forward reconcile
+  the worklist to the addressed window; a source-owned portfolio correction discards a cursor that
+  belonged to the stale addressed portfolio.
 - Uses the shared `WorkbenchWorklist` composition with one keyboard-operable source list, one
   selected decision region, stable accessibility relationships, and visible selected state.
 - Admits a URL `selectedRecordId` only when the exact proposal is present in the current Gateway
