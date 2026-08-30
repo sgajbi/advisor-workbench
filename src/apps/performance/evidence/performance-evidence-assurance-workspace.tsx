@@ -8,7 +8,10 @@ import {
 import type { PerformanceEvidenceView } from "@/features/workbench/types";
 import type { WorkspaceCapability } from "@/shell/workspace-capabilities";
 
-import { buildPerformanceEvidenceAssuranceViewModel } from "./performance-evidence-assurance-view-model";
+import {
+  buildPerformanceEvidenceAssuranceViewModel,
+  PERFORMANCE_EVIDENCE_COPY,
+} from "./performance-evidence-assurance-view-model";
 import type { PerformanceEvidenceSelectionContext } from "./performance-evidence-assurance-view-model";
 import styles from "./performance-evidence-assurance-workspace.module.css";
 
@@ -21,9 +24,8 @@ export default function PerformanceEvidenceAssuranceWorkspace({
   evidenceView?: PerformanceEvidenceView | null;
   selection: PerformanceEvidenceSelectionContext;
 }) {
-  const title = "Calculation assurance";
-  const subtitle =
-    "Confirm whether the selected performance result has complete calculation, lineage, and supporting evidence for internal review.";
+  const title = PERFORMANCE_EVIDENCE_COPY.workspace.title;
+  const subtitle = PERFORMANCE_EVIDENCE_COPY.workspace.subtitle;
 
   if (capability.state === "unavailable" || !evidenceView) {
     return (
@@ -35,8 +37,12 @@ export default function PerformanceEvidenceAssuranceWorkspace({
       >
         <ScreenStatePanel
           kind={capability.state === "partial" ? "partial" : "unavailable"}
-          title={capability.state === "partial" ? "Assurance evidence incomplete" : "Assurance unavailable"}
-          body="The source has not provided a usable calculation-assurance package for this performance selection."
+          title={
+            capability.state === "partial"
+              ? PERFORMANCE_EVIDENCE_COPY.workspace.incompleteTitle
+              : PERFORMANCE_EVIDENCE_COPY.workspace.unavailableTitle
+          }
+          body={PERFORMANCE_EVIDENCE_COPY.workspace.unavailableBody}
           hint={capability.reason}
           className={styles.statePanel}
           surface="analysis"
@@ -61,7 +67,9 @@ export default function PerformanceEvidenceAssuranceWorkspace({
       >
         <section className={`${styles.assuranceSummary} ${styles[view.state]}`} aria-labelledby="performance-assurance-heading">
           <div className={styles.assuranceCopy}>
-            <Text variant="eyebrow" as="span">Assurance posture</Text>
+            <Text variant="eyebrow" as="span">
+              {PERFORMANCE_EVIDENCE_COPY.summary.eyebrow}
+            </Text>
             <Text variant="sectionTitle" as="h4" id="performance-assurance-heading">
               {view.posture}
             </Text>
@@ -69,7 +77,10 @@ export default function PerformanceEvidenceAssuranceWorkspace({
               {view.summary}
             </Text>
           </div>
-          <dl className={styles.context} aria-label="Performance assurance context">
+          <dl
+            className={styles.context}
+            aria-label={PERFORMANCE_EVIDENCE_COPY.summary.contextLabel}
+          >
             {view.context.map((item) => (
               <div key={item.label} className={styles.contextItem}>
                 <dt>{item.label}</dt>
@@ -214,8 +225,8 @@ export default function PerformanceEvidenceAssuranceWorkspace({
             </Text>
             <Text variant="bodySmall">
               Open source-published calculation records above. {view.methodologyCount > 0
-                ? `${view.methodologyCount} governed methodology ${view.methodologyCount === 1 ? "reference is" : "references are"} recorded in support details.`
-                : "No methodology reference is published for this selection."}
+                ? PERFORMANCE_EVIDENCE_COPY.methodology.recorded(view.methodologyCount)
+                : PERFORMANCE_EVIDENCE_COPY.methodology.none}
             </Text>
           </div>
           <details className={styles.supportDisclosure}>

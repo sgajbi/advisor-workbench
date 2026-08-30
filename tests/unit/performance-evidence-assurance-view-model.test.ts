@@ -541,7 +541,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
         "Alternate calculation path applied",
         "Source limitation applies",
         "Evidence coverage is limited",
-        "Source assurance qualified",
+        "Calculation available with limitations",
       ])
     );
     expect(view.exceptions.map((item) => item.detail).join(" ")).not.toContain(
@@ -652,7 +652,7 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.exceptions).toContainEqual(
       expect.objectContaining({
         key: "source-supportability-identity-0",
-        title: "Source supportability identity not confirmed",
+        title: "Calculation reference not confirmed",
         tone: "warn",
       })
     );
@@ -949,7 +949,10 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     expect(view.state).toBe("attention");
     expect(view.exceptions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ title: "Source assurance qualified", tone: "warn" }),
+        expect.objectContaining({
+          title: "Calculation available with limitations",
+          tone: "warn",
+        }),
         expect.objectContaining({ title: "Source calculation unavailable", tone: "danger" }),
       ])
     );
@@ -958,9 +961,9 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
   it.each([
     ["coverage", { coverage: null }, "Evidence coverage not confirmed"],
     [
-      "source supportability",
+      "calculation availability",
       { source_supportability: [] as NonNullable<PerformanceEvidenceView["source_supportability"]> },
-      "Source supportability not confirmed",
+      "Calculation availability not confirmed",
     ],
     [
       "methodology",
