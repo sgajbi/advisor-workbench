@@ -1,5 +1,6 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import PerformanceSourceSelectionControls from "../../src/apps/performance/components/performance-source-selection-controls";
@@ -44,8 +45,17 @@ const baseProps = {
 };
 
 describe("PerformanceSourceSelectionControls", () => {
+  it("uses the business Review window label before client hydration", () => {
+    const markup = renderToString(
+      <PerformanceSourceSelectionControls {...baseProps} onRequestChange={vi.fn()} />,
+    );
+
+    expect(markup).toContain("Review window");
+    expect(markup).not.toContain("Custom window");
+  });
+
   it("routes every source selection through one complete request-shaping path", async () => {
-    const onRequestChange = vi.fn();
+    const onRequestChange = vi.fn().mockResolvedValue(true);
     render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
 
     await waitFor(() => {
@@ -124,7 +134,7 @@ describe("PerformanceSourceSelectionControls", () => {
         reportStartDate: "2026-02-01",
         reportEndDate: "2026-03-31",
       },
-      { kind: "action", actionLabel: "Apply" },
+      { kind: "window" },
     );
     expect(windowTrigger).toHaveTextContent("01 Jan 2026 – 14 Apr 2026");
     expect(screen.getByRole("button", { name: "Applying…" })).toBeDisabled();
@@ -203,7 +213,7 @@ describe("PerformanceSourceSelectionControls", () => {
   });
 
   it("keeps the last confirmed window after a rejected source refresh", async () => {
-    const onRequestChange = vi.fn();
+    const onRequestChange = vi.fn().mockResolvedValue(true);
     const { rerender } = render(
       <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />,
     );
@@ -232,6 +242,52 @@ describe("PerformanceSourceSelectionControls", () => {
       expect(windowTrigger).toHaveFocus();
     });
     expect(onRequestChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("releases the dialog when the parent reports that no refresh was dispatched", async () => {
+    const onRequestChange = vi.fn().mockResolvedValue(false);
+    render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
+
+    const windowTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    fireEvent.click(windowTrigger);
+    fireEvent.change(screen.getByLabelText(/^From/), { target: { value: "2026-02-01" } });
+    fireEvent.change(screen.getByLabelText(/^To/), { target: { value: "2026-03-31" } });
+    fireEvent.click(screen.getByRole("button", { name: "Apply window" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(windowTrigger).toHaveFocus();
+    });
+    expect(onRequestChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        period: "EXPLICIT",
+        reportStartDate: "2026-02-01",
+        reportEndDate: "2026-03-31",
+      }),
+      { kind: "window" },
+    );
+  });
+
+  it("does not steal focus when the advisor moves after dismissing the dialog", async () => {
+    render(
+      <>
+        <PerformanceSourceSelectionControls {...baseProps} onRequestChange={vi.fn()} />
+        <button type="button">Continue review</button>
+      </>,
+    );
+
+    const windowTrigger = await screen.findByRole("button", {
+      name: "Review window 01 Jan 2026 – 14 Apr 2026",
+    });
+    fireEvent.click(windowTrigger);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    const continueReview = screen.getByRole("button", { name: "Continue review", hidden: true });
+    act(() => continueReview.focus());
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(continueReview).toHaveFocus();
   });
 
   it("closes an unchanged explicit window without issuing a redundant request", async () => {

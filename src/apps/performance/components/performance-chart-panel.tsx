@@ -59,7 +59,7 @@ type PerformanceChartPanelProps = {
   reportStartDate: string;
   reportEndDate: string;
   capabilities: PerformanceWorkspaceCapabilities;
-  onRequestChange: (patch: PerformanceControlPatch) => void;
+  onRequestChange: (patch: PerformanceControlPatch) => Promise<boolean>;
   isUpdating?: boolean;
   isDetailsPending?: boolean;
   returnView?: PerformanceChartViewMode;

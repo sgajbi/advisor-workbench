@@ -39,7 +39,7 @@ export default function PerformanceAnalysisMode({
         capabilities={capabilities}
         isUpdating={isUpdating}
         ariaLabel="Performance analysis source selection"
-        onRequestChange={onRequestChange ?? (() => undefined)}
+        onRequestChange={onRequestChange ?? (async () => false)}
       />
       <PerformanceAnalysisDecisionSummary
         workspace={workspace}
