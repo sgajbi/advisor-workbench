@@ -8,6 +8,7 @@ export type SourceAuthorityContract = {
   readonly allowedStates: readonly string[];
   readonly renderedEvidence: Readonly<{
     rowSelector: string;
+    sourceAttribute: string;
     identityAttribute: string;
     stateAttribute: string;
   }>;

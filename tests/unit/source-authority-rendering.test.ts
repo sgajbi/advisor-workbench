@@ -8,7 +8,10 @@ import { buildRiskMandateComparisonViewModel } from "@/apps/performance/risk-man
 import RiskMandateComparison from "@/apps/performance/components/risk/risk-mandate-comparison";
 
 import { assertExactSourceRenderProof } from "../../scripts/live/validation/source-render-proof.mjs";
-import { SOURCE_AUTHORITY_CONTRACTS } from "../../scripts/quality/source-authority-contracts.mjs";
+import {
+  SOURCE_AUTHORITY_CONTRACTS,
+  type SourceAuthorityContract,
+} from "../../scripts/quality/source-authority-contracts.mjs";
 import { SOURCE_AUTHORITY_RENDER_PROOF_IDS } from "../../scripts/quality/source-authority-render-proof-registry.mjs";
 import {
   buildConcentrationMandateComparisonFixture,
@@ -120,14 +123,13 @@ function advisorBookResponse(
   };
 }
 
-function advisorBookRenderedRows() {
-  return [...document.querySelectorAll('[data-advisor-book-row="portfolio"]')].map(
-    (row) => ({
-      source: "advisor-book",
-      identity: row.getAttribute("data-portfolio-id") ?? "",
-      state: row.getAttribute("data-lifecycle-state") ?? "",
-    }),
-  );
+function extractDeclaredRenderedRows(contract: SourceAuthorityContract) {
+  const evidence = contract.renderedEvidence;
+  return [...document.querySelectorAll(evidence.rowSelector)].map((row) => ({
+    source: row.getAttribute(evidence.sourceAttribute) ?? "",
+    identity: row.getAttribute(evidence.identityAttribute) ?? "",
+    state: row.getAttribute(evidence.stateAttribute) ?? "",
+  }));
 }
 
 function riskPayload(
@@ -147,7 +149,7 @@ function riskPayload(
   return { summary, concentration };
 }
 
-function riskRenderedRows(payload: ReturnType<typeof riskPayload>) {
+function renderRiskMandateComparison(payload: ReturnType<typeof riskPayload>) {
   render(
     createElement(RiskMandateComparison, {
       comparison: buildRiskMandateComparisonViewModel({
@@ -156,11 +158,6 @@ function riskRenderedRows(payload: ReturnType<typeof riskPayload>) {
       }),
     }),
   );
-  return [...document.querySelectorAll("[data-mandate-constraint]")].map((row) => ({
-    source: row.getAttribute("data-mandate-constraint-source") ?? "",
-    identity: row.getAttribute("data-mandate-constraint") ?? "",
-    state: row.getAttribute("data-mandate-state") ?? "",
-  }));
 }
 
 describe("source-authority production mapping", () => {
@@ -184,6 +181,7 @@ describe("source-authority production mapping", () => {
   it.each(ADVISOR_BOOK_RENDER_CASES)(
     "preserves Advisor Book identity $identity and lifecycle state $state through the rendered workspace",
     async ({ identity, state }) => {
+      const contract = sourceContract("advisor-book-portfolios");
       const response = advisorBookResponse(identity, state);
       getAdvisorBookMock.mockResolvedValue(response);
       render(createElement(AdvisorBookWorkspace));
@@ -191,8 +189,8 @@ describe("source-authority production mapping", () => {
       expect(
         assertExactSourceRenderProof({
           screen: "Advisor Book",
-          expectedRows: sourceContract("advisor-book-portfolios").buildExpectedRows(response),
-          renderedRows: advisorBookRenderedRows(),
+          expectedRows: contract.buildExpectedRows(response),
+          renderedRows: extractDeclaredRenderedRows(contract),
         }),
       ).toHaveLength(1);
     },
@@ -201,12 +199,14 @@ describe("source-authority production mapping", () => {
   it.each(RISK_RENDER_CASES)(
     "preserves Risk identity $identity and constraint state $state through the rendered comparison",
     ({ identity, state }) => {
+      const contract = sourceContract("risk-mandate-comparison");
       const payload = riskPayload(identity, state);
+      renderRiskMandateComparison(payload);
       expect(
         assertExactSourceRenderProof({
           screen: "Risk review",
-          expectedRows: sourceContract("risk-mandate-comparison").buildExpectedRows(payload),
-          renderedRows: riskRenderedRows(payload),
+          expectedRows: contract.buildExpectedRows(payload),
+          renderedRows: extractDeclaredRenderedRows(contract),
         }),
       ).toHaveLength(4);
     },

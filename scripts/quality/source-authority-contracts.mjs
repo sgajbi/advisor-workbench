@@ -35,6 +35,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     allowedStates: Object.freeze(["ACTIVE", "CLOSED"]),
     renderedEvidence: Object.freeze({
       rowSelector: '[data-advisor-book-row="portfolio"]',
+      sourceAttribute: "data-advisor-book-source",
       identityAttribute: "data-portfolio-id",
       stateAttribute: "data-lifecycle-state",
     }),
@@ -51,6 +52,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
         path: "src/features/advisor-book/components/advisor-book-workspace.tsx",
         tokens: Object.freeze([
           'data-advisor-book-row="portfolio"',
+          'data-advisor-book-source="advisor-book"',
           "data-portfolio-id={row.portfolioId}",
           "data-lifecycle-state={row.sourceLifecycleState}",
         ]),
@@ -94,6 +96,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     ]),
     renderedEvidence: Object.freeze({
       rowSelector: "[data-mandate-constraint]",
+      sourceAttribute: "data-mandate-constraint-source",
       identityAttribute: "data-mandate-constraint",
       stateAttribute: "data-mandate-state",
     }),
