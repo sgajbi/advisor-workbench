@@ -338,10 +338,12 @@ screen-specific slices.
 Workbench issue #809 completes the shared-pattern adoption: Approval Queue consumes
 `WorkbenchWorklist`, proposal row presentation has one feature-owned mapping, URL selection is
 admitted only from the returned source window, Enter and Escape form a complete focus loop, and
-Proposal Detail return restores the admitted selected proposal. The shared composition uses two
-columns only when its business lane has sufficient capacity. Persistent navigation and context
-rails make the lane stack at 1280 pixels; after those rails reflow at 1024 pixels, the wider main
-lane supports the split again. Neither composition changes DOM or business order.
+Proposal Detail return restores the admitted selected proposal from the same page-local Gateway
+cursor window. Workbench carries the opaque cursor and visible window number without interpreting
+either as business evidence. The shared composition uses two columns only when its business lane
+has sufficient capacity. Persistent navigation and context rails make the lane stack at 1280
+pixels; after those rails reflow at 1024 pixels, the wider main lane supports the split again.
+Neither composition changes DOM or business order.
 
 ## Proposal Builder: evidence before persistent action
 
