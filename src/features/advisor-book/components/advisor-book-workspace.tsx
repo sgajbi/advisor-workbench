@@ -416,6 +416,7 @@ function AdvisorBookSourceWorkspace({
                     key="portfolio"
                     className={styles.portfolioCell}
                     data-advisor-book-row="portfolio"
+                    data-advisor-book-source="advisor-book"
                     data-portfolio-id={row.portfolioId}
                     data-lifecycle-state={row.sourceLifecycleState}
                   >

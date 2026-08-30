@@ -195,6 +195,7 @@ export function validateSourceAuthorityContracts(
     }
     if (
       !isText(evidence?.rowSelector) ||
+      !isText(evidence?.sourceAttribute) ||
       !isText(evidence?.identityAttribute) ||
       !isText(evidence?.stateAttribute)
     ) {
