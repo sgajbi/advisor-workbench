@@ -7,6 +7,7 @@ import { DEFAULT_PANEL_REGISTRY } from "../../scripts/live/validation/contract-m
 
 const {
   assertClientContextMandateProof,
+  assertCanonicalIdeaPresentationReceiptEvidence,
   buildPreparedProofPackSourceProof,
   buildProofPackMemoSourceProof,
   buildReportCentreProofPosture,
@@ -37,6 +38,12 @@ const {
     sourceValue: string;
     renderedValue: string;
   }) => { sourceMandate: string; renderedMandate: string };
+  assertCanonicalIdeaPresentationReceiptEvidence: (input: {
+    expectedCandidateId: string;
+    idempotencyKey: string | null;
+    requestBody: unknown;
+    responseBody: unknown;
+  }) => Record<string, unknown>;
   buildPreparedProofPackSourceProof: (sourceResponse: unknown) => {
     proofPackId: string;
     sectionCount: number;
@@ -1042,6 +1049,96 @@ describe("live validation browser workflow helpers", () => {
         "&candidateId=idea_high_cash_ef02ad8793485081" +
         "&portfolioId=PB_SG_GLOBAL_BAL_001",
     );
+  });
+
+  describe("canonical Idea presentation receipt proof", () => {
+    const requestBody = {
+      presentedAtUtc: "2026-08-31T07:00:00.000Z",
+      rankAtPresentation: 25,
+      visibleCandidateCount: 1,
+      queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+      queuePolicyVersion: "idea-deterministic-ranking-v1",
+      rankingPolicyVersion: "idle-liquidity-v1",
+      candidateMaterialVersion: 3,
+      candidateEvidenceVersion: 7,
+    };
+    const responseBody = {
+      data: {
+        receipt: {
+          ...requestBody,
+          candidateId: "idea_high_cash_ef02ad8793485081",
+          tenantId: "tenant-sg-private-bank",
+          receiptId: "receipt-001",
+          schemaVersion: "lotus-idea.candidate-presentation-receipt.v1",
+          surface: "advisor_review_queue",
+          producer: "lotus-workbench",
+        },
+        persistenceDecision: "accepted",
+        durableStorageBacked: true,
+      },
+    };
+
+    it("preserves independent global rank and visible count", () => {
+      expect(
+        assertCanonicalIdeaPresentationReceiptEvidence({
+          expectedCandidateId: "idea_high_cash_ef02ad8793485081",
+          idempotencyKey: "presentation-001",
+          requestBody,
+          responseBody,
+        }),
+      ).toMatchObject({
+        candidateId: "idea_high_cash_ef02ad8793485081",
+        rankAtPresentation: 25,
+        visibleCandidateCount: 1,
+        tenantAuthority: "workbench-bff-derived",
+        durableStorageBacked: true,
+      });
+    });
+
+    it.each([
+      ["browser tenant", { ...requestBody, tenantId: "tenant-browser" }, responseBody],
+      ["missing idempotency", requestBody, responseBody, null],
+      [
+        "Boolean rank",
+        { ...requestBody, rankAtPresentation: true },
+        responseBody,
+      ],
+      [
+        "changed receipt evidence",
+        requestBody,
+        {
+          data: {
+            ...responseBody.data,
+            receipt: {
+              ...responseBody.data.receipt,
+              visibleCandidateCount: 25,
+            },
+          },
+        },
+      ],
+      [
+        "wrong candidate",
+        requestBody,
+        {
+          data: {
+            ...responseBody.data,
+            receipt: {
+              ...responseBody.data.receipt,
+              candidateId: "idea_high_cash_other",
+            },
+          },
+        },
+      ],
+    ])("rejects %s", (_case, request, response, key = "presentation-001") => {
+      expect(() =>
+        assertCanonicalIdeaPresentationReceiptEvidence({
+          expectedCandidateId: "idea_high_cash_ef02ad8793485081",
+          idempotencyKey: key,
+          requestBody: request,
+          responseBody: response,
+        }),
+      ).toThrow();
+    });
   });
 
   it.each([

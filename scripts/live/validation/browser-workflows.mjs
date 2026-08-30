@@ -439,6 +439,118 @@ export function canonicalIdeaOpportunitiesRoute({
   });
 }
 
+export function assertCanonicalIdeaPresentationReceiptEvidence({
+  expectedCandidateId,
+  idempotencyKey,
+  requestBody,
+  responseBody,
+}) {
+  const request = requireCanonicalRecord(
+    requestBody,
+    "Idea presentation request",
+  );
+  const responseEnvelope = requireCanonicalRecord(
+    responseBody,
+    "Idea presentation response",
+  );
+  const response = requireCanonicalRecord(
+    responseEnvelope.data ?? responseEnvelope,
+    "Idea presentation response data",
+  );
+  const receipt = requireCanonicalRecord(
+    response.receipt,
+    "Idea presentation receipt",
+  );
+  if (
+    Object.hasOwn(request, "tenantId") ||
+    Object.hasOwn(request, "tenant_id")
+  ) {
+    throw new Error(
+      "Canonical Workbench presentation request exposed browser-owned tenant scope.",
+    );
+  }
+  if (typeof idempotencyKey !== "string" || !idempotencyKey.trim()) {
+    throw new Error(
+      "Canonical Workbench presentation request omitted its idempotency key.",
+    );
+  }
+  for (const field of [
+    "rankAtPresentation",
+    "visibleCandidateCount",
+    "candidateMaterialVersion",
+    "candidateEvidenceVersion",
+  ]) {
+    if (!Number.isInteger(request[field]) || request[field] < 1) {
+      throw new Error(
+        `Canonical Idea presentation request did not preserve positive integer ${field}.`,
+      );
+    }
+  }
+  for (const field of [
+    "presentedAtUtc",
+    "queueSnapshotDigest",
+    "queuePolicyVersion",
+    "rankingPolicyVersion",
+  ]) {
+    if (typeof request[field] !== "string" || !request[field].trim()) {
+      throw new Error(
+        `Canonical Idea presentation request omitted ${field}.`,
+      );
+    }
+  }
+  for (const field of [
+    "presentedAtUtc",
+    "rankAtPresentation",
+    "visibleCandidateCount",
+    "queueSnapshotDigest",
+    "queuePolicyVersion",
+    "rankingPolicyVersion",
+    "candidateMaterialVersion",
+    "candidateEvidenceVersion",
+  ]) {
+    if (receipt[field] !== request[field]) {
+      throw new Error(
+        `Canonical Idea presentation receipt did not preserve ${field}.`,
+      );
+    }
+  }
+  if (
+    receipt.candidateId !== expectedCandidateId ||
+    receipt.schemaVersion !== "lotus-idea.candidate-presentation-receipt.v1" ||
+    receipt.surface !== "advisor_review_queue" ||
+    receipt.producer !== "lotus-workbench" ||
+    typeof receipt.receiptId !== "string" ||
+    !receipt.receiptId.trim() ||
+    typeof receipt.tenantId !== "string" ||
+    !receipt.tenantId.trim() ||
+    !["accepted", "replayed"].includes(response.persistenceDecision) ||
+    response.durableStorageBacked !== true
+  ) {
+    throw new Error(
+      "Canonical Idea presentation response did not prove durable source-owned receipt identity.",
+    );
+  }
+  return {
+    candidateId: expectedCandidateId,
+    rankAtPresentation: request.rankAtPresentation,
+    visibleCandidateCount: request.visibleCandidateCount,
+    queuePolicyVersion: request.queuePolicyVersion,
+    rankingPolicyVersion: request.rankingPolicyVersion,
+    candidateMaterialVersion: request.candidateMaterialVersion,
+    candidateEvidenceVersion: request.candidateEvidenceVersion,
+    persistenceDecision: response.persistenceDecision,
+    durableStorageBacked: true,
+    tenantAuthority: "workbench-bff-derived",
+  };
+}
+
+function requireCanonicalRecord(value, description) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${description} was incomplete.`);
+  }
+  return value;
+}
+
 function recordAdvisoryJourneyCheck(summary, payload) {
   summary.advisoryJourneyChecks ??= [];
   summary.advisoryJourneyChecks.push({
@@ -923,6 +1035,7 @@ export async function validateAdvisoryJourneyScreens(
     panel: "advisory.opportunities",
     owner: "lotus-idea",
     sourcePosture: "idea-review-queue-through-gateway",
+    expectedIdeaCandidateId,
     screenshotAdvisoryJourney,
     validate: async () => {
       await expect(page.getByLabel("Idea candidates")).toBeVisible({
@@ -1327,7 +1440,49 @@ export async function validateAdvisoryJourneyScreens(
 }
 
 export async function validateCanonicalIdeaJourney(page, preparedJourney) {
+  const expectedIdeaCandidateId = requireHighCashIdeaCandidateId(
+    preparedJourney.expectedIdeaCandidateId,
+  );
+  const presentationReceiptResponsePromise = page.waitForResponse(
+    (response) => {
+      const url = new URL(response.url());
+      return (
+        response.request().method() === "POST" &&
+        url.pathname.endsWith(
+          `/api/bff/api/v1/ideas/candidates/${encodeURIComponent(expectedIdeaCandidateId)}/presentation-receipts`,
+        )
+      );
+    },
+    { timeout: preparedJourney.timeoutMs },
+  );
   await validateAdvisoryJourneyRoute(page, preparedJourney);
+  const presentationReceiptResponse = await presentationReceiptResponsePromise;
+  if (!presentationReceiptResponse.ok()) {
+    throw new Error(
+      `Workbench Idea presentation receipt failed with HTTP ${presentationReceiptResponse.status()}.`,
+    );
+  }
+  const presentationEvidence = assertCanonicalIdeaPresentationReceiptEvidence({
+    expectedCandidateId: expectedIdeaCandidateId,
+    idempotencyKey: await presentationReceiptResponse
+      .request()
+      .headerValue("idempotency-key"),
+    requestBody: presentationReceiptResponse.request().postDataJSON(),
+    responseBody: await presentationReceiptResponse.json(),
+  });
+  preparedJourney.summary.uiChecks.push({
+    description: "Source-owned Idea candidate presentation receipt",
+    kind: "idea-presentation-receipt-browser-proof",
+    route: "/recommendations?mode=opportunities",
+    owner: "lotus-idea",
+    gatewayBacked: true,
+    evidence: presentationEvidence,
+    nonClaims: [
+      "browser_tenant_authority",
+      "effectiveness_outcome",
+      "supported_feature_promotion",
+    ],
+  });
 }
 
 export async function validatePortfolioPanels(

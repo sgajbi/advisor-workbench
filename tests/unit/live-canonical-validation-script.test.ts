@@ -1937,6 +1937,12 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Idea candidate review queue");
     expect(browserWorkflowModule).toContain("assertGridHasRows");
     expect(browserWorkflowModule).toContain('page.getByRole("grid"');
+    expect(browserWorkflowModule).toContain(
+      "assertCanonicalIdeaPresentationReceiptEvidence",
+    );
+    expect(browserWorkflowModule).toContain(
+      "idea-presentation-receipt-browser-proof",
+    );
     expect(browserWorkflowModule).toContain("canonicalCandidateLink");
     expect(browserWorkflowModule).toContain(
       "candidateId=${encodeURIComponent(canonicalCandidateId)}",

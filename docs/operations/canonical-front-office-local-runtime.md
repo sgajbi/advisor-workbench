@@ -515,7 +515,12 @@ conversion-intent controls through the Workbench BFF/Gateway path, verifying sou
 detail refresh after each mutation. Each mutation must return an accepted/replayed source
 persistence receipt before Workbench can show success. The browser checks a stable action status id
 with `data-action-state=recorded-and-refreshed` and retains business copy as supporting evidence;
-it does not depend on one full sentence. The machine-readable summary records only action-control
+it does not depend on one full sentence. The proof also requires the named virtualized opportunity
+grid to contain source rows and captures its automatic presentation-receipt write. That receipt
+must preserve the candidate identity, Idea global rank, independently observed visible count,
+queue/ranking policies, candidate versions, and exact request evidence; tenant scope must appear
+only in the returned BFF/Gateway/Idea receipt, never in the browser request. The machine-readable
+summary records that durable source evidence and only bounded action-control
 posture and non-claim boundaries; it does not expose conversion-intent identifiers, create
 proposals, grant suitability or execution authority, certify production identity, or promote Lotus
 Idea as a supported feature.
