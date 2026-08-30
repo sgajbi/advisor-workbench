@@ -48,6 +48,25 @@ describe("report ordering contracts", () => {
     );
   });
 
+  it.each(["business_date", "currency", "benchmark", "multi_select"])(
+    "rejects a conditional %s field that the ordering form cannot collect",
+    (inputType) => {
+      const response = buildReportOrderingResponse();
+      response.reportFamilies[0].configurationFields.push({
+        fieldId: `conditional_${inputType}`,
+        businessLabel: "Unsupported conditional evidence",
+        description: "Evidence that must not be silently omitted.",
+        inputType,
+        requirement: "conditional",
+        defaultingPolicy: "caller_required_when_section_selected",
+        valueSource: "caller",
+        options: [],
+      });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
   it("fails closed when the Gateway contract contains an unknown primary field", () => {
     expect(() =>
       parseReportOrderingResponse({

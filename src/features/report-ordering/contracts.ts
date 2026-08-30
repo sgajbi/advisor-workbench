@@ -46,13 +46,10 @@ const configurationOptionSchema = z
   })
   .strict();
 
-const configurationFieldSchema = z
-  .object({
+const configurationFieldBaseSchema = z.object({
     fieldId: z.string().min(1),
     businessLabel: z.string().min(1),
     description: z.string().min(1),
-    inputType: z.enum(["business_date", "currency", "benchmark", "multi_select", "text"]),
-    requirement: z.enum(["required", "optional", "conditional"]),
     defaultingPolicy: z.string().min(1),
     valueSource: z.enum([
       "caller",
@@ -61,8 +58,22 @@ const configurationFieldSchema = z
       "report_catalogue",
     ]),
     options: z.array(configurationOptionSchema),
-  })
-  .strict();
+  });
+
+const configurationFieldSchema = z.union([
+  configurationFieldBaseSchema
+    .extend({
+      inputType: z.literal("text"),
+      requirement: z.enum(["required", "optional", "conditional"]),
+    })
+    .strict(),
+  configurationFieldBaseSchema
+    .extend({
+      inputType: z.enum(["business_date", "currency", "benchmark", "multi_select"]),
+      requirement: z.enum(["required", "optional"]),
+    })
+    .strict(),
+]);
 
 const reportSectionSchema = z
   .object({
