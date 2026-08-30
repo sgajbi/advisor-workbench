@@ -557,9 +557,13 @@ Current repository posture:
     confirmed portfolio-evidence fact. Feature presentation belongs in a CSS Module; do not restore
     the superseded MUI action panel or add this workflow to global CSS.
     Approval Queue is an exception-led selected-record review desk over one cursor-bounded Gateway
-    proposal window. Keep worklist selection and the selected proposal's source-supported stage,
-    version, creator-record presence, recorded date, and next action visible together at desktop;
-    stack them in the same document order for tablet, narrow, and zoomed layouts. Load detail,
+    proposal window. Compose it through the shared `WorkbenchWorklist`: keep selection and the
+    selected proposal's source-supported stage, version, creator-record presence, recorded date,
+    and next action visible together when container capacity supports two columns; stack them in
+    the same document order when the component becomes narrow or zoomed. Admit URL
+    `selectedRecordId` only from the current source window, push user selection without losing the
+    surrounding review context, use Enter to focus decision evidence, and use Escape to restore
+    focus to the selected source row. Load detail,
     workflow, approvals, and lineage for the selected proposal only and reconcile the selected
     worklist portfolio/state/version, proposal identity, workflow state, and active version before
     publishing maker-checker posture. A refresh confirms only after the queue record and all four
