@@ -41,6 +41,8 @@ export const PERFORMANCE_EVIDENCE_COPY = {
     },
     calculationAvailabilityQualified:
       "The calculation is available with stated limitations.",
+    calculationAvailabilityQualifiedTitle: "Calculation available with limitations",
+    calculationAvailabilityUnknownTitle: "Calculation availability not confirmed",
     calculationAvailabilityUnknown:
       "The calculation availability state is not recognised.",
     methodologyMissing: {

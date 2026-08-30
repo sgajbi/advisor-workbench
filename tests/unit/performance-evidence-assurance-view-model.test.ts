@@ -958,6 +958,37 @@ describe("buildPerformanceEvidenceAssuranceViewModel", () => {
     );
   });
 
+  it.each(["", "new_source_state"])(
+    "does not claim calculation availability for the unrecognised %j state",
+    (state) => {
+      const view = buildPerformanceEvidenceAssuranceViewModel(
+        supportedCapability,
+        evidence({
+          source_supportability: [
+            {
+              operation: "performance.summary",
+              source_service: "lotus-performance",
+              state,
+              freshness_bucket: "fresh",
+            },
+          ],
+        })
+      );
+
+      expect(view.state).toBe("incomplete");
+      expect(view.exceptions).toContainEqual(
+        expect.objectContaining({
+          title: "Calculation availability not confirmed",
+          detail: "The calculation availability state is not recognised.",
+          tone: "warn",
+        })
+      );
+      expect(view.exceptions).not.toContainEqual(
+        expect.objectContaining({ title: "Calculation available with limitations" })
+      );
+    }
+  );
+
   it.each([
     ["coverage", { coverage: null }, "Evidence coverage not confirmed"],
     [
