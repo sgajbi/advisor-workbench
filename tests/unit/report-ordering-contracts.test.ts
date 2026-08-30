@@ -108,8 +108,16 @@ describe("report ordering contracts", () => {
     },
   );
 
-  it.each(["advisor.note", "advisor[brief]", "advisor]brief["])(
-    "rejects the form-unsafe text field identifier %s",
+  it.each([
+    "advisor.note",
+    "advisor[brief]",
+    "advisor]brief[",
+    "advisor:note",
+    "advisor/note",
+    "Advisor_Note",
+    "advisor-note",
+  ])(
+    "rejects the non-canonical text field identifier %s",
     (fieldId) => {
       const response = buildReportOrderingResponse();
       response.reportFamilies[0].configurationFields.push({
@@ -122,6 +130,41 @@ describe("report ordering contracts", () => {
         valueSource: "caller",
         options: [],
       });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it("rejects duplicate configuration field identifiers", () => {
+    const response = buildReportOrderingResponse();
+    response.reportFamilies[0].configurationFields.push({
+      fieldId: "advisor_brief_run_id",
+      businessLabel: "Duplicate advisor evidence",
+      description: "Configuration identities must remain unambiguous.",
+      inputType: "text",
+      requirement: "optional",
+      defaultingPolicy: "caller_optional",
+      valueSource: "caller",
+      options: [],
+    });
+
+    expect(() => parseReportOrderingResponse(response)).toThrow();
+  });
+
+  it.each([
+    ["as_of_date", "portfolio_context_or_caller"],
+    ["reporting_currency", "report_catalogue"],
+    ["benchmark_code", "caller"],
+    ["allocation_dimensions", "caller"],
+  ])(
+    "rejects the dedicated %s control with incompatible %s source authority",
+    (fieldId, valueSource) => {
+      const response = buildReportOrderingResponse();
+      const field = response.reportFamilies[0].configurationFields.find(
+        (candidate) => candidate.fieldId === fieldId,
+      );
+      if (!field) throw new Error(`Fixture field ${fieldId} is missing`);
+      field.valueSource = valueSource;
 
       expect(() => parseReportOrderingResponse(response)).toThrow();
     },

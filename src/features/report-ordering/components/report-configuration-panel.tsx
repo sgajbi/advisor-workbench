@@ -245,7 +245,7 @@ export function ReportConfigurationPanel({
             </div>
           ) : null}
           {textFields.map((fieldDefinition) => {
-            const fieldId = `report-ordering-field-${toDomId(fieldDefinition.fieldId)}`;
+            const fieldId = `report-ordering-field-${fieldDefinition.fieldId}`;
             const helpId = `${fieldId}-help`;
             const errorId = `${fieldId}-error`;
             return (
@@ -413,8 +413,4 @@ function FieldError({
   children: string;
 }) {
   return visible ? <small id={id} className={styles.fieldError}>{children}</small> : null;
-}
-
-function toDomId(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/g, "-");
 }

@@ -261,6 +261,14 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByText("Review report contents"));
     fireEvent.click(screen.getByRole("checkbox", { name: /Advisor commentary/ }));
     const acceptedBrief = screen.getByRole("textbox", { name: "Accepted advisor brief" });
+    expect(acceptedBrief).toHaveAttribute(
+      "id",
+      "report-ordering-field-advisor_brief_run_id",
+    );
+    expect(acceptedBrief).toHaveAttribute(
+      "aria-describedby",
+      "report-ordering-field-advisor_brief_run_id-help",
+    );
     const review = screen.getByRole("button", { name: "Review Request" });
     expect(review).toBeEnabled();
 
