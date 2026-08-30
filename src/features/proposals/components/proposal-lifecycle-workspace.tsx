@@ -62,6 +62,10 @@ import {
   buildSuitabilityReviewWorkflowContext,
 } from "../proposal-workflow-context-view-model";
 import { SUITABILITY_WORKFLOW_LABELS } from "../suitability-terminology";
+import {
+  buildProposalSourceWindowHref,
+  type ProposalSourceWindowContext,
+} from "../proposal-source-window-navigation";
 import { useProposalImplementationStatus } from "../use-proposal-implementation-status";
 import { useProposalDiscussionPack } from "../use-proposal-discussion-pack";
 import PolicyReviewWorkspace from "./policy-review-workspace";
@@ -88,10 +92,12 @@ export default function ProposalLifecycleWorkspace({
   portfolioId,
   reviewContext,
   mode,
+  initialSourceWindow,
 }: {
   portfolioId: string;
   reviewContext?: AdvisoryJourneyReviewContext;
   mode: ProposalLifecycleMode;
+  initialSourceWindow?: ProposalSourceWindowContext;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -115,7 +121,7 @@ export default function ProposalLifecycleWorkspace({
   ] = useState<SourceRefreshTransaction | null>(null);
   const [discussionRefreshTransaction, setDiscussionRefreshTransaction] =
     useState<SourceRefreshTransaction | null>(null);
-  const sourceWindow = useSourceWindow(portfolioId);
+  const sourceWindow = useSourceWindow(portfolioId, initialSourceWindow);
   const activeReviewContext: AdvisoryJourneyReviewContext = {
     ...reviewContext,
     portfolioId,
@@ -176,6 +182,10 @@ export default function ProposalLifecycleWorkspace({
         proposals,
         hasMoreResults: Boolean(data?.next_cursor),
         hasPreviousResults: sourceWindow.hasPrevious,
+        sourceWindow: {
+          cursor: sourceWindow.cursor,
+          windowNumber: sourceWindow.windowNumber,
+        },
       }),
     [
       data?.next_cursor,
@@ -184,6 +194,8 @@ export default function ProposalLifecycleWorkspace({
       proposals,
       reviewContext,
       sourceWindow.hasPrevious,
+      sourceWindow.cursor,
+      sourceWindow.windowNumber,
     ],
   );
   const riskSelectionIsCurrent =
@@ -215,7 +227,47 @@ export default function ProposalLifecycleWorkspace({
       searchParams,
       patch: { portfolioId, selectedRecordId: proposalId },
     });
-    if (href) router.push(href, { scroll: false });
+    if (href) {
+      router.push(
+        buildProposalSourceWindowHref(href, {
+          cursor: sourceWindow.cursor,
+          windowNumber: sourceWindow.windowNumber,
+        }),
+        { scroll: false },
+      );
+    }
+  }
+
+  function updateSourceWindowAddress(
+    context: ProposalSourceWindowContext,
+  ) {
+    const href = buildReviewContextNavigationHref({
+      pathname,
+      searchParams,
+      patch: { portfolioId, selectedRecordId: undefined },
+    });
+    if (href) {
+      router.push(buildProposalSourceWindowHref(href, context), {
+        scroll: false,
+      });
+    }
+  }
+
+  function showNextProposalWindow(nextCursor?: string | null) {
+    if (!nextCursor) return;
+    const nextWindow = sourceWindow.windowNumber + 1;
+    sourceWindow.showNext(nextCursor);
+    updateSourceWindowAddress({ cursor: nextCursor, windowNumber: nextWindow });
+  }
+
+  function showPreviousProposalWindow() {
+    const previousWindow = sourceWindow.windowNumber - 1;
+    const previousCursor = sourceWindow.previousCursor;
+    sourceWindow.showPrevious();
+    updateSourceWindowAddress({
+      cursor: previousCursor,
+      windowNumber: previousWindow,
+    });
   }
   const approvalEvidenceQueryKey = [
     "proposal-approval-evidence",
@@ -1413,8 +1465,8 @@ export default function ProposalLifecycleWorkspace({
           isLoading={proposalQuery.isFetching}
           itemLabel="proposals"
           viewLabel="Proposal view"
-          onPrevious={sourceWindow.showPrevious}
-          onNext={() => sourceWindow.showNext(data?.next_cursor)}
+          onPrevious={showPreviousProposalWindow}
+          onNext={() => showNextProposalWindow(data?.next_cursor)}
         />
       ) : null}
     </SectionBlock>

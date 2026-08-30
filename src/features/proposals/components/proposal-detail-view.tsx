@@ -64,6 +64,7 @@ import {
   getProposalDetailReturnTitle,
   type ProposalDetailOrigin,
 } from "../proposal-detail-return-navigation";
+import type { ProposalSourceWindowContext } from "../proposal-source-window-navigation";
 import {
   buildReviewContextHref,
   type WorkspaceReviewContext,
@@ -80,6 +81,7 @@ type Props = {
   returnPortfolioId?: string;
   returnReviewContext?: WorkspaceReviewContext;
   returnMode?: ProposalDetailOrigin;
+  returnSourceWindow?: ProposalSourceWindowContext;
 };
 
 type ProposalDetailWorkspaceProps = Props & {
@@ -105,6 +107,7 @@ export default function ProposalDetailView({
   returnPortfolioId,
   returnReviewContext,
   returnMode,
+  returnSourceWindow,
 }: Props) {
   const queryClient = useQueryClient();
   const { data: revision = 0 } = useQuery({
@@ -128,6 +131,7 @@ export default function ProposalDetailView({
       returnPortfolioId={returnPortfolioId}
       returnReviewContext={returnReviewContext}
       returnMode={returnMode}
+      returnSourceWindow={returnSourceWindow}
       revision={revision}
       onAdvanceRevision={advanceRevision}
     />
@@ -139,6 +143,7 @@ function ProposalDetailWorkspace({
   returnPortfolioId,
   returnReviewContext,
   returnMode,
+  returnSourceWindow,
   revision,
   onAdvanceRevision,
 }: ProposalDetailWorkspaceProps) {
@@ -148,6 +153,7 @@ function ProposalDetailWorkspace({
           portfolioId: returnPortfolioId,
           reviewContext: returnReviewContext,
           origin: returnMode,
+          sourceWindow: returnSourceWindow,
         })
       : "/book";
   const returnLabel = returnPortfolioId && returnMode
@@ -601,6 +607,7 @@ function ProposalDetailWorkspace({
         portfolioId: sourcePortfolioId,
         reviewContext: sourceReturnReviewContext,
         origin: returnMode ?? "approval-queue",
+        sourceWindow: returnSourceWindow,
       })
     : fallbackReturnHref;
   const sourceReturnLabel = sourcePortfolioId
