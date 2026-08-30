@@ -31,7 +31,7 @@
     "quality:runtime-support": "node scripts/quality/check-runtime-support-policy.mjs",
     "quality:runtime-state": "node scripts/quality/check-runtime-state-inventory.mjs",
     "quality:bff-header-boundary": "node scripts/quality/check-bff-header-boundary.mjs",
-    "quality:source-authority": "node scripts/quality/check-source-authority-contracts.mjs",
+    "quality:source-authority": "node scripts/quality/check-source-authority-contracts.mjs && node node_modules/vitest/vitest.mjs run tests/unit/source-authority-rendering.test.ts --coverage=false",
     "quality:dependency-risk": "node scripts/quality/check-dependency-risk-inventory.mjs",
     "quality:font-assets": "node scripts/quality/check-font-asset-governance.mjs",
     "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=263 --max-unresolved=1720 --unresolved-digest=d33228ea576fa64fa1a335cc52db3508d86cf114c3735265eb1a5522b97e0cd1",

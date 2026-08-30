@@ -1674,9 +1674,11 @@ Most relevant current governance:
     real consumer proves the same mechanics. Risk Review and Advisor Book are the reference
     consumers and are enrolled in `scripts/quality/source-authority-contracts.mjs`. A new critical
     Gateway-backed surface must add its domain adapter, stable rendered identity/state evidence,
-    executable source mutation, controlled reassuring-fallback proof, and production wiring
-    evidence to that registry. `npm run quality:source-authority` fails closed for empty or
-    single-surface enrollment and runs in every blocking lint lane. It governs source-owned
+    executable source mutation, controlled reassuring-fallback proof, production wiring evidence,
+    and a focused production view-model mapping proof to that registry. `npm run
+    quality:source-authority` runs both the static enrollment validator and the executable mapping
+    proof; it fails closed for empty or single-surface enrollment and runs in every blocking lint
+    lane. It governs source-owned
     identity and business state, not labels, number/date formatting, or other presentation-only
     fields. A new screen must include unit diagnostics and fixture/browser proof before claiming
     exact source rendering.
