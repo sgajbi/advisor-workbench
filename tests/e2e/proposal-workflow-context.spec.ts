@@ -292,17 +292,20 @@ async function mockProposalImplementationStatus(
 async function mockProposalApprovalEvidence(page: Page) {
   const proposal = (proposalId: string) => {
     const executionReady = proposalId === "PRP-READY-001";
+    const incomeReview = proposalId === "PRP-RISK-003";
     return {
       proposal_id: proposalId,
       portfolio_id: portfolioId,
       current_state: executionReady ? "EXECUTION_READY" : "RISK_REVIEW",
-      current_version_no: executionReady ? 5 : 3,
+      current_version_no: executionReady ? 5 : incomeReview ? 4 : 3,
       created_by: executionReady ? "advisor_sg_02" : "advisor_sg_01",
       created_at: executionReady
         ? "2026-08-20T11:15:00Z"
         : "2026-08-19T09:30:00Z",
       title: executionReady
         ? "Execution handoff review"
+        : incomeReview
+          ? "Income allocation review"
         : "Concentration risk review",
     };
   };
@@ -1619,6 +1622,7 @@ test("keeps proposal counts scoped to the current source window", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await mockProposalApprovalEvidence(page);
   await page.route(
     "**/api/bff/api/v1/proposals?portfolio_id=**",
     async (route) => {
@@ -1636,6 +1640,13 @@ test("keeps proposal counts scoped to the current source window", async ({
                     current_state: "RISK_REVIEW",
                     current_version_no: 3,
                     title: "Cross-asset concentration review",
+                  },
+                  {
+                    proposal_id: "PRP-RISK-003",
+                    portfolio_id: portfolioId,
+                    current_state: "RISK_REVIEW",
+                    current_version_no: 4,
+                    title: "Income allocation review",
                   },
                 ],
                 next_cursor: null,
@@ -1665,13 +1676,17 @@ test("keeps proposal counts scoped to the current source window", async ({
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Next proposals" }).click();
 
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&mode=approval-queue&cursor=cursor-window-2&sourceWindow=2`,
+  );
+
   await expect(
     page
       .getByRole("region", { name: "Selected proposal decision" })
       .getByRole("heading", { name: "Cross-asset concentration review" }),
   ).toBeVisible();
   await expect(page.getByLabel("Proposal lifecycle counts")).toHaveText(
-    /^\s*1\s*In view\s*1\s*Not execution-ready\s*$/,
+    /^\s*2\s*In view\s*2\s*Not execution-ready\s*$/,
   );
   await expect(page.getByText("Proposal view 2")).toBeVisible();
   await expect(
@@ -1680,6 +1695,36 @@ test("keeps proposal counts scoped to the current source window", async ({
   await expect(
     page.getByRole("button", { name: "Next proposals" }),
   ).toBeDisabled();
+
+  const secondWindowProposal = page.getByRole("option", {
+    name: /Income allocation review/,
+  });
+  await secondWindowProposal.click();
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-003&mode=approval-queue&cursor=cursor-window-2&sourceWindow=2`,
+  );
+  const openReview = page.getByRole("link", {
+    name: "Open full proposal review",
+  });
+  await expect(openReview).toHaveAttribute(
+    "href",
+    `/proposals/PRP-RISK-003?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-003&fromMode=approval-queue&cursor=cursor-window-2&sourceWindow=2`,
+  );
+  await openReview.click();
+  const returnLink = page.getByRole("link", {
+    name: "Return to Approval Queue",
+  });
+  await expect(returnLink).toHaveAttribute(
+    "href",
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-003&cursor=cursor-window-2&sourceWindow=2`,
+  );
+  await returnLink.click();
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-003&cursor=cursor-window-2&sourceWindow=2`,
+  );
+  await expect(
+    page.getByRole("option", { name: /Income allocation review/ }),
+  ).toHaveAttribute("aria-selected", "true");
 });
 
 test("keeps proposal evaluation inside construction without persisted workflow authority", async ({
