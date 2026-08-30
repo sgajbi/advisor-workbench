@@ -133,6 +133,7 @@ export default function AdvisoryOpportunityGrid({
           quickFilterText={filterText}
           getRowId={({ data }) => data.candidateId}
           rowBuffer={2}
+          suppressColumnVirtualisation
           suppressRowVirtualisation={false}
           onGridReady={({ api }) =>
             api.setGridAriaProperty("label", "Idea candidate review queue")

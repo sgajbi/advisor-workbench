@@ -121,8 +121,14 @@ test("records only presented Idea rows and retries the same failed evidence", as
   await expect.poll(() => presentations.length).toBeGreaterThan(0);
   await expect(gridContainer).toHaveAttribute("data-receipt-state", "ready");
 
-  const renderedRows = grid.locator('[role="row"]:has([role="gridcell"])');
-  expect(await renderedRows.count()).toBeLessThan(candidateCount);
+  const renderedCandidates = grid.locator("[data-idea-presentation-candidate]");
+  expect(await renderedCandidates.count()).toBeLessThan(candidateCount);
+  const centreRows = grid.locator('.ag-center-cols-container [role="row"]');
+  const firstQueuePositionCell = centreRows.first().getByRole("gridcell").first();
+  const secondQueuePositionCell = centreRows.nth(1).getByRole("gridcell").first();
+  await firstQueuePositionCell.click();
+  await firstQueuePositionCell.press("ArrowDown");
+  await expect(secondQueuePositionCell).toBeFocused();
   expect(presentations.some(({ candidateId: id }) => id === targetCandidateId)).toBe(
     false,
   );
@@ -130,7 +136,7 @@ test("records only presented Idea rows and retries the same failed evidence", as
   const filter = page.getByRole("searchbox", { name: "Find an opportunity" });
   const settledPresentationCount = presentations.length;
   await filter.fill("no matching opportunity");
-  await expect(renderedRows).toHaveCount(0);
+  await expect(renderedCandidates).toHaveCount(0);
   await page.evaluate(
     () =>
       new Promise<void>((resolve) =>

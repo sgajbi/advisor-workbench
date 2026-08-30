@@ -148,6 +148,9 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       await screen.findByRole("grid", { name: "Idea candidate review queue" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("columnheader", { name: "Next decision" }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("link", { name: "High Cash - idea_high_cash_001" }),
     ).toHaveAttribute(
       "href",
