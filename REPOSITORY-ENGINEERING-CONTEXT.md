@@ -46,6 +46,22 @@ a syntax-aware CI backstop that blocks equivalent raw browser-header access, a m
 an empty scan in every checked-in BFF route; the closed allowlist is the runtime control. This rule
 does not certify production identity; Workbench #436 remains the authenticated-principal owner.
 
+### Browser transport and error-authority rule
+
+Feature clients must use the governed Workbench JSON transport for same-origin BFF reads and
+mutations. `WorkbenchApiError` is the only client authority for HTTP status; features must not
+recover status from message text, read an upstream response body directly, or present a transport
+exception as advisor-facing copy. A screen may translate a typed status into bounded business
+guidance, while unknown failures retain the screen's explicit safe fallback and operational detail
+remains outside the primary interface.
+
+`npm run quality:feature-transport` is a blocking ratchet over feature source. It permits the two
+intentional transport primitives in `src/features/workbench/api-client.ts`, requires Proposals to
+remain at zero raw fetches, and exact-baselines six historical one-call owners pending migration
+under #791. New owners and count growth fail; removing a historical call also fails until the
+baseline is lowered in the same change. This is a migration control, not evidence that the six
+baselined owners already use the preferred transport.
+
 ### Risk Review source-authority rule
 
 Risk Review presents exact Gateway/Lotus Risk measures, factual lifecycle and recovery state,
