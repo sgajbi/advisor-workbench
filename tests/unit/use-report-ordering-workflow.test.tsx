@@ -10,6 +10,7 @@ import { parseReportOrderingResponse } from "@/features/report-ordering/contract
 import {
   useReportOrderingWorkflow as useReportOrderingWorkflowSource,
 } from "@/features/report-ordering/use-report-ordering-workflow";
+import { WorkbenchApiError } from "@/features/workbench/api-client";
 import {
   buildReportJobListResponse,
   buildReportOrderingResponse,
@@ -200,6 +201,36 @@ describe("useReportOrderingWorkflow", () => {
 
     expect(result.current.historyState).toBe("error");
     expect(result.current.history?.items[0].reportJobId).toBe("rjob_1");
+  });
+
+  it("does not poll report history after source access becomes permission blocked", async () => {
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      const { result } = renderHook(() =>
+        useReportOrderingWorkflow({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      );
+      await waitFor(() => expect(result.current.historyState).toBe("ready"));
+      timerSpy.mockClear();
+      historyMock.mockRejectedValueOnce(
+        new WorkbenchApiError("recent portfolio review requests", 403),
+      );
+
+      act(() => expect(result.current.reviewRequest()).toBe(true));
+      await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+      await act(async () => expect(await result.current.submitRequest()).toBe(true));
+      await waitFor(() => expect(result.current.historyState).toBe("permission_blocked"));
+
+      expect(
+        timerSpy.mock.calls.some(([, delay]) => delay === 5_000 || delay === 10_000),
+      ).toBe(false);
+      expect(historyMock).toHaveBeenCalledTimes(2);
+    } finally {
+      timerSpy.mockRestore();
+    }
   });
 
   it("preserves one idempotency intent across a safe retry", async () => {

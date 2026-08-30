@@ -46,17 +46,27 @@ const configurationOptionSchema = z
   })
   .strict();
 
-const editableTextFieldIdSchema = z.string().min(1).refine(
-  (fieldId) =>
-    ![
-      "sections",
-      "as_of_date",
-      "reporting_currency",
-      "benchmark_code",
-      "allocation_dimensions",
-    ].includes(fieldId),
-  "Text configuration fields must not replace dedicated report controls",
-);
+const editableTextFieldIdSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (fieldId) =>
+      !fieldId.includes(".") &&
+      !fieldId.includes("[") &&
+      !fieldId.includes("]"),
+    "Text configuration field identifiers must be form-safe",
+  )
+  .refine(
+    (fieldId) =>
+      ![
+        "sections",
+        "as_of_date",
+        "reporting_currency",
+        "benchmark_code",
+        "allocation_dimensions",
+      ].includes(fieldId),
+    "Text configuration fields must not replace dedicated report controls",
+  );
 
 const configurationFieldBaseSchema = z.object({
     fieldId: z.string().min(1),
