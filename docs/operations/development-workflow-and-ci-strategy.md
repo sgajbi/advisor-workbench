@@ -45,16 +45,17 @@ blocking static-analysis lane. It enrolls critical Gateway-backed surfaces throu
 source adapters and stable rendered identity/state attributes. Each enrollment proves that:
 
 1. Gateway identity and state survive a controlled source mutation through the production view
-   model unchanged;
+   model and rendered component unchanged;
 2. exact rendered evidence rejects omitted, extra, duplicated, substituted, or mismatched rows;
 3. a plausible reassuring fallback, such as Risk `breach` rendered as `within`, fails;
-4. the production view-model mapping, component evidence attributes, and browser extraction remain
-   wired; and
+4. the production view-model mapping, component evidence attributes, and DOM/browser extraction
+   remain wired; and
 5. an empty or single-surface registry fails closed.
 
 Risk mandate comparison and Advisor Book are the reference enrollments. Add a new surface only when
-its Gateway contract owns the facts and the screen has a domain adapter, executable production
-mapping proof, and deterministic browser evidence. A cloned adapter row is not rendered proof.
+its Gateway contract owns the facts and the screen has a domain adapter, executable rendered
+component proof, and deterministic browser evidence. A cloned adapter or view-model row is not
+rendered proof.
 Presentation-only labels and formatting remain outside this control; do not turn the gate into a
 literal scanner or a second domain model.
 

@@ -1,6 +1,11 @@
+import { render, screen } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
+import { beforeEach, vi } from "vitest";
+
 import type { AdvisorBookResponse } from "@/features/advisor-book/contracts";
-import { buildAdvisorBookWorkspaceModel } from "@/features/advisor-book/view-model";
+import AdvisorBookWorkspace from "@/features/advisor-book/components/advisor-book-workspace";
 import { buildRiskMandateComparisonViewModel } from "@/apps/performance/risk-mandate-comparison-view-model";
+import RiskMandateComparison from "@/apps/performance/components/risk/risk-mandate-comparison";
 
 import { assertExactSourceRenderProof } from "../../scripts/live/validation/source-render-proof.mjs";
 import { SOURCE_AUTHORITY_CONTRACTS } from "../../scripts/quality/source-authority-contracts.mjs";
@@ -8,6 +13,29 @@ import {
   buildConcentrationMandateComparisonFixture,
   buildSummaryMandateComparisonFixture,
 } from "../fixtures/risk-mandate-comparison-fixtures";
+
+const getAdvisorBookMock = vi.fn();
+
+vi.mock("@/features/advisor-book/api", async () => {
+  const actual = await vi.importActual<typeof import("@/features/advisor-book/api")>(
+    "@/features/advisor-book/api",
+  );
+  return {
+    ...actual,
+    getAdvisorBook: (...args: unknown[]) => getAdvisorBookMock(...args),
+  };
+});
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/book",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams("asOfDate=2026-02-24"),
+}));
+
+vi.mock("next/link", () => ({
+  default: ({ href, children }: { href: string; children: ReactNode }) =>
+    createElement("a", { href }, children),
+}));
 
 function sourceContract(id: string) {
   const contract = SOURCE_AUTHORITY_CONTRACTS.find((candidate) => candidate.id === id);
@@ -61,12 +89,14 @@ function advisorBookResponse(status: "ACTIVE" | "CLOSED"): AdvisorBookResponse {
   };
 }
 
-function advisorBookRenderedRows(response: AdvisorBookResponse) {
-  return buildAdvisorBookWorkspaceModel(response).rows.map((row) => ({
-    source: "advisor-book",
-    identity: row.portfolioId,
-    state: row.sourceLifecycleState,
-  }));
+function advisorBookRenderedRows() {
+  return [...document.querySelectorAll('[data-advisor-book-row="portfolio"]')].map(
+    (row) => ({
+      source: "advisor-book",
+      identity: row.getAttribute("data-portfolio-id") ?? "",
+      state: row.getAttribute("data-lifecycle-state") ?? "",
+    }),
+  );
 }
 
 function riskPayload(state: "breach" | "measure_unavailable") {
@@ -83,35 +113,45 @@ function riskPayload(state: "breach" | "measure_unavailable") {
 }
 
 function riskRenderedRows(payload: ReturnType<typeof riskPayload>) {
-  return buildRiskMandateComparisonViewModel({
-    portfolioRisk: payload.summary,
-    concentrationRisk: payload.concentration,
-  }).sources.flatMap((source) =>
-    source.constraints.map((constraint) => ({
-      source: source.key,
-      identity: constraint.key,
-      state: constraint.state,
-    })),
+  render(
+    createElement(RiskMandateComparison, {
+      comparison: buildRiskMandateComparisonViewModel({
+        portfolioRisk: payload.summary,
+        concentrationRisk: payload.concentration,
+      }),
+    }),
   );
+  return [...document.querySelectorAll("[data-mandate-constraint]")].map((row) => ({
+    source: row.getAttribute("data-mandate-constraint-source") ?? "",
+    identity: row.getAttribute("data-mandate-constraint") ?? "",
+    state: row.getAttribute("data-mandate-state") ?? "",
+  }));
 }
 
 describe("source-authority production mapping", () => {
+  beforeEach(() => {
+    getAdvisorBookMock.mockReset();
+  });
+
   it.each(["CLOSED", "ACTIVE"] as const)(
-    "preserves Advisor Book lifecycle state %s through the production view model",
-    (status) => {
+    "preserves Advisor Book lifecycle state %s through the rendered workspace",
+    async (status) => {
       const response = advisorBookResponse(status);
+      getAdvisorBookMock.mockResolvedValue(response);
+      render(createElement(AdvisorBookWorkspace));
+      await screen.findByRole("table", { name: "Portfolios in my book" });
       expect(
         assertExactSourceRenderProof({
           screen: "Advisor Book",
           expectedRows: sourceContract("advisor-book-portfolios").buildExpectedRows(response),
-          renderedRows: advisorBookRenderedRows(response),
+          renderedRows: advisorBookRenderedRows(),
         }),
       ).toHaveLength(1);
     },
   );
 
   it.each(["breach", "measure_unavailable"] as const)(
-    "preserves Risk constraint state %s through the production view model",
+    "preserves Risk constraint state %s through the rendered comparison",
     (state) => {
       const payload = riskPayload(state);
       expect(
