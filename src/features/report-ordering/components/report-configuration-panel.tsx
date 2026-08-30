@@ -1,32 +1,85 @@
 "use client";
 
+import { forwardRef, useImperativeHandle, useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { FieldLabel, SectionBlock, SemanticBadge } from "@/design-system";
 
+import {
+  buildReportOrderingFormSchema,
+  type ReportOrderingFormValues,
+} from "../report-ordering-form";
 import type { ReportOrderingConfiguration, ReportOrderingViewModel } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 
-export function ReportConfigurationPanel({
-  model,
-  configuration,
-  disabled,
-  updateConfiguration,
-  toggleSection,
-}: {
+export type ReportConfigurationPanelHandle = {
+  validate: () => Promise<boolean>;
+};
+
+type ReportConfigurationPanelProps = {
   model: ReportOrderingViewModel;
   configuration: ReportOrderingConfiguration;
   disabled: boolean;
   updateConfiguration: (patch: Partial<ReportOrderingConfiguration>) => void;
   toggleSection: (sectionId: string) => void;
-}) {
+};
+
+export const ReportConfigurationPanel = forwardRef<
+  ReportConfigurationPanelHandle,
+  ReportConfigurationPanelProps
+>(function ReportConfigurationPanel({
+  model,
+  configuration,
+  disabled,
+  updateConfiguration,
+  toggleSection,
+}, ref) {
   const configurationFields = new Map(
     model.family?.configurationFields.map((field) => [field.fieldId, field]) ?? [],
   );
   const currencyField = configurationFields.get("reporting_currency");
-  const benchmarkField = configurationFields.get("benchmark_code");
   const allocationField = configurationFields.get("allocation_dimensions");
+  const textFields = (model.family?.configurationFields ?? []).filter((field) => {
+    if (field.inputType !== "text") return false;
+    if (field.requirement !== "conditional") return true;
+    return (model.family?.sections ?? []).some(
+      (section) =>
+        configuration.selectedSections.includes(section.sectionId) &&
+        section.dependencyFieldIds.includes(field.fieldId),
+    );
+  });
   const selectedSectionCount = model.sectionChoices.filter(
     (section) => section.selected,
   ).length;
+  const schema = useMemo(
+    () =>
+      buildReportOrderingFormSchema({
+        family: model.family,
+        selectedSections: configuration.selectedSections,
+        sourceContext: model.sourceContext,
+      }),
+    [configuration.selectedSections, model.family, model.sourceContext],
+  );
+  const form = useForm<ReportOrderingFormValues>({
+    resolver: zodResolver(schema),
+    mode: "onBlur",
+    reValidateMode: "onChange",
+    shouldFocusError: true,
+    values: {
+      asOfDate: configuration.asOfDate,
+      reportingCurrency: configuration.reportingCurrency,
+      configurationValues: configuration.configurationValues,
+    },
+  });
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      validate: async () => await form.trigger(undefined, { shouldFocus: true }),
+    }),
+    [form],
+  );
 
   return (
     <div className={styles.configurationStack}>
@@ -105,54 +158,119 @@ export function ReportConfigurationPanel({
         <div className={styles.fieldGrid}>
           <div className={styles.fieldGroup}>
             <FieldLabel htmlFor="report-ordering-as-of-date">Report date</FieldLabel>
-            <input
-              id="report-ordering-as-of-date"
-              className="workbench-input"
-              type="date"
-              value={configuration.asOfDate}
-              disabled={disabled}
-              onChange={(event) => updateConfiguration({ asOfDate: event.target.value })}
-              aria-describedby="report-ordering-as-of-help"
+            <Controller
+              control={form.control}
+              name="asOfDate"
+              render={({ field, fieldState }) => (
+                <>
+                  <input
+                    {...field}
+                    id="report-ordering-as-of-date"
+                    className={`${styles.fieldInput} workbench-input`}
+                    type="date"
+                    min={model.sourceContext.earliestReportDate}
+                    max={model.sourceContext.latestReportDate}
+                    disabled={disabled}
+                    onChange={(event) => {
+                      field.onChange(event);
+                      updateConfiguration({ asOfDate: event.target.value });
+                    }}
+                    aria-invalid={fieldState.invalid}
+                    aria-describedby={
+                      fieldState.error
+                        ? "report-ordering-as-of-help report-ordering-as-of-error"
+                        : "report-ordering-as-of-help"
+                    }
+                  />
+                  <small id="report-ordering-as-of-help">
+                    Available from {model.sourceContext.earliestReportDate} to {model.sourceContext.latestReportDate}, as confirmed by the portfolio record.
+                  </small>
+                  <FieldError id="report-ordering-as-of-error" message={fieldState.error?.message} />
+                </>
+              )}
             />
-            <small id="report-ordering-as-of-help">
-              Holdings, activity, performance, and risk evidence are evaluated for this date.
-            </small>
           </div>
           {currencyField ? (
             <div className={styles.fieldGroup}>
               <FieldLabel htmlFor="report-ordering-currency">
                 {currencyField.businessLabel}
               </FieldLabel>
-              <input
-                id="report-ordering-currency"
-                className="workbench-input"
-                inputMode="text"
-                maxLength={3}
-                disabled={disabled}
-                value={configuration.reportingCurrency}
-                onChange={(event) =>
-                  updateConfiguration({
-                    reportingCurrency: event.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z]/g, ""),
-                  })
-                }
-                aria-describedby="report-ordering-currency-help"
+              <Controller
+                control={form.control}
+                name="reportingCurrency"
+                render={({ field, fieldState }) => (
+                  <>
+                    <select
+                      {...field}
+                      id="report-ordering-currency"
+                      className={`${styles.fieldInput} workbench-input`}
+                      disabled={disabled || model.sourceContext.reportingCurrencies.length === 0}
+                      onChange={(event) => {
+                        field.onChange(event);
+                        updateConfiguration({ reportingCurrency: event.target.value });
+                      }}
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={
+                        fieldState.error
+                          ? "report-ordering-currency-help report-ordering-currency-error"
+                          : "report-ordering-currency-help"
+                      }
+                    >
+                      {model.sourceContext.reportingCurrencies.map((currency) => (
+                        <option key={currency} value={currency}>{currency}</option>
+                      ))}
+                    </select>
+                    <small id="report-ordering-currency-help">
+                      Choices are confirmed by the portfolio reporting controls.
+                    </small>
+                    <FieldError
+                      id="report-ordering-currency-error"
+                      message={fieldState.error?.message}
+                    />
+                  </>
+                )}
               />
-              <small id="report-ordering-currency-help">
-                Leave blank to use the portfolio currency maintained by the source record.
-              </small>
             </div>
           ) : null}
-          {benchmarkField ? (
-            <div className={styles.fieldGroup}>
-              <span className="workbench-field-label">
-                {benchmarkField.businessLabel}
-              </span>
-              <div className={styles.sourceDefault}>Portfolio benchmark</div>
-              <small>Reporting applies the eligible benchmark from portfolio context.</small>
-            </div>
-          ) : null}
+          {textFields.map((fieldDefinition) => {
+            const fieldId = `report-ordering-field-${toDomId(fieldDefinition.fieldId)}`;
+            const helpId = `${fieldId}-help`;
+            const errorId = `${fieldId}-error`;
+            return (
+              <div key={fieldDefinition.fieldId} className={styles.fieldGroup}>
+                <FieldLabel htmlFor={fieldId}>{fieldDefinition.businessLabel}</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name={`configurationValues.${fieldDefinition.fieldId}`}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <input
+                        {...field}
+                        id={fieldId}
+                        className={`${styles.fieldInput} workbench-input`}
+                        type="text"
+                        value={field.value ?? ""}
+                        disabled={disabled}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          updateConfiguration({
+                            configurationValues: {
+                              ...configuration.configurationValues,
+                              [fieldDefinition.fieldId]: event.target.value,
+                            },
+                          });
+                        }}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={fieldState.error ? `${helpId} ${errorId}` : helpId}
+                      />
+                      <small id={helpId}>{fieldDefinition.description}</small>
+                      <FieldError id={errorId} message={fieldState.error?.message} />
+                    </>
+                  )}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {allocationField?.options.length ? (
@@ -267,4 +385,12 @@ export function ReportConfigurationPanel({
       </SectionBlock>
     </div>
   );
+});
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  return message ? <small id={id} className={styles.fieldError}>{message}</small> : null;
+}
+
+function toDomId(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, "-");
 }

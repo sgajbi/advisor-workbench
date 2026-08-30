@@ -10,6 +10,7 @@ import {
 import { buildPortfolioReviewContextStrip } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
 import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip-view-model";
 import { resolvePortfolioReviewControls } from "@/apps/portfolio/portfolio-workspace-controls";
+import { getPortfolioCurrencyOptions } from "@/apps/portfolio/view-model";
 import {
   AppPageShell,
   buildWorkbenchUnsupportedReviewContextNotice,
@@ -84,6 +85,16 @@ export async function ReportOrderingPage({
       />
     );
   }
+  const historicalSnapshots = workspace.control_capabilities?.historical_snapshots;
+  const hasGovernedReportDateRange = Boolean(
+    historicalSnapshots?.state === "supported" &&
+      historicalSnapshots.earliest_available_as_of_date &&
+      historicalSnapshots.latest_available_as_of_date,
+  );
+  const reportingCurrencies =
+    workspace.control_capabilities?.reporting_currency_restatement.state === "supported"
+      ? getPortfolioCurrencyOptions(workspace)
+      : [controlResolution.controls.reportingCurrency];
 
   return (
     <ReportOrderingWorkspace
@@ -108,6 +119,16 @@ export async function ReportOrderingPage({
         asOfDate: controlResolution.controls.asOfDate,
         sourceBaseCurrency: workspace.portfolio.base_currency,
         reportingCurrency: controlResolution.controls.reportingCurrency,
+        earliestReportDate: hasGovernedReportDateRange
+          ? historicalSnapshots?.earliest_available_as_of_date ?? controlResolution.controls.asOfDate
+          : controlResolution.controls.asOfDate,
+        latestReportDate: hasGovernedReportDateRange
+          ? historicalSnapshots?.latest_available_as_of_date ?? controlResolution.controls.asOfDate
+          : controlResolution.controls.asOfDate,
+        reportingCurrencies: [...new Set([
+          controlResolution.controls.reportingCurrency,
+          ...reportingCurrencies,
+        ])],
       }}
     />
   );

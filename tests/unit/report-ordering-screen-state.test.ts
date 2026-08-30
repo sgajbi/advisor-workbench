@@ -8,14 +8,20 @@ import {
 import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
 import { buildReportOrderingResponse } from "../fixtures/report-ordering-fixtures";
 
+const sourceContext = {
+  asOfDate: "2026-04-22",
+  reportingCurrency: "SGD",
+  earliestReportDate: "2025-01-06",
+  latestReportDate: "2026-04-22",
+  reportingCurrencies: ["SGD", "USD"],
+};
+
 function readyModel() {
   const response = parseReportOrderingResponse(buildReportOrderingResponse());
   return buildReportOrderingViewModel(
     response,
-    createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    }),
+    createReportOrderingConfiguration(response, sourceContext),
+    sourceContext,
   );
 }
 
@@ -55,10 +61,8 @@ describe("report ordering screen state", () => {
     const response = parseReportOrderingResponse(payload);
     const model = buildReportOrderingViewModel(
       response,
-      createReportOrderingConfiguration(response, {
-        asOfDate: "2026-04-22",
-        reportingCurrency: "SGD",
-      }),
+      createReportOrderingConfiguration(response, sourceContext),
+      sourceContext,
     );
 
     const state = buildReportOrderingScreenState({

@@ -28,12 +28,18 @@ const submitMock = vi.mocked(submitPortfolioReviewOrder);
 function useReportOrderingWorkflow(
   options: Omit<
     Parameters<typeof useReportOrderingWorkflowSource>[0],
-    "sourceBaseCurrency"
+    | "sourceBaseCurrency"
+    | "earliestReportDate"
+    | "latestReportDate"
+    | "reportingCurrencies"
   >,
 ) {
   return useReportOrderingWorkflowSource({
     ...options,
     sourceBaseCurrency: "SGD",
+    earliestReportDate: "2025-01-06",
+    latestReportDate: "2026-04-22",
+    reportingCurrencies: ["SGD", "USD"],
   });
 }
 

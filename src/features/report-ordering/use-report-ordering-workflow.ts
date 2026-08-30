@@ -29,10 +29,12 @@ import {
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
+  selectedReportConfigurationValues,
   selectReportOrderingFamily,
   toReportRequestRows,
   type ReportOrderingConfiguration,
   type ReportOrderingScopeMode,
+  type ReportOrderingSourceContext,
 } from "./view-model";
 
 type ReviewedIntent = {
@@ -78,6 +80,9 @@ export function useReportOrderingWorkflow({
   asOfDate,
   sourceBaseCurrency,
   reportingCurrency,
+  earliestReportDate,
+  latestReportDate,
+  reportingCurrencies,
   scopeMode = "single_portfolio",
   selectedPortfolioIds = [portfolioId],
   portfolioSelectionState = "ready",
@@ -88,6 +93,9 @@ export function useReportOrderingWorkflow({
   asOfDate: string;
   sourceBaseCurrency: string;
   reportingCurrency: string;
+  earliestReportDate: string;
+  latestReportDate: string;
+  reportingCurrencies: string[];
   scopeMode?: ReportOrderingScopeMode;
   selectedPortfolioIds?: string[];
   portfolioSelectionState?: "loading" | "ready" | "error";
@@ -97,6 +105,19 @@ export function useReportOrderingWorkflow({
     context: Readonly<{ asOfDate: string; reportingCurrency: string }>,
   ) => void;
 }) {
+  const reportingCurrenciesKey = reportingCurrencies.join("\u0000");
+  const sourceContext = useMemo<ReportOrderingSourceContext>(
+    () => ({
+      asOfDate,
+      reportingCurrency,
+      earliestReportDate,
+      latestReportDate,
+      reportingCurrencies: reportingCurrenciesKey
+        ? reportingCurrenciesKey.split("\u0000")
+        : [],
+    }),
+    [asOfDate, earliestReportDate, latestReportDate, reportingCurrenciesKey, reportingCurrency],
+  );
   const [catalogue, setCatalogue] = useState<ReportOrderingResponse | null>(null);
   const [catalogueState, setCatalogueState] =
     useState<ReportOrderingCatalogueState>("loading");
@@ -387,7 +408,7 @@ export function useReportOrderingWorkflow({
         if (!isActiveWorkspaceGeneration(portfolioId, workspaceGeneration)) {
           return;
         }
-        const nextSourceFingerprint = JSON.stringify(response);
+        const nextSourceFingerprint = JSON.stringify({ response, sourceContext });
         if (
           sourceFingerprintRef.current &&
           sourceFingerprintRef.current !== nextSourceFingerprint
@@ -398,7 +419,7 @@ export function useReportOrderingWorkflow({
         setCatalogue(response);
         setConfiguration((current) =>
           resetConfiguration || !current
-            ? createReportOrderingConfiguration(response, { asOfDate, reportingCurrency })
+            ? createReportOrderingConfiguration(response, sourceContext)
             : current,
         );
         setCatalogueState("ready");
@@ -415,7 +436,7 @@ export function useReportOrderingWorkflow({
         setCatalogueError(catalogueErrorCopy(error));
       }
     },
-    [asOfDate, isActiveWorkspaceGeneration, portfolioId, reportingCurrency],
+    [isActiveWorkspaceGeneration, portfolioId, sourceContext],
   );
 
   useEffect(() => {
@@ -439,9 +460,9 @@ export function useReportOrderingWorkflow({
   const baseModel = useMemo(
     () =>
       catalogue && configuration
-        ? buildReportOrderingViewModel(catalogue, configuration)
+        ? buildReportOrderingViewModel(catalogue, configuration, sourceContext)
         : null,
-    [catalogue, configuration],
+    [catalogue, configuration, sourceContext],
   );
   const activeScopePortfolioIds =
     initialBatchId && activeBatchIntent
@@ -466,14 +487,15 @@ export function useReportOrderingWorkflow({
     [activePortfolioSelectionState, activeScopePortfolioIds, baseModel, scopeMode],
   );
   const publishedConfigurationFieldIds = useMemo(
-    () =>
-      new Set(model?.family?.configurationFields.map((field) => field.fieldId) ?? []),
+    () => new Set(model?.family?.configurationFields.map((field) => field.fieldId) ?? []),
     [model?.family?.configurationFields],
   );
   const currentConfigurationFingerprint = configuration
     ? configurationFingerprint(configuration)
     : "";
-  const currentSourceFingerprint = catalogue ? JSON.stringify(catalogue) : "";
+  const currentSourceFingerprint = catalogue
+    ? JSON.stringify({ response: catalogue, sourceContext })
+    : "";
   const currentScopeFingerprint = JSON.stringify({
     scopeMode,
     portfolioIds: [...activeScopePortfolioIds].sort(),
@@ -604,14 +626,14 @@ export function useReportOrderingWorkflow({
         configuration.reportingCurrency
           ? { reportingCurrency: configuration.reportingCurrency }
           : {}),
-        ...(publishedConfigurationFieldIds.has("benchmark_code") &&
-        configuration.benchmarkCode
-          ? { benchmarkCode: configuration.benchmarkCode }
-          : {}),
         ...(publishedConfigurationFieldIds.has("allocation_dimensions") &&
         configuration.allocationDimensions.length
           ? { allocationDimensions: configuration.allocationDimensions }
           : {}),
+        configurationValues: selectedReportConfigurationValues(
+          model.family,
+          configuration,
+        ),
         sections: configuration.selectedSections,
         idempotencyKey: activeReviewedIntent.idempotencyKey,
       };

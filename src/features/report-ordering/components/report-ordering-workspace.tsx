@@ -26,7 +26,10 @@ import {
 } from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 import { ReportBatchStatusPanel } from "./report-batch-status";
-import { ReportConfigurationPanel } from "./report-configuration-panel";
+import {
+  ReportConfigurationPanel,
+  type ReportConfigurationPanelHandle,
+} from "./report-configuration-panel";
 import { ReportReadinessRail } from "./report-readiness-rail";
 import { ReportRequestHistory } from "./report-request-history";
 import { ReportPortfolioScopePanel } from "./report-portfolio-scope-panel";
@@ -36,6 +39,9 @@ type ReportOrderingPortfolio = {
   asOfDate: string;
   sourceBaseCurrency: string;
   reportingCurrency: string;
+  earliestReportDate: string;
+  latestReportDate: string;
+  reportingCurrencies: string[];
 };
 
 export function ReportOrderingWorkspace({
@@ -122,11 +128,15 @@ function ReportOrderingWorkspaceSession({
     scopeMode,
     selectedPortfolioIds,
     portfolioSelectionState,
+    earliestReportDate: portfolio.earliestReportDate,
+    latestReportDate: portfolio.latestReportDate,
+    reportingCurrencies: portfolio.reportingCurrencies,
     initialBatchId,
     onBatchAccepted: commitBatchAddress,
   });
   const readinessRef = useRef<HTMLDivElement>(null);
   const configurationRef = useRef<HTMLDivElement>(null);
+  const configurationPanelRef = useRef<ReportConfigurationPanelHandle>(null);
   const focusIntentRef = useRef(0);
   const workspaceState = workflow.screenState.workspace;
   const batchAvailable = Boolean(findPortfolioReviewBatchMode(workflow.model?.family ?? null));
@@ -145,6 +155,12 @@ function ReportOrderingWorkspaceSession({
 
   function focusReadiness() {
     requestAnimationFrame(() => readinessRef.current?.focus());
+  }
+
+  async function reviewRequest() {
+    const valid = await configurationPanelRef.current?.validate();
+    if (!valid || !workflow.reviewRequest()) return;
+    focusReadiness();
   }
 
   async function submitRequest() {
@@ -260,6 +276,7 @@ function ReportOrderingWorkspaceSession({
                         onBookStateChange={setPortfolioSelectionState}
                       />
                       <ReportConfigurationPanel
+                        ref={configurationPanelRef}
                         model={workspaceState.model}
                         configuration={workflow.configuration}
                         disabled={configurationLocked}
@@ -297,10 +314,7 @@ function ReportOrderingWorkspaceSession({
                         : `${selectedPortfolioIds.length} selected portfolios`
                     : "Selected portfolio"}
                   isPortfolioBundle={scopeMode === "explicit_portfolio_batch"}
-                  onReview={() => {
-                    workflow.reviewRequest();
-                    focusReadiness();
-                  }}
+                  onReview={() => void reviewRequest()}
                   onSubmit={() => void submitRequest()}
                   onStartAnother={startAnotherReport}
                 />

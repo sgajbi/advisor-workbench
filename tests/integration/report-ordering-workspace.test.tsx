@@ -151,6 +151,9 @@ const portfolio = {
   asOfDate: "2026-04-22",
   sourceBaseCurrency: "SGD",
   reportingCurrency: "SGD",
+  earliestReportDate: "2025-01-06",
+  latestReportDate: "2026-04-22",
+  reportingCurrencies: ["SGD", "USD"],
 };
 
 describe("ReportOrderingWorkspace", () => {
@@ -222,8 +225,16 @@ describe("ReportOrderingWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Approved report" })).toBeInTheDocument();
-    expect(screen.getByDisplayValue("2026-04-22")).toHaveAccessibleName("Report date");
-    expect(screen.getByDisplayValue("SGD")).toHaveAccessibleName("Reporting currency");
+    const reportDate = screen.getByDisplayValue("2026-04-22");
+    expect(reportDate).toHaveAccessibleName("Report date");
+    expect(reportDate).toHaveAttribute("min", "2025-01-06");
+    expect(reportDate).toHaveAttribute("max", "2026-04-22");
+    const reportingCurrency = screen.getByRole("combobox", { name: "Reporting currency" });
+    expect(reportingCurrency).toHaveValue("SGD");
+    expect(within(reportingCurrency).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "SGD",
+      "USD",
+    ]);
     expect(screen.getByRole("radio", { name: /Structured data package/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: /Governed PDF document/ })).toBeDisabled();
     expect(screen.getByText(/PDF creation is temporarily unavailable/)).toBeInTheDocument();
@@ -241,6 +252,40 @@ describe("ReportOrderingWorkspace", () => {
     expect(requiredSection).toBeChecked();
     expect(requiredSection).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "Asset class" })).not.toBeChecked();
+  });
+
+  it("associates conditional catalogue validation with the first missing field", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByText("Review report contents"));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Advisor commentary/ }));
+    const acceptedBrief = screen.getByRole("textbox", { name: "Accepted advisor brief" });
+    const review = screen.getByRole("button", { name: "Review Request" });
+    expect(review).toBeEnabled();
+
+    fireEvent.click(review);
+    await waitFor(() => expect(acceptedBrief).toHaveFocus());
+    expect(acceptedBrief).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getAllByText(
+        "Accepted advisor brief is required when Advisor commentary is included.",
+      ),
+    ).toHaveLength(2);
+
+    fireEvent.change(acceptedBrief, { target: { value: "abr_accepted_1" } });
+    fireEvent.click(review);
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configurationValues: { advisor_brief_run_id: "abr_accepted_1" },
+        sections: expect.arrayContaining(["ADVISOR_COMMENTARY"]),
+      }),
+    );
   });
 
   it("requires an explicit review before idempotent submission", async () => {
@@ -577,7 +622,9 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
     fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
-    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled(),
+    );
 
     advisorBookMock.mockReturnValue(buildAdvisorBookResult({ currentPortfolioStatus: "INACTIVE" }));
     view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
@@ -595,7 +642,9 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
     fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
-    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled(),
+    );
 
     advisorBookMock.mockReturnValue(buildAdvisorBookResult({ includeCurrentPortfolio: false }));
     view.rerender(<ReportOrderingWorkspace portfolio={portfolio} />);
@@ -611,7 +660,9 @@ describe("ReportOrderingWorkspace", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Income Preservation Mandate/ }));
     fireEvent.click(screen.getByRole("button", { name: "Review Portfolio Bundle" }));
-    expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Submit Portfolio Bundle" })).toBeEnabled(),
+    );
 
     const emptyBook = buildAdvisorBookResult();
     emptyBook.response.items = [];
@@ -1596,7 +1647,13 @@ describe("ReportOrderingWorkspace", () => {
     expect(within(status).getByLabelText("Status Setup required")).toBeInTheDocument();
     expect(screen.getByText("Complete before review")).toBeInTheDocument();
     expect(screen.getByText("Select a valid report date.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Review Request" })).toBeDisabled();
+    const review = screen.getByRole("button", { name: "Review Request" });
+    expect(review).toBeEnabled();
+    fireEvent.click(review);
+    const date = screen.getByLabelText("Report date");
+    await waitFor(() => expect(date).toHaveFocus());
+    expect(date).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getAllByText("Select a valid report date.")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
   });
 

@@ -70,8 +70,8 @@ describe("report ordering API", () => {
         asOfDate: "2026-04-22",
         outputFormat,
         reportingCurrency: "SGD",
-        benchmarkCode: "BMK_PB_GLOBAL_BALANCED_60_40",
         allocationDimensions: ["asset_class", "currency"],
+        configurationValues: { advisor_brief_run_id: "abr_accepted_1" },
         sections: ["CLIENT_PROFILE", "OVERVIEW", "PERFORMANCE"],
         idempotencyKey: "intent_1",
       });
@@ -91,7 +91,7 @@ describe("report ordering API", () => {
         options: {
           sections: ["CLIENT_PROFILE", "OVERVIEW", "PERFORMANCE"],
           allocation_dimensions: ["asset_class", "currency"],
-          benchmark_code: "BMK_PB_GLOBAL_BALANCED_60_40",
+          advisor_brief_run_id: "abr_accepted_1",
         },
       });
       expect(body.options).not.toHaveProperty("source_surface");

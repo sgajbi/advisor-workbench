@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
+import {
+  parseReportOrderingResponse,
+  type ReportJobListItem,
+} from "@/features/report-ordering/contracts";
 import {
   applyReportScopeReadiness,
   buildReportOrderingViewModel,
   configurationFingerprint,
   createReportOrderingConfiguration,
   findPortfolioReviewBatchMode,
+  selectedReportConfigurationValues,
   selectReportOrderingFamily,
   toReportRequestRows,
 } from "@/features/report-ordering/view-model";
@@ -15,14 +19,19 @@ import {
   buildReportOrderingResponse,
 } from "../fixtures/report-ordering-fixtures";
 
+const sourceContext = {
+  asOfDate: "2026-04-22",
+  reportingCurrency: "SGD",
+  earliestReportDate: "2025-01-06",
+  latestReportDate: "2026-04-22",
+  reportingCurrencies: ["SGD", "USD"],
+};
+
 describe("report ordering view model", () => {
   it("selects the source-ready JSON path while keeping unavailable PDF visible", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    const model = buildReportOrderingViewModel(response, configuration);
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(configuration.outputFormat).toBe("json");
     expect(model.canSubmit).toBe(true);
@@ -41,12 +50,10 @@ describe("report ordering view model", () => {
 
   it("keeps required sections selected and blocks invalid report dates", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "not-a-date",
-      reportingCurrency: "SGD",
-    });
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    configuration.asOfDate = "not-a-date";
     configuration.selectedSections = [];
-    const model = buildReportOrderingViewModel(response, configuration);
+    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(model.canSubmit).toBe(false);
     expect(model.readiness.issues).toEqual(
@@ -58,22 +65,30 @@ describe("report ordering view model", () => {
     );
   });
 
-  it("blocks incomplete reporting currency codes while preserving the optional default", () => {
+  it("blocks report dates outside the source-confirmed portfolio range", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SG",
-    });
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    configuration.asOfDate = "2026-04-23";
 
-    expect(buildReportOrderingViewModel(response, configuration).readiness.issues).toContain(
-      "Enter a three-letter reporting currency, such as SGD or USD.",
+    expect(
+      buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues,
+    ).toContain("Select a report date from 06 Jan 2025 to 22 Apr 2026.");
+  });
+
+  it("blocks reporting currencies not confirmed by the portfolio source", () => {
+    const response = parseReportOrderingResponse(buildReportOrderingResponse());
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    configuration.reportingCurrency = "XYZ";
+
+    expect(buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues).toContain(
+      "Select a reporting currency confirmed for this portfolio.",
     );
     expect(
       buildReportOrderingViewModel(response, {
         ...configuration,
         reportingCurrency: "",
-      }).canSubmit,
-    ).toBe(true);
+      }, sourceContext).canSubmit,
+    ).toBe(false);
   });
 
   it("does not validate reporting currency when the selected family does not publish it", () => {
@@ -83,16 +98,14 @@ describe("report ordering view model", () => {
         (field) => field.fieldId !== "reporting_currency",
       );
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SG",
-    });
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    configuration.reportingCurrency = "XYZ";
 
-    const model = buildReportOrderingViewModel(response, configuration);
+    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(model.canSubmit).toBe(true);
     expect(model.readiness.issues).not.toContain(
-      "Enter a three-letter reporting currency, such as SGD or USD.",
+      "Select a reporting currency confirmed for this portfolio.",
     );
   });
 
@@ -105,11 +118,8 @@ describe("report ordering view model", () => {
     };
     payload.reportFamilies = [];
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    const model = buildReportOrderingViewModel(response, configuration);
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(model.canSubmit).toBe(false);
     expect(model.readiness.issues.join(" ")).toContain(
@@ -122,10 +132,7 @@ describe("report ordering view model", () => {
 
   it("normalizes set ordering when deciding whether a preflight became stale", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const first = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
+    const first = createReportOrderingConfiguration(response, sourceContext);
     first.selectedSections = ["OVERVIEW", "CLIENT_PROFILE"];
     const second = { ...first, selectedSections: ["CLIENT_PROFILE", "OVERVIEW"] };
 
@@ -147,6 +154,32 @@ describe("report ordering view model", () => {
         tone: "success",
       }),
     );
+  });
+
+  it("fails closed when Reporting returns an unmapped lifecycle step", () => {
+    const response = buildReportJobListResponse();
+    response.items[0].currentStep = "SOMETHING_NEW";
+
+    expect(toReportRequestRows(response.items)[0]).toEqual(
+      expect.objectContaining({
+        statusLabel: "Status not reported",
+        tone: "default",
+      }),
+    );
+  });
+
+  it("explains incomplete source data without exposing a failure code", () => {
+    const response = buildReportJobListResponse();
+    const item = {
+      ...response.items[0],
+      status: "failed",
+      currentStep: "failed",
+      failureCategory: "data_incomplete",
+    } as ReportJobListItem;
+
+    const row = toReportRequestRows([item])[0];
+    expect(row.statusDetail).toContain("could not be completed from its sources");
+    expect(JSON.stringify(row)).not.toContain("data_incomplete");
   });
 
   it("normalizes report request instants to disclosed UTC and fails closed without a source zone", () => {
@@ -191,11 +224,8 @@ describe("report ordering view model", () => {
         },
       ],
     });
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    const model = buildReportOrderingViewModel(response, configuration);
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(model.eligibleFamilies.map((family) => family.reportFamilyId)).toEqual([
       "portfolio_review",
@@ -222,11 +252,8 @@ describe("report ordering view model", () => {
       ...payload,
       reportFamilies: [...payload.reportFamilies, alternateFamily],
     });
-    const current = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    current.benchmarkCode = "BENCHMARK_OLD";
+    const current = createReportOrderingConfiguration(response, sourceContext);
+    current.configurationValues.advisor_brief_run_id = "abr_previous";
     current.allocationDimensions = ["asset_class"];
 
     const selected = selectReportOrderingFamily(
@@ -240,19 +267,41 @@ describe("report ordering view model", () => {
         familyId: "portfolio_review_condensed",
         modeId: "single_portfolio",
         selectedSections: ["CONDENSED_PROFILE"],
-        benchmarkCode: "",
+        configurationValues: { advisor_brief_run_id: "" },
         allocationDimensions: [],
       }),
     );
   });
 
+  it("requires and submits a conditional catalogue field only for its selected section", () => {
+    const response = parseReportOrderingResponse(buildReportOrderingResponse());
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    configuration.selectedSections.push("ADVISOR_COMMENTARY");
+
+    expect(
+      buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues,
+    ).toContain(
+      "Accepted advisor brief is required when Advisor commentary is included.",
+    );
+
+    configuration.configurationValues.advisor_brief_run_id = " abr_accepted_1 ";
+    expect(
+      buildReportOrderingViewModel(response, configuration, sourceContext).canSubmit,
+    ).toBe(true);
+    expect(selectedReportConfigurationValues(response.reportFamilies[0], configuration)).toEqual({
+      advisor_brief_run_id: "abr_accepted_1",
+    });
+
+    configuration.selectedSections = configuration.selectedSections.filter(
+      (sectionId) => sectionId !== "ADVISOR_COMMENTARY",
+    );
+    expect(selectedReportConfigurationValues(response.reportFamilies[0], configuration)).toEqual({});
+  });
+
   it("requires a source-published batch capability and at least two selected portfolios", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    const baseModel = buildReportOrderingViewModel(response, configuration);
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const baseModel = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(findPortfolioReviewBatchMode(baseModel.family)?.submission?.path).toBe(
       "/api/v1/report-batches",
@@ -287,11 +336,8 @@ describe("report ordering view model", () => {
     singleMode.submission.state = "unavailable";
     singleMode.submission.reasonCode = "single_portfolio_unavailable";
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, {
-      asOfDate: "2026-04-22",
-      reportingCurrency: "SGD",
-    });
-    const baseModel = buildReportOrderingViewModel(response, configuration);
+    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const baseModel = buildReportOrderingViewModel(response, configuration, sourceContext);
 
     expect(baseModel.family?.reportFamilyId).toBe("portfolio_review");
     expect(baseModel.readiness.issues).toContain(

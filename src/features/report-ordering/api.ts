@@ -25,8 +25,8 @@ export type PortfolioReviewOrder = {
   asOfDate: string;
   outputFormat: "json" | "pdf";
   reportingCurrency?: string;
-  benchmarkCode?: string;
   allocationDimensions?: string[];
+  configurationValues?: Record<string, string>;
   sections: string[];
   idempotencyKey: string;
 };
@@ -141,7 +141,7 @@ function buildReportConfigurationPayload(
       ...(order.allocationDimensions?.length
         ? { allocation_dimensions: order.allocationDimensions }
         : {}),
-      ...(order.benchmarkCode ? { benchmark_code: order.benchmarkCode } : {}),
+      ...order.configurationValues,
     },
   };
 }
