@@ -775,6 +775,53 @@ test("shows source-backed queue posture without invented advisory evidence", asy
   await expect(page.getByRole("checkbox")).toHaveCount(0);
 });
 
+test("keeps Approval Queue decisions unavailable when its source worklist fails", async ({
+  page,
+}, testInfo) => {
+  const pageErrors: string[] = [];
+  const proposalSourceStatuses: number[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("response", (response) => {
+    if (/\/api\/bff\/api\/v1\/proposals\?/.test(response.url())) {
+      proposalSourceStatuses.push(response.status());
+    }
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route(
+    "**/api/bff/api/v1/proposals?portfolio_id=**",
+    async (route) => {
+      await route.fulfill({
+        status: 503,
+        json: { detail: "Proposal source unavailable" },
+      });
+    },
+  );
+  await page.goto(`/proposals?portfolioId=${portfolioId}&mode=approval-queue`, {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(
+    page.getByRole("heading", { name: "Proposal lifecycle unavailable" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "The proposal queue could not be loaded from the approved advisory workflow.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("listbox", { name: "Approval Queue proposals" }),
+  ).toHaveCount(0);
+  await expect(page.getByText("Concentration risk review")).toHaveCount(0);
+  await testInfo.attach("approval-queue-source-unavailable", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+  expect(proposalSourceStatuses.length).toBeGreaterThan(0);
+  expect(new Set(proposalSourceStatuses)).toEqual(new Set([503]));
+  expect(pageErrors).toEqual([]);
+});
+
 test("keeps an exception-led Approval Queue worklist and selected decision context", async ({
   page,
 }, testInfo) => {
@@ -824,6 +871,9 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   await firstProposal.press("ArrowDown");
   await expect(secondProposal).toBeFocused();
   await expect(secondProposal).toHaveAttribute("aria-selected", "true");
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-READY-001&mode=approval-queue`,
+  );
   await expect(
     selectedDecision.getByRole("heading", { name: "Execution handoff review" }),
   ).toBeVisible();
@@ -831,8 +881,12 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     selectedDecision.getByRole("link", { name: "Open full proposal review" }),
   ).toHaveAttribute(
     "href",
-    `/proposals/PRP-READY-001?portfolioId=${portfolioId}&fromMode=approval-queue`,
+    `/proposals/PRP-READY-001?portfolioId=${portfolioId}&selectedRecordId=PRP-READY-001&fromMode=approval-queue`,
   );
+  await secondProposal.press("Enter");
+  await expect(selectedDecision).toBeFocused();
+  await selectedDecision.press("Escape");
+  await expect(secondProposal).toBeFocused();
   await testInfo.attach("approval-queue-review-desk-desktop", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
@@ -841,8 +895,10 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   for (const viewport of [
     { width: 1440, height: 1000, layout: "split" },
     { width: 1280, height: 1000, layout: "stacked" },
-    { width: 1024, height: 1100, layout: "stacked" },
+    { width: 1024, height: 1100, layout: "split" },
+    { width: 768, height: 1024, layout: "stacked" },
     { width: 720, height: 1000, layout: "stacked" },
+    { width: 519, height: 900, layout: "stacked" },
     { width: 390, height: 844, layout: "stacked" },
     { width: 320, height: 900, layout: "stacked" },
   ] as const) {
@@ -896,17 +952,25 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     .click();
   await expect(page).toHaveURL(
     new RegExp(
-      `/proposals/PRP-READY-001\\?portfolioId=${portfolioId}&fromMode=approval-queue$`,
+      `/proposals/PRP-READY-001\\?portfolioId=${portfolioId}&selectedRecordId=PRP-READY-001&fromMode=approval-queue$`,
     ),
   );
   await expect(
     page.getByRole("link", { name: "Return to Approval Queue" }),
-  ).toHaveAttribute("href", `/proposals?portfolioId=${portfolioId}`);
+  ).toHaveAttribute(
+    "href",
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-READY-001`,
+  );
   await page.getByRole("link", { name: "Return to Approval Queue" }).click();
-  await expect(page).toHaveURL(`/proposals?portfolioId=${portfolioId}`);
+  await expect(page).toHaveURL(
+    `/proposals?portfolioId=${portfolioId}&selectedRecordId=PRP-READY-001`,
+  );
   await expect(
     page.getByRole("listbox", { name: "Approval Queue proposals" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /Execution handoff review/ }),
+  ).toHaveAttribute("aria-selected", "true");
   expect(browserErrors).toEqual([]);
 });
 
