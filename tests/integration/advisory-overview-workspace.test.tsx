@@ -656,6 +656,50 @@ describe("AdvisoryOverviewWorkspace", () => {
     ).toBeEnabled();
   });
 
+  it("preserves source partiality when a cyclic continuation disables navigation", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-2" })
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-3" })
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-2" });
+
+    renderWithQueryClient(
+      <AdvisoryOverviewWorkspace
+        reviewContext={{ portfolioId: "PB_SG_GLOBAL_BAL_001" }}
+      />,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenLastCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: "cursor-2",
+        limit: 8,
+      });
+    });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenLastCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: "cursor-3",
+        limit: 8,
+      });
+    });
+
+    expect(
+      await screen.findByText("No proposals in this source window"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("advisory-source-window-posture"),
+    ).toHaveTextContent(/Counts and ranking apply only/);
+    expect(
+      screen.getByRole("button", { name: "Next proposals" }),
+    ).toBeDisabled();
+  });
+
   it("keeps the decision and proposal worklist as the only primary workflow path", async () => {
     renderWithQueryClient(
       <AdvisoryOverviewWorkspace
