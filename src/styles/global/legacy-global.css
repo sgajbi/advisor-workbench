@@ -517,13 +517,6 @@
   cursor: not-allowed;
 }
 
-.page-container {
-  width: 100%;
-  max-width: 1680px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
 .workstation-page {
   width: 100%;
   max-width: none;
@@ -8456,10 +8449,6 @@
   stroke: #344762;
 }
 
-.position-table td[align="right"] {
-  font-variant-numeric: tabular-nums;
-}
-
   .portfolio-empty-state {
     max-width: none;
     display: grid;
@@ -8577,129 +8566,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
   margin-bottom: 0.8rem;
-}
-
-.action-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
-}
-
-.workbench-split {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 1rem;
-}
-
-.workbench-col {
-  display: grid;
-  gap: 1rem;
-}
-
-.position-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.84rem;
-}
-
-.position-table th {
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #50607a;
-  font-size: 0.71rem;
-  border-bottom: 1px solid #d6dfec;
-  padding: 0.45rem 0.4rem;
-  position: sticky;
-  top: 0;
-  background: #f7fbff;
-}
-
-.position-table td {
-  border-bottom: 1px dashed #d6dfec;
-  padding: 0.48rem 0.4rem;
-  line-height: 1.45;
-}
-
-.position-table tfoot td {
-  font-weight: 700;
-  background: rgba(245, 248, 252, 0.9);
-  border-top: 1px solid #d6dfec;
-  border-bottom: 0;
-}
-
-.table-wrap {
-  max-height: 390px;
-  overflow: auto;
-  border: 1px solid #d7dfec;
-  border-radius: 10px;
-}
-
-.constraint-rail {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.constraint-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
-.constraint-label {
-  color: #4b5c75;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-.constraint-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid #c9d6ea;
-  padding: 0.25rem 0.58rem;
-  font-size: 0.74rem;
-  font-weight: 700;
-  max-width: 62%;
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.constraint-pass {
-  border-color: #85bf98;
-  background: #edf8f1;
-  color: #1f6a34;
-}
-
-.constraint-warn {
-  border-color: #ddbb6e;
-  background: #fff7e5;
-  color: #8a5d08;
-}
-
-.constraint-fail {
-  border-color: #db8d8d;
-  background: #fef0f0;
-  color: #8f2f2f;
-}
-
-.constraint-neutral {
-  border-color: #ced8e8;
-  background: #f3f7fc;
-  color: #41526f;
-}
-
-.summary-ready {
-  color: #1f6a34;
-}
-
-.summary-caution {
-  color: #8a5d08;
-}
-
-.summary-blocked {
-  color: #8f2f2f;
 }
 
 .performance-section-benchmark {
@@ -9392,10 +9258,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .workbench-split {
-    grid-template-columns: 1fr;
-  }
-
   .performance-analysis-summary-band-grid,
   .performance-risk-supportability-notes,
   .performance-surface-supportability-summary,
@@ -9608,10 +9470,6 @@
     gap: 0.45rem;
   }
 
-  .page-container {
-    padding: 24px;
-  }
-
   .kpi-grid {
     grid-template-columns: 1fr;
   }
@@ -9704,10 +9562,6 @@
 
   .workspace-side,
   .portfolio-side {
-    grid-template-columns: 1fr;
-  }
-
-  .workbench-split {
     grid-template-columns: 1fr;
   }
 
@@ -9924,10 +9778,6 @@
   .section-card {
     padding: 0.82rem;
     border-radius: 14px;
-  }
-
-  .page-container {
-    padding: 24px;
   }
 
   .performance-summary-stage {
