@@ -38,3 +38,18 @@ not canonical live-service or production evidence.
 
 The full-page captures are diagnostic review evidence. The Playwright assertions, not visual
 inspection alone, are the regression gate.
+
+## Repository gate
+
+`make check` passed after the browser scenario:
+
+- zero npm audit vulnerabilities at the governed thresholds;
+- runtime, BFF, source-authority, dependency, font, product-copy, E2E registration, CSS,
+  architecture, and screen-documentation fitness functions passed;
+- ESLint and TypeScript passed;
+- 448 test files / 4,288 tests passed;
+- 94.16% statements and lines, 86.38% branches, and 93.6% functions;
+- optimized 25-route production build and portfolio-record bundle budgets passed.
+
+The build retains the existing AG Grid autoprefixer warning for the dependency's `align-items: end`
+declaration. This issue does not suppress, reclassify, or modify that third-party stylesheet.
