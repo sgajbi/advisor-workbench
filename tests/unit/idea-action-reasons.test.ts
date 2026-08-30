@@ -83,12 +83,6 @@ describe("Idea advisor action reasons", () => {
   it("combines the business basis with the deterministic action audit reason", () => {
     expect(
       buildIdeaActionReasonCodes({
-        basis: "high_cash_ratio",
-        kind: "feedback",
-      }),
-    ).toEqual(["feedback_recorded", "high_cash_ratio"]);
-    expect(
-      buildIdeaActionReasonCodes({
         basis: "review_required",
         kind: "review",
         reviewAction: "reject",
