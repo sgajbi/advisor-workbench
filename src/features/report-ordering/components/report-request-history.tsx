@@ -27,11 +27,12 @@ export function ReportRequestHistory({
   const hasRows = rows.length > 0;
   const isInitialLoading = state === "loading" && !hasRows;
   const isRefreshing = state === "loading" && hasRows;
+  const refreshFailed = state === "error" && hasRows;
 
   return (
     <SectionBlock
       title="Recent report requests"
-      subtitle="Current lifecycle state for this portfolio. Archive and delivery are separate controls."
+      subtitle="Current lifecycle state for this portfolio. Active requests refresh automatically; archive and delivery remain separate controls."
       className={styles.section}
       actions={
         <ActionButton priority="quiet" onClick={onRefresh} disabled={state === "loading"}>
@@ -39,7 +40,7 @@ export function ReportRequestHistory({
         </ActionButton>
       }
     >
-      {state === "permission_blocked" || state === "error" ? (
+      {state === "permission_blocked" || (state === "error" && !hasRows) ? (
         <ScreenStatePanel
           kind={state === "permission_blocked" ? "permission_blocked" : "error"}
           surface="portfolio"
@@ -51,6 +52,9 @@ export function ReportRequestHistory({
         <>
           {isRefreshing ? (
             <WorkbenchInlineRefreshNote message="Refreshing recent requests. Previously confirmed lifecycle evidence remains visible." />
+          ) : null}
+          {refreshFailed ? (
+            <WorkbenchInlineRefreshNote message="The latest lifecycle check did not complete. Previously confirmed requests remain visible and another check is scheduled." />
           ) : null}
           <div className={styles.historyResponsive} data-testid="report-request-history-layout">
             <div className={styles.historyDesktop}>

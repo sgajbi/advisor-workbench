@@ -1550,6 +1550,20 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.queryByText("Recent requests unavailable")).not.toBeInTheDocument();
   });
 
+  it("retains confirmed request history when the latest lifecycle check fails", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("table", { name: "Recent portfolio report requests" });
+    historyMock.mockRejectedValueOnce(new Error("reporting unavailable"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    expect(
+      await screen.findByText(/latest lifecycle check did not complete/i),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("rjob_1")).toHaveLength(2);
+    expect(screen.queryByText("Recent requests unavailable")).not.toBeInTheDocument();
+  });
+
   it("invalidates reviewed readiness after a business-date change", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });

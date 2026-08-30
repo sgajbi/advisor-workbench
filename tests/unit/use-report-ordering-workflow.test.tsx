@@ -136,6 +136,72 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.historyState).toBe("ready");
   });
 
+  it("refreshes an accepted single report until Reporting confirms a terminal lifecycle", async () => {
+    const activeHistory = buildReportJobListResponse();
+    activeHistory.items[0] = {
+      ...activeHistory.items[0],
+      reportJobId: "rjob_2",
+      reportRequestId: "rrq_2",
+      status: "accepted",
+      currentStep: "accepted",
+    };
+    const completedHistory = structuredClone(activeHistory);
+    completedHistory.items[0].status = "completed";
+    completedHistory.items[0].currentStep = "completed";
+    historyMock
+      .mockResolvedValueOnce(buildReportJobListResponse())
+      .mockResolvedValueOnce(activeHistory)
+      .mockResolvedValueOnce(completedHistory);
+    const timerSpy = vi.spyOn(window, "setTimeout");
+    try {
+      const { result } = renderHook(() =>
+        useReportOrderingWorkflow({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          asOfDate: "2026-04-22",
+          reportingCurrency: "SGD",
+        }),
+      );
+      await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
+      act(() => expect(result.current.reviewRequest()).toBe(true));
+      await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
+      await act(async () => expect(await result.current.submitRequest()).toBe(true));
+      await waitFor(() => expect(result.current.history?.items[0].status).toBe("accepted"));
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(true),
+      );
+      const poll = [...timerSpy.mock.calls]
+        .reverse()
+        .find(([, delay]) => delay === 5_000)?.[0];
+
+      await act(async () => {
+        (poll as () => void)();
+      });
+      await waitFor(() => expect(result.current.history?.items[0].status).toBe("completed"));
+      expect(historyMock).toHaveBeenCalledTimes(3);
+    } finally {
+      timerSpy.mockRestore();
+    }
+  });
+
+  it("retains confirmed request evidence when an automatic refresh fails", async () => {
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
+    );
+    await waitFor(() => expect(result.current.historyState).toBe("ready"));
+    historyMock.mockRejectedValueOnce(new Error("reporting unavailable"));
+
+    await act(async () => {
+      await result.current.refreshHistory();
+    });
+
+    expect(result.current.historyState).toBe("error");
+    expect(result.current.history?.items[0].reportJobId).toBe("rjob_1");
+  });
+
   it("preserves one idempotency intent across a safe retry", async () => {
     submitMock
       .mockRejectedValueOnce(new Error("temporary unavailable"))
