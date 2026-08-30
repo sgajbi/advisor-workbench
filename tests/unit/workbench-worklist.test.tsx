@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { useState } from "react";
 import { vi } from "vitest";
 
 import { WorkbenchWorklist } from "../../src/design-system";
@@ -9,6 +10,41 @@ const items = [
 ] as const;
 
 describe("WorkbenchWorklist", () => {
+  it("returns focus from the decision to the source-selected record", () => {
+    function ControlledWorklist() {
+      const [selectedKey, setSelectedKey] =
+        useState<(typeof items)[number]["key"]>("action-1");
+      return (
+        <WorkbenchWorklist
+          ariaLabel="Advisor actions"
+          relationshipIdBase="advisor-actions-focus-loop"
+          title="Actions requiring review"
+          items={items}
+          selectedKey={selectedKey}
+          onSelectionChange={setSelectedKey}
+          decisionLabel="Selected advisor action"
+          decision={<button type="button">Review evidence</button>}
+        />
+      );
+    }
+
+    render(<ControlledWorklist />);
+
+    const secondOption = screen.getByRole("option", {
+      name: /Confirm liquidity/,
+    });
+    fireEvent.keyDown(secondOption, { key: "Enter" });
+
+    const decision = screen.getByRole("region", {
+      name: "Selected advisor action",
+    });
+    expect(decision).toHaveFocus();
+    expect(secondOption).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.keyDown(decision, { key: "Escape" });
+    expect(secondOption).toHaveFocus();
+  });
+
   it("connects one business worklist to one keyboard-addressable decision", () => {
     const onSelectionChange = vi.fn();
 
@@ -95,11 +131,15 @@ describe("WorkbenchWorklist", () => {
       </>,
     );
 
-    const advisorWorklist = screen.getByRole("listbox", { name: "Advisor actions" });
+    const advisorWorklist = screen.getByRole("listbox", {
+      name: "Advisor actions",
+    });
     const advisorDecision = screen.getByRole("region", {
       name: "Selected advisor action",
     });
-    const portfolioWorklist = screen.getByRole("listbox", { name: "Portfolio actions" });
+    const portfolioWorklist = screen.getByRole("listbox", {
+      name: "Portfolio actions",
+    });
     const portfolioDecision = screen.getByRole("region", {
       name: "Selected portfolio action",
     });
@@ -125,7 +165,9 @@ describe("WorkbenchWorklist", () => {
       );
     }
 
-    const ids = [...container.querySelectorAll("[id]")].map((element) => element.id);
+    const ids = [...container.querySelectorAll("[id]")].map(
+      (element) => element.id,
+    );
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

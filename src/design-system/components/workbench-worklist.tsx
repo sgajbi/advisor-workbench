@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import Text from "./text";
 import WorkbenchDecisionWorkspace from "./workbench-decision-workspace";
@@ -43,6 +43,20 @@ export default function WorkbenchWorklist<T extends string>({
   const titleId = `${relationshipIdBase}-title`;
   const decisionId = `${relationshipIdBase}-decision`;
   const decisionRef = useRef<HTMLElement>(null);
+  const worklistRef = useRef<HTMLElement>(null);
+
+  function returnFocusToSelectedRecord(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Escape" || event.defaultPrevented) return;
+
+    const selectedRecord =
+      worklistRef.current?.querySelector<HTMLButtonElement>(
+        '[role="option"][aria-selected="true"]:not([aria-disabled="true"])',
+      );
+    if (!selectedRecord) return;
+
+    event.preventDefault();
+    selectedRecord.focus();
+  }
 
   return (
     <WorkbenchDecisionWorkspace
@@ -52,8 +66,13 @@ export default function WorkbenchWorklist<T extends string>({
       decisionClassName={decisionClassName}
       decisionId={decisionId}
       decisionRef={decisionRef}
+      onDecisionKeyDown={returnFocusToSelectedRecord}
       worklist={
-        <section className={styles.worklist} aria-labelledby={titleId}>
+        <section
+          ref={worklistRef}
+          className={styles.worklist}
+          aria-labelledby={titleId}
+        >
           <div className={styles.header}>
             <div className={styles.heading}>
               <Text variant="microLabel">{eyebrow}</Text>
