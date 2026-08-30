@@ -1,6 +1,6 @@
 # RFC-0012: Workbench Analytics Controls and Delta Panel
 
-- Status: IMPLEMENTED
+- Status: SUPERSEDED — GENERIC PRESENTATION RETIRED UNDER #780
 - Date: 2026-02-24
 - Owners: Advisor Workbench UI
 
@@ -19,6 +19,16 @@ Workbench lacks an explicit analytics control layer and benchmark-relative delta
 1. Add Analytics Controls bar for period, group-by, benchmark, and preset selection.
 2. Add Benchmark KPI strip with return, benchmark, active return, and simulation coverage.
 3. Add Delta Analytics panel that aggregates current vs projected quantities by selected dimension.
+
+## Supersession Note
+
+The generic analytics controls and delta panel had no production route consumer and were retired
+under #780. Their quantity-derived comparison and placeholder benchmark posture do not describe
+current product behavior. Current Portfolio and Performance workflows use their own typed
+Gateway-backed contracts, screen models, and shared control primitives.
+
+This RFC remains historical context only. Workbench must not reconstruct allocation, benchmark, or
+projected-portfolio truth in the browser to recreate this surface.
 
 ## Architectural Impact
 

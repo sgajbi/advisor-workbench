@@ -84,7 +84,15 @@ one-observation comparison. The single-observation owner has no inherited chart 
 reflows from its own inline-size container; the time-series owner retains the established 28.5rem
 analytical canvas. The retired `performance-return-path-chart-stage` and
 `performance-return-path-single-observation` selector families are forbidden from returning to
-global CSS. The resulting `legacy-global.css` ratchet is 12,137 lines and 265,472 normalized bytes.
+global CSS.
+
+Issue #780 applied the same ownership rule to the unreachable pre-BFF Workbench presentation.
+The legacy page container, split view, generated position table, constraint rail, summary posture,
+and rebalance-status selector families had no production React consumer, so they were deleted rather
+than migrated. The resulting exact ratchets are 98 lines and 1,940 normalized bytes for
+`legacy-feature-overrides.css`, and 10,990 lines and 240,422 normalized bytes for
+`legacy-global.css`. The retired families are forbidden from returning; future product work must
+use the active Workbench container and source-backed screen architecture.
 
 ## Ratchet gate
 
