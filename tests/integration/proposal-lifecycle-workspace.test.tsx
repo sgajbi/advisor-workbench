@@ -521,7 +521,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("link", { name: "Open full proposal record" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=implementation",
+      "/proposals/PRP-READY?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=PRP-READY&fromMode=implementation",
     );
   });
 
@@ -1770,7 +1770,7 @@ describe("ProposalLifecycleWorkspace", () => {
       }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&fromMode=approval-queue",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=PRP-RISK&fromMode=approval-queue",
     );
 
     fireEvent.keyDown(options[0], { key: "ArrowDown" });
@@ -3104,7 +3104,7 @@ describe("ProposalLifecycleWorkspace", () => {
       screen.getByRole("link", { name: "Open full proposal" }),
     ).toHaveAttribute(
       "href",
-      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&fromMode=suitability",
+      "/proposals/PRP-RISK?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&selectedRecordId=PRP-RISK&fromMode=suitability",
     );
     expect(screen.getAllByText("Review required")).toHaveLength(3);
     expect(screen.getByText("Sign-off pending")).toBeInTheDocument();

@@ -48,7 +48,7 @@ describe("proposal policy review view model", () => {
       openRequirements: "1 approval dependency, 1 disclosure review",
       evidencePosture: "1 evidence gap",
       nextAction: "Complete required approval review.",
-      href: "/proposals/PRP-SUITABILITY?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&fromMode=suitability",
+      href: "/proposals/PRP-SUITABILITY?portfolioId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-10&period=YTD&reportingCurrency=SGD&selectedRecordId=PRP-SUITABILITY&fromMode=suitability",
     });
     expect(JSON.stringify(model)).not.toContain("PENDING_REVIEW");
     expect(JSON.stringify(model)).not.toContain("advisor_reviewed_disclosure");

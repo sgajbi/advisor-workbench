@@ -870,6 +870,12 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
       name: "1 decision is not approved",
     }),
   ).toBeVisible();
+  await expect(
+    selectedDecision.getByRole("link", { name: "Open full proposal review" }),
+  ).toHaveAttribute(
+    "href",
+    `/proposals/PRP-RISK-001?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-001&fromMode=approval-queue`,
+  );
 
   await firstProposal.press("ArrowDown");
   await expect(secondProposal).toBeFocused();
@@ -1364,7 +1370,7 @@ test("presents source-backed Risk and Impact evidence as a responsive advisor de
     selectedEvidence.getByRole("link", { name: "Open proposal review" }),
   ).toHaveAttribute(
     "href",
-    `/proposals/PRP-RISK-002?portfolioId=${portfolioId}&fromMode=risk-impact`,
+    `/proposals/PRP-RISK-002?portfolioId=${portfolioId}&selectedRecordId=PRP-RISK-002&fromMode=risk-impact`,
   );
 
   const refreshAction = selectedEvidence.getByRole("button", {
@@ -1564,7 +1570,7 @@ test("binds the suitability evidence workspace to the advisor-selected review", 
     selectedReview.getByRole("link", { name: "Open full proposal" }),
   ).toHaveAttribute(
     "href",
-    `/proposals/PRP-INCOME-002?portfolioId=${portfolioId}&fromMode=suitability`,
+    `/proposals/PRP-INCOME-002?portfolioId=${portfolioId}&selectedRecordId=PRP-INCOME-002&fromMode=suitability`,
   );
   await expect(
     selectedReview.getByText("Source evidence complete"),
