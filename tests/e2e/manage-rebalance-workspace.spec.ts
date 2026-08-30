@@ -1,3 +1,6 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
@@ -9,6 +12,9 @@ import {
 test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
+const evidenceDirectory = process.env.MANAGE_REBALANCE_EVIDENCE_DIR
+  ? path.resolve(process.env.MANAGE_REBALANCE_EVIDENCE_DIR)
+  : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
 test.beforeAll(async () => {
@@ -39,12 +45,17 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
   test.skip(!fixtureGateway, "Owned Manage fixture is not active.");
   test.setTimeout(180_000);
   const runtime = observeBrowserRuntimeFailures(page);
+  if (evidenceDirectory) {
+    await mkdir(evidenceDirectory, { recursive: true });
+  }
 
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 1024, height: 900 },
+    { width: 768, height: 900 },
+    { width: 721, height: 900 },
     { width: 720, height: 900 },
-    { width: 390, height: 844 },
+    { width: 519, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto(`/workbench/${portfolioId}?mode=waves`, {
@@ -52,8 +63,10 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
       timeout: 60_000,
     });
 
+    const workspace = page.locator("#rebalance-workspace");
+    await expect(workspace).toBeVisible({ timeout: 60_000 });
     await expect(
-      page.getByRole("heading", { name: "Rebalance", exact: true }),
+      workspace.getByRole("heading", { name: "Rebalance", exact: true }),
     ).toBeVisible({
       timeout: 60_000,
     });
@@ -192,8 +205,14 @@ test("Rebalance Waves keeps source context and the portfolio decision first", as
       `Rebalance Waves has page-level horizontal overflow at ${viewport.width}px: ${JSON.stringify(overflowEvidence)}`,
     ).toBeLessThanOrEqual(overflowEvidence.clientWidth);
 
+    const screenshot = await page.screenshot({
+      fullPage: true,
+      path: evidenceDirectory
+        ? path.join(evidenceDirectory, `rebalance-waves-${viewport.width}.png`)
+        : undefined,
+    });
     await testInfo.attach(`rebalance-waves-${viewport.width}`, {
-      body: await page.screenshot({ fullPage: true }),
+      body: screenshot,
       contentType: "image/png",
     });
   }
