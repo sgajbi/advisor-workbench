@@ -10,6 +10,7 @@ import type {
 import PerformanceWorkspaceClient, {
   PERFORMANCE_REFRESH_CONFIRMATION_DURATION_MS,
 } from "../../src/apps/performance/components/performance-workspace-client";
+import type { PerformanceSourceControlFocusTarget } from "../../src/apps/performance/components/performance-workspace-types";
 import {
   buildPerformanceWorkspaceDetails,
   buildPerformanceWorkspaceSummary,
@@ -20,6 +21,7 @@ const pushMock = vi.fn();
 const getSummaryClientMock = vi.fn();
 const getDetailsClientMock = vi.fn();
 const restoreFocusMock = vi.fn();
+const requestResultMock = vi.fn();
 const DEFAULT_PORTFOLIO_RETURN = String(
   buildPerformanceWorkspaceSummary().net_performance.portfolio_return_pct
 );
@@ -79,8 +81,8 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
         reportStartDate?: string;
         reportEndDate?: string;
       },
-      focusTarget?: { kind: "choice"; groupLabel: "Horizon"; optionLabel: string }
-    ) => void;
+      focusTarget?: PerformanceSourceControlFocusTarget
+    ) => Promise<boolean>;
     isUpdating?: boolean;
     isDetailsPending?: boolean;
     refreshStatus?: {
@@ -141,6 +143,32 @@ vi.mock("../../src/apps/performance/components/performance-workspace-view", () =
       </button>
       <button
         type="button"
+        onClick={() => {
+          const request = onRequestChange?.({ period });
+          if (request) {
+            void request.then((result) => requestResultMock(result));
+          }
+        }}
+      >
+        Repeat confirmed selection
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onRequestChange?.(
+            {
+              period: "EXPLICIT",
+              reportStartDate: "2026-02-01",
+              reportEndDate: "2026-03-31",
+            },
+            { kind: "window" },
+          )
+        }
+      >
+        Switch review window
+      </button>
+      <button
+        type="button"
         onClick={() => onRequestChange?.({ contributionDimension: "sector" })}
       >
         Switch Contribution Segment
@@ -184,6 +212,7 @@ describe("PerformanceWorkspaceClient", () => {
     getSummaryClientMock.mockReset();
     getDetailsClientMock.mockReset();
     restoreFocusMock.mockReset();
+    requestResultMock.mockReset();
   });
 
   it("withholds stale initial detail and rehydrates it from the confirmed source identity", async () => {
@@ -377,6 +406,82 @@ describe("PerformanceWorkspaceClient", () => {
     expect(document.activeElement).toBe(stableControl);
     expect(pushMock).not.toHaveBeenCalled();
     expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("reports that an already-confirmed request did not dispatch a refresh", async () => {
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Repeat confirmed selection" }).click();
+    });
+
+    await waitFor(() => expect(requestResultMock).toHaveBeenCalledWith(false));
+    expect(getSummaryClientMock).not.toHaveBeenCalled();
+    expect(getDetailsClientMock).not.toHaveBeenCalled();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("restores Retry focus to Review window after a rejected explicit-window refresh", async () => {
+    const failedRequest = Object.assign(new Error("Performance summary unavailable"), {
+      status: 503,
+    });
+    const explicitSummary = buildSummary({
+      period: "EXPLICIT",
+      report_start_date: "2026-02-01",
+      report_end_date: "2026-03-31",
+    });
+    const explicitDetails = buildDetails({
+      period: "EXPLICIT",
+      report_start_date: "2026-02-01",
+      report_end_date: "2026-03-31",
+    });
+    getSummaryClientMock
+      .mockRejectedValueOnce(failedRequest)
+      .mockResolvedValueOnce(explicitSummary);
+    getDetailsClientMock.mockResolvedValueOnce(explicitDetails);
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary()}
+        initialDetails={buildDetails()}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch review window" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
+    });
+    expect(restoreFocusMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Retry Selection" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(screen.getByTestId("period")).toHaveTextContent("EXPLICIT");
+    });
+    expect(restoreFocusMock).toHaveBeenLastCalledWith({ kind: "window" });
   });
 
   it("does not reuse an earlier selector target for a targetless retry", async () => {

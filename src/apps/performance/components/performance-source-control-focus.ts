@@ -63,8 +63,10 @@ function findPerformanceSourceControl(
     );
   }
 
-  return findInRegions(controlRegions, 'button[type="submit"]', (button) =>
-    button.textContent?.trim() === target.actionLabel
+  return findInRegions(
+    controlRegions,
+    '[data-performance-window-control="true"]',
+    () => true
   );
 }
 

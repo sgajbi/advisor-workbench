@@ -40,7 +40,7 @@ export type PerformanceSourceControlFocusTarget =
       kind: "field";
       fieldLabel: "Frequency" | "Benchmark" | "Contribution Segment" | "Attribution Segment";
     }
-  | { kind: "action"; actionLabel: "Apply" };
+  | { kind: "window" };
 
 export type PerformanceWorkspaceControls = {
   period: string;
@@ -52,7 +52,7 @@ export type PerformanceWorkspaceControls = {
   onRequestChange?: (
     patch: PerformanceWorkspaceRequestPatch,
     focusTarget?: PerformanceSourceControlFocusTarget
-  ) => void;
+  ) => Promise<boolean>;
   isUpdating: boolean;
   isDetailsPending: boolean;
 };
@@ -148,7 +148,7 @@ export type PerformanceWorkspaceViewProps = {
   onRequestChange?: (
     patch: PerformanceWorkspaceRequestPatch,
     focusTarget?: PerformanceSourceControlFocusTarget
-  ) => void;
+  ) => Promise<boolean>;
   onRetryRefresh?: () => void;
   isUpdating?: boolean;
   isDetailsPending?: boolean;

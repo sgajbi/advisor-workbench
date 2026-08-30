@@ -71,7 +71,7 @@ export default function PerformanceSummaryMode({
           reportStartDate={workspace.report_start_date}
           reportEndDate={workspace.report_end_date}
           capabilities={capabilities}
-          onRequestChange={onRequestChange ?? (() => undefined)}
+          onRequestChange={onRequestChange ?? (async () => false)}
           isUpdating={isUpdating}
           isDetailsPending={isDetailsPending}
           returnView={effectiveReturnView}

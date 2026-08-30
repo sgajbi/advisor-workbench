@@ -414,9 +414,8 @@ export default function PerformanceWorkspaceClient({
     focusTarget?: PerformanceSourceControlFocusTarget
   ) {
     if (!controls) {
-      return;
+      return false;
     }
-    lastSourceControlFocusTargetRef.current = focusTarget ?? null;
     const nextControls = applyPerformanceControlPatch(controls, patch);
     const sameSummary = buildSummaryCacheKey(nextControls) === buildSummaryCacheKey(controls);
     const sameDetails = buildDetailsCacheKey(nextControls) === buildDetailsCacheKey(controls);
@@ -427,21 +426,23 @@ export default function PerformanceWorkspaceClient({
         buildDetailsCacheKey(nextControls) ===
           buildDetailsCacheKey(pendingRefresh.requestedControls);
       if (repeatsPendingRequest) {
-        return;
+        return false;
       }
       if (sameSummary && sameDetails) {
         requestSequenceRef.current += 1;
         setPendingRefresh(null);
         setRefreshFailure(null);
         setRefreshConfirmation(null);
-        return;
+        return false;
       }
     }
     if (sameSummary && sameDetails && detailsStatus === "ready" && !refreshFailure) {
-      return;
+      return false;
     }
 
+    lastSourceControlFocusTargetRef.current = focusTarget ?? null;
     await runRefresh(nextControls, controls, { focusTarget });
+    return true;
   }
 
   async function runRefresh(

@@ -44,7 +44,7 @@ export type PerformanceSourceSelectionControlsProps = {
   onRequestChange: (
     patch: PerformanceControlPatch,
     focusTarget?: PerformanceSourceControlFocusTarget
-  ) => void;
+  ) => Promise<boolean>;
 };
 
 export default function PerformanceSourceSelectionControls({
@@ -161,7 +161,7 @@ export default function PerformanceSourceSelectionControls({
     const activeElement = document.activeElement;
     selectionFocusTargetRef.current =
       focusRestoreTarget ?? (activeElement instanceof HTMLElement ? activeElement : null);
-    onRequestChange(
+    return onRequestChange(
       buildPerformanceControlSelectionPatch({
         patch,
         portfolioId,
@@ -178,7 +178,7 @@ export default function PerformanceSourceSelectionControls({
     );
   }
 
-  function applyExplicitDates(window: PerformanceCustomWindow) {
+  async function applyExplicitDates(window: PerformanceCustomWindow) {
     const confirmedWindowIsUnchanged =
       period === "EXPLICIT" &&
       reportStartDate === window.fromDate &&
@@ -189,15 +189,20 @@ export default function PerformanceSourceSelectionControls({
     }
 
     setSubmittedWindow(window);
-    updateSelection(
+    const requestDispatched = await updateSelection(
       {
         period: "EXPLICIT",
         reportStartDate: window.fromDate,
         reportEndDate: window.toDate,
       },
-      { kind: "action", actionLabel: "Apply" },
+      { kind: "window" },
       windowTriggerRef.current ?? undefined,
     );
+    if (!requestDispatched) {
+      windowRequestWasUpdatingRef.current = false;
+      setSubmittedWindow(null);
+      setWindowDialogOpen(false);
+    }
   }
 
   if (!isHydrated) {
@@ -224,7 +229,7 @@ export default function PerformanceSourceSelectionControls({
           <StaticControlValue>{benchmark ?? "Default benchmark"}</StaticControlValue>
         </ControlSlot>
         <div className={styles.windowSummaryStatic}>
-          <FieldLabel>Custom window</FieldLabel>
+          <FieldLabel>Review window</FieldLabel>
           <StaticControlValue>{windowLabel}</StaticControlValue>
         </div>
         {presentationControl}
@@ -385,7 +390,18 @@ export default function PerformanceSourceSelectionControls({
         isSubmitting={submittedWindow !== null || isUpdating}
         onCancel={() => setWindowDialogOpen(false)}
         onApply={applyExplicitDates}
-        onExited={() => windowTriggerRef.current?.focus()}
+        onExited={() => {
+          const activeElement = document.activeElement;
+          const activeHtmlElement = activeElement instanceof HTMLElement ? activeElement : null;
+          const focusIsUnclaimed =
+            activeElement === document.body ||
+            activeElement === document.documentElement ||
+            !activeHtmlElement?.isConnected ||
+            Boolean(activeHtmlElement.closest('[role="dialog"]'));
+          if (focusIsUnclaimed) {
+            windowTriggerRef.current?.focus();
+          }
+        }}
       />
     </div>
   );
