@@ -29,6 +29,19 @@ describe("source-authority CI fitness function", () => {
     );
   });
 
+  it("rejects a contract that has no executable rendered-component proof", () => {
+    const unprovedContract = {
+      ...SOURCE_AUTHORITY_CONTRACTS[0],
+      id: "unproved-advisor-surface",
+    };
+
+    expect(
+      validateSourceAuthorityContracts([...SOURCE_AUTHORITY_CONTRACTS, unprovedContract]),
+    ).toContain(
+      "unproved-advisor-surface: no executable rendered-component proof is enrolled.",
+    );
+  });
+
   it("rejects a plausible reassuring browser fallback", () => {
     const contracts = replaceContract("risk-mandate-comparison", (contract) => ({
       ...contract,
