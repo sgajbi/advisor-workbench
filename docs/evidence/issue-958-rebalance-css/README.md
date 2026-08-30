@@ -53,3 +53,9 @@ inspection alone, are the regression gate.
 
 The build retains the existing AG Grid autoprefixer warning for the dependency's `align-items: end`
 declaration. This issue does not suppress, reclassify, or modify that third-party stylesheet.
+
+Exact-head review found that the first retired-prefix ratchet covered only imported global layers.
+The corrected gate now scans fully retired selector contracts across every discovered CSS Module as
+well, and includes a regression proving that a same-count `:global(...)` substitution cannot hide
+their return. Component-owned selector families remain permitted only behind their reviewed local
+module scope and continue to be prohibited from the imported global layers.

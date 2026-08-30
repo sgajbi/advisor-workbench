@@ -320,7 +320,9 @@ Current repository posture:
     nodes so comments and attribute values cannot masquerade as escapes, allows zero new escapes by default, and
     requires exact per-file exceptions with no headroom. Invalid selectors fail closed. Lower
     `maxGlobalEscapes` in the same migration whenever an escape is removed; delete the exception at
-    zero. Manage Review Evidence
+    zero. Prefixes for migrated owners are prohibited from the imported global layers; prefixes for
+    retired presentation contracts are prohibited from both global layers and every discovered CSS
+    Module, so an unchanged aggregate escape count cannot conceal their return. Manage Review Evidence
     rail presentation belongs to `manage-evidence-rail.module.css`; do not restore its retired
     global class contract inside `manage-workspace.module.css`.
     The Rebalance workspace is owned by the shared `SectionBlock`/`Panel` and `AnalyticsTable`

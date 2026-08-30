@@ -87,8 +87,10 @@
       }
     ]
   },
+  "retiredSelectorPrefixes": [
+    "dpm-wave-command-center-"
+  ],
   "forbiddenSelectorPrefixes": [
-    "dpm-wave-command-center-",
     "domain-products-",
     "intake-operation-tabs",
     "lotus-mode-tabs",

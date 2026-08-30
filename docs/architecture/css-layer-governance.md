@@ -116,13 +116,17 @@ containerized local-CI lane. The CSS gate validates:
   `scripts/quality/css-global-governance-baseline.json`;
 - selector families listed in `forbiddenSelectorPrefixes` do not return to any governed global
   layer after migration to a component owner;
+- selector families listed in `retiredSelectorPrefixes` do not return to a governed global layer or
+  any discovered CSS Module after their presentation authority is removed;
 - every CSS Module is discovered automatically, its selector AST is parsed with
   `postcss-selector-parser`, and every bare or functional `:global` pseudo-class node counts against
   the exact reviewed baseline; comments and attribute values cannot consume allowance, invalid
   selectors fail closed, and a new module begins with zero allowed escapes.
 
 When a migration removes selectors from `legacy-global.css`, lower the corresponding baseline in the
-same PR and add the migrated selector family to `forbiddenSelectorPrefixes`. Increase a budget only
+same PR and add the migrated selector family to `forbiddenSelectorPrefixes`. When the presentation
+contract is retired rather than moved, add it to `retiredSelectorPrefixes` so an unchanged module
+escape budget cannot conceal its return. Increase a budget only
 with issue-backed evidence explaining why a selector belongs in a global layer instead of a feature
 module. When a migration removes `:global(...)` selectors from a CSS Module, lower that module's
 `maxGlobalEscapes` in the same PR; remove the exception entirely when the count reaches zero.
