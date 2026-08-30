@@ -1,0 +1,139 @@
+import { buildAdvisorBookSourceRenderRows } from "../live/validation/advisor-book-proof.mjs";
+import { buildRiskMandateSourceRenderRows } from "../live/validation/risk-mandate-proof.mjs";
+
+const advisorBookGatewaySample = {
+  items: [
+    {
+      portfolio_id: "PB_SG_GLOBAL_BAL_001",
+      status: "CLOSED",
+    },
+  ],
+};
+
+const riskMandateGatewaySample = {
+  summary: {
+    constraints: [{ key: "cash_band", state: "within" }],
+  },
+  concentration: {
+    constraints: [{ key: "issuer_max_weight", state: "breach" }],
+  },
+};
+
+/**
+ * Enrollment metadata is deliberately limited to source ownership and browser evidence. It is not
+ * a second business model: Gateway payloads and their domain adapters remain authoritative.
+ */
+export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
+  Object.freeze({
+    id: "advisor-book-portfolios",
+    screen: "Advisor Book",
+    sourceOwnership: Object.freeze({
+      identity: "items[].portfolio_id",
+      state: "items[].status",
+    }),
+    presentationOnly: Object.freeze(["display name", "formatted market value"]),
+    allowedStates: Object.freeze(["ACTIVE", "CLOSED"]),
+    renderedEvidence: Object.freeze({
+      rowSelector: '[data-advisor-book-row="portfolio"]',
+      identityAttribute: "data-portfolio-id",
+      stateAttribute: "data-lifecycle-state",
+    }),
+    implementationEvidence: Object.freeze([
+      Object.freeze({
+        path: "scripts/live/validation/advisor-book-proof.mjs",
+        tokens: Object.freeze([
+          "buildAdvisorBookSourceRenderRows",
+          "item?.portfolio_id",
+          "item?.status",
+        ]),
+      }),
+      Object.freeze({
+        path: "src/features/advisor-book/components/advisor-book-workspace.tsx",
+        tokens: Object.freeze([
+          'data-advisor-book-row="portfolio"',
+          "data-portfolio-id={row.portfolioId}",
+          "data-lifecycle-state={row.sourceLifecycleState}",
+        ]),
+      }),
+      Object.freeze({
+        path: "scripts/live/validation/browser-workflows.mjs",
+        tokens: Object.freeze([
+          'screen: "Advisor Book"',
+          'element.getAttribute("data-portfolio-id")',
+          'element.getAttribute("data-lifecycle-state")',
+        ]),
+      }),
+    ]),
+    sampleGatewayResponse: Object.freeze(advisorBookGatewaySample),
+    target: Object.freeze({
+      source: "advisor-book",
+      identity: "PB_SG_GLOBAL_BAL_001",
+      sourceState: "CLOSED",
+      mutatedSourceState: "ACTIVE",
+      reassuringRenderedState: "ACTIVE",
+    }),
+    buildExpectedRows: buildAdvisorBookSourceRenderRows,
+    mutateSourceState(payload, state) {
+      payload.items[0].status = state;
+    },
+  }),
+  Object.freeze({
+    id: "risk-mandate-comparison",
+    screen: "Risk review",
+    sourceOwnership: Object.freeze({
+      identity: "summary|concentration.constraints[].key",
+      state: "summary|concentration.constraints[].state",
+    }),
+    presentationOnly: Object.freeze(["label", "formatted measure", "formatted limit"]),
+    allowedStates: Object.freeze([
+      "unavailable",
+      "not_defined",
+      "measure_unavailable",
+      "within",
+      "breach",
+    ]),
+    renderedEvidence: Object.freeze({
+      rowSelector: "[data-mandate-constraint]",
+      identityAttribute: "data-mandate-constraint",
+      stateAttribute: "data-mandate-state",
+    }),
+    implementationEvidence: Object.freeze([
+      Object.freeze({
+        path: "scripts/live/validation/risk-mandate-proof.mjs",
+        tokens: Object.freeze([
+          "buildRiskMandateSourceRenderRows",
+          "constraint?.key",
+          "constraint?.state",
+        ]),
+      }),
+      Object.freeze({
+        path: "src/apps/performance/components/risk/risk-mandate-comparison.tsx",
+        tokens: Object.freeze([
+          "data-mandate-constraint-source={sourceKey}",
+          "data-mandate-constraint={constraint.key}",
+          "data-mandate-state={constraint.state}",
+        ]),
+      }),
+      Object.freeze({
+        path: "scripts/live/validation/browser-workflows.mjs",
+        tokens: Object.freeze([
+          'screen: "Risk review"',
+          'element.getAttribute("data-mandate-constraint")',
+          'element.getAttribute("data-mandate-state")',
+        ]),
+      }),
+    ]),
+    sampleGatewayResponse: Object.freeze(riskMandateGatewaySample),
+    target: Object.freeze({
+      source: "concentration",
+      identity: "issuer_max_weight",
+      sourceState: "breach",
+      mutatedSourceState: "measure_unavailable",
+      reassuringRenderedState: "within",
+    }),
+    buildExpectedRows: buildRiskMandateSourceRenderRows,
+    mutateSourceState(payload, state) {
+      payload.concentration.constraints[0].state = state;
+    },
+  }),
+]);
