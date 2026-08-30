@@ -343,6 +343,9 @@ cursor window. Workbench carries the opaque cursor and window ordinal without in
 either as business evidence, reconciles browser Back/Forward navigation to that address, and drops
 the cursor if source proposal evidence corrects the portfolio identity. Every Proposal Detail
 handoff binds the exact proposal being opened, including the source-ranked fallback row. The shared
+source-window authority also rejects any cyclic return to a previously visited cursor, permits only
+the retained forward window after an advisor steps back, and enforces the governed maximum before
+mutating component state or the browser address. The shared
 composition uses two columns only when its business lane
 has sufficient capacity. Persistent navigation and context rails make the lane stack at 1280
 pixels; after those rails reflow at 1024 pixels, the wider main lane supports the split again.
