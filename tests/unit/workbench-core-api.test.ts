@@ -11,8 +11,6 @@ import {
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
 
-const expectedBffBaseUrl = "/api/bff/api/v1";
-
 describe("workbench core api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
