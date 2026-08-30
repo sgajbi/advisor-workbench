@@ -57,8 +57,6 @@ export type AdvisorIdeaReviewAction =
   | "escalate_to_pm"
   | "escalate_to_compliance";
 
-export type IdeaActionKind = "review" | "feedback" | "conversion";
-
 export type IdeaBusinessReasonOption = {
   value: AdvisorIdeaReasonCode;
   label: string;
@@ -144,14 +142,12 @@ export function buildIdeaActionReasonCodes({
   reviewAction,
 }: {
   basis: AdvisorIdeaReasonCode;
-  kind: IdeaActionKind;
+  kind: "review" | "conversion";
   reviewAction?: AdvisorIdeaReviewAction;
 }): AdvisorIdeaReasonCode[] {
   const actionReason =
     kind === "review"
       ? REVIEW_ACTION_REASON[reviewAction ?? "no_action"]
-      : kind === "feedback"
-        ? "feedback_recorded"
-        : "review_approved_for_conversion";
+      : "review_approved_for_conversion";
   return actionReason === basis ? [actionReason] : [actionReason, basis];
 }
