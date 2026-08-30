@@ -48,6 +48,44 @@ describe("report ordering contracts", () => {
     );
   });
 
+  it.each(["sections", "allocation_dimensions"])(
+    "rejects a text field that could replace the structured %s option",
+    (fieldId) => {
+      const response = buildReportOrderingResponse();
+      response.reportFamilies[0].configurationFields.push({
+        fieldId,
+        businessLabel: "Conflicting report option",
+        description: "A generic value must not replace a structured report option.",
+        inputType: "text",
+        requirement: "optional",
+        defaultingPolicy: "caller_optional",
+        valueSource: "caller",
+        options: [],
+      });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it.each(["gateway_eligible_benchmark", "report_catalogue"])(
+    "rejects an editable text field owned by %s",
+    (valueSource) => {
+      const response = buildReportOrderingResponse();
+      response.reportFamilies[0].configurationFields.push({
+        fieldId: "source_owned_reference",
+        businessLabel: "Source-owned reference",
+        description: "A source-owned value must not become an advisor override.",
+        inputType: "text",
+        requirement: "optional",
+        defaultingPolicy: "source_owned",
+        valueSource,
+        options: [],
+      });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
   it.each([
     ["as_of_date", "business_date"],
     ["reporting_currency", "currency"],

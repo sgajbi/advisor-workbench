@@ -46,6 +46,11 @@ const configurationOptionSchema = z
   })
   .strict();
 
+const editableTextFieldIdSchema = z.string().min(1).refine(
+  (fieldId) => fieldId !== "sections" && fieldId !== "allocation_dimensions",
+  "Text configuration fields must not replace structured report options",
+);
+
 const configurationFieldBaseSchema = z.object({
     fieldId: z.string().min(1),
     businessLabel: z.string().min(1),
@@ -63,8 +68,10 @@ const configurationFieldBaseSchema = z.object({
 const configurationFieldSchema = z.union([
   configurationFieldBaseSchema
     .extend({
+      fieldId: editableTextFieldIdSchema,
       inputType: z.literal("text"),
       requirement: z.enum(["required", "optional", "conditional"]),
+      valueSource: z.enum(["caller", "portfolio_context_or_caller"]),
     })
     .strict(),
   configurationFieldBaseSchema
