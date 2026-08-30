@@ -80,6 +80,50 @@ describe("useSourceWindow", () => {
     });
   });
 
+  it("rejects a continuation cursor already visited in the active history", () => {
+    const { result } = renderHook(() => useSourceWindow("portfolio-a"));
+
+    act(() => result.current.showNext("cursor-window-2"));
+    act(() => result.current.showNext("cursor-window-3"));
+
+    expect(result.current.canShowNext("cursor-window-2")).toBe(false);
+    act(() => result.current.showNext("cursor-window-2"));
+
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-3",
+      windowNumber: 3,
+    });
+  });
+
+  it("allows a known next window after returning to the previous window", () => {
+    const { result } = renderHook(() => useSourceWindow("portfolio-a"));
+
+    act(() => result.current.showNext("cursor-window-2"));
+    act(() => result.current.showPrevious());
+
+    expect(result.current.canShowNext("cursor-window-2")).toBe(true);
+    act(() => result.current.showNext("cursor-window-2"));
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-2",
+      windowNumber: 2,
+    });
+  });
+
+  it("stops before advancing beyond the configured source-window boundary", () => {
+    const { result } = renderHook(() =>
+      useSourceWindow("portfolio-a", undefined, { maximumWindowNumber: 2 }),
+    );
+
+    act(() => result.current.showNext("cursor-window-2"));
+
+    expect(result.current.canShowNext("cursor-window-3")).toBe(false);
+    act(() => result.current.showNext("cursor-window-3"));
+    expect(result.current).toMatchObject({
+      cursor: "cursor-window-2",
+      windowNumber: 2,
+    });
+  });
+
   it("rehydrates an addressed source cursor without inventing prior history", () => {
     const { result } = renderHook(() =>
       useSourceWindow("portfolio-a", {

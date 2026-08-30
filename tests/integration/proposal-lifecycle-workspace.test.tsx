@@ -2329,7 +2329,9 @@ describe("ProposalLifecycleWorkspace", () => {
     fireEvent.keyDown(firstWindowOptions[0], { key: "ArrowDown" });
     expect(firstWindowOptions[1]).toHaveAttribute("aria-selected", "true");
 
-    fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
 
     const nextWindowProposal = await screen.findByRole("option", {
       name: /Consent evidence review/,
@@ -2890,7 +2892,9 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.queryByText("No proposals in the approval queue"),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Next proposals" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
 
     await waitFor(() => {
       expect(listProposalsMock).toHaveBeenLastCalledWith({
@@ -2915,6 +2919,80 @@ describe("ProposalLifecycleWorkspace", () => {
     expect(
       screen.getByRole("button", { name: "Next proposals" }),
     ).toBeDisabled();
+  });
+
+  it("stops when a continuation cursor returns to a visited source window", async () => {
+    listProposalsMock
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-window-2" })
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-window-3" })
+      .mockResolvedValueOnce({ items: [], next_cursor: "cursor-window-2" });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        mode="approval-queue"
+      />,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenLastCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: "cursor-window-2",
+      });
+    });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    );
+    await waitFor(() => {
+      expect(listProposalsMock).toHaveBeenLastCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        cursor: "cursor-window-3",
+      });
+    });
+
+    expect(
+      await screen.findByRole("button", { name: "Next proposals" }),
+    ).toBeDisabled();
+    expect(screen.getByText("Proposal view 3")).toBeInTheDocument();
+  });
+
+  it("withholds continuation at the maximum addressed source window", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/proposals?portfolioId=PB_SG_GLOBAL_BAL_001&mode=approval-queue&cursor=cursor-window-100000&sourceWindow=100000",
+    );
+    listProposalsMock.mockResolvedValueOnce({
+      items: [],
+      next_cursor: "cursor-window-100001",
+    });
+
+    renderWithQueryClient(
+      <ProposalLifecycleWorkspace
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        initialSourceWindow={{
+          cursor: "cursor-window-100000",
+          windowNumber: 100_000,
+        }}
+        mode="approval-queue"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "No proposals in the approval queue",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next proposals" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByText("More proposals available"),
+    ).not.toBeInTheDocument();
+    expect(routerPushMock).not.toHaveBeenCalled();
   });
 
   it("allows return to the prior proposal window after a later window fails", async () => {
