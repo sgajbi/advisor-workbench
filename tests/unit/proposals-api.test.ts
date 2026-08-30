@@ -373,6 +373,30 @@ describe("proposal api", () => {
     },
   );
 
+  it("rejects a continuation cursor that repeats the requested source window", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              correlation_id: "c",
+              contract_version: "v1",
+              data: { items: [], next_cursor: "cursor-window-2" },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    await expect(
+      listProposals({ cursor: "cursor-window-2" }),
+    ).rejects.toThrow("Proposal list response was incomplete.");
+  });
+
   it("loads the Gateway-backed advisory policy review queue", async () => {
     vi.stubGlobal(
       "fetch",
