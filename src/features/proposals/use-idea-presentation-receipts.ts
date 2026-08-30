@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type RefObject,
 } from "react";
 
@@ -20,6 +21,10 @@ import type { AdvisorIdeaReviewQueueData } from "./types";
 
 const VISIBILITY_THRESHOLD = 0.5;
 const MARKER_SELECTOR = "[data-idea-presentation-candidate]";
+const subscribeToStaticBrowserCapability = () => () => undefined;
+const getIntersectionObserverSupport = () =>
+  "IntersectionObserver" in globalThis;
+const getServerIntersectionObserverSupport = () => true;
 
 type ReceiptTransaction = {
   candidateId: string;
@@ -48,9 +53,6 @@ export function useIdeaPresentationReceipts({
   const transactions = useRef(new Map<string, ReceiptTransaction>());
   const draftingCandidates = useRef(new Set<string>());
   const observationGeneration = useRef(0);
-  const [summary, setSummary] = useState<
-    Pick<IdeaPresentationReceiptState, "status" | "failedCount">
-  >({ status: "ready", failedCount: 0 });
   const sources = useMemo(() => {
     const sourceMap = new Map<string, IdeaPresentationSource>();
     for (const item of queue?.items ?? []) {
@@ -79,11 +81,26 @@ export function useIdeaPresentationReceipts({
       ]),
     [queue],
   );
+  const activeSnapshotKey = useRef(snapshotKey);
+  const [summary, setSummary] = useState<
+    Pick<IdeaPresentationReceiptState, "status" | "failedCount"> & {
+      snapshotKey: string;
+    }
+  >({ snapshotKey, status: "ready", failedCount: 0 });
+  const intersectionObserverSupported = useSyncExternalStore(
+    subscribeToStaticBrowserCapability,
+    getIntersectionObserverSupport,
+    getServerIntersectionObserverSupport,
+  );
 
   const refreshSummary = useCallback(() => {
+    if (activeSnapshotKey.current !== snapshotKey) {
+      return;
+    }
     const entries = [...transactions.current.values()];
     const failedCount = entries.filter((entry) => entry.status === "failed").length;
     setSummary({
+      snapshotKey,
       status: failedCount > 0
         ? "attention"
         : entries.some((entry) => entry.status === "pending")
@@ -91,7 +108,7 @@ export function useIdeaPresentationReceipts({
           : "ready",
       failedCount,
     });
-  }, []);
+  }, [snapshotKey]);
 
   const submit = useCallback(
     async (transaction: ReceiptTransaction) => {
@@ -139,7 +156,11 @@ export function useIdeaPresentationReceipts({
         for (const candidateId of pendingCandidateIds) {
           draftingCandidates.current.delete(candidateId);
         }
-        setSummary({ status: "unavailable", failedCount: pendingCandidateIds.length });
+        setSummary({
+          snapshotKey,
+          status: "unavailable",
+          failedCount: pendingCandidateIds.length,
+        });
         return;
       }
       if (observationGeneration.current !== generation) {
@@ -160,14 +181,14 @@ export function useIdeaPresentationReceipts({
       refreshSummary();
       await Promise.all(newTransactions.map(submit));
     },
-    [refreshSummary, sources, submit],
+    [refreshSummary, snapshotKey, sources, submit],
   );
 
   useEffect(() => {
+    activeSnapshotKey.current = snapshotKey;
     observationGeneration.current += 1;
     transactions.current.clear();
     draftingCandidates.current.clear();
-    setSummary({ status: "ready", failedCount: 0 });
   }, [snapshotKey]);
 
   useEffect(() => {
@@ -175,8 +196,7 @@ export function useIdeaPresentationReceipts({
     if (!enabled || !queue || !root) {
       return;
     }
-    if (!("IntersectionObserver" in globalThis)) {
-      setSummary({ status: "unavailable", failedCount: 0 });
+    if (!intersectionObserverSupported) {
       return;
     }
 
@@ -251,7 +271,14 @@ export function useIdeaPresentationReceipts({
       mutationObserver.disconnect();
       intersectionObserver.disconnect();
     };
-  }, [containerRef, emitVisibleSet, enabled, queue, snapshotKey]);
+  }, [
+    containerRef,
+    emitVisibleSet,
+    enabled,
+    intersectionObserverSupported,
+    queue,
+    snapshotKey,
+  ]);
 
   const retryFailed = useCallback(async () => {
     const failed = [...transactions.current.values()].filter(
@@ -264,7 +291,17 @@ export function useIdeaPresentationReceipts({
     await Promise.all(failed.map(submit));
   }, [refreshSummary, submit]);
 
-  return { ...summary, retryFailed };
+  const currentSummary =
+    summary.snapshotKey === snapshotKey
+      ? summary
+      : { status: "ready" as const, failedCount: 0 };
+  return {
+    ...currentSummary,
+    status: intersectionObserverSupported
+      ? currentSummary.status
+      : "unavailable",
+    retryFailed,
+  };
 }
 
 function compareVisualOrder(left: Element, right: Element): number {
