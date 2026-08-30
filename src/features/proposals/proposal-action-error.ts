@@ -4,6 +4,7 @@ import {
 } from "@/features/workbench/api-client";
 
 export type ProposalActionFailureContext =
+  | "advance_proposal"
   | "create_version"
   | "evaluate_draft"
   | "load_version"
@@ -22,6 +23,8 @@ export type ProposalActionSupportEvidence = Readonly<{
 }>;
 
 const UNAVAILABLE_COPY: Record<ProposalActionFailureContext, string> = {
+  advance_proposal:
+    "The proposal action could not be completed. Review the current posture and try again.",
   create_version:
     "The next proposal version could not be created. Refresh current proposal evidence and try again.",
   evaluate_draft:

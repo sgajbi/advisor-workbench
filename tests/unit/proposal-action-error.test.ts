@@ -52,12 +52,21 @@ describe("proposal action failure copy", () => {
   });
 
   it("preserves only explicitly classified local business guidance", () => {
+    const businessFailure = new ProposalActionBusinessError(
+      "The source action completed, but refreshed evidence could not be confirmed.",
+    );
+    const lookAlikeTransportFailure = new Error(
+      "The source action exposed INTERNAL_SOURCE_DETAIL",
+    );
+
+    expect(proposalActionFailureCopy(businessFailure, "advance_proposal")).toBe(
+      businessFailure.message,
+    );
     expect(
-      proposalActionFailureCopy(
-        new ProposalActionBusinessError("Review the current portfolio evidence."),
-        "evaluate_draft",
-      ),
-    ).toBe("Review the current portfolio evidence.");
+      proposalActionFailureCopy(lookAlikeTransportFailure, "advance_proposal"),
+    ).toBe(
+      "The proposal action could not be completed. Review the current posture and try again.",
+    );
   });
 
   it("keeps source request evidence out of primary business copy", () => {

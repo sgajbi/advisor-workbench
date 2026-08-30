@@ -4,6 +4,7 @@ import type {
   ProposalLineageData,
   ProposalWorkflowEventsData,
 } from "./types";
+import { ProposalActionBusinessError } from "./proposal-action-error";
 
 export type ProposalActionEvidenceIssue =
   | "missing-evidence"
@@ -82,7 +83,7 @@ export function confirmRefreshedProposalActionEvidence({
     workflow,
   });
   if (agreement.issue === "proposal-mismatch") {
-    throw new Error(
+    throw new ProposalActionBusinessError(
       "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
     );
   }
@@ -90,18 +91,18 @@ export function confirmRefreshedProposalActionEvidence({
     agreement.issue === "state-mismatch" ||
     agreement.issue === "missing-evidence"
   ) {
-    throw new Error(
+    throw new ProposalActionBusinessError(
       "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
     );
   }
   if (agreement.issue === "active-version-mismatch") {
-    throw new Error(
+    throw new ProposalActionBusinessError(
       "The source action returned lineage that does not confirm the active proposal version. Reload the proposal before continuing.",
     );
   }
   const refreshedState = agreement.currentState;
   if (!refreshedState || refreshedState === previousState) {
-    throw new Error(
+    throw new ProposalActionBusinessError(
       "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing.",
     );
   }

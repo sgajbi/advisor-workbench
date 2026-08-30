@@ -58,6 +58,7 @@ import {
   proposalStageLabel,
 } from "../proposal-workflow-copy";
 import {
+  ProposalActionBusinessError,
   proposalActionFailureCopy,
   proposalActionFailureSupportEvidence,
   type ProposalActionSupportEvidence,
@@ -303,7 +304,7 @@ function ProposalDetailWorkspace({
       lineageQuery.refetch(),
     ]);
     if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
-      throw new Error(
+      throw new ProposalActionBusinessError(
         "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
       );
     }
@@ -349,12 +350,7 @@ function ProposalDetailWorkspace({
         actionEvidenceBlockedRef.current = true;
         setActionEvidenceBlocked(true);
       }
-      const message = err instanceof Error ? err.message : "";
-      setError(
-        message.startsWith("The source action")
-          ? message
-          : "The proposal action could not be completed. Review the current posture and try again."
-      );
+      setError(proposalActionFailureCopy(err, "advance_proposal"));
       setErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
     } finally {
       if (activeActionRef.current?.token === actionContext.token) {
