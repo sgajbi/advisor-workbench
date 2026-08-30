@@ -68,6 +68,11 @@ import {
   ProposalWorkflowEventsData,
 } from "./types";
 import { matchesAdvisorIdeaFeedbackEvidence } from "./idea-feedback";
+import {
+  matchesIdeaPresentationReceiptEvidence,
+  type IdeaPresentationReceiptDraft,
+  type IdeaPresentationReceiptResponse,
+} from "./idea-presentation-receipt";
 import { parseProposalListEnvelope } from "./proposal-list-contract";
 import {
   parseProposalRiskImpactEnvelope,
@@ -121,6 +126,13 @@ type AdvisorIdeaCandidateActionInput<TRequest> = {
   portfolioId: string;
   idempotencyKey: string;
   request: TRequest;
+};
+
+export type AdvisorIdeaPresentationReceiptInput = {
+  candidateId: string;
+  portfolioId: string;
+  idempotencyKey: string;
+  request: IdeaPresentationReceiptDraft;
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
@@ -386,6 +398,42 @@ export async function recordAdvisorIdeaFeedback(
       ) {
         throw new WorkbenchResponseEvidenceError(
           "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
+        );
+      }
+      return data;
+    },
+  );
+}
+
+export async function recordAdvisorIdeaPresentationReceipt(
+  input: AdvisorIdeaPresentationReceiptInput,
+): Promise<IdeaPresentationReceiptResponse> {
+  requireSelectedIdeaPortfolio(input.portfolioId);
+  return await observeWorkbenchMutation(
+    "idea.candidate.presentation-receipt",
+    async () => {
+      const headers = new Headers();
+      headers.set("Content-Type", "application/json");
+      headers.set("Idempotency-Key", input.idempotencyKey);
+      const payload = await fetchWorkbenchMutation<unknown>(
+        `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(input.candidateId)}/presentation-receipts`,
+        "advisor idea presentation receipt",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(input.request),
+        },
+      );
+      const data = unwrapGatewayData<IdeaPresentationReceiptResponse>(payload);
+      if (
+        !matchesIdeaPresentationReceiptEvidence({
+          candidateId: input.candidateId,
+          request: input.request,
+          response: data,
+        })
+      ) {
+        throw new WorkbenchResponseEvidenceError(
+          "Idea visibility evidence did not match the recorded observation. Review remains available.",
         );
       }
       return data;

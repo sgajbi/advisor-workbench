@@ -324,6 +324,11 @@ describe("analytics UI observability metrics", () => {
       ],
       [
         "workbench.recommendations",
+        "idea-candidate-queue",
+        "idea.candidate.presentation-receipt",
+      ],
+      [
+        "workbench.recommendations",
         "idea-candidate-detail",
         "idea.candidate.conversion-intent",
       ],

@@ -176,6 +176,11 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.recommendations",
+    panel: "idea-candidate-queue",
+    operation: "idea.candidate.presentation-receipt",
+  },
+  {
+    route: "workbench.recommendations",
     panel: "idea-candidate-detail",
     operation: "idea.candidate.conversion-intent",
   },
