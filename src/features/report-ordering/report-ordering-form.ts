@@ -12,6 +12,13 @@ export type ReportOrderingFormValues = Pick<
   "asOfDate" | "reportingCurrency" | "configurationValues"
 >;
 
+export const REPORT_DATE_FORM_ERROR =
+  "Choose a report date within the available portfolio history.";
+export const REPORT_CURRENCY_FORM_ERROR =
+  "Choose a reporting currency available for this portfolio.";
+export const REPORT_REQUIRED_EVIDENCE_FORM_ERROR =
+  "Complete this required report evidence before review.";
+
 const reportOrderingFormValuesSchema = z.object({
   asOfDate: z.string(),
   reportingCurrency: z.string(),
@@ -37,21 +44,21 @@ export function buildReportOrderingFormSchema({
       context.addIssue({
         code: "custom",
         path: ["asOfDate"],
-        message: errors.asOfDate,
+        message: REPORT_DATE_FORM_ERROR,
       });
     }
     if (errors.reportingCurrency) {
       context.addIssue({
         code: "custom",
         path: ["reportingCurrency"],
-        message: errors.reportingCurrency,
+        message: REPORT_CURRENCY_FORM_ERROR,
       });
     }
-    Object.entries(errors.configurationValues).forEach(([fieldId, message]) => {
+    Object.keys(errors.configurationValues).forEach((fieldId) => {
       context.addIssue({
         code: "custom",
         path: ["configurationValues", fieldId],
-        message,
+        message: REPORT_REQUIRED_EVIDENCE_FORM_ERROR,
       });
     });
   });
