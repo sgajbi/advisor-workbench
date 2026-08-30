@@ -392,11 +392,34 @@ export function useReportOrderingWorkflow({
       ) {
         return;
       }
-      setHistory(null);
-      setHistoryState(isWorkbenchPermissionBlockedError(error) ? "permission_blocked" : "error");
+      const permissionBlocked = isWorkbenchPermissionBlockedError(error);
+      if (permissionBlocked) setHistory(null);
+      setHistoryState(permissionBlocked ? "permission_blocked" : "error");
       setHistoryError(historyErrorCopy(error));
     }
   }, [isActiveWorkspaceGeneration, portfolioId]);
+
+  useEffect(() => {
+    if (scopeMode !== "single_portfolio" || historyState === "loading") return;
+    const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
+    const hasActiveHistory = history?.items.some(
+      (item) => !isTerminalReportJobStatus(item.status),
+    ) ?? false;
+    const submittedLifecycleConfirmed = Boolean(
+      submittedHandle &&
+        history?.items.some(
+          (item) =>
+            item.reportJobId === submittedHandle.report_job_id &&
+            isTerminalReportJobStatus(item.status),
+        ),
+    );
+    if (!hasActiveHistory && (!submittedHandle || submittedLifecycleConfirmed)) return;
+
+    const timer = window.setTimeout(() => {
+      void loadHistory();
+    }, historyState === "error" ? 10_000 : 5_000);
+    return () => window.clearTimeout(timer);
+  }, [history, historyState, loadHistory, portfolioId, scopeMode, submittedHandlesByPortfolio]);
 
   const loadCatalogue = useCallback(
     async (resetConfiguration: boolean) => {
@@ -815,6 +838,14 @@ function submissionErrorCopy(error: unknown): string {
 function isTerminalBatchStatus(status: ReportBatchStatus["status"]): boolean {
   return status === "completed" ||
     status === "completed_with_failures" ||
+    status === "failed" ||
+    status === "cancelled";
+}
+
+function isTerminalReportJobStatus(status: string): boolean {
+  return status === "completed" ||
+    status === "archived" ||
+    status === "completed_with_warnings" ||
     status === "failed" ||
     status === "cancelled";
 }
