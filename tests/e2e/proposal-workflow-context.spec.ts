@@ -887,6 +887,7 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
   await expect(selectedDecision).toBeFocused();
   await selectedDecision.press("Escape");
   await expect(secondProposal).toBeFocused();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
   await testInfo.attach("approval-queue-review-desk-desktop", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
@@ -932,6 +933,7 @@ test("keeps an exception-led Approval Queue worklist and selected decision conte
     ).toBe(true);
   }
 
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
   await testInfo.attach("approval-queue-review-desk-mobile", {
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
