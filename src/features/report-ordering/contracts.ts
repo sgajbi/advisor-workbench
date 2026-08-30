@@ -47,8 +47,15 @@ const configurationOptionSchema = z
   .strict();
 
 const editableTextFieldIdSchema = z.string().min(1).refine(
-  (fieldId) => fieldId !== "sections" && fieldId !== "allocation_dimensions",
-  "Text configuration fields must not replace structured report options",
+  (fieldId) =>
+    ![
+      "sections",
+      "as_of_date",
+      "reporting_currency",
+      "benchmark_code",
+      "allocation_dimensions",
+    ].includes(fieldId),
+  "Text configuration fields must not replace dedicated report controls",
 );
 
 const configurationFieldBaseSchema = z.object({
@@ -161,7 +168,23 @@ const reportFamilySchema = z
     availability: availabilitySchema,
     eligibility: eligibilitySchema,
   })
-  .strict();
+  .strict()
+  .superRefine((family, context) => {
+    family.configurationFields.forEach((field, fieldIndex) => {
+      if (
+        field.requirement === "conditional" &&
+        !family.sections.some((section) =>
+          section.dependencyFieldIds.includes(field.fieldId),
+        )
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Conditional configuration fields must be bound to a report section",
+          path: ["configurationFields", fieldIndex, "fieldId"],
+        });
+      }
+    });
+  });
 
 export const reportOrderingResponseSchema = z
   .object({

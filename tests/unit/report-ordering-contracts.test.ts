@@ -48,8 +48,14 @@ describe("report ordering contracts", () => {
     );
   });
 
-  it.each(["sections", "allocation_dimensions"])(
-    "rejects a text field that could replace the structured %s option",
+  it.each([
+    "sections",
+    "as_of_date",
+    "reporting_currency",
+    "benchmark_code",
+    "allocation_dimensions",
+  ])(
+    "rejects a text field that could replace the dedicated %s control",
     (fieldId) => {
       const response = buildReportOrderingResponse();
       response.reportFamilies[0].configurationFields.push({
@@ -66,6 +72,22 @@ describe("report ordering contracts", () => {
       expect(() => parseReportOrderingResponse(response)).toThrow();
     },
   );
+
+  it("rejects a conditional text field without a declared section dependency", () => {
+    const response = buildReportOrderingResponse();
+    response.reportFamilies[0].configurationFields.push({
+      fieldId: "unbound_advisor_evidence",
+      businessLabel: "Unbound advisor evidence",
+      description: "Conditional evidence needs a declared business dependency.",
+      inputType: "text",
+      requirement: "conditional",
+      defaultingPolicy: "caller_required_when_section_selected",
+      valueSource: "caller",
+      options: [],
+    });
+
+    expect(() => parseReportOrderingResponse(response)).toThrow();
+  });
 
   it.each(["gateway_eligible_benchmark", "report_catalogue"])(
     "rejects an editable text field owned by %s",
