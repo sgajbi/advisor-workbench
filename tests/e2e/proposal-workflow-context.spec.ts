@@ -2026,17 +2026,17 @@ for (const failure of [
 
     await expect(rail.getByText(failure.businessCopy)).toBeVisible();
     await expect(page.getByText("INTERNAL_SOURCE_DETAIL")).toHaveCount(0);
+    const supportDetails = rail.locator("details").filter({
+      hasText: "Source request evidence",
+    });
     await expect(
-      rail.getByText(
-        `HTTP status ${failure.status}. Request reference corr-proposal-builder-${failure.status}.`,
-      ),
+      supportDetails.getByText(`corr-proposal-builder-${failure.status}`),
     ).not.toBeVisible();
 
-    await rail.getByText("Support details").click();
+    await supportDetails.getByText("Support details").click();
+    await expect(supportDetails.getByText(String(failure.status), { exact: true })).toBeVisible();
     await expect(
-      rail.getByText(
-        `HTTP status ${failure.status}. Request reference corr-proposal-builder-${failure.status}.`,
-      ),
+      supportDetails.getByText(`corr-proposal-builder-${failure.status}`),
     ).toBeVisible();
   });
 }

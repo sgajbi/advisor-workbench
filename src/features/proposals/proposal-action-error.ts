@@ -16,9 +16,9 @@ export class ProposalActionBusinessError extends Error {
   }
 }
 
-export type ProposalActionFailure = Readonly<{
-  message: string;
-  supportEvidence: string | null;
+export type ProposalActionSupportEvidence = Readonly<{
+  requestReference: string | null;
+  status: string;
 }>;
 
 const UNAVAILABLE_COPY: Record<ProposalActionFailureContext, string> = {
@@ -54,22 +54,15 @@ export function proposalActionFailureCopy(
   return UNAVAILABLE_COPY[context];
 }
 
-export function proposalActionFailure(
+export function proposalActionFailureSupportEvidence(
   error: unknown,
-  context: ProposalActionFailureContext,
-): ProposalActionFailure {
-  return {
-    message: proposalActionFailureCopy(error, context),
-    supportEvidence: proposalActionFailureSupportEvidence(error),
-  };
-}
-
-export function proposalActionFailureSupportEvidence(error: unknown): string | null {
+): ProposalActionSupportEvidence | null {
   const evidence = getWorkbenchApiErrorEvidence(error);
   if (!evidence) {
     return null;
   }
-  return evidence.requestReference
-    ? `${evidence.label} ${evidence.value}. Request reference ${evidence.requestReference}.`
-    : `${evidence.label} ${evidence.value}.`;
+  return {
+    requestReference: evidence.requestReference ?? null,
+    status: evidence.value,
+  };
 }

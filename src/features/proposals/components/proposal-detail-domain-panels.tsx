@@ -1,6 +1,6 @@
 import { Alert, Button, Divider, FormControlLabel, Switch } from "@mui/material";
 
-import { SemanticBadge, SupportDetails, Text } from "@/design-system";
+import { SemanticBadge, Text } from "@/design-system";
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import {
   querySourceAvailability,
@@ -14,8 +14,10 @@ import type {
 } from "../types";
 import type { ProposalDetailStageItem } from "../proposal-detail-evidence-view-model";
 import { businessEventLabel, proposalStageLabel } from "../proposal-workflow-copy";
+import type { ProposalActionSupportEvidence } from "../proposal-action-error";
 
 import detailStyles from "./proposal-detail-view.module.css";
+import ProposalActionSupportDetails from "./proposal-action-support-details";
 
 export function ProposalAdvisorActionsPanel({
   currentState,
@@ -127,7 +129,7 @@ export function ProposalEvidenceControlsPanel({
   createdVersionNo: number | null;
   versionLookup: ProposalVersionData | null;
   versionActionError: string | null;
-  versionActionErrorSupportEvidence: string | null;
+  versionActionErrorSupportEvidence: ProposalActionSupportEvidence | null;
 }) {
   return (
     <section className={detailStyles.railPanel}>
@@ -191,9 +193,7 @@ export function ProposalEvidenceControlsPanel({
         <>
           <Alert severity="warning">{versionActionError}</Alert>
           {versionActionErrorSupportEvidence ? (
-            <SupportDetails context="Source request evidence">
-              <Text variant="secondary">{versionActionErrorSupportEvidence}</Text>
-            </SupportDetails>
+            <ProposalActionSupportDetails evidence={versionActionErrorSupportEvidence} />
           ) : null}
         </>
       ) : null}
