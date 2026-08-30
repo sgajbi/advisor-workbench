@@ -111,6 +111,24 @@
     "performance-risk-window-toolbar",
     "performance-return-path-chart-stage",
     "performance-return-path-single-observation",
+    "page-container",
+    "workbench-split",
+    "workbench-col",
+    "position-table",
+    "table-wrap",
+    "constraint-rail",
+    "constraint-item",
+    "constraint-label",
+    "constraint-pill",
+    "constraint-pass",
+    "constraint-warn",
+    "constraint-fail",
+    "constraint-neutral",
+    "summary-ready",
+    "summary-caution",
+    "summary-blocked",
+    "rebalance-status-",
+    "rebalance-operations-",
     "kpi-stat-",
     "portfolio-income-activity",
     "portfolio-primary-view-tabs",
@@ -151,8 +169,8 @@
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
-      "maxLines": 188,
-      "maxBytes": 3666
+      "maxLines": 98,
+      "maxBytes": 1940
     },
     {
       "path": "src/styles/global/base.css",
@@ -169,8 +187,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 11140,
-      "maxBytes": 242713
+      "maxLines": 10990,
+      "maxBytes": 240422
     }
   ]
 }
