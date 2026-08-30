@@ -765,15 +765,18 @@ function buildExceptions(
       return;
     }
     const actionRequired = ACTION_REQUIRED_SUPPORTABILITY_STATES.includes(state);
+    const qualified = PARTIAL_SUPPORTABILITY_STATES.includes(state);
     exceptions.push({
       key: `source-supportability-${sourceReference}`,
       title: actionRequired
         ? "Source calculation unavailable"
-        : "Calculation available with limitations",
+        : qualified
+          ? PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityQualifiedTitle
+          : PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityUnknownTitle,
       detail:
         actionRequired
           ? "A source calculation required by this evidence package is unavailable."
-          : PARTIAL_SUPPORTABILITY_STATES.includes(state)
+          : qualified
             ? PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityQualified
             : PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityUnknown,
       action: "Review the source reason in support details and obtain refreshed evidence.",

@@ -26,6 +26,9 @@ describe("performance evidence business copy", () => {
     });
     expect(PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityIdentityMissing.action)
       .toContain("complete calculation availability evidence");
+    expect(PERFORMANCE_EVIDENCE_COPY.exceptions.calculationAvailabilityUnknownTitle).toBe(
+      "Calculation availability not confirmed",
+    );
   });
 
   it("reports methodology evidence with correct singular and plural grammar", () => {
