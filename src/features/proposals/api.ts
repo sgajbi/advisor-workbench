@@ -86,6 +86,7 @@ import {
   fetchWorkbenchMutation,
   observeWorkbenchMutation,
 } from "@/features/workbench/api-client";
+import { WorkbenchResponseEvidenceError } from "@/features/analytics-observability/response-evidence-error";
 
 const BFF_PROXY_BASE = "/api/bff/api/v1";
 
@@ -383,7 +384,7 @@ export async function recordAdvisorIdeaFeedback(
           request: input.request,
         })
       ) {
-        throw new Error(
+        throw new WorkbenchResponseEvidenceError(
           "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
         );
       }

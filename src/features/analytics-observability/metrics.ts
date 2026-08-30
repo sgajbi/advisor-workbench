@@ -25,6 +25,7 @@ import {
   type WorkbenchAnalyticsUiMetricEvent,
   type WorkbenchAnalyticsUiMetricSample,
 } from "./metric-store";
+import { WorkbenchResponseEvidenceError } from "./response-evidence-error";
 
 export {
   getAnalyticsUiMetricEvents,
@@ -1088,7 +1089,7 @@ export async function observeWorkbenchAnalyticsRequest<T>(
         statusClass === "4xx"
           ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
           : "error",
-      errorCategory: errorCategoryFromStatusClass(statusClass),
+      errorCategory: errorCategoryFromStatusClass(statusClass, error),
     });
     recordAnalyticsUiPanelState({
       context,
@@ -1096,7 +1097,7 @@ export async function observeWorkbenchAnalyticsRequest<T>(
         statusClass === "4xx"
           ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
           : "error",
-      reason: errorCategoryFromStatusClass(statusClass),
+      reason: errorCategoryFromStatusClass(statusClass, error),
     });
     recordAttentionForObservation({
       context,
@@ -1104,7 +1105,7 @@ export async function observeWorkbenchAnalyticsRequest<T>(
         statusClass === "4xx"
           ? classifyAnalyticsUiPanelState({ status: statusFromError(error) })
           : "error",
-      reason: errorCategoryFromStatusClass(statusClass),
+      reason: errorCategoryFromStatusClass(statusClass, error),
       supportabilityState: "unknown",
       freshnessBucket: "unknown",
     });
@@ -1278,6 +1279,7 @@ function normalizeAttentionReason(reason: string): string {
     "client",
     "server",
     "network",
+    "evidence",
     "none",
     "repeated_failure",
     "source_warning",
@@ -1290,7 +1292,7 @@ function normalizeAttentionReason(reason: string): string {
 
 function normalizeErrorCategory(category: string): string {
   const normalized = category.trim().toLowerCase();
-  return ["client", "server", "network", "none"].includes(normalized)
+  return ["client", "server", "network", "evidence", "none"].includes(normalized)
     ? normalized
     : "other";
 }
@@ -1315,6 +1317,7 @@ function assertMetricLabelVocabulary(
       "client",
       "server",
       "network",
+      "evidence",
       "none",
       "repeated_failure",
       "source_warning",
@@ -1333,7 +1336,7 @@ function assertMetricLabelVocabulary(
     attention_type: ANALYTICS_UI_ATTENTION_EVENT_TYPES,
     severity: ANALYTICS_UI_SEVERITY_LEVELS,
     status_class: ["2xx", "3xx", "4xx", "5xx", "network"],
-    error_category: ["client", "server", "network", "none", "other"],
+    error_category: ["client", "server", "network", "evidence", "none", "other"],
     region: ["APAC", "EMEA", "AMERICAS", "GLOBAL"],
     environment: ["dev", "test", "uat", "prod", "production"],
   };
@@ -1673,6 +1676,9 @@ function statusFromError(error: unknown): number | undefined {
 }
 
 function statusClassFromError(error: unknown): AnalyticsUiStatusClass {
+  if (error instanceof WorkbenchResponseEvidenceError) {
+    return error.statusClass;
+  }
   const status = statusFromError(error);
   if (status === undefined) {
     return "network";
@@ -1691,7 +1697,11 @@ function statusClassFromError(error: unknown): AnalyticsUiStatusClass {
 
 function errorCategoryFromStatusClass(
   statusClass: AnalyticsUiStatusClass,
+  error?: unknown,
 ): string {
+  if (error instanceof WorkbenchResponseEvidenceError) {
+    return error.errorCategory;
+  }
   if (statusClass === "4xx") {
     return "client";
   }

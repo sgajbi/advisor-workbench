@@ -15,6 +15,7 @@ import {
   resetAnalyticsUiMetricEvents,
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
 } from "../../src/features/analytics-observability/metrics";
+import { WorkbenchResponseEvidenceError } from "../../src/features/analytics-observability/response-evidence-error";
 
 const context = {
   route: "workbench.performance",
@@ -1106,6 +1107,32 @@ describe("analytics UI observability metrics", () => {
       expect.objectContaining({
         metric_name: "lotus_workbench_panel_state_total",
         labels: expect.objectContaining({ state: "error", reason: "server" }),
+      }),
+    ]);
+  });
+
+  it("preserves transport success while classifying rejected response evidence", async () => {
+    await expect(
+      observeWorkbenchAnalyticsRequest(context, async () => {
+        throw new WorkbenchResponseEvidenceError("Response evidence did not match.");
+      }),
+    ).rejects.toThrow("Response evidence did not match.");
+
+    expect(getAnalyticsUiMetricEvents().slice(0, 2)).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          status_class: "2xx",
+          state: "error",
+          error_category: "evidence",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          state: "error",
+          reason: "evidence",
+        }),
       }),
     ]);
   });
