@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useMemo } from "react";
+import { useImperativeHandle, useMemo, type Ref } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -23,18 +23,17 @@ type ReportConfigurationPanelProps = {
   disabled: boolean;
   updateConfiguration: (patch: Partial<ReportOrderingConfiguration>) => void;
   toggleSection: (sectionId: string) => void;
+  ref?: Ref<ReportConfigurationPanelHandle>;
 };
 
-export const ReportConfigurationPanel = forwardRef<
-  ReportConfigurationPanelHandle,
-  ReportConfigurationPanelProps
->(function ReportConfigurationPanel({
+export function ReportConfigurationPanel({
   model,
   configuration,
   disabled,
   updateConfiguration,
   toggleSection,
-}, ref) {
+  ref,
+}: ReportConfigurationPanelProps) {
   const configurationFields = new Map(
     model.family?.configurationFields.map((field) => [field.fieldId, field]) ?? [],
   );
@@ -385,7 +384,7 @@ export const ReportConfigurationPanel = forwardRef<
       </SectionBlock>
     </div>
   );
-});
+}
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? <small id={id} className={styles.fieldError}>{message}</small> : null;
