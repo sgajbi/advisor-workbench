@@ -400,7 +400,11 @@ export function useReportOrderingWorkflow({
   }, [isActiveWorkspaceGeneration, portfolioId]);
 
   useEffect(() => {
-    if (scopeMode !== "single_portfolio" || historyState === "loading") return;
+    if (
+      scopeMode !== "single_portfolio" ||
+      historyState === "loading" ||
+      historyState === "permission_blocked"
+    ) return;
     const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
     const hasActiveHistory = history?.items.some(
       (item) => !isTerminalReportJobStatus(item.status),

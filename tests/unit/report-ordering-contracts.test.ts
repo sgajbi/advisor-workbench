@@ -108,6 +108,25 @@ describe("report ordering contracts", () => {
     },
   );
 
+  it.each(["advisor.note", "advisor[brief]", "advisor]brief["])(
+    "rejects the form-unsafe text field identifier %s",
+    (fieldId) => {
+      const response = buildReportOrderingResponse();
+      response.reportFamilies[0].configurationFields.push({
+        fieldId,
+        businessLabel: "Advisor evidence",
+        description: "The identifier must remain a flat form value.",
+        inputType: "text",
+        requirement: "optional",
+        defaultingPolicy: "caller_optional",
+        valueSource: "caller",
+        options: [],
+      });
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
   it.each([
     ["as_of_date", "business_date"],
     ["reporting_currency", "currency"],
