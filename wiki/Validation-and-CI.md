@@ -65,7 +65,8 @@ concurrency group.
   proof. The gate fails closed when
   enrollment is empty or drops below two surfaces. Labels, date/number formatting, and other
   presentation-only fields are explicitly outside the control; Workbench must not create a second
-  risk or portfolio lifecycle model.
+  risk or portfolio lifecycle model. Contract and render-proof enrollment must match exactly, and
+  each surface proves at least two distinct source identities and two distinct source states.
 - `npm run test:coverage`
   runs the complete V8-backed application suite. The function threshold is a monotonic exact-measurement
   ratchet at 93.29% (3,115 of 3,339 functions on 2026-08-30), replacing the former 70% floor without

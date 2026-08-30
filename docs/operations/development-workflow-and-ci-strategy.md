@@ -52,6 +52,10 @@ source adapters and stable rendered identity/state attributes. Each enrollment p
    remain wired; and
 5. an empty or single-surface registry fails closed.
 
+The render-proof registry must equal the contract registry exactly. Each enrolled contract requires
+at least two executable component scenarios with distinct source identities and distinct source
+states; a fixed canonical identity does not prove source identity ownership.
+
 Risk mandate comparison and Advisor Book are the reference enrollments. Add a new surface only when
 its Gateway contract owns the facts and the screen has a domain adapter, executable rendered
 component proof, and deterministic browser evidence. A cloned adapter or view-model row is not

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { assertExactSourceRenderProof } from "../live/validation/source-render-proof.mjs";
 import { SOURCE_AUTHORITY_CONTRACTS } from "./source-authority-contracts.mjs";
+import { SOURCE_AUTHORITY_RENDER_PROOF_IDS } from "./source-authority-render-proof-registry.mjs";
 
 function defaultRepoRoot() {
   return resolve(process.cwd());
@@ -49,6 +50,32 @@ function validateSourceRows(contract, rows, errors) {
       );
     }
     identities.add(identity);
+  }
+}
+
+function validateRenderProofEnrollment(contracts, errors) {
+  const proofIds = SOURCE_AUTHORITY_RENDER_PROOF_IDS;
+  if (!Array.isArray(proofIds) || proofIds.length === 0) {
+    errors.push("Source-authority rendered-component proof enrollment is empty.");
+    return;
+  }
+  const uniqueProofIds = new Set(proofIds);
+  if (uniqueProofIds.size !== proofIds.length) {
+    errors.push("Source-authority rendered-component proof enrollment contains duplicate IDs.");
+  }
+
+  const contractIds = new Set(
+    contracts.map((contract) => contract?.id).filter((id) => isText(id)),
+  );
+  for (const contractId of contractIds) {
+    if (!uniqueProofIds.has(contractId)) {
+      errors.push(`${contractId}: no executable rendered-component proof is enrolled.`);
+    }
+  }
+  for (const proofId of uniqueProofIds) {
+    if (!contractIds.has(proofId)) {
+      errors.push(`${proofId}: rendered-component proof has no source-authority contract.`);
+    }
   }
 }
 
@@ -147,6 +174,7 @@ export function validateSourceAuthorityContracts(
   if (contracts.length < 2) {
     errors.push("Source-authority enrollment must cover at least two critical Gateway-backed surfaces.");
   }
+  validateRenderProofEnrollment(contracts, errors);
 
   const ids = new Set();
   for (const contract of contracts) {

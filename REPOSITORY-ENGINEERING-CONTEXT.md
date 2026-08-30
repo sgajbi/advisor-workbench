@@ -1680,7 +1680,8 @@ Most relevant current governance:
     proof; it fails closed for empty or single-surface enrollment and runs in every blocking lint
     lane. The executable proof must traverse the production view model and component, then read the
     stable evidence attributes from the DOM; a cloned adapter or view-model row is not render
-    evidence. It governs source-owned
+    evidence. `source-authority-render-proof-registry.mjs` must match the contract registry exactly,
+    and every exercised surface must mutate both identity and state. It governs source-owned
     identity and business state, not labels, number/date formatting, or other presentation-only
     fields. A new screen must include unit diagnostics and fixture/browser proof before claiming
     exact source rendering.
