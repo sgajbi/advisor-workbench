@@ -10,6 +10,7 @@ import {
   ProposalWorkflowContextRail,
 } from "../../src/features/proposals/components/proposal-workflow-context";
 import { buildSimulationProposalWorkflowContext } from "../../src/features/proposals/proposal-workflow-context-view-model";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const advisoryApiMocks = vi.hoisted(() => ({
   applyAdvisoryWorkspaceDraftAction: vi.fn(),
@@ -860,14 +861,20 @@ describe("ProposalSimulateForm", () => {
 
   it("retains construction-only posture when draft persistence fails", async () => {
     advisoryApiMocks.handoffAdvisoryWorkspace.mockRejectedValueOnce(
-      new Error("advisory service unavailable")
+      new WorkbenchApiError("advisory workspace request", 403)
     );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Save Advisor Draft" }));
 
-    expect(await screen.findByText("advisory service unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "This proposal action is not available for your current access. No proposal change was recorded."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch advisory workspace request (403)"))
+      .not.toBeInTheDocument();
     expect(screen.getByRole("alert", { name: "Proposal action failure" })).toHaveTextContent(
       "Proposal action not completed"
     );
@@ -1015,14 +1022,20 @@ describe("ProposalSimulateForm", () => {
 
   it("keeps evaluation failure explicit without claiming the workspace was evaluated", async () => {
     advisoryApiMocks.evaluateAdvisoryWorkspace.mockRejectedValueOnce(
-      new Error("proposal evaluation unavailable")
+      new WorkbenchApiError("advisory workspace request", 503)
     );
     renderForm("PB_SG_GLOBAL_BAL_001");
 
     await waitForPortfolioEvidence();
     fireEvent.click(screen.getByRole("button", { name: "Evaluate Workspace" }));
 
-    expect(await screen.findByText("proposal evaluation unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "The proposal could not be evaluated from the current source evidence. Confirm portfolio holdings and try again."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Failed to fetch advisory workspace request (503)"))
+      .not.toBeInTheDocument();
     expect(screen.getByRole("alert", { name: "Proposal action failure" })).toHaveTextContent(
       "Proposal action not completed"
     );
