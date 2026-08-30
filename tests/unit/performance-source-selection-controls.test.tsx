@@ -246,7 +246,12 @@ describe("PerformanceSourceSelectionControls", () => {
 
   it("releases the dialog when the parent reports that no refresh was dispatched", async () => {
     const onRequestChange = vi.fn().mockResolvedValue(false);
-    render(<PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />);
+    const { rerender } = render(
+      <>
+        <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />
+        <button type="button">Continue review</button>
+      </>,
+    );
 
     const windowTrigger = await screen.findByRole("button", {
       name: "Review window 01 Jan 2026 – 14 Apr 2026",
@@ -268,6 +273,26 @@ describe("PerformanceSourceSelectionControls", () => {
       }),
       { kind: "window" },
     );
+
+    const continueReview = screen.getByRole("button", { name: "Continue review" });
+    act(() => continueReview.focus());
+    rerender(
+      <>
+        <PerformanceSourceSelectionControls
+          {...baseProps}
+          isUpdating
+          onRequestChange={onRequestChange}
+        />
+        <button type="button">Continue review</button>
+      </>,
+    );
+    rerender(
+      <>
+        <PerformanceSourceSelectionControls {...baseProps} onRequestChange={onRequestChange} />
+        <button type="button">Continue review</button>
+      </>,
+    );
+    await waitFor(() => expect(continueReview).toHaveFocus());
   });
 
   it("does not steal focus when the advisor moves after dismissing the dialog", async () => {

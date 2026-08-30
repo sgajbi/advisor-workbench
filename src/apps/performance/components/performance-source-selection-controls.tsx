@@ -199,6 +199,7 @@ export default function PerformanceSourceSelectionControls({
       windowTriggerRef.current ?? undefined,
     );
     if (!requestDispatched) {
+      selectionFocusTargetRef.current = null;
       windowRequestWasUpdatingRef.current = false;
       setSubmittedWindow(null);
       setWindowDialogOpen(false);
