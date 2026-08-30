@@ -565,7 +565,7 @@ function clientReleaseLabel(posture: ReportFamily["clientReleasePosture"]): stri
     : "For internal control use only. Client distribution is not supported.";
 }
 
-const REPORT_JOB_LIFECYCLE_VALUES = new Set([
+const REPORT_JOB_LIFECYCLE_VALUES = [
   "accepted",
   "queued",
   "collecting_data",
@@ -577,7 +577,11 @@ const REPORT_JOB_LIFECYCLE_VALUES = new Set([
   "completed_with_warnings",
   "failed",
   "cancelled",
-]);
+] as const;
+
+function isReportJobLifecycleValue(value: string): boolean {
+  return (REPORT_JOB_LIFECYCLE_VALUES as readonly string[]).includes(value);
+}
 
 function reportLifecycleCopy(
   status: string,
@@ -586,8 +590,8 @@ function reportLifecycleCopy(
 ) {
   const normalized = status.toLowerCase();
   if (
-    !REPORT_JOB_LIFECYCLE_VALUES.has(normalized) ||
-    !REPORT_JOB_LIFECYCLE_VALUES.has(currentStep.toLowerCase())
+    !isReportJobLifecycleValue(normalized) ||
+    !isReportJobLifecycleValue(currentStep.toLowerCase())
   ) {
     return {
       label: "Status not reported",
