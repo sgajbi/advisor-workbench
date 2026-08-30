@@ -71,6 +71,10 @@ import {
 import { proposalRiskImpactFixture } from "../fixtures/proposal-risk-impact";
 import { proposalDiscussionPackFixture } from "../fixtures/proposal-discussion-pack";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 const expectedBaseUrl = "/api/bff/api/v1";
 
@@ -84,6 +88,7 @@ function expectNoStoreRequest(
 describe("proposal api", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    resetAnalyticsUiMetricEvents();
   });
 
   it("keeps raw Gateway failure bodies out of proposal transport errors", async () => {
@@ -781,6 +786,23 @@ describe("proposal api", () => {
     expect((init.headers as Headers).get("Idempotency-Key")).toBe(
       "ui-idea-feedback-001",
     );
+    expect(getAnalyticsUiMetricEvents()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.feedback",
+          status_class: "2xx",
+          state: "ready",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.feedback",
+          state: "ready",
+        }),
+      }),
+    ]);
   });
 
   it("rejects persistence success without matching source-owned feedback event evidence", async () => {
@@ -814,6 +836,25 @@ describe("proposal api", () => {
     ).rejects.toThrow(
       "Advisor idea feedback did not return matching source-owned event evidence. No success was recorded in Workbench.",
     );
+    expect(getAnalyticsUiMetricEvents()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.feedback",
+          status_class: "network",
+          state: "error",
+          error_category: "network",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.feedback",
+          state: "error",
+          reason: "network",
+        }),
+      }),
+    ]);
   });
 
   it("records an Idea conversion intent without creating a proposal locally", async () => {
