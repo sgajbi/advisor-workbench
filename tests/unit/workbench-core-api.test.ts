@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  applySandboxChanges,
-  createSandboxSession,
   getPortfolio360,
   getReportingSnapshot,
   getWorkbenchAnalytics,
@@ -65,61 +63,6 @@ describe("workbench core api", () => {
     const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
     expect(metricEventsJson).toContain("advisor-overview");
     expect(metricEventsJson).toContain("portfolio-360");
-    expect(metricEventsJson).not.toContain("PF_1001");
-    expect(metricEventsJson).not.toContain("sess_1");
-  });
-
-  it("keeps sandbox mutations on the Workbench BFF proxy with JSON payloads", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            correlation_id: "corr",
-            contract_version: "v1",
-            portfolio_id: "PF_1001",
-            session_id: "sess_1",
-            session_version: 2,
-            projected_positions: [],
-            projected_summary: null,
-            warnings: [],
-            partial_failures: [],
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
-      )
-    );
-
-    await createSandboxSession("PF_1001", { created_by: "advisor_1", ttl_hours: 24 });
-    await applySandboxChanges("PF_1001", "sess_1", {
-      changes: [{ security_id: "EQ_1", transaction_type: "BUY", quantity: 2 }],
-      evaluate_policy: true,
-    });
-
-    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      `${expectedBffBaseUrl}/workbench/PF_1001/sandbox/sessions`
-    );
-    expect(fetchMock.mock.calls[0][1]).toEqual(
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({ "Content-Type": "application/json" }),
-      })
-    );
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
-      created_by: "advisor_1",
-      ttl_hours: 24,
-    });
-    expect(fetchMock.mock.calls[1][0]).toBe(
-      `${expectedBffBaseUrl}/workbench/PF_1001/sandbox/sessions/sess_1/changes`
-    );
-    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
-      changes: [{ security_id: "EQ_1", transaction_type: "BUY", quantity: 2 }],
-      evaluate_policy: true,
-    });
-    const metricEventsJson = JSON.stringify(getAnalyticsUiMetricEvents());
-    expect(metricEventsJson).toContain("sandbox-session-create");
-    expect(metricEventsJson).toContain("sandbox-session-apply");
     expect(metricEventsJson).not.toContain("PF_1001");
     expect(metricEventsJson).not.toContain("sess_1");
   });

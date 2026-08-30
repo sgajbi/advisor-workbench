@@ -1,8 +1,5 @@
 import {
-  BFF_PROXY_BASE,
-  fetchWorkbenchMutation,
   fetchWorkbenchResource,
-  observeWorkbenchMutation,
   observeWorkbenchResource,
 } from "@/features/workbench/api-client";
 import type {
@@ -10,7 +7,6 @@ import type {
   WorkbenchOverview,
   WorkbenchPortfolio360,
   WorkbenchReportingSnapshot,
-  WorkbenchSandboxState,
 } from "@/features/workbench/types";
 
 export async function getWorkbenchOverview(portfolioId: string): Promise<WorkbenchOverview> {
@@ -40,54 +36,6 @@ export async function getPortfolio360(
         `/workbench/${portfolioId}/portfolio-360`,
         "portfolio 360",
         query
-      )
-  );
-}
-
-export async function createSandboxSession(
-  portfolioId: string,
-  payload: { created_by?: string; ttl_hours?: number }
-): Promise<WorkbenchSandboxState> {
-  return await observeWorkbenchMutation(
-    "workbench.sandbox-session.create",
-    async () =>
-      await fetchWorkbenchMutation<WorkbenchSandboxState>(
-        `${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions`,
-        "create sandbox session",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      )
-  );
-}
-
-export async function applySandboxChanges(
-  portfolioId: string,
-  sessionId: string,
-  payload: {
-    changes: Array<{
-      security_id: string;
-      transaction_type: string;
-      quantity?: number;
-      amount?: number;
-      currency?: string;
-    }>;
-    evaluate_policy?: boolean;
-  }
-): Promise<WorkbenchSandboxState> {
-  return await observeWorkbenchMutation(
-    "workbench.sandbox-session.apply",
-    async () =>
-      await fetchWorkbenchMutation<WorkbenchSandboxState>(
-        `${BFF_PROXY_BASE}/workbench/${portfolioId}/sandbox/sessions/${sessionId}/changes`,
-        "apply sandbox changes",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
       )
   );
 }
