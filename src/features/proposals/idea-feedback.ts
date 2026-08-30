@@ -23,8 +23,8 @@ export type AdvisorIdeaFeedbackRequest = {
 
 export type AdvisorIdeaFeedbackEvent = AdvisorIdeaFeedbackRequest & {
   candidateId: string;
-  evidencePacketId?: string;
-  actorRole?: string;
+  evidencePacketId: string;
+  actorRole: string;
 };
 
 export type AdvisorIdeaFeedbackReasonOption = {
@@ -55,6 +55,8 @@ const notUsefulReasons = new Set<AdvisorIdeaFeedbackReason>(
   NOT_USEFUL_REASON_OPTIONS.map(({ value }) => value),
 );
 
+const TIMEZONE_AWARE_TIMESTAMP = /(?:Z|[+-]\d{2}:\d{2})$/i;
+
 export function resolveAdvisorIdeaFeedbackReason(
   outcome: AdvisorIdeaFeedbackOutcome,
   selectedReason: AdvisorIdeaFeedbackReason | "",
@@ -81,6 +83,14 @@ export function matchesAdvisorIdeaFeedbackEvidence({
   request: AdvisorIdeaFeedbackRequest;
 }): boolean {
   if (!event) {
+    return false;
+  }
+  if (
+    !event.evidencePacketId.trim() ||
+    !event.actorRole.trim() ||
+    !TIMEZONE_AWARE_TIMESTAMP.test(request.recordedAtUtc) ||
+    !TIMEZONE_AWARE_TIMESTAMP.test(event.recordedAtUtc)
+  ) {
     return false;
   }
   const submittedAt = Date.parse(request.recordedAtUtc);

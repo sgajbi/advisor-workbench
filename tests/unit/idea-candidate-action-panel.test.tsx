@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import IdeaCandidateActionPanel from "../../src/features/proposals/components/idea-candidate-action-panel";
 import { NOT_USEFUL_REASON_OPTIONS } from "../../src/features/proposals/idea-feedback";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const ideaApi = vi.hoisted(() => ({
   recordAdvisorIdeaConversionIntent: vi.fn(),
@@ -40,7 +41,12 @@ describe("IdeaCandidateActionPanel", () => {
     vi.clearAllMocks();
     ideaApi.recordAdvisorIdeaFeedback.mockImplementation(
       async ({ candidateId, request }) => ({
-        feedbackEvent: { ...request, candidateId },
+        feedbackEvent: {
+          ...request,
+          candidateId,
+          evidencePacketId: "evidence_high_cash_001",
+          actorRole: "advisor",
+        },
         persistence: { decision: "accepted" },
         durableStorageBacked: true,
       }),
@@ -141,14 +147,23 @@ describe("IdeaCandidateActionPanel", () => {
     const onRecorded = vi.fn(async () => true);
     ideaApi.recordAdvisorIdeaFeedback
       .mockRejectedValueOnce(new Error("source validation failed"))
-      .mockResolvedValueOnce({ durableStorageBacked: true });
+      .mockImplementationOnce(async ({ candidateId, request }) => ({
+        feedbackEvent: {
+          ...request,
+          candidateId,
+          evidencePacketId: "evidence_high_cash_001",
+          actorRole: "advisor",
+        },
+        persistence: { decision: "replayed" },
+        durableStorageBacked: true,
+      }));
     renderPanel(onRecorded);
 
     fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
     const error = await screen.findByTestId("idea-action-error");
     expect(error).toHaveAttribute("data-action-state", "not-recorded");
     expect(error).toHaveTextContent(
-      "could not confirm that the adviser action was saved",
+      "could not verify the saved feedback against source evidence",
     );
     expect(onRecorded).not.toHaveBeenCalled();
 
@@ -160,5 +175,63 @@ describe("IdeaCandidateActionPanel", () => {
     expect(retryInput.idempotencyKey).toBe(firstInput.idempotencyKey);
     expect(retryInput.request).toEqual(firstInput.request);
     expect(onRecorded).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      status: 403,
+      message: "Feedback is not available for your current access",
+    },
+    {
+      status: 409,
+      message: "The opportunity changed or conflicts with existing feedback",
+    },
+    {
+      status: 503,
+      message: "The feedback service is unavailable",
+    },
+  ])("keeps a $status feedback failure explicit", async ({ status, message }) => {
+    const onRecorded = vi.fn(async () => true);
+    ideaApi.recordAdvisorIdeaFeedback.mockRejectedValueOnce(
+      new WorkbenchApiError("advisor idea feedback", status),
+    );
+    renderPanel(onRecorded);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+
+    expect(await screen.findByTestId("idea-action-error")).toHaveTextContent(
+      message,
+    );
+    expect(
+      screen.queryByTestId("idea-action-feedback-status"),
+    ).not.toBeInTheDocument();
+    expect(onRecorded).not.toHaveBeenCalled();
+  });
+
+  it("abandons a failed retry only after the adviser changes the feedback", async () => {
+    const onRecorded = vi.fn(async () => true);
+    ideaApi.recordAdvisorIdeaFeedback.mockRejectedValueOnce(
+      new WorkbenchApiError("advisor idea feedback", 409),
+    );
+    renderPanel(onRecorded);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+    await screen.findByTestId("idea-action-error");
+    const failedInput = ideaApi.recordAdvisorIdeaFeedback.mock.calls[0][0];
+
+    fireEvent.click(screen.getByRole("radio", { name: "Not useful" }));
+    fireEvent.change(screen.getByLabelText("Why was it not useful?"), {
+      target: { value: "wrong_timing" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+    await screen.findByTestId("idea-action-feedback-status");
+
+    const changedInput = ideaApi.recordAdvisorIdeaFeedback.mock.calls[1][0];
+    expect(changedInput.idempotencyKey).not.toBe(failedInput.idempotencyKey);
+    expect(changedInput.request).toMatchObject({
+      outcome: "not_useful",
+      reason: "wrong_timing",
+    });
+    expect(changedInput.request).not.toEqual(failedInput.request);
   });
 });

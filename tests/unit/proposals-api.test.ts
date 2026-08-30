@@ -734,9 +734,11 @@ describe("proposal api", () => {
               feedbackEvent: {
                 feedbackId: "feedback_001",
                 candidateId: "idea_high_cash_001",
+                evidencePacketId: "evidence_high_cash_001",
                 taxonomyVersion: "idea-feedback-taxonomy-v1",
                 outcome: "useful",
                 reason: "relevant",
+                actorRole: "advisor",
                 recordedAtUtc: "2026-07-17T08:00:00Z",
               },
               persistence: { decision: "accepted" },
