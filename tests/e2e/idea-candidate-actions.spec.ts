@@ -96,7 +96,7 @@ test("records a source-owned Idea review without creating a proposal", async ({
 
   await expect(page.getByLabel("Idea candidate advisor actions")).toBeVisible();
   await expect(
-    page.getByText(/do not create a proposal, grant downstream authority/),
+    page.getByText(/do not create or approve a proposal, contact a client/),
   ).toBeVisible();
   await page.getByRole("button", { name: "Record review" }).click();
 
@@ -116,4 +116,61 @@ test("records a source-owned Idea review without creating a proposal", async ({
     page.getByRole("link", { name: /Open Proposal Builder/ }),
   ).toBeVisible();
   await expect(page.getByText(/proposal created/i)).toHaveCount(0);
+});
+
+test("records the adviser-selected governed feedback reason through Gateway", async ({
+  page,
+}) => {
+  await mockIdeaCandidateActions(page);
+  let recordedRequest:
+    | { headers: Record<string, string>; body: Record<string, string> }
+    | undefined;
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/feedback`,
+    async (route) => {
+      const body = route.request().postDataJSON() as Record<string, string>;
+      recordedRequest = { headers: route.request().headers(), body };
+      await route.fulfill({
+        json: {
+          data: {
+            feedbackEvent: { ...body, candidateId },
+            persistence: { decision: "accepted" },
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}&candidateId=${candidateId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  await page.getByRole("radio", { name: "Not useful" }).click();
+  await page
+    .getByLabel("Why was it not useful?")
+    .selectOption("insufficient_evidence");
+  await page.getByRole("button", { name: "Record feedback" }).click();
+
+  const status = page.getByTestId("idea-action-feedback-status");
+  await expect(status).toHaveAttribute(
+    "data-action-state",
+    "recorded-and-refreshed",
+  );
+  await expect(status).toContainText(
+    "Feedback saved. Opportunity detail and worklist are current.",
+  );
+  expect(recordedRequest?.headers["idempotency-key"]).toMatch(
+    /^ui-idea-feedback-/,
+  );
+  expect(recordedRequest?.body).toEqual({
+    feedbackId: expect.stringMatching(/^ui-idea-feedback-/),
+    taxonomyVersion: "idea-feedback-taxonomy-v1",
+    outcome: "not_useful",
+    reason: "insufficient_evidence",
+    recordedAtUtc: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+  });
+  expect(recordedRequest?.body).not.toHaveProperty("reasonCodes");
 });
