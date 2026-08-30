@@ -26,6 +26,28 @@ describe("report ordering contracts", () => {
     );
   });
 
+  it("accepts catalogue-driven conditional text fields without relaxing the contract", () => {
+    const parsed = parseReportOrderingResponse(buildReportOrderingResponse());
+
+    expect(parsed.reportFamilies[0].configurationFields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fieldId: "advisor_brief_run_id",
+          inputType: "text",
+          requirement: "conditional",
+        }),
+      ]),
+    );
+    expect(parsed.reportFamilies[0].sections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sectionId: "ADVISOR_COMMENTARY",
+          dependencyFieldIds: ["advisor_brief_run_id"],
+        }),
+      ]),
+    );
+  });
+
   it("fails closed when the Gateway contract contains an unknown primary field", () => {
     expect(() =>
       parseReportOrderingResponse({

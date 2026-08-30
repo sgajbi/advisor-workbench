@@ -51,8 +51,8 @@ const configurationFieldSchema = z
     fieldId: z.string().min(1),
     businessLabel: z.string().min(1),
     description: z.string().min(1),
-    inputType: z.enum(["business_date", "currency", "benchmark", "multi_select"]),
-    requirement: z.enum(["required", "optional"]),
+    inputType: z.enum(["business_date", "currency", "benchmark", "multi_select", "text"]),
+    requirement: z.enum(["required", "optional", "conditional"]),
     defaultingPolicy: z.string().min(1),
     valueSource: z.enum([
       "caller",
