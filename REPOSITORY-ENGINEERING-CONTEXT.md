@@ -1675,10 +1675,12 @@ Most relevant current governance:
     consumers and are enrolled in `scripts/quality/source-authority-contracts.mjs`. A new critical
     Gateway-backed surface must add its domain adapter, stable rendered identity/state evidence,
     executable source mutation, controlled reassuring-fallback proof, production wiring evidence,
-    and a focused production view-model mapping proof to that registry. `npm run
-    quality:source-authority` runs both the static enrollment validator and the executable mapping
+    and a focused rendered-component extraction proof to that registry. `npm run
+    quality:source-authority` runs both the static enrollment validator and the executable render
     proof; it fails closed for empty or single-surface enrollment and runs in every blocking lint
-    lane. It governs source-owned
+    lane. The executable proof must traverse the production view model and component, then read the
+    stable evidence attributes from the DOM; a cloned adapter or view-model row is not render
+    evidence. It governs source-owned
     identity and business state, not labels, number/date formatting, or other presentation-only
     fields. A new screen must include unit diagnostics and fixture/browser proof before claiming
     exact source rendering.

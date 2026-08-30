@@ -58,10 +58,11 @@ concurrency group.
 - `npm run quality:source-authority`
   is a blocking, contract-driven fitness function for critical Gateway-backed business facts. Risk
   mandate comparison and Advisor Book each declare source identity/state ownership, a domain-local
-  adapter, executable production view-model mapping, stable rendered evidence, and production
+  adapter, executable rendered-component extraction, stable rendered evidence, and production
   wiring. The gate mutates Gateway-shaped source state, requires that mutation to survive the real
-  screen mapping, and rejects missing, extra, duplicate, substituted, or reassuring browser
-  evidence. A cloned adapter result is not accepted as render proof. The gate fails closed when
+  screen mapping and component DOM, and rejects missing, extra, duplicate, substituted, or
+  reassuring browser evidence. A cloned adapter or view-model result is not accepted as render
+  proof. The gate fails closed when
   enrollment is empty or drops below two surfaces. Labels, date/number formatting, and other
   presentation-only fields are explicitly outside the control; Workbench must not create a second
   risk or portfolio lifecycle model.
