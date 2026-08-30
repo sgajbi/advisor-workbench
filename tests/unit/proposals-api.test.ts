@@ -330,6 +330,36 @@ describe("proposal api", () => {
       },
     },
     {
+      label: "whitespace-padded proposal identity",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: {
+          items: [{ proposal_id: " PRP-1", current_state: "DRAFT" }],
+        },
+      },
+    },
+    {
+      label: "control-containing proposal identity",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: {
+          items: [{ proposal_id: "PRP-1\u0000", current_state: "DRAFT" }],
+        },
+      },
+    },
+    {
+      label: "unbounded proposal identity",
+      envelope: {
+        correlation_id: "c",
+        contract_version: "v1",
+        data: {
+          items: [{ proposal_id: "x".repeat(257), current_state: "DRAFT" }],
+        },
+      },
+    },
+    {
       label: "empty continuation cursor",
       envelope: {
         correlation_id: "c",

@@ -68,6 +68,15 @@ const REVIEW_CONTEXT_FIELDS = Object.keys(
 const REPORTING_CURRENCY_PATTERN = /^[A-Z]{3}$/;
 const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 
+export function isValidReviewContextRecordId(
+  value: unknown,
+): value is string {
+  return (
+    typeof value === "string" &&
+    isBoundedSourceIdentity(value, 256)
+  );
+}
+
 /**
  * Parses only the governed cross-workspace context fields. Page-local query
  * parameters are intentionally ignored so each screen can compose its own
@@ -252,7 +261,7 @@ function isValidReviewContextValue(
     case "reportingCurrency":
       return REPORTING_CURRENCY_PATTERN.test(value);
     case "selectedRecordId":
-      return isBoundedSourceIdentity(value, 256);
+      return isValidReviewContextRecordId(value);
     case "batchId":
       return isBoundedSourceIdentity(value, 128);
   }

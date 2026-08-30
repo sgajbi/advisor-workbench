@@ -1,5 +1,7 @@
-import type { ProposalListData } from "./types";
+import { isValidReviewContextRecordId } from "@/shell/review-context";
+
 import { isValidProposalSourceCursor } from "./proposal-source-window-navigation";
+import type { ProposalListData } from "./types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -13,8 +15,7 @@ function isProposalSummary(value: unknown): value is ProposalListData["items"][n
   if (!isRecord(value)) return false;
 
   return (
-    typeof value.proposal_id === "string"
-    && value.proposal_id.length > 0
+    isValidReviewContextRecordId(value.proposal_id)
     && typeof value.current_state === "string"
     && value.current_state.length > 0
     && isOptionalString(value.portfolio_id)
