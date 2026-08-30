@@ -731,7 +731,7 @@ export function useReportOrderingWorkflow({
     isActiveWorkspaceGeneration,
     loadHistory,
     loadBatchStatus,
-    model?.canSubmit,
+    model,
     portfolioId,
     publishedConfigurationFieldIds,
     activeReviewedIntent,
