@@ -48,13 +48,9 @@ const configurationOptionSchema = z
 
 const editableTextFieldIdSchema = z
   .string()
-  .min(1)
-  .refine(
-    (fieldId) =>
-      !fieldId.includes(".") &&
-      !fieldId.includes("[") &&
-      !fieldId.includes("]"),
-    "Text configuration field identifiers must be form-safe",
+  .regex(
+    /^[a-z][a-z0-9_]*$/,
+    "Text configuration field identifiers must use lower snake case",
   )
   .refine(
     (fieldId) =>
@@ -96,6 +92,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("as_of_date"),
       inputType: z.literal("business_date"),
       requirement: z.enum(["required", "optional"]),
+      valueSource: z.literal("caller"),
     })
     .strict(),
   configurationFieldBaseSchema
@@ -103,6 +100,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("reporting_currency"),
       inputType: z.literal("currency"),
       requirement: z.enum(["required", "optional"]),
+      valueSource: z.literal("portfolio_context_or_caller"),
     })
     .strict(),
   configurationFieldBaseSchema
@@ -110,6 +108,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("benchmark_code"),
       inputType: z.literal("benchmark"),
       requirement: z.literal("optional"),
+      valueSource: z.literal("gateway_eligible_benchmark"),
     })
     .strict(),
   configurationFieldBaseSchema
@@ -117,6 +116,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("allocation_dimensions"),
       inputType: z.literal("multi_select"),
       requirement: z.literal("optional"),
+      valueSource: z.literal("report_catalogue"),
     })
     .strict(),
 ]);
@@ -181,6 +181,18 @@ const reportFamilySchema = z
   .strict()
   .superRefine((family, context) => {
     family.configurationFields.forEach((field, fieldIndex) => {
+      if (
+        family.configurationFields.findIndex(
+          (candidate) => candidate.fieldId === field.fieldId,
+        ) !== fieldIndex
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Configuration field identifiers must be unique",
+          path: ["configurationFields", fieldIndex, "fieldId"],
+        });
+      }
+
       if (
         field.requirement === "conditional" &&
         !family.sections.some((section) =>
