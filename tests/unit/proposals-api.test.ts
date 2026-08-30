@@ -25,6 +25,7 @@ import {
   getAdvisorIdeaReviewQueue,
   recordAdvisorIdeaConversionIntent,
   recordAdvisorIdeaFeedback,
+  recordAdvisorIdeaPresentationReceipt,
   recordAdvisorIdeaReviewAction,
   getBankDemoScenarioContract,
   getBankDemoSupportedClaimRegister,
@@ -850,6 +851,148 @@ describe("proposal api", () => {
         metric_name: "lotus_workbench_panel_state_total",
         labels: expect.objectContaining({
           operation: "idea.candidate.feedback",
+          state: "error",
+          reason: "evidence",
+        }),
+      }),
+    ]);
+  });
+
+  it("records exact Idea presentation evidence without browser-owned tenant authority", async () => {
+    const request = {
+      presentedAtUtc: "2026-08-31T10:15:00.000Z",
+      rankAtPresentation: 25,
+      visibleCandidateCount: 1,
+      queueSnapshotDigest: `sha256:${"a".repeat(64)}` as const,
+      queuePolicyVersion: "idea-deterministic-ranking-v1",
+      rankingPolicyVersion: "idle-liquidity-v1",
+      candidateMaterialVersion: 2,
+      candidateEvidenceVersion: 3,
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              receipt: {
+                ...request,
+                tenantId: "tenant-private-bank-sg",
+                receiptId: "receipt-idea-025",
+                candidateId: "idea-025",
+                schemaVersion: "lotus-idea.candidate-presentation-receipt.v1",
+                surface: "advisor_review_queue",
+                producer: "lotus-workbench",
+              },
+              persistenceDecision: "accepted",
+              durableStorageBacked: true,
+              supportedFeaturePromoted: false,
+            }),
+            { status: 201, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    await recordAdvisorIdeaPresentationReceipt({
+      candidateId: "idea-025",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      idempotencyKey: "presentation-idea-025",
+      request,
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `${expectedBaseUrl}/ideas/candidates/idea-025/presentation-receipts`,
+    );
+    expect(JSON.parse(String(init.body))).toEqual(request);
+    expect(JSON.parse(String(init.body))).not.toHaveProperty("tenantId");
+    expect((init.headers as Headers).get("Idempotency-Key")).toBe(
+      "presentation-idea-025",
+    );
+    expect(getAnalyticsUiMetricEvents()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.presentation-receipt",
+          status_class: "2xx",
+          state: "ready",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.presentation-receipt",
+          state: "ready",
+        }),
+      }),
+    ]);
+  });
+
+  it("rejects presentation success without matching persisted evidence", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              receipt: {
+                presentedAtUtc: "2026-08-31T10:15:00.000Z",
+                rankAtPresentation: 24,
+                visibleCandidateCount: 1,
+                queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+                queuePolicyVersion: "idea-deterministic-ranking-v1",
+                rankingPolicyVersion: "idle-liquidity-v1",
+                candidateMaterialVersion: 2,
+                candidateEvidenceVersion: 3,
+                tenantId: "tenant-private-bank-sg",
+                receiptId: "receipt-idea-025",
+                candidateId: "idea-025",
+                schemaVersion: "lotus-idea.candidate-presentation-receipt.v1",
+                surface: "advisor_review_queue",
+                producer: "lotus-workbench",
+              },
+              persistenceDecision: "accepted",
+              durableStorageBacked: true,
+            }),
+            { status: 201, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    await expect(
+      recordAdvisorIdeaPresentationReceipt({
+        candidateId: "idea-025",
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        idempotencyKey: "presentation-idea-025",
+        request: {
+          presentedAtUtc: "2026-08-31T10:15:00.000Z",
+          rankAtPresentation: 25,
+          visibleCandidateCount: 1,
+          queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+          queuePolicyVersion: "idea-deterministic-ranking-v1",
+          rankingPolicyVersion: "idle-liquidity-v1",
+          candidateMaterialVersion: 2,
+          candidateEvidenceVersion: 3,
+        },
+      }),
+    ).rejects.toThrow(
+      "Idea visibility evidence did not match the recorded observation. Review remains available.",
+    );
+    expect(getAnalyticsUiMetricEvents()).toEqual([
+      expect.objectContaining({
+        metric_name: "lotus_workbench_api_request_duration_seconds",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.presentation-receipt",
+          status_class: "2xx",
+          state: "error",
+          error_category: "evidence",
+        }),
+      }),
+      expect.objectContaining({
+        metric_name: "lotus_workbench_panel_state_total",
+        labels: expect.objectContaining({
+          operation: "idea.candidate.presentation-receipt",
           state: "error",
           reason: "evidence",
         }),
