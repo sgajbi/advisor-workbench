@@ -207,9 +207,18 @@ describe("useReportOrderingWorkflow", () => {
     }
   });
 
-  it.each([undefined, null, "", "SOMETHING_NEW"])(
-    "does not poll a submitted request when its lifecycle is not reported: %s",
-    async (status) => {
+  it.each([
+    [undefined, undefined],
+    [null, null],
+    ["", ""],
+    ["SOMETHING_NEW", "SOMETHING_NEW"],
+    ["queued", undefined],
+    ["queued", null],
+    ["queued", ""],
+    ["queued", "SOMETHING_NEW"],
+  ])(
+    "does not poll a submitted request when lifecycle evidence is not reported: status=%s step=%s",
+    async (status, currentStep) => {
       const unreportedHistory = buildReportJobListResponse();
       unreportedHistory.items[0] = {
         ...unreportedHistory.items[0],
@@ -219,10 +228,13 @@ describe("useReportOrderingWorkflow", () => {
       const item = unreportedHistory.items[0] as unknown as Record<string, unknown>;
       if (status === undefined) {
         delete item.status;
-        delete item.currentStep;
       } else {
         item.status = status;
-        item.currentStep = status;
+      }
+      if (currentStep === undefined) {
+        delete item.currentStep;
+      } else {
+        item.currentStep = currentStep;
       }
       historyMock
         .mockResolvedValueOnce(buildReportJobListResponse())
