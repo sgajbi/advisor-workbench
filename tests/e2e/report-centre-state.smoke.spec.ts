@@ -233,7 +233,7 @@ test("retains confirmed active requests when automatic refresh fails", async ({ 
   await expect(history.getByText("Queued", { exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(
     page.getByText(
-      "The latest lifecycle check did not complete. Previously confirmed requests remain visible and another check is scheduled.",
+      "The latest lifecycle check did not complete. Previously confirmed requests remain visible; use Refresh to check again.",
       { exact: true },
     ),
   ).toBeVisible({ timeout: 12_000 });

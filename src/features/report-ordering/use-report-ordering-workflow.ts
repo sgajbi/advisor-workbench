@@ -24,7 +24,7 @@ import {
   type ReportOrderingCatalogueState,
   type ReportOrderingSubmissionState,
 } from "./report-ordering-screen-state";
-import { isTerminalReportJobStatus } from "./report-job-lifecycle";
+import { isActiveReportJobStatus } from "./report-job-lifecycle";
 import {
   applyReportScopeReadiness,
   buildReportOrderingViewModel,
@@ -408,17 +408,16 @@ export function useReportOrderingWorkflow({
     ) return;
     const submittedHandle = submittedHandlesByPortfolio[portfolioId] ?? null;
     const hasActiveHistory = history?.items.some(
-      (item) => !isTerminalReportJobStatus(item.status),
+      (item) => isActiveReportJobStatus(item.status),
     ) ?? false;
-    const submittedLifecycleConfirmed = Boolean(
+    const submittedLifecycleObserved = Boolean(
       submittedHandle &&
         history?.items.some(
           (item) =>
-            item.reportJobId === submittedHandle.report_job_id &&
-            isTerminalReportJobStatus(item.status),
+            item.reportJobId === submittedHandle.report_job_id,
         ),
     );
-    if (!hasActiveHistory && (!submittedHandle || submittedLifecycleConfirmed)) return;
+    if (!hasActiveHistory && (!submittedHandle || submittedLifecycleObserved)) return;
 
     const timer = window.setTimeout(() => {
       void loadHistory();

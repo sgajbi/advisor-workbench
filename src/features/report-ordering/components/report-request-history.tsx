@@ -54,7 +54,7 @@ export function ReportRequestHistory({
             <WorkbenchInlineRefreshNote message="Refreshing recent requests. Previously confirmed lifecycle evidence remains visible." />
           ) : null}
           {refreshFailed ? (
-            <WorkbenchInlineRefreshNote message="The latest lifecycle check did not complete. Previously confirmed requests remain visible and another check is scheduled." />
+            <WorkbenchInlineRefreshNote message="The latest lifecycle check did not complete. Previously confirmed requests remain visible; use Refresh to check again." />
           ) : null}
           <div className={styles.historyResponsive} data-testid="report-request-history-layout">
             <div className={styles.historyDesktop}>
