@@ -92,6 +92,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("as_of_date"),
       inputType: z.literal("business_date"),
       requirement: z.enum(["required", "optional"]),
+      defaultingPolicy: z.literal("caller_required"),
       valueSource: z.literal("caller"),
     })
     .strict(),
@@ -100,6 +101,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("reporting_currency"),
       inputType: z.literal("currency"),
       requirement: z.enum(["required", "optional"]),
+      defaultingPolicy: z.literal("portfolio_currency_when_omitted"),
       valueSource: z.literal("portfolio_context_or_caller"),
     })
     .strict(),
@@ -108,6 +110,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("benchmark_code"),
       inputType: z.literal("benchmark"),
       requirement: z.literal("optional"),
+      defaultingPolicy: z.literal("portfolio_benchmark_when_omitted"),
       valueSource: z.literal("gateway_eligible_benchmark"),
     })
     .strict(),
@@ -116,6 +119,7 @@ const configurationFieldSchema = z.union([
       fieldId: z.literal("allocation_dimensions"),
       inputType: z.literal("multi_select"),
       requirement: z.literal("optional"),
+      defaultingPolicy: z.literal("asset_class_when_omitted"),
       valueSource: z.literal("report_catalogue"),
     })
     .strict(),
@@ -180,11 +184,10 @@ const reportFamilySchema = z
   })
   .strict()
   .superRefine((family, context) => {
+    const configurationFieldIds = family.configurationFields.map((field) => field.fieldId);
     family.configurationFields.forEach((field, fieldIndex) => {
       if (
-        family.configurationFields.findIndex(
-          (candidate) => candidate.fieldId === field.fieldId,
-        ) !== fieldIndex
+        configurationFieldIds.indexOf(field.fieldId) !== fieldIndex
       ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
@@ -205,6 +208,25 @@ const reportFamilySchema = z
           path: ["configurationFields", fieldIndex, "fieldId"],
         });
       }
+    });
+
+    family.sections.forEach((section, sectionIndex) => {
+      section.dependencyFieldIds.forEach((dependencyFieldId, dependencyIndex) => {
+        if (!configurationFieldIds.includes(dependencyFieldId)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Report section dependencies must identify an admitted configuration field",
+            path: ["sections", sectionIndex, "dependencyFieldIds", dependencyIndex],
+          });
+        }
+        if (section.dependencyFieldIds.indexOf(dependencyFieldId) !== dependencyIndex) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Report section dependency identifiers must be unique",
+            path: ["sections", sectionIndex, "dependencyFieldIds", dependencyIndex],
+          });
+        }
+      });
     });
   });
 
@@ -251,9 +273,9 @@ const reportJobListItemSchema = z
     region: z.string().min(1),
     portfolioScope: portfolioScopeSchema,
     asOfDate: z.string().min(1),
-    status: z.string().min(1),
+    status: z.string().nullable().optional(),
     failureCategory: z.string().nullable(),
-    currentStep: z.string().min(1),
+    currentStep: z.string().nullable().optional(),
     retryEligible: z.boolean(),
     cancelRequested: z.boolean(),
     idempotencyKey: z.string().min(1),

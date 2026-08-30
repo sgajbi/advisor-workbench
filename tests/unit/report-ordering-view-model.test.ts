@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  parseReportJobListResponse,
   parseReportOrderingResponse,
   type ReportJobListItem,
 } from "@/features/report-ordering/contracts";
@@ -161,6 +162,28 @@ describe("report ordering view model", () => {
     response.items[0].currentStep = "SOMETHING_NEW";
 
     expect(toReportRequestRows(response.items)[0]).toEqual(
+      expect.objectContaining({
+        statusLabel: "Status not reported",
+        tone: "default",
+      }),
+    );
+  });
+
+  it.each([
+    ["status", undefined],
+    ["status", null],
+    ["status", ""],
+    ["currentStep", undefined],
+    ["currentStep", null],
+    ["currentStep", ""],
+  ])("keeps the affected request visible when %s is %s", (key, value) => {
+    const response = buildReportJobListResponse();
+    const item = response.items[0] as Record<string, unknown>;
+    if (value === undefined) delete item[key];
+    else item[key] = value;
+
+    const parsed = parseReportJobListResponse(response);
+    expect(toReportRequestRows(parsed.items)[0]).toEqual(
       expect.objectContaining({
         statusLabel: "Status not reported",
         tone: "default",

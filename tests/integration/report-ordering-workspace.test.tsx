@@ -1598,6 +1598,10 @@ describe("ReportOrderingWorkspace", () => {
       payload.reportFamilies[0].configurationFields.filter(
         (field) => field.fieldId === "as_of_date",
       );
+    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map((section) => ({
+      ...section,
+      dependencyFieldIds: [],
+    }));
     optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
 
     render(<ReportOrderingWorkspace portfolio={portfolio} />);

@@ -11,6 +11,7 @@ import type {
   ReportOutputFormat,
   ReportSection,
 } from "./contracts";
+import { normalizeReportJobLifecycleValue } from "./report-job-lifecycle";
 
 export type ReportOrderingConfiguration = {
   familyId: string;
@@ -565,34 +566,14 @@ function clientReleaseLabel(posture: ReportFamily["clientReleasePosture"]): stri
     : "For internal control use only. Client distribution is not supported.";
 }
 
-const REPORT_JOB_LIFECYCLE_VALUES = [
-  "accepted",
-  "queued",
-  "collecting_data",
-  "data_ready",
-  "rendering",
-  "completed",
-  "archiving",
-  "archived",
-  "completed_with_warnings",
-  "failed",
-  "cancelled",
-] as const;
-
-function isReportJobLifecycleValue(value: string): boolean {
-  return (REPORT_JOB_LIFECYCLE_VALUES as readonly string[]).includes(value);
-}
-
 function reportLifecycleCopy(
-  status: string,
-  currentStep: string,
+  status: string | null | undefined,
+  currentStep: string | null | undefined,
   failureCategory: string | null,
 ) {
-  const normalized = status.toLowerCase();
-  if (
-    !isReportJobLifecycleValue(normalized) ||
-    !isReportJobLifecycleValue(currentStep.toLowerCase())
-  ) {
+  const normalized = normalizeReportJobLifecycleValue(status);
+  const normalizedStep = normalizeReportJobLifecycleValue(currentStep);
+  if (!normalized || !normalizedStep) {
     return {
       label: "Status not reported",
       detail: "Reporting returned a lifecycle state that this screen cannot safely interpret.",
