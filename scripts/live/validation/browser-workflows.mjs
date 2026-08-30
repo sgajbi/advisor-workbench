@@ -271,6 +271,19 @@ export function createBrowserValidationHelpers({
     summary.uiChecks.push({ description, kind: "table", rowCount: count });
   }
 
+  async function assertGridHasRows(locator, minimumRows, description) {
+    await expect(locator).toBeVisible({ timeout: timeoutMs });
+    const rows = locator.locator('[role="row"]:has([role="gridcell"])');
+    await expect(rows.first()).toBeVisible({ timeout: timeoutMs });
+    const count = await rows.count();
+    if (count < minimumRows) {
+      throw new Error(
+        `${description} expected at least ${minimumRows} rendered rows but found ${count}.`,
+      );
+    }
+    summary.uiChecks.push({ description, kind: "grid", rowCount: count });
+  }
+
   function recordUiCheck(check) {
     summary.uiChecks.push(check);
   }
@@ -333,6 +346,7 @@ export function createBrowserValidationHelpers({
   }
 
   return {
+    assertGridHasRows,
     assertListHasItems,
     assertTableHasRows,
     recordUiCheck,
@@ -769,7 +783,7 @@ export async function validateAdvisoryJourneyScreens(
     portfolioWorkspace,
     timeoutMs,
     screenshotAdvisoryJourney,
-    assertTableHasRows,
+    assertGridHasRows,
   },
 ) {
   const expectedIdeaCandidateId = requireHighCashIdeaCandidateId(
@@ -927,13 +941,16 @@ export async function validateAdvisoryJourneyScreens(
         "Durable storage: Backed",
         { timeout: timeoutMs },
       );
-      const candidateTable = tableByExactLabel(page, "Idea candidate review queue");
-      await assertTableHasRows(
-        candidateTable,
+      const candidateGrid = page.getByRole("grid", {
+        name: "Idea candidate review queue",
+        exact: true,
+      });
+      await assertGridHasRows(
+        candidateGrid,
         1,
         "Idea candidate review queue",
       );
-      const canonicalCandidateLink = candidateTable.getByRole("link", {
+      const canonicalCandidateLink = candidateGrid.getByRole("link", {
         name: `High Cash - ${expectedIdeaCandidateId}`,
         exact: true,
       });

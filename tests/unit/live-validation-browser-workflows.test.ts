@@ -606,6 +606,15 @@ describe("live validation browser workflow helpers", () => {
     expect(source).not.toContain("locator.locator('[role=\"listitem\"]')");
   });
 
+  it("counts only rendered data rows for virtualized grids", () => {
+    const source = createBrowserValidationHelpers.toString();
+
+    expect(source).toContain(
+      "locator.locator('[role=\"row\"]:has([role=\"gridcell\"])')",
+    );
+    expect(source).toContain('kind: "grid"');
+  });
+
   it("waits for the source-backed Portfolio Review decision brief", () => {
     const source = browserWorkflowModule.validatePortfolioPanels.toString();
 

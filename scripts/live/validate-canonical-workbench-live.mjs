@@ -2153,7 +2153,7 @@ async function run() {
       portfolioWorkspace,
       timeoutMs,
       screenshotAdvisoryJourney: browserHelpers.screenshotAdvisoryJourney,
-      assertTableHasRows: browserHelpers.assertTableHasRows,
+      assertGridHasRows: browserHelpers.assertGridHasRows,
     });
     await validateRiskPanel(page, {
       summary,
