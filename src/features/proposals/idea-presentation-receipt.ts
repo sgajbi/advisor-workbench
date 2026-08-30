@@ -87,6 +87,38 @@ export async function buildIdeaPresentationReceiptDraft({
   };
 }
 
+export async function buildIdeaPresentationReceiptDrafts({
+  presentedAtUtc,
+  sources,
+  visibleCandidateIds,
+}: {
+  presentedAtUtc: string;
+  sources: ReadonlyMap<string, IdeaPresentationSource>;
+  visibleCandidateIds: string[];
+}): Promise<Array<{ candidateId: string; request: IdeaPresentationReceiptDraft }>> {
+  requireVisibleCandidateSet(visibleCandidateIds);
+  const digest = await digestVisibleCandidateIds(visibleCandidateIds);
+  return visibleCandidateIds.map((candidateId) => {
+    const source = sources.get(candidateId);
+    if (!source) {
+      throw new Error("Visible Idea candidate source evidence is unavailable.");
+    }
+    return {
+      candidateId,
+      request: {
+        presentedAtUtc,
+        rankAtPresentation: source.rank,
+        visibleCandidateCount: visibleCandidateIds.length,
+        queueSnapshotDigest: digest,
+        queuePolicyVersion: source.queuePolicyVersion,
+        rankingPolicyVersion: source.rankingPolicyVersion,
+        candidateMaterialVersion: source.candidateMaterialVersion,
+        candidateEvidenceVersion: source.candidateEvidenceVersion,
+      },
+    };
+  });
+}
+
 export async function digestVisibleCandidateIds(
   candidateIds: string[],
 ): Promise<`sha256:${string}`> {
