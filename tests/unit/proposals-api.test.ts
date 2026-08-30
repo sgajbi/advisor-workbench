@@ -841,9 +841,9 @@ describe("proposal api", () => {
         metric_name: "lotus_workbench_api_request_duration_seconds",
         labels: expect.objectContaining({
           operation: "idea.candidate.feedback",
-          status_class: "network",
+          status_class: "2xx",
           state: "error",
-          error_category: "network",
+          error_category: "evidence",
         }),
       }),
       expect.objectContaining({
@@ -851,7 +851,7 @@ describe("proposal api", () => {
         labels: expect.objectContaining({
           operation: "idea.candidate.feedback",
           state: "error",
-          reason: "network",
+          reason: "evidence",
         }),
       }),
     ]);
