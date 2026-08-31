@@ -7386,7 +7386,9 @@ never mistakes fetch, filtering, render buffering, or a hidden browser tab for a
 3. Observe exact candidate content against the browser viewport at 50% intersection and only while
    the document is visible. Browser intersection applies ancestor clipping from the bounded grid
    scrollport, so neither an off-screen grid nor a render-buffer row can become presentation
-   evidence.
+   evidence. Clear queued intersection state and disconnect observation when the document becomes
+   hidden; foregrounding must produce a fresh browser intersection result rather than replaying
+   cached visibility.
 4. Coalesce the currently visible set into visual order, hash the exact identity array once, and
    freeze each candidate's UTC observation, source versions, payload, and idempotency key across
    retry.
