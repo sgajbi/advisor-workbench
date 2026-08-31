@@ -86,6 +86,102 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
+  it("requires every preset result to end on the admitted valuation date", () => {
+    const source = {
+      ...SOURCE,
+      payload: {
+        periods: [
+          { start_date: "2026-01-01", end_date: "2026-02-24" },
+          { start_date: "2026-02-01", end_date: "2026-02-24" },
+        ],
+      },
+    };
+
+    expect(isPerformanceRiskSourceCurrent(source, IDENTITY)).toBe(true);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            periods: [
+              { start_date: "2026-01-01", end_date: "2026-03-27" },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
+  it("binds attribution controls and every returned set to the requested decomposition", () => {
+    const identity = {
+      ...IDENTITY,
+      attributionType: "ACTIVE_RISK",
+      groupingDimension: "ASSET_CLASS",
+    };
+    const source = {
+      ...SOURCE,
+      payload: {
+        controls: {
+          selected_attribution_type: "ACTIVE_RISK",
+          selected_grouping_dimension: "ASSET_CLASS",
+        },
+        periods: [
+          {
+            start_date: "2026-01-01",
+            end_date: "2026-02-24",
+            attribution_sets: [
+              {
+                attribution_type: "ACTIVE_RISK",
+                grouping_dimension: "ASSET_CLASS",
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(isPerformanceRiskSourceCurrent(source, identity)).toBe(true);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            ...source.payload,
+            controls: {
+              selected_attribution_type: "TOTAL_RISK",
+              selected_grouping_dimension: "SECTOR",
+            },
+          },
+        },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            ...source.payload,
+            periods: [
+              {
+                start_date: "2026-01-01",
+                end_date: "2026-02-24",
+                attribution_sets: [
+                  {
+                    attribution_type: "TOTAL_RISK",
+                    grouping_dimension: "SECTOR",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        identity,
+      ),
+    ).toBe(false);
+  });
+
   it("fails closed before a stale response can be cached or rendered", () => {
     expect(() =>
       requireCurrentPerformanceRiskSource(

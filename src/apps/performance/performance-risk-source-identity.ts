@@ -13,6 +13,8 @@ export type PerformanceRiskSourceIdentity = Readonly<{
   benchmark: string | null;
   reportStartDate?: string;
   reportEndDate?: string;
+  attributionType?: string;
+  groupingDimension?: string;
 }>;
 
 export function isPerformanceRiskSourceCurrent(
@@ -24,7 +26,8 @@ export function isPerformanceRiskSourceCurrent(
     source.period === identity.period &&
     source.as_of_date === identity.asOfDate &&
     (source.benchmark_code ?? null) === identity.benchmark &&
-    hasRequestedRiskWindow(source, identity)
+    hasRequestedRiskWindow(source, identity) &&
+    hasRequestedRiskAttribution(source, identity)
   );
 }
 
@@ -33,7 +36,8 @@ function hasRequestedRiskWindow(
   identity: PerformanceRiskSourceIdentity,
 ): boolean {
   if (!identity.reportStartDate && !identity.reportEndDate) {
-    return true;
+    const periods = readRiskPeriods(source.payload);
+    return periods?.every((period) => period.end_date === identity.asOfDate) ?? true;
   }
 
   const periods = readRiskPeriods(source.payload);
@@ -43,6 +47,54 @@ function hasRequestedRiskWindow(
         (period) =>
           (!identity.reportStartDate || period.start_date === identity.reportStartDate) &&
           (!identity.reportEndDate || period.end_date === identity.reportEndDate),
+      ),
+  );
+}
+
+function hasRequestedRiskAttribution(
+  source: PerformanceRiskSource,
+  identity: PerformanceRiskSourceIdentity,
+): boolean {
+  if (!identity.attributionType && !identity.groupingDimension) {
+    return true;
+  }
+  if (!identity.attributionType || !identity.groupingDimension) {
+    return false;
+  }
+
+  const payload = source.payload;
+  if (!payload || typeof payload !== "object" || !("controls" in payload)) {
+    return false;
+  }
+  const controls = payload.controls;
+  if (
+    !controls ||
+    typeof controls !== "object" ||
+    !("selected_attribution_type" in controls) ||
+    controls.selected_attribution_type !== identity.attributionType ||
+    !("selected_grouping_dimension" in controls) ||
+    controls.selected_grouping_dimension !== identity.groupingDimension
+  ) {
+    return false;
+  }
+
+  if (!("periods" in payload) || !Array.isArray(payload.periods)) {
+    return false;
+  }
+  return payload.periods.every(
+    (period) =>
+      period &&
+      typeof period === "object" &&
+      "attribution_sets" in period &&
+      Array.isArray(period.attribution_sets) &&
+      period.attribution_sets.every(
+        (set: unknown) =>
+          set &&
+          typeof set === "object" &&
+          "attribution_type" in set &&
+          set.attribution_type === identity.attributionType &&
+          "grouping_dimension" in set &&
+          set.grouping_dimension === identity.groupingDimension,
       ),
   );
 }

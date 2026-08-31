@@ -1099,12 +1099,18 @@ describe("PerformanceRiskMode", () => {
     vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
       buildFixtureRiskConcentration(scenario.workspace, "YTD"),
     );
-    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
-      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET", {
-        attributionType: "ACTIVE_RISK",
-        groupingDimension: "ISSUER",
-      }),
+    const blockedAttribution = buildFixtureRiskAttribution(
+      scenario.workspace,
+      "YTD",
+      "NET",
     );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue({
+      ...blockedAttribution,
+      state: "blocked",
+      payload: blockedAttribution.payload
+        ? { ...blockedAttribution.payload, periods: [] }
+        : null,
+    });
     vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
       buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
     );

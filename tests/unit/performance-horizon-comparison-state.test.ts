@@ -117,4 +117,25 @@ describe("performance-horizon-comparison-state", () => {
       ),
     ).toBe(false);
   });
+
+  it("requires benchmark absence when no benchmark was requested", () => {
+    const comparison = {
+      ...buildPerformanceHorizonComparison("PF_1001"),
+      portfolio_id: "PF_1001",
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-03-27",
+      as_of_date: "2026-03-27",
+      reporting_currency: "SGD",
+      benchmark_code: null,
+    };
+    const unassignedRequest = { ...request, benchmark: undefined };
+
+    expect(isHorizonComparisonCurrent(comparison, unassignedRequest)).toBe(true);
+    expect(
+      isHorizonComparisonCurrent(
+        { ...comparison, benchmark_code: "BMK_UNSOLICITED" },
+        unassignedRequest,
+      ),
+    ).toBe(false);
+  });
 });
