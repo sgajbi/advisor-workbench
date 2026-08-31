@@ -64,7 +64,9 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(
       screen
         .getByLabelText("Reporting currency")
-        .closest("div[title='Full currency restatement is not available for every workflow yet.']")
+        .closest(
+          "div[title='Book-style holdings honor reporting currency, but performance snapshot does not.']"
+        )
     ).not.toBeNull();
     expect(screen.getByText(/Period 30D\./i)).toBeInTheDocument();
     const contextControls = screen.getByRole("group", { name: "Context controls" });
@@ -137,14 +139,14 @@ describe("PortfolioWorkspaceToolbar", () => {
 
     expect(
       screen.getByText(
-        /Some adjacent workflows keep their own date controls\./i
+        /Historical review is not available across the portfolio record\./i
       )
     ).toBeInTheDocument();
     expect(
       screen
         .getByLabelText("As of")
         .closest(
-          "div[title='Historical review is not available for every adjacent workflow yet.']"
+          "div[title='Most portfolio modules honor as_of_date, but rebalance and performance snapshot still follow separate control semantics.']"
         )
     ).not.toBeNull();
     expect(
@@ -156,8 +158,68 @@ describe("PortfolioWorkspaceToolbar", () => {
       screen
         .getByLabelText("Reporting currency")
         .closest(
-          "div[title='Full currency restatement is not available for every workflow yet.']"
+          "div[title='Workflow, readiness, and performance snapshot do not yet share reporting currency.']"
         )
     ).not.toBeNull();
+  });
+
+  it("enables a partial historical capability only after the screen modules are proven", () => {
+    const onControlsChange = vi.fn();
+    render(
+      <PortfolioWorkspaceToolbar
+        controls={{
+          asOfDate: "2026-03-29",
+          reportingCurrency: "USD",
+          viewMode: "summary",
+          timeWindow: "30D",
+          customStartDate: "",
+          customEndDate: "",
+          columnMode: "essential",
+          hideEmptyModules: false,
+          focusExceptions: false,
+        }}
+        context={{
+          selectedAsOfDate: "2026-03-29",
+          selectedReportingCurrency: "USD",
+          timeWindow: "30D",
+          periodLabel: "30D",
+          viewMode: "summary",
+          columnMode: "essential",
+          hideEmptyModules: false,
+          focusExceptions: false,
+          effectivePeriodStartDate: "2026-03-01",
+          effectivePeriodEndDate: "2026-03-29",
+          usesCustomDateRange: false,
+          hasHistoricalGap: true,
+          currencyOptions: ["USD"],
+          historicalSnapshotState: "partial",
+          historicalSnapshotReason: "Dated portfolio records are supported.",
+          supportsHistoricalSnapshots: true,
+          historicalDateRange: {
+            earliest: "2024-01-15",
+            latest: "2026-05-12",
+          },
+          reportingCurrencyRestatementState: "partial",
+          reportingCurrencyRestatementReason: "Reporting-currency restatement is not uniform.",
+          supportsReportingCurrencyRestatement: false,
+        }}
+        onControlsChange={onControlsChange}
+        onExport={vi.fn()}
+        quickActions={[]}
+      />
+    );
+
+    const dateControl = screen.getByLabelText("As of");
+    expect(dateControl).toBeEnabled();
+    expect(dateControl).toHaveAttribute("min", "2024-01-15");
+    expect(dateControl).toHaveAttribute("max", "2026-05-12");
+    expect(
+      screen.getByText(
+        "Portfolio records use the selected business date; rebalance remains the latest source run."
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.change(dateControl, { target: { value: "2026-03-28" } });
+    expect(onControlsChange).toHaveBeenCalledWith({ asOfDate: "2026-03-28" });
   });
 });

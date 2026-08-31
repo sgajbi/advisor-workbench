@@ -10,6 +10,7 @@ import type {
   PortfolioWorkspace,
 } from "./types";
 import { buildActivityMovementSummary } from "./portfolio-income-activity-view-model";
+import { canUsePortfolioHistoricalReview } from "./portfolio-control-capabilities";
 
 export const PORTFOLIO_TIME_WINDOW_OPTIONS = ["7D", "30D", "MTD", "QTD", "YTD", "1Y", "SI"] as const;
 export const PORTFOLIO_VIEW_MODE_OPTIONS = ["summary", "detailed"] as const;
@@ -48,6 +49,10 @@ export type PortfolioWorkspaceContext = {
   historicalSnapshotState: "supported" | "partial" | "unsupported";
   historicalSnapshotReason: string;
   supportsHistoricalSnapshots: boolean;
+  historicalDateRange?: {
+    earliest: string;
+    latest: string;
+  };
   reportingCurrencyRestatementState: "supported" | "partial" | "unsupported";
   reportingCurrencyRestatementReason: string;
   supportsReportingCurrencyRestatement: boolean;
@@ -118,6 +123,15 @@ export function buildPortfolioWorkspaceContext(
   const historicalSnapshotReason =
     workspace?.control_capabilities?.historical_snapshots.reason ??
     "Historical as-of review is not available for this portfolio yet.";
+  const historicalDateRange =
+    workspace?.control_capabilities?.historical_snapshots.earliest_available_as_of_date &&
+    workspace.control_capabilities.historical_snapshots.latest_available_as_of_date
+      ? {
+          earliest:
+            workspace.control_capabilities.historical_snapshots.earliest_available_as_of_date,
+          latest: workspace.control_capabilities.historical_snapshots.latest_available_as_of_date,
+        }
+      : undefined;
   const reportingCurrencyState =
     workspace?.control_capabilities?.reporting_currency_restatement.state ?? "unsupported";
   const reportingCurrencyReason =
@@ -155,7 +169,8 @@ export function buildPortfolioWorkspaceContext(
     currencyOptions,
     historicalSnapshotState,
     historicalSnapshotReason,
-    supportsHistoricalSnapshots: historicalSnapshotState === "supported",
+    supportsHistoricalSnapshots: canUsePortfolioHistoricalReview(workspace),
+    ...(historicalDateRange ? { historicalDateRange } : {}),
     reportingCurrencyRestatementState: reportingCurrencyState,
     reportingCurrencyRestatementReason: reportingCurrencyReason,
     supportsReportingCurrencyRestatement: reportingCurrencyState === "supported",
