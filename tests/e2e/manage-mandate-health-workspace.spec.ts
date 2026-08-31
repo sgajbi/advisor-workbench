@@ -1,3 +1,6 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
@@ -10,6 +13,9 @@ test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const secondaryPortfolioId = "PB_SG_INCOME_001";
+const evidenceDirectory = process.env.ISSUE_974_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_974_EVIDENCE_DIR, "mandate-health")
+  : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
 test.beforeAll(async () => {
@@ -44,8 +50,8 @@ test("Mandate Health preserves source truth across partial and complete attentio
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 1024, height: 900 },
-    { width: 720, height: 900 },
-    { width: 390, height: 844 },
+    { width: 768, height: 900 },
+    { width: 519, height: 844 },
   ]) {
     fixtureGateway?.setMandateHealthExceptionMode("windows");
     fixtureGateway?.setMandateHealthPortfolioScope(portfolioId);
@@ -76,6 +82,30 @@ test("Mandate Health preserves source truth across partial and complete attentio
       queue.getByRole("button", { name: "Benchmark mapping requires review" }),
     ).toBeVisible();
     await expect(queue.getByText("No open items")).toHaveCount(0);
+    const geometry = await page.evaluate(() => {
+      const summary = document.querySelector<HTMLElement>(
+        '[aria-label="Mandate health summary"]',
+      );
+      const workspace = document.querySelector<HTMLElement>(
+        '[data-testid="mandate-health-review-workspace"]',
+      );
+      if (!summary || !workspace) {
+        throw new Error("Mandate Health workspace geometry is unavailable.");
+      }
+      return {
+        summaryColumns: getComputedStyle(summary).gridTemplateColumns.split(" ").length,
+        workspaceColumns: getComputedStyle(workspace).gridTemplateColumns.split(" ").length,
+      };
+    });
+    expect(geometry.summaryColumns).toBe(viewport.width > 1200 ? 4 : viewport.width > 720 ? 2 : 1);
+    expect(geometry.workspaceColumns).toBe(viewport.width > 1200 ? 2 : 1);
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: path.join(evidenceDirectory, `mandate-health-${viewport.width}.png`),
+        fullPage: true,
+      });
+    }
     await testInfo.attach(`mandate-health-partial-${viewport.width}`, {
       body: await page.screenshot({ fullPage: true }),
       contentType: "image/png",
