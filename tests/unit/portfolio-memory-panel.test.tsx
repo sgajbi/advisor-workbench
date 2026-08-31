@@ -75,6 +75,10 @@ describe("PortfolioMemoryPanel", () => {
     expect(screen.getByText("PortfolioRealizedTaxSummary:v1 (1)")).toBeInTheDocument();
     expect(screen.getByText("Source Owner Store Query: No")).toBeInTheDocument();
     expect(screen.getAllByText("Outcome Review Created").length).toBeGreaterThan(1);
+    expect(
+      screen.getByRole("button", { name: "Outcome Review Created 1" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Review required/ })).not.toBeInTheDocument();
     expect(screen.getAllByText("Outcome Review Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Historical Event Log")).toBeInTheDocument();
     expect(screen.getByText("Recommended Actions")).toBeInTheDocument();
