@@ -83,13 +83,10 @@ describe("E2E fixture scenario registry", () => {
     }
   });
 
-  it("makes both formerly unreachable historical-review assertions cashflow proof", () => {
+  it("registers the fail-closed historical-review assertion as cashflow proof", () => {
     const cashflow = registry.families.portfolio.scenarios.cashflow.expected_tests;
     expect(cashflow).toContain(
-      "unconfirmed historical review keeps the source-confirmed context active",
-    );
-    expect(cashflow).toContain(
-      "source-confirmed historical review replaces dated evidence atomically",
+      "historical review stays unavailable until aggregate evidence can refresh atomically",
     );
   });
 
@@ -105,7 +102,7 @@ describe("E2E fixture scenario registry", () => {
     );
 
     expect(expectedExecutions).toEqual({
-      portfolio: 12,
+      portfolio: 11,
       performance: 25,
       manage: 5,
       reports: 19,
