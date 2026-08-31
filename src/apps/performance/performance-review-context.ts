@@ -19,22 +19,25 @@ export function isPerformanceReviewContextCurrent(
     return false;
   }
 
-  if (request.asOfDate && source.requested_as_of_date !== request.asOfDate) {
+  const requestedAsOfDate = request.asOfDate?.trim() || null;
+  if (source.requested_as_of_date !== requestedAsOfDate) {
     return false;
   }
 
   const requestedCurrency = normalizeCurrency(request.reportingCurrency);
   if (
-    requestedCurrency &&
     normalizeCurrency(source.requested_reporting_currency) !== requestedCurrency
   ) {
     return false;
   }
 
-  return !(
+  if (source.reporting_currency_state !== "applied") {
+    return true;
+  }
+
+  return Boolean(
     requestedCurrency &&
-    source.reporting_currency_state === "applied" &&
-    normalizeCurrency(source.effective_reporting_currency) !== requestedCurrency
+      normalizeCurrency(source.effective_reporting_currency) === requestedCurrency,
   );
 }
 
