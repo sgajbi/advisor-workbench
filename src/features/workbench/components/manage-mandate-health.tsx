@@ -9,6 +9,7 @@ import {
   SourceWindowNavigation,
   useAdmittedSourceSelection,
 } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import { buildDpmCommandCenterPanelModel } from "@/features/workbench/dpm-command-center-view-model";
 import {
   clampMandateHealthPercent,
@@ -40,6 +41,8 @@ import type {
 } from "@/features/workbench/manage-workspace-view-model";
 
 import type { ManageWorkspaceData } from "../manage-workspace-data";
+
+import styles from "./manage-mandate-health.module.css";
 
 type Props = {
   data: ManageWorkspaceData;
@@ -106,7 +109,8 @@ export default function ManageMandateHealth({ data }: Props) {
     <SectionBlock
       title={MANAGE_WORKFLOW_LABELS.mandateReview}
       subtitle="Review mandate posture, select an attention item, and inspect its source-owned next step and evidence."
-      className="manage-mandate-panel"
+      className={styles.panel}
+      headerClassName={styles.header}
       actions={
         <SemanticBadge tone={toneForState(commandModel.supportabilityState)}>
           {businessStateLabel(commandModel.supportabilityState)}
@@ -125,7 +129,7 @@ export default function ManageMandateHealth({ data }: Props) {
         )}
       />
 
-      <div className="mandate-health-context-row" aria-label="Mandate context">
+      <div className={styles.contextRow} aria-label="Mandate context">
         <span>{mandateType}</span>
         <span>{riskProfile}</span>
         <span>{currency}</span>
@@ -135,7 +139,7 @@ export default function ManageMandateHealth({ data }: Props) {
         </span>
       </div>
 
-      <div className="mandate-health-summary-grid" aria-label="Mandate health summary">
+      <div className={styles.summaryGrid} aria-label="Mandate health summary">
         <HealthSummaryCard
           label={MANAGE_WORKFLOW_LABELS.mandateHealth}
           value={businessStateLabel(commandModel.mandateHealthState)}
@@ -170,7 +174,7 @@ export default function ManageMandateHealth({ data }: Props) {
         />
       </div>
 
-      <div className="mandate-health-review-workspace">
+      <div className={styles.reviewWorkspace}>
         <AttentionReviewQueue
           rows={exceptionRows}
           evidencePosture={exceptionSource.evidencePosture}
@@ -288,13 +292,13 @@ function HealthSummaryCard({
   meter: number | null;
 }) {
   return (
-    <div className={`mandate-health-card is-${tone}`}>
+    <div className={cx(styles.healthCard, tone !== "default" && styles[tone])}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
       {meter === null ? null : (
         <div
-          className="mandate-health-meter"
+          className={styles.meter}
           role="img"
           aria-label={`Source score ${clampMandateHealthPercent(meter)} out of 100`}
         >
@@ -344,7 +348,7 @@ function AttentionReviewQueue({
   const hasAvailableEvidence = evidencePosture !== "unavailable";
   return (
     <section
-      className="manage-overview-table-card mandate-attention-card"
+      className={cx("manage-overview-table-card", styles.attentionCard)}
       aria-labelledby="mandate-attention-heading"
       data-source-window={currentWindow}
       data-source-posture={evidencePosture}
@@ -415,11 +419,11 @@ function AttentionReviewQueue({
       ) : null}
       {hasAvailableEvidence && rows.length ? (
         <div
-          className="mandate-attention-table-scroll"
+          className={styles.tableScroll}
           tabIndex={0}
           aria-label="Mandate attention items"
         >
-          <table className="manage-overview-table">
+          <table className={cx("manage-overview-table", styles.attentionTable)}>
             <thead>
               <tr>
                 <th>Observation</th>
@@ -429,12 +433,13 @@ function AttentionReviewQueue({
             <tbody>
               {rows.map((row) => (
                 <tr
-                  className={row.key === selectedKey ? "is-selected" : undefined}
+                  className={row.key === selectedKey ? styles.selectedRow : undefined}
                   key={row.key}
                 >
-                  <td>
+                  <td className={styles.observationCell}>
                     <button
                       type="button"
+                      className={styles.observationButton}
                       aria-pressed={row.key === selectedKey}
                       onClick={() => onSelect(row.key)}
                     >
@@ -491,7 +496,7 @@ function SelectedReviewItem({
 }) {
   return (
     <aside
-      className="mandate-review-detail"
+      className={styles.reviewDetail}
       aria-label="Selected mandate review item"
       aria-live="polite"
     >
@@ -504,8 +509,8 @@ function SelectedReviewItem({
           {businessStateLabel(row.severity)}
         </SemanticBadge>
       </div>
-      <div className="mandate-review-detail-body">
-        <dl className="mandate-review-facts">
+      <div className={styles.reviewDetailBody}>
+        <dl className={styles.reviewFacts}>
           <div>
             <dt>Workflow status</dt>
             <dd>{businessStateLabel(row.state)}</dd>
@@ -523,11 +528,11 @@ function SelectedReviewItem({
             <dd>{formatBusinessSource(row.source)}</dd>
           </div>
         </dl>
-        <div className="mandate-source-next-step">
+        <div className={styles.nextStep}>
           <span>Source-owned next step</span>
           <strong>{formatMandateAction(row.nextAction)}</strong>
         </div>
-        <details className="mandate-technical-evidence">
+        <details className={styles.technicalEvidence}>
           <summary>Evidence and technical identifiers</summary>
           <dl>
             <div>
@@ -564,7 +569,7 @@ function SelectedReviewItem({
 function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
   return (
     <section
-      className="manage-overview-table-card mandate-health-dimensions-card"
+      className={cx("manage-overview-table-card", styles.dimensionsCard)}
       aria-labelledby="mandate-dimensions-heading"
     >
       <div className="manage-overview-card-header">
@@ -576,7 +581,7 @@ function HealthDimensionsCard({ rows }: { rows: MandateHealthRow[] }) {
         </div>
       </div>
       <div
-        className="mandate-health-dimensions-scroll"
+        className={styles.tableScroll}
         tabIndex={0}
         aria-label="Mandate health dimensions"
       >

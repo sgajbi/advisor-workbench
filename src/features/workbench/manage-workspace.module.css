@@ -35,8 +35,7 @@
   color: #45464d;
 }
 
-.manageScope :global(.manage-overview-panel > .section-block-header),
-.manageScope :global(.manage-mandate-panel > .section-block-header) {
+.manageScope :global(.manage-overview-panel > .section-block-header) {
   margin: -18px -18px 2px;
   padding: 18px;
   border-bottom: 1px solid #c6c6cd;
@@ -44,58 +43,14 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 251, 0.9));
 }
 
-.manageScope :global(.manage-overview-panel > .section-block-header h2),
-.manageScope :global(.manage-mandate-panel > .section-block-header h2) {
+.manageScope :global(.manage-overview-panel > .section-block-header h2) {
   font-size: 20px;
   line-height: 26px;
   letter-spacing: 0;
 }
 
-.manageScope :global(.manage-overview-panel > .section-block-header p),
-.manageScope :global(.manage-mandate-panel > .section-block-header p) {
+.manageScope :global(.manage-overview-panel > .section-block-header p) {
   color: #45464d;
-}
-
-.manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip) {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip > .workbench-summary-metric-card) {
-  position: relative;
-  min-height: 82px;
-  padding: 14px 16px;
-  border-color: #d6dbe0;
-  border-radius: 4px;
-  background:
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 1px 2px rgba(19, 27, 46, 0.04);
-}
-
-.manageScope :global(.manage-mandate-panel .workbench-summary-metric-strip > .workbench-summary-metric-card::before) {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 2px;
-  border-radius: 4px 0 0 4px;
-  background: #e2c383;
-}
-
-.manageScope :global(.manage-mandate-panel .workbench-summary-metric-label) {
-  color: #5f6670;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
-
-.manageScope :global(.manage-mandate-panel .workbench-summary-metric-value) {
-  color: #131b2e;
-  font-size: 18px;
-  line-height: 23px;
-}
-
-.manageScope :global(.manage-mandate-panel > .section-block-header) {
-  align-items: flex-start;
 }
 
 .manageScope :global(.manage-mandate-action-bar) {
@@ -273,285 +228,6 @@
   margin-top: 0;
 }
 
-.manageScope :global(.mandate-health-context-row) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.manageScope :global(.mandate-health-context-row span) {
-  display: inline-flex;
-  min-height: 28px;
-  align-items: center;
-  padding: 4px 9px;
-  border: 1px solid #c6c6cd;
-  border-radius: 2px;
-  background: #f2f4f6;
-  color: #343941;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.mandate-health-summary-grid) {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.manageScope :global(.mandate-health-card) {
-  display: grid;
-  align-content: space-between;
-  gap: 12px;
-  min-height: 116px;
-  padding: 18px 20px;
-  border: 1px solid #c6c6cd;
-  border-left: 4px solid #76777d;
-  border-radius: 2px;
-  background: #ffffff;
-}
-
-.manageScope :global(.mandate-health-card span) {
-  color: #343941;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.mandate-health-card strong) {
-  color: #131b2e;
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 27px;
-}
-
-.manageScope :global(.mandate-health-card small) {
-  color: #5f6670;
-  font-size: 11px;
-  line-height: 16px;
-}
-
-.manageScope :global(.mandate-health-meter) {
-  display: block;
-  height: 4px;
-  overflow: hidden;
-  background: #f2f4f6;
-}
-
-.manageScope :global(.mandate-health-meter span) {
-  display: block;
-  height: 100%;
-  background: #76777d;
-}
-
-.manageScope :global(.mandate-health-card.is-danger) {
-  border-left-color: #ba1a1a;
-}
-
-.manageScope :global(.mandate-health-card.is-danger strong) {
-  color: #ba1a1a;
-}
-
-.manageScope :global(.mandate-health-card.is-danger .mandate-health-meter span) {
-  background: #ba1a1a;
-}
-
-.manageScope :global(.mandate-health-card.is-warn) {
-  border-left-color: #b06000;
-}
-
-.manageScope :global(.mandate-health-card.is-warn strong) {
-  color: #b06000;
-}
-
-.manageScope :global(.mandate-health-card.is-warn .mandate-health-meter span) {
-  background: #f59e0b;
-}
-
-.manageScope :global(.mandate-health-card.is-success) {
-  border-left-color: #137333;
-}
-
-.manageScope :global(.mandate-health-card.is-success strong) {
-  color: #137333;
-}
-
-.manageScope :global(.mandate-health-card.is-success .mandate-health-meter span) {
-  background: #137333;
-}
-
-.manageScope :global(.mandate-health-review-workspace) {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
-  gap: 14px;
-  align-items: start;
-}
-
-.manageScope :global(.mandate-attention-card),
-.manageScope :global(.mandate-review-detail),
-.manageScope :global(.mandate-health-dimensions-card) {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.manageScope :global(.mandate-attention-table-scroll),
-.manageScope :global(.mandate-health-dimensions-scroll) {
-  max-width: 100%;
-  overflow-x: auto;
-  outline: none;
-}
-
-.manageScope :global(.mandate-attention-table-scroll:focus-visible),
-.manageScope :global(.mandate-health-dimensions-scroll:focus-visible) {
-  box-shadow: inset 0 0 0 3px rgba(114, 91, 38, 0.24);
-}
-
-.manageScope :global(.mandate-attention-card .manage-overview-table) {
-  min-width: 0;
-}
-
-.manageScope :global(.mandate-attention-card .manage-overview-table td) {
-  height: 48px;
-}
-
-.manageScope :global(.mandate-attention-card .manage-overview-table tr.is-selected) {
-  background: #f7f1e5;
-  box-shadow: inset 3px 0 0 #725b26;
-}
-
-.manageScope :global(.mandate-attention-card td:first-child) {
-  width: 76%;
-}
-
-.manageScope :global(.mandate-attention-card td button) {
-  width: 100%;
-  min-height: 34px;
-  padding: 4px 0;
-  border: 0;
-  border-radius: 2px;
-  background: transparent;
-  color: #191c1e;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  line-height: 19px;
-  text-align: left;
-}
-
-.manageScope :global(.mandate-attention-card td button:hover) {
-  color: #594410;
-  text-decoration: underline;
-}
-
-.manageScope :global(.mandate-attention-card td button:focus-visible) {
-  box-shadow: 0 0 0 3px rgba(114, 91, 38, 0.28);
-  outline: none;
-}
-
-.manageScope :global(.mandate-review-detail) {
-  display: grid;
-  border: 1px solid #c6c6cd;
-  border-radius: 2px;
-  background: #ffffff;
-}
-
-.manageScope :global(.mandate-review-detail-body) {
-  display: grid;
-  gap: 16px;
-  padding: 18px 20px 20px;
-}
-
-.manageScope :global(.mandate-review-facts) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 18px;
-  margin: 0;
-}
-
-.manageScope :global(.mandate-review-facts > div) {
-  display: grid;
-  gap: 3px;
-  padding: 10px 0;
-  border-bottom: 1px solid #e0e3e5;
-}
-
-.manageScope :global(.mandate-review-facts dt),
-.manageScope :global(.mandate-technical-evidence dt) {
-  color: #5f6670;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 16px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.mandate-review-facts dd),
-.manageScope :global(.mandate-technical-evidence dd) {
-  min-width: 0;
-  margin: 0;
-  color: #191c1e;
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 18px;
-  overflow-wrap: anywhere;
-}
-
-.manageScope :global(.mandate-source-next-step) {
-  display: grid;
-  gap: 5px;
-  padding: 14px 16px;
-  border-left: 3px solid #725b26;
-  background: #f7f1e5;
-}
-
-.manageScope :global(.mandate-source-next-step span) {
-  color: #594410;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 15px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.mandate-source-next-step strong) {
-  color: #191c1e;
-  font-size: 15px;
-  line-height: 20px;
-}
-
-.manageScope :global(.mandate-technical-evidence) {
-  border-top: 1px solid #d6dbe0;
-  padding-top: 12px;
-}
-
-.manageScope :global(.mandate-technical-evidence summary) {
-  border-radius: 2px;
-  color: #594410;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 18px;
-}
-
-.manageScope :global(.mandate-technical-evidence summary:focus-visible) {
-  box-shadow: 0 0 0 3px rgba(114, 91, 38, 0.28);
-  outline: none;
-}
-
-.manageScope :global(.mandate-technical-evidence dl) {
-  display: grid;
-  gap: 8px;
-  margin: 14px 0 0;
-}
-
-.manageScope :global(.mandate-technical-evidence dl > div) {
-  display: grid;
-  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
-  gap: 12px;
-}
 
 .manageScope :global(.manage-readiness-strip) {
   display: flex;
@@ -687,8 +363,7 @@
 .manageScope :global(.construction-alternatives-panel),
 .manageScope :global(.outcome-review-panel),
 .manageScope :global(.proof-pack-panel),
-.manageScope :global(.manage-overview-panel),
-.manageScope :global(.manage-mandate-panel) {
+.manageScope :global(.manage-overview-panel) {
   border-color: #c6c6cd;
   border-radius: 6px;
   background: #ffffff;
@@ -2982,7 +2657,6 @@
 @media (max-width: 1200px) {
   .manageScope :global(.manage-mandate-primary-grid),
   .manageScope :global(.manage-mandate-secondary-grid),
-  .manageScope :global(.mandate-health-review-workspace),
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
   .manageScope :global(.dpm-wave-decision-support-status),
@@ -3010,10 +2684,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .manageScope :global(.mandate-health-summary-grid) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .manageScope :global(.dpm-wave-decision-support-header) {
     flex-direction: column;
   }
@@ -3026,17 +2696,6 @@
 @media (max-width: 720px) {
   .manageScope :global(.workbench-page-container) {
     padding: 12px;
-  }
-
-  .manageScope :global(.mandate-health-summary-grid),
-  .manageScope :global(.mandate-review-facts),
-  .manageScope :global(.mandate-technical-evidence dl > div) {
-    grid-template-columns: 1fr;
-  }
-
-  .manageScope :global(.mandate-health-card),
-  .manageScope :global(.mandate-review-detail-body) {
-    padding: 14px;
   }
 
   .manageScope :global(.manage-overview-card-header) {
