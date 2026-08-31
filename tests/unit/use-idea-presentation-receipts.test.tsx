@@ -462,4 +462,59 @@ describe("useIdeaPresentationReceipts", () => {
     });
     expect(recordReceipt).not.toHaveBeenCalled();
   });
+
+  it("preserves unavailable source posture when an earlier receipt completes", async () => {
+    let resolveReceipt!: (value: { persistenceDecision: string }) => void;
+    recordReceipt.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveReceipt = resolve;
+        }),
+    );
+    render(
+      <Harness
+        sourceQueue={{
+          ...queue,
+          items: [
+            queue.items![0],
+            { rank: 26, candidate: { candidateId: "idea-026" } },
+          ],
+        }}
+      />,
+    );
+    const visibilityObserver = await observer();
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => expect(recordReceipt).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-026"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("receipt-status")).toHaveTextContent(
+        "unavailable",
+      );
+    });
+
+    await act(async () => {
+      resolveReceipt({ persistenceDecision: "accepted" });
+    });
+    expect(screen.getByTestId("receipt-status")).toHaveTextContent(
+      "unavailable",
+    );
+  });
 });
