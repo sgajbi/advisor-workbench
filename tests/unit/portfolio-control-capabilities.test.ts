@@ -110,9 +110,7 @@ describe("portfolio control capabilities", () => {
     const workspace = buildPartialHistoricalWorkspace({ state: "supported" });
 
     expect(canUsePortfolioHistoricalReview(workspace)).toBe(false);
-    expect(isPortfolioHistoricalDateInRange(workspace, "2025-12-31")).toBe(
-      false,
-    );
+    expect(isPortfolioHistoricalDateInRange(workspace, "2025-12-31")).toBe(true);
     expect(isPortfolioHistoricalDateInRange(workspace, "2024-01-14")).toBe(
       false,
     );

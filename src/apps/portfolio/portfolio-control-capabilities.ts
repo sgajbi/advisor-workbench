@@ -17,7 +17,7 @@ export function isPortfolioHistoricalDateInRange(
 ): boolean {
   const capability = workspace.control_capabilities?.historical_snapshots;
   return Boolean(
-    canUsePortfolioHistoricalReview(workspace) &&
+    capability?.state === "supported" &&
     capability?.earliest_available_as_of_date &&
     capability.latest_available_as_of_date &&
     asOfDate >= capability.earliest_available_as_of_date &&
