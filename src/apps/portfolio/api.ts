@@ -498,12 +498,27 @@ export async function getPortfolioWorkspaceSummaryDetails(
     }
     const incomePayload = settledPortfolioPayload(incomeResult);
     const activityPayload = settledPortfolioPayload(activityResult);
-    const performancePayload = settledPortfolioPayload(performanceResult);
-    const periodPerformancePayloads = [
+    const rawPerformancePayload = settledPortfolioPayload(performanceResult);
+    const rawPeriodPerformancePayloads = [
       settledPortfolioPayload(mtdPerformanceResult),
       settledPortfolioPayload(qtdPerformanceResult),
       settledPortfolioPayload(ytdPerformanceResult),
     ];
+    const periodPerformancePayloads = rawPeriodPerformancePayloads.map((payload, index) =>
+      isPortfolioPeriodPerformanceCurrent(
+        payload,
+        performancePeriods[index],
+        performancePeriodQueries[index],
+      )
+        ? payload
+        : null,
+    );
+    const performancePayload =
+      selectedStandardPeriodIndex >= 0
+        ? periodPerformancePayloads[selectedStandardPeriodIndex]
+        : isPortfolioPeriodPerformanceCurrent(rawPerformancePayload, "EXPLICIT", performanceQuery)
+          ? rawPerformancePayload
+          : null;
     const workflowPayload = settledPortfolioPayload(workflowResult);
     const supportingEvidenceFailures = [
       buildSupportingEvidenceFailure(incomePayload, "income_summary"),
@@ -980,6 +995,22 @@ function mapPortfolioPerformancePeriodReturn(
     warnings: payload?.warnings ?? [],
     partial_failures: payload?.partial_failures ?? [],
   };
+}
+
+function isPortfolioPeriodPerformanceCurrent(
+  payload: PortfolioPerformanceSnapshotResponse | null,
+  period: "MTD" | "QTD" | "YTD" | "EXPLICIT",
+  query: URLSearchParams,
+): boolean {
+  if (!payload || payload.period !== period) {
+    return false;
+  }
+  const requestedStart = query.get("report_start_date");
+  const requestedEnd = query.get("report_end_date");
+  return (
+    (!requestedStart || payload.report_start_date === requestedStart) &&
+    (!requestedEnd || payload.report_end_date === requestedEnd)
+  );
 }
 
 function buildPortfolioApiUrl(

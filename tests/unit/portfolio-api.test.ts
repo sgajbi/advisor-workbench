@@ -468,6 +468,8 @@ describe("portfolio api", () => {
         return jsonResponse({
           period: "EXPLICIT",
           as_of_date: "2026-03-28",
+          report_start_date: "2026-03-01",
+          report_end_date: "2026-03-28",
           benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
           portfolio_return_pct: 5.12,
           benchmark_return_pct: 4.91,
@@ -807,6 +809,8 @@ describe("portfolio api", () => {
           return jsonResponse({
             period,
             as_of_date: "2026-03-28",
+            report_start_date: period === "EXPLICIT" ? "2026-03-01" : null,
+            report_end_date: "2026-03-28",
             benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
             portfolio_return_pct: portfolioReturn,
             benchmark_return_pct: null,
@@ -866,6 +870,85 @@ describe("portfolio api", () => {
     expect(recoveredDetails?.supporting_evidence_failures).toEqual([]);
   });
 
+  it("withholds a standard-period return whose source window is newer than the review", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+
+        if (url.includes("/book")) {
+          return jsonResponse({
+            as_of_date: "2026-03-28",
+            summary: {
+              assets_under_management_base: 982500,
+              invested_market_value_base: 900000,
+              cash_market_value_base: 82500,
+              cash_weight_pct: 8.3969,
+              position_count: 3,
+              cash_balance_count: 1,
+            },
+            allocation_views: [{ dimension: "asset_class", buckets: [] }],
+            top_positions: [],
+            positions: [],
+          });
+        }
+        if (url.includes("/income-summary")) {
+          return jsonResponse({ reporting_currency: "USD" });
+        }
+        if (url.includes("/activity-summary")) {
+          return jsonResponse({ reporting_currency: "USD", buckets: [] });
+        }
+        if (url.includes("/performance-snapshot")) {
+          const period = url.includes("period=MTD")
+            ? "MTD"
+            : url.includes("period=QTD")
+              ? "QTD"
+              : url.includes("period=YTD")
+                ? "YTD"
+                : "EXPLICIT";
+          return jsonResponse({
+            period,
+            as_of_date: "2026-03-28",
+            report_start_date: period === "EXPLICIT" ? "2026-03-01" : null,
+            report_end_date: period === "QTD" ? "2026-03-31" : "2026-03-28",
+            benchmark_code: null,
+            portfolio_return_pct: period === "QTD" ? 9.9 : 2.4,
+            benchmark_return_pct: null,
+            excess_return_pct: null,
+            warnings: [],
+            partial_failures: [],
+            sparkline: [],
+          });
+        }
+
+        throw new Error(`Unexpected fetch: ${url}`);
+      }),
+    );
+
+    const details = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+      asOfDate: "2026-03-28",
+      reportingCurrency: "USD",
+      includeProjected: false,
+      timeWindow: "30D",
+      reportStartDate: "2026-03-01",
+      reportEndDate: "2026-03-28",
+    });
+
+    expect(details?.performance?.return_pct).toBe(2.4);
+    expect(details?.performance_period_returns).toEqual([
+      expect.objectContaining({ period: "MTD", return_pct: 2.4 }),
+      expect.objectContaining({ period: "QTD", return_pct: null }),
+      expect.objectContaining({ period: "YTD", return_pct: 2.4 }),
+    ]);
+    expect(details?.supporting_evidence_failures).toContainEqual(
+      expect.objectContaining({
+        evidence_scope: "standard_period_performance",
+        period: "QTD",
+        title: "QTD performance unavailable",
+      }),
+    );
+  });
+
   it("reuses a selected standard-period request and reports one limitation", async () => {
     const performanceRequests: string[] = [];
     vi.stubGlobal(
@@ -904,6 +987,7 @@ describe("portfolio api", () => {
           return jsonResponse({
             period,
             as_of_date: "2026-03-28",
+            report_end_date: "2026-03-28",
             benchmark_code: null,
             portfolio_return_pct: period === "QTD" ? 1.2 : 4.5,
             benchmark_return_pct: null,
@@ -983,6 +1067,8 @@ describe("portfolio api", () => {
           return jsonResponse({
             period,
             as_of_date: "2026-03-28",
+            report_start_date: period === "EXPLICIT" ? "2026-03-01" : null,
+            report_end_date: "2026-03-28",
             benchmark_code: null,
             portfolio_return_pct: period === "MTD" ? null : 1,
             benchmark_return_pct: null,
@@ -1090,6 +1176,7 @@ describe("portfolio api", () => {
           return jsonResponse({
             period,
             as_of_date: "2026-03-28",
+            report_end_date: "2026-03-28",
             benchmark_code: null,
             portfolio_return_pct: 1,
             benchmark_return_pct: null,
@@ -1149,6 +1236,8 @@ describe("portfolio api", () => {
           return jsonResponse({
             period: "EXPLICIT",
             as_of_date: "2026-03-28",
+            report_start_date: "2026-03-01",
+            report_end_date: "2026-03-28",
             benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
             portfolio_return_pct: null,
             benchmark_return_pct: null,
@@ -1182,7 +1271,7 @@ describe("portfolio api", () => {
 
     expect(details?.performance).toMatchObject({
       period: "EXPLICIT",
-      report_start_date: null,
+      report_start_date: "2026-03-01",
       report_end_date: "2026-03-28",
       return_pct: null,
       benchmark_return_pct: null,
@@ -1732,7 +1821,7 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
   });
 
-  it("preserves source-authored performance snapshot report windows", async () => {
+  it("withholds a source-authored performance window that differs from the review", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input) => {
@@ -1795,9 +1884,13 @@ describe("portfolio api", () => {
       reportEndDate: "2026-03-28",
     });
 
-    expect(workspace?.performance?.report_start_date).toBe("2026-02-15");
-    expect(workspace?.performance?.report_end_date).toBe("2026-03-28");
-    expect(workspace?.performance?.sparkline_points?.[0]?.label).toBe("2026-03-01");
+    expect(workspace?.performance).toBeNull();
+    expect(workspace?.supporting_evidence_failures).toContainEqual(
+      expect.objectContaining({
+        evidence_scope: "selected_period_performance",
+        title: "Selected-period performance unavailable",
+      }),
+    );
   });
 
   it("coalesces identical in-flight ledger requests into a single fetch", async () => {
