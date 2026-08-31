@@ -46,11 +46,7 @@ export default function PortfolioWorkspaceToolbar({
     }
 
     if (context.historicalSnapshotState === "partial") {
-      return context.supportsHistoricalSnapshots
-        ? context.hasHistoricalGap
-          ? "Portfolio records use the selected business date; rebalance remains the latest source run."
-          : "Portfolio records use the confirmed business date; rebalance remains the latest source run."
-        : "Historical review is not available across the portfolio record.";
+      return "Historical review is not available across the portfolio record.";
     }
 
     if (!context.hasHistoricalGap) {
@@ -61,7 +57,6 @@ export default function PortfolioWorkspaceToolbar({
   }, [
     context.hasHistoricalGap,
     context.historicalSnapshotState,
-    context.supportsHistoricalSnapshots,
   ]);
   const historicalControlTitle = !context.supportsHistoricalSnapshots
     ? context.historicalSnapshotReason

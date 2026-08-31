@@ -187,9 +187,10 @@ Research was refreshed on 2026-08-31 from current official sources:
 
 1. Keep review date and reporting currency in the existing governed URL context and pass them
    through the Workbench BFF to every affected Performance read and review action.
-2. Enable historical Portfolio Review when the aggregate capability is partial only if every dated
-   module used by the screen is source-supported; constrain the native date control to the
-   source-published availability range. Rebalance remains explicitly the latest source run.
+2. Enable historical Portfolio Review only when the aggregate capability is source-supported and
+   constrain the native date control to the source-published availability range. A partial
+   capability stays disabled because the refresh contract cannot replace every workspace-shell
+   module atomically; rebalance remains explicitly the latest source run.
 3. Admit Performance summary and detail only when requested and effective date/currency evidence is
    coherent. Treat `accepted_unverified`, `rejected`, and `unavailable` as base-currency
    presentation states; only `applied` may change the displayed currency.
@@ -202,7 +203,8 @@ Research was refreshed on 2026-08-31 from current official sources:
 
 1. Browser-side foreign-exchange conversion, inferred historical availability, or fallback dates.
 2. Treating an accepted request as proof that restatement occurred.
-3. Enabling a partial aggregate capability without verifying every dated module used by the screen.
+3. Enabling a partial aggregate capability from module flags when the screen refresh cannot replace
+   every carried workspace-shell module atomically.
 4. A custom date picker or currency selector when native and existing Workbench controls already
    provide the required keyboard and responsive behavior.
 5. Showing mixed summary/detail evidence under one review label or converting a rejected trend
