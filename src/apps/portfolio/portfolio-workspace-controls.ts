@@ -6,7 +6,6 @@ import {
 } from "@/shell/review-context";
 
 import type { PortfolioWorkspace } from "./types";
-import { isPortfolioHistoricalDateInRange } from "./portfolio-control-capabilities";
 import {
   isPortfolioPerformanceWindowCurrent,
   type PortfolioPerformanceWindowRequest,
@@ -222,11 +221,7 @@ function canUsePortfolioAsOfDate(
   workspace: PortfolioWorkspace,
   asOfDate: string,
 ): boolean {
-  if (asOfDate === workspace.as_of_date) {
-    return true;
-  }
-
-  return isPortfolioHistoricalDateInRange(workspace, asOfDate);
+  return asOfDate === workspace.as_of_date;
 }
 
 function canUsePortfolioReportingCurrency(
