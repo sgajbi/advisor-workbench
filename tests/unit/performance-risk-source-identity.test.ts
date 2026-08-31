@@ -35,13 +35,55 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
-  it("does not require a benchmark when the review has none assigned", () => {
+  it("requires benchmark absence when the review has none assigned", () => {
     expect(
       isPerformanceRiskSourceCurrent(
         { ...SOURCE, benchmark_code: null },
-        { ...IDENTITY, benchmark: undefined },
+        { ...IDENTITY, benchmark: null },
       ),
     ).toBe(true);
+    expect(
+      isPerformanceRiskSourceCurrent(SOURCE, { ...IDENTITY, benchmark: null }),
+    ).toBe(false);
+  });
+
+  it("requires every explicit result to confirm the requested window", () => {
+    const identity = {
+      ...IDENTITY,
+      period: "EXPLICIT",
+      reportStartDate: "2025-02-25",
+      reportEndDate: "2026-02-24",
+    };
+    const source = {
+      ...SOURCE,
+      period: "EXPLICIT",
+      payload: {
+        periods: [
+          {
+            start_date: "2025-02-25",
+            end_date: "2026-02-24",
+          },
+        ],
+      },
+    };
+
+    expect(isPerformanceRiskSourceCurrent(source, identity)).toBe(true);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            periods: [
+              {
+                start_date: "2025-03-01",
+                end_date: "2026-02-24",
+              },
+            ],
+          },
+        },
+        identity,
+      ),
+    ).toBe(false);
   });
 
   it("fails closed before a stale response can be cached or rendered", () => {

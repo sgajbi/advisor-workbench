@@ -133,10 +133,12 @@ export function usePerformanceRiskContract({
       portfolioId: workspace.portfolio.portfolio_id,
       period,
       asOfDate: riskAsOfDate,
-      benchmark: workspace.benchmark_code ?? undefined,
+      benchmark: workspace.benchmark_code ?? null,
+      ...riskWindowParams,
     }),
     [
       period,
+      riskWindowParams,
       riskAsOfDate,
       workspace.benchmark_code,
       workspace.portfolio.portfolio_id,
@@ -796,7 +798,8 @@ function buildPerformanceRiskSourceIdentity(
     portfolioId: workspace.portfolio.portfolio_id,
     period,
     asOfDate: getRiskAsOfDate(workspace),
-    benchmark: workspace.benchmark_code ?? undefined,
+    benchmark: workspace.benchmark_code ?? null,
+    ...getRiskWindowParams(workspace, period),
   };
 }
 
