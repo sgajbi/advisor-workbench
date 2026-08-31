@@ -388,9 +388,12 @@ test.describe('Performance workbench smoke', () => {
     ) {
       await expect(returnDecisionReadout).toHaveCount(0);
       if (posture.capabilities.summary !== 'unavailable') {
-        await expect(getExecutiveMetric(executiveStrip, 'Benchmark evidence')).toContainText(
-          'Unavailable',
-        );
+        const benchmarkEvidence = getExecutiveMetric(executiveStrip, 'Benchmark evidence');
+        if (posture.benchmarkAssigned) {
+          await expect(benchmarkEvidence).toContainText('Unavailable');
+        } else {
+          await expect(benchmarkEvidence).toHaveCount(0);
+        }
         await expect(getExecutiveMetric(executiveStrip, 'Money-weighted return (MWR)')).toContainText(
           posture.metrics.moneyWeightedReturn ? /Money-weighted return \(MWR\)/ : /Unavailable/,
         );

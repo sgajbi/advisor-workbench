@@ -43,6 +43,7 @@ describe('Performance E2E supportability posture', () => {
       classifyPerformanceSummaryPosture(buildSupportedPerformanceScenario().workspace),
     ).toEqual({
       populated: true,
+      benchmarkAssigned: true,
       capabilities: {
         summary: 'supported',
         returnPath: 'supported',
@@ -77,6 +78,7 @@ describe('Performance E2E supportability posture', () => {
     );
 
     expect(posture.populated).toBe(false);
+    expect(posture.benchmarkAssigned).toBe(false);
     expect(posture.capabilities).toMatchObject({
       returnPath: 'unavailable',
       benchmark: 'unavailable',

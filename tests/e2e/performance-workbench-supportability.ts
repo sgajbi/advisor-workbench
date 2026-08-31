@@ -24,6 +24,7 @@ type PerformanceCapabilityState = PerformanceModuleCapability['state'];
 
 export type PerformanceSummaryPosture = {
   populated: boolean;
+  benchmarkAssigned: boolean;
   capabilities: {
     summary: PerformanceCapabilityState;
     returnPath: PerformanceCapabilityState;
@@ -109,6 +110,9 @@ export function classifyPerformanceSummaryPosture(
         capabilities.contributors,
       ].every((state) => state === 'supported') &&
       Object.values(metrics).every(Boolean),
+    benchmarkAssigned:
+      Boolean(summary.benchmark_code) ||
+      (summary.benchmark_options ?? []).some((option) => option.is_assigned),
     capabilities,
     metrics,
   };

@@ -212,7 +212,12 @@ export async function startPerformanceFixtureGateway({
       sendJson(
         response,
         applyRequestedPerformanceReviewContext(
-          buildPerformanceAttributionTrend(portfolioId),
+          scenario === 'unavailable'
+            ? {
+                ...buildPerformanceAttributionTrend(portfolioId),
+                benchmark_code: null,
+              }
+            : buildPerformanceAttributionTrend(portfolioId),
           requestUrl,
         ),
         200,
@@ -224,7 +229,13 @@ export async function startPerformanceFixtureGateway({
       sendJson(
         response,
         applyRequestedPerformanceReviewContext(
-          reviewedAdvisorBriefs.get(portfolioId) ?? buildAdvisorBriefResponse(portfolioId),
+          reviewedAdvisorBriefs.get(portfolioId) ??
+            (scenario === 'unavailable'
+              ? {
+                  ...buildAdvisorBriefResponse(portfolioId),
+                  benchmark_code: null,
+                }
+              : buildAdvisorBriefResponse(portfolioId)),
           requestUrl,
         ),
       );
@@ -544,13 +555,16 @@ function buildSummaryResponse(
     );
     return scenario === 'unknown-period' ? publishUnknownPeriod(response) : response;
   }
-  return {
-    ...summary,
-    capabilities: buildUnavailableCapabilities(summary.capabilities),
-    money_weighted_return: null,
-    net_performance: clearPerformanceEconomics(summary.net_performance),
-    gross_performance: clearPerformanceEconomics(summary.gross_performance),
-  };
+  return applyRequestedSummaryContext(
+    {
+      ...summary,
+      capabilities: buildUnavailableCapabilities(summary.capabilities),
+      money_weighted_return: null,
+      net_performance: clearPerformanceEconomics(summary.net_performance),
+      gross_performance: clearPerformanceEconomics(summary.gross_performance),
+    },
+    requestUrl,
+  );
 }
 
 function buildDetailsResponse(
@@ -577,13 +591,16 @@ function buildDetailsResponse(
     );
     return scenario === 'unknown-period' ? publishUnknownPeriod(response) : response;
   }
-  return {
-    ...details,
-    capabilities: buildUnavailableCapabilities(details.capabilities),
-    net_chart: [],
-    gross_chart: [],
-    contribution: null,
-  };
+  return applyRequestedDetailContext(
+    {
+      ...details,
+      capabilities: buildUnavailableCapabilities(details.capabilities),
+      net_chart: [],
+      gross_chart: [],
+      contribution: null,
+    },
+    requestUrl,
+  );
 }
 
 function publishUnknownPeriod<
