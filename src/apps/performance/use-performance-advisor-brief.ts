@@ -13,7 +13,11 @@ import type {
 } from "@/features/workbench/types";
 
 import { isConfirmedAdvisorBriefReviewTransition } from "./advisor-brief/advisor-brief-review-transition";
-import { isPerformanceReviewContextCurrent } from "./performance-review-context";
+import {
+  arePerformanceReviewContextsCoherent,
+  isPerformanceReviewContextCurrent,
+  type PerformanceReviewContextSource,
+} from "./performance-review-context";
 
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
@@ -41,9 +45,11 @@ const IDLE_REVIEW_FEEDBACK: AdvisorBriefReviewFeedback = {
 
 export function usePerformanceAdvisorBrief({
   request,
+  sourceContext,
 }: {
   request: PerformanceAdvisorBriefRequest;
   isDetailsPending: boolean;
+  sourceContext: PerformanceReviewContextSource;
 }) {
   const {
     portfolioId,
@@ -94,7 +100,8 @@ export function usePerformanceAdvisorBrief({
           !isPerformanceReviewContextCurrent(response, {
             asOfDate,
             reportingCurrency,
-          })
+          }) ||
+          !arePerformanceReviewContextsCoherent(response, sourceContext)
         ) {
           throw new TypeError(
             "Performance adviser brief does not confirm the requested review context.",
@@ -136,6 +143,7 @@ export function usePerformanceAdvisorBrief({
     reportEndDate,
     reportStartDate,
     reportingCurrency,
+    sourceContext,
   ]);
 
   const refresh = useCallback(() => {
@@ -187,6 +195,7 @@ export function usePerformanceAdvisorBrief({
             asOfDate,
             reportingCurrency,
           }) ||
+          !arePerformanceReviewContextsCoherent(response, sourceContext) ||
           !isConfirmedAdvisorBriefReviewTransition({
             response,
             payload,
@@ -236,6 +245,7 @@ export function usePerformanceAdvisorBrief({
       reportEndDate,
       reportStartDate,
       reportingCurrency,
+      sourceContext,
     ]
   );
 

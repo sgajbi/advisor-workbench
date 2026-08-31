@@ -13,6 +13,10 @@ const REVIEW_CONTEXT_EVIDENCE = {
   effective_reporting_currency: "USD",
   reporting_currency_state: "accepted_unverified" as const,
 };
+const SOURCE_CONTEXT = {
+  as_of_date: "2026-03-27",
+  ...REVIEW_CONTEXT_EVIDENCE,
+};
 
 vi.mock("echarts-for-react", () => ({
   default: ({
@@ -95,6 +99,7 @@ describe("PerformanceAttributionTrendPanel", () => {
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        sourceContext={SOURCE_CONTEXT}
       />,
     );
 
@@ -188,6 +193,7 @@ describe("PerformanceAttributionTrendPanel", () => {
         chartFrequency="monthly"
         attributionDimension="asset_class"
         detailBasis="NET"
+        sourceContext={SOURCE_CONTEXT}
       />,
     );
 
@@ -231,7 +237,18 @@ describe("PerformanceAttributionTrendPanel", () => {
       rows: [],
     });
 
-    render(<PerformanceAttributionTrendPanel {...buildProps()} reportingCurrency="SGD" />);
+    render(
+      <PerformanceAttributionTrendPanel
+        {...buildProps({
+          sourceContext: {
+            ...SOURCE_CONTEXT,
+            requested_reporting_currency: "SGD",
+            reporting_currency_state: state,
+          },
+        })}
+        reportingCurrency="SGD"
+      />,
+    );
 
     expect(await screen.findByText(expected)).toBeInTheDocument();
   });
@@ -253,6 +270,27 @@ describe("PerformanceAttributionTrendPanel", () => {
       screen.queryByRole("img", { name: "Attribution over time chart" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Attribution trend table")).not.toBeInTheDocument();
+  });
+
+  it("withholds internally valid history that differs from the workspace context", async () => {
+    getTrendMock.mockResolvedValue(buildTrendContract());
+
+    render(
+      <PerformanceAttributionTrendPanel
+        {...buildProps({
+          sourceContext: {
+            ...SOURCE_CONTEXT,
+            as_of_date: "2026-03-26",
+            effective_as_of_date: "2026-03-26",
+          },
+        })}
+      />,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Attribution history could not be refreshed",
+    );
+    expect(screen.queryByLabelText("Attribution observation table")).not.toBeInTheDocument();
   });
 
   it("keeps request failure distinct from source-confirmed absence and retries the exact selection", async () => {
@@ -478,6 +516,7 @@ describe("PerformanceAttributionTrendPanel", () => {
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        sourceContext={SOURCE_CONTEXT}
       />,
     );
 
@@ -535,6 +574,7 @@ describe("PerformanceAttributionTrendPanel", () => {
         benchmark="BMK_GLOBAL_BALANCED_60_40"
         reportStartDate="2026-01-01"
         reportEndDate="2026-03-27"
+        sourceContext={SOURCE_CONTEXT}
         onRequestChange={onRequestChange}
       />,
     );
@@ -560,6 +600,7 @@ function buildProps(
     benchmark: "BMK_GLOBAL_BALANCED_60_40",
     reportStartDate: "2026-01-01",
     reportEndDate: "2026-03-27",
+    sourceContext: SOURCE_CONTEXT,
     ...overrides,
   };
 }

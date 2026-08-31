@@ -434,6 +434,42 @@ describe("PerformanceAdvisorBriefMode", () => {
     });
   });
 
+  it("withholds a self-consistent brief that differs from the loaded workspace context", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient).mockResolvedValue({
+      ...readyAdvisorBriefResponse,
+      as_of_date: "2026-02-23",
+      effective_as_of_date: "2026-02-23",
+      summary: "Evidence from a different effective review date.",
+    });
+    const workspace = buildSupportedPerformanceScenario().workspace;
+
+    render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Risks and exceptions")).toHaveTextContent(
+        "Adviser brief generation is unavailable.",
+      );
+    });
+    expect(
+      screen.queryByText("Evidence from a different effective review date."),
+    ).not.toBeInTheDocument();
+  });
+
   it("recovers from an unavailable advisor brief after an explicit refresh", async () => {
     vi.mocked(getWorkbenchPerformanceAdvisorBriefClient)
       .mockReset()

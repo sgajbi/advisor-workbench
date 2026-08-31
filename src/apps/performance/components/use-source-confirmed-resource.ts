@@ -11,7 +11,7 @@ export type SourceConfirmedResourceState<T> =
   | { status: "loading"; value: null; httpStatus: null }
   | { status: "ready"; value: T; httpStatus: null }
   | {
-      status: "error" | "permission_blocked";
+      status: "error" | "permission_blocked" | "source_mismatch";
       value: null;
       httpStatus: number | null;
     };
@@ -20,6 +20,8 @@ type RefreshRequest = {
   requestKey: string;
   sequence: number;
 };
+
+export class SourceEvidenceMismatchError extends Error {}
 
 /**
  * Owns the browser lifecycle for independently fetched, source-confirmed evidence.
@@ -74,7 +76,8 @@ export function useSourceConfirmedResource<T>({
       })
       .catch((error: unknown) => {
         const permissionBlocked = isWorkbenchPermissionBlockedError(error);
-        if (permissionBlocked) {
+        const sourceMismatch = error instanceof SourceEvidenceMismatchError;
+        if (permissionBlocked || sourceMismatch) {
           cacheRef.current.delete(requestKey);
         }
         if (latestRequestIdRef.current !== requestId) {
@@ -82,7 +85,11 @@ export function useSourceConfirmedResource<T>({
         }
         const errorEvidence = getWorkbenchApiErrorEvidence(error);
         setState({
-          status: permissionBlocked ? "permission_blocked" : "error",
+          status: permissionBlocked
+            ? "permission_blocked"
+            : sourceMismatch
+              ? "source_mismatch"
+              : "error",
           value: null,
           httpStatus: errorEvidence ? Number(errorEvidence.value) : null,
         });

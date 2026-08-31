@@ -4,8 +4,15 @@ import { useCallback, useMemo } from "react";
 
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type { WorkbenchPerformanceAttributionTrend } from "@/features/workbench/types";
-import { isPerformanceReviewContextCurrent } from "../performance-review-context";
-import { useSourceConfirmedResource } from "./use-source-confirmed-resource";
+import {
+  arePerformanceReviewContextsCoherent,
+  isPerformanceReviewContextCurrent,
+  type PerformanceReviewContextSource,
+} from "../performance-review-context";
+import {
+  SourceEvidenceMismatchError,
+  useSourceConfirmedResource,
+} from "./use-source-confirmed-resource";
 
 type PerformanceAttributionTrendRequest = {
   portfolioId: string;
@@ -33,7 +40,10 @@ export type PerformanceAttributionTrendState =
       httpStatus: number | null;
     };
 
-export function usePerformanceAttributionTrend(request: PerformanceAttributionTrendRequest) {
+export function usePerformanceAttributionTrend(
+  request: PerformanceAttributionTrendRequest,
+  sourceContext: PerformanceReviewContextSource,
+) {
   const requestKey = useMemo(() => buildPerformanceAttributionTrendRequestKey(request), [request]);
   const load = useCallback(async () => {
     const trend = await getWorkbenchPerformanceAttributionTrendClient(request.portfolioId, {
@@ -48,14 +58,17 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
       reportingCurrency: request.reportingCurrency
     });
 
-    if (!isPerformanceReviewContextCurrent(trend, request)) {
-      throw new TypeError(
+    if (
+      !isPerformanceReviewContextCurrent(trend, request) ||
+      !arePerformanceReviewContextsCoherent(trend, sourceContext)
+    ) {
+      throw new SourceEvidenceMismatchError(
         "Performance attribution history does not confirm the requested review context."
       );
     }
 
     return trend;
-  }, [request]);
+  }, [request, sourceContext]);
   const resource = useSourceConfirmedResource({ requestKey, load });
   const state: PerformanceAttributionTrendState =
     resource.state.status === "ready"
@@ -63,7 +76,10 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
       : resource.state.status === "loading"
         ? { status: "loading", trend: null, httpStatus: null }
         : {
-            status: resource.state.status,
+            status:
+              resource.state.status === "source_mismatch"
+                ? "error"
+                : resource.state.status,
             trend: null,
             httpStatus: resource.state.httpStatus
           };

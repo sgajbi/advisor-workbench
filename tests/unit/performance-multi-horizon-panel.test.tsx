@@ -30,10 +30,22 @@ describe("PerformanceMultiHorizonPanel", () => {
 
   it("loads standard horizons from the dedicated horizon comparison contract", async () => {
     getHorizonComparisonClientMock.mockImplementation(
-      async (_portfolioId: string, params: { detailBasis: string; benchmark?: string }) =>
+      async (
+        _portfolioId: string,
+        params: {
+          period: string;
+          detailBasis: string;
+          benchmark?: string;
+          reportStartDate?: string;
+          reportEndDate?: string;
+        },
+      ) =>
         buildHorizonComparison({
+          period: params.period,
           detail_basis: params.detailBasis,
           benchmark_code: params.benchmark ?? "BMK_GLOBAL_BALANCED_60_40",
+          report_start_date: params.reportStartDate ?? "2026-01-01",
+          report_end_date: params.reportEndDate ?? "2026-02-24",
         })
     );
 
@@ -206,14 +218,28 @@ describe("PerformanceMultiHorizonPanel", () => {
   });
 
   it("withholds horizon economics when the source does not confirm review context", async () => {
-    getHorizonComparisonClientMock.mockResolvedValue(
-      buildHorizonComparison({
-        as_of_date: "2026-03-27",
-        reporting_currency: "USD",
-      })
-    );
+    getHorizonComparisonClientMock
+      .mockResolvedValueOnce(
+        buildHorizonComparison({
+          as_of_date: "2026-03-27",
+          reporting_currency: "USD",
+        }),
+      )
+      .mockResolvedValueOnce(
+        buildHorizonComparison({
+          period: "3M",
+          as_of_date: "2026-03-27",
+          reporting_currency: "SGD",
+        }),
+      )
+      .mockResolvedValueOnce(
+        buildHorizonComparison({
+          as_of_date: "2026-03-27",
+          reporting_currency: "SGD",
+        }),
+      );
 
-    render(
+    const view = render(
       <PerformanceMultiHorizonPanel
         portfolioId="PF_1001"
         period="YTD"
@@ -233,12 +259,66 @@ describe("PerformanceMultiHorizonPanel", () => {
       "PF_1001",
       expect.objectContaining({ asOfDate: "2026-03-27", reportingCurrency: "SGD" })
     );
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="3M"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        asOfDate="2026-03-27"
+        reportingCurrency="SGD"
+      />,
+    );
+    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+
+    view.rerender(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        asOfDate="2026-03-27"
+        reportingCurrency="SGD"
+      />,
+    );
+    await waitFor(() => expect(getHorizonComparisonClientMock).toHaveBeenCalledTimes(3));
+    expect(screen.getByLabelText("Multi-horizon returns")).toBeInTheDocument();
+  });
+
+  it("withholds a horizon response that does not confirm the explicit review window", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        period: "EXPLICIT",
+        report_start_date: "2026-01-01",
+        report_end_date: "2026-03-28",
+      }),
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="EXPLICIT"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        reportStartDate="2026-01-01"
+        reportEndDate="2026-03-27"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Horizon comparison not available for this review"),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon returns")).not.toBeInTheDocument();
   });
 
   it("inherits page basis and return view and clears local overrides when that source context changes", async () => {
     getHorizonComparisonClientMock.mockImplementation(
-      async (_portfolioId: string, params: { detailBasis: string }) =>
-        buildHorizonComparison({ detail_basis: params.detailBasis }),
+      async (_portfolioId: string, params: { period: string; detailBasis: string }) =>
+        buildHorizonComparison({
+          period: params.period,
+          detail_basis: params.detailBasis,
+        }),
     );
 
     const view = render(
