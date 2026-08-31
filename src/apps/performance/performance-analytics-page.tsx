@@ -19,10 +19,6 @@ import {
 } from "./performance-source-identity";
 import { buildPerformanceReviewContextStrip } from "./performance-review-context-strip-view-model";
 
-const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
-  PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
-  DEMO_ADV_USD_001: "BMK_GLOBAL_BALANCED_60_40",
-};
 export default async function PerformanceAnalyticsPage({
   searchParams,
 }: {
@@ -82,9 +78,7 @@ export default async function PerformanceAnalyticsPage({
   const chartFrequency = getSearchParamValue(resolvedSearch, "chartFrequency") || "monthly";
   const requestedMode = getSearchParamValue(resolvedSearch, "mode");
   const initialMode = normalizePerformanceWorkspaceMode(requestedMode) ?? "summary";
-  const benchmark =
-    getSearchParamValue(resolvedSearch, "benchmark") ||
-    DEFAULT_BENCHMARK_BY_PORTFOLIO[selectedPortfolioId];
+  const benchmark = getSearchParamValue(resolvedSearch, "benchmark");
   const reportStartDate = requestedReportStartDate;
   const reportEndDate = requestedReportEndDate;
   const workspaceRequest = {
@@ -134,6 +128,9 @@ export default async function PerformanceAnalyticsPage({
       reportEndDate,
       asOfDate: reviewContextResult.context.asOfDate,
       reportingCurrency: reviewContextResult.context.reportingCurrency,
+      detailBasis,
+      chartFrequency,
+      benchmark,
     })
   ) {
     return (
