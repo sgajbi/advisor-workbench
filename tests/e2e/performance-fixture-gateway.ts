@@ -639,20 +639,43 @@ function applyRequestedPerformanceReviewContext<
   Response extends {
     as_of_date: string;
     period?: string;
+    report_start_date?: string | null;
     report_end_date?: string | null;
+    detail_basis?: string;
+    contribution_dimension?: string;
+    attribution_dimension?: string;
+    chart_frequency?: string;
+    benchmark_code?: string | null;
     portfolio?: { base_currency?: string };
   },
 >(response: Response, requestUrl: URL) {
   const requestedAsOfDate = requestUrl.searchParams.get('as_of_date');
   const requestedPeriod = requestUrl.searchParams.get('period') ?? response.period;
+  const requestedReportStartDate = requestUrl.searchParams.get('report_start_date');
+  const requestedReportEndDate = requestUrl.searchParams.get('report_end_date');
   const requestedReportingCurrency = requestUrl.searchParams.get('reporting_currency');
   const effectiveAsOfDate = requestedAsOfDate ?? response.as_of_date;
   return {
     ...response,
+    period: requestedPeriod,
+    report_start_date: requestedReportStartDate ?? response.report_start_date,
     report_end_date:
-      requestedAsOfDate && requestedPeriod !== 'EXPLICIT'
+      requestedReportEndDate ??
+      (requestedAsOfDate && requestedPeriod !== 'EXPLICIT'
         ? effectiveAsOfDate
-        : response.report_end_date,
+        : response.report_end_date),
+    detail_basis:
+      requestUrl.searchParams.get('detail_basis') ?? response.detail_basis,
+    contribution_dimension:
+      requestUrl.searchParams.get('contribution_dimension') ??
+      response.contribution_dimension,
+    attribution_dimension:
+      requestUrl.searchParams.get('attribution_dimension') ??
+      response.attribution_dimension,
+    chart_frequency:
+      requestUrl.searchParams.get('chart_frequency') ?? response.chart_frequency,
+    benchmark_code:
+      requestUrl.searchParams.get('benchmark_code') ?? response.benchmark_code,
     as_of_date: effectiveAsOfDate,
     requested_as_of_date: requestedAsOfDate,
     effective_as_of_date: effectiveAsOfDate,
