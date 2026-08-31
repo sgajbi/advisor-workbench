@@ -133,12 +133,14 @@ export function usePerformanceRiskContract({
     () => ({
       portfolioId: workspace.portfolio.portfolio_id,
       period,
+      detailBasis,
       asOfDate: riskAsOfDate,
       benchmark: workspace.benchmark_code ?? null,
       ...riskWindowParams,
     }),
     [
       period,
+      detailBasis,
       riskWindowParams,
       riskAsOfDate,
       workspace.benchmark_code,
@@ -422,6 +424,7 @@ export function usePerformanceRiskContract({
             .then<RiskFetchResult<WorkbenchRiskConcentrationResponse>>((response) => {
               const value = requireCurrentPerformanceRiskSource(response, {
                 ...riskSourceIdentity,
+                detailBasis: undefined,
                 windowEvidence: "point_in_time",
               });
               return { value, cacheable: isCacheableRiskResponse(value) };
@@ -644,6 +647,7 @@ export function usePerformanceRiskContract({
         const unavailableResponse = buildUnavailableRiskAttribution({
           workspace: workspaceRef.current,
           period,
+          detailBasis,
           detail: "Risk attribution fetch failed.",
         });
         if (attributionRequestSequenceRef.current !== requestId) {

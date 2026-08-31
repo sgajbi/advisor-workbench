@@ -890,6 +890,7 @@ export type WorkbenchRiskSummaryResponse = {
   contract_version: "risk-workspace.v1";
   portfolio_id: string;
   period: string;
+  detail_basis: "NET" | "GROSS";
   as_of_date: string;
   benchmark_code?: string | null;
   source_service: "lotus-risk";
@@ -1066,6 +1067,7 @@ export type WorkbenchRiskDrawdownResponse = {
   contract_version: "risk-workspace.v1";
   portfolio_id: string;
   period: string;
+  detail_basis: "NET" | "GROSS";
   as_of_date: string;
   benchmark_code?: string | null;
   source_service: "lotus-risk";
@@ -1152,6 +1154,7 @@ export type WorkbenchRiskRollingResponse = {
   contract_version: "risk-workspace.v1";
   portfolio_id: string;
   period: string;
+  detail_basis: "NET" | "GROSS";
   as_of_date: string;
   benchmark_code?: string | null;
   source_service: "lotus-risk";
@@ -1272,6 +1275,7 @@ export type WorkbenchRiskAttributionResponse = {
   contract_version: "risk-workspace.v1";
   portfolio_id: string;
   period: string;
+  detail_basis: "NET" | "GROSS";
   as_of_date: string;
   benchmark_code?: string | null;
   source_service: "lotus-risk";
