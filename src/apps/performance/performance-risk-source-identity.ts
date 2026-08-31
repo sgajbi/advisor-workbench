@@ -3,6 +3,7 @@ type PerformanceRiskSource = Readonly<{
   period: string;
   as_of_date: string;
   benchmark_code?: string | null;
+  state?: string;
   payload?: unknown;
 }>;
 
@@ -46,7 +47,10 @@ function hasRequestedRiskDetail(
   }
   const payload = source.payload;
   if (!payload || typeof payload !== "object") {
-    return false;
+    return (
+      payload == null &&
+      (source.state === "unavailable" || source.state === "blocked")
+    );
   }
   return (
     hasRequestedBoolean(
