@@ -21,11 +21,12 @@ function confirmsRequestedWindow(
     period: string;
     report_start_date?: string | null;
     report_end_date?: string | null;
+    effective_as_of_date?: string | null;
   }>,
   identity: PerformanceSourceIdentity
 ): boolean {
   if (identity.period !== "EXPLICIT") {
-    return true;
+    return !identity.asOfDate || source.report_end_date === source.effective_as_of_date;
   }
   return (
     Boolean(identity.reportStartDate) &&
