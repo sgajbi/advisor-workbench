@@ -79,6 +79,15 @@ test("records only presented Idea rows and retries the same failed evidence", as
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 1 });
+  await page.addInitScript(() => {
+    const getRandomValues = globalThis.crypto.getRandomValues.bind(
+      globalThis.crypto,
+    );
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: Object.freeze({ getRandomValues }),
+    });
+  });
   await mockIdeaQueue(page);
   const presentations: RecordedPresentation[] = [];
   let targetFailureReturned = false;
@@ -112,6 +121,17 @@ test("records only presented Idea rows and retries the same failed evidence", as
     `/recommendations?mode=opportunities&portfolioId=${portfolioId}`,
     { waitUntil: "domcontentloaded" },
   );
+  await expect(
+    page.evaluate(() => ({
+      getRandomValues: typeof globalThis.crypto.getRandomValues,
+      randomUUID: typeof globalThis.crypto.randomUUID,
+      subtle: typeof globalThis.crypto.subtle,
+    })),
+  ).resolves.toEqual({
+    getRandomValues: "function",
+    randomUUID: "undefined",
+    subtle: "undefined",
+  });
 
   const grid = page.getByRole("grid", {
     name: "Idea candidate review queue",
