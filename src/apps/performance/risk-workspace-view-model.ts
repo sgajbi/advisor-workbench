@@ -722,7 +722,7 @@ export function buildFixtureRiskRolling(
           start_date: workspace.report_start_date,
           end_date: workspace.report_end_date,
           series_count: 66,
-          window_results: [21, 63, 126, 252].map((windowLength, index) => ({
+          window_results: [21, 63, 126, 252].map((windowLength) => ({
             window_length: windowLength,
             metric_summaries: buildFixtureRollingMetricSummaries({
               windowLength,
@@ -732,7 +732,8 @@ export function buildFixtureRiskRolling(
               ? buildFixtureRollingSeries({
                   windowLength,
                   includeBenchmarkMetrics,
-                  offset: index,
+                  reportStartDate: workspace.report_start_date,
+                  reportEndDate: workspace.report_end_date,
                 })
               : null,
           })),
@@ -2770,15 +2771,25 @@ function buildFixtureRollingMetricSummaries({
 function buildFixtureRollingSeries({
   windowLength,
   includeBenchmarkMetrics,
-  offset,
+  reportStartDate,
+  reportEndDate,
 }: {
   windowLength: number;
   includeBenchmarkMetrics: boolean;
-  offset: number;
+  reportStartDate: string;
+  reportEndDate: string;
 }) {
+  const startTime = Date.parse(`${reportStartDate}T00:00:00Z`);
+  const endTime = Date.parse(`${reportEndDate}T00:00:00Z`);
+  const middleDate = new Date(
+    startTime + Math.floor((endTime - startTime) / 2),
+  )
+    .toISOString()
+    .slice(0, 10);
+  const dates = [reportStartDate, middleDate, reportEndDate];
   return [
     {
-      date: `2026-03-${String(15 + offset).padStart(2, "0")}`,
+      date: dates[0],
       metric_values: buildFixtureRollingSeriesMetricValues({
         windowLength,
         includeBenchmarkMetrics,
@@ -2787,7 +2798,7 @@ function buildFixtureRollingSeries({
       }),
     },
     {
-      date: `2026-03-${String(22 + offset).padStart(2, "0")}`,
+      date: dates[1],
       metric_values: buildFixtureRollingSeriesMetricValues({
         windowLength,
         includeBenchmarkMetrics,
@@ -2796,7 +2807,7 @@ function buildFixtureRollingSeries({
       }),
     },
     {
-      date: `2026-03-${String(29 + offset).padStart(2, "0")}`,
+      date: dates[2],
       metric_values: buildFixtureRollingSeriesMetricValues({
         windowLength,
         includeBenchmarkMetrics,

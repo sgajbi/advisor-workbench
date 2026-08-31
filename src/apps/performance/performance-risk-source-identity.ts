@@ -7,6 +7,10 @@ type PerformanceRiskSource = Readonly<{
   payload?: unknown;
 }>;
 
+type RiskPeriod = Readonly<
+  { start_date: string; end_date: string } & Record<string, unknown>
+>;
+
 export type PerformanceRiskSourceIdentity = Readonly<{
   portfolioId: string;
   period: string;
@@ -112,7 +116,13 @@ function hasRequestedRiskWindow(
   }
   if (!identity.reportStartDate && !identity.reportEndDate) {
     const periods = readRiskPeriods(source.payload);
-    return periods?.every((period) => period.end_date === identity.asOfDate) ?? true;
+    return (
+      periods?.every(
+        (period) =>
+          period.end_date === identity.asOfDate &&
+          hasRiskSeriesWithinPeriod(period),
+      ) ?? true
+    );
   }
 
   const periods = readRiskPeriods(source.payload);
@@ -121,8 +131,60 @@ function hasRequestedRiskWindow(
       periods.every(
         (period) =>
           (!identity.reportStartDate || period.start_date === identity.reportStartDate) &&
-          (!identity.reportEndDate || period.end_date === identity.reportEndDate),
+          (!identity.reportEndDate || period.end_date === identity.reportEndDate) &&
+          hasRiskSeriesWithinPeriod(period),
       ),
+  );
+}
+
+function hasRiskSeriesWithinPeriod(
+  period: RiskPeriod,
+): boolean {
+  return (
+    hasDatedSeriesWithinPeriod(period.underwater_series, period) &&
+    hasRollingSeriesWithinPeriod(period.window_results, period)
+  );
+}
+
+function hasDatedSeriesWithinPeriod(
+  series: unknown,
+  period: RiskPeriod,
+): boolean {
+  if (series == null) {
+    return true;
+  }
+  if (!Array.isArray(series)) {
+    return false;
+  }
+  return series.every(
+    (point) =>
+      point != null &&
+      typeof point === "object" &&
+      "date" in point &&
+      typeof point.date === "string" &&
+      point.date >= period.start_date &&
+      point.date <= period.end_date,
+  );
+}
+
+function hasRollingSeriesWithinPeriod(
+  windowResults: unknown,
+  period: RiskPeriod,
+): boolean {
+  if (windowResults == null) {
+    return true;
+  }
+  return (
+    Array.isArray(windowResults) &&
+    windowResults.every(
+      (window) =>
+        window != null &&
+        typeof window === "object" &&
+        hasDatedSeriesWithinPeriod(
+          "metric_series" in window ? window.metric_series : null,
+          period,
+        ),
+    )
   );
 }
 
@@ -197,7 +259,7 @@ function hasRequestedRiskAttribution(
 
 function readRiskPeriods(
   payload: unknown,
-): ReadonlyArray<Readonly<{ start_date: string; end_date: string }>> | null {
+): ReadonlyArray<RiskPeriod> | null {
   if (!payload || typeof payload !== "object" || !("periods" in payload)) {
     return null;
   }

@@ -501,7 +501,7 @@ describe("buildPerformanceRiskViewModel", () => {
     expect(viewModel.rollingDetailState).toBe("ready");
     expect(viewModel.rollingWindows[0]?.seriesRows).toHaveLength(3);
     expect(viewModel.rollingWindows[0]?.seriesRows[0]).toMatchObject({
-      date: "15 Mar 2026",
+      date: "01 Jan 2026",
     });
     expect(viewModel.rollingWindows[0]?.seriesRows[0]?.values.ROLLING_VOLATILITY).toMatch(
       /%$/
