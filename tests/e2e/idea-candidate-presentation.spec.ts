@@ -198,6 +198,11 @@ test("records only presented Idea rows and retries the same failed evidence", as
   );
   expect(presentations).toHaveLength(settledPresentationCount);
 
+  await filter.fill("Portfolio Review Due");
+  await expect(renderedCandidates.first()).toBeVisible();
+  await filter.fill("Advisor Review Required");
+  await expect(renderedCandidates.first()).toBeVisible();
+
   await filter.fill(targetCandidateId);
   await expect(
     grid.getByRole("link", {
