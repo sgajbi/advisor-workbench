@@ -2,6 +2,7 @@ import { execFile, spawnSync } from "node:child_process";
 import {
   mkdtempSync,
   mkdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -4366,13 +4367,24 @@ describe("product-copy governance", () => {
   it(
     "keeps the checked-in productive-copy and unresolved inventories exact",
     async () => {
+      const packageManifest = JSON.parse(
+        readFileSync(join(process.cwd(), "package.json"), "utf8"),
+      ) as { scripts?: Record<string, string> };
+      const qualityCommand = packageManifest.scripts?.["quality:product-copy"];
+      const commandPrefix =
+        "node scripts/quality/check-product-copy-governance.mjs ";
+      expect(qualityCommand).toMatch(
+        /^node scripts\/quality\/check-product-copy-governance\.mjs --max=\d+ --max-unresolved=\d+ --unresolved-digest=[a-f0-9]{64}$/,
+      );
+      const qualityArguments = qualityCommand!.slice(commandPrefix.length).split(" ");
+      const expectedFindingCount = qualityArguments[0].split("=")[1];
+      const expectedUnresolvedCount = qualityArguments[1].split("=")[1];
+      const expectedUnresolvedDigest = qualityArguments[2].split("=")[1];
       const { stdout, stderr } = await execFileAsync(
         process.execPath,
         [
           productCopyChecker,
-          "--max=234",
-          "--max-unresolved=1711",
-          "--unresolved-digest=f01183280734e3d2a1ecf61ac471ab4c729f8ee1e3491623822382dafd951e17",
+          ...qualityArguments,
         ],
         {
           cwd: process.cwd(),
@@ -4383,11 +4395,9 @@ describe("product-copy governance", () => {
 
       expect(stderr).toBe("");
       expect(stdout).toContain(
-        "measured inventory matches the checked-in baselines at 234 finding(s) and 1711 unresolved expression(s)",
+        `measured inventory matches the checked-in baselines at ${expectedFindingCount} finding(s) and ${expectedUnresolvedCount} unresolved expression(s)`,
       );
-      expect(stdout).toContain(
-        "f01183280734e3d2a1ecf61ac471ab4c729f8ee1e3491623822382dafd951e17",
-      );
+      expect(stdout).toContain(expectedUnresolvedDigest);
     },
     REPOSITORY_SCAN_TIMEOUT_MS,
   );
