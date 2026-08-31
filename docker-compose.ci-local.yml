@@ -3,6 +3,8 @@ services:
     build:
       context: .
       target: ci-base
+      labels:
+        com.lotus.repository.checkout: "${PWD:?Docker Compose must resolve the Workbench checkout path}"
     working_dir: /app
     volumes:
       - ./:/app
