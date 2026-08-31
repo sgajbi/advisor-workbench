@@ -182,7 +182,7 @@ jobs:
         with:
           node-version: "22.23.1"
       - name: Build image
-        run: docker build --build-arg WORKBENCH_DEPLOYMENT_ID="${{ github.sha }}" -t lotus-workbench:ci-test .
+        run: docker build --label "com.lotus.repository.checkout=${{ github.workspace }}" --build-arg WORKBENCH_DEPLOYMENT_ID="${{ github.sha }}" -t lotus-workbench:ci-test .
       - name: Reject fixable high and critical image vulnerabilities
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
@@ -195,7 +195,7 @@ jobs:
           vuln-type: os,library
           severity: HIGH,CRITICAL
       - name: Build patched scale-proof load balancer
-        run: docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .
+        run: docker build --label "com.lotus.repository.checkout=${{ github.workspace }}" --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .
       - name: Reject fixable high and critical load-balancer vulnerabilities
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:

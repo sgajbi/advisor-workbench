@@ -86,7 +86,7 @@ describe("Workbench scale-proof governance", () => {
       expect(workflow).toContain("SCALE_PROOF_SKIP_BUILD: \"1\"");
       expect(workflow).toContain("WORKBENCH_DEPLOYMENT_ID: ${{ github.");
       expect(workflow).toContain(
-        "docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .",
+        'docker build --label "com.lotus.repository.checkout=${{ github.workspace }}" --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .',
       );
       expect(workflow).toContain(
         "WORKBENCH_SCALE_BALANCER_IMAGE: lotus-workbench-scale-balancer:ci-test",

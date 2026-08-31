@@ -330,7 +330,7 @@ describe("dependency security governance", () => {
 
       expect(workflow.match(new RegExp(trivyActionCommit, "g"))).toHaveLength(3);
       expect(workflow).toContain(
-        "docker build --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .",
+        'docker build --label "com.lotus.repository.checkout=${{ github.workspace }}" --file scripts/scale/Dockerfile.balancer --tag lotus-workbench-scale-balancer:ci-test .',
       );
       expect(workflow).toContain("image-ref: lotus-workbench-scale-balancer:ci-test");
       expect(workflow).toContain(

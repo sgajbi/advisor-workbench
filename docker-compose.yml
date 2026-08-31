@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      labels:
+        com.lotus.repository.checkout: "${PWD:?Docker Compose must resolve the Workbench checkout path}"
       args:
         WORKBENCH_DEPLOYMENT_ID: ${WORKBENCH_DEPLOYMENT_ID:-local-development}
     image: lotus-workbench:latest
