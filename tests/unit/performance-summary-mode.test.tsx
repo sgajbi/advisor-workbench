@@ -218,4 +218,41 @@ describe("PerformanceSummaryMode", () => {
       undefined
     );
   });
+
+  it("requests horizon economics only in the source-confirmed display currency", () => {
+    const scenario = buildSupportedPerformanceScenario();
+    scenario.workspace.requested_reporting_currency = "SGD";
+    scenario.workspace.effective_reporting_currency = "USD";
+    scenario.workspace.reporting_currency_state = "accepted_unverified";
+
+    render(
+      <PerformanceSummaryMode
+        workspace={scenario.workspace}
+        period="YTD"
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        capabilities={scenario.capabilities}
+        selectedBenchmarkCode={scenario.selectedBenchmarkCode}
+        selectedBenchmarkLabel={scenario.selectedBenchmarkLabel}
+        selectedPerformance={scenario.workspace.net_performance}
+        primaryDriver={null}
+        hasMoneyWeightedReturn={false}
+        suspiciousMoneyWeightedReturn={false}
+        contributorScale={1}
+        positivePositionContributors={[]}
+        negativePositionContributors={[]}
+        topContributors={[]}
+        bottomContributors={[]}
+        isUpdating={false}
+        isDetailsPending={false}
+      />,
+    );
+
+    expect(multiHorizonPanelMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ reportingCurrency: "USD" }),
+      undefined,
+    );
+  });
 });
