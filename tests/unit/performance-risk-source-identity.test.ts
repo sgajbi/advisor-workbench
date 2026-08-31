@@ -149,6 +149,81 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
+  it.each([
+    [
+      "drawdown",
+      {
+        underwater_series: [
+          { date: "2025-12-31", drawdown: -0.02 },
+          { date: "2026-02-24", drawdown: -0.01 },
+        ],
+      },
+    ],
+    [
+      "rolling",
+      {
+        window_results: [
+          {
+            window_length: 21,
+            metric_series: [
+              { date: "2026-01-01", metric_values: { volatility: 0.08 } },
+              { date: "2026-02-25", metric_values: { volatility: 0.09 } },
+            ],
+          },
+        ],
+      },
+    ],
+  ])("rejects %s observations outside their enclosing source period", (_label, detail) => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              {
+                start_date: "2026-01-01",
+                end_date: "2026-02-24",
+                ...detail,
+              },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
+  it("admits nested Risk observations bounded by their source period", () => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              {
+                start_date: "2026-01-01",
+                end_date: "2026-02-24",
+                underwater_series: [
+                  { date: "2026-01-01", drawdown: 0 },
+                  { date: "2026-02-24", drawdown: -0.01 },
+                ],
+                window_results: [
+                  {
+                    window_length: 21,
+                    metric_series: [
+                      { date: "2026-01-21", metric_values: { volatility: 0.08 } },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(true);
+  });
+
   it("binds attribution controls and every returned set to the requested decomposition", () => {
     const identity = {
       ...IDENTITY,
