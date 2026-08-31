@@ -3,9 +3,6 @@ import {
   getWorkbenchApiErrorStatus,
   isWorkbenchPermissionBlockedError,
 } from "@/features/workbench/api";
-import {
-  buildWorkbenchSourceContextNotice,
-} from "@/design-system";
 import { getPortfolioWorkspaceShell } from "@/apps/portfolio/api";
 import {
   parseReviewContext,
@@ -21,6 +18,7 @@ import {
   isPerformanceSummarySourceCurrent,
 } from "./performance-source-identity";
 import { buildPerformanceReviewContextStrip } from "./performance-review-context-strip-view-model";
+import { buildPerformanceReviewContextNotice } from "./performance-review-context-notice";
 
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
@@ -99,6 +97,8 @@ export default async function PerformanceAnalyticsPage({
     benchmark,
     reportStartDate,
     reportEndDate,
+    asOfDate: reviewContextResult.context.asOfDate,
+    reportingCurrency: reviewContextResult.context.reportingCurrency,
   };
 
   const [workspaceSummaryResult, portfolioContextResult] = await Promise.allSettled([
@@ -126,13 +126,10 @@ export default async function PerformanceAnalyticsPage({
     portfolioContextResult.value?.portfolio.portfolio_id === selectedPortfolioId
       ? portfolioContextResult.value
       : null;
-  const sourceContextNotice = buildWorkbenchSourceContextNotice({
-    title: "Performance source context",
-    subject: "Performance",
+  const sourceContextNotice = buildPerformanceReviewContextNotice({
     requestedAsOfDate: reviewContextResult.context.asOfDate,
     requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
-    sourceAsOfDate: workspaceSummary?.as_of_date,
-    sourceCurrency: workspaceSummary?.portfolio.base_currency,
+    source: workspaceSummary,
   });
 
   if (
@@ -142,6 +139,8 @@ export default async function PerformanceAnalyticsPage({
       period,
       reportStartDate,
       reportEndDate,
+      asOfDate: reviewContextResult.context.asOfDate,
+      reportingCurrency: reviewContextResult.context.reportingCurrency,
     })
   ) {
     return (

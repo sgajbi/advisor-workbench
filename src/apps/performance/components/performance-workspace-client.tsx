@@ -19,6 +19,7 @@ import type {
 
 import { buildPerformanceHref } from "../navigation";
 import {
+  doPerformanceSummaryAndDetailsShareReviewContext,
   isPerformanceDetailsSourceCurrent,
   isPerformanceSummarySourceCurrent,
 } from "../performance-source-identity";
@@ -115,10 +116,13 @@ export default function PerformanceWorkspaceClient({
         period: initialSummary.period,
         reportStartDate: initialSummary.report_start_date ?? undefined,
         reportEndDate: initialSummary.report_end_date ?? undefined,
-      })
+        asOfDate: initialAsOfDate,
+        reportingCurrency: initialReportingCurrency,
+      }) &&
+      doPerformanceSummaryAndDetailsShareReviewContext(initialSummary, initialDetails)
         ? initialDetails
         : null,
-    [initialDetails, initialSummary],
+    [initialAsOfDate, initialDetails, initialReportingCurrency, initialSummary],
   );
   const initialControls = useMemo<PerformanceControlState | null>(
     () =>
@@ -162,6 +166,8 @@ export default function PerformanceWorkspaceClient({
             benchmark: initialControls.benchmark,
             reportStartDate: initialControls.reportStartDate,
             reportEndDate: initialControls.reportEndDate,
+            reviewAsOfDate: initialControls.reviewAsOfDate,
+            reviewReportingCurrency: initialControls.reviewReportingCurrency,
           })
         : null,
     [
@@ -347,13 +353,18 @@ export default function PerformanceWorkspaceClient({
 
   const resolveDetailsForControls = useCallback(async (
     nextControls: PerformanceControlState,
+    summaryEvidence: WorkbenchPerformanceWorkspaceSummary,
     options: { allowInitialFallback?: boolean } = {}
   ): Promise<ResolvedPerformanceDetails> => {
     const detailsKey = buildDetailsCacheKey(nextControls);
     const cachedDetails = detailsCacheRef.current.get(detailsKey);
     if (cachedDetails !== undefined) {
       return {
-        details: cachedDetails,
+        details: requireCurrentPerformanceDetails(
+          cachedDetails,
+          nextControls,
+          summaryEvidence,
+        ),
         controls: nextControls,
       };
     }
@@ -364,6 +375,7 @@ export default function PerformanceWorkspaceClient({
         buildDetailsRequest(nextControls),
       ),
       nextControls,
+      summaryEvidence,
     );
     let resolvedControls = buildResolvedDetailControls(nextControls, resolvedDetails);
 
@@ -389,14 +401,19 @@ export default function PerformanceWorkspaceClient({
         };
         const normalizedDetailsKey = buildDetailsCacheKey(resolvedControls);
         const cachedNormalizedDetails = detailsCacheRef.current.get(normalizedDetailsKey);
-        resolvedDetails =
-          cachedNormalizedDetails ??
-          requireCurrentPerformanceDetails(
+        resolvedDetails = cachedNormalizedDetails
+          ? requireCurrentPerformanceDetails(
+              cachedNormalizedDetails,
+              resolvedControls,
+              summaryEvidence,
+            )
+          : requireCurrentPerformanceDetails(
             await getWorkbenchPerformanceWorkspaceDetailsClient(
               resolvedControls.portfolioId,
               buildDetailsRequest(resolvedControls),
             ),
             resolvedControls,
+            summaryEvidence,
           );
       }
     }
@@ -487,7 +504,10 @@ export default function PerformanceWorkspaceClient({
       }
 
       failureScope = "details";
-      const resolvedDetails = await resolveDetailsForControls(detailRequestControls);
+      const resolvedDetails = await resolveDetailsForControls(
+        detailRequestControls,
+        resolvedSummary,
+      );
       if (requestSequenceRef.current !== requestId) {
         return;
       }
@@ -554,7 +574,7 @@ export default function PerformanceWorkspaceClient({
     initialDetailsRequestedRef.current = true;
     const requestId = requestSequenceRef.current;
     setDetailsStatus("loading");
-    void resolveDetailsForControls(controls, { allowInitialFallback: true })
+    void resolveDetailsForControls(controls, summary, { allowInitialFallback: true })
       .then((resolvedDetails) => {
         if (requestSequenceRef.current !== requestId) {
           return;
@@ -686,6 +706,8 @@ function buildSummaryRequest(controls: PerformanceControlState) {
     benchmark: controls.benchmark,
     reportStartDate: controls.reportStartDate,
     reportEndDate: controls.reportEndDate,
+    asOfDate: controls.reviewAsOfDate,
+    reportingCurrency: controls.reviewReportingCurrency,
   };
 }
 
@@ -705,7 +727,7 @@ function buildResolvedSummaryControls(
     benchmark: resolvedSummary.benchmark_code ?? undefined,
     reportStartDate: resolvedSummary.report_start_date,
     reportEndDate: resolvedSummary.report_end_date,
-    sourceAsOfDate: resolvedSummary.as_of_date,
+    sourceAsOfDate: resolvedSummary.effective_as_of_date,
   };
 }
 
@@ -722,7 +744,7 @@ function buildResolvedDetailControls(
     benchmark: resolvedDetails.benchmark_code ?? requestedControls.benchmark,
     reportStartDate: resolvedDetails.report_start_date,
     reportEndDate: resolvedDetails.report_end_date,
-    sourceAsOfDate: resolvedDetails.as_of_date,
+    sourceAsOfDate: resolvedDetails.effective_as_of_date,
   };
 }
 
@@ -749,6 +771,7 @@ function buildPerformanceControlsHref(
 function requireCurrentPerformanceDetails(
   details: WorkbenchPerformanceWorkspaceDetails,
   controls: PerformanceControlState,
+  summary: WorkbenchPerformanceWorkspaceSummary,
 ): WorkbenchPerformanceWorkspaceDetails {
   if (
     !isPerformanceDetailsSourceCurrent(details, {
@@ -756,7 +779,10 @@ function requireCurrentPerformanceDetails(
       period: controls.period,
       reportStartDate: controls.reportStartDate,
       reportEndDate: controls.reportEndDate,
-    })
+      asOfDate: controls.reviewAsOfDate,
+      reportingCurrency: controls.reviewReportingCurrency,
+    }) ||
+    !doPerformanceSummaryAndDetailsShareReviewContext(summary, details)
   ) {
     throw new Error("Performance analytical detail did not confirm the requested source identity.");
   }
@@ -773,6 +799,8 @@ function requireCurrentPerformanceSummary(
       period: controls.period,
       reportStartDate: controls.reportStartDate,
       reportEndDate: controls.reportEndDate,
+      asOfDate: controls.reviewAsOfDate,
+      reportingCurrency: controls.reviewReportingCurrency,
     })
   ) {
     throw new Error("Performance summary did not confirm the requested source identity.");
@@ -893,7 +921,9 @@ function shouldRefreshSummary(
     currentControls.period !== nextControls.period ||
     currentControls.benchmark !== nextControls.benchmark ||
     currentControls.reportStartDate !== nextControls.reportStartDate ||
-    currentControls.reportEndDate !== nextControls.reportEndDate
+    currentControls.reportEndDate !== nextControls.reportEndDate ||
+    currentControls.reviewAsOfDate !== nextControls.reviewAsOfDate ||
+    currentControls.reviewReportingCurrency !== nextControls.reviewReportingCurrency
   );
 }
 
@@ -907,6 +937,8 @@ function buildSummaryCacheKey(
     | "benchmark"
     | "reportStartDate"
     | "reportEndDate"
+    | "reviewAsOfDate"
+    | "reviewReportingCurrency"
   >
 ): string {
   const isExplicitWindow = controls.period === "EXPLICIT";
@@ -918,6 +950,8 @@ function buildSummaryCacheKey(
     benchmark: controls.benchmark ?? null,
     reportStartDate: isExplicitWindow ? controls.reportStartDate ?? null : null,
     reportEndDate: isExplicitWindow ? controls.reportEndDate ?? null : null,
+    reviewAsOfDate: controls.reviewAsOfDate ?? null,
+    reviewReportingCurrency: controls.reviewReportingCurrency ?? null,
   });
 }
 
@@ -933,6 +967,8 @@ function buildDetailsCacheKey(controls: PerformanceControlState): string {
     benchmark: controls.benchmark ?? null,
     reportStartDate: isExplicitWindow ? controls.reportStartDate ?? null : null,
     reportEndDate: isExplicitWindow ? controls.reportEndDate ?? null : null,
+    reviewAsOfDate: controls.reviewAsOfDate ?? null,
+    reviewReportingCurrency: controls.reviewReportingCurrency ?? null,
   });
 }
 
@@ -976,7 +1012,8 @@ function resolveInitialControls({
       initialBenchmark,
     reportStartDate: initialDetails?.report_start_date ?? initialSummary?.report_start_date,
     reportEndDate: initialDetails?.report_end_date ?? initialSummary?.report_end_date,
-    sourceAsOfDate: initialDetails?.as_of_date ?? initialSummary?.as_of_date,
+    sourceAsOfDate:
+      initialDetails?.effective_as_of_date ?? initialSummary?.effective_as_of_date,
     reviewAsOfDate: initialAsOfDate,
     reviewReportingCurrency: initialReportingCurrency,
   };

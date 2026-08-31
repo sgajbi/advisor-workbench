@@ -239,6 +239,60 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
+  it("withholds mixed-currency initial detail until it matches the summary context", async () => {
+    const summary = buildSummary({
+      requested_as_of_date: "2026-02-24",
+      effective_as_of_date: "2026-02-24",
+      requested_reporting_currency: "SGD",
+      effective_reporting_currency: "USD",
+      reporting_currency_state: "unavailable",
+    });
+    const mixedDetails = buildDetails({
+      requested_as_of_date: "2026-02-24",
+      effective_as_of_date: "2026-02-24",
+      requested_reporting_currency: "SGD",
+      effective_reporting_currency: "SGD",
+      reporting_currency_state: "accepted_unverified",
+    });
+    getDetailsClientMock.mockResolvedValueOnce(
+      buildDetails({
+        requested_as_of_date: "2026-02-24",
+        effective_as_of_date: "2026-02-24",
+        requested_reporting_currency: "SGD",
+        effective_reporting_currency: "USD",
+        reporting_currency_state: "unavailable",
+      }),
+    );
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={summary}
+        initialDetails={mixedDetails}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+        initialAsOfDate="2026-02-24"
+        initialReportingCurrency="SGD"
+      />
+    );
+
+    await waitFor(() => {
+      expect(getDetailsClientMock).toHaveBeenCalledWith(
+        "PF_1001",
+        expect.objectContaining({
+          asOfDate: "2026-02-24",
+          reportingCurrency: "SGD",
+        }),
+      );
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
+    });
+  });
+
   it("rehydrates initial detail when its explicit bounds do not match the confirmed summary", async () => {
     const explicitWindow = {
       period: "EXPLICIT",
@@ -278,7 +332,7 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
-  it("accepts returned valuation metadata that is not part of Performance request identity", async () => {
+  it("rejects analytical detail whose effective valuation date is internally inconsistent", async () => {
     getDetailsClientMock.mockResolvedValueOnce(
       buildDetails({ as_of_date: "2026-02-23" }),
     );
@@ -297,8 +351,8 @@ describe("PerformanceWorkspaceClient", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("chart-points")).toHaveTextContent("1");
-      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("none");
+      expect(screen.getByTestId("chart-points")).toHaveTextContent("0");
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("failed");
       expect(screen.getByTestId("details-pending")).toHaveTextContent("false");
     });
     expect(getDetailsClientMock).toHaveBeenCalledTimes(1);

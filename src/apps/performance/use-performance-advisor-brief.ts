@@ -13,6 +13,7 @@ import type {
 } from "@/features/workbench/types";
 
 import { isConfirmedAdvisorBriefReviewTransition } from "./advisor-brief/advisor-brief-review-transition";
+import { isPerformanceReviewContextCurrent } from "./performance-review-context";
 
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
@@ -24,6 +25,8 @@ type PerformanceAdvisorBriefRequest = {
   benchmark?: string | null;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 };
 
 export type AdvisorBriefReviewFeedback = {
@@ -52,6 +55,8 @@ export function usePerformanceAdvisorBrief({
     benchmark,
     reportStartDate,
     reportEndDate,
+    asOfDate,
+    reportingCurrency,
   } = request;
   const [advisorBrief, setAdvisorBrief] = useState<WorkbenchPerformanceAdvisorBrief | null>(null);
   const [advisorBriefUnavailable, setAdvisorBriefUnavailable] = useState(false);
@@ -78,10 +83,22 @@ export function usePerformanceAdvisorBrief({
       benchmark: benchmark ?? undefined,
       reportStartDate,
       reportEndDate,
+      asOfDate,
+      reportingCurrency,
     })
       .then((response) => {
         if (requestSequenceRef.current !== requestId) {
           return;
+        }
+        if (
+          !isPerformanceReviewContextCurrent(response, {
+            asOfDate,
+            reportingCurrency,
+          })
+        ) {
+          throw new TypeError(
+            "Performance adviser brief does not confirm the requested review context.",
+          );
         }
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
@@ -108,6 +125,7 @@ export function usePerformanceAdvisorBrief({
     };
   }, [
     attributionDimension,
+    asOfDate,
     benchmark,
     chartFrequency,
     contributionDimension,
@@ -117,6 +135,7 @@ export function usePerformanceAdvisorBrief({
     refreshSequence,
     reportEndDate,
     reportStartDate,
+    reportingCurrency,
   ]);
 
   const refresh = useCallback(() => {
@@ -153,6 +172,8 @@ export function usePerformanceAdvisorBrief({
             benchmark: benchmark ?? undefined,
             reportStartDate,
             reportEndDate,
+            asOfDate,
+            reportingCurrency,
           },
           payload
         );
@@ -162,6 +183,10 @@ export function usePerformanceAdvisorBrief({
         }
 
         if (
+          !isPerformanceReviewContextCurrent(response, {
+            asOfDate,
+            reportingCurrency,
+          }) ||
           !isConfirmedAdvisorBriefReviewTransition({
             response,
             payload,
@@ -201,6 +226,7 @@ export function usePerformanceAdvisorBrief({
       activeRunId,
       advisorBrief,
       attributionDimension,
+      asOfDate,
       benchmark,
       chartFrequency,
       contributionDimension,
@@ -209,6 +235,7 @@ export function usePerformanceAdvisorBrief({
       portfolioId,
       reportEndDate,
       reportStartDate,
+      reportingCurrency,
     ]
   );
 

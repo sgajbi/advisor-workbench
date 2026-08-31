@@ -6,6 +6,7 @@ import {
   WorkspaceGrid,
 } from "@/design-system";
 
+import { getPerformanceDisplayCurrency } from "../performance-review-context";
 import { getPerformanceReturnPathTitle } from "../performance-terminology";
 import PerformanceChartPanel from "./performance-chart-panel";
 import {
@@ -46,6 +47,10 @@ export default function PerformanceSummaryMode({
     hasBenchmarkSeries: hasBenchmarkReturnSeries(returnPoints),
     hasActiveSeries: hasActiveReturnSeries(returnPoints),
   });
+  const displayCurrency = getPerformanceDisplayCurrency(
+    workspace,
+    workspace.portfolio.base_currency,
+  );
 
   return (
     <PerformanceWorkspaceStageSurface
@@ -67,7 +72,7 @@ export default function PerformanceSummaryMode({
           benchmark={benchmark}
           benchmarkOptions={workspace.benchmark_options ?? []}
           moneyWeightedReturn={workspace.money_weighted_return}
-          reportingCurrency={workspace.portfolio.base_currency}
+          reportingCurrency={displayCurrency}
           reportStartDate={workspace.report_start_date}
           reportEndDate={workspace.report_end_date}
           capabilities={capabilities}

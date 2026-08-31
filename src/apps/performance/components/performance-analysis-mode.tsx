@@ -56,6 +56,8 @@ export default function PerformanceAnalysisMode({
           benchmark={workspace.benchmark_code ?? benchmark}
           reportStartDate={workspace.report_start_date}
           reportEndDate={workspace.report_end_date}
+          asOfDate={workspace.requested_as_of_date ?? undefined}
+          reportingCurrency={workspace.requested_reporting_currency ?? undefined}
           onRequestChange={onRequestChange}
         />
         <PerformanceAnalysisAttributionSection

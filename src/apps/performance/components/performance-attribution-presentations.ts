@@ -179,6 +179,23 @@ export function getAttributionTrendUnavailableBody(
     return `${requestedDimension} attribution trend is unavailable because the selected benchmark does not expose complete ${requestedDimension.toLowerCase()} classification for every component.`;
   }
 
+  if (trend?.requested_reporting_currency) {
+    const requestedCurrency = trend.requested_reporting_currency;
+    const effectiveCurrency = trend.effective_reporting_currency;
+
+    if (trend.reporting_currency_state === "rejected") {
+      return `Attribution history remains unavailable because the requested ${requestedCurrency} restatement was not accepted. Source evidence remains in ${effectiveCurrency}.`;
+    }
+
+    if (trend.reporting_currency_state === "accepted_unverified") {
+      return `Attribution history is unavailable for this selection. The requested ${requestedCurrency} restatement is not source-verified, so no restated history has been inferred.`;
+    }
+
+    if (trend.reporting_currency_state === "unavailable") {
+      return `Attribution history is unavailable because reporting-currency evidence for ${requestedCurrency} could not be confirmed.`;
+    }
+  }
+
   return "Attribution trend is not available for the current selection.";
 }
 
