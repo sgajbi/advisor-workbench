@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type { WorkbenchPerformanceHorizonComparison } from "@/features/workbench/types";
+import { isPerformanceRequestedValueCurrent } from "../performance-source-identity";
 import {
   SourceEvidenceMismatchError,
   useSourceConfirmedResource,
@@ -99,12 +100,21 @@ export function buildPerformanceHorizonComparisonCacheKey(
   });
 }
 
-function isHorizonComparisonCurrent(
+export function isHorizonComparisonCurrent(
   response: WorkbenchPerformanceHorizonComparison,
   request: PerformanceHorizonComparisonRequest,
 ): boolean {
   return (
+    response.portfolio_id === request.portfolioId &&
     response.period === request.period &&
+    response.detail_basis === request.detailBasis &&
+    (request.benchmark === undefined ||
+      response.benchmark_code === request.benchmark) &&
+    isPerformanceRequestedValueCurrent(
+      response.chart_frequency,
+      request.chartFrequency,
+      response.requested_chart_frequency_supported,
+    ) &&
     (!request.reportStartDate ||
       response.report_start_date === request.reportStartDate) &&
     (!request.reportEndDate ||
