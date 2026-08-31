@@ -45,7 +45,7 @@ describe("E2E scenario governance gate", () => {
     const result = runChecker();
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("21 scenarios");
-    expect(result.stdout).toContain("61 registered executions");
+    expect(result.stdout).toContain("60 registered executions");
   }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a registered test no longer exists", () => {
@@ -64,13 +64,13 @@ describe("E2E scenario governance gate", () => {
       registry.families.portfolio.scenarios.cashflow.expected_tests.filter(
         (title: string) =>
           title !==
-          "source-confirmed historical review replaces dated evidence atomically",
+          "historical review stays unavailable until aggregate evidence can refresh atomically",
       );
     const result = runChecker({ registry: writeTemporaryRegistry(registry) });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("fixture-gated test");
     expect(result.stderr).toContain(
-      "source-confirmed historical review replaces dated evidence atomically",
+      "historical review stays unavailable until aggregate evidence can refresh atomically",
     );
   }, GOVERNANCE_TEST_TIMEOUT_MS);
 
