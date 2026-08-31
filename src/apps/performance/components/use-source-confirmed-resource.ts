@@ -21,6 +21,17 @@ type RefreshRequest = {
   sequence: number;
 };
 
+type KeyedResourceState<T> = {
+  requestKey: string;
+  state: SourceConfirmedResourceState<T>;
+};
+
+const LOADING_RESOURCE_STATE = {
+  status: "loading",
+  value: null,
+  httpStatus: null,
+} as const;
+
 export class SourceEvidenceMismatchError extends Error {}
 
 /**
@@ -39,10 +50,9 @@ export function useSourceConfirmedResource<T>({
     requestKey: "",
     sequence: 0,
   });
-  const [state, setState] = useState<SourceConfirmedResourceState<T>>({
-    status: "loading",
-    value: null,
-    httpStatus: null,
+  const [keyedState, setKeyedState] = useState<KeyedResourceState<T>>({
+    requestKey: "",
+    state: LOADING_RESOURCE_STATE,
   });
   const latestRequestIdRef = useRef(0);
   const consumedRefreshSequenceRef = useRef(0);
@@ -58,13 +68,16 @@ export function useSourceConfirmedResource<T>({
 
     const cached = cacheRef.current.get(requestKey);
     if (cached && !forceRefresh) {
-      setState({ status: "ready", value: cached, httpStatus: null });
+      setKeyedState({
+        requestKey,
+        state: { status: "ready", value: cached, httpStatus: null },
+      });
       return;
     }
 
     const requestId = latestRequestIdRef.current + 1;
     latestRequestIdRef.current = requestId;
-    setState({ status: "loading", value: null, httpStatus: null });
+    setKeyedState({ requestKey, state: LOADING_RESOURCE_STATE });
 
     void load()
       .then((value) => {
@@ -72,7 +85,10 @@ export function useSourceConfirmedResource<T>({
           return;
         }
         cacheRef.current.set(requestKey, value);
-        setState({ status: "ready", value, httpStatus: null });
+        setKeyedState({
+          requestKey,
+          state: { status: "ready", value, httpStatus: null },
+        });
       })
       .catch((error: unknown) => {
         const permissionBlocked = isWorkbenchPermissionBlockedError(error);
@@ -84,14 +100,17 @@ export function useSourceConfirmedResource<T>({
           return;
         }
         const errorEvidence = getWorkbenchApiErrorEvidence(error);
-        setState({
-          status: permissionBlocked
-            ? "permission_blocked"
-            : sourceMismatch
-              ? "source_mismatch"
-              : "error",
-          value: null,
-          httpStatus: errorEvidence ? Number(errorEvidence.value) : null,
+        setKeyedState({
+          requestKey,
+          state: {
+            status: permissionBlocked
+              ? "permission_blocked"
+              : sourceMismatch
+                ? "source_mismatch"
+                : "error",
+            value: null,
+            httpStatus: errorEvidence ? Number(errorEvidence.value) : null,
+          },
         });
       });
 
@@ -108,6 +127,11 @@ export function useSourceConfirmedResource<T>({
       sequence: current.sequence + 1,
     }));
   }, [requestKey]);
+
+  const state =
+    keyedState.requestKey === requestKey
+      ? keyedState.state
+      : LOADING_RESOURCE_STATE;
 
   return { state, refresh, requestKey };
 }
