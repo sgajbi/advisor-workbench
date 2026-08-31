@@ -411,6 +411,22 @@ export type PerformanceEvidenceView = {
   source_supportability?: PerformanceSourceSupportabilityView[] | null;
 };
 
+export type WorkbenchReportingCurrencyState =
+  "applied" | "accepted_unverified" | "rejected" | "unavailable";
+
+/**
+ * Gateway-owned evidence for the review date and reporting currency carried
+ * into a performance calculation. Consumers must use the state field before
+ * presenting the effective currency as an applied restatement.
+ */
+export type WorkbenchPerformanceReviewContextEvidence = {
+  requested_as_of_date: string | null;
+  effective_as_of_date: string;
+  requested_reporting_currency: string | null;
+  effective_reporting_currency: string;
+  reporting_currency_state: WorkbenchReportingCurrencyState;
+};
+
 export type PerformanceHorizonComparisonRow = {
   period: string;
   period_start?: string | null;
@@ -473,7 +489,7 @@ export type PerformanceAttributionTrendRow = {
   supportability_evidence?: AttributionSupportabilityEvidenceView | null;
 };
 
-export type WorkbenchPerformanceAttributionTrend = {
+export type WorkbenchPerformanceAttributionTrend = WorkbenchPerformanceReviewContextEvidence & {
   correlation_id: string;
   contract_version: string;
   portfolio_id: string;
@@ -509,7 +525,7 @@ export type AttributionSummaryView = {
   levels: AttributionLevelView[];
 };
 
-export type WorkbenchPerformanceWorkspace = {
+export type WorkbenchPerformanceWorkspace = WorkbenchPerformanceReviewContextEvidence & {
   correlation_id: string;
   contract_version: string;
   portfolio_id: string;
@@ -548,6 +564,11 @@ export type WorkbenchPerformanceWorkspaceSummary = Pick<
   | "contract_version"
   | "portfolio_id"
   | "as_of_date"
+  | "requested_as_of_date"
+  | "effective_as_of_date"
+  | "requested_reporting_currency"
+  | "effective_reporting_currency"
+  | "reporting_currency_state"
   | "period"
   | "report_start_date"
   | "report_end_date"
@@ -575,6 +596,11 @@ export type WorkbenchPerformanceWorkspaceDetails = Pick<
   | "contract_version"
   | "portfolio_id"
   | "as_of_date"
+  | "requested_as_of_date"
+  | "effective_as_of_date"
+  | "requested_reporting_currency"
+  | "effective_reporting_currency"
+  | "reporting_currency_state"
   | "period"
   | "report_start_date"
   | "report_end_date"
@@ -685,11 +711,7 @@ export type WorkbenchAdvisorBriefWorkflowPackRunFinding = {
 };
 
 export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionType =
-  | "ACCEPT"
-  | "REJECT"
-  | "REVISE"
-  | "SUPERSEDE"
-  | "ABANDON";
+  "ACCEPT" | "REJECT" | "REVISE" | "SUPERSEDE" | "ABANDON";
 
 export type WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest = {
   action_type: WorkbenchAdvisorBriefWorkflowPackRunReviewActionType;
@@ -744,7 +766,7 @@ export type WorkbenchAdvisorBriefWorkflowPackTaskFlow = {
   updated_at: string;
 };
 
-export type WorkbenchPerformanceAdvisorBrief = {
+export type WorkbenchPerformanceAdvisorBrief = WorkbenchPerformanceReviewContextEvidence & {
   correlation_id: string;
   contract_version: string;
   portfolio_id: string;
@@ -809,10 +831,7 @@ export type WorkbenchRiskMetric = {
 };
 
 export type WorkbenchMandateConstraintState =
-  | "within"
-  | "breach"
-  | "not_defined"
-  | "measure_unavailable";
+  "within" | "breach" | "not_defined" | "measure_unavailable";
 
 export type WorkbenchMandateComparison = {
   mandate_id?: string | null;

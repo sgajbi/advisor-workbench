@@ -8,7 +8,7 @@ import {
   fetchWorkbenchResource,
   observeWorkbenchMutation,
   observeWorkbenchResource,
-  type WorkbenchRequestTarget,
+  type WorkbenchRequestTarget
 } from "@/features/workbench/api-client";
 import type {
   CompositePerformanceGatewayResponse,
@@ -19,7 +19,7 @@ import type {
   WorkbenchPerformanceAttributionTrend,
   WorkbenchPerformanceHorizonComparison,
   WorkbenchPerformanceWorkspaceDetails,
-  WorkbenchPerformanceWorkspaceSummary,
+  WorkbenchPerformanceWorkspaceSummary
 } from "@/features/workbench/types";
 
 function buildPerformanceWorkspaceQuery(params: {
@@ -31,6 +31,8 @@ function buildPerformanceWorkspaceQuery(params: {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 }): string {
   const query = new URLSearchParams();
   query.set("period", params.period);
@@ -47,6 +49,12 @@ function buildPerformanceWorkspaceQuery(params: {
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
   }
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
+  }
   return query.toString();
 }
 
@@ -61,16 +69,14 @@ function buildPerformanceWorkspaceUrl(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   },
   pathSuffix: string,
   target: WorkbenchRequestTarget
 ): string {
   const query = buildPerformanceWorkspaceQuery(params);
-  return buildWorkbenchUrl(
-    target,
-    `/workbench/${portfolioId}/performance${pathSuffix}`,
-    query
-  );
+  return buildWorkbenchUrl(target, `/workbench/${portfolioId}/performance${pathSuffix}`, query);
 }
 
 export async function getWorkbenchPerformanceWorkspaceSummary(
@@ -84,6 +90,8 @@ export async function getWorkbenchPerformanceWorkspaceSummary(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
   return await observeWorkbenchResource(
@@ -108,6 +116,8 @@ export async function getWorkbenchPerformanceWorkspaceDetails(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await fetchWorkbenchJson<WorkbenchPerformanceWorkspaceDetails>(
@@ -128,6 +138,8 @@ export async function getWorkbenchPerformanceWorkspaceSummaryClient(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceSummary> {
   return await observeWorkbenchResource(
@@ -152,6 +164,8 @@ export async function getWorkbenchPerformanceWorkspaceDetailsClient(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceWorkspaceDetails> {
   return await observeWorkbenchResource(
@@ -213,6 +227,8 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceAttributionTrend> {
   const query = new URLSearchParams();
@@ -228,6 +244,12 @@ export async function getWorkbenchPerformanceAttributionTrendClient(
   }
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
+  }
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
   }
   return await observeWorkbenchResource(
     "performance.workspace.attribution-trend",
@@ -253,7 +275,7 @@ export async function calculateCompositePerformanceTwrClient(
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         }
       )
   );
@@ -271,7 +293,7 @@ export async function inspectCompositePerformanceClient(
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         }
       )
   );
@@ -288,6 +310,8 @@ export async function getWorkbenchPerformanceAdvisorBriefClient(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
   return await observeWorkbenchResource(
@@ -313,6 +337,8 @@ export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
     benchmark?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   },
   payload: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest
 ): Promise<WorkbenchPerformanceAdvisorBrief> {
@@ -328,8 +354,10 @@ export async function postWorkbenchPerformanceAdvisorBriefReviewActionClient(
         "performance advisor brief review action",
         {
           method: "POST",
-          headers: buildAnalyticsUiCorrelationHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify(payload),
+          headers: buildAnalyticsUiCorrelationHeaders({
+            "Content-Type": "application/json"
+          }),
+          body: JSON.stringify(payload)
         }
       )
   );

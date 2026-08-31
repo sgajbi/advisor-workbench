@@ -1,6 +1,7 @@
 import type { PerformanceWorkspaceCapabilities } from "../../src/apps/performance/capabilities";
 import type {
   WorkbenchPerformanceCapabilities,
+  WorkbenchPerformanceAttributionTrend,
   PerformanceComparativeSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceDetails,
@@ -194,6 +195,11 @@ export function buildPerformanceWorkspaceSummary(
     contract_version: "v1",
     portfolio_id: portfolioId,
     as_of_date: "2026-02-24",
+    requested_as_of_date: null,
+    effective_as_of_date: "2026-02-24",
+    requested_reporting_currency: null,
+    effective_reporting_currency: "USD",
+    reporting_currency_state: "accepted_unverified",
     period: "YTD",
     report_start_date: "2026-01-01",
     report_end_date: "2026-02-24",
@@ -366,6 +372,11 @@ export function buildPerformanceWorkspaceDetails(
     contract_version: "v1",
     portfolio_id: portfolioId,
     as_of_date: "2026-02-24",
+    requested_as_of_date: null,
+    effective_as_of_date: "2026-02-24",
+    requested_reporting_currency: null,
+    effective_reporting_currency: "USD",
+    reporting_currency_state: "accepted_unverified",
     period: "YTD",
     report_start_date: "2026-01-01",
     report_end_date: "2026-02-24",
@@ -1046,9 +1057,9 @@ export function buildPerformanceHorizonComparisonForScenario(
 }
 
 export function buildPerformanceAttributionTrend(
-  portfolioIdOrOverrides: string | Record<string, unknown> = "PF_1001",
-  overrides: Record<string, unknown> = {}
-) {
+  portfolioIdOrOverrides: string | Partial<WorkbenchPerformanceAttributionTrend> = "PF_1001",
+  overrides: Partial<WorkbenchPerformanceAttributionTrend> = {}
+): WorkbenchPerformanceAttributionTrend {
   const portfolioId =
     typeof portfolioIdOrOverrides === "string" ? portfolioIdOrOverrides : "PF_1001";
   const trendOverrides =
@@ -1059,6 +1070,11 @@ export function buildPerformanceAttributionTrend(
     contract_version: "v1",
     portfolio_id: portfolioId,
     as_of_date: "2026-02-24",
+    requested_as_of_date: null,
+    effective_as_of_date: "2026-02-24",
+    requested_reporting_currency: null,
+    effective_reporting_currency: "USD",
+    reporting_currency_state: "accepted_unverified",
     period: "YTD",
     report_start_date: "2026-01-01",
     report_end_date: "2026-02-24",

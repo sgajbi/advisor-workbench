@@ -1,13 +1,19 @@
 import type {
   WorkbenchPerformanceWorkspaceDetails,
-  WorkbenchPerformanceWorkspaceSummary,
+  WorkbenchPerformanceWorkspaceSummary
 } from "@/features/workbench/types";
+import {
+  arePerformanceReviewContextsCoherent,
+  isPerformanceReviewContextCurrent
+} from "./performance-review-context";
 
 export type PerformanceSourceIdentity = Readonly<{
   portfolioId: string;
   period?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 }>;
 
 function confirmsRequestedWindow(
@@ -16,7 +22,7 @@ function confirmsRequestedWindow(
     report_start_date?: string | null;
     report_end_date?: string | null;
   }>,
-  identity: PerformanceSourceIdentity,
+  identity: PerformanceSourceIdentity
 ): boolean {
   if (identity.period !== "EXPLICIT") {
     return true;
@@ -31,32 +37,38 @@ function confirmsRequestedWindow(
 
 export function isPerformanceSummarySourceCurrent(
   summary: WorkbenchPerformanceWorkspaceSummary,
-  identity: PerformanceSourceIdentity,
+  identity: PerformanceSourceIdentity
 ): boolean {
   return (
     isPerformanceSummaryPortfolioIdentityCurrent(summary, identity.portfolioId) &&
     (!identity.period || summary.period === identity.period) &&
-    confirmsRequestedWindow(summary, identity)
+    confirmsRequestedWindow(summary, identity) &&
+    isPerformanceReviewContextCurrent(summary, identity)
   );
 }
 
 export function isPerformanceSummaryPortfolioIdentityCurrent(
   summary: WorkbenchPerformanceWorkspaceSummary,
-  portfolioId: string,
+  portfolioId: string
 ): boolean {
-  return (
-    summary.portfolio_id === portfolioId &&
-    summary.portfolio.portfolio_id === portfolioId
-  );
+  return summary.portfolio_id === portfolioId && summary.portfolio.portfolio_id === portfolioId;
 }
 
 export function isPerformanceDetailsSourceCurrent(
   details: WorkbenchPerformanceWorkspaceDetails,
-  identity: PerformanceSourceIdentity,
+  identity: PerformanceSourceIdentity
 ): boolean {
   return (
     details.portfolio_id === identity.portfolioId &&
     (!identity.period || details.period === identity.period) &&
-    confirmsRequestedWindow(details, identity)
+    confirmsRequestedWindow(details, identity) &&
+    isPerformanceReviewContextCurrent(details, identity)
   );
+}
+
+export function doPerformanceSummaryAndDetailsShareReviewContext(
+  summary: WorkbenchPerformanceWorkspaceSummary,
+  details: WorkbenchPerformanceWorkspaceDetails
+): boolean {
+  return arePerformanceReviewContextsCoherent(summary, details);
 }
