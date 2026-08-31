@@ -344,6 +344,51 @@ describe("PerformanceRiskMode", () => {
     );
   });
 
+  it("withholds stale risk responses from the admitted historical review context", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const historicalScenario = {
+      ...scenario,
+      workspace: {
+        ...scenario.workspace,
+        as_of_date: "2026-05-23",
+        report_end_date: "2026-04-10",
+      },
+    };
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue({
+      ...buildFixtureRiskSummary(historicalScenario.workspace, "YTD", "NET"),
+      as_of_date: "2026-05-23",
+    });
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue({
+      ...buildFixtureRiskConcentration(historicalScenario.workspace, "YTD"),
+      as_of_date: "2026-05-23",
+    });
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue({
+      ...buildFixtureRiskAttribution(historicalScenario.workspace, "YTD", "NET"),
+      as_of_date: "2026-05-23",
+    });
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue({
+      ...buildFixtureRiskDrawdown(historicalScenario.workspace, "YTD", "NET"),
+      as_of_date: "2026-05-23",
+    });
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue({
+      ...buildFixtureRiskRolling(historicalScenario.workspace, "YTD", "NET"),
+      as_of_date: "2026-05-23",
+    });
+
+    renderRiskMode(historicalScenario);
+
+    expect(await screen.findByText("Risk unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk snapshot headline metrics"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Risk concentration headline metrics"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Historical risk attribution table"),
+    ).not.toBeInTheDocument();
+  });
+
   it("reuses cached live responses for the same request shape and invalidates summary only when detail basis changes", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
@@ -1032,7 +1077,7 @@ describe("PerformanceRiskMode", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders structured unavailable states for deferred detail panels", async () => {
+  it("renders structured unavailable states for stale deferred detail responses", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
@@ -1047,12 +1092,22 @@ describe("PerformanceRiskMode", () => {
       .mockResolvedValueOnce(
         buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
       )
-      .mockRejectedValueOnce(new Error("underwater unavailable"));
+      .mockResolvedValueOnce({
+        ...buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+          includeUnderwaterSeries: true,
+        }),
+        as_of_date: "2026-02-23",
+      });
     vi.mocked(getWorkbenchRiskRollingClient)
       .mockResolvedValueOnce(
         buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
       )
-      .mockRejectedValueOnce(new Error("rolling unavailable"));
+      .mockResolvedValueOnce({
+        ...buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+          includeTimeSeries: true,
+        }),
+        as_of_date: "2026-02-23",
+      });
 
     renderRiskMode(scenario);
 

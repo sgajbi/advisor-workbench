@@ -26,6 +26,10 @@ import {
   buildUnavailableRiskRolling,
   buildUnavailableRiskSummary,
 } from "./risk-workspace-view-model";
+import {
+  requireCurrentPerformanceRiskSource,
+  type PerformanceRiskSourceIdentity,
+} from "./performance-risk-source-identity";
 
 type PerformanceRiskContractState = {
   riskSummary: WorkbenchRiskSummaryResponse | null;
@@ -119,6 +123,20 @@ export function usePerformanceRiskContract({
     [period, workspace.report_end_date, workspace.report_start_date],
   );
   const riskAsOfDate = getRiskAsOfDate(workspace);
+  const riskSourceIdentity = useMemo<PerformanceRiskSourceIdentity>(
+    () => ({
+      portfolioId: workspace.portfolio.portfolio_id,
+      period,
+      asOfDate: riskAsOfDate,
+      benchmark: workspace.benchmark_code ?? undefined,
+    }),
+    [
+      period,
+      riskAsOfDate,
+      workspace.benchmark_code,
+      workspace.portfolio.portfolio_id,
+    ],
+  );
   const attributionScopeKey = useMemo(
     () =>
       JSON.stringify({
@@ -358,7 +376,11 @@ export function usePerformanceRiskContract({
             ...riskWindowParams,
             asOfDate: riskAsOfDate,
             reportingCurrency: workspace.portfolio.base_currency,
-          }).catch((error: unknown) =>
+          })
+            .then((response) =>
+              requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+            )
+            .catch((error: unknown) =>
             buildUnavailableRiskSummary({
               workspace: workspaceRef.current,
               period,
@@ -379,7 +401,11 @@ export function usePerformanceRiskContract({
               asOfDate: riskAsOfDate,
               reportingCurrency: workspace.portfolio.base_currency,
             },
-          ).catch((error: unknown) =>
+          )
+            .then((response) =>
+              requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+            )
+            .catch((error: unknown) =>
             buildUnavailableRiskConcentration({
               workspace: workspaceRef.current,
               period,
@@ -401,7 +427,11 @@ export function usePerformanceRiskContract({
             asOfDate: riskAsOfDate,
             reportingCurrency: workspace.portfolio.base_currency,
             includeUnderwaterSeries: false,
-          }).catch((error: unknown) =>
+          })
+            .then((response) =>
+              requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+            )
+            .catch((error: unknown) =>
             buildUnavailableRiskDrawdown({
               workspace: workspaceRef.current,
               period,
@@ -422,7 +452,11 @@ export function usePerformanceRiskContract({
             asOfDate: riskAsOfDate,
             reportingCurrency: workspace.portfolio.base_currency,
             includeTimeSeries: false,
-          }).catch((error: unknown) =>
+          })
+            .then((response) =>
+              requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+            )
+            .catch((error: unknown) =>
             buildUnavailableRiskRolling({
               workspace: workspaceRef.current,
               period,
@@ -481,6 +515,7 @@ export function usePerformanceRiskContract({
     rollingKey,
     summaryKey,
     riskAsOfDate,
+    riskSourceIdentity,
     workspace.benchmark_code,
     workspace.portfolio.base_currency,
     workspace.portfolio.portfolio_id,
@@ -554,8 +589,12 @@ export function usePerformanceRiskContract({
         if (attributionRequestSequenceRef.current !== requestId) {
           return;
         }
-        attributionCacheRef.current.set(attributionKey, response);
-        setRiskAttribution(response);
+        const currentResponse = requireCurrentPerformanceRiskSource(
+          response,
+          riskSourceIdentity,
+        );
+        attributionCacheRef.current.set(attributionKey, currentResponse);
+        setRiskAttribution(currentResponse);
         setIsAttributionLoading(false);
       })
       .catch(() => {
@@ -580,6 +619,7 @@ export function usePerformanceRiskContract({
     selectedAttributionType,
     selectedGroupingDimension,
     riskAsOfDate,
+    riskSourceIdentity,
     workspace.benchmark_code,
     workspace.portfolio.base_currency,
     workspace.portfolio.portfolio_id,
@@ -610,6 +650,12 @@ export function usePerformanceRiskContract({
         includeUnderwaterSeries: true,
       },
     )
+      .then((response) =>
+        requireCurrentPerformanceRiskSource(
+          response,
+          buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+        ),
+      )
       .catch((error: unknown) =>
         buildUnavailableRiskDrawdown({
           workspace: workspaceRef.current,
@@ -657,6 +703,12 @@ export function usePerformanceRiskContract({
         includeTimeSeries: true,
       },
     )
+      .then((response) =>
+        requireCurrentPerformanceRiskSource(
+          response,
+          buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+        ),
+      )
       .catch((error: unknown) =>
         buildUnavailableRiskRolling({
           workspace: workspaceRef.current,
@@ -711,6 +763,18 @@ function getRiskWindowParams(
 
 function getRiskAsOfDate(workspace: WorkbenchPerformanceWorkspace): string {
   return workspace.report_end_date?.trim() || workspace.as_of_date;
+}
+
+function buildPerformanceRiskSourceIdentity(
+  workspace: WorkbenchPerformanceWorkspace,
+  period: string,
+): PerformanceRiskSourceIdentity {
+  return {
+    portfolioId: workspace.portfolio.portfolio_id,
+    period,
+    asOfDate: getRiskAsOfDate(workspace),
+    benchmark: workspace.benchmark_code ?? undefined,
+  };
 }
 
 function buildRiskFetchFailureDetail(error: unknown, label: string): string {
