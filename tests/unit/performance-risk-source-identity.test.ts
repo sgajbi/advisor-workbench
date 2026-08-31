@@ -17,6 +17,11 @@ const SOURCE = {
   period: "YTD",
   as_of_date: "2026-02-24",
   benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+  payload: {
+    periods: [
+      { start_date: "2026-01-01", end_date: "2026-02-24" },
+    ],
+  },
 } as const;
 
 describe("performance risk source identity", () => {
@@ -144,6 +149,19 @@ describe("performance risk source identity", () => {
             ],
           },
         },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["empty", { periods: [] }],
+    ["malformed", { periods: [{ start_date: "2026-01-01" }] }],
+  ])("rejects a ready preset payload with %s period evidence", (_label, payload) => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        { ...SOURCE, payload },
         IDENTITY,
       ),
     ).toBe(false);
@@ -323,13 +341,19 @@ describe("performance risk source identity", () => {
     (_label, detailIdentity, matchingPayload, stalePayload) => {
       expect(
         isPerformanceRiskSourceCurrent(
-          { ...SOURCE, payload: matchingPayload },
+          {
+            ...SOURCE,
+            payload: { ...SOURCE.payload, ...matchingPayload },
+          },
           { ...IDENTITY, ...detailIdentity },
         ),
       ).toBe(true);
       expect(
         isPerformanceRiskSourceCurrent(
-          { ...SOURCE, payload: stalePayload },
+          {
+            ...SOURCE,
+            payload: { ...SOURCE.payload, ...stalePayload },
+          },
           { ...IDENTITY, ...detailIdentity },
         ),
       ).toBe(false);
@@ -370,6 +394,12 @@ describe("performance risk source identity", () => {
         { ...IDENTITY, includeUnderwaterSeries: true },
       ),
     ).toBe(false);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        { ...SOURCE, state: "blocked", payload: { periods: [] } },
+        IDENTITY,
+      ),
+    ).toBe(true);
   });
 
   it("fails closed before a stale response can be cached or rendered", () => {
