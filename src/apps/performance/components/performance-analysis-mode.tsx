@@ -48,6 +48,7 @@ export default function PerformanceAnalysisMode({
       />
       <section className="performance-analysis-stage performance-lotus-stage performance-lotus-stage-analysis">
         <PerformanceAttributionTrendPanel
+          sourceContext={workspace}
           portfolioId={workspace.portfolio.portfolio_id}
           period={period}
           chartFrequency={chartFrequency}

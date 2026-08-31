@@ -11,6 +11,7 @@ import type { PerformanceWorkspaceRequestPatch } from "./performance-workspace-t
 import { getAttributionTrendUnavailableBody, getAttributionTrendSummaryItems } from "./performance-attribution-presentations";
 import { usePerformanceAttributionTrend } from "./use-performance-attribution-trend";
 import styles from "./performance-attribution-trend-panel.module.css";
+import type { PerformanceReviewContextSource } from "../performance-review-context";
 
 type Props = {
   portfolioId: string;
@@ -23,6 +24,7 @@ type Props = {
   reportEndDate?: string;
   asOfDate?: string;
   reportingCurrency?: string;
+  sourceContext: PerformanceReviewContextSource;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 };
 
@@ -52,6 +54,7 @@ export default function PerformanceAttributionTrendPanel({
   reportEndDate,
   asOfDate,
   reportingCurrency,
+  sourceContext,
   onRequestChange,
 }: Props) {
   const request = useMemo(
@@ -69,7 +72,7 @@ export default function PerformanceAttributionTrendPanel({
     }),
     [asOfDate, attributionDimension, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate, reportingCurrency],
   );
-  const { state, refresh, requestKey } = usePerformanceAttributionTrend(request);
+  const { state, refresh, requestKey } = usePerformanceAttributionTrend(request, sourceContext);
   const refreshButtonRef = useRef<HTMLButtonElement>(null);
   const restoreRefreshFocusRequestKeyRef = useRef<string | null>(null);
   const trend = state.status === "ready" ? state.trend : null;

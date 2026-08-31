@@ -82,6 +82,7 @@ function PerformanceAdvisorBriefModeSession({
     applyReviewAction,
     refresh,
   } = usePerformanceAdvisorBrief({
+    sourceContext: workspace,
     request: {
       portfolioId: workspace.portfolio.portfolio_id,
       period,

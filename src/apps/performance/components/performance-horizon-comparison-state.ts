@@ -4,7 +4,10 @@ import { useCallback, useMemo } from "react";
 
 import { getWorkbenchPerformanceHorizonComparisonClient } from "@/features/workbench/api";
 import type { WorkbenchPerformanceHorizonComparison } from "@/features/workbench/types";
-import { useSourceConfirmedResource } from "./use-source-confirmed-resource";
+import {
+  SourceEvidenceMismatchError,
+  useSourceConfirmedResource,
+} from "./use-source-confirmed-resource";
 
 type PerformanceHorizonComparisonRequest = {
   portfolioId: string;
@@ -39,34 +42,40 @@ export function usePerformanceHorizonComparison(
     [request],
   );
   const load = useCallback(
-    () => getWorkbenchPerformanceHorizonComparisonClient(request.portfolioId, {
-      period: request.period,
-      detailBasis: request.detailBasis,
-      benchmark: request.benchmark,
-      chartFrequency: request.chartFrequency,
-      reportStartDate: request.reportStartDate,
-      reportEndDate: request.reportEndDate,
-      asOfDate: request.asOfDate,
-      reportingCurrency: request.reportingCurrency,
-    }),
+    async () => {
+      const response = await getWorkbenchPerformanceHorizonComparisonClient(
+        request.portfolioId,
+        {
+          period: request.period,
+          detailBasis: request.detailBasis,
+          benchmark: request.benchmark,
+          chartFrequency: request.chartFrequency,
+          reportStartDate: request.reportStartDate,
+          reportEndDate: request.reportEndDate,
+          asOfDate: request.asOfDate,
+          reportingCurrency: request.reportingCurrency,
+        },
+      );
+      if (!isHorizonComparisonCurrent(response, request)) {
+        throw new SourceEvidenceMismatchError(
+          "Horizon comparison does not confirm the requested review window.",
+        );
+      }
+      return response;
+    },
     [request],
   );
   const resource = useSourceConfirmedResource({ requestKey, load });
-  const contextMatches =
-    resource.state.status === "ready" &&
-    (!request.asOfDate || resource.state.value.as_of_date === request.asOfDate) &&
-    (!request.reportingCurrency ||
-      resource.state.value.reporting_currency?.toUpperCase() ===
-        request.reportingCurrency.toUpperCase());
   const state: PerformanceHorizonComparisonState =
     resource.state.status === "ready"
-      ? contextMatches
-        ? { status: "ready", comparison: resource.state.value, httpStatus: null }
-        : { status: "context_mismatch", comparison: null, httpStatus: null }
+      ? { status: "ready", comparison: resource.state.value, httpStatus: null }
       : resource.state.status === "loading"
         ? { status: "loading", comparison: null, httpStatus: null }
         : {
-            status: resource.state.status,
+            status:
+              resource.state.status === "source_mismatch"
+                ? "context_mismatch"
+                : resource.state.status,
             comparison: null,
             httpStatus: resource.state.httpStatus,
           };
@@ -88,4 +97,21 @@ export function buildPerformanceHorizonComparisonCacheKey(
     asOfDate: request.asOfDate ?? null,
     reportingCurrency: request.reportingCurrency?.toUpperCase() ?? null,
   });
+}
+
+function isHorizonComparisonCurrent(
+  response: WorkbenchPerformanceHorizonComparison,
+  request: PerformanceHorizonComparisonRequest,
+): boolean {
+  return (
+    response.period === request.period &&
+    (!request.reportStartDate ||
+      response.report_start_date === request.reportStartDate) &&
+    (!request.reportEndDate ||
+      response.report_end_date === request.reportEndDate) &&
+    (!request.asOfDate || response.as_of_date === request.asOfDate) &&
+    (!request.reportingCurrency ||
+      response.reporting_currency?.toUpperCase() ===
+        request.reportingCurrency.toUpperCase())
+  );
 }
