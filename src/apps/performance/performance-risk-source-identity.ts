@@ -15,6 +15,8 @@ export type PerformanceRiskSourceIdentity = Readonly<{
   reportEndDate?: string;
   attributionType?: string;
   groupingDimension?: string;
+  includeUnderwaterSeries?: boolean;
+  includeTimeSeries?: boolean;
 }>;
 
 export function isPerformanceRiskSourceCurrent(
@@ -27,7 +29,59 @@ export function isPerformanceRiskSourceCurrent(
     source.as_of_date === identity.asOfDate &&
     (source.benchmark_code ?? null) === identity.benchmark &&
     hasRequestedRiskWindow(source, identity) &&
-    hasRequestedRiskAttribution(source, identity)
+    hasRequestedRiskAttribution(source, identity) &&
+    hasRequestedRiskDetail(source, identity)
+  );
+}
+
+function hasRequestedRiskDetail(
+  source: PerformanceRiskSource,
+  identity: PerformanceRiskSourceIdentity,
+): boolean {
+  if (
+    identity.includeUnderwaterSeries === undefined &&
+    identity.includeTimeSeries === undefined
+  ) {
+    return true;
+  }
+  const payload = source.payload;
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+  return (
+    hasRequestedBoolean(
+      payload,
+      "analysis_context",
+      "include_underwater_series",
+      identity.includeUnderwaterSeries,
+    ) &&
+    hasRequestedBoolean(
+      payload,
+      "request_context",
+      "include_time_series",
+      identity.includeTimeSeries,
+    )
+  );
+}
+
+function hasRequestedBoolean(
+  payload: object,
+  contextKey: string,
+  valueKey: string,
+  requested: boolean | undefined,
+): boolean {
+  if (requested === undefined) {
+    return true;
+  }
+  if (!(contextKey in payload)) {
+    return false;
+  }
+  const context = payload[contextKey as keyof typeof payload];
+  return Boolean(
+    context &&
+      typeof context === "object" &&
+      valueKey in context &&
+      context[valueKey as keyof typeof context] === requested,
   );
 }
 

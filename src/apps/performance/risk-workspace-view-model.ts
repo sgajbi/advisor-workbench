@@ -590,6 +590,9 @@ export function buildFixtureRiskDrawdown(
     source_service: "lotus-risk",
     state: includeBenchmarkRelative ? "partial" : "partial",
     payload: {
+      analysis_context: {
+        include_underwater_series: includeUnderwaterSeries,
+      },
       periods: [
         {
           key: period,
@@ -709,6 +712,9 @@ export function buildFixtureRiskRolling(
     source_service: "lotus-risk",
     state: includeBenchmarkMetrics ? "partial" : "partial",
     payload: {
+      request_context: {
+        include_time_series: includeTimeSeries,
+      },
       periods: [
         {
           key: period,

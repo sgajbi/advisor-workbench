@@ -676,7 +676,10 @@ export function usePerformanceRiskContract({
       .then((response) => {
         const currentResponse = requireCurrentPerformanceRiskSource(
           response,
-          buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+          {
+            ...buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+            includeUnderwaterSeries: true,
+          },
         );
         if (drawdownDetailRequestSequenceRef.current !== requestId) {
           return;
@@ -732,7 +735,10 @@ export function usePerformanceRiskContract({
       .then((response) => {
         const currentResponse = requireCurrentPerformanceRiskSource(
           response,
-          buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+          {
+            ...buildPerformanceRiskSourceIdentity(workspaceRef.current, period),
+            includeTimeSeries: true,
+          },
         );
         if (rollingDetailRequestSequenceRef.current !== requestId) {
           return;

@@ -1132,7 +1132,7 @@ describe("PerformanceRiskMode", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders structured unavailable states for stale deferred detail responses", async () => {
+  it("rejects summary-shaped detail responses and refetches instead of caching them", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
@@ -1148,10 +1148,7 @@ describe("PerformanceRiskMode", () => {
         buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
       )
       .mockResolvedValueOnce({
-        ...buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
-          includeUnderwaterSeries: true,
-        }),
-        as_of_date: "2026-02-23",
+        ...buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
       })
       .mockResolvedValueOnce(
         buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
@@ -1163,11 +1160,13 @@ describe("PerformanceRiskMode", () => {
         buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
       )
       .mockResolvedValueOnce({
-        ...buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+        ...buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+      })
+      .mockResolvedValueOnce(
+        buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
           includeTimeSeries: true,
         }),
-        as_of_date: "2026-02-23",
-      });
+      );
 
     renderRiskMode(scenario);
 
@@ -1209,5 +1208,17 @@ describe("PerformanceRiskMode", () => {
         screen.getByText("Rolling series unavailable"),
       ).toBeInTheDocument();
     });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Close Rolling series detail" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "View rolling series" }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("Rolling risk series table"),
+      ).toBeInTheDocument();
+    });
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(3);
   });
 });
