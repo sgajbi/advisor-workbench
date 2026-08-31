@@ -6,6 +6,7 @@ import {
 } from "@/shell/review-context";
 
 import type { PortfolioWorkspace } from "./types";
+import { isPortfolioHistoricalDateInRange } from "./portfolio-control-capabilities";
 import {
   isPortfolioPerformanceWindowCurrent,
   type PortfolioPerformanceWindowRequest,
@@ -220,14 +221,7 @@ function canUsePortfolioAsOfDate(
     return true;
   }
 
-  const capability = workspace.control_capabilities?.historical_snapshots;
-  return Boolean(
-    capability?.state === "supported" &&
-      capability.earliest_available_as_of_date &&
-      capability.latest_available_as_of_date &&
-      asOfDate >= capability.earliest_available_as_of_date &&
-      asOfDate <= capability.latest_available_as_of_date,
-  );
+  return isPortfolioHistoricalDateInRange(workspace, asOfDate);
 }
 
 function canUsePortfolioReportingCurrency(

@@ -171,7 +171,7 @@ describe("portfolio review-context controls", () => {
       {
         as_of_date: "2026-08-21",
         income_summary: { reporting_currency: "SGD" },
-        performance: { period: "YTD" },
+        performance: { period: "YTD", report_end_date: "2026-08-21" },
       },
       true,
     ],
@@ -210,6 +210,26 @@ describe("portfolio review-context controls", () => {
       ).toBe(expected);
     },
   );
+
+  it("rejects a standard period whose source end date does not match the review date", () => {
+    expect(
+      isPortfolioReviewResponseCurrent(
+        {
+          as_of_date: "2026-08-21",
+          performance: {
+            period: "YTD",
+            report_end_date: "2026-08-20",
+          },
+        },
+        { ...CONTROLS, asOfDate: "2026-08-21", timeWindow: "YTD" },
+        {
+          timeWindow: "YTD",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-08-21",
+        },
+      ),
+    ).toBe(false);
+  });
 
   it("matches the default 30D control to its exact EXPLICIT source window", () => {
     const controls = { ...CONTROLS, timeWindow: "30D" as const };

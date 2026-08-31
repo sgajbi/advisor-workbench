@@ -13,9 +13,7 @@ export type PortfolioPerformanceWindowEvidence = Readonly<{
   report_end_date?: string | null;
 }>;
 
-function usesExplicitPerformanceWindow(
-  request: PortfolioPerformanceWindowRequest,
-): boolean {
+function usesExplicitPerformanceWindow(request: PortfolioPerformanceWindowRequest): boolean {
   return (
     Boolean(request.usesCustomDateRange) ||
     request.timeWindow === "7D" ||
@@ -24,7 +22,7 @@ function usesExplicitPerformanceWindow(
 }
 
 export function buildPortfolioPerformanceWindowQuery(
-  request: PortfolioPerformanceWindowRequest,
+  request: PortfolioPerformanceWindowRequest
 ): URLSearchParams {
   const query = new URLSearchParams();
   const usesExplicitWindow = usesExplicitPerformanceWindow(request);
@@ -46,7 +44,7 @@ export function buildPortfolioPerformanceWindowQuery(
  */
 export function isPortfolioPerformanceWindowCurrent(
   evidence: PortfolioPerformanceWindowEvidence,
-  request: PortfolioPerformanceWindowRequest,
+  request: PortfolioPerformanceWindowRequest
 ): boolean {
   const query = buildPortfolioPerformanceWindowQuery(request);
   const requestedPeriod = query.get("period");
@@ -55,12 +53,13 @@ export function isPortfolioPerformanceWindowCurrent(
     return false;
   }
 
+  if (evidence.report_end_date !== query.get("report_end_date")) {
+    return false;
+  }
+
   if (requestedPeriod !== "EXPLICIT") {
     return true;
   }
 
-  return (
-    evidence.report_start_date === query.get("report_start_date") &&
-    evidence.report_end_date === query.get("report_end_date")
-  );
+  return evidence.report_start_date === query.get("report_start_date");
 }

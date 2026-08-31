@@ -46,7 +46,11 @@ export default function PortfolioWorkspaceToolbar({
     }
 
     if (context.historicalSnapshotState === "partial") {
-      return "Some adjacent workflows keep their own date controls.";
+      return context.supportsHistoricalSnapshots
+        ? context.hasHistoricalGap
+          ? "Portfolio records use the selected business date; rebalance remains the latest source run."
+          : "Portfolio records use the confirmed business date; rebalance remains the latest source run."
+        : "Historical review is not available across the portfolio record.";
     }
 
     if (!context.hasHistoricalGap) {
@@ -54,12 +58,16 @@ export default function PortfolioWorkspaceToolbar({
     }
 
     return "Some work areas use the latest available book state.";
-  }, [context.hasHistoricalGap, context.historicalSnapshotState]);
+  }, [
+    context.hasHistoricalGap,
+    context.historicalSnapshotState,
+    context.supportsHistoricalSnapshots,
+  ]);
   const historicalControlTitle = !context.supportsHistoricalSnapshots
-    ? "Historical review is not available for every adjacent workflow yet."
+    ? context.historicalSnapshotReason
     : undefined;
   const reportingCurrencyControlTitle = !context.supportsReportingCurrencyRestatement
-    ? "Full currency restatement is not available for every workflow yet."
+    ? context.reportingCurrencyRestatementReason
     : undefined;
   const contextSegments = useMemo(() => {
     const segments = [historicalContextCopy];
@@ -90,7 +98,10 @@ export default function PortfolioWorkspaceToolbar({
                   size="small"
                   value={controls.asOfDate}
                   onChange={(event) => onControlsChange({ asOfDate: event.target.value })}
-                  inputProps={{ max: context.selectedAsOfDate }}
+                  inputProps={{
+                    min: context.historicalDateRange?.earliest,
+                    max: context.historicalDateRange?.latest,
+                  }}
                   title={historicalControlTitle}
                   disabled={!context.supportsHistoricalSnapshots || contextChangePending}
                 />
