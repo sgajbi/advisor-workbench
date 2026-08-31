@@ -13,7 +13,7 @@ import {
 } from "./portfolio-selection";
 import {
   isPortfolioReviewResponseCurrent,
-  resolvePortfolioReviewControls,
+  resolvePortfolioRecordReviewControls,
 } from "./portfolio-workspace-controls";
 import { resolvePortfolioRecordScreenWindow } from "./portfolio-record-screen-view-model";
 import type { PortfolioWorkspace } from "./types";
@@ -83,7 +83,7 @@ export async function loadPortfolioRecordScreenData({
     };
   }
 
-  const controlResolution = resolvePortfolioReviewControls(
+  const controlResolution = resolvePortfolioRecordReviewControls(
     shell,
     reviewContextResult.context,
   );

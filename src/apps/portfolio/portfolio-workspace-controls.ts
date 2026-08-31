@@ -6,6 +6,7 @@ import {
 } from "@/shell/review-context";
 
 import type { PortfolioWorkspace } from "./types";
+import { isPortfolioHistoricalDateInRange } from "./portfolio-control-capabilities";
 import {
   isPortfolioPerformanceWindowCurrent,
   type PortfolioPerformanceWindowRequest,
@@ -37,6 +38,21 @@ export function resolvePortfolioReviewControls(
   workspace: PortfolioWorkspace,
   reviewContext: ReviewContext,
 ): PortfolioReviewControlResolution {
+  return resolvePortfolioControls(workspace, reviewContext, canUsePortfolioAsOfDate);
+}
+
+export function resolvePortfolioRecordReviewControls(
+  workspace: PortfolioWorkspace,
+  reviewContext: ReviewContext,
+): PortfolioReviewControlResolution {
+  return resolvePortfolioControls(workspace, reviewContext, canUsePortfolioRecordAsOfDate);
+}
+
+function resolvePortfolioControls(
+  workspace: PortfolioWorkspace,
+  reviewContext: ReviewContext,
+  canUseAsOfDate: (workspace: PortfolioWorkspace, asOfDate: string) => boolean,
+): PortfolioReviewControlResolution {
   const controls = buildInitialPortfolioControls(workspace);
   const issues: PortfolioReviewControlIssue[] = [];
 
@@ -53,7 +69,7 @@ export function resolvePortfolioReviewControls(
   }
 
   if (reviewContext.asOfDate) {
-    if (canUsePortfolioAsOfDate(workspace, reviewContext.asOfDate)) {
+    if (canUseAsOfDate(workspace, reviewContext.asOfDate)) {
       controls.asOfDate = reviewContext.asOfDate;
     } else {
       issues.push("unsupported_as_of_date");
@@ -222,6 +238,16 @@ function canUsePortfolioAsOfDate(
   asOfDate: string,
 ): boolean {
   return asOfDate === workspace.as_of_date;
+}
+
+function canUsePortfolioRecordAsOfDate(
+  workspace: PortfolioWorkspace,
+  asOfDate: string,
+): boolean {
+  return (
+    canUsePortfolioAsOfDate(workspace, asOfDate) ||
+    isPortfolioHistoricalDateInRange(workspace, asOfDate)
+  );
 }
 
 function canUsePortfolioReportingCurrency(
