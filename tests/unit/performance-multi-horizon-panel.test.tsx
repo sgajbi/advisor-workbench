@@ -223,6 +223,7 @@ describe("PerformanceMultiHorizonPanel", () => {
         buildHorizonComparison({
           as_of_date: "2026-03-27",
           reporting_currency: "USD",
+          benchmark_code: null,
         }),
       )
       .mockResolvedValueOnce(
@@ -230,12 +231,14 @@ describe("PerformanceMultiHorizonPanel", () => {
           period: "3M",
           as_of_date: "2026-03-27",
           reporting_currency: "SGD",
+          benchmark_code: null,
         }),
       )
       .mockResolvedValueOnce(
         buildHorizonComparison({
           as_of_date: "2026-03-27",
           reporting_currency: "SGD",
+          benchmark_code: null,
         }),
       );
 
@@ -318,6 +321,7 @@ describe("PerformanceMultiHorizonPanel", () => {
         buildHorizonComparison({
           period: params.period,
           detail_basis: params.detailBasis,
+          benchmark_code: null,
         }),
     );
 
