@@ -10,6 +10,7 @@ import { resolveGatewayBaseUrl } from "@/features/platform-runtime/service-addre
 import {
   applyIdeaRouteCallerContextHeaders,
   applyReportOrderingRouteCallerContextHeaders,
+  matchesIdeaPresentationReceiptTenantAuthority,
 } from "@/features/workbench/caller-context";
 import { buildGatewayBffRequestHeaders } from "@/features/workbench/bff-request-headers";
 
@@ -125,6 +126,24 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
 
   const responseHeaders = new Headers(response.headers);
   responseHeaders.delete("transfer-encoding");
+
+  if (
+    response.ok &&
+    ideaAuthority.status === "applied" &&
+    ideaAuthority.presentationReceiptTenantId &&
+    !matchesIdeaPresentationReceiptTenantAuthority(
+      new TextDecoder().decode(responseBody),
+      ideaAuthority.presentationReceiptTenantId,
+    )
+  ) {
+    return NextResponse.json(
+      {
+        code: "idea_response_authority_mismatch",
+        status: "unavailable",
+      },
+      { status: 502, headers: { "cache-control": "no-store" } },
+    );
+  }
 
   return new NextResponse(responseBody, {
     status: response.status,

@@ -511,7 +511,17 @@ describe("BFF proxy route", () => {
   it("injects the single entitled tenant into an exact Idea presentation receipt", async () => {
     process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-private-bank-sg";
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"persistenceDecision":"accepted"}', { status: 201 }));
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            receipt: { tenantId: "tenant-private-bank-sg" },
+            persistenceDecision: "accepted",
+          },
+        }),
+        { status: 201 },
+      ),
+    );
     const body = {
       presentedAtUtc: "2026-08-31T10:15:00Z",
       rankAtPresentation: 25,
@@ -562,6 +572,60 @@ describe("BFF proxy route", () => {
     expect(JSON.parse(String(upstreamRequest?.body))).toEqual({
       ...body,
       tenantId: "tenant-private-bank-sg",
+    });
+  });
+
+  it("rejects Idea presentation evidence attributed to another tenant", async () => {
+    process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-private-bank-sg";
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            receipt: { tenantId: "tenant-other-bank" },
+            persistenceDecision: "accepted",
+          },
+        }),
+        { status: 201 },
+      ),
+    );
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_025/presentation-receipts",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          presentedAtUtc: "2026-08-31T10:15:00Z",
+          rankAtPresentation: 25,
+          visibleCandidateCount: 1,
+          queueSnapshotDigest: `sha256:${"a".repeat(64)}`,
+          queuePolicyVersion: "idea-deterministic-ranking-v1",
+          rankingPolicyVersion: "idle-liquidity-v1",
+          candidateMaterialVersion: 2,
+          candidateEvidenceVersion: 3,
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea_025",
+          "presentation-receipts",
+        ],
+      }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(502);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_response_authority_mismatch",
+      status: "unavailable",
     });
   });
 
