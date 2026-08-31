@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   getWorkbenchPerformanceAdvisorBriefClient,
@@ -17,7 +17,10 @@ import {
   arePerformanceReviewContextsCoherent,
   type PerformanceReviewContextSource,
 } from "./performance-review-context";
-import { isPerformanceAnalyticalSourceCurrent } from "./performance-source-identity";
+import {
+  isPerformanceAnalyticalSourceCurrent,
+  type PerformanceSourceIdentity,
+} from "./performance-source-identity";
 
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
@@ -74,11 +77,51 @@ export function usePerformanceAdvisorBrief({
   const [refreshSequence, setRefreshSequence] = useState(0);
   const requestSequenceRef = useRef(0);
   const reviewActionSequenceRef = useRef(0);
-  const activeRunId = advisorBrief?.workflow_pack_run?.run_id ?? null;
+  const requestIdentity = useMemo<PerformanceSourceIdentity>(
+    () => ({
+      portfolioId,
+      period,
+      reportStartDate,
+      reportEndDate,
+      asOfDate,
+      reportingCurrency,
+      detailBasis,
+      contributionDimension,
+      attributionDimension,
+      chartFrequency,
+      benchmark: benchmark ?? null,
+    }),
+    [
+      asOfDate,
+      attributionDimension,
+      benchmark,
+      chartFrequency,
+      contributionDimension,
+      detailBasis,
+      period,
+      portfolioId,
+      reportEndDate,
+      reportStartDate,
+      reportingCurrency,
+    ],
+  );
+  const advisorBriefIsCurrent = Boolean(
+    advisorBrief &&
+      isPerformanceAnalyticalSourceCurrent(advisorBrief, requestIdentity) &&
+      arePerformanceReviewContextsCoherent(advisorBrief, sourceContext),
+  );
+  const currentAdvisorBrief = advisorBriefIsCurrent ? advisorBrief : null;
+  const activeRunId = currentAdvisorBrief?.workflow_pack_run?.run_id ?? null;
 
   useEffect(() => {
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
+    setAdvisorBrief(null);
+    setAdvisorBriefUnavailable(false);
+    setAdvisorBriefPermissionBlocked(false);
+    setIsLoading(true);
+    setIsApplyingReviewAction(false);
+    setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
 
     void getWorkbenchPerformanceAdvisorBriefClient(portfolioId, {
       period,
@@ -97,19 +140,7 @@ export function usePerformanceAdvisorBrief({
           return;
         }
         if (
-          !isPerformanceAnalyticalSourceCurrent(response, {
-            portfolioId,
-            period,
-            reportStartDate,
-            reportEndDate,
-            asOfDate,
-            reportingCurrency,
-            detailBasis,
-            contributionDimension,
-            attributionDimension,
-            chartFrequency,
-            benchmark: benchmark ?? null,
-          }) ||
+          !isPerformanceAnalyticalSourceCurrent(response, requestIdentity) ||
           !arePerformanceReviewContextsCoherent(response, sourceContext)
         ) {
           throw new TypeError(
@@ -152,6 +183,7 @@ export function usePerformanceAdvisorBrief({
     reportEndDate,
     reportStartDate,
     reportingCurrency,
+    requestIdentity,
     sourceContext,
   ]);
 
@@ -200,26 +232,14 @@ export function usePerformanceAdvisorBrief({
         }
 
         if (
-          !isPerformanceAnalyticalSourceCurrent(response, {
-            portfolioId,
-            period,
-            reportStartDate,
-            reportEndDate,
-            asOfDate,
-            reportingCurrency,
-            detailBasis,
-            contributionDimension,
-            attributionDimension,
-            chartFrequency,
-            benchmark: benchmark ?? null,
-          }) ||
+          !isPerformanceAnalyticalSourceCurrent(response, requestIdentity) ||
           !arePerformanceReviewContextsCoherent(response, sourceContext) ||
           !isConfirmedAdvisorBriefReviewTransition({
             response,
             payload,
             expectedPortfolioId: portfolioId,
             expectedRunId: activeRunId,
-            previousRun: advisorBrief?.workflow_pack_run ?? null,
+            previousRun: currentAdvisorBrief?.workflow_pack_run ?? null,
           })
         ) {
           throw new Error("Gateway did not confirm the requested advisor-brief review transition.");
@@ -251,7 +271,6 @@ export function usePerformanceAdvisorBrief({
     },
     [
       activeRunId,
-      advisorBrief,
       attributionDimension,
       asOfDate,
       benchmark,
@@ -263,15 +282,17 @@ export function usePerformanceAdvisorBrief({
       reportEndDate,
       reportStartDate,
       reportingCurrency,
+      requestIdentity,
       sourceContext,
+      currentAdvisorBrief,
     ]
   );
 
   return {
-    advisorBrief,
+    advisorBrief: currentAdvisorBrief,
     advisorBriefUnavailable,
     advisorBriefPermissionBlocked,
-    isLoading,
+    isLoading: isLoading || (advisorBrief !== null && !advisorBriefIsCurrent),
     isApplyingReviewAction,
     reviewActionFeedback,
     applyReviewAction,
