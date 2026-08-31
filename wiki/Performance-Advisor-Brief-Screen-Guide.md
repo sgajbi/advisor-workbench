@@ -68,6 +68,9 @@ client communication, order a report, or authorize downstream use.
 
 - Presents Gateway-returned talking points, recommended internal actions, risks, exceptions,
   source measures, warnings, and supportability without recalculating portfolio economics.
+- Passes the governed review date and reporting currency through both the Advisor Brief read and
+  review action. A persisted decision is accepted only under the same coherent source context; an
+  unverified, rejected, or unavailable restatement remains visibly in portfolio base currency.
 - Keeps AI or rule-based preparation posture separate from output availability, evidence coverage,
   source-recorded human review, freshness, and client-use permission.
 - Treats review as source-recorded only when the returned workflow evidence includes review
@@ -136,6 +139,8 @@ directly. Shared contract detail remains in [API Surface](API-Surface), and owne
 | Ready, awaiting review | Talking points, source measures, supportability, limitations, and source-allowed decisions | Review evidence, then prepare one permitted decision |
 | Rule-based fallback | Internal working narrative explicitly identified as Workbench-composed and not a source-published AI run | Use only as qualified internal preparation; source review controls remain unavailable |
 | Partial or limited | Usable evidence retained with named warnings, partial failures, or unavailable preparation dimensions | Qualify the discussion and investigate the named source |
+| Currency accepted but not verified | Brief measures remain in portfolio base currency with one explicit restatement limitation | Use the base-currency evidence only; do not describe the brief as restated |
+| Review context changed | Prior brief or action result is not admitted under the newly requested date/currency context | Reload the matching brief before recording a decision |
 | Review confirmation | Exact decision consequence, staff reference, rationale, optional replacement, and prohibited downstream uses | Confirm or return to editing |
 | Recording review | Controls remain unavailable while the exact source request is pending; polite status feedback is announced | Wait for Gateway and Lotus AI completion |
 | Review recorded | Source-returned decision posture plus actor, readable UTC timestamp, transition count, and review-history evidence; focus remains on the source-confirmed status | Continue only within the displayed internal boundary |
@@ -194,6 +199,8 @@ capability.
   rationale, replacement requirement, review-before-confirm, no request before confirmation,
   source-confirmed success, explicit failure, retained input, copy boundary, and technical-detail
   disclosure.
+- Review-context tests prove that the brief read and review action carry the same date/currency
+  request and that success is admitted only under coherent returned context.
 - The owned optimized-production Playwright journey uses `PB_SG_GLOBAL_BAL_001`, proves no review
   request occurs before confirmation, verifies confirmation focus and exactly one POST, renders the
   source actor/time/history only after success, rejects unexpected browser failures, and verifies no
