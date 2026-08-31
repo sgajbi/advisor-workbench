@@ -86,9 +86,10 @@ function buildPortfolioModeHref(
   context: PortfolioWorkspaceContext,
   mode: "summary" | "risk" | "advisor" | "evidence"
 ): string {
+  const period = workspace.performance?.period ?? "YTD";
   const query = new URLSearchParams({
     portfolioId: workspace.portfolio.portfolio_id,
-    period: workspace.performance?.period ?? "YTD",
+    period,
     detailBasis: "NET",
     contributionDimension: "asset_class",
     attributionDimension: "asset_class",
@@ -96,6 +97,10 @@ function buildPortfolioModeHref(
     asOfDate: context.selectedAsOfDate,
     reportingCurrency: context.selectedReportingCurrency,
   });
+  if (period === "EXPLICIT") {
+    query.set("reportStartDate", context.effectivePeriodStartDate);
+    query.set("reportEndDate", context.effectivePeriodEndDate);
+  }
   if (mode !== "summary") {
     query.set("mode", mode);
   }

@@ -59,6 +59,31 @@ describe("portfolio decision posture", () => {
     }
   });
 
+  it("preserves the confirmed bounds of an explicit performance window", () => {
+    render(
+      <PortfolioEvidenceModule
+        workspace={buildPortfolioWorkspace({
+          performance: {
+            ...buildPortfolioWorkspace().performance!,
+            period: "EXPLICIT",
+          },
+        })}
+        context={buildPortfolioWorkspaceContext({
+          selectedAsOfDate: "2026-04-30",
+          effectivePeriodStartDate: "2026-04-01",
+          effectivePeriodEndDate: "2026-04-30",
+        })}
+      />
+    );
+
+    for (const name of ["Performance", "Risk", "Advisor Brief", "Evidence"]) {
+      const href = screen.getByRole("link", { name }).getAttribute("href");
+      expect(href).toContain("period=EXPLICIT");
+      expect(href).toContain("reportStartDate=2026-04-01");
+      expect(href).toContain("reportEndDate=2026-04-30");
+    }
+  });
+
   it("uses the canonical valuation label only when the source date differs", () => {
     render(
       <PortfolioEvidenceModule
