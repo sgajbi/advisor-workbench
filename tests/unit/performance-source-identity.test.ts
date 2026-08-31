@@ -240,6 +240,106 @@ describe("performance source identity", () => {
     expect(isPerformanceAnalyticalSourceCurrent(source, identity)).toBe(false);
   });
 
+  it.each([
+    ["basis", { detail_basis: "GROSS" }],
+    ["frequency", { chart_frequency: "daily" }],
+    ["benchmark", { benchmark_code: "BMK_OTHER" }],
+  ])(
+    "rejects primary summary evidence with a different %s",
+    (_name, overrides) => {
+      const requestedIdentity = {
+        portfolioId: "PF_1001",
+        period: "YTD",
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      };
+
+      expect(
+        isPerformanceSummarySourceCurrent(
+          { ...buildPerformanceWorkspaceSummary(), ...overrides },
+          requestedIdentity,
+        ),
+      ).toBe(false);
+    },
+  );
+
+  it.each([
+    ["basis", { detail_basis: "GROSS" }],
+    ["contribution dimension", { contribution_dimension: "issuer" }],
+    ["attribution dimension", { attribution_dimension: "issuer" }],
+    ["frequency", { chart_frequency: "daily" }],
+    ["benchmark", { benchmark_code: "BMK_OTHER" }],
+  ])(
+    "rejects primary detail evidence with a different %s",
+    (_name, overrides) => {
+      expect(
+        isPerformanceDetailsSourceCurrent(
+          { ...buildPerformanceWorkspaceDetails(), ...overrides },
+          {
+            portfolioId: "PF_1001",
+            period: "YTD",
+            detailBasis: "NET",
+            contributionDimension: "asset_class",
+            attributionDimension: "asset_class",
+            chartFrequency: "monthly",
+            benchmark: "BMK_GLOBAL_BALANCED_60_40",
+          },
+        ),
+      ).toBe(false);
+    },
+  );
+
+  it("admits declared primary normalization without adopting undeclared drift", () => {
+    const requestedIdentity = {
+      portfolioId: "PF_1001",
+      period: "YTD",
+      attributionDimension: "issuer",
+      chartFrequency: "weekly",
+    };
+    const declaredSummaryNormalization = {
+      chart_frequency: "monthly",
+      requested_chart_frequency_supported: false,
+    };
+    const declaredDetailNormalization = {
+      attribution_dimension: "asset_class",
+      chart_frequency: "monthly",
+      requested_attribution_dimension_supported: false,
+      requested_chart_frequency_supported: false,
+    };
+
+    expect(
+      isPerformanceSummarySourceCurrent(
+        {
+          ...buildPerformanceWorkspaceSummary(),
+          ...declaredSummaryNormalization,
+        },
+        requestedIdentity,
+      ),
+    ).toBe(true);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        {
+          ...buildPerformanceWorkspaceDetails(),
+          ...declaredDetailNormalization,
+        },
+        requestedIdentity,
+      ),
+    ).toBe(true);
+    expect(
+      isPerformanceSummarySourceCurrent(
+        {
+          ...buildPerformanceWorkspaceSummary(),
+          ...declaredSummaryNormalization,
+          requested_chart_frequency_supported: true,
+        },
+        requestedIdentity,
+      ),
+    ).toBe(false);
+  });
+
   it("requires summary and detail to share one effective review context", () => {
     expect(
       doPerformanceSummaryAndDetailsShareReviewContext(

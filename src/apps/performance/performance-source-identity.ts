@@ -94,12 +94,23 @@ export function isPerformanceRequestedValueCurrent(
 
 export function isPerformanceSummarySourceCurrent(
   summary: WorkbenchPerformanceWorkspaceSummary,
-  identity: PerformanceSourceIdentity
+  identity: PerformanceSourceIdentity,
 ): boolean {
   return (
-    isPerformanceSummaryPortfolioIdentityCurrent(summary, identity.portfolioId) &&
+    isPerformanceSummaryPortfolioIdentityCurrent(
+      summary,
+      identity.portfolioId,
+    ) &&
     (!identity.period || summary.period === identity.period) &&
     confirmsRequestedWindow(summary, identity) &&
+    (!identity.detailBasis || summary.detail_basis === identity.detailBasis) &&
+    isPerformanceRequestedValueCurrent(
+      summary.chart_frequency,
+      identity.chartFrequency,
+      summary.requested_chart_frequency_supported,
+    ) &&
+    (identity.benchmark === undefined ||
+      summary.benchmark_code === identity.benchmark) &&
     isPerformanceReviewContextCurrent(summary, identity)
   );
 }
@@ -113,14 +124,9 @@ export function isPerformanceSummaryPortfolioIdentityCurrent(
 
 export function isPerformanceDetailsSourceCurrent(
   details: WorkbenchPerformanceWorkspaceDetails,
-  identity: PerformanceSourceIdentity
+  identity: PerformanceSourceIdentity,
 ): boolean {
-  return (
-    details.portfolio_id === identity.portfolioId &&
-    (!identity.period || details.period === identity.period) &&
-    confirmsRequestedWindow(details, identity) &&
-    isPerformanceReviewContextCurrent(details, identity)
-  );
+  return isPerformanceAnalyticalSourceCurrent(details, identity);
 }
 
 export function doPerformanceSummaryAndDetailsShareReviewContext(
