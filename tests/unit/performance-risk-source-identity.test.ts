@@ -190,10 +190,22 @@ describe("performance risk source identity", () => {
       { analysis_context: { include_underwater_series: false } },
     ],
     [
+      "underwater-series exclusion",
+      { includeUnderwaterSeries: false },
+      { analysis_context: { include_underwater_series: false } },
+      { analysis_context: { include_underwater_series: true } },
+    ],
+    [
       "rolling series",
       { includeTimeSeries: true },
       { request_context: { include_time_series: true } },
       { request_context: { include_time_series: false } },
+    ],
+    [
+      "rolling-series exclusion",
+      { includeTimeSeries: false },
+      { request_context: { include_time_series: false } },
+      { request_context: { include_time_series: true } },
     ],
   ])(
     "requires the source to confirm requested %s detail",
