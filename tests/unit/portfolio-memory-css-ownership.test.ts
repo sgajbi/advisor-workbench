@@ -76,11 +76,17 @@ describe("Portfolio Memory CSS ownership", () => {
       /\.workspace\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) minmax\(250px, 300px\);/,
     );
     expect(stylesheet).toMatch(
-      /@media \(max-width: 1200px\)[\s\S]*?\.statusStrip,[\s\S]*?\.workspace,[\s\S]*?\.detailGrid\s*\{[\s\S]*?grid-template-columns: 1fr;/,
+      /\.panel\s*\{[\s\S]*?container-name: portfolio-memory;[\s\S]*?container-type: inline-size;/,
+    );
+    expect(stylesheet).toMatch(
+      /@container portfolio-memory \(max-width: 60rem\)[\s\S]*?\.workspace,[\s\S]*?\.detailGrid\s*\{[\s\S]*?grid-template-columns: 1fr;/,
+    );
+    expect(stylesheet).toMatch(
+      /@container portfolio-memory \(max-width: 30rem\)[\s\S]*?\.statusStrip,[\s\S]*?\.artifactGrid\s*\{[\s\S]*?grid-template-columns: 1fr;/,
     );
     expect(stylesheet).toMatch(
       /\.snapshot\s*\{[\s\S]*?border-left: 1px solid #c6c6cd;/,
     );
-    expect(timeline).toContain("tableMinWidth={900}");
+    expect(timeline).toContain("tableMinWidth={770}");
   });
 });
