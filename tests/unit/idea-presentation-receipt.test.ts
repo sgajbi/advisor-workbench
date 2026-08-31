@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buildIdeaPresentationReceiptDraft,
+  createIdeaPresentationIdempotencyKey,
   digestVisibleCandidateIds,
   matchesIdeaPresentationReceiptEvidence,
   readIdeaPresentationSource,
@@ -129,6 +130,23 @@ describe("Idea presentation receipt contract", () => {
 
     expect(first).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(reordered).not.toBe(first);
+  });
+
+  it("builds canonical HTTP evidence without secure-context-only APIs", async () => {
+    const browserCrypto = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: browserCrypto.getRandomValues.bind(browserCrypto),
+    });
+    try {
+      await expect(digestVisibleCandidateIds(["idea-025"])).resolves.toMatch(
+        /^sha256:[0-9a-f]{64}$/,
+      );
+      expect(createIdeaPresentationIdempotencyKey()).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+    } finally {
+      vi.stubGlobal("crypto", browserCrypto);
+    }
   });
 
   it.each([

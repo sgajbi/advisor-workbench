@@ -1,3 +1,5 @@
+import { sha256 } from "@noble/hashes/sha2.js";
+
 import type {
   AdvisorIdeaQueueItem,
   AdvisorIdeaReviewQueueData,
@@ -124,11 +126,31 @@ export async function digestVisibleCandidateIds(
 ): Promise<`sha256:${string}`> {
   requireVisibleCandidateSet(candidateIds);
   const bytes = new TextEncoder().encode(JSON.stringify(candidateIds));
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-  const hex = Array.from(new Uint8Array(digest), (byte) =>
+  const digest = globalThis.crypto?.subtle
+    ? new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes))
+    : sha256(bytes);
+  const hex = Array.from(digest, (byte) =>
     byte.toString(16).padStart(2, "0"),
   ).join("");
   return `sha256:${hex}`;
+}
+
+export function createIdeaPresentationIdempotencyKey(): string {
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi?.getRandomValues) {
+    throw new Error("Secure random values are unavailable in this browser.");
+  }
+  const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return [
+    hex.slice(0, 4).join(""),
+    hex.slice(4, 6).join(""),
+    hex.slice(6, 8).join(""),
+    hex.slice(8, 10).join(""),
+    hex.slice(10).join(""),
+  ].join("-");
 }
 
 export function matchesIdeaPresentationReceiptEvidence({
