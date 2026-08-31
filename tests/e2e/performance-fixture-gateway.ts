@@ -195,7 +195,10 @@ export async function startPerformanceFixtureGateway({
         setTimeout(() => {
           sendJson(
             response,
-            buildPerformanceAttributionTrend(portfolioId),
+            applyRequestedPerformanceReviewContext(
+              buildPerformanceAttributionTrend(portfolioId),
+              requestUrl,
+            ),
             200,
             'perf-reference;dur=1, perf-benchmark;dur=1, perf-attribution;dur=1',
           );
@@ -204,14 +207,23 @@ export async function startPerformanceFixtureGateway({
       }
       sendJson(
         response,
-        buildPerformanceAttributionTrend(portfolioId),
+        applyRequestedPerformanceReviewContext(
+          buildPerformanceAttributionTrend(portfolioId),
+          requestUrl,
+        ),
         200,
         'perf-reference;dur=1, perf-benchmark;dur=1, perf-attribution;dur=1',
       );
       return;
     }
     if (requestUrl.pathname.endsWith('/performance/advisor-brief')) {
-      sendJson(response, reviewedAdvisorBriefs.get(portfolioId) ?? buildAdvisorBriefResponse(portfolioId));
+      sendJson(
+        response,
+        applyRequestedPerformanceReviewContext(
+          reviewedAdvisorBriefs.get(portfolioId) ?? buildAdvisorBriefResponse(portfolioId),
+          requestUrl,
+        ),
+      );
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/summary')) {
@@ -301,7 +313,10 @@ export async function startPerformanceFixtureGateway({
           sendJson(response, { code: 'invalid_fixture_review_action' }, 422);
           return;
         }
-        const reviewedBrief = buildReviewedAdvisorBriefResponse(portfolioId, reviewedBy);
+        const reviewedBrief = applyRequestedPerformanceReviewContext(
+          buildReviewedAdvisorBriefResponse(portfolioId, reviewedBy),
+          requestUrl,
+        );
         reviewedAdvisorBriefs.set(portfolioId, reviewedBrief);
         sendJson(response, reviewedBrief);
       });
@@ -409,6 +424,11 @@ function buildAdvisorBriefResponse(portfolioId: string): WorkbenchPerformanceAdv
       booking_center_code: 'SG',
     },
     as_of_date: '2026-02-24',
+    requested_as_of_date: null,
+    effective_as_of_date: '2026-02-24',
+    requested_reporting_currency: null,
+    effective_reporting_currency: 'USD',
+    reporting_currency_state: 'accepted_unverified',
     period: 'YTD',
     report_start_date: '2026-01-01',
     report_end_date: '2026-02-24',
@@ -580,12 +600,15 @@ function applyRequestedSummaryContext(
 ): WorkbenchPerformanceWorkspaceSummary {
   const period = requestUrl.searchParams.get('period') ?? summary.period;
   const benchmarkCode = requestUrl.searchParams.get('benchmark_code') ?? summary.benchmark_code;
-  return {
-    ...summary,
-    period,
-    benchmark_code: benchmarkCode,
-    report_start_date: period === '3Y' ? '2023-03-28' : summary.report_start_date,
-  };
+  return applyRequestedPerformanceReviewContext(
+    {
+      ...summary,
+      period,
+      benchmark_code: benchmarkCode,
+      report_start_date: period === '3Y' ? '2023-03-28' : summary.report_start_date,
+    },
+    requestUrl,
+  );
 }
 
 function applyRequestedDetailContext(
@@ -598,14 +621,38 @@ function applyRequestedDetailContext(
   const attributionDimension =
     requestUrl.searchParams.get('attribution_dimension') ?? details.attribution_dimension;
   const benchmarkCode = requestUrl.searchParams.get('benchmark_code') ?? details.benchmark_code;
+  return applyRequestedPerformanceReviewContext(
+    {
+      ...details,
+      period,
+      benchmark_code: benchmarkCode,
+      report_start_date: period === '3Y' ? '2023-03-28' : details.report_start_date,
+      contribution_dimension: contributionDimension,
+      attribution_dimension: attributionDimension,
+      segment: contributionDimension,
+    },
+    requestUrl,
+  );
+}
+
+function applyRequestedPerformanceReviewContext<
+  Response extends {
+    as_of_date: string;
+    portfolio?: { base_currency?: string };
+  },
+>(response: Response, requestUrl: URL) {
+  const requestedAsOfDate = requestUrl.searchParams.get('as_of_date');
+  const requestedReportingCurrency = requestUrl.searchParams.get('reporting_currency');
+  const effectiveAsOfDate = requestedAsOfDate ?? response.as_of_date;
   return {
-    ...details,
-    period,
-    benchmark_code: benchmarkCode,
-    report_start_date: period === '3Y' ? '2023-03-28' : details.report_start_date,
-    contribution_dimension: contributionDimension,
-    attribution_dimension: attributionDimension,
-    segment: contributionDimension,
+    ...response,
+    as_of_date: effectiveAsOfDate,
+    requested_as_of_date: requestedAsOfDate,
+    effective_as_of_date: effectiveAsOfDate,
+    requested_reporting_currency: requestedReportingCurrency,
+    effective_reporting_currency:
+      requestedReportingCurrency ?? response.portfolio?.base_currency ?? 'USD',
+    reporting_currency_state: 'accepted_unverified' as const,
   };
 }
 
