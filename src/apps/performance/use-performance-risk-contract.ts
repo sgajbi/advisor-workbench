@@ -611,7 +611,11 @@ export function usePerformanceRiskContract({
         }
         const currentResponse = requireCurrentPerformanceRiskSource(
           response,
-          riskSourceIdentity,
+          {
+            ...riskSourceIdentity,
+            attributionType: selectedAttributionType,
+            groupingDimension: selectedGroupingDimension,
+          },
         );
         attributionCacheRef.current.set(attributionKey, currentResponse);
         setRiskAttribution(currentResponse);

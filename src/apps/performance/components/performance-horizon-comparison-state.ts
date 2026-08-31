@@ -108,8 +108,7 @@ export function isHorizonComparisonCurrent(
     response.portfolio_id === request.portfolioId &&
     response.period === request.period &&
     response.detail_basis === request.detailBasis &&
-    (request.benchmark === undefined ||
-      response.benchmark_code === request.benchmark) &&
+    (response.benchmark_code ?? null) === (request.benchmark ?? null) &&
     isPerformanceRequestedValueCurrent(
       response.chart_frequency,
       request.chartFrequency,
