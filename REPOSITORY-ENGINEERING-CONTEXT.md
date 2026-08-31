@@ -351,6 +351,10 @@ Current repository posture:
     responsive rules belong to `portfolio-projected-cashflow.module.css`; shared Portfolio chart
     geometry and `AnalyticsTable` behavior remain separate owners. Do not restore
     `portfolio-cashflow*` selectors or app-shell repairs to governed global CSS.
+    Performance Adviser Brief presentation belongs to the family module under
+    `src/apps/performance/components/advisor-brief/`; its production components import local
+    classes directly and require no CSS-governance escape exception. Do not restore the
+    `performance-advisor-brief-*` global class-string contract or a root scoping workaround.
 18. `/suite` is a compatibility alias of the single canonical Home entry and owns no business
     surface. It must not regain hard-coded clients, portfolios, analytics, priorities, roles,
     workflow state, or technical policy diagnostics. The canonical Home currently routes to

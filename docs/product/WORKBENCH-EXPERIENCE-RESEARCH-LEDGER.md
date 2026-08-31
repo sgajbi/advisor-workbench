@@ -7435,3 +7435,58 @@ Canonical `PB_SG_GLOBAL_BAL_001` proof follows Gateway #692 exact-main merge. Th
 Ideas screen guide and repository context change, so repo-local wiki publication is required after
 merge. No ranking, suitability, proposal, approval, execution, authentication, or effectiveness
 authority is added to Workbench.
+
+## 2026-08-31 — Adviser Brief component-owned presentation (#965)
+
+### Business workflow question
+
+How can the Performance Adviser Brief remain a compact, source-backed review workspace while its
+presentation becomes safe to evolve without cross-screen cascade effects or an exceptional global
+class-name contract?
+
+### Evidence consulted
+
+1. [Next.js CSS Modules](https://nextjs.org/docs/13/app/building-your-application/styling/css-modules)
+   defines locally scoped component styles as the supported App Router composition model.
+2. [CSS Modules local scope](https://github.com/css-modules/css-modules/blob/master/docs/local-scope.md)
+   binds class identities through an explicit component import instead of the global namespace.
+3. [MDN cascade introduction](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascade/Introduction)
+   describes specificity and source order as cascade conflict resolution; they should not replace
+   a clear feature owner.
+4. [BlackRock on AI-enabled advisers](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor)
+   describes concise, source-grounded insights that advisers review and act on inside a connected
+   workflow. Lotus keeps that review boundary and does not turn generated narrative into advice.
+5. Current production evidence showed one 825-line file with 167 `:global(...)` escapes and 89
+   globally named selectors, while the same colocated component family already owned every real
+   consumer and focused state/action coverage.
+
+### Adopted decisions
+
+1. Keep one family-owned CSS Module beside the Adviser Brief components and import its local class
+   map from each production owner.
+2. Remove all 167 escapes and the exact governance exception in the same slice; zero is the durable
+   module default.
+3. Preserve the existing decision-first composition, source metrics, evidence, supportability and
+   persisted review-action behavior. This is an ownership refactor, not a visual or contract change.
+4. Use the existing design-system stage, section, disclosure and status primitives; add only local
+   hooks where a feature layout must compose a shared primitive.
+5. Prove ready, unavailable, permission, pending, failed and confirmed states with existing focused
+   behavior tests, then prove keyboard focus, responsive composition and page-level overflow in an
+   optimized browser at 1440, 1024, 768 and 519 CSS pixels.
+
+### Rejected decisions
+
+1. A new styling library, CSS-in-JS runtime or cascade layer.
+2. Moving the selector family without removing its global escapes and string-based consumer contract.
+3. A generic class-name abstraction or compatibility wrapper without another proven consumer.
+4. Changing Adviser Brief hierarchy, business copy, service authority or review behavior inside a
+   presentation-ownership slice.
+
+### Validation and publication decision
+
+Workbench #965 owns the migration and is a child of the incremental CSS programme in #492. The
+repository CSS gate, focused component/integration tests and optimized-browser evidence form the
+regression boundary. Repository context and this research ledger change because the durable
+presentation owner changes. The existing Performance Adviser Brief screen guide remains accurate:
+business purpose, source contracts, states, actions and operating behavior do not change, so no
+repo-local wiki source change is required.
