@@ -1,4 +1,5 @@
 import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
+import type { WorkbenchIconName } from "@/design-system";
 import type { DpmPortfolioMemoryGatewayResponse } from "./types";
 
 const CAMPAIGN_ASSIGNMENT_TASK_TRANSITION_EVENT =
@@ -81,7 +82,7 @@ export type PortfolioMemoryRecommendedAction = {
   key: string;
   title: string;
   body: string;
-  icon: string;
+  icon: WorkbenchIconName;
 };
 
 export function buildPortfolioMemoryPanelModel(
@@ -451,19 +452,19 @@ function defaultRecommendedActions(state: string): PortfolioMemoryRecommendedAct
       key: "review-latest",
       title: "Review latest memory event",
       body: "Check the most recent mandate, rebalance, review, or evidence update.",
-      icon: "autorenew",
+      icon: "refresh",
     },
     {
       key: "open-evidence",
       title: "Open linked evidence pack",
       body: "Access audit-ready documentation linked to this memory view.",
-      icon: "folder_zip",
+      icon: "archive",
     },
     {
       key: "review-supportability",
       title: "Review supportability posture",
       body: "Use the source-owned supportability and reason-code posture before follow-up.",
-      icon: "fact_check",
+      icon: "verify",
     },
   ];
   if (state === "BLOCKED" || state === "PENDING_REVIEW" || state === "DEGRADED") {
@@ -472,7 +473,7 @@ function defaultRecommendedActions(state: string): PortfolioMemoryRecommendedAct
         key: "resolve-attention",
         title: "Resolve advisor attention item",
         body: "Clear open review conditions before approving the next action.",
-        icon: "pending_actions",
+        icon: "pending",
       },
       ...actions,
     ];
