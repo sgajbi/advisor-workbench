@@ -37,7 +37,7 @@ export function isPerformanceRiskSourceCurrent(
   if (!sourceIdentityMatches) {
     return false;
   }
-  if (isSourceDeclaredFailureWithoutPayload(source)) {
+  if (isSourceDeclaredFailureWithoutResults(source)) {
     return true;
   }
   return (
@@ -47,12 +47,13 @@ export function isPerformanceRiskSourceCurrent(
   );
 }
 
-function isSourceDeclaredFailureWithoutPayload(
+function isSourceDeclaredFailureWithoutResults(
   source: PerformanceRiskSource,
 ): boolean {
+  const periods = readRiskPeriods(source.payload);
   return (
-    source.payload == null &&
-    (source.state === "unavailable" || source.state === "blocked")
+    (source.state === "unavailable" || source.state === "blocked") &&
+    (source.payload == null || periods?.length === 0)
   );
 }
 
@@ -116,12 +117,13 @@ function hasRequestedRiskWindow(
   }
   if (!identity.reportStartDate && !identity.reportEndDate) {
     const periods = readRiskPeriods(source.payload);
-    return (
-      periods?.every(
+    return Boolean(
+      periods?.length &&
+        periods.every(
         (period) =>
           period.end_date === identity.asOfDate &&
           hasRiskSeriesWithinPeriod(period),
-      ) ?? true
+        ),
     );
   }
 
