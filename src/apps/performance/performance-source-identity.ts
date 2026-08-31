@@ -34,6 +34,7 @@ type PerformanceAnalyticalSource = PerformanceReviewContextSource &
     chart_frequency: string;
     benchmark_code: string | null;
     requested_chart_frequency_supported?: boolean;
+    requested_contribution_dimension_supported?: boolean;
     requested_attribution_dimension_supported?: boolean;
   }>;
 
@@ -67,7 +68,12 @@ export function isPerformanceAnalyticalSourceCurrent(
     confirmsRequestedWindow(source, identity) &&
     (!identity.detailBasis || source.detail_basis === identity.detailBasis) &&
     (!identity.contributionDimension ||
-      source.contribution_dimension === identity.contributionDimension) &&
+      source.contribution_dimension === undefined ||
+      isPerformanceRequestedValueCurrent(
+        source.contribution_dimension,
+        identity.contributionDimension,
+        source.requested_contribution_dimension_supported,
+      )) &&
     isPerformanceRequestedValueCurrent(
       source.attribution_dimension,
       identity.attributionDimension,
@@ -126,7 +132,10 @@ export function isPerformanceDetailsSourceCurrent(
   details: WorkbenchPerformanceWorkspaceDetails,
   identity: PerformanceSourceIdentity,
 ): boolean {
-  return isPerformanceAnalyticalSourceCurrent(details, identity);
+  return (
+    Boolean(details.contribution_dimension) &&
+    isPerformanceAnalyticalSourceCurrent(details, identity)
+  );
 }
 
 export function doPerformanceSummaryAndDetailsShareReviewContext(

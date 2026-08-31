@@ -1063,6 +1063,9 @@ describe("PerformanceWorkspaceClient", () => {
           contribution_dimension: "asset_class",
           attribution_dimension: "asset_class",
           chart_frequency: "monthly",
+          requested_contribution_dimension_supported: false,
+          requested_attribution_dimension_supported: false,
+          requested_chart_frequency_supported: false,
         })}
         initialPortfolioId="PF_1001"
         initialPeriod="YTD"

@@ -292,10 +292,26 @@ describe("performance source identity", () => {
     },
   );
 
+  it("rejects primary detail evidence that omits its contribution dimension", () => {
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        {
+          ...buildPerformanceWorkspaceDetails(),
+          contribution_dimension: "",
+        },
+        {
+          portfolioId: "PF_1001",
+          contributionDimension: "asset_class",
+        },
+      ),
+    ).toBe(false);
+  });
+
   it("admits declared primary normalization without adopting undeclared drift", () => {
     const requestedIdentity = {
       portfolioId: "PF_1001",
       period: "YTD",
+      contributionDimension: "issuer",
       attributionDimension: "issuer",
       chartFrequency: "weekly",
     };
@@ -304,8 +320,10 @@ describe("performance source identity", () => {
       requested_chart_frequency_supported: false,
     };
     const declaredDetailNormalization = {
+      contribution_dimension: "asset_class",
       attribution_dimension: "asset_class",
       chart_frequency: "monthly",
+      requested_contribution_dimension_supported: false,
       requested_attribution_dimension_supported: false,
       requested_chart_frequency_supported: false,
     };

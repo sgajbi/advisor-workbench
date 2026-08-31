@@ -362,7 +362,10 @@ describe("PerformanceAnalyticsPage", () => {
         { scroll: false },
       );
     });
-    expect(replaceMock).not.toHaveBeenCalled();
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/performance?portfolioId=DEMO_ADV_USD_001&asOfDate=2026-02-24&period=YTD&reportingCurrency=USD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+      { scroll: false },
+    );
   });
 
   it("uses the shared full-width workstation shell instead of a centered page container", async () => {
@@ -519,9 +522,7 @@ describe("PerformanceAnalyticsPage", () => {
     expect(summaryCall?.[0].toString()).toContain("period=YTD");
     expect(summaryCall?.[0].toString()).not.toContain("report_start_date=");
     expect(summaryCall?.[0].toString()).not.toContain("report_end_date=");
-    expect(summaryCall?.[0].toString()).toContain(
-      "benchmark_code=BMK_GLOBAL_BALANCED_60_40"
-    );
+    expect(summaryCall?.[0].toString()).not.toContain("benchmark_code=");
     expect(
       fetchMock.mock.calls.some(([input]) =>
         isServerDetailsCall(input.toString(), "DEMO_ADV_USD_001")
@@ -1247,11 +1248,14 @@ describe("PerformanceAnalyticsPage", () => {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          const requestedDimension = new URL(url, "http://workbench.test").searchParams.get(
+            "attribution_dimension",
+          );
           return {
             ok: true,
             json: async () => ({
               ...rawWorkspace,
-              attribution_dimension: "asset_class",
+              attribution_dimension: requestedDimension ?? "issuer",
               requested_attribution_dimension_supported: true,
             }),
           } as Response;
@@ -1289,23 +1293,18 @@ describe("PerformanceAnalyticsPage", () => {
 
       fireEvent.click(await findWorkflowControl(/^Performance analysis/i));
 
-      await waitFor(() => {
-        expect(replaceMock).toHaveBeenCalledWith(
-          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
-          { scroll: false }
-        );
-        expect(pushMock).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&mode=analysis",
-          ),
-          { scroll: false },
-        );
-      });
-
       const notice = await screen.findByRole("status", {
         name: "Attribution trend normalization",
       });
       expect(notice).toHaveTextContent("segment reset to Asset Class");
+
+      await waitFor(() => {
+        expect(pushMock).toHaveBeenCalledWith(
+          "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&mode=analysis&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
+          { scroll: false }
+        );
+      });
+
     } finally {
       consoleErrorSpy.mockRestore();
       consoleWarnSpy.mockRestore();
@@ -1348,11 +1347,14 @@ describe("PerformanceAnalyticsPage", () => {
           return { ok: true, json: async () => rawWorkspace } as Response;
         }
         if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
+          const requestedFrequency = new URL(url, "http://workbench.test").searchParams.get(
+            "chart_frequency",
+          );
           return {
             ok: true,
             json: async () => ({
               ...rawWorkspace,
-              chart_frequency: "monthly",
+              chart_frequency: requestedFrequency ?? "weekly",
               requested_chart_frequency_supported: true,
             }),
           } as Response;
@@ -1383,17 +1385,18 @@ describe("PerformanceAnalyticsPage", () => {
         })
       );
 
+      const notice = await screen.findByRole("status", {
+        name: "Horizon comparison normalization",
+      });
+      expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
+
       await waitFor(() => {
-        expect(replaceMock).toHaveBeenCalledWith(
+        expect(pushMock).toHaveBeenCalledWith(
           "/performance?portfolioId=DEMO_ADV_USD_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_GLOBAL_BALANCED_60_40",
           { scroll: false }
         );
       });
 
-      const notice = await screen.findByRole("status", {
-        name: "Horizon comparison normalization",
-      });
-      expect(notice).toHaveTextContent("Unsupported frequency was replaced with Monthly.");
     } finally {
       consoleErrorSpy.mockRestore();
       consoleWarnSpy.mockRestore();

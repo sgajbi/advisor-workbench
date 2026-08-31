@@ -117,11 +117,26 @@ export default function PerformanceWorkspaceClient({
         reportEndDate: initialSummary.report_end_date ?? undefined,
         asOfDate: initialAsOfDate,
         reportingCurrency: initialReportingCurrency,
+        detailBasis: initialDetailBasis,
+        contributionDimension: initialContributionDimension,
+        attributionDimension: initialAttributionDimension,
+        chartFrequency: initialChartFrequency,
+        benchmark: initialBenchmark,
       }) &&
       doPerformanceSummaryAndDetailsShareReviewContext(initialSummary, initialDetails)
         ? initialDetails
         : null,
-    [initialAsOfDate, initialDetails, initialReportingCurrency, initialSummary],
+    [
+      initialAsOfDate,
+      initialAttributionDimension,
+      initialBenchmark,
+      initialChartFrequency,
+      initialContributionDimension,
+      initialDetailBasis,
+      initialDetails,
+      initialReportingCurrency,
+      initialSummary,
+    ],
   );
   const initialControls = useMemo<PerformanceControlState | null>(
     () =>
@@ -788,6 +803,11 @@ function requireCurrentPerformanceDetails(
       reportEndDate: controls.reportEndDate,
       asOfDate: controls.reviewAsOfDate,
       reportingCurrency: controls.reviewReportingCurrency,
+      detailBasis: controls.detailBasis,
+      contributionDimension: controls.contributionDimension,
+      attributionDimension: controls.attributionDimension,
+      chartFrequency: controls.chartFrequency,
+      benchmark: controls.benchmark,
     }) ||
     !doPerformanceSummaryAndDetailsShareReviewContext(summary, details)
   ) {
@@ -808,6 +828,9 @@ function requireCurrentPerformanceSummary(
       reportEndDate: controls.reportEndDate,
       asOfDate: controls.reviewAsOfDate,
       reportingCurrency: controls.reviewReportingCurrency,
+      detailBasis: controls.detailBasis,
+      chartFrequency: controls.chartFrequency,
+      benchmark: controls.benchmark,
     })
   ) {
     throw new Error("Performance summary did not confirm the requested source identity.");
