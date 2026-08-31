@@ -13,8 +13,9 @@ import {
 test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const evidenceDirectory = process.env.ISSUE_861_EVIDENCE_DIR
-  ? path.resolve(process.env.ISSUE_861_EVIDENCE_DIR, "proof-copilot")
+const evidenceRoot = process.env.ISSUE_967_EVIDENCE_DIR ?? process.env.ISSUE_861_EVIDENCE_DIR;
+const evidenceDirectory = evidenceRoot
+  ? path.resolve(evidenceRoot, "proof-copilot")
   : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
@@ -84,9 +85,21 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
   ).toBeVisible();
   expect(fixtureGateway?.getLastProofPackMemoId()).toBe(manageProofPackFixtureIds.published);
 
+  const preparationDisclosure = page.locator("summary").filter({
+    hasText: "How this was prepared",
+  });
+  await preparationDisclosure.focus();
+  await expect(preparationDisclosure).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(preparationDisclosure.locator("..")).toHaveAttribute("open", "");
+  await expect(page.getByText("Human review required", { exact: true })).toBeVisible();
+  await expect(page.getByText("Internal working use only", { exact: true })).toBeVisible();
+
   for (const viewport of [
     { width: 1440, height: 1000 },
+    { width: 1024, height: 900 },
     { width: 768, height: 900 },
+    { width: 519, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
     await expect(prepareMemo).toBeVisible();
