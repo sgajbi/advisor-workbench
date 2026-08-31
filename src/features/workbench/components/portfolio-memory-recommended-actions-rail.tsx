@@ -2,6 +2,7 @@
 
 import { ScreenStatePanel, Text } from "@/design-system";
 import type { PortfolioMemoryRecommendedAction } from "@/features/workbench/portfolio-memory-view-model";
+import styles from "@/features/workbench/components/portfolio-memory-panel.module.css";
 
 type Props = {
   actions: PortfolioMemoryRecommendedAction[];
@@ -9,19 +10,22 @@ type Props = {
 
 export default function PortfolioMemoryRecommendedActionsRail({ actions }: Props) {
   return (
-    <aside className="portfolio-memory-actions-card">
+    <aside className={styles.actionsCard}>
       <Text as="h3" variant="subsectionTitle">
         Recommended Actions
       </Text>
       {actions.length > 0 ? (
-        <div className="portfolio-memory-action-stack" role="list">
+        <div className={styles.actionStack} role="list">
           {actions.map((action) => (
-            <div className="portfolio-memory-action-item" key={action.key} role="listitem">
-              <span className="material-symbols-outlined" aria-hidden="true">
+            <div className={styles.actionItem} key={action.key} role="listitem">
+              <span
+                className={`material-symbols-outlined ${styles.actionIcon}`}
+                aria-hidden="true"
+              >
                 {action.icon}
               </span>
-              <strong>{action.title}</strong>
-              <small>{action.body}</small>
+              <strong className={styles.actionTitle}>{action.title}</strong>
+              <small className={styles.actionBody}>{action.body}</small>
             </div>
           ))}
         </div>
