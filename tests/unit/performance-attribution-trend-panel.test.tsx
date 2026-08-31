@@ -479,6 +479,23 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(screen.queryByText("2026-01")).not.toBeInTheDocument();
   });
 
+  it("withholds attribution history containing a stale observation window", async () => {
+    const trend = buildTrendContract();
+    getTrendMock.mockResolvedValue({
+      ...trend,
+      rows: trend.rows.map((row, index) =>
+        index === 0 ? { ...row, period_start: "2025-12-01" } : row,
+      ),
+    });
+
+    render(<PerformanceAttributionTrendPanel {...buildProps()} />);
+
+    expect(
+      await screen.findByText("Attribution history does not match this review"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("2026-01")).not.toBeInTheDocument();
+  });
+
   it("reloads attribution history when the confirmed source context changes", async () => {
     const requestedContext = {
       ...SOURCE_CONTEXT,

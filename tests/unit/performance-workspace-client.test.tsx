@@ -551,10 +551,21 @@ describe("PerformanceWorkspaceClient", () => {
       report_start_date: "2026-02-01",
       report_end_date: "2026-03-31",
     });
+    const explicitDetailsBaseline = buildDetails();
     const explicitDetails = buildDetails({
       period: "EXPLICIT",
       report_start_date: "2026-02-01",
       report_end_date: "2026-03-31",
+      net_chart: explicitDetailsBaseline.net_chart.map((point) => ({
+        ...point,
+        period_start: "2026-02-01",
+        period_end: "2026-02-28",
+      })),
+      gross_chart: explicitDetailsBaseline.gross_chart.map((point) => ({
+        ...point,
+        period_start: "2026-02-01",
+        period_end: "2026-02-28",
+      })),
     });
     getSummaryClientMock
       .mockRejectedValueOnce(failedRequest)

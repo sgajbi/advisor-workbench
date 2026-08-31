@@ -8,7 +8,10 @@ import {
   arePerformanceReviewContextsCoherent,
   type PerformanceReviewContextSource,
 } from "../performance-review-context";
-import { isPerformanceAnalyticalSourceCurrent } from "../performance-source-identity";
+import {
+  arePerformanceObservationWindowsCurrent,
+  isPerformanceAnalyticalSourceCurrent,
+} from "../performance-source-identity";
 import {
   SourceEvidenceMismatchError,
   useSourceConfirmedResource,
@@ -66,6 +69,7 @@ export function usePerformanceAttributionTrend(
         ...request,
         benchmark: request.benchmark ?? null,
       }) ||
+      !arePerformanceObservationWindowsCurrent(trend.rows, trend) ||
       !arePerformanceReviewContextsCoherent(trend, sourceContext)
     ) {
       throw new SourceEvidenceMismatchError(
