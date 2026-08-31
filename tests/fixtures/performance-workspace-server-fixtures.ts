@@ -32,10 +32,15 @@ function withPerformanceReviewContext<Response extends Record<string, unknown>>(
 ) {
   const query = new URL(requestUrl, "http://workbench.test").searchParams;
   const requestedAsOfDate = query.get("as_of_date");
+  const requestedPeriod = query.get("period");
   const requestedReportingCurrency = query.get("reporting_currency")?.toUpperCase() ?? null;
   const effectiveAsOfDate = requestedAsOfDate ?? FIXTURE_AS_OF_DATE;
   return {
     ...response,
+    report_end_date:
+      requestedAsOfDate && requestedPeriod !== "EXPLICIT"
+        ? effectiveAsOfDate
+        : response.report_end_date,
     as_of_date: effectiveAsOfDate,
     requested_as_of_date: requestedAsOfDate,
     effective_as_of_date: effectiveAsOfDate,

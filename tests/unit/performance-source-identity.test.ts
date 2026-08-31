@@ -148,6 +148,42 @@ describe("performance source identity", () => {
     ).toBe(false);
   });
 
+  it("binds a historical preset period to the source-confirmed valuation date", () => {
+    const summary = buildPerformanceWorkspaceSummary();
+    const details = buildPerformanceWorkspaceDetails();
+    const historicalIdentity = {
+      ...identity,
+      asOfDate: "2026-02-24",
+    };
+
+    expect(
+      isPerformanceSummarySourceCurrent(
+        { ...summary, requested_as_of_date: "2026-02-24" },
+        historicalIdentity,
+      ),
+    ).toBe(true);
+    expect(
+      isPerformanceSummarySourceCurrent(
+        {
+          ...summary,
+          requested_as_of_date: "2026-02-24",
+          report_end_date: "2026-03-31",
+        },
+        historicalIdentity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        {
+          ...details,
+          requested_as_of_date: "2026-02-24",
+          report_end_date: "2026-03-31",
+        },
+        historicalIdentity,
+      ),
+    ).toBe(false);
+  });
+
   it("requires summary and detail to share one effective review context", () => {
     expect(
       doPerformanceSummaryAndDetailsShareReviewContext(
