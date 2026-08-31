@@ -480,6 +480,55 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
   });
 
+  it("refetches a recovered source after rejecting stale risk evidence", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient)
+      .mockResolvedValueOnce({
+        ...buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+        as_of_date: "2026-02-23",
+      })
+      .mockResolvedValueOnce(
+        buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS"),
+      )
+      .mockResolvedValueOnce(
+        buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+      );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    );
+
+    const { rerender } = renderRiskMode(scenario);
+
+    await waitFor(() => {
+      expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByLabelText("Risk snapshot headline metrics"),
+      ).not.toBeInTheDocument();
+    });
+
+    rerender(buildRiskModeElement(scenario, { detailBasis: "GROSS" }));
+    await waitFor(() => {
+      expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(2);
+    });
+
+    rerender(buildRiskModeElement(scenario, { detailBasis: "NET" }));
+    await waitFor(() => {
+      expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(3);
+      expect(
+        screen.getByLabelText("Risk snapshot headline metrics"),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("shows partial live supportability when benchmark-relative risk is unavailable", async () => {
     const scenario = buildBenchmarkUnassignedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
@@ -1097,7 +1146,12 @@ describe("PerformanceRiskMode", () => {
           includeUnderwaterSeries: true,
         }),
         as_of_date: "2026-02-23",
-      });
+      })
+      .mockResolvedValueOnce(
+        buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+          includeUnderwaterSeries: true,
+        }),
+      );
     vi.mocked(getWorkbenchRiskRollingClient)
       .mockResolvedValueOnce(
         buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
@@ -1125,6 +1179,18 @@ describe("PerformanceRiskMode", () => {
         screen.getByText("Underwater path unavailable"),
       ).toBeInTheDocument();
     });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Close Underwater path detail" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "View underwater path" }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("Risk underwater series table"),
+      ).toBeInTheDocument();
+    });
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(3);
     fireEvent.click(
       screen.getByRole("button", { name: "Close Underwater path detail" }),
     );
