@@ -150,6 +150,8 @@ export default async function PerformanceAnalyticsPage({
             ? workspaceSummary
             : null,
           portfolioContext,
+          currencyPresentation:
+            initialMode === "risk" ? "portfolio_base" : "source_confirmed",
         })}
         body="The selected portfolio or performance period is not confirmed by the source response. No analytical detail was requested."
         href="/book"
