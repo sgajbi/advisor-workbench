@@ -1,4 +1,6 @@
 .panel {
+  container-name: portfolio-memory;
+  container-type: inline-size;
   border-color: #c6c6cd;
   border-radius: 6px;
   background: #ffffff;
@@ -170,9 +172,20 @@
 }
 
 .eventTitle {
+  display: block;
   color: #131b2e;
   font-size: 13px;
   font-weight: 800;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.tableText {
+  display: block;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .rowAction {
@@ -375,8 +388,7 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 1200px) {
-  .statusStrip,
+@container portfolio-memory (max-width: 60rem) {
   .workspace,
   .detailGrid {
     grid-template-columns: 1fr;
@@ -385,5 +397,35 @@
   .snapshot {
     padding-left: 0;
     border-left: 0;
+  }
+}
+
+@container portfolio-memory (max-width: 48rem) {
+  .statusStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .metric:nth-child(-n + 2) {
+    border-bottom: 1px solid #e0e3e5;
+  }
+}
+
+@container portfolio-memory (max-width: 30rem) {
+  .statusStrip,
+  .artifactGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric {
+    border-right: 0;
+    border-bottom: 1px solid #e0e3e5;
+  }
+
+  .metric:last-child {
+    border-bottom: 0;
   }
 }

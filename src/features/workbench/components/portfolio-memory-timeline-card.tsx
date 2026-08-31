@@ -33,14 +33,14 @@ export default function PortfolioMemoryTimelineCard({
         className={styles.table}
         variant="analysis"
         density="compact"
-        tableMinWidth={900}
+        tableMinWidth={770}
         columns={[
-          { key: "time", label: "Date/Time" },
-          { key: "event", label: "Event" },
-          { key: "category", label: "Category" },
-          { key: "impact", label: "Business Impact" },
-          { key: "evidence", label: "Evidence" },
-          { key: "action", label: "Action", align: "right" },
+          { key: "time", label: "Date/Time", width: 140 },
+          { key: "event", label: "Event", width: 180 },
+          { key: "category", label: "Category", width: 130 },
+          { key: "impact", label: "Business Impact", width: 160 },
+          { key: "evidence", label: "Evidence", width: 90 },
+          { key: "action", label: "Action", align: "right", width: 70 },
         ]}
         rows={events.map((row) => ({
           key: row.key,
@@ -51,12 +51,18 @@ export default function PortfolioMemoryTimelineCard({
           ariaLabel: row.displayId,
           onClick: () => onSelectEvent(row.eventId),
           cells: [
-            row.eventTime,
+            <span key={`${row.key}-time`} className={styles.tableText}>
+              {row.eventTime}
+            </span>,
             <strong key={`${row.key}-event`} className={styles.eventTitle}>
               {row.eventLabel}
             </strong>,
-            row.category,
-            row.businessImpact,
+            <span key={`${row.key}-category`} className={styles.tableText}>
+              {row.category}
+            </span>,
+            <span key={`${row.key}-impact`} className={styles.tableText}>
+              {row.businessImpact}
+            </span>,
             <SemanticBadge
               key={`${row.key}-evidence`}
               tone={row.artifactRefCount > 0 ? "success" : "default"}
