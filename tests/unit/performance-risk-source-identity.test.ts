@@ -182,6 +182,37 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
+  it.each([
+    [
+      "underwater series",
+      { includeUnderwaterSeries: true },
+      { analysis_context: { include_underwater_series: true } },
+      { analysis_context: { include_underwater_series: false } },
+    ],
+    [
+      "rolling series",
+      { includeTimeSeries: true },
+      { request_context: { include_time_series: true } },
+      { request_context: { include_time_series: false } },
+    ],
+  ])(
+    "requires the source to confirm requested %s detail",
+    (_label, detailIdentity, matchingPayload, stalePayload) => {
+      expect(
+        isPerformanceRiskSourceCurrent(
+          { ...SOURCE, payload: matchingPayload },
+          { ...IDENTITY, ...detailIdentity },
+        ),
+      ).toBe(true);
+      expect(
+        isPerformanceRiskSourceCurrent(
+          { ...SOURCE, payload: stalePayload },
+          { ...IDENTITY, ...detailIdentity },
+        ),
+      ).toBe(false);
+    },
+  );
+
   it("fails closed before a stale response can be cached or rendered", () => {
     expect(() =>
       requireCurrentPerformanceRiskSource(
