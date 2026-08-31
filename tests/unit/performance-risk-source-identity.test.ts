@@ -242,6 +242,58 @@ describe("performance risk source identity", () => {
     ).toBe(true);
   });
 
+  it.each([
+    [
+      "summary event outside the period",
+      {
+        summary: {
+          max_drawdown_peak_date: "2025-12-31",
+          max_drawdown_trough_date: "2026-01-15",
+        },
+      },
+    ],
+    [
+      "episode with reversed event order",
+      {
+        episodes: [
+          {
+            peak_date: "2026-02-10",
+            trough_date: "2026-02-01",
+            recovery_date: "2026-02-20",
+          },
+        ],
+      },
+    ],
+    [
+      "relative recovery before its trough",
+      {
+        relative_to_benchmark: {
+          max_drawdown_peak_date: "2026-01-10",
+          max_drawdown_trough_date: "2026-02-10",
+          max_drawdown_recovery_date: "2026-02-01",
+        },
+      },
+    ],
+  ])("rejects a drawdown %s", (_label, drawdownEvidence) => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              {
+                start_date: "2026-01-01",
+                end_date: "2026-02-24",
+                ...drawdownEvidence,
+              },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
   it("binds attribution controls and every returned set to the requested decomposition", () => {
     const identity = {
       ...IDENTITY,
@@ -304,6 +356,21 @@ describe("performance risk source identity", () => {
                 ],
               },
             ],
+          },
+        },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            ...source.payload,
+            periods: source.payload.periods.map((period) => ({
+              ...period,
+              attribution_sets: [],
+            })),
           },
         },
         identity,

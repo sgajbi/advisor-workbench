@@ -144,7 +144,80 @@ function hasRiskSeriesWithinPeriod(
 ): boolean {
   return (
     hasDatedSeriesWithinPeriod(period.underwater_series, period) &&
-    hasRollingSeriesWithinPeriod(period.window_results, period)
+    hasRollingSeriesWithinPeriod(period.window_results, period) &&
+    hasDrawdownEventsWithinPeriod(period)
+  );
+}
+
+function hasDrawdownEventsWithinPeriod(period: RiskPeriod): boolean {
+  return (
+    hasDrawdownDateRecord(period.summary, period) &&
+    hasDrawdownDateRecord(period.relative_to_benchmark, period) &&
+    hasDrawdownEpisodesWithinPeriod(period.episodes, period)
+  );
+}
+
+function hasDrawdownEpisodesWithinPeriod(
+  episodes: unknown,
+  period: RiskPeriod,
+): boolean {
+  if (episodes === undefined) {
+    return true;
+  }
+  return (
+    Array.isArray(episodes) &&
+    episodes.every((episode) => hasDrawdownDateRecord(episode, period))
+  );
+}
+
+function hasDrawdownDateRecord(
+  value: unknown,
+  period: RiskPeriod,
+): boolean {
+  if (value == null) {
+    return true;
+  }
+  if (typeof value !== "object") {
+    return false;
+  }
+  const record = value as Readonly<Record<string, unknown>>;
+  const usesSummaryDates =
+    "max_drawdown_peak_date" in record ||
+    "max_drawdown_trough_date" in record ||
+    "max_drawdown_recovery_date" in record;
+  const usesEpisodeDates =
+    "peak_date" in record ||
+    "trough_date" in record ||
+    "recovery_date" in record;
+  if (!usesSummaryDates && !usesEpisodeDates) {
+    return true;
+  }
+  const peak = usesSummaryDates
+    ? record.max_drawdown_peak_date
+    : record.peak_date;
+  const trough = usesSummaryDates
+    ? record.max_drawdown_trough_date
+    : record.trough_date;
+  const recovery = usesSummaryDates
+    ? record.max_drawdown_recovery_date
+    : record.recovery_date;
+  return (
+    isDateWithinRiskPeriod(peak, period) &&
+    isDateWithinRiskPeriod(trough, period) &&
+    peak <= trough &&
+    (recovery == null ||
+      (isDateWithinRiskPeriod(recovery, period) && trough <= recovery))
+  );
+}
+
+function isDateWithinRiskPeriod(
+  value: unknown,
+  period: RiskPeriod,
+): value is string {
+  return (
+    typeof value === "string" &&
+    value >= period.start_date &&
+    value <= period.end_date
   );
 }
 
@@ -247,6 +320,7 @@ function hasRequestedRiskAttribution(
       typeof period === "object" &&
       "attribution_sets" in period &&
       Array.isArray(period.attribution_sets) &&
+      period.attribution_sets.length > 0 &&
       period.attribution_sets.every(
         (set: unknown) =>
           set &&
