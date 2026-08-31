@@ -133,6 +133,7 @@ type IdeaAuthorityResolution =
       status: "applied";
       mode: "development_configured";
       bodyText?: string;
+      presentationReceiptTenantId?: string;
     }
   | {
       status: "rejected";
@@ -316,6 +317,7 @@ export function applyIdeaRouteCallerContextHeaders(
     status: "applied",
     mode: authorityMode,
     bodyText: preparedBody.bodyText,
+    presentationReceiptTenantId: preparedBody.presentationReceiptTenantId,
   };
 }
 
@@ -330,7 +332,11 @@ function prepareIdeaPresentationReceiptBody(
   request: { method: string; upstreamPath: string; bodyText?: string },
   tenantIds: string[],
 ):
-  | { status: "ready"; bodyText?: string }
+  | {
+      status: "ready";
+      bodyText?: string;
+      presentationReceiptTenantId?: string;
+    }
   | { status: "rejected"; reason: "invalid_idea_configuration" | "invalid_idea_request" } {
   const isPresentationReceipt =
     request.method === "POST" &&
@@ -358,9 +364,38 @@ function prepareIdeaPresentationReceiptBody(
     return {
       status: "ready",
       bodyText: JSON.stringify({ ...requestFields, tenantId: tenantIds[0] }),
+      presentationReceiptTenantId: tenantIds[0],
     };
   } catch {
     return { status: "rejected", reason: "invalid_idea_request" };
+  }
+}
+
+export function matchesIdeaPresentationReceiptTenantAuthority(
+  bodyText: string,
+  expectedTenantId: string,
+): boolean {
+  try {
+    const body = JSON.parse(bodyText) as unknown;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return false;
+    }
+    const envelope = body as Record<string, unknown>;
+    const payload =
+      envelope.data &&
+      typeof envelope.data === "object" &&
+      !Array.isArray(envelope.data)
+        ? (envelope.data as Record<string, unknown>)
+        : envelope;
+    const receipt = payload.receipt;
+    return Boolean(
+      receipt &&
+        typeof receipt === "object" &&
+        !Array.isArray(receipt) &&
+        (receipt as Record<string, unknown>).tenantId === expectedTenantId,
+    );
+  } catch {
+    return false;
   }
 }
 
