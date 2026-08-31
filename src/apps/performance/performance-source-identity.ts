@@ -98,6 +98,38 @@ export function isPerformanceRequestedValueCurrent(
   return !requested || actual === requested || requestedValueSupported === false;
 }
 
+export function arePerformanceObservationWindowsCurrent(
+  rows: ReadonlyArray<{
+    frequency: string;
+    period_start?: string | null;
+    period_end?: string | null;
+  }>,
+  source: Readonly<{
+    chart_frequency: string;
+    report_start_date?: string | null;
+    report_end_date?: string | null;
+  }>,
+): boolean {
+  const reportStartDate = source.report_start_date?.trim();
+  const reportEndDate = source.report_end_date?.trim();
+  if (!reportStartDate || !reportEndDate) {
+    return false;
+  }
+  return rows.every((row) => {
+    const periodStart = row.period_start?.trim();
+    const periodEnd = row.period_end?.trim();
+    if (!periodStart || !periodEnd) {
+      return false;
+    }
+    return (
+      row.frequency === source.chart_frequency &&
+      periodStart >= reportStartDate &&
+      periodEnd <= reportEndDate &&
+      periodStart <= periodEnd
+    );
+  });
+}
+
 export function isPerformanceSummarySourceCurrent(
   summary: WorkbenchPerformanceWorkspaceSummary,
   identity: PerformanceSourceIdentity,
@@ -134,7 +166,9 @@ export function isPerformanceDetailsSourceCurrent(
 ): boolean {
   return (
     Boolean(details.contribution_dimension) &&
-    isPerformanceAnalyticalSourceCurrent(details, identity)
+    isPerformanceAnalyticalSourceCurrent(details, identity) &&
+    arePerformanceObservationWindowsCurrent(details.net_chart, details) &&
+    arePerformanceObservationWindowsCurrent(details.gross_chart, details)
   );
 }
 

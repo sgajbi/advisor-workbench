@@ -149,6 +149,34 @@ describe("performance source identity", () => {
     ).toBe(false);
   });
 
+  it.each([
+    [
+      "return-path window",
+      (details: WorkbenchPerformanceWorkspaceDetails) => ({
+        ...details,
+        net_chart: details.net_chart.map((point, index) =>
+          index === 0 ? { ...point, period_end: "2026-03-31" } : point,
+        ),
+      }),
+    ],
+    [
+      "return-path frequency",
+      (details: WorkbenchPerformanceWorkspaceDetails) => ({
+        ...details,
+        gross_chart: details.gross_chart.map((point, index) =>
+          index === 0 ? { ...point, frequency: "weekly" } : point,
+        ),
+      }),
+    ],
+  ])("rejects detail evidence with a stale %s", (_name, buildStaleDetails) => {
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        buildStaleDetails(buildPerformanceWorkspaceDetails()),
+        identity,
+      ),
+    ).toBe(false);
+  });
+
   it("binds a historical preset period to the source-confirmed valuation date", () => {
     const summary = buildPerformanceWorkspaceSummary();
     const details = buildPerformanceWorkspaceDetails();
