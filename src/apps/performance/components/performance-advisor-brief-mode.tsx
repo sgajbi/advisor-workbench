@@ -11,6 +11,7 @@ import { usePerformanceAdvisorBrief } from "../use-performance-advisor-brief";
 import AdvisorBriefReviewWorkflow from "./advisor-brief/advisor-brief-review-workflow";
 import LotusDrilldownList from "./advisor-brief/lotus-drilldown-list";
 import LotusMetricPanel from "./advisor-brief/lotus-metric-panel";
+import styles from "./advisor-brief/performance-advisor-brief.module.css";
 import {
   canCopyAdvisorBrief,
   dedupeAdvisorActions,
@@ -24,7 +25,6 @@ import PerformanceWorkspaceStageSurface, {
 } from "./performance-workspace-stage-surface";
 import PerformanceWorkspaceSection from "./performance-workspace-section";
 import type { PerformanceAdvisorBriefModeProps } from "./performance-workspace-types";
-import styles from "./performance-advisor-brief-mode.module.css";
 
 export default function PerformanceAdvisorBriefMode(props: PerformanceAdvisorBriefModeProps) {
   const {
@@ -114,11 +114,19 @@ function PerformanceAdvisorBriefModeSession({
   const narrativeSections = [
     {
       ariaLabel: "Adviser talking points",
-      className: "performance-advisor-brief-section performance-advisor-brief-section-narrative",
+      className: cx(
+        styles.section,
+        styles.sectionNarrative
+      ),
       title: "Adviser talking points",
       description: "Internal working narrative for the selected period; review before client use.",
       content: brief.talkingPoints.length ? (
-        <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-narrative">
+        <div
+          className={cx(
+            styles.itemList,
+            styles.itemListNarrative
+          )}
+        >
           {brief.talkingPoints.map((item) => (
             <LotusTalkingPointCard
               key={item.headline}
@@ -128,14 +136,17 @@ function PerformanceAdvisorBriefModeSession({
           ))}
         </div>
       ) : (
-        <div className="performance-advisor-brief-empty-note">
+        <div className={styles.emptyNote}>
           No advisor talking points are available for this selection.
         </div>
       ),
     },
     {
       ariaLabel: "Recommended actions",
-      className: "performance-advisor-brief-section performance-advisor-brief-section-workflow",
+      className: cx(
+        styles.section,
+        styles.sectionWorkflow
+      ),
       title: "Recommended actions",
       description: "Next advisor workflow steps from the current brief.",
       content: (
@@ -148,11 +159,19 @@ function PerformanceAdvisorBriefModeSession({
     },
     {
       ariaLabel: "Risks and exceptions",
-      className: "performance-advisor-brief-section performance-advisor-brief-section-risk",
+      className: cx(
+        styles.section,
+        styles.sectionRisk
+      ),
       title: "Risks and exceptions",
       description: "Exceptions, evidence gaps, and supportability limits.",
       content: brief.risksAndExceptions.length ? (
-        <div className="performance-advisor-brief-item-list performance-advisor-brief-item-list-risk">
+        <div
+          className={cx(
+            styles.itemList,
+            styles.itemListRisk
+          )}
+        >
           {brief.risksAndExceptions.map((item) => (
             <LotusTalkingPointCard
               key={item.headline}
@@ -163,7 +182,7 @@ function PerformanceAdvisorBriefModeSession({
           ))}
         </div>
       ) : (
-        <div className="performance-advisor-brief-empty-note">
+        <div className={styles.emptyNote}>
           No material supportability exceptions are flagged in the current source bundle.
         </div>
       ),
@@ -176,7 +195,9 @@ function PerformanceAdvisorBriefModeSession({
       intro={modeIntro}
       contextAriaLabel="Adviser brief context"
       contextItems={contextItems}
-      shellClassName={cx(styles.advisorBriefScope, "performance-advisor-brief-shell")}
+      shellClassName={styles.shell}
+      shellAriaLabel="Performance adviser brief workspace"
+      shellRole="region"
     >
         <LotusPageHeader
           summary={brief.summary}
@@ -188,9 +209,9 @@ function PerformanceAdvisorBriefModeSession({
           interactionBusy={isLoading || isApplyingReviewAction}
         />
         <AiAssistanceDisclosure disclosure={brief.aiDisclosure} />
-        <div className="performance-advisor-brief-body-grid">
+        <div className={styles.bodyGrid}>
           <section
-            className="performance-advisor-brief-main-column"
+            className={styles.mainColumn}
             aria-label="Adviser brief narrative"
           >
             {narrativeSections.map((section, index) => (
@@ -198,7 +219,7 @@ function PerformanceAdvisorBriefModeSession({
                 <PerformanceWorkspaceSection
                   ariaLabel={section.ariaLabel}
                   className={section.className}
-                  headingClassName="performance-advisor-brief-section-heading"
+                  headingClassName={styles.sectionHeading}
                   title={section.title}
                   description={section.description}
                 >
@@ -218,7 +239,10 @@ function PerformanceAdvisorBriefModeSession({
           </section>
 
           <aside
-            className="performance-advisor-brief-side-column performance-advisor-brief-sidecar"
+            className={cx(
+              styles.sideColumn,
+              styles.sidecar
+            )}
             aria-label="Adviser brief source metrics"
           >
             <LotusMetricPanel metrics={brief.sourceMetrics} onSelectMode={onSelectMode} />

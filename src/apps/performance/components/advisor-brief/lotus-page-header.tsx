@@ -1,7 +1,9 @@
 import { Text } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import { PERFORMANCE_WORKFLOW_LABELS } from "../../performance-terminology";
 
 import LotusStatusBar from "./lotus-status-bar";
+import styles from "./performance-advisor-brief.module.css";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
 
 export default function LotusPageHeader({
@@ -22,33 +24,48 @@ export default function LotusPageHeader({
   interactionBusy: boolean;
 }) {
   return (
-    <header className="lotus-page-header performance-advisor-brief-header">
-      <div className="lotus-page-header-copy performance-advisor-brief-header-copy performance-advisor-brief-overview">
-        <div className="performance-advisor-brief-overview-topline">
-          <div className="performance-advisor-brief-overview-copy">
+    <header className={cx("lotus-page-header", styles.header)}>
+      <div
+        className={cx(
+          "lotus-page-header-copy",
+          styles.headerCopy,
+          styles.overview
+        )}
+      >
+        <div className={styles.overviewTopline}>
+          <div className={styles.overviewCopy}>
             <Text
               as="p"
               variant="dataLabel"
-              className="lotus-page-header-eyebrow performance-advisor-brief-eyebrow"
+              className={cx(
+                "lotus-page-header-eyebrow",
+                styles.eyebrow
+              )}
             >
               {PERFORMANCE_WORKFLOW_LABELS.adviserBrief}
             </Text>
-            <div className="lotus-page-header-title-row">
+            <div className={cx("lotus-page-header-title-row", styles.pageHeaderTitleRow)}>
               <Text
                 as="h2"
                 variant="pageTitle"
-                className="lotus-page-header-title performance-advisor-brief-title"
+                className={cx(
+                  "lotus-page-header-title",
+                  styles.title
+                )}
               >
                 Performance adviser brief
               </Text>
-              <span className="lotus-page-header-anchor" aria-hidden="true" />
+              <span
+                className={cx("lotus-page-header-anchor", styles.pageHeaderAnchor)}
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>
         <Text
           as="p"
           variant="body"
-          className="performance-advisor-brief-overview-summary"
+          className={styles.overviewSummary}
           aria-label="Brief synopsis"
         >
           {summary}
