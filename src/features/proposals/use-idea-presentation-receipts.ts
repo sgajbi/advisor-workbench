@@ -106,14 +106,17 @@ export function useIdeaPresentationReceipts({
       return;
     }
     const entries = [...transactions.current.values()];
-    const failedCount = entries.filter((entry) => entry.status === "failed").length;
+    const failedCount = entries.filter(
+      (entry) => entry.status === "failed",
+    ).length;
     setSummary({
       snapshotKey,
-      status: failedCount > 0
-        ? "attention"
-        : entries.some((entry) => entry.status === "pending")
-          ? "recording"
-          : "ready",
+      status:
+        failedCount > 0
+          ? "attention"
+          : entries.some((entry) => entry.status === "pending")
+            ? "recording"
+            : "ready",
       failedCount,
     });
   }, [snapshotKey]);
@@ -150,7 +153,9 @@ export function useIdeaPresentationReceipts({
       for (const candidateId of pendingCandidateIds) {
         draftingCandidates.current.add(candidateId);
       }
-      let drafts: Awaited<ReturnType<typeof buildIdeaPresentationReceiptDrafts>>;
+      let drafts: Awaited<
+        ReturnType<typeof buildIdeaPresentationReceiptDrafts>
+      >;
       try {
         drafts = await buildIdeaPresentationReceiptDrafts({
           presentedAtUtc: new Date().toISOString(),
@@ -219,13 +224,19 @@ export function useIdeaPresentationReceipts({
         return;
       }
       const markers = [...observed]
-        .filter((marker) => marker.isConnected && intersecting.get(marker) === true)
+        .filter(
+          (marker) => marker.isConnected && intersecting.get(marker) === true,
+        )
         .sort(compareVisualOrder);
       const visibleCandidateIds = [
         ...new Set(
           markers
-            .map((marker) => marker.getAttribute("data-idea-presentation-candidate"))
-            .filter((candidateId): candidateId is string => Boolean(candidateId)),
+            .map((marker) =>
+              marker.getAttribute("data-idea-presentation-candidate"),
+            )
+            .filter((candidateId): candidateId is string =>
+              Boolean(candidateId),
+            ),
         ),
       ];
       if (visibleCandidateIds.length > 0) {
@@ -243,12 +254,13 @@ export function useIdeaPresentationReceipts({
         for (const entry of entries) {
           intersecting.set(
             entry.target,
-            entry.isIntersecting && entry.intersectionRatio >= VISIBILITY_THRESHOLD,
+            entry.isIntersecting &&
+              entry.intersectionRatio >= VISIBILITY_THRESHOLD,
           );
         }
         scheduleFlush();
       },
-      { root, threshold: VISIBILITY_THRESHOLD },
+      { root: null, threshold: VISIBILITY_THRESHOLD },
     );
     const observeMarkers = () => {
       for (const marker of observed) {

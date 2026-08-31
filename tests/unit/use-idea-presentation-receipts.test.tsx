@@ -1,5 +1,11 @@
 import { useRef } from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useIdeaPresentationReceipts } from "../../src/features/proposals/use-idea-presentation-receipts";
@@ -107,10 +113,7 @@ function Harness({
     <>
       <div ref={containerRef} data-testid="queue-viewport">
         {candidateIds.map((candidateId) => (
-          <div
-            key={candidateId}
-            data-idea-presentation-candidate={candidateId}
-          >
+          <div key={candidateId} data-idea-presentation-candidate={candidateId}>
             {candidateId}
           </div>
         ))}
@@ -133,7 +136,9 @@ function marker(candidateId: string): Element {
 async function observer(): Promise<TestIntersectionObserver> {
   await waitFor(() => {
     expect(TestIntersectionObserver.instances).toHaveLength(1);
-    expect(TestIntersectionObserver.instances[0].targets.size).toBeGreaterThan(0);
+    expect(TestIntersectionObserver.instances[0].targets.size).toBeGreaterThan(
+      0,
+    );
   });
   return TestIntersectionObserver.instances[0];
 }
@@ -164,9 +169,11 @@ describe("useIdeaPresentationReceipts", () => {
     });
   });
 
-  it("does not treat mount or an off-screen buffer row as presentation", async () => {
+  it("uses the browser viewport and does not treat a clipped buffer row as presentation", async () => {
     render(<Harness />);
     const visibilityObserver = await observer();
+    expect(visibilityObserver.root).toBeNull();
+    expect(visibilityObserver.thresholds).toEqual([0.5]);
 
     await act(async () => {
       visibilityObserver.emit([
@@ -208,7 +215,9 @@ describe("useIdeaPresentationReceipts", () => {
         }),
       }),
     );
-    expect(recordReceipt.mock.calls[0][0].request).not.toHaveProperty("tenantId");
+    expect(recordReceipt.mock.calls[0][0].request).not.toHaveProperty(
+      "tenantId",
+    );
   });
 
   it("uses one digest for the exact visual order of the visible set", async () => {
@@ -291,7 +300,11 @@ describe("useIdeaPresentationReceipts", () => {
     view.rerender(<Harness candidateIds={["idea-025"]} />);
     await act(async () => {
       visibilityObserver.emit([
-        { target: marker("idea-025"), isIntersecting: true, intersectionRatio: 1 },
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
       ]);
       await Promise.resolve();
     });
@@ -389,7 +402,9 @@ describe("useIdeaPresentationReceipts", () => {
       ]);
     });
     await waitFor(() => {
-      expect(screen.getByTestId("receipt-status")).toHaveTextContent("attention");
+      expect(screen.getByTestId("receipt-status")).toHaveTextContent(
+        "attention",
+      );
     });
     const firstInput = recordReceipt.mock.calls[0][0];
 
@@ -424,7 +439,9 @@ describe("useIdeaPresentationReceipts", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("receipt-status")).toHaveTextContent("unavailable");
+      expect(screen.getByTestId("receipt-status")).toHaveTextContent(
+        "unavailable",
+      );
     });
     expect(recordReceipt).not.toHaveBeenCalled();
   });
