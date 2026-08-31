@@ -1,0 +1,111 @@
+.result {
+  --decision-support-accent: #725b26;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid #b8c0ca;
+  border-left: 4px solid var(--decision-support-accent);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ffffff, #f7f9fb);
+  box-shadow: 0 2px 7px rgba(19, 27, 46, 0.06);
+}
+
+.copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.copy > span {
+  color: var(--decision-support-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.copy h3 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 17px;
+  line-height: 23px;
+  outline: none;
+}
+
+.copy h3:focus-visible {
+  border-radius: 2px;
+  box-shadow: 0 0 0 3px rgba(114, 91, 38, 0.24);
+}
+
+.copy p {
+  margin: 0;
+  color: #45464d;
+  font-size: 13px;
+  line-height: 19px;
+}
+
+.material {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #d8dde4;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.material h4 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.material dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.material dl > div {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid #e5e8ec;
+}
+
+.material dt,
+.material dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.material dt {
+  color: #5b5d63;
+  font-weight: 700;
+}
+
+.material dd {
+  color: #24272b;
+}
+
+.material ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 1200px) {
+  .material dl > div {
+    grid-template-columns: 1fr;
+  }
+}

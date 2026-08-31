@@ -5,6 +5,8 @@ import { useLayoutEffect, useRef } from "react";
 import { AiAssistanceDisclosure } from "@/design-system";
 import type { DpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 
+import styles from "./dpm-ai-workflow-result.module.css";
+
 type Props = {
   outcome: DpmAiWorkflowOutcome;
   ariaLabel?: string;
@@ -27,8 +29,8 @@ export default function DpmAiWorkflowResult({
   }, [focusOnMount, outcome.sourceIdentity]);
 
   return (
-    <section className="dpm-ai-workflow-result" aria-label={ariaLabel} aria-live="polite">
-      <div className="dpm-ai-workflow-result-copy">
+    <section className={styles.result} aria-label={ariaLabel} aria-live="polite">
+      <div className={styles.copy}>
         <span>{eyebrow}</span>
         <h3 ref={headingRef} tabIndex={focusOnMount ? -1 : undefined}>
           {outcome.scopeLabel}
@@ -37,7 +39,7 @@ export default function DpmAiWorkflowResult({
       </div>
       {outcome.material.sections.length > 0 ? (
         <section
-          className="dpm-ai-workflow-material"
+          className={styles.material}
           aria-label={outcome.material.title}
         >
           <h4>{outcome.material.title}</h4>
