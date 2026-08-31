@@ -1,18 +1,30 @@
 import type {
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceWorkspaceDetails,
-  WorkbenchPerformanceWorkspaceSummary,
+  WorkbenchPerformanceWorkspaceSummary
 } from "@/features/workbench/types";
+import { arePerformanceReviewContextsCoherent } from "./performance-review-context";
 
 export function assemblePerformanceWorkspace(
   summary: WorkbenchPerformanceWorkspaceSummary,
   details: WorkbenchPerformanceWorkspaceDetails | null
 ): WorkbenchPerformanceWorkspace {
+  if (details && !arePerformanceReviewContextsCoherent(summary, details)) {
+    throw new TypeError(
+      "Performance summary and details do not share one source-confirmed review context."
+    );
+  }
+
   return {
     correlation_id: details?.correlation_id ?? summary.correlation_id,
     contract_version: details?.contract_version ?? summary.contract_version,
     portfolio_id: summary.portfolio_id,
     as_of_date: details?.as_of_date ?? summary.as_of_date,
+    requested_as_of_date: summary.requested_as_of_date,
+    effective_as_of_date: summary.effective_as_of_date,
+    requested_reporting_currency: summary.requested_reporting_currency,
+    effective_reporting_currency: summary.effective_reporting_currency,
+    reporting_currency_state: summary.reporting_currency_state,
     period: details?.period ?? summary.period,
     report_start_date: details?.report_start_date ?? summary.report_start_date,
     report_end_date: details?.report_end_date ?? summary.report_end_date,
@@ -50,7 +62,7 @@ export function assemblePerformanceWorkspace(
     partial_failures: mergePartialFailures(
       summary.partial_failures,
       details?.partial_failures ?? []
-    ),
+    )
   };
 }
 

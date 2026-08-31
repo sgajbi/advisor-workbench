@@ -6,6 +6,7 @@ import type {
 } from "../../src/features/workbench/types";
 
 import {
+  doPerformanceSummaryAndDetailsShareReviewContext,
   isPerformanceDetailsSourceCurrent,
   isPerformanceSummarySourceCurrent,
 } from "../../src/apps/performance/performance-source-identity";
@@ -121,25 +122,47 @@ describe("performance source identity", () => {
     ).toBe(false);
   });
 
-  it("does not claim unsupported valuation-date or currency request identity", () => {
+  it("requires the source to echo the requested valuation date and currency", () => {
     const summary = buildPerformanceWorkspaceSummary();
     const details = buildPerformanceWorkspaceDetails();
+    const reviewIdentity = {
+      ...identity,
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
+    };
 
     expect(
       isPerformanceSummarySourceCurrent(
         {
           ...summary,
-          as_of_date: "2026-02-23",
-          portfolio: { ...summary.portfolio, base_currency: "EUR" },
+          requested_as_of_date: "2026-02-23",
         },
-        identity,
+        reviewIdentity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        { ...details, requested_reporting_currency: "EUR" },
+        reviewIdentity,
+      ),
+    ).toBe(false);
+  });
+
+  it("requires summary and detail to share one effective review context", () => {
+    expect(
+      doPerformanceSummaryAndDetailsShareReviewContext(
+        buildPerformanceWorkspaceSummary(),
+        buildPerformanceWorkspaceDetails(),
       ),
     ).toBe(true);
     expect(
-      isPerformanceDetailsSourceCurrent(
-        { ...details, as_of_date: "2026-02-23" },
-        identity,
+      doPerformanceSummaryAndDetailsShareReviewContext(
+        buildPerformanceWorkspaceSummary(),
+        {
+          ...buildPerformanceWorkspaceDetails(),
+          reporting_currency_state: "unavailable",
+        },
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 });

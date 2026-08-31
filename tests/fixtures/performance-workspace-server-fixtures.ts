@@ -23,6 +23,28 @@ type InstallPerformancePageFetchScenarioOptions = {
   portfolioId?: string;
 };
 
+const FIXTURE_AS_OF_DATE = "2026-02-24";
+const FIXTURE_BASE_CURRENCY = "USD";
+
+function withPerformanceReviewContext<Response extends Record<string, unknown>>(
+  response: Response,
+  requestUrl: string,
+) {
+  const query = new URL(requestUrl, "http://workbench.test").searchParams;
+  const requestedAsOfDate = query.get("as_of_date");
+  const requestedReportingCurrency = query.get("reporting_currency")?.toUpperCase() ?? null;
+  const effectiveAsOfDate = requestedAsOfDate ?? FIXTURE_AS_OF_DATE;
+  return {
+    ...response,
+    as_of_date: effectiveAsOfDate,
+    requested_as_of_date: requestedAsOfDate,
+    effective_as_of_date: effectiveAsOfDate,
+    requested_reporting_currency: requestedReportingCurrency,
+    effective_reporting_currency: requestedReportingCurrency ?? FIXTURE_BASE_CURRENCY,
+    reporting_currency_state: "accepted_unverified" as const,
+  };
+}
+
 function buildLookupResponse() {
   return {
     ok: true,
@@ -214,19 +236,28 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
       if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/summary")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("DEMO_ADV_USD_001", options),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceSummary("DEMO_ADV_USD_001", options),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceDetails("DEMO_ADV_USD_001", options),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
@@ -238,13 +269,19 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
         return {
           ok: true,
-          json: async () => buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceAttributionTrend("DEMO_ADV_USD_001"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/advisor-brief")) {
         return {
           ok: true,
-          json: async () => buildAdvisorBriefResponse("DEMO_ADV_USD_001", "BMK_GLOBAL_BALANCED_60_40"),
+          json: async () => withPerformanceReviewContext(
+            buildAdvisorBriefResponse("DEMO_ADV_USD_001", "BMK_GLOBAL_BALANCED_60_40"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/risk/summary")) {
@@ -302,19 +339,28 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("PF_1001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceSummary("PF_1001"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceDetails("PF_1001"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/PF_1001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceDetails("PF_1001"),
+            url,
+          ),
         } as Response;
       }
       return { ok: false, json: async () => ({}) } as Response;
@@ -346,19 +392,19 @@ export function installPerformancePageFetchScenario(
       if (url.includes(`/api/v1/workbench/${portfolioId}/performance/summary`)) {
         return {
           ok: true,
-          json: async () => workspace,
+          json: async () => withPerformanceReviewContext(workspace, url),
         } as Response;
       }
       if (url.includes(`/api/v1/workbench/${portfolioId}/performance/details`)) {
         return {
           ok: true,
-          json: async () => workspace,
+          json: async () => withPerformanceReviewContext(workspace, url),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/details`)) {
         return {
           ok: true,
-          json: async () => workspace,
+          json: async () => withPerformanceReviewContext(workspace, url),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison`)) {
@@ -376,13 +422,19 @@ export function installPerformancePageFetchScenario(
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/attribution-trend`)) {
         return {
           ok: true,
-          json: async () => buildPerformanceAttributionTrend(portfolioId),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceAttributionTrend(portfolioId),
+            url,
+          ),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/advisor-brief`)) {
         return {
           ok: true,
-          json: async () => buildAdvisorBriefResponse(portfolioId, workspace.benchmark_code),
+          json: async () => withPerformanceReviewContext(
+            buildAdvisorBriefResponse(portfolioId, workspace.benchmark_code),
+            url,
+          ),
         } as Response;
       }
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/risk/summary`)) {
@@ -437,13 +489,19 @@ export function installPerformancePageFetchScenario(
       if (url.includes("/api/v1/workbench/PF_1001/performance/summary")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceSummary("PF_1001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceSummary("PF_1001"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/v1/workbench/PF_1001/performance/details")) {
         return {
           ok: true,
-          json: async () => buildPerformanceWorkspaceDetails("PF_1001"),
+          json: async () => withPerformanceReviewContext(
+            buildPerformanceWorkspaceDetails("PF_1001"),
+            url,
+          ),
         } as Response;
       }
       return { ok: false, json: async () => ({}) } as Response;

@@ -615,11 +615,13 @@ describe("workbench api", () => {
       attributionDimension: "asset_class",
       detailBasis: "NET",
       benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance/summary?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+      "/api/bff/api/v1/workbench/PF_1001/performance/summary?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
     );
     expect(getAnalyticsUiMetricEvents()).toEqual([
       expect.objectContaining({
@@ -705,11 +707,13 @@ describe("workbench api", () => {
       attributionDimension: "asset_class",
       detailBasis: "NET",
       benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance/details?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40"
+      "/api/bff/api/v1/workbench/PF_1001/performance/details?period=3Y&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&as_of_date=2026-02-24&reporting_currency=USD"
     );
   });
 
@@ -1376,11 +1380,13 @@ describe("workbench api", () => {
       benchmark: "BMK_GLOBAL_BALANCED_60_40",
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-02-24",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance/attribution-trend?period=YTD&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+      "/api/bff/api/v1/workbench/PF_1001/performance/attribution-trend?period=YTD&chart_frequency=monthly&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24&as_of_date=2026-02-24&reporting_currency=USD"
     );
   });
 
@@ -1489,11 +1495,13 @@ describe("workbench api", () => {
       benchmark: "BMK_GLOBAL_BALANCED_60_40",
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-02-24",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "USD",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24&as_of_date=2026-02-24&reporting_currency=USD"
     );
     expect(advisorBrief.workflow_pack_task_flow?.task_flow_id).toBe(
       "taskflow_advisor_brief_req-1"
@@ -1601,6 +1609,8 @@ describe("workbench api", () => {
         benchmark: "BMK_GLOBAL_BALANCED_60_40",
         reportStartDate: "2026-01-01",
         reportEndDate: "2026-02-24",
+        asOfDate: "2026-02-24",
+        reportingCurrency: "USD",
       },
       {
         action_type: "ACCEPT",
@@ -1611,7 +1621,7 @@ describe("workbench api", () => {
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief/review-actions?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24",
+      "/api/bff/api/v1/workbench/PF_1001/performance/advisor-brief/review-actions?period=YTD&chart_frequency=monthly&contribution_dimension=asset_class&attribution_dimension=asset_class&detail_basis=NET&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24&as_of_date=2026-02-24&reporting_currency=USD",
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
