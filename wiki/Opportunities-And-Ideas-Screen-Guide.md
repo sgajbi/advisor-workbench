@@ -64,7 +64,10 @@ For viewing evidence, Idea owns the global queue rank, queue and ranking policy 
 candidate material and evidence versions. Workbench measures the independently visible candidate
 set, preserves the same observation and idempotency key on retry, and accepts success only when the
 durable receipt returns the exact observation evidence. The BFF supplies entitled tenant scope;
-the browser cannot submit or override it.
+the browser cannot submit or override it, and a returned receipt for another tenant is rejected.
+The governed HTTP runtime uses the same exact SHA-256 evidence contract as HTTPS. If required source
+versions are missing, the active queue snapshot remains unavailable until a changed valid snapshot
+arrives; an earlier receipt completing cannot turn that warning into a ready state.
 The current journey metadata that suggests direct proposal promotion is an overclaim tracked in
 #798; Advise, Performance, and Risk are not sources for this screen's current queue/detail contract.
 

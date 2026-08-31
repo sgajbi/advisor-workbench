@@ -7399,7 +7399,15 @@ never mistakes fetch, filtering, render buffering, or a hidden browser tab for a
    available, success is not implied, and retry resubmits the unchanged observation.
 7. Keep tenant authority at the BFF. Browser-owned tenant fields fail before Gateway; Workbench
    accepts persistence only when the returned durable receipt matches every frozen observation
-   field.
+   field, and the BFF rejects a successful receipt attributed to any tenant other than its exact
+   server-derived authority.
+8. Keep the evidence primitive compatible with the governed HTTP origin. Native Web Crypto digest
+   remains preferred, with admitted `@noble/hashes` SHA-256 as the contained fallback; generate the
+   UUID-quality idempotency key from `crypto.getRandomValues`, which remains available without a
+   secure context. Do not make canonical proof depend on `SubtleCrypto` or `crypto.randomUUID`.
+9. Bind unavailable evidence to the source snapshot. Missing rank, policy, or candidate versions
+   keep that snapshot unavailable even if an earlier valid receipt finishes later; only a changed,
+   valid source snapshot may restore readiness.
 
 ### Rejected decisions
 
@@ -7418,8 +7426,9 @@ never mistakes fetch, filtering, render buffering, or a hidden browser tab for a
 ### Validation and publication decision
 
 Workbench #954 owns this bounded workflow and authority correction. Unit tests cover strict source
-facts, ordered digest, exact accepted/replayed evidence, hidden/off-screen/rerender behavior, and
-unchanged retry. The focused production-browser test uses 25 candidates to prove that render-buffer
+facts, HTTP-origin digest/idempotency compatibility, exact accepted/replayed and tenant authority
+evidence, unavailable-snapshot races, hidden/off-screen/rerender behavior, and unchanged retry. The
+focused production-browser test uses 25 candidates to prove that render-buffer
 rows do not emit, filtering to global rank 25 records rank 25 with visible count 1, browser tenant
 fields remain absent, and a failed write retries with the identical body and idempotency key.
 Canonical `PB_SG_GLOBAL_BAL_001` proof follows Gateway #692 exact-main merge. The Opportunities and

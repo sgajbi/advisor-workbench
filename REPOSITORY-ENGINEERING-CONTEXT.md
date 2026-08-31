@@ -674,9 +674,16 @@ Current repository posture:
     material/evidence versions; Workbench contributes only the UTC observation time, exact ordered
     visible-set count and digest. The browser cannot author tenant scope. The BFF requires exactly
     one development-entitled Idea tenant, rejects browser tenant fields, and supplies scope before
-    Gateway. Receipt success requires accepted/replayed durable evidence matching the complete
-    frozen request. Retry preserves the same payload and idempotency key; failure stays visible but
-    does not block candidate review or imply a viewing confirmation. Workbench must not synthesize
+    Gateway. The BFF also rejects a successful upstream receipt unless its tenant matches that
+    server-derived authority. Exact SHA-256 digest generation must work on the governed HTTP origin:
+    prefer native Web Crypto when present and use only the admitted, dependency-inventoried
+    SHA-256 fallback otherwise; idempotency generation may use the HTTP-available
+    `crypto.getRandomValues` primitive but not secure-context-only `crypto.randomUUID`.
+    Receipt success requires accepted/replayed durable evidence matching the complete frozen
+    request. Missing source versions make the active queue snapshot unavailable until that snapshot
+    changes; a prior request completing must not restore a reassuring ready state. Retry preserves
+    the same payload and idempotency key; failure stays visible but does not block candidate review
+    or imply a viewing confirmation. Workbench must not synthesize
     review lifecycle or conversion state locally. It must not treat Advise draft proposals as sourced
     opportunities, rerank candidates, clone Idea scoring, infer downstream conversion, create
     proposals automatically, grant suitability or execution authority, or promote Lotus Idea as a
