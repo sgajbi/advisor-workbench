@@ -420,7 +420,10 @@ export function usePerformanceRiskContract({
             },
           )
             .then<RiskFetchResult<WorkbenchRiskConcentrationResponse>>((response) => {
-              const value = requireCurrentPerformanceRiskSource(response, riskSourceIdentity);
+              const value = requireCurrentPerformanceRiskSource(response, {
+                ...riskSourceIdentity,
+                windowEvidence: "point_in_time",
+              });
               return { value, cacheable: isCacheableRiskResponse(value) };
             })
             .catch((error: unknown) => ({

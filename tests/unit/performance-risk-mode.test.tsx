@@ -355,6 +355,31 @@ describe("PerformanceRiskMode", () => {
     );
   });
 
+  it("keeps point-in-time concentration available for an explicit review window", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "EXPLICIT", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "EXPLICIT"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "EXPLICIT", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "EXPLICIT", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "EXPLICIT", "NET"),
+    );
+
+    renderRiskMode(scenario, { period: "EXPLICIT" });
+
+    expect(
+      await screen.findByLabelText("Risk concentration headline metrics"),
+    ).toBeInTheDocument();
+  });
+
   it("withholds stale risk responses from the admitted historical review context", async () => {
     const scenario = buildSupportedPerformanceScenario();
     const historicalScenario = {
