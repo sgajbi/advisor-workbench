@@ -273,6 +273,21 @@ export function useIdeaPresentationReceipts({
       for (const marker of root.querySelectorAll(MARKER_SELECTOR)) {
         if (!observed.has(marker)) {
           observed.add(marker);
+          if (document.visibilityState === "visible") {
+            intersectionObserver.observe(marker);
+          }
+        }
+      }
+    };
+    const handleDocumentVisibilityChange = () => {
+      intersecting.clear();
+      intersectionObserver.takeRecords();
+      intersectionObserver.disconnect();
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      for (const marker of observed) {
+        if (marker.isConnected) {
           intersectionObserver.observe(marker);
         }
       }
@@ -280,14 +295,20 @@ export function useIdeaPresentationReceipts({
     const mutationObserver = new MutationObserver(observeMarkers);
     mutationObserver.observe(root, { childList: true, subtree: true });
     observeMarkers();
-    document.addEventListener("visibilitychange", scheduleFlush);
+    document.addEventListener(
+      "visibilitychange",
+      handleDocumentVisibilityChange,
+    );
 
     return () => {
       if (observationGeneration.current === generation) {
         observationGeneration.current += 1;
         activeDraftingCandidates.clear();
       }
-      document.removeEventListener("visibilitychange", scheduleFlush);
+      document.removeEventListener(
+        "visibilitychange",
+        handleDocumentVisibilityChange,
+      );
       mutationObserver.disconnect();
       intersectionObserver.disconnect();
     };

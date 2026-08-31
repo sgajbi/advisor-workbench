@@ -667,7 +667,9 @@ Current repository posture:
     hidden document. The Opportunities worklist keeps the complete returned source window in one
     bounded virtualized grid and observes candidate content against the browser viewport; normal
     ancestor clipping still enforces the grid scrollport, so a row cannot count while either the
-    row or the entire grid is off-screen.
+    row or the entire grid is off-screen. Hiding the document clears queued intersection state and
+    disconnects observation; returning to the foreground requires a fresh browser intersection
+    result before any receipt can be created.
     A presentation receipt copies Idea-owned global rank, queue/ranking policies, and candidate
     material/evidence versions; Workbench contributes only the UTC observation time, exact ordered
     visible-set count and digest. The browser cannot author tenant scope. The BFF requires exactly

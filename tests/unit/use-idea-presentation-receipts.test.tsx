@@ -254,13 +254,18 @@ describe("useIdeaPresentationReceipts", () => {
     );
   });
 
-  it("waits for the document to become visible", async () => {
+  it("requires fresh intersection evidence after the document becomes visible", async () => {
+    render(<Harness candidateIds={["idea-025"]} />);
+    const visibilityObserver = await observer();
+
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
       value: "hidden",
     });
-    render(<Harness candidateIds={["idea-025"]} />);
-    const visibilityObserver = await observer();
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(visibilityObserver.targets).toHaveLength(0);
 
     await act(async () => {
       visibilityObserver.emit([
@@ -280,6 +285,18 @@ describe("useIdeaPresentationReceipts", () => {
     });
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(recordReceipt).not.toHaveBeenCalled();
+    expect(visibilityObserver.targets).toContain(marker("idea-025"));
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
     });
     await waitFor(() => expect(recordReceipt).toHaveBeenCalledTimes(1));
   });

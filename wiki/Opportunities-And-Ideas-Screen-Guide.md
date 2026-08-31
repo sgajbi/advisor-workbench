@@ -39,7 +39,8 @@ completed or an explicit refresh-failed posture is shown.
 - Records review, governed adviser feedback, and conversion intent with idempotency.
 - Records source-verifiable viewing evidence only for candidate rows at least half visible in both
   the browser viewport and the bounded worklist; fetching, filtering out, buffering, an off-screen
-  worklist, or rendering in a background tab does not count as a presentation.
+  worklist, or rendering in a background tab does not count as a presentation. Returning from a
+  background tab requires a fresh visibility observation; cached row position is never reused.
 - Captures usefulness first, then the canonical business reason; candidate signals never become the
   adviser's feedback reason.
 - Refreshes queue and detail after persistence and distinguishes refresh failure.
