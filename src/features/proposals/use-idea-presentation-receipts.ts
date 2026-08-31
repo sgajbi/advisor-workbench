@@ -13,6 +13,7 @@ import {
 import { recordAdvisorIdeaPresentationReceipt } from "./api";
 import {
   buildIdeaPresentationReceiptDrafts,
+  createIdeaPresentationIdempotencyKey,
   readIdeaPresentationSource,
   type IdeaPresentationSource,
   type IdeaPresentationReceiptDraft,
@@ -60,6 +61,10 @@ export function useIdeaPresentationReceipts({
 }): IdeaPresentationReceiptState {
   const transactions = useRef(new Map<string, ReceiptTransaction>());
   const draftingCandidates = useRef(new Set<string>());
+  const unavailableSourceSnapshot = useRef<{
+    failedCount: number;
+    snapshotKey: string;
+  } | null>(null);
   const observationGeneration = useRef(0);
   const sources = useMemo(() => {
     const sourceMap = new Map<string, IdeaPresentationSource>();
@@ -103,6 +108,15 @@ export function useIdeaPresentationReceipts({
 
   const refreshSummary = useCallback(() => {
     if (activeSnapshotKey.current !== snapshotKey) {
+      return;
+    }
+    const sourceFailure = unavailableSourceSnapshot.current;
+    if (sourceFailure?.snapshotKey === snapshotKey) {
+      setSummary({
+        snapshotKey,
+        status: "unavailable",
+        failedCount: sourceFailure.failedCount,
+      });
       return;
     }
     const entries = [...transactions.current.values()];
@@ -169,6 +183,10 @@ export function useIdeaPresentationReceipts({
         for (const candidateId of pendingCandidateIds) {
           draftingCandidates.current.delete(candidateId);
         }
+        unavailableSourceSnapshot.current = {
+          snapshotKey,
+          failedCount: pendingCandidateIds.length,
+        };
         setSummary({
           snapshotKey,
           status: "unavailable",
@@ -183,7 +201,7 @@ export function useIdeaPresentationReceipts({
         .filter(({ candidateId }) => pendingCandidateIds.includes(candidateId))
         .map(({ candidateId, request }) => ({
           candidateId,
-          idempotencyKey: globalThis.crypto.randomUUID(),
+          idempotencyKey: createIdeaPresentationIdempotencyKey(),
           request,
           status: "pending" as const,
         }));
@@ -202,6 +220,7 @@ export function useIdeaPresentationReceipts({
     observationGeneration.current += 1;
     transactions.current.clear();
     draftingCandidates.current.clear();
+    unavailableSourceSnapshot.current = null;
   }, [snapshotKey]);
 
   useEffect(() => {
