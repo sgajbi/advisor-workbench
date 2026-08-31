@@ -29,6 +29,59 @@ describe("performance review context", () => {
     expect(getPerformanceDisplayCurrency(BASE_EVIDENCE, "USD")).toBe("SGD");
   });
 
+  it("accepts source evidence that confirms no date or currency override", () => {
+    expect(
+      isPerformanceReviewContextCurrent(
+        {
+          ...BASE_EVIDENCE,
+          requested_as_of_date: null,
+          requested_reporting_currency: null,
+          effective_reporting_currency: "USD",
+          reporting_currency_state: "accepted_unverified",
+        },
+        {},
+      ),
+    ).toBe(true);
+  });
+
+  it.each([
+    {
+      label: "reporting-currency",
+      source: {
+        requested_as_of_date: null,
+        requested_reporting_currency: "EUR",
+        effective_reporting_currency: "EUR",
+        reporting_currency_state: "applied" as const,
+      },
+    },
+    {
+      label: "valuation-date",
+      source: {
+        requested_as_of_date: "2026-02-24",
+        requested_reporting_currency: null,
+        effective_reporting_currency: "USD",
+        reporting_currency_state: "accepted_unverified" as const,
+      },
+    },
+  ])("rejects an unsolicited $label override", ({ source }) => {
+    expect(
+      isPerformanceReviewContextCurrent({ ...BASE_EVIDENCE, ...source }, {}),
+    ).toBe(false);
+  });
+
+  it("rejects an applied state without a requested currency", () => {
+    expect(
+      isPerformanceReviewContextCurrent(
+        {
+          ...BASE_EVIDENCE,
+          requested_as_of_date: null,
+          requested_reporting_currency: null,
+        },
+        {},
+      ),
+    ).toBe(false);
+  });
+
   it.each([
     { requested_as_of_date: "2026-02-23" },
     { effective_as_of_date: "2026-02-23" },
