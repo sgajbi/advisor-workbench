@@ -7,7 +7,10 @@ import type {
   PortfolioWorkspace,
 } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
-import { buildPortfolioPerformanceWindowQuery } from "./portfolio-performance-window";
+import {
+  buildPortfolioPerformanceWindowQuery,
+  isPortfolioPerformanceWindowCurrent,
+} from "./portfolio-performance-window";
 import {
   resolveGatewayBaseUrl,
   resolveWorkbenchApiBase,
@@ -506,18 +509,20 @@ export async function getPortfolioWorkspaceSummaryDetails(
       settledPortfolioPayload(ytdPerformanceResult),
     ];
     const periodPerformancePayloads = rawPeriodPerformancePayloads.map((payload, index) =>
-      isPortfolioPeriodPerformanceCurrent(
-        payload,
-        performancePeriods[index],
-        performancePeriodQueries[index],
-      )
+      payload &&
+      isPortfolioPerformanceWindowCurrent(payload, {
+        ...params,
+        timeWindow: performancePeriods[index],
+        usesCustomDateRange: false,
+      })
         ? payload
         : null,
     );
     const performancePayload =
       selectedStandardPeriodIndex >= 0
         ? periodPerformancePayloads[selectedStandardPeriodIndex]
-        : isPortfolioPeriodPerformanceCurrent(rawPerformancePayload, "EXPLICIT", performanceQuery)
+        : rawPerformancePayload &&
+            isPortfolioPerformanceWindowCurrent(rawPerformancePayload, params)
           ? rawPerformancePayload
           : null;
     const workflowPayload = settledPortfolioPayload(workflowResult);
@@ -997,22 +1002,6 @@ function mapPortfolioPerformancePeriodReturn(
     warnings: payload?.warnings ?? [],
     partial_failures: payload?.partial_failures ?? [],
   };
-}
-
-function isPortfolioPeriodPerformanceCurrent(
-  payload: PortfolioPerformanceSnapshotResponse | null,
-  period: "MTD" | "QTD" | "YTD" | "EXPLICIT",
-  query: URLSearchParams,
-): boolean {
-  if (!payload || payload.period !== period) {
-    return false;
-  }
-  const requestedStart = query.get("report_start_date");
-  const requestedEnd = query.get("report_end_date");
-  return (
-    (!requestedStart || payload.report_start_date === requestedStart) &&
-    (!requestedEnd || payload.report_end_date === requestedEnd)
-  );
 }
 
 function buildPortfolioApiUrl(

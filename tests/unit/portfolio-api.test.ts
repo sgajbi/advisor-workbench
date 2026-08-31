@@ -1821,6 +1821,73 @@ describe("portfolio api", () => {
     expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
   });
 
+  it.each(["1Y", "SI"] as const)(
+    "admits source performance for the selected %s horizon",
+    async (timeWindow) => {
+      const requestedPerformancePeriods: string[] = [];
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (input) => {
+          const url = new URL(String(input), "http://workbench.test");
+          if (url.pathname.endsWith("/book")) {
+            return jsonResponse({
+              allocation_views: [{ dimension: "asset_class", buckets: [] }],
+              top_positions: [],
+              positions: [],
+            });
+          }
+
+          if (url.pathname.endsWith("/income-summary")) {
+            return jsonResponse(null);
+          }
+
+          if (url.pathname.endsWith("/activity-summary")) {
+            return jsonResponse(null);
+          }
+
+          if (!url.pathname.endsWith("/performance-snapshot")) {
+            throw new Error(`Unexpected fetch: ${url}`);
+          }
+
+          const period = url.searchParams.get("period");
+          requestedPerformancePeriods.push(period ?? "missing");
+          return jsonResponse({
+            period,
+            as_of_date: "2026-03-28",
+            report_end_date: "2026-03-28",
+            benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
+            portfolio_return_pct: 6.4,
+            benchmark_return_pct: 5.8,
+            excess_return_pct: 0.6,
+            sparkline: [],
+            warnings: [],
+            partial_failures: [],
+          });
+        }),
+      );
+
+      const workspace = await getPortfolioWorkspaceSummaryDetails("MANUAL_PB_USD_001", {
+        asOfDate: "2026-03-28",
+        reportingCurrency: "USD",
+        includeProjected: false,
+        timeWindow,
+        reportStartDate: "2025-03-29",
+        reportEndDate: "2026-03-28",
+        includeWorkflowActions: false,
+      });
+
+      expect(requestedPerformancePeriods).toContain(timeWindow);
+      expect(workspace?.performance).toMatchObject({
+        period: timeWindow,
+        report_end_date: "2026-03-28",
+        return_pct: 6.4,
+      });
+      expect(workspace?.supporting_evidence_failures).not.toContainEqual(
+        expect.objectContaining({ evidence_scope: "selected_period_performance" }),
+      );
+    },
+  );
+
   it("withholds a source-authored performance window that differs from the review", async () => {
     vi.stubGlobal(
       "fetch",
