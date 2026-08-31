@@ -50,6 +50,8 @@ export default function AdvisoryOpportunityGrid({
         cellDataType: "number",
         cellRenderer: QueuePositionCell,
         field: "rank",
+        getQuickFilterText: ({ data }) =>
+          data ? `${data.rank ?? "Unranked"} ${data.score}` : "",
         headerName: "Queue position",
         maxWidth: 136,
         minWidth: 116,
