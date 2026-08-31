@@ -78,6 +78,7 @@ async function acceptPresentationReceipt(
 test("records only presented Idea rows and retries the same failed evidence", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1280, height: 1 });
   await mockIdeaQueue(page);
   const presentations: RecordedPresentation[] = [];
   let targetFailureReturned = false;
@@ -116,7 +117,19 @@ test("records only presented Idea rows and retries the same failed evidence", as
     name: "Idea candidate review queue",
     exact: true,
   });
+  await expect(grid).toBeAttached();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  expect(presentations).toHaveLength(0);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await grid.scrollIntoViewIfNeeded();
   await expect(grid).toBeVisible();
+  await expect(grid).toBeInViewport();
   const gridContainer = page.locator("[data-receipt-state]");
   await expect.poll(() => presentations.length).toBeGreaterThan(0);
   await expect(gridContainer).toHaveAttribute("data-receipt-state", "ready");
@@ -124,8 +137,14 @@ test("records only presented Idea rows and retries the same failed evidence", as
   const renderedCandidates = grid.locator("[data-idea-presentation-candidate]");
   expect(await renderedCandidates.count()).toBeLessThan(candidateCount);
   const centreRows = grid.locator('.ag-center-cols-container [role="row"]');
-  const firstQueuePositionCell = centreRows.first().getByRole("gridcell").first();
-  const secondQueuePositionCell = centreRows.nth(1).getByRole("gridcell").first();
+  const firstQueuePositionCell = centreRows
+    .first()
+    .getByRole("gridcell")
+    .first();
+  const secondQueuePositionCell = centreRows
+    .nth(1)
+    .getByRole("gridcell")
+    .first();
   await page.evaluate(
     () =>
       new Promise<void>((resolve) =>
@@ -143,9 +162,9 @@ test("records only presented Idea rows and retries the same failed evidence", as
       ),
   );
   expect(presentations).toEqual(presentationsBeforeKeyboardNavigation);
-  expect(presentations.some(({ candidateId: id }) => id === targetCandidateId)).toBe(
-    false,
-  );
+  expect(
+    presentations.some(({ candidateId: id }) => id === targetCandidateId),
+  ).toBe(false);
 
   const filter = page.getByRole("searchbox", { name: "Find an opportunity" });
   const settledPresentationCount = presentations.length;

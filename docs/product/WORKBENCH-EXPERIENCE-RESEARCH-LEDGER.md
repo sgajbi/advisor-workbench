@@ -7383,9 +7383,10 @@ never mistakes fetch, filtering, render buffering, or a hidden browser tab for a
    position, review priority, decision evidence, and next decision.
 2. Preserve Idea's global rank even when filtering leaves one visible candidate. Workbench never
    renumbers the queue or inflates visible count; rank 25 with visible count 1 is valid.
-3. Observe exact candidate content against the bounded grid viewport at 50% intersection and only
-   while the document is visible. A small render buffer remains a scrolling optimization and is
-   explicitly excluded from presentation evidence.
+3. Observe exact candidate content against the browser viewport at 50% intersection and only while
+   the document is visible. Browser intersection applies ancestor clipping from the bounded grid
+   scrollport, so neither an off-screen grid nor a render-buffer row can become presentation
+   evidence.
 4. Coalesce the currently visible set into visual order, hash the exact identity array once, and
    freeze each candidate's UTC observation, source versions, payload, and idempotency key across
    retry.
