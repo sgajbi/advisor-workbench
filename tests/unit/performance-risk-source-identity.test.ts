@@ -240,6 +240,20 @@ describe("performance risk source identity", () => {
       }),
     ).toBe(sourceUnavailable);
     expect(
+      requireCurrentPerformanceRiskSource(
+        { ...sourceUnavailable, period: "EXPLICIT" },
+        {
+          ...IDENTITY,
+          period: "EXPLICIT",
+          reportStartDate: "2026-01-01",
+          reportEndDate: "2026-02-24",
+          attributionType: "ACTIVE_RISK",
+          groupingDimension: "ASSET_CLASS",
+          includeUnderwaterSeries: true,
+        },
+      ),
+    ).toMatchObject({ correlation_id: "corr-source-unavailable" });
+    expect(
       isPerformanceRiskSourceCurrent(
         { ...sourceUnavailable, state: "ready" },
         { ...IDENTITY, includeUnderwaterSeries: true },

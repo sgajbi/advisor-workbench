@@ -24,14 +24,30 @@ export function isPerformanceRiskSourceCurrent(
   source: PerformanceRiskSource,
   identity: PerformanceRiskSourceIdentity,
 ): boolean {
-  return (
+  const sourceIdentityMatches =
     source.portfolio_id === identity.portfolioId &&
     source.period === identity.period &&
     source.as_of_date === identity.asOfDate &&
-    (source.benchmark_code ?? null) === identity.benchmark &&
+    (source.benchmark_code ?? null) === identity.benchmark;
+  if (!sourceIdentityMatches) {
+    return false;
+  }
+  if (isSourceDeclaredFailureWithoutPayload(source)) {
+    return true;
+  }
+  return (
     hasRequestedRiskWindow(source, identity) &&
     hasRequestedRiskAttribution(source, identity) &&
     hasRequestedRiskDetail(source, identity)
+  );
+}
+
+function isSourceDeclaredFailureWithoutPayload(
+  source: PerformanceRiskSource,
+): boolean {
+  return (
+    source.payload == null &&
+    (source.state === "unavailable" || source.state === "blocked")
   );
 }
 
@@ -47,10 +63,7 @@ function hasRequestedRiskDetail(
   }
   const payload = source.payload;
   if (!payload || typeof payload !== "object") {
-    return (
-      payload == null &&
-      (source.state === "unavailable" || source.state === "blocked")
-    );
+    return false;
   }
   return (
     hasRequestedBoolean(
