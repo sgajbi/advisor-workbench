@@ -109,6 +109,7 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
   capability is source-supported, because the current refresh cannot replace and identity-check
   every rendered workspace-shell module atomically. The date control therefore remains disabled;
   the published availability range is retained as source evidence for a future complete refresh.
+  The acceptance boundary is that a complete dated book summary replaces totals, valuation date, and position-coverage readiness together before historical review can be enabled.
   Rebalance remains labelled as the latest source run.
   Reporting-currency selection remains disabled until the aggregate restatement
   capability is supported. Record filters stay on the record screens where their effect is visible; Portfolio
