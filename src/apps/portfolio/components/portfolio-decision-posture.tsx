@@ -46,10 +46,10 @@ export function PortfolioEvidenceModule({
         ))}
       </div>
       <div className="portfolio-workflow-entry-list" aria-label="Related portfolio workflows">
-        <ActionLink href={buildPortfolioModeHref(workspace, "summary")}>Performance</ActionLink>
-        <ActionLink href={buildPortfolioModeHref(workspace, "risk")}>Risk</ActionLink>
-        <ActionLink href={buildPortfolioModeHref(workspace, "advisor")}>Advisor Brief</ActionLink>
-        <ActionLink href={buildPortfolioModeHref(workspace, "evidence")}>Evidence</ActionLink>
+        <ActionLink href={buildPortfolioModeHref(workspace, context, "summary")}>Performance</ActionLink>
+        <ActionLink href={buildPortfolioModeHref(workspace, context, "risk")}>Risk</ActionLink>
+        <ActionLink href={buildPortfolioModeHref(workspace, context, "advisor")}>Advisor Brief</ActionLink>
+        <ActionLink href={buildPortfolioModeHref(workspace, context, "evidence")}>Evidence</ActionLink>
         <ActionLink href={`/workbench/${encodeURIComponent(workspace.portfolio.portfolio_id)}`}>
           Mandate Operations
         </ActionLink>
@@ -83,6 +83,7 @@ function formatPortfolioEvidence(workspace: PortfolioWorkspace): string {
 
 function buildPortfolioModeHref(
   workspace: PortfolioWorkspace,
+  context: PortfolioWorkspaceContext,
   mode: "summary" | "risk" | "advisor" | "evidence"
 ): string {
   const query = new URLSearchParams({
@@ -92,6 +93,8 @@ function buildPortfolioModeHref(
     contributionDimension: "asset_class",
     attributionDimension: "asset_class",
     chartFrequency: "monthly",
+    asOfDate: context.selectedAsOfDate,
+    reportingCurrency: context.selectedReportingCurrency,
   });
   if (mode !== "summary") {
     query.set("mode", mode);

@@ -14,6 +14,8 @@ type PerformanceHorizonComparisonRequest = {
   chartFrequency: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 };
 
 export type PerformanceHorizonComparisonState =
@@ -24,7 +26,7 @@ export type PerformanceHorizonComparisonState =
       httpStatus: null;
     }
   | {
-      status: "error" | "permission_blocked";
+      status: "error" | "permission_blocked" | "context_mismatch";
       comparison: null;
       httpStatus: number | null;
     };
@@ -44,13 +46,23 @@ export function usePerformanceHorizonComparison(
       chartFrequency: request.chartFrequency,
       reportStartDate: request.reportStartDate,
       reportEndDate: request.reportEndDate,
+      asOfDate: request.asOfDate,
+      reportingCurrency: request.reportingCurrency,
     }),
     [request],
   );
   const resource = useSourceConfirmedResource({ requestKey, load });
+  const contextMatches =
+    resource.state.status === "ready" &&
+    (!request.asOfDate || resource.state.value.as_of_date === request.asOfDate) &&
+    (!request.reportingCurrency ||
+      resource.state.value.reporting_currency?.toUpperCase() ===
+        request.reportingCurrency.toUpperCase());
   const state: PerformanceHorizonComparisonState =
     resource.state.status === "ready"
-      ? { status: "ready", comparison: resource.state.value, httpStatus: null }
+      ? contextMatches
+        ? { status: "ready", comparison: resource.state.value, httpStatus: null }
+        : { status: "context_mismatch", comparison: null, httpStatus: null }
       : resource.state.status === "loading"
         ? { status: "loading", comparison: null, httpStatus: null }
         : {
@@ -73,5 +85,7 @@ export function buildPerformanceHorizonComparisonCacheKey(
     chartFrequency: request.chartFrequency,
     reportStartDate: request.reportStartDate ?? null,
     reportEndDate: request.reportEndDate ?? null,
+    asOfDate: request.asOfDate ?? null,
+    reportingCurrency: request.reportingCurrency?.toUpperCase() ?? null,
   });
 }

@@ -14,6 +14,8 @@ describe("performance-horizon-comparison-state", () => {
       chartFrequency: "monthly",
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-03-27",
+      asOfDate: "2026-03-27",
+      reportingCurrency: "SGD",
     });
 
     expect(
@@ -25,8 +27,24 @@ describe("performance-horizon-comparison-state", () => {
         chartFrequency: "monthly",
         reportStartDate: "2026-01-01",
         reportEndDate: "2026-03-27",
+        asOfDate: "2026-03-27",
+        reportingCurrency: "sgd",
       })
     ).toBe(baseline);
+
+    expect(
+      buildPerformanceHorizonComparisonCacheKey({
+        portfolioId: "PF_1001",
+        period: "YTD",
+        detailBasis: "NET",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+        chartFrequency: "monthly",
+        reportStartDate: "2026-01-01",
+        reportEndDate: "2026-03-27",
+        asOfDate: "2026-03-27",
+        reportingCurrency: "USD",
+      })
+    ).not.toBe(baseline);
 
     expect(
       buildPerformanceHorizonComparisonCacheKey({

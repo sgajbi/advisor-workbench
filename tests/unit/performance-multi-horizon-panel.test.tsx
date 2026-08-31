@@ -205,6 +205,36 @@ describe("PerformanceMultiHorizonPanel", () => {
     });
   });
 
+  it("withholds horizon economics when the source does not confirm review context", async () => {
+    getHorizonComparisonClientMock.mockResolvedValue(
+      buildHorizonComparison({
+        as_of_date: "2026-03-27",
+        reporting_currency: "USD",
+      })
+    );
+
+    render(
+      <PerformanceMultiHorizonPanel
+        portfolioId="PF_1001"
+        period="YTD"
+        detailBasis="NET"
+        chartFrequency="monthly"
+        asOfDate="2026-03-27"
+        reportingCurrency="SGD"
+      />
+    );
+
+    expect(
+      await screen.findByText("Horizon comparison not available for this review")
+    ).toBeInTheDocument();
+    expect(screen.getByText(/No base-currency figures have been mixed/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon returns")).not.toBeInTheDocument();
+    expect(getHorizonComparisonClientMock).toHaveBeenCalledWith(
+      "PF_1001",
+      expect.objectContaining({ asOfDate: "2026-03-27", reportingCurrency: "SGD" })
+    );
+  });
+
   it("inherits page basis and return view and clears local overrides when that source context changes", async () => {
     getHorizonComparisonClientMock.mockImplementation(
       async (_portfolioId: string, params: { detailBasis: string }) =>

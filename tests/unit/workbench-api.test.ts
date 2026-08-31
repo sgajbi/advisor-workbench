@@ -846,11 +846,13 @@ describe("workbench api", () => {
       chartFrequency: "monthly",
       reportStartDate: "2026-01-01",
       reportEndDate: "2026-02-24",
+      asOfDate: "2026-02-24",
+      reportingCurrency: "SGD",
     });
 
     const requestedUrl = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0].toString();
     expect(requestedUrl).toContain(
-      "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?period=EXPLICIT&detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24"
+      "/api/bff/api/v1/workbench/PF_1001/performance/horizon-comparison?period=EXPLICIT&detail_basis=NET&chart_frequency=monthly&benchmark_code=BMK_GLOBAL_BALANCED_60_40&report_start_date=2026-01-01&report_end_date=2026-02-24&as_of_date=2026-02-24&reporting_currency=SGD"
     );
     expect(getAnalyticsUiMetricEvents()).toEqual(
       expect.arrayContaining([

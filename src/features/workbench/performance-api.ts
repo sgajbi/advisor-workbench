@@ -188,6 +188,8 @@ export async function getWorkbenchPerformanceHorizonComparisonClient(
     chartFrequency?: string;
     reportStartDate?: string;
     reportEndDate?: string;
+    asOfDate?: string;
+    reportingCurrency?: string;
   }
 ): Promise<WorkbenchPerformanceHorizonComparison> {
   const query = new URLSearchParams();
@@ -204,6 +206,12 @@ export async function getWorkbenchPerformanceHorizonComparisonClient(
   }
   if (params.reportEndDate) {
     query.set("report_end_date", params.reportEndDate);
+  }
+  if (params.asOfDate) {
+    query.set("as_of_date", params.asOfDate);
+  }
+  if (params.reportingCurrency) {
+    query.set("reporting_currency", params.reportingCurrency);
   }
   return await observeWorkbenchResource(
     "performance.workspace.horizon-comparison",

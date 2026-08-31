@@ -27,16 +27,36 @@ describe("portfolio decision posture", () => {
     expect(screen.queryByText("Valuation date")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Performance" })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&asOfDate=2026-05-12&reportingCurrency=USD&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
     );
     expect(screen.getByRole("link", { name: "Risk" })).toHaveAttribute(
       "href",
-      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&mode=risk&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
+      "/performance?portfolioId=PB_SG_GLOBAL_BAL_001&period=YTD&detailBasis=NET&contributionDimension=asset_class&attributionDimension=asset_class&chartFrequency=monthly&asOfDate=2026-05-12&reportingCurrency=USD&mode=risk&benchmark=BMK_PB_GLOBAL_BALANCED_60_40"
     );
     expect(screen.getByRole("link", { name: "Mandate Operations" })).toHaveAttribute(
       "href",
       "/workbench/PB_SG_GLOBAL_BAL_001"
     );
+  });
+
+  it("preserves historical review identity in every performance handoff", () => {
+    render(
+      <PortfolioEvidenceModule
+        workspace={buildPortfolioWorkspace()}
+        context={buildPortfolioWorkspaceContext({
+          selectedAsOfDate: "2026-04-30",
+          selectedReportingCurrency: "SGD",
+          hasHistoricalGap: true,
+        })}
+      />
+    );
+
+    for (const name of ["Performance", "Risk", "Advisor Brief", "Evidence"]) {
+      expect(screen.getByRole("link", { name })).toHaveAttribute(
+        "href",
+        expect.stringContaining("asOfDate=2026-04-30&reportingCurrency=SGD")
+      );
+    }
   });
 
   it("uses the canonical valuation label only when the source date differs", () => {
