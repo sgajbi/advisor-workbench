@@ -115,19 +115,25 @@ export function arePerformanceObservationWindowsCurrent(
   if (!reportStartDate || !reportEndDate) {
     return false;
   }
-  return rows.every((row) => {
+  let previousPeriodEnd: string | null = null;
+  for (const row of rows) {
     const periodStart = row.period_start?.trim();
     const periodEnd = row.period_end?.trim();
     if (!periodStart || !periodEnd) {
       return false;
     }
-    return (
-      row.frequency === source.chart_frequency &&
-      periodStart >= reportStartDate &&
-      periodEnd <= reportEndDate &&
-      periodStart <= periodEnd
-    );
-  });
+    if (
+      row.frequency !== source.chart_frequency ||
+      periodStart < reportStartDate ||
+      periodEnd > reportEndDate ||
+      periodStart > periodEnd ||
+      (previousPeriodEnd !== null && periodStart <= previousPeriodEnd)
+    ) {
+      return false;
+    }
+    previousPeriodEnd = periodEnd;
+  }
+  return true;
 }
 
 export function isPerformanceSummarySourceCurrent(

@@ -6,6 +6,7 @@ import type {
 } from "../../src/features/workbench/types";
 
 import {
+  arePerformanceObservationWindowsCurrent,
   doPerformanceSummaryAndDetailsShareReviewContext,
   isPerformanceAnalyticalSourceCurrent,
   isPerformanceDetailsSourceCurrent,
@@ -175,6 +176,33 @@ describe("performance source identity", () => {
         identity,
       ),
     ).toBe(false);
+  });
+
+  it("rejects out-of-order and overlapping analytical observations", () => {
+    const details = buildPerformanceWorkspaceDetails();
+    const january = {
+      frequency: details.chart_frequency,
+      period_start: "2026-01-01",
+      period_end: "2026-01-31",
+    };
+    const february = {
+      frequency: details.chart_frequency,
+      period_start: "2026-02-01",
+      period_end: "2026-02-24",
+    };
+
+    expect(
+      arePerformanceObservationWindowsCurrent([february, january], details),
+    ).toBe(false);
+    expect(
+      arePerformanceObservationWindowsCurrent(
+        [january, { ...february, period_start: "2026-01-31" }],
+        details,
+      ),
+    ).toBe(false);
+    expect(
+      arePerformanceObservationWindowsCurrent([january, february], details),
+    ).toBe(true);
   });
 
   it("binds a historical preset period to the source-confirmed valuation date", () => {
