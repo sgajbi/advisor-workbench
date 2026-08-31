@@ -70,7 +70,11 @@ export async function startPortfolioFixtureGateway({
     if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/book`) {
       sendJson(
         response,
-        buildBookResponse(requestUrl.searchParams.get('as_of_date') ?? AS_OF_DATE, scenario)
+        buildBookResponse(
+          requestUrl.searchParams.get('as_of_date') ?? AS_OF_DATE,
+          scenario,
+          reviewContextSourceState,
+        )
       );
       return;
     }
@@ -495,7 +499,11 @@ function buildProjectedCashflowResponse(horizonDays: number) {
   };
 }
 
-function buildBookResponse(asOfDate: string, scenario: PortfolioFixtureScenario = 'cashflow') {
+function buildBookResponse(
+  asOfDate: string,
+  scenario: PortfolioFixtureScenario = 'cashflow',
+  reviewContextSourceState: 'confirmed' | 'partial' = 'confirmed',
+) {
   const historicalSummary = {
     assets_under_management_base: 0,
     invested_market_value_base: 0,
@@ -507,7 +515,7 @@ function buildBookResponse(asOfDate: string, scenario: PortfolioFixtureScenario 
 
   return {
     as_of_date: asOfDate,
-    portfolio: buildWorkspaceResponse(scenario).portfolio,
+    portfolio: buildWorkspaceResponse(scenario, reviewContextSourceState).portfolio,
     summary:
       asOfDate === MISSING_HISTORICAL_SUMMARY_DATE
         ? undefined
