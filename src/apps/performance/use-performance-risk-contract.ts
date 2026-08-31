@@ -437,7 +437,10 @@ export function usePerformanceRiskContract({
             includeUnderwaterSeries: false,
           })
             .then<RiskFetchResult<WorkbenchRiskDrawdownResponse>>((response) => ({
-              value: requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+              value: requireCurrentPerformanceRiskSource(response, {
+                ...riskSourceIdentity,
+                includeUnderwaterSeries: false,
+              }),
               cacheable: true,
             }))
             .catch((error: unknown) => ({
@@ -464,7 +467,10 @@ export function usePerformanceRiskContract({
             includeTimeSeries: false,
           })
             .then<RiskFetchResult<WorkbenchRiskRollingResponse>>((response) => ({
-              value: requireCurrentPerformanceRiskSource(response, riskSourceIdentity),
+              value: requireCurrentPerformanceRiskSource(response, {
+                ...riskSourceIdentity,
+                includeTimeSeries: false,
+              }),
               cacheable: true,
             }))
             .catch((error: unknown) => ({
