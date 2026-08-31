@@ -37,6 +37,8 @@ export default function PerformanceMultiHorizonPanel({
   chartFrequency,
   reportStartDate,
   reportEndDate,
+  asOfDate,
+  reportingCurrency: requestedReportingCurrency,
   benchmarkOptions = [],
   returnView = "absolute",
   onRequestChange,
@@ -48,6 +50,8 @@ export default function PerformanceMultiHorizonPanel({
   chartFrequency: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
   benchmarkOptions?: PerformanceBenchmarkOptionView[];
   returnView?: PerformanceChartViewMode;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
@@ -62,8 +66,10 @@ export default function PerformanceMultiHorizonPanel({
       chartFrequency,
       reportStartDate,
       reportEndDate,
+      asOfDate,
+      reportingCurrency: requestedReportingCurrency,
     }),
-    [benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate],
+    [asOfDate, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate, requestedReportingCurrency],
   );
   const { state, refresh, requestKey } = usePerformanceHorizonComparison(request);
   const refreshButtonRef = useRef<HTMLButtonElement>(null);
@@ -193,6 +199,13 @@ export default function PerformanceMultiHorizonPanel({
               surface="analysis"
             />
           </div>
+        ) : state.status === "context_mismatch" ? (
+          <ScreenStatePanel
+            kind="unavailable"
+            title="Horizon comparison not available for this review"
+            body="The source did not confirm the selected review date and reporting currency for this comparison. No base-currency figures have been mixed into the review."
+            surface="analysis"
+          />
         ) : state.status === "error" ? (
           <div role="alert" aria-live="assertive" aria-atomic="true">
             <ScreenStatePanel

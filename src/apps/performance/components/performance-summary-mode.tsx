@@ -97,6 +97,8 @@ export default function PerformanceSummaryMode({
             chartFrequency={chartFrequency}
             reportStartDate={workspace.report_start_date}
             reportEndDate={workspace.report_end_date}
+            asOfDate={workspace.effective_as_of_date}
+            reportingCurrency={displayCurrency}
             benchmarkOptions={workspace.benchmark_options ?? []}
             returnView={effectiveReturnView}
             onRequestChange={onRequestChange}
