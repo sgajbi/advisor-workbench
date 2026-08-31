@@ -1541,7 +1541,7 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain("Historical Event Log");
     expect(browserWorkflowModule).toContain("Support Snapshot");
     expect(browserWorkflowModule).toContain(
-      'workbenchPanelByClass(page, "portfolio-memory-panel")',
+      'page.locator("article#portfolio-memory-panel")',
     );
     expect(browserWorkflowModule).toContain(
       'screenshotRegisteredPanel(page, "dpm.portfolio_memory")',

@@ -59,6 +59,7 @@ export default function PortfolioMemoryPanel({
 
   return (
     <SectionBlock
+      id="portfolio-memory-panel"
       title="Portfolio Memory"
       subtitle="Mandate activity, evidence, and review history for this portfolio."
       className={styles.panel}

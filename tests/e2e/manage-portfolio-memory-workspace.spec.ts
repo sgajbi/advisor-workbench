@@ -62,6 +62,7 @@ test("Portfolio Memory keeps the event decision path dense and keyboard complete
     await expect(
       page.getByRole("heading", { name: "Historical Event Log" }),
     ).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator("article#portfolio-memory-panel")).toBeVisible();
     await expect(page.getByTestId("review-context-strip")).toHaveAttribute(
       "data-source-state",
       "confirmed",

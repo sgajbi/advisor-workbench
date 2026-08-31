@@ -3128,7 +3128,7 @@ export async function validatePortfolioMemoryPanel(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=memory`, {
     timeout: timeoutMs,
   });
-  const memoryPanel = workbenchPanelByClass(page, "portfolio-memory-panel");
+  const memoryPanel = page.locator("article#portfolio-memory-panel");
   await expect(
     memoryPanel.getByRole("heading", {
       name: "Portfolio Memory",
