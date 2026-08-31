@@ -50,6 +50,25 @@ function withPerformanceReviewContext<Response extends Record<string, unknown>>(
   };
 }
 
+function withPerformanceHorizonReviewContext<Response extends Record<string, unknown>>(
+  response: Response,
+  requestUrl: string,
+) {
+  const query = new URL(requestUrl, "http://workbench.test").searchParams;
+  return {
+    ...response,
+    period: query.get("period") ?? response.period,
+    detail_basis: query.get("detail_basis") ?? response.detail_basis,
+    benchmark_code: query.has("benchmark_code")
+      ? query.get("benchmark_code")
+      : response.benchmark_code,
+    chart_frequency: query.get("chart_frequency") ?? response.chart_frequency,
+    report_start_date:
+      query.get("report_start_date") ?? response.report_start_date,
+    report_end_date: query.get("report_end_date") ?? response.report_end_date,
+  };
+}
+
 function buildLookupResponse() {
   return {
     ok: true,
@@ -268,7 +287,10 @@ export function installPerformancePageFetchMock(options?: PerformanceFixtureOpti
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/horizon-comparison")) {
         return {
           ok: true,
-          json: async () => buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+          json: async () => withPerformanceHorizonReviewContext(
+            buildPerformanceHorizonComparison("DEMO_ADV_USD_001"),
+            url,
+          ),
         } as Response;
       }
       if (url.includes("/api/bff/api/v1/workbench/DEMO_ADV_USD_001/performance/attribution-trend")) {
@@ -415,12 +437,15 @@ export function installPerformancePageFetchScenario(
       if (url.includes(`/api/bff/api/v1/workbench/${portfolioId}/performance/horizon-comparison`)) {
         return {
           ok: true,
-          json: async () => buildPerformanceHorizonComparisonForScenario(
-            {
-              ...scenario,
-              workspace,
-            },
-            portfolioId
+          json: async () => withPerformanceHorizonReviewContext(
+            buildPerformanceHorizonComparisonForScenario(
+              {
+                ...scenario,
+                workspace,
+              },
+              portfolioId,
+            ),
+            url,
           ),
         } as Response;
       }
