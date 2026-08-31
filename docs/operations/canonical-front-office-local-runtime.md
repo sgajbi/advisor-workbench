@@ -519,11 +519,13 @@ it does not depend on one full sentence. The proof also requires the named virtu
 grid to contain source rows and captures its automatic presentation-receipt write. That receipt
 must preserve the candidate identity, Idea global rank, independently observed visible count,
 queue/ranking policies, candidate versions, and exact request evidence; tenant scope must appear
-only in the returned BFF/Gateway/Idea receipt, never in the browser request. The machine-readable
-summary records that durable source evidence and only bounded action-control
-posture and non-claim boundaries; it does not expose conversion-intent identifiers, create
-proposals, grant suitability or execution authority, certify production identity, or promote Lotus
-Idea as a supported feature.
+only in the returned BFF/Gateway/Idea receipt, never in the browser request, and must match the
+single tenant injected by the Workbench BFF. The canonical HTTP origin must also produce the exact
+SHA-256 visible-set digest without depending on secure-context-only `SubtleCrypto` or
+`Crypto.randomUUID`. The machine-readable summary records that durable source evidence and only
+bounded action-control posture and non-claim boundaries. It
+does not expose conversion-intent identifiers, create proposals, grant suitability or execution
+authority, certify production identity, or promote Lotus Idea as a supported feature.
 RFC-0028 bank-demo proof checks read Gateway-backed scenario and supported-claim contracts,
 validate the governed scenario id, proof marker, and claim postures, then render
 `/recommendations?mode=proof` as `advisory.bank_demo_proof`. The proof captures
