@@ -349,6 +349,7 @@ export default function PortfolioWorkspaceClient({
         details,
         controls,
         request.params,
+        selectedPortfolioId,
       );
       const sourceOverrideRequested = hasPortfolioSourceControlOverride(
         controls,
@@ -479,6 +480,7 @@ export default function PortfolioWorkspaceClient({
         details,
         requestedControls,
         request.params,
+        selectedPortfolioId,
       )
     ) {
       setControlTransition({

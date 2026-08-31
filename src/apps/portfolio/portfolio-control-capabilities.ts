@@ -1,23 +1,14 @@
 import type { PortfolioWorkspace } from "./types";
 
 /**
- * Historical Portfolio Review is available only when Gateway confirms the
- * aggregate capability. A partial capability is not sufficient because the
- * refresh contract does not replace every module carried by the workspace
- * shell atomically.
+ * Historical Portfolio Review remains unavailable until the Workbench refresh
+ * contract replaces and identity-checks every module carried by the shell.
+ * Gateway capability alone cannot make a partial browser refresh coherent.
  */
 export function canUsePortfolioHistoricalReview(
-  workspace: PortfolioWorkspace | null,
+  _workspace: PortfolioWorkspace | null,
 ): boolean {
-  const capability = workspace?.control_capabilities?.historical_snapshots;
-  if (
-    !capability?.earliest_available_as_of_date ||
-    !capability.latest_available_as_of_date
-  ) {
-    return false;
-  }
-
-  return capability.state === "supported";
+  return false;
 }
 
 export function isPortfolioHistoricalDateInRange(

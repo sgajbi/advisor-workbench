@@ -214,6 +214,7 @@ type PortfolioInsightsResponse = {
 
 type PortfolioWorkspaceSummaryDetails = Pick<
   PortfolioWorkspace,
+  | "portfolio"
   | "allocations"
   | "allocation_views"
   | "top_positions"
@@ -540,6 +541,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
     const datedSummary = mapPortfolioBookSummary(bookPayload);
 
     return {
+      portfolio: bookPayload.portfolio,
       ...datedSummary,
       allocations: (allocationView?.buckets ?? []).map((bucket) => ({
         asset_class: bucket.bucket,

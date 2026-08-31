@@ -162,6 +162,16 @@ function buildWorkspace(portfolioId = "MANUAL_PB_USD_001"): PortfolioWorkspace {
   };
 }
 
+function confirmedDetails<Details extends Record<string, unknown>>(
+  details: Details,
+  portfolioId = "MANUAL_PB_USD_001",
+): Details & { portfolio: PortfolioWorkspace["portfolio"] } {
+  return {
+    portfolio: buildWorkspace(portfolioId).portfolio,
+    ...details,
+  };
+}
+
 describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
     getShellWorkspaceMock.mockReset();
@@ -209,7 +219,9 @@ describe("PortfolioWorkspaceClient", () => {
     expect(routerPushMock).not.toHaveBeenCalled();
 
     await act(async () => {
-      confirmDetails?.({ as_of_date: "2026-03-28", positions: [] });
+      confirmDetails?.(
+        confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+      );
     });
     await waitFor(() => {
       expect(screen.getByTestId("time-window")).toHaveTextContent("YTD");
@@ -227,10 +239,10 @@ describe("PortfolioWorkspaceClient", () => {
     getSummaryDetailsMock
       .mockResolvedValueOnce({ positions: [] })
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
+      .mockResolvedValueOnce(confirmedDetails({
         as_of_date: "2026-03-28",
         positions: [],
-      });
+      }));
     render(
       <PortfolioWorkspaceClient
         portfolios={[
@@ -311,14 +323,18 @@ describe("PortfolioWorkspaceClient", () => {
     });
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(3));
     await act(async () => {
-      confirmOneYear?.({ as_of_date: "2026-03-28", positions: [] });
+      confirmOneYear?.(
+        confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+      );
     });
     await waitFor(() =>
       expect(screen.getByTestId("time-window")).toHaveTextContent("1Y"),
     );
 
     await act(async () => {
-      confirmYtd?.({ as_of_date: "2026-03-28", positions: [] });
+      confirmYtd?.(
+        confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+      );
     });
     expect(screen.getByTestId("time-window")).toHaveTextContent("1Y");
     expect(routerPushMock).toHaveBeenCalledTimes(1);
@@ -383,10 +399,12 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     await act(async () => {
-      confirmFirstPortfolio?.({
-        as_of_date: "2026-03-28",
-        positions: [],
-      });
+      confirmFirstPortfolio?.(
+        confirmedDetails({
+          as_of_date: "2026-03-28",
+          positions: [],
+        }),
+      );
     });
 
     expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
@@ -398,14 +416,14 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("does not duplicate summary fetches in strict mode and preserves explicit detail changes", async () => {
     getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
-    getSummaryDetailsMock.mockResolvedValue({
+    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
       positions: [{ security_id: "EQ_1" }],
       top_positions: [],
       allocations: [],
       allocation_views: [],
       income_summary: null,
       activity_summary: null,
-    });
+    }));
     render(
       <StrictMode>
         <PortfolioWorkspaceClient
@@ -454,13 +472,13 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("restores source-confirmed controls when automatic detail rejects URL-derived context", async () => {
     const initialWorkspace = buildWorkspace();
-    getSummaryDetailsMock.mockResolvedValue({
+    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
       as_of_date: initialWorkspace.as_of_date,
       summary: {
         ...initialWorkspace.summary,
         market_value_base: 2000000.25,
       },
-    });
+    }));
 
     render(
       <PortfolioWorkspaceClient
@@ -596,12 +614,12 @@ describe("PortfolioWorkspaceClient", () => {
         module_capabilities: [],
       },
     };
-    getSummaryDetailsMock.mockResolvedValue({
+    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
       as_of_date: initialWorkspace.as_of_date,
       income_summary: { reporting_currency: "SGD" },
       activity_summary: { reporting_currency: "SGD" },
       positions: [],
-    });
+    }));
 
     render(
       <PortfolioWorkspaceClient
@@ -626,7 +644,7 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {
     const initialWorkspace = buildWorkspace();
-    getSummaryDetailsMock.mockResolvedValue({
+    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
       as_of_date: initialWorkspace.as_of_date,
       positions: [{ security_id: "EQ_1" }],
       performance: {
@@ -634,7 +652,7 @@ describe("PortfolioWorkspaceClient", () => {
         report_start_date: "2026-02-26",
         report_end_date: "2026-03-28",
       },
-    });
+    }));
 
     render(
       <PortfolioWorkspaceClient
