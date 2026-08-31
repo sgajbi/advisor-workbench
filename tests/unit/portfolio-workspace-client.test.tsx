@@ -530,7 +530,7 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps requested date and currency out of the confirmed strip while source proof is pending", async () => {
+  it("withholds the current shell while source proof for URL-derived context is pending", async () => {
     const initialWorkspace = buildWorkspace();
     initialWorkspace.control_capabilities = {
       historical_snapshots: {
@@ -566,14 +566,15 @@ describe("PortfolioWorkspaceClient", () => {
 
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
     const strip = screen.getByTestId("review-context-strip");
-    expect(strip).toHaveTextContent("28 Mar 2026");
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+    expect(screen.getByTestId("market-value")).toHaveTextContent("none");
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent("none");
+    expect(strip).toHaveTextContent("Business dateNot confirmed");
+    expect(strip).not.toHaveTextContent("28 Mar 2026");
     expect(strip).not.toHaveTextContent("20 Mar 2026");
-    const baseCurrencyFact =
-      within(strip).getByText("Base currency").parentElement;
-    expect(baseCurrencyFact).toHaveTextContent("USD");
-    expect(
-      within(strip).queryByText("Reporting currency"),
-    ).not.toBeInTheDocument();
+    expect(within(strip).getByText("Base currency").parentElement).toHaveTextContent(
+      "Not confirmed",
+    );
   });
 
   it("promotes an alternate currency only after source detail confirms it", async () => {

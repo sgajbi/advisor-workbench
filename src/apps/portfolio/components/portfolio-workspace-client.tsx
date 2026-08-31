@@ -186,6 +186,38 @@ export default function PortfolioWorkspaceClient({
   const controlRequestSourceKey = useRef(initialWorkspaceSourceKey);
   const [controlTransition, setControlTransition] =
     useState<PortfolioControlTransition | null>(null);
+  const initialControlTransition = useMemo<PortfolioControlTransition | null>(
+    () =>
+      confirmedInitialWorkspace &&
+      hasPortfolioSourceControlOverride(
+        initialControlValues,
+        confirmedInitialWorkspace,
+      )
+        ? {
+            sourceKey: initialWorkspaceSourceKey,
+            status: "pending",
+            requestedControls: initialControlValues,
+          }
+        : null,
+    [
+      confirmedInitialWorkspace,
+      initialControlValues,
+      initialWorkspaceSourceKey,
+    ],
+  );
+  const activeControlTransition =
+    controlTransition?.sourceKey === initialWorkspaceSourceKey
+      ? controlTransition
+      : initialControlTransition;
+  const awaitsInitialSourceConfirmation =
+    activeControlTransition?.status === "pending" &&
+    Boolean(
+      confirmedInitialWorkspace &&
+        hasPortfolioSourceControlOverride(
+          activeControlTransition.requestedControls,
+          confirmedInitialWorkspace,
+        ),
+    );
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState],
@@ -394,8 +426,11 @@ export default function PortfolioWorkspaceClient({
   ]);
 
   const workspace = useMemo(
-    () => derivePortfolioWorkspace(workspaceState, controls),
-    [controls, workspaceState],
+    () =>
+      awaitsInitialSourceConfirmation
+        ? null
+        : derivePortfolioWorkspace(workspaceState, controls),
+    [awaitsInitialSourceConfirmation, controls, workspaceState],
   );
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
     const nextControls = applyPortfolioControlPatch(controls, patch);
@@ -492,10 +527,6 @@ export default function PortfolioWorkspaceClient({
     URL.revokeObjectURL(downloadUrl);
   }
 
-  const activeControlTransition =
-    controlTransition?.sourceKey === initialWorkspaceSourceKey
-      ? controlTransition
-      : null;
   const acceptedReportingCurrency =
     workspace &&
     activeControlTransition?.status === "confirmed" &&
@@ -522,9 +553,10 @@ export default function PortfolioWorkspaceClient({
           workspaceStatus={
             workspace
               ? "ready"
-              : selectedPortfolioId &&
+              : awaitsInitialSourceConfirmation ||
+                  (selectedPortfolioId &&
                   (activeShellRequestStatus === "idle" ||
-                    activeShellRequestStatus === "loading")
+                    activeShellRequestStatus === "loading"))
                 ? "loading"
                 : "unavailable"
           }
