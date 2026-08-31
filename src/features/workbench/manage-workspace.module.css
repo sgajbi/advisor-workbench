@@ -157,110 +157,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.manageScope :global(.dpm-ai-workflow-result) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-  padding: 16px;
-  border: 1px solid #b8c0ca;
-  border-left: 4px solid #725b26;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #ffffff, #f7f9fb);
-  box-shadow: 0 2px 7px rgba(19, 27, 46, 0.06);
-}
-
-.manageScope :global(.dpm-ai-workflow-result-copy) {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-}
-
-.manageScope :global(.dpm-ai-workflow-result-copy > span) {
-  color: #725b26;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 14px;
-  text-transform: uppercase;
-}
-
-.manageScope :global(.dpm-ai-workflow-result-copy h3) {
-  margin: 0;
-  color: #191c1e;
-  font-size: 17px;
-  line-height: 23px;
-  outline: none;
-}
-
-.manageScope :global(.dpm-ai-workflow-result-copy h3:focus-visible) {
-  border-radius: 2px;
-  box-shadow: 0 0 0 3px rgba(114, 91, 38, 0.24);
-}
-
-.manageScope :global(.dpm-ai-workflow-result-copy p) {
-  margin: 0;
-  color: #45464d;
-  font-size: 13px;
-  line-height: 19px;
-}
-
-.manageScope :global(.dpm-ai-workflow-material) {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid #d8dde4;
-  border-radius: 4px;
-  background: #ffffff;
-}
-
-.manageScope :global(.dpm-ai-workflow-material h4) {
-  margin: 0;
-  color: #191c1e;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.manageScope :global(.dpm-ai-workflow-material dl) {
-  display: grid;
-  gap: 0;
-  margin: 0;
-}
-
-.manageScope :global(.dpm-ai-workflow-material dl > div) {
-  display: grid;
-  grid-template-columns: minmax(130px, 0.32fr) minmax(0, 1fr);
-  gap: 12px;
-  padding: 9px 0;
-  border-top: 1px solid #e5e8ec;
-}
-
-.manageScope :global(.dpm-ai-workflow-material dt),
-.manageScope :global(.dpm-ai-workflow-material dd) {
-  min-width: 0;
-  margin: 0;
-  font-size: 12px;
-  line-height: 18px;
-  overflow-wrap: anywhere;
-}
-
-.manageScope :global(.dpm-ai-workflow-material dt) {
-  color: #5b5d63;
-  font-weight: 700;
-}
-
-.manageScope :global(.dpm-ai-workflow-material dd) {
-  color: #24272b;
-}
-
-.manageScope :global(.dpm-ai-workflow-material ul) {
-  display: grid;
-  gap: 5px;
-  margin: 0;
-  padding-left: 18px;
-}
-
 .manageScope :global(.dpm-wave-decision-support) {
   display: grid;
   gap: 12px;
@@ -3455,8 +3351,6 @@
   .manageScope :global(.mandate-health-review-workspace),
   .manageScope :global(.dpm-copilot-status-strip),
   .manageScope :global(.dpm-copilot-action-grid),
-  .manageScope :global(.dpm-ai-workflow-result),
-  .manageScope :global(.dpm-ai-workflow-material dl > div),
   .manageScope :global(.dpm-wave-decision-support-status),
   .manageScope :global(.portfolio-memory-status-strip),
   .manageScope :global(.portfolio-memory-workspace),
