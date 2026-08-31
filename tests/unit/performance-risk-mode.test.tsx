@@ -1,7 +1,9 @@
 import React from "react";
 import {
+  act,
   fireEvent,
   render,
+  renderHook,
   screen,
   waitFor,
   within,
@@ -9,6 +11,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceRiskMode from "../../src/apps/performance/components/performance-risk-mode";
+import { usePerformanceRiskContract } from "../../src/apps/performance/use-performance-risk-contract";
 import {
   buildFixtureRiskAttribution,
   buildFixtureRiskConcentration,
@@ -72,6 +75,14 @@ function buildRiskModeElement(
       isDetailsPending={options.isDetailsPending ?? false}
     />
   );
+}
+
+function createDeferred<Value>() {
+  let resolve!: (value: Value) => void;
+  const promise = new Promise<Value>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
 }
 
 describe("PerformanceRiskMode", () => {
@@ -478,6 +489,143 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches source-declared failures after returning to a Risk review scope", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const unavailable = <Response extends { state: string; payload: unknown }>(response: Response) => ({
+      ...response,
+      state: "unavailable" as const,
+      payload: null,
+    });
+    vi.mocked(getWorkbenchRiskSummaryClient)
+      .mockResolvedValueOnce(unavailable(buildFixtureRiskSummary(scenario.workspace, "YTD", "NET")))
+      .mockResolvedValueOnce(buildFixtureRiskSummary(scenario.workspace, "1Y", "NET"))
+      .mockResolvedValueOnce(buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"));
+    vi.mocked(getWorkbenchRiskConcentrationClient)
+      .mockResolvedValueOnce(unavailable(buildFixtureRiskConcentration(scenario.workspace, "YTD")))
+      .mockResolvedValueOnce(buildFixtureRiskConcentration(scenario.workspace, "1Y"))
+      .mockResolvedValueOnce(buildFixtureRiskConcentration(scenario.workspace, "YTD"));
+    vi.mocked(getWorkbenchRiskAttributionClient)
+      .mockResolvedValueOnce(unavailable(buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET")))
+      .mockResolvedValueOnce(buildFixtureRiskAttribution(scenario.workspace, "1Y", "NET"))
+      .mockResolvedValueOnce(buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"));
+    vi.mocked(getWorkbenchRiskDrawdownClient)
+      .mockResolvedValueOnce(unavailable(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET")))
+      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "1Y", "NET"))
+      .mockResolvedValueOnce(buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"));
+    vi.mocked(getWorkbenchRiskRollingClient)
+      .mockResolvedValueOnce(unavailable(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET")))
+      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "1Y", "NET"))
+      .mockResolvedValueOnce(buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"));
+
+    const { rerender } = renderRiskMode(scenario);
+    await waitFor(() => expect(screen.getByText("Risk unavailable")).toBeInTheDocument());
+
+    rerender(buildRiskModeElement(scenario, { period: "1Y" }));
+    await waitFor(() => expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(2));
+
+    rerender(buildRiskModeElement(scenario));
+    await waitFor(() => {
+      expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(3);
+      expect(screen.getByLabelText("Risk snapshot headline metrics")).toBeInTheDocument();
+    });
+    expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(3);
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(3);
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(3);
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(3);
+  });
+
+  it("discards deferred Risk detail when the review scope changes", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    const ytdDrawdownDetail = buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET", {
+      includeUnderwaterSeries: true,
+    });
+    const ytdRollingDetail = buildFixtureRiskRolling(scenario.workspace, "YTD", "NET", {
+      includeTimeSeries: true,
+    });
+    const deferredDrawdown = createDeferred<typeof ytdDrawdownDetail>();
+    const deferredRolling = createDeferred<typeof ytdRollingDetail>();
+    let drawdownDetailRequests = 0;
+    let rollingDetailRequests = 0;
+
+    vi.mocked(getWorkbenchRiskSummaryClient).mockImplementation((_, request) =>
+      Promise.resolve(buildFixtureRiskSummary(scenario.workspace, request.period, request.detailBasis)),
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockImplementation((_, request) =>
+      Promise.resolve(buildFixtureRiskConcentration(scenario.workspace, request.period)),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockImplementation((_, request) =>
+      Promise.resolve(buildFixtureRiskAttribution(
+        scenario.workspace,
+        request.period,
+        request.detailBasis,
+      )),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockImplementation((_, request) => {
+      if (!request.includeUnderwaterSeries) {
+        return Promise.resolve(buildFixtureRiskDrawdown(scenario.workspace, request.period, request.detailBasis));
+      }
+      drawdownDetailRequests += 1;
+      return drawdownDetailRequests === 1
+        ? deferredDrawdown.promise
+        : Promise.resolve(buildFixtureRiskDrawdown(scenario.workspace, request.period, request.detailBasis, {
+            includeUnderwaterSeries: true,
+          }));
+    });
+    vi.mocked(getWorkbenchRiskRollingClient).mockImplementation((_, request) => {
+      if (!request.includeTimeSeries) {
+        return Promise.resolve(buildFixtureRiskRolling(scenario.workspace, request.period, request.detailBasis));
+      }
+      rollingDetailRequests += 1;
+      return rollingDetailRequests === 1
+        ? deferredRolling.promise
+        : Promise.resolve(buildFixtureRiskRolling(scenario.workspace, request.period, request.detailBasis, {
+            includeTimeSeries: true,
+          }));
+    });
+
+    const { result, rerender } = renderHook(
+      ({ period }) => usePerformanceRiskContract({
+        workspace: scenario.workspace,
+        period,
+        detailBasis: "NET",
+        isDetailsPending: false,
+      }),
+      { initialProps: { period: "YTD" } },
+    );
+    await waitFor(() => expect(result.current.riskSummary).not.toBeNull());
+    act(() => {
+      result.current.requestDrawdownDetail();
+      result.current.requestRollingDetail();
+    });
+    expect(drawdownDetailRequests).toBe(1);
+    expect(rollingDetailRequests).toBe(1);
+
+    rerender({ period: "1Y" });
+    await waitFor(() => expect(result.current.riskSummary?.period).toBe("1Y"));
+    await act(async () => {
+      deferredDrawdown.resolve(ytdDrawdownDetail);
+      deferredRolling.resolve(ytdRollingDetail);
+      await Promise.resolve();
+    });
+    expect(result.current.riskDrawdownDetail).toBeNull();
+    expect(result.current.riskRollingDetail).toBeNull();
+    expect(result.current.isDrawdownDetailLoading).toBe(false);
+    expect(result.current.isRollingDetailLoading).toBe(false);
+
+    rerender({ period: "YTD" });
+    await waitFor(() => expect(result.current.riskSummary?.period).toBe("YTD"));
+    act(() => {
+      result.current.requestDrawdownDetail();
+      result.current.requestRollingDetail();
+    });
+    await waitFor(() => {
+      expect(drawdownDetailRequests).toBe(2);
+      expect(rollingDetailRequests).toBe(2);
+      expect(result.current.riskDrawdownDetail?.period).toBe("YTD");
+      expect(result.current.riskRollingDetail?.period).toBe("YTD");
+    });
   });
 
   it("refetches a recovered source after rejecting stale risk evidence", async () => {
