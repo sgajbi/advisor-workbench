@@ -67,6 +67,7 @@ describe("PortfolioMemoryPanel", () => {
   it("renders business-facing portfolio memory supportability and timeline", () => {
     render(<PortfolioMemoryPanel response={readyResponse} searchResponse={searchResponse} />);
 
+    expect(document.querySelector("article#portfolio-memory-panel")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Portfolio Memory" })).toBeInTheDocument();
     expect(screen.getAllByText("Ready").length).toBeGreaterThan(0);
     expect(screen.getByText("Latest Memory Event")).toBeInTheDocument();
