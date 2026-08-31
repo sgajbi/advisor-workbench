@@ -68,12 +68,12 @@ export function isPerformanceAnalyticalSourceCurrent(
     (!identity.detailBasis || source.detail_basis === identity.detailBasis) &&
     (!identity.contributionDimension ||
       source.contribution_dimension === identity.contributionDimension) &&
-    matchesRequestedOrNormalized(
+    isPerformanceRequestedValueCurrent(
       source.attribution_dimension,
       identity.attributionDimension,
       source.requested_attribution_dimension_supported,
     ) &&
-    matchesRequestedOrNormalized(
+    isPerformanceRequestedValueCurrent(
       source.chart_frequency,
       identity.chartFrequency,
       source.requested_chart_frequency_supported,
@@ -84,7 +84,7 @@ export function isPerformanceAnalyticalSourceCurrent(
   );
 }
 
-function matchesRequestedOrNormalized(
+export function isPerformanceRequestedValueCurrent(
   actual: string,
   requested: string | undefined,
   requestedValueSupported: boolean | undefined,

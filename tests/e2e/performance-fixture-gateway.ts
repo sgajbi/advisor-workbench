@@ -4,6 +4,7 @@ import type {
   PerformanceComparativeSummary,
   WorkbenchPerformanceWorkspace,
   WorkbenchPerformanceAdvisorBrief,
+  WorkbenchPerformanceHorizonComparison,
   WorkbenchPerformanceWorkspaceDetails,
   WorkbenchPerformanceWorkspaceSummary,
 } from '../../src/features/workbench/types';
@@ -158,7 +159,10 @@ export async function startPerformanceFixtureGateway({
         sendJson(response, { code: 'performance_horizon_comparison_temporarily_unavailable' }, 503);
         return;
       }
-      const horizon = buildPerformanceHorizonComparison(portfolioId);
+      const horizon = applyRequestedHorizonContext(
+        buildPerformanceHorizonComparison(portfolioId),
+        requestUrl,
+      );
       if (scenario === 'horizon-integrity') {
         setTimeout(() => {
           sendJson(
@@ -683,6 +687,18 @@ function applyRequestedPerformanceReviewContext<
     effective_reporting_currency:
       requestedReportingCurrency ?? response.portfolio?.base_currency ?? 'USD',
     reporting_currency_state: 'accepted_unverified' as const,
+  };
+}
+
+function applyRequestedHorizonContext(
+  response: WorkbenchPerformanceHorizonComparison,
+  requestUrl: URL,
+): WorkbenchPerformanceHorizonComparison {
+  return {
+    ...applyRequestedPerformanceReviewContext(response, requestUrl),
+    reporting_currency:
+      requestUrl.searchParams.get('reporting_currency') ??
+      response.reporting_currency,
   };
 }
 
