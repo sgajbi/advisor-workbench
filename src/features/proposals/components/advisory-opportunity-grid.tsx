@@ -57,6 +57,8 @@ export default function AdvisoryOpportunityGrid({
       {
         cellRenderer: ReviewPostureCell,
         field: "priority",
+        getQuickFilterText: ({ data }) =>
+          data ? `${data.priority} ${data.reviewPosture}` : "",
         headerName: "Review priority",
         minWidth: 176,
       },
@@ -64,6 +66,8 @@ export default function AdvisoryOpportunityGrid({
         cellRenderer: SourceEvidenceCell,
         field: "sourceSignals",
         flex: 2,
+        getQuickFilterText: ({ data }) =>
+          data ? `${data.sourceSignals} ${data.reasonCodes}` : "",
         headerName: "Decision evidence",
         minWidth: 240,
       },
