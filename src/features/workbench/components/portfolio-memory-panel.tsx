@@ -150,7 +150,7 @@ export default function PortfolioMemoryPanel({
               setSelectedEventId(null);
             }}
           >
-            {businessStateLabel(row.eventType)}
+            {row.eventLabel}
             <span className={styles.filterCount}>{row.count}</span>
           </button>
         ))}
