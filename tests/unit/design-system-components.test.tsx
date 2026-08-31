@@ -516,14 +516,21 @@ describe("design-system components", () => {
 
   it("renders section blocks with a standardized header and body seam", () => {
     render(
-      <SectionBlock title="Service State" subtitle="Operational posture" actions={<button type="button">Refresh</button>}>
+      <SectionBlock
+        title="Service State"
+        subtitle="Operational posture"
+        actions={<button type="button">Refresh</button>}
+        headerClassName="owned-section-header"
+      >
         <MetricRow label="Portfolio catalog" value="Ready" />
       </SectionBlock>
     );
 
     expect(document.querySelector(".section-block")).toBeTruthy();
     expect(document.querySelector(".section-block-body")).toBeTruthy();
-    expect(screen.getByRole("group", { name: "Service State section header" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Service State section header" }),
+    ).toHaveClass("owned-section-header");
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
     expect(screen.getByText("Portfolio catalog")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
