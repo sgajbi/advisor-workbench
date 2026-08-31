@@ -18,6 +18,7 @@ export type PerformanceRiskSourceIdentity = Readonly<{
   groupingDimension?: string;
   includeUnderwaterSeries?: boolean;
   includeTimeSeries?: boolean;
+  windowEvidence?: "periods" | "point_in_time";
 }>;
 
 export function isPerformanceRiskSourceCurrent(
@@ -106,6 +107,9 @@ function hasRequestedRiskWindow(
   source: PerformanceRiskSource,
   identity: PerformanceRiskSourceIdentity,
 ): boolean {
+  if (identity.windowEvidence === "point_in_time") {
+    return hasMatchingPointInTimeExecutionContext(source.payload, identity);
+  }
   if (!identity.reportStartDate && !identity.reportEndDate) {
     const periods = readRiskPeriods(source.payload);
     return periods?.every((period) => period.end_date === identity.asOfDate) ?? true;
@@ -119,6 +123,27 @@ function hasRequestedRiskWindow(
           (!identity.reportStartDate || period.start_date === identity.reportStartDate) &&
           (!identity.reportEndDate || period.end_date === identity.reportEndDate),
       ),
+  );
+}
+
+function hasMatchingPointInTimeExecutionContext(
+  payload: unknown,
+  identity: PerformanceRiskSourceIdentity,
+): boolean {
+  if (!payload || typeof payload !== "object" || !("execution_context" in payload)) {
+    return true;
+  }
+  const executionContext = payload.execution_context;
+  if (!executionContext || typeof executionContext !== "object") {
+    return false;
+  }
+  return (
+    (!("as_of_date" in executionContext) ||
+      executionContext.as_of_date == null ||
+      executionContext.as_of_date === identity.asOfDate) &&
+    (!("portfolio_id" in executionContext) ||
+      executionContext.portfolio_id == null ||
+      executionContext.portfolio_id === identity.portfolioId)
   );
 }
 

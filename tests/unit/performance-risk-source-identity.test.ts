@@ -86,6 +86,42 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
+  it("admits point-in-time concentration for an explicit review using execution context", () => {
+    const identity = {
+      ...IDENTITY,
+      period: "EXPLICIT",
+      reportStartDate: "2025-02-25",
+      reportEndDate: "2026-02-24",
+      windowEvidence: "point_in_time" as const,
+    };
+    const source = {
+      ...SOURCE,
+      period: "EXPLICIT",
+      payload: {
+        execution_context: {
+          as_of_date: IDENTITY.asOfDate,
+          portfolio_id: IDENTITY.portfolioId,
+        },
+      },
+    };
+
+    expect(isPerformanceRiskSourceCurrent(source, identity)).toBe(true);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...source,
+          payload: {
+            execution_context: {
+              as_of_date: "2026-02-23",
+              portfolio_id: IDENTITY.portfolioId,
+            },
+          },
+        },
+        identity,
+      ),
+    ).toBe(false);
+  });
+
   it("requires every preset result to end on the admitted valuation date", () => {
     const source = {
       ...SOURCE,
