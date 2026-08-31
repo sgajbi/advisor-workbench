@@ -1228,6 +1228,88 @@ test.describe('Performance workbench smoke', () => {
     expect(runtime.snapshot()).toEqual([]);
   });
 
+  test('review context is source-confirmed across Performance decision modes', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic source-context proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+    const portfolioId = await resolveSmokePortfolioId(request);
+    expect(portfolioId).not.toBeNull();
+    const observedPerformanceRequests: string[] = [];
+    page.on('request', (browserRequest) => {
+      const url = browserRequest.url();
+      if (url.includes(`/workbench/${portfolioId}/performance/`)) {
+        observedPerformanceRequests.push(url);
+      }
+    });
+    const reviewDate = '2026-02-23';
+    const reportingCurrency = 'SGD';
+    const reviewUrl = new URL(
+      buildPerformanceSmokePagePath(portfolioId!),
+      'http://workbench.local',
+    );
+    reviewUrl.searchParams.set('asOfDate', reviewDate);
+    reviewUrl.searchParams.set('reportingCurrency', reportingCurrency);
+
+    await page.goto(`${reviewUrl.pathname}${reviewUrl.search}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.getByRole('heading', { name: /^Performance$/i })).toBeVisible({
+      timeout: 30_000,
+    });
+    const reviewContext = page.getByTestId('review-context-strip');
+    await expect(reviewContext).toContainText('23 Feb 2026');
+    await expect(reviewContext).toContainText('Base currency');
+    await expect(reviewContext).toContainText('USD');
+    await expect(
+      reviewContext.getByText(
+        /Performance remains in portfolio base currency USD because restatement to SGD has not been verified/i,
+      ),
+    ).toBeVisible();
+
+    const analysisStep = await openPerformanceWorkflowStep(
+      page,
+      /^Performance analysis/i,
+    );
+    await analysisStep.click();
+    const attributionEvidence = page.getByTestId('attribution-trend-evidence');
+    await expect(attributionEvidence).toBeVisible();
+    await expect(attributionEvidence).toHaveAttribute('data-state', 'single-observation');
+
+    const adviserBriefStep = await openPerformanceWorkflowStep(page, /^Adviser brief/i);
+    await adviserBriefStep.click();
+    await expect(page.getByRole('heading', { name: 'Performance adviser brief' })).toBeVisible();
+    await expect(page.getByLabel('Adviser brief toolbar')).toContainText('Ready');
+
+    expect(new URL(page.url()).searchParams.get('asOfDate')).toBe(reviewDate);
+    expect(new URL(page.url()).searchParams.get('reportingCurrency')).toBe(reportingCurrency);
+
+    for (const path of [
+      '/performance/details',
+      '/performance/attribution-trend',
+      '/performance/advisor-brief',
+    ]) {
+      expect(
+        observedPerformanceRequests.some((url) => {
+          const requestUrl = new URL(url);
+          return (
+            requestUrl.pathname.endsWith(path) &&
+            requestUrl.searchParams.get('as_of_date') === reviewDate &&
+            requestUrl.searchParams.get('reporting_currency') === reportingCurrency
+          );
+        }),
+      ).toBe(true);
+    }
+
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
+  });
+
   test('governed review context survives Portfolio to Performance and browser Back', async ({
     page,
   }) => {
