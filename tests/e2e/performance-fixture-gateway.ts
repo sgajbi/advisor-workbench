@@ -638,14 +638,21 @@ function applyRequestedDetailContext(
 function applyRequestedPerformanceReviewContext<
   Response extends {
     as_of_date: string;
+    period?: string;
+    report_end_date?: string | null;
     portfolio?: { base_currency?: string };
   },
 >(response: Response, requestUrl: URL) {
   const requestedAsOfDate = requestUrl.searchParams.get('as_of_date');
+  const requestedPeriod = requestUrl.searchParams.get('period') ?? response.period;
   const requestedReportingCurrency = requestUrl.searchParams.get('reporting_currency');
   const effectiveAsOfDate = requestedAsOfDate ?? response.as_of_date;
   return {
     ...response,
+    report_end_date:
+      requestedAsOfDate && requestedPeriod !== 'EXPLICIT'
+        ? effectiveAsOfDate
+        : response.report_end_date,
     as_of_date: effectiveAsOfDate,
     requested_as_of_date: requestedAsOfDate,
     effective_as_of_date: effectiveAsOfDate,
