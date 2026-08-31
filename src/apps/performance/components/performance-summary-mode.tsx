@@ -98,7 +98,7 @@ export default function PerformanceSummaryMode({
             reportStartDate={workspace.report_start_date}
             reportEndDate={workspace.report_end_date}
             asOfDate={workspace.effective_as_of_date}
-            reportingCurrency={workspace.requested_reporting_currency ?? displayCurrency}
+            reportingCurrency={displayCurrency}
             benchmarkOptions={workspace.benchmark_options ?? []}
             returnView={effectiveReturnView}
             onRequestChange={onRequestChange}

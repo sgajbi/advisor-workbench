@@ -267,7 +267,7 @@ describe("PerformanceAnalyticsPage", () => {
         return (
           url.includes("/performance/horizon-comparison") &&
           url.includes("as_of_date=2026-02-23") &&
-          url.includes("reporting_currency=EUR")
+          url.includes("reporting_currency=USD")
         );
       }),
     ).toBe(true);
