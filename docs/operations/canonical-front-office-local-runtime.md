@@ -303,7 +303,14 @@ or rebuild the Docker-backed Workbench image when proving the containerized runt
 docker compose up -d --build
 ```
 
-from `lotus-workbench` while the canonical backend stack is running. A stale Workbench container can
+from `lotus-workbench` while the canonical backend stack is running. Compose resolves the repository
+root and records it on the resulting image as `com.lotus.repository.checkout`. This immutable image
+label lets Platform cleanup prove a residual Workbench image belongs to this exact checkout after
+the container has gone; a missing, sibling, or nested-worktree path remains a blocking ownership
+conflict. Protected direct Docker builds apply the same label from `github.workspace`; do not build
+governed Workbench images through an unlabelled ad hoc command.
+
+A stale Workbench container can
 render old panel labels and create false live-validation failures or, worse, false proof against an
 older UI. Diagnostic screenshots taken before this refresh must stay separate from demo-ready
 evidence.

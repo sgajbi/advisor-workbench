@@ -381,4 +381,8 @@ Gateway and backend Lotus apps remain on the canonical stack. Docker-backed Work
 valid for released images, but it must not be used to prove newly changed Workbench panels.
 For one-command proof, `npm run live:stack:up:validate` rebuilds Docker-backed service images before
 validation. Stale containers can hide new Gateway or Advise routes, render old panel text, and turn
-the live validator into evidence for the wrong runtime build.
+the live validator into evidence for the wrong runtime build. Governed Workbench Compose and
+protected CI builds also stamp the exact checkout on the image so Platform cleanup can distinguish
+an owned residual image from another checkout. The
+[canonical runtime guide](https://github.com/sgajbi/lotus-workbench/blob/main/docs/operations/canonical-front-office-local-runtime.md)
+owns the command and fail-closed behavior.
