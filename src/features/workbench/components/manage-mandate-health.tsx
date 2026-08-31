@@ -174,7 +174,7 @@ export default function ManageMandateHealth({ data }: Props) {
         />
       </div>
 
-      <div className={styles.reviewWorkspace}>
+      <div className={styles.reviewWorkspace} data-testid="mandate-health-review-workspace">
         <AttentionReviewQueue
           rows={exceptionRows}
           evidencePosture={exceptionSource.evidencePosture}
