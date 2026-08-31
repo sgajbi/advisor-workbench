@@ -211,6 +211,49 @@ describe("performance risk source identity", () => {
     ).toBe(false);
   });
 
+  it("rejects non-chronological nested Risk observations", () => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              {
+                start_date: "2026-01-01",
+                end_date: "2026-02-24",
+                underwater_series: [
+                  { date: "2026-02-01", drawdown: -0.02 },
+                  { date: "2026-01-31", drawdown: -0.01 },
+                ],
+              },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects a Risk period whose end precedes its start", () => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              {
+                start_date: "2026-02-25",
+                end_date: "2026-02-24",
+                underwater_series: [],
+              },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
+    ).toBe(false);
+  });
+
   it("admits nested Risk observations bounded by their source period", () => {
     expect(
       isPerformanceRiskSourceCurrent(
