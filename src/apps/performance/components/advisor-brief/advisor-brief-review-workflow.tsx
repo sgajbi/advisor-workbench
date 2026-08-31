@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionButton, SemanticBadge, type SemanticBadgeTone } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import type { AdvisorBriefReviewFeedback } from "../../use-performance-advisor-brief";
 import type {
   WorkbenchAdvisorBriefWorkflowPackRun,
@@ -16,6 +17,7 @@ import {
 } from "../../advisor-brief/advisor-brief-review-evidence";
 
 import PerformanceWorkspaceSection from "../performance-workspace-section";
+import styles from "./performance-advisor-brief.module.css";
 
 type ReviewActionDefinition = {
   label: string;
@@ -58,6 +60,12 @@ const REVIEW_ACTIONS: Record<
     confirmLabel: "Confirm withdrawal",
   },
 };
+
+const REVIEW_FEEDBACK_CLASS = {
+  failed: styles.reviewFeedbackFailed,
+  pending: styles.reviewFeedbackPending,
+  success: styles.reviewFeedbackSuccess,
+} satisfies Record<Exclude<AdvisorBriefReviewFeedback["state"], "idle">, string>;
 
 export default function AdvisorBriefReviewWorkflow({
   workflowPackRun,
@@ -144,13 +152,16 @@ export default function AdvisorBriefReviewWorkflow({
   return (
     <PerformanceWorkspaceSection
       ariaLabel="Adviser brief human review"
-      className="performance-advisor-brief-section performance-advisor-brief-review-workflow"
-      headingClassName="performance-advisor-brief-section-heading"
+      className={cx(
+        styles.section,
+        styles.reviewWorkflow
+      )}
+      headingClassName={styles.sectionHeading}
       kicker="Human review"
       title="Record the internal review decision"
       description="Review the evidence and narrative before recording one of the decisions currently allowed by the source workflow."
     >
-      <div className="performance-advisor-brief-review-state-row">
+      <div className={styles.reviewStateRow}>
         <span>Current review state</span>
         <SemanticBadge
           tone={getReviewStateTone(workflowPackRun)}
@@ -163,7 +174,10 @@ export default function AdvisorBriefReviewWorkflow({
       {feedback.state !== "idle" ? (
         <div
           ref={feedbackRef}
-          className={`performance-advisor-brief-review-feedback performance-advisor-brief-review-feedback-${feedback.state}`}
+          className={cx(
+            styles.reviewFeedback,
+            REVIEW_FEEDBACK_CLASS[feedback.state]
+          )}
           role={feedback.state === "failed" ? "alert" : "status"}
           aria-live={feedback.state === "failed" ? "assertive" : "polite"}
           tabIndex={feedback.state === "success" ? -1 : undefined}
@@ -173,14 +187,16 @@ export default function AdvisorBriefReviewWorkflow({
       ) : null}
 
       {allowedActions.length === 0 ? (
-        <p className="performance-advisor-brief-review-complete">
+        <p className={styles.reviewComplete}>
           No further review decision is currently available for this brief. Use the source evidence
           and support details to understand its recorded state.
         </p>
       ) : step === "edit" ? (
-        <div className="performance-advisor-brief-review-form">
-          <label className="performance-advisor-brief-review-field">
-            <span className="performance-advisor-brief-supportability-label">Review decision</span>
+        <div className={styles.reviewForm}>
+          <label className={styles.reviewField}>
+            <span className={styles.supportabilityLabel}>
+              Review decision
+            </span>
             <select
               className="select"
               value={selectedAction}
@@ -201,14 +217,14 @@ export default function AdvisorBriefReviewWorkflow({
           </label>
 
           {selectedDefinition ? (
-            <p className="performance-advisor-brief-review-consequence">
+            <p className={styles.reviewConsequence}>
               {selectedDefinition.consequence}
             </p>
           ) : null}
 
-          <div className="performance-advisor-brief-review-field-grid">
-            <label className="performance-advisor-brief-review-field">
-              <span className="performance-advisor-brief-supportability-label">
+          <div className={styles.reviewFieldGrid}>
+            <label className={styles.reviewField}>
+              <span className={styles.supportabilityLabel}>
                 Reviewer reference
               </span>
               <input
@@ -219,14 +235,14 @@ export default function AdvisorBriefReviewWorkflow({
                 autoComplete="off"
                 disabled={isApplying}
               />
-              <span className="performance-advisor-brief-review-helper">
+              <span className={styles.reviewHelper}>
                 Use the bank staff reference required for this internal review record.
               </span>
             </label>
 
             {requiresReplacement ? (
-              <label className="performance-advisor-brief-review-field">
-                <span className="performance-advisor-brief-supportability-label">
+              <label className={styles.reviewField}>
+                <span className={styles.supportabilityLabel}>
                   Replacement brief reference
                 </span>
                 <input
@@ -241,8 +257,10 @@ export default function AdvisorBriefReviewWorkflow({
             ) : null}
           </div>
 
-          <label className="performance-advisor-brief-review-field">
-            <span className="performance-advisor-brief-supportability-label">Review rationale</span>
+          <label className={styles.reviewField}>
+            <span className={styles.supportabilityLabel}>
+              Review rationale
+            </span>
             <textarea
               className="textarea"
               value={reviewReason}
@@ -253,7 +271,7 @@ export default function AdvisorBriefReviewWorkflow({
             />
           </label>
 
-          <div className="performance-advisor-brief-review-action-row">
+          <div className={styles.reviewActionRow}>
             <ActionButton
               ref={reviewButtonRef}
               priority="primary"
@@ -265,12 +283,12 @@ export default function AdvisorBriefReviewWorkflow({
           </div>
         </div>
       ) : selectedAction && selectedDefinition ? (
-        <div className="performance-advisor-brief-review-confirmation">
-          <div className="performance-advisor-brief-review-confirmation-copy">
+        <div className={styles.reviewConfirmation}>
+          <div className={styles.reviewConfirmationCopy}>
             <strong>{selectedDefinition.label}</strong>
             <p>{selectedDefinition.consequence}</p>
           </div>
-          <dl className="performance-advisor-brief-review-summary">
+          <dl className={styles.reviewSummary}>
             <div>
               <dt>Reviewer reference</dt>
               <dd>{reviewedBy.trim()}</dd>
@@ -286,11 +304,11 @@ export default function AdvisorBriefReviewWorkflow({
               </div>
             ) : null}
           </dl>
-          <p className="performance-advisor-brief-review-boundary">
+          <p className={styles.reviewBoundary}>
             This records an internal workflow decision. It does not approve client communication,
             suitability, an order, or execution.
           </p>
-          <div className="performance-advisor-brief-review-action-row">
+          <div className={styles.reviewActionRow}>
             <ActionButton
               priority="secondary"
               disabled={isApplying}

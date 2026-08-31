@@ -1,6 +1,14 @@
 import type { PerformanceAdvisorBriefSupportabilityItem } from "../../advisor-brief-view-model";
+import { cx } from "@/design-system/utils/cx";
 import PerformanceSupportabilitySummary from "../performance-supportability-summary";
 import PerformanceWorkspaceSection from "../performance-workspace-section";
+import styles from "./performance-advisor-brief.module.css";
+
+const SUPPORTABILITY_TONE_CLASS = {
+  danger: styles.supportabilityStateDanger,
+  success: styles.supportabilityStateSuccess,
+  warn: styles.supportabilityStateWarn,
+} satisfies Record<PerformanceAdvisorBriefSupportabilityItem["tone"], string>;
 
 function isWorkflowPackStateItem(item: PerformanceAdvisorBriefSupportabilityItem): boolean {
   return item.label === "Brief preparation" || item.label === "Human review";
@@ -15,23 +23,33 @@ function LotusSupportabilityRow({
 
   return (
     <div
-      className="performance-advisor-brief-supportability-row"
+      className={styles.supportabilityRow}
       data-recorded-at={reviewEvidence?.recordedAt ?? undefined}
       data-review-state={reviewEvidence?.reviewState ?? undefined}
       data-review-supportability={reviewEvidence?.supportability ?? undefined}
       data-reviewer={reviewEvidence?.reviewer ?? undefined}
       data-testid={reviewEvidence ? "advisor-brief-human-review-evidence" : undefined}
     >
-      <div className="performance-advisor-brief-supportability-identity">
-        <span className="performance-advisor-brief-supportability-label">{item.label}</span>
+      <div className={styles.supportabilityIdentity}>
+        <span className={styles.supportabilityLabel}>
+          {item.label}
+        </span>
         {item.detail ? (
-          <span className="performance-advisor-brief-supportability-detail">{item.detail}</span>
+          <span className={styles.supportabilityDetail}>
+            {item.detail}
+          </span>
         ) : null}
       </div>
       <span
-        className={`performance-advisor-brief-supportability-state performance-advisor-brief-supportability-state-${item.tone}`}
+        className={cx(
+          styles.supportabilityState,
+          SUPPORTABILITY_TONE_CLASS[item.tone]
+        )}
       >
-        <span aria-hidden="true" className="performance-advisor-brief-supportability-dot" />
+        <span
+          aria-hidden="true"
+          className={styles.supportabilityDot}
+        />
         {item.value}
       </span>
     </div>
@@ -58,13 +76,17 @@ export default function LotusSupportabilityPanel({
   return (
     <PerformanceWorkspaceSection
       ariaLabel="Adviser brief supportability"
-      className="lotus-supportability-panel performance-advisor-brief-supportability-panel"
-      headingClassName="performance-advisor-brief-section-heading"
+      className={cx(
+        "lotus-supportability-panel",
+        styles.supportabilityPanel,
+        styles.supportabilityPanel
+      )}
+      headingClassName={styles.sectionHeading}
       kicker="Supportability"
       title="Decision support coverage"
     >
       <PerformanceSupportabilitySummary
-        className="performance-advisor-brief-supportability-summary"
+        className={styles.supportabilitySummary}
         items={[
           { label: "Ready modules", value: readyCount },
           { label: "Review items", value: reviewItems.length + reviewNotes.length },
@@ -73,14 +95,14 @@ export default function LotusSupportabilityPanel({
       {hasVisibleSupportabilityItems ? (
         <>
           {workflowPackStateItems.length ? (
-            <div className="performance-advisor-brief-supportability-grid">
+            <div className={styles.supportabilityGrid}>
               {workflowPackStateItems.map((item) => (
                 <LotusSupportabilityRow key={item.label} item={item} />
               ))}
             </div>
           ) : null}
           {reviewItems.length ? (
-            <div className="performance-advisor-brief-supportability-grid">
+            <div className={styles.supportabilityGrid}>
               {reviewItems.map((item) => (
                 <LotusSupportabilityRow key={item.label} item={item} />
               ))}
@@ -88,21 +110,24 @@ export default function LotusSupportabilityPanel({
           ) : null}
         </>
       ) : (
-        <div className="performance-advisor-brief-supportability-all-ready">
+        <div className={styles.supportabilityAllReady}>
           All current brief dependencies are ready for the selected context.
         </div>
       )}
       {reviewNotes.length ? (
-        <div className="performance-advisor-brief-supportability-notes">
+        <div className={styles.supportabilityNotes}>
           {reviewNotes.map((note) => (
-            <div key={note} className="performance-advisor-brief-supportability-note">
+            <div
+              key={note}
+              className={styles.supportabilityNote}
+            >
               {note}
             </div>
           ))}
         </div>
       ) : null}
       {supportDetails.length ? (
-        <details className="performance-advisor-brief-support-details">
+        <details className={styles.supportDetails}>
           <summary>Source support details</summary>
           <dl>
             {supportDetails.map((detail) => (

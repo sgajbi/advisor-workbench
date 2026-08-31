@@ -3,7 +3,9 @@
 import { useRef, useState } from "react";
 
 import { ActionButton, SemanticBadge } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import type { PerformanceAdvisorBriefStatus } from "../../advisor-brief-view-model";
+import styles from "./performance-advisor-brief.module.css";
 
 function getStatusLabel(status: PerformanceAdvisorBriefStatus) {
   if (status === "loading") {
@@ -82,28 +84,47 @@ export default function LotusStatusBar({
   }
 
   return (
-    <div className="lotus-status-bar performance-advisor-brief-toolbar" aria-label="Adviser brief toolbar">
-      <div className="lotus-status-bar-status performance-advisor-brief-toolbar-status">
+    <div
+      className={cx("lotus-status-bar", styles.toolbar)}
+      aria-label="Adviser brief toolbar"
+    >
+      <div
+        className={cx(
+          "lotus-status-bar-status",
+          styles.toolbarStatus
+        )}
+      >
         <SemanticBadge
           tone={getStatusTone(status)}
           emphasis="strong"
-          className="performance-advisor-brief-toolbar-chip performance-advisor-brief-toolbar-chip-primary"
+          className={cx(
+            styles.toolbarChip,
+            styles.toolbarChipPrimary
+          )}
         >
           {getStatusLabel(status)}
         </SemanticBadge>
         <SemanticBadge
           tone={status === "ready" ? "success" : status === "partial" ? "warn" : "default"}
-          className="performance-advisor-brief-toolbar-chip"
+          className={styles.toolbarChip}
         >
           {getEvidenceLabel(status)}
         </SemanticBadge>
         {status === "partial" ? (
-          <SemanticBadge tone="warn" className="performance-advisor-brief-toolbar-chip">
+          <SemanticBadge
+            tone="warn"
+            className={styles.toolbarChip}
+          >
             Partial Evidence
           </SemanticBadge>
         ) : null}
       </div>
-      <div className="lotus-status-bar-actions performance-advisor-brief-toolbar-actions">
+      <div
+        className={cx(
+          "lotus-status-bar-actions",
+          styles.toolbarActions
+        )}
+      >
         <ActionButton disabled={interactionBusy} onClick={onRefresh}>
           {refreshing ? "Refreshing…" : "Refresh"}
         </ActionButton>
@@ -117,11 +138,15 @@ export default function LotusStatusBar({
         </ActionButton>
       </div>
       {copyState === "copied" ? (
-        <div className="performance-advisor-brief-copy-feedback" role="status" aria-live="polite">
+        <div
+          className={styles.copyFeedback}
+          role="status"
+          aria-live="polite"
+        >
           Internal note copied. Review it before any client communication.
         </div>
       ) : copyState === "failed" ? (
-        <div className="performance-advisor-brief-copy-feedback" role="alert">
+        <div className={styles.copyFeedback} role="alert">
           The internal note could not be copied. Select the brief text or try again.
         </div>
       ) : null}

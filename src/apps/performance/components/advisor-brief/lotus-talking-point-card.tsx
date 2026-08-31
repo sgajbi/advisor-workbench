@@ -1,8 +1,16 @@
 import { SemanticBadge, Text } from "@/design-system";
+import { cx } from "@/design-system/utils/cx";
 import type { PerformanceAdvisorBriefItem } from "../../advisor-brief-view-model";
 import type { PerformanceWorkspaceMode } from "../../performance-workspace-modes";
 
 import LotusEvidenceChip from "./lotus-evidence-chip";
+import styles from "./performance-advisor-brief.module.css";
+
+const ITEM_TONE_CLASS = {
+  neutral: styles.itemNeutral,
+  positive: styles.itemPositive,
+  warning: styles.itemWarning,
+} satisfies Record<PerformanceAdvisorBriefItem["tone"], string>;
 
 function toToneLabel(tone: PerformanceAdvisorBriefItem["tone"]) {
   if (tone === "warning") {
@@ -25,14 +33,25 @@ export default function LotusTalkingPointCard({
 }) {
   return (
     <article
-      className={[
+      className={cx(
         "lotus-talking-point-card",
         `lotus-talking-point-card-${variant}`,
-        `performance-advisor-brief-item performance-advisor-brief-item-${item.tone}`,
-      ].join(" ")}
+        styles.item,
+        ITEM_TONE_CLASS[item.tone]
+      )}
     >
-      <header className="lotus-talking-point-card-header performance-advisor-brief-item-header">
-        <div className="lotus-talking-point-card-copy performance-advisor-brief-item-copy">
+      <header
+        className={cx(
+          "lotus-talking-point-card-header",
+          styles.itemHeader
+        )}
+      >
+        <div
+          className={cx(
+            "lotus-talking-point-card-copy",
+            styles.itemCopy
+          )}
+        >
           <Text as="h4" variant="subsectionTitle">
             {item.headline}
           </Text>
@@ -42,14 +61,21 @@ export default function LotusTalkingPointCard({
         </div>
         <SemanticBadge
           tone={item.tone === "warning" ? "warn" : item.tone === "positive" ? "success" : "default"}
-          className="performance-advisor-brief-item-tone"
+          className={styles.itemTone}
         >
           {toToneLabel(item.tone)}
         </SemanticBadge>
       </header>
       {item.evidenceRefs.length ? (
-        <div className="performance-advisor-brief-evidence-row" aria-label="Supporting metrics">
-          <Text as="span" variant="microLabel" className="performance-advisor-brief-item-support-label">
+        <div
+          className={styles.evidenceRow}
+          aria-label="Supporting metrics"
+        >
+          <Text
+            as="span"
+            variant="microLabel"
+            className={styles.itemSupportLabel}
+          >
             Supporting metrics
           </Text>
           {item.evidenceRefs.map((evidenceRef) => (

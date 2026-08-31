@@ -6,10 +6,6 @@
     "defaultMaxGlobalEscapes": 0,
     "exceptions": [
       {
-        "path": "src/apps/performance/components/performance-advisor-brief-mode.module.css",
-        "maxGlobalEscapes": 167
-      },
-      {
         "path": "src/apps/performance/components/performance-custom-window-dialog.module.css",
         "maxGlobalEscapes": 2
       },

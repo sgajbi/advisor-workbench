@@ -3,6 +3,8 @@ import {
   getPerformanceWorkspaceModeLabel,
   type PerformanceWorkspaceMode,
 } from "../../performance-workspace-modes";
+import { cx } from "@/design-system/utils/cx";
+import styles from "./performance-advisor-brief.module.css";
 
 function resolveActionLabel(action: PerformanceAdvisorBriefAction) {
   return action.label || `Open ${getPerformanceWorkspaceModeLabel(action.targetMode)}`;
@@ -21,8 +23,8 @@ export default function LotusDrilldownList({
     <div
       className={
         variant === "workflow"
-          ? "performance-advisor-brief-workflow-list"
-          : "performance-advisor-brief-drilldown-list"
+          ? styles.workflowList
+          : styles.drilldownList
       }
     >
       {actions.map((action) => (
@@ -31,20 +33,29 @@ export default function LotusDrilldownList({
           type="button"
           className={
             variant === "workflow"
-              ? "lotus-drilldown-item performance-advisor-brief-workflow-action"
-              : "lotus-drilldown-item performance-advisor-brief-drilldown-action"
+              ? cx(
+                  "lotus-drilldown-item",
+                  styles.workflowAction
+                )
+              : cx(
+                  "lotus-drilldown-item",
+                  styles.drilldownAction
+                )
           }
           onClick={() => onSelectMode(action.targetMode)}
         >
-          <span className="performance-advisor-brief-action-copy">
-            <span className="performance-advisor-brief-action-title">
+          <span className={styles.actionCopy}>
+            <span className={styles.actionTitle}>
               {resolveActionLabel(action)}
             </span>
-            <span className="performance-advisor-brief-action-meta">
+            <span className={styles.actionMeta}>
               {variant === "workflow" ? "Adviser workflow" : "Open analysis surface"}
             </span>
           </span>
-          <span aria-hidden="true" className="performance-advisor-brief-action-chevron">
+          <span
+            aria-hidden="true"
+            className={styles.actionChevron}
+          >
             →
           </span>
         </button>
