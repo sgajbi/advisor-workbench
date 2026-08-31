@@ -293,6 +293,61 @@ describe("PerformanceWorkspaceClient", () => {
     });
   });
 
+  it("recomputes the business limitation when refreshed source context changes", async () => {
+    const rejectedContext = {
+      requested_as_of_date: "2026-02-24",
+      effective_as_of_date: "2026-02-24",
+      requested_reporting_currency: "EUR",
+      effective_reporting_currency: "USD",
+      reporting_currency_state: "rejected" as const,
+    };
+    const appliedContext = {
+      period: "3Y",
+      report_start_date: "2023-03-28",
+      requested_as_of_date: "2026-02-24",
+      effective_as_of_date: "2026-02-24",
+      requested_reporting_currency: "EUR",
+      effective_reporting_currency: "EUR",
+      reporting_currency_state: "applied" as const,
+    };
+    getSummaryClientMock.mockResolvedValueOnce(buildSummary(appliedContext));
+    getDetailsClientMock.mockResolvedValueOnce(buildDetails(appliedContext));
+
+    render(
+      <PerformanceWorkspaceClient
+        initialSummary={buildSummary(rejectedContext)}
+        initialDetails={buildDetails(rejectedContext)}
+        initialPortfolioId="PF_1001"
+        initialPeriod="YTD"
+        initialDetailBasis="NET"
+        initialContributionDimension="asset_class"
+        initialAttributionDimension="asset_class"
+        initialChartFrequency="monthly"
+        initialBenchmark="BMK_GLOBAL_BALANCED_60_40"
+        initialAsOfDate="2026-02-24"
+        initialReportingCurrency="EUR"
+      />
+    );
+
+    expect(
+      screen.getByText(/requested EUR restatement was not accepted/i),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Switch 3Y" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("refresh-kind")).toHaveTextContent("confirmed");
+      expect(
+        screen.queryByText(/requested EUR restatement was not accepted/i),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Performance remains in portfolio base currency/i),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("rehydrates initial detail when its explicit bounds do not match the confirmed summary", async () => {
     const explicitWindow = {
       period: "EXPLICIT",

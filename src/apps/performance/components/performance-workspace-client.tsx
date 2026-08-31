@@ -29,6 +29,7 @@ import { getNormalizedInitialPerformanceDetailControls } from "../performance-de
 import { restorePerformanceSourceControlFocus } from "./performance-source-control-focus";
 import PerformanceWorkspaceView from "./performance-workspace-view";
 import { buildPerformanceReviewContextStrip } from "../performance-review-context-strip-view-model";
+import { buildPerformanceReviewContextNotice } from "../performance-review-context-notice";
 import type {
   PerformanceSourceControlFocusTarget,
   PerformanceWorkspaceLoadIssue,
@@ -49,7 +50,6 @@ type PerformanceWorkspaceClientProps = {
   initialBenchmark?: string;
   initialAsOfDate?: string;
   initialReportingCurrency?: string;
-  initialContextNotice?: { title: string; body: string } | null;
   initialPortfolioContext?: PortfolioWorkspace | null;
 };
 
@@ -103,7 +103,6 @@ export default function PerformanceWorkspaceClient({
   initialBenchmark,
   initialAsOfDate,
   initialReportingCurrency,
-  initialContextNotice,
   initialPortfolioContext = null,
 }: PerformanceWorkspaceClientProps) {
   const router = useRouter();
@@ -623,10 +622,16 @@ export default function PerformanceWorkspaceClient({
       });
   }, [controls, details, mode, resolveDetailsForControls, router, summary]);
 
-  const shellContextNotice = initialContextNotice
+  const currentContextNotice = buildPerformanceReviewContextNotice({
+    requestedAsOfDate: controls?.reviewAsOfDate ?? initialAsOfDate,
+    requestedReportingCurrency:
+      controls?.reviewReportingCurrency ?? initialReportingCurrency,
+    source: summary,
+  });
+  const shellContextNotice = currentContextNotice
     ? {
-        label: initialContextNotice.title,
-        message: initialContextNotice.body,
+        label: currentContextNotice.title,
+        message: currentContextNotice.body,
         tone: "attention" as const,
       }
     : null;

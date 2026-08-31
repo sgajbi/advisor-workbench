@@ -18,7 +18,6 @@ import {
   isPerformanceSummarySourceCurrent,
 } from "./performance-source-identity";
 import { buildPerformanceReviewContextStrip } from "./performance-review-context-strip-view-model";
-import { buildPerformanceReviewContextNotice } from "./performance-review-context-notice";
 
 const DEFAULT_BENCHMARK_BY_PORTFOLIO: Record<string, string> = {
   PB_SG_GLOBAL_BAL_001: "BMK_PB_GLOBAL_BALANCED_60_40",
@@ -126,12 +125,6 @@ export default async function PerformanceAnalyticsPage({
     portfolioContextResult.value?.portfolio.portfolio_id === selectedPortfolioId
       ? portfolioContextResult.value
       : null;
-  const sourceContextNotice = buildPerformanceReviewContextNotice({
-    requestedAsOfDate: reviewContextResult.context.asOfDate,
-    requestedReportingCurrency: reviewContextResult.context.reportingCurrency,
-    source: workspaceSummary,
-  });
-
   if (
     workspaceSummary &&
     !isPerformanceSummarySourceCurrent(workspaceSummary, {
@@ -180,7 +173,6 @@ export default async function PerformanceAnalyticsPage({
         initialBenchmark={benchmark}
         initialAsOfDate={reviewContextResult.context.asOfDate}
         initialReportingCurrency={reviewContextResult.context.reportingCurrency}
-        initialContextNotice={sourceContextNotice}
         initialPortfolioContext={portfolioContext}
       />
   );
