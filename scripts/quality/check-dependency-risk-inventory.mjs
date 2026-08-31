@@ -74,6 +74,7 @@ const ARCHITECTURAL_ROLES = new Set([
   "framework_core",
   "design_system",
   "server_state",
+  "evidence_integrity",
   "data_grid_adapter",
   "chart_adapter",
   "form_adapter",

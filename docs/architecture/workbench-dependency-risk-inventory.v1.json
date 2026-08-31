@@ -2,9 +2,9 @@
   "$schema": "./workbench-dependency-risk-inventory.v1.schema.json",
   "schemaVersion": "lotus-workbench.dependency-risk-inventory.v1",
   "inventoryId": "lotus-workbench-direct-production-dependencies",
-  "inventoryVersion": "1.1.0",
+  "inventoryVersion": "1.2.0",
   "governedByIssue": "https://github.com/sgajbi/lotus-workbench/issues/618",
-  "reviewedOn": "2026-08-12",
+  "reviewedOn": "2026-08-31",
   "nextReviewBy": "2026-11-10",
   "admissionMode": "blocking",
   "reviewOwner": "workbench-architecture-maintainers",
@@ -271,6 +271,48 @@
         "owner": "workbench-architecture-maintainers",
         "reviewedOn": "2026-08-12",
         "nextReviewBy": "2026-11-10"
+      },
+      "exception": null
+    },
+    {
+      "name": "@noble/hashes",
+      "version": "2.4.0",
+      "technologyState": "approved_default",
+      "purpose": "Produces exact SHA-256 presentation-evidence digests when the governed HTTP runtime cannot expose secure-context Web Crypto digest APIs.",
+      "ownershipBoundary": "Workbench owns the ordered candidate-set contract and digest label; noble-hashes owns the standards-compliant SHA-256 implementation.",
+      "architecturalRole": "evidence_integrity",
+      "criticality": "high",
+      "containmentBoundary": "Imported only by the Idea presentation receipt contract module as a fallback behind native Web Crypto.",
+      "replacementPosture": {
+        "strategy": "adapter_contained",
+        "exitPath": "Remove the fallback after the governed Workbench runtime is HTTPS-only and canonical browser proof confirms native Web Crypto on every supported origin.",
+        "switchingCost": "low"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidenceUrl": "https://www.npmjs.com/package/@noble/hashes/v/2.4.0"
+      },
+      "stewardship": {
+        "steward": "noble cryptography maintainers",
+        "repositoryUrl": "https://github.com/paulmillr/noble-hashes",
+        "securityChannelUrl": "https://github.com/paulmillr/noble-hashes/security/policy"
+      },
+      "lifecycle": {
+        "releaseChannel": "stable",
+        "maintenanceStatus": "active",
+        "releaseEvidenceUrl": "https://www.npmjs.com/package/@noble/hashes/v/2.4.0"
+      },
+      "maturity": {
+        "rationale": "Small tree-shakeable SHA-256 implementation with no runtime dependencies, public security guidance, independent audit evidence, test-vector coverage, and supported 2.x maintenance.",
+        "adoptionEvidenceUrls": [
+          "https://github.com/paulmillr/noble-hashes#security",
+          "https://github.com/paulmillr/noble-hashes/blob/main/SECURITY.md"
+        ]
+      },
+      "review": {
+        "owner": "workbench-architecture-maintainers",
+        "reviewedOn": "2026-08-31",
+        "nextReviewBy": "2026-11-29"
       },
       "exception": null
     },
