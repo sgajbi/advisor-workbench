@@ -355,6 +355,12 @@ Current repository posture:
     `src/apps/performance/components/advisor-brief/`; its production components import local
     classes directly and require no CSS-governance escape exception. Do not restore the
     `performance-advisor-brief-*` global class-string contract or a root scoping workaround.
+    The shared PM AI decision-support result owns its presentation in
+    `components/dpm-ai-workflow-result.module.css`; every Copilot, evidence-pack, rebalance,
+    outcome-review, and PM operating-quality consumer reuses that component and its governed
+    `AiAssistanceDisclosure`. Do not restore `dpm-ai-workflow-*` strings or global escapes, clone
+    the explanation pattern, or derive AI availability, evidence, review, client-use, freshness,
+    limitation, or diagnostic truth in the browser.
 18. `/suite` is a compatibility alias of the single canonical Home entry and owns no business
     surface. It must not regain hard-coded clients, portfolios, analytics, priorities, roles,
     workflow state, or technical policy diagnostics. The canonical Home currently routes to

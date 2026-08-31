@@ -7490,3 +7490,60 @@ regression boundary. Repository context and this research ledger change because 
 presentation owner changes. The existing Performance Adviser Brief screen guide remains accurate:
 business purpose, source contracts, states, actions and operating behavior do not change, so no
 repo-local wiki source change is required.
+
+## 2026-08-31 — Component-owned PM AI decision-support result (#967)
+
+### Business workflow question
+
+How can one reusable PM decision-support result remain immediately identifiable, explainable, and
+safe to review across Copilot, evidence-pack, rebalance, outcome-review, and operating-quality
+workflows without relying on a Manage-wide global selector contract?
+
+### Evidence consulted
+
+1. [Next.js CSS Modules](https://nextjs.org/docs/13/app/building-your-application/styling/css-modules)
+   defines locally scoped component styling as the supported collision-resistant model for
+   component-level CSS and production code splitting.
+2. [Carbon AI label usage](https://carbondesignsystem.com/components/ai-label/usage/) treats AI
+   presence as a consistent pathway to explainability, not decoration or an AI-action trigger.
+3. [Microsoft HAX guideline 11](https://www.microsoft.com/en-us/haxtoolkit/guideline/make-clear-why-the-system-did-what-it-did/)
+   recommends access to an explanation while warning that an explanation can inflate trust and
+   encourage over-reliance.
+4. Current source and rendered evidence showed one reusable React result owner across six workflow
+   consumers, three global class identities, 17 escape arms, and an existing governed
+   `AiAssistanceDisclosure` that already exposes source preparation, availability, evidence,
+   review, client-use, freshness, limitations, and diagnostics.
+
+### Adopted decisions
+
+1. Move the three result classes and their compact-width definition-list reflow into one colocated,
+   zero-escape CSS Module imported directly by `DpmAiWorkflowResult`.
+2. Preserve the current business reading order: result state and scope, summary, source material,
+   then an expandable preparation/evidence/review/client-use explanation.
+3. Keep the existing Workbench explainability primitive rather than importing another design
+   system. Its visible source-backed badge and disclosure already supply more useful control
+   evidence than a decorative AI marker.
+4. Prove live review-required, deterministic simulation, stale, unavailable, partial, and
+   contradictory-provenance states at the component boundary. Preserve once-per-source-result
+   focus and keyboard disclosure access.
+5. Extend the existing source-confirmed PM Copilot transaction to 1440, 1024, 768, and 519 pixels,
+   open the disclosure by keyboard, and capture the complete evidence hierarchy without overflow.
+
+### Rejected decisions
+
+1. Adding Carbon, CSS-in-JS, or another component dependency for an ownership migration.
+2. Replacing source evidence with a sparkle, generic **AI** badge, browser-generated explanation,
+   or reassuring presentation.
+3. Moving the disclosure into a compact popover that would hide review limitations and technical
+   support evidence or duplicate the governed details primitive.
+4. Changing provider selection, workflow output, approval, client-use eligibility, or service
+   contracts in a presentation-boundary slice.
+5. Bulk-splitting unrelated Copilot cards or the wider Manage stylesheet.
+
+### Validation and publication decision
+
+Workbench #967 is the bounded child of #492. Focused state, ownership, CSS-governance, and
+source-confirmed browser proof form the regression boundary. Repository context and this ledger
+change because the durable owner and exact CSS ratchet change. PM Copilot business purpose,
+contracts, actions, limitations, and operating behavior remain unchanged, so its existing screen
+guide remains accurate and repo-local wiki source does not change.
