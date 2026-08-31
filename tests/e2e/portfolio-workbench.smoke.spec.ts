@@ -744,7 +744,7 @@ test.describe('Portfolio workbench smoke', () => {
     browserRuntime.assertClean();
   });
 
-  test('unconfirmed historical review keeps the source-confirmed context active', async ({
+  test('historical review stays unavailable until aggregate evidence can refresh atomically', async ({
     page,
     request,
   }) => {
@@ -759,55 +759,17 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(
       page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
     ).toBeVisible();
-    await page.getByLabel('As of').fill('2026-04-01');
-
-    const rejectedTransition = page.getByTestId('workbench-refresh-status');
-    await expect(rejectedTransition).toContainText('Review context was not changed');
-    await expect(rejectedTransition.getByText('Requested', { exact: true })).toBeVisible();
-    await expect(
-      rejectedTransition.getByText('01 Apr 2026 · 30D · USD', { exact: true })
-    ).toBeVisible();
-    await expect(rejectedTransition.getByText('Source-confirmed', { exact: true })).toBeVisible();
-    await expect(
-      rejectedTransition.getByText('10 Apr 2026 · 30D · USD', { exact: true })
-    ).toBeVisible();
-    await expect(page.getByLabel('As of')).toHaveValue('2026-04-10');
+    const historicalReview = page.getByLabel('As of');
+    await expect(historicalReview).toBeDisabled();
+    await expect(historicalReview).toHaveValue('2026-04-10');
+    await expect(historicalReview.locator('xpath=ancestor::*[@title][1]')).toHaveAttribute(
+      'title',
+      'Book evidence is available for governed historical review dates.',
+    );
     await expect(page.getByTestId('review-context-strip')).toContainText('10 Apr 2026');
+    await expect(page.getByTestId('workbench-refresh-status')).toHaveCount(0);
     await expect(page.getByText('Review date', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
-    await expect(
-      page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
-    ).toBeVisible();
-  });
-
-  test('source-confirmed historical review replaces dated evidence atomically', async ({
-    page,
-    request,
-  }) => {
-    test.skip(
-      process.env.PORTFOLIO_E2E_FIXTURE !== 'cashflow',
-      'Historical source-to-render proof requires the owned portfolio fixture.'
-    );
-    await page.setViewportSize({ width: 1280, height: 1000 });
-    const session = await openPortfolioReview(page, request);
-    test.skip(!session.available, 'Portfolio workspace upstream unavailable in standalone smoke environment.');
-
-    await expect(
-      page.getByRole('button', { name: 'Portfolio value: 12,500,000 USD' }),
-    ).toBeVisible();
-
-    await page.getByLabel('As of').fill('2026-03-31');
-
-    await expect(page.getByLabel('As of')).toHaveValue('2026-03-31');
-    await expect(page.getByTestId('review-context-strip')).toContainText('31 Mar 2026');
-    await expect(page.getByText('Review date', { exact: true })).toHaveCount(0);
-    await expect(page.getByText('Valuation date', { exact: true })).toHaveCount(0);
-    await expect(
-      page.getByRole('button', { name: 'Portfolio value: 0 USD' }),
-    ).toBeVisible();
-    const decisionReview = page.getByRole('region', { name: 'Portfolio decision review' });
-    await expect(decisionReview.getByLabel('Status Partial')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Portfolio review is ready' })).toHaveCount(0);
   });
 
   test('income route renders the dedicated income and activity workspace', async ({ page, request }) => {

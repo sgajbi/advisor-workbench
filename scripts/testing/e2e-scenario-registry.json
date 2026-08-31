@@ -18,8 +18,7 @@
             "cashflow route keeps projection identity and movement semantics explicit",
             "portfolio record routes hydrate without browser runtime errors",
             "record recovery preserves confirmed portfolio context while withholding unsupported controls",
-            "unconfirmed historical review keeps the source-confirmed context active",
-            "source-confirmed historical review replaces dated evidence atomically"
+            "historical review stays unavailable until aggregate evidence can refresh atomically"
           ]
         },
         "allocation-recovery": {
