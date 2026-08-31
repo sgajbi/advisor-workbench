@@ -149,7 +149,7 @@ describe("portfolio record screen data", () => {
     });
   });
 
-  it("keeps source-supported historical record reads available while aggregate review stays disabled", async () => {
+  it("withholds historical records until every dated module can confirm its source window", async () => {
     const shell = buildPortfolioWorkspace({
       control_capabilities: {
         historical_snapshots: {
@@ -173,12 +173,6 @@ describe("portfolio record screen data", () => {
     });
     const historicalDate = "2025-12-31";
     apiMocks.getPortfolioWorkspaceShell.mockResolvedValueOnce(shell);
-    apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValueOnce({
-      as_of_date: historicalDate,
-      portfolio: shell.portfolio,
-      positions: [],
-    });
-
     const result = await loadPortfolioRecordScreenData({
       searchParams: Promise.resolve({
         portfolioId: shell.portfolio.portfolio_id,
@@ -186,12 +180,10 @@ describe("portfolio record screen data", () => {
       }),
     });
 
-    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).toHaveBeenCalledWith(
-      shell.portfolio.portfolio_id,
-      expect.objectContaining({ asOfDate: historicalDate }),
-    );
-    expect(result.reviewContextError).toBeUndefined();
-    expect(result.workspace?.as_of_date).toBe(historicalDate);
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).not.toHaveBeenCalled();
+    expect(apiMocks.getPortfolioWorkspaceDetailedDetails).not.toHaveBeenCalled();
+    expect(result.workspace).toBeNull();
+    expect(result.reviewContextError).toMatch(/not supported/i);
   });
 
   it("stops before detail reads when the record surface cannot support the period", async () => {
