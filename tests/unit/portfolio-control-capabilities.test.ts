@@ -70,12 +70,12 @@ function buildPartialHistoricalWorkspace(
 }
 
 describe("portfolio control capabilities", () => {
-  it("admits a partial aggregate only when every dated screen module is supported", () => {
+  it("rejects a partial aggregate even when its module flags look supported", () => {
     const workspace = buildPartialHistoricalWorkspace();
 
-    expect(canUsePortfolioHistoricalReview(workspace)).toBe(true);
+    expect(canUsePortfolioHistoricalReview(workspace)).toBe(false);
     expect(isPortfolioHistoricalDateInRange(workspace, "2025-12-31")).toBe(
-      true,
+      false,
     );
   });
 
@@ -107,7 +107,7 @@ describe("portfolio control capabilities", () => {
   });
 
   it("enforces the source-published date range", () => {
-    const workspace = buildPartialHistoricalWorkspace();
+    const workspace = buildPartialHistoricalWorkspace({ state: "supported" });
 
     expect(isPortfolioHistoricalDateInRange(workspace, "2024-01-14")).toBe(
       false,
