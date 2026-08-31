@@ -143,6 +143,7 @@ function hasRiskSeriesWithinPeriod(
   period: RiskPeriod,
 ): boolean {
   return (
+    period.start_date <= period.end_date &&
     hasDatedSeriesWithinPeriod(period.underwater_series, period) &&
     hasRollingSeriesWithinPeriod(period.window_results, period) &&
     hasDrawdownEventsWithinPeriod(period)
@@ -231,15 +232,22 @@ function hasDatedSeriesWithinPeriod(
   if (!Array.isArray(series)) {
     return false;
   }
-  return series.every(
-    (point) =>
-      point != null &&
-      typeof point === "object" &&
-      "date" in point &&
-      typeof point.date === "string" &&
-      point.date >= period.start_date &&
-      point.date <= period.end_date,
-  );
+  let previousDate: string | null = null;
+  for (const point of series) {
+    if (
+      point == null ||
+      typeof point !== "object" ||
+      !("date" in point) ||
+      typeof point.date !== "string" ||
+      point.date < period.start_date ||
+      point.date > period.end_date ||
+      (previousDate !== null && point.date <= previousDate)
+    ) {
+      return false;
+    }
+    previousDate = point.date;
+  }
+  return true;
 }
 
 function hasRollingSeriesWithinPeriod(
