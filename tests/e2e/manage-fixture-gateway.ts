@@ -100,6 +100,16 @@ export async function startManageFixtureGateway({
       return;
     }
     if (
+      path === `/api/v1/dpm/command-center/portfolios/${portfolioId}/memory`
+    ) {
+      sendJson(response, portfolioMemoryEnvelope());
+      return;
+    }
+    if (path === "/api/v1/dpm/command-center/portfolio-memory/search") {
+      sendJson(response, portfolioMemorySearchEnvelope());
+      return;
+    }
+    if (
       path === "/api/v1/dpm/command-center/outcome-reviews" &&
       ["outcome-reviews", "proof-copilot"].includes(
         process.env.MANAGE_E2E_FIXTURE ?? "",
@@ -612,6 +622,98 @@ function waveItemsEnvelope() {
           },
         },
       ],
+    },
+  };
+}
+
+function portfolioMemoryEnvelope() {
+  return {
+    ...commandEnvelope(
+      {
+      portfolio_id: portfolioId,
+      events: [
+        {
+          event_id: "memory:outcome-review:or_1",
+          event_type: "OUTCOME_REVIEW_CREATED",
+          event_time: "2026-05-07T10:05:00Z",
+          title: "Post-rebalance outcome review is ready.",
+          supportability_state: "READY",
+          source_refs: [
+            { source_system: "lotus-manage", source_id: "or_1" },
+          ],
+          artifact_refs: [
+            { artifact_type: "outcome_review", artifact_id: "or_1" },
+          ],
+          reason_codes: ["OUTCOME_REVIEW_READY"],
+        },
+        {
+          event_id: "memory:mandate-health:mh_1",
+          event_type: "MANDATE_HEALTH_SNAPSHOT",
+          event_time: "2026-05-06T09:15:00Z",
+          title: "Daily mandate readiness check completed.",
+          supportability_state: "READY",
+          source_refs: [
+            { source_system: "lotus-manage", source_id: "mh_1" },
+          ],
+          artifact_refs: [],
+          reason_codes: ["MANDATE_HEALTH_READY"],
+        },
+      ],
+      },
+      "corr-manage-portfolio-memory",
+    ),
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:portfolio-memory",
+      state: "READY",
+      event_count: 2,
+      event_type_counts: {
+        OUTCOME_REVIEW_CREATED: 1,
+        MANDATE_HEALTH_SNAPSHOT: 1,
+      },
+      source_systems: ["lotus-manage"],
+      source_system_counts: { "lotus-manage": 2 },
+      source_type_counts: {
+        "PortfolioOutcomeReview:v1": 1,
+        "MandateHealthSnapshot:v1": 1,
+      },
+      reason_codes: ["MEMORY_READY"],
+      blocked_actions: [],
+    },
+  };
+}
+
+function portfolioMemorySearchEnvelope() {
+  return {
+    ...commandEnvelope(
+      {
+        support_boundary: {
+          manage_persisted_lineage_only: true,
+          source_owner_store_query: false,
+        },
+        items: [],
+      },
+      "corr-manage-portfolio-memory-search",
+    ),
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:portfolio-memory",
+      state: "READY",
+      event_count: 2,
+      event_type_counts: {
+        OUTCOME_REVIEW_CREATED: 1,
+        MANDATE_HEALTH_SNAPSHOT: 1,
+      },
+      source_systems: ["lotus-manage", "lotus-performance"],
+      source_system_counts: {
+        "lotus-manage": 1,
+        "lotus-performance": 1,
+      },
+      source_type_counts: {
+        "PortfolioOutcomeReview:v1": 1,
+        "MandateHealthSnapshot:v1": 1,
+      },
+      reason_codes: ["PERSISTED_LINEAGE_SEARCH_ONLY"],
     },
   };
 }

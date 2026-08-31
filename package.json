@@ -72,6 +72,7 @@
     "test:e2e:portfolio:transactions-status": "node scripts/testing/run-portfolio-smoke-scenario.mjs transactions-status",
     "test:e2e:portfolio:unavailable": "node scripts/testing/run-portfolio-smoke-scenario.mjs shell-unavailable",
     "test:e2e:manage:overview": "node scripts/testing/run-manage-smoke-scenario.mjs overview",
+    "test:e2e:manage:portfolio-memory": "node scripts/testing/run-manage-smoke-scenario.mjs portfolio-memory",
     "test:e2e:manage:rebalance-waves": "node scripts/testing/run-manage-smoke-scenario.mjs rebalance-waves",
     "test:e2e:manage:mandate-health": "node scripts/testing/run-manage-smoke-scenario.mjs mandate-health",
     "test:e2e:manage:outcome-reviews": "node scripts/testing/run-manage-smoke-scenario.mjs outcome-reviews",

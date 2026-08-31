@@ -185,6 +185,13 @@
             "Manage Overview keeps the portfolio decision first without repeated destinations"
           ]
         },
+        "portfolio-memory": {
+          "fixture_value": "portfolio-memory",
+          "spec": "tests/e2e/manage-portfolio-memory-workspace.spec.ts",
+          "expected_tests": [
+            "Portfolio Memory keeps the event decision path dense and keyboard complete"
+          ]
+        },
         "mandate-health": {
           "fixture_value": "mandate-health",
           "spec": "tests/e2e/manage-mandate-health-workspace.spec.ts",
