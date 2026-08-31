@@ -966,6 +966,7 @@ describe("workbench api", () => {
             contract_version: "risk-workspace.v1",
             portfolio_id: "PF_1001",
             period: "YTD",
+            detail_basis: "NET",
             as_of_date: "2026-02-24",
             source_service: "lotus-risk",
             state: "ready",
