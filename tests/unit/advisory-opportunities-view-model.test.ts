@@ -42,6 +42,7 @@ describe("buildAdvisoryOpportunitiesModel", () => {
       expect.objectContaining({
         candidateId: "idea_high_cash_001",
         title: "High Cash - idea_high_cash_001",
+        rank: 1,
         priority: "High",
         reviewPosture: "Advisor Review Required",
         sourceSignals: "signal_high_cash_001",
@@ -51,6 +52,27 @@ describe("buildAdvisoryOpportunitiesModel", () => {
           "&candidateId=idea_high_cash_001",
       }),
     ]);
+  });
+
+  it("preserves Idea queue positions as numeric grid sort values", () => {
+    const model = buildAdvisoryOpportunitiesModel({
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      queue: {
+        items: [
+          { rank: 10, candidate: { candidateId: "idea-010" } },
+          { rank: 2, candidate: { candidateId: "idea-002" } },
+          { candidate: { candidateId: "idea-unranked" } },
+        ],
+      },
+    });
+
+    expect(model.rows.map(({ rank }) => rank)).toEqual([10, 2, null]);
+    expect(
+      model.rows
+        .map(({ rank }) => rank)
+        .filter((rank): rank is number => rank !== null)
+        .sort((left, right) => left - right),
+    ).toEqual([2, 10]);
   });
 
   it("keeps an empty idea queue action-oriented", () => {

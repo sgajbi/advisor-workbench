@@ -1,12 +1,9 @@
-import type {
-  AdvisorIdeaQueueItem,
-  AdvisorIdeaReviewQueueData,
-} from "./types";
+import type { AdvisorIdeaQueueItem, AdvisorIdeaReviewQueueData } from "./types";
 
 export type AdvisoryOpportunityRow = {
   candidateId: string;
   title: string;
-  rank: string;
+  rank: number | null;
   score: string;
   priority: string;
   reviewPosture: string;
@@ -40,7 +37,9 @@ export function buildAdvisoryOpportunitiesModel({
   const candidateItems = (queue?.items ?? []).filter(
     (item) => item.candidate?.candidateId,
   );
-  const rows = candidateItems.map((item) => buildOpportunityRow(portfolioId, item));
+  const rows = candidateItems.map((item) =>
+    buildOpportunityRow(portfolioId, item),
+  );
 
   return {
     portfolioId,
@@ -50,7 +49,8 @@ export function buildAdvisoryOpportunitiesModel({
     evaluatedAtUtc: queue?.evaluatedAtUtc ?? "Evaluation pending",
     durableStorageBacked: queue?.durableStorageBacked === true,
     supportedFeaturePromoted: queue?.supportedFeaturePromoted === true,
-    primaryDecision: "Which Idea candidate should be reviewed before advisory conversion?",
+    primaryDecision:
+      "Which Idea candidate should be reviewed before advisory conversion?",
     recommendedAction:
       rows.length > 0
         ? "Review source evidence and decide whether the candidate is suitable for advisor follow-up."
@@ -70,12 +70,20 @@ function buildOpportunityRow(
   return {
     candidateId,
     title: formatCandidateTitle(candidate.family, candidateId),
-    rank: item.rank ? String(item.rank) : "Unranked",
+    rank: item.rank ?? null,
     score: candidate.score ?? item.score ?? "Score pending",
     priority: formatCode(item.priorityBucket ?? "priority_pending"),
-    reviewPosture: formatCode(candidate.reviewPosture ?? "review_posture_pending"),
-    sourceSignals: sourceSignals.length > 0 ? sourceSignals.join(", ") : "Source signal pending",
-    reasonCodes: reasonCodes.length > 0 ? reasonCodes.map(formatCode).join(", ") : "Reason pending",
+    reviewPosture: formatCode(
+      candidate.reviewPosture ?? "review_posture_pending",
+    ),
+    sourceSignals:
+      sourceSignals.length > 0
+        ? sourceSignals.join(", ")
+        : "Source signal pending",
+    reasonCodes:
+      reasonCodes.length > 0
+        ? reasonCodes.map(formatCode).join(", ")
+        : "Reason pending",
     nextAction: "Review the evidence and record the next advisory decision.",
     href:
       `/recommendations?mode=opportunities&portfolioId=${encodeURIComponent(portfolioId)}` +
@@ -83,7 +91,10 @@ function buildOpportunityRow(
   };
 }
 
-function formatCandidateTitle(family: string | undefined, candidateId: string): string {
+function formatCandidateTitle(
+  family: string | undefined,
+  candidateId: string,
+): string {
   const label = family ? formatCode(family) : "Idea Candidate";
   return `${label} - ${candidateId}`;
 }
