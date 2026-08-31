@@ -202,6 +202,13 @@ test("records only presented Idea rows and retries the same failed evidence", as
   await expect(renderedCandidates.first()).toBeVisible();
   await filter.fill("Advisor Review Required");
   await expect(renderedCandidates.first()).toBeVisible();
+  await filter.fill("76");
+  await expect(
+    grid.getByRole("link", {
+      name: `Liquidity Review - ${targetCandidateId}`,
+      exact: true,
+    }),
+  ).toBeVisible();
 
   await filter.fill(targetCandidateId);
   await expect(
@@ -269,4 +276,63 @@ test("records only presented Idea rows and retries the same failed evidence", as
   await queuePositionHeader.click();
   await expect(queuePositionHeader).toHaveAttribute("aria-sort", "descending");
   await expect(firstQueuePositionCell.locator("strong")).toHaveText("25");
+});
+
+test("searches the complete rendered queue-position value", async ({ page }) => {
+  const unrankedCandidateId = "idea_candidate_unranked";
+  await page.route(
+    "**/api/bff/api/v1/ideas/review-queues/advisor**",
+    async (route) => {
+      await route.fulfill({
+        json: {
+          data: {
+            policyVersion: "idea-deterministic-ranking-v1",
+            evaluatedAtUtc: "2026-08-31T07:00:00Z",
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+            exclusions: [],
+            items: [
+              {
+                score: "74.5",
+                priorityBucket: "standard",
+                reasonCodes: ["portfolio_review_due"],
+                candidate: {
+                  candidateId: unrankedCandidateId,
+                  materialVersion: 3,
+                  evidenceVersion: 7,
+                  scorePolicyVersion: "idle-liquidity-v1",
+                  family: "liquidity_review",
+                  reviewPosture: "advisor_review_required",
+                  score: "74.5",
+                  sourceSignalIds: ["signal_unranked"],
+                },
+              },
+            ],
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+  const grid = page.getByRole("grid", {
+    name: "Idea candidate review queue",
+    exact: true,
+  });
+  const candidate = grid.getByRole("link", {
+    name: `Liquidity Review - ${unrankedCandidateId}`,
+    exact: true,
+  });
+  const filter = page.getByRole("searchbox", { name: "Find an opportunity" });
+  await expect(candidate).toBeVisible();
+
+  await filter.fill("no matching opportunity");
+  await expect(candidate).toHaveCount(0);
+  await filter.fill("Unranked");
+  await expect(candidate).toBeVisible();
+  await filter.fill("74.5");
+  await expect(candidate).toBeVisible();
 });
