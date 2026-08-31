@@ -254,4 +254,14 @@ test("records only presented Idea rows and retries the same failed evidence", as
       "Opportunity visibility could not be recorded. Review remains available.",
     ),
   ).toHaveCount(0);
+
+  await filter.fill("");
+  const queuePositionHeader = grid.getByRole("columnheader", {
+    name: "Queue position",
+  });
+  await queuePositionHeader.click();
+  await expect(queuePositionHeader).toHaveAttribute("aria-sort", "ascending");
+  await queuePositionHeader.click();
+  await expect(queuePositionHeader).toHaveAttribute("aria-sort", "descending");
+  await expect(firstQueuePositionCell.locator("strong")).toHaveText("25");
 });

@@ -47,6 +47,7 @@ export default function AdvisoryOpportunityGrid({
         pinned: "left",
       },
       {
+        cellDataType: "number",
         cellRenderer: QueuePositionCell,
         field: "rank",
         headerName: "Queue position",
@@ -107,12 +108,13 @@ export default function AdvisoryOpportunityGrid({
             </ActionButton>
           }
         >
-          Opportunity visibility could not be recorded. Review remains available.
+          Opportunity visibility could not be recorded. Review remains
+          available.
         </Alert>
       ) : receiptState.status === "unavailable" ? (
         <Alert severity="warning" className={styles.receiptAlert}>
-          Opportunity visibility evidence is unavailable. Review remains available;
-          no viewing confirmation has been claimed.
+          Opportunity visibility evidence is unavailable. Review remains
+          available; no viewing confirmation has been claimed.
         </Alert>
       ) : null}
       <div
@@ -152,7 +154,9 @@ export default function AdvisoryOpportunityGrid({
   );
 }
 
-function OpportunityCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>) {
+function OpportunityCell({
+  data,
+}: ICellRendererParams<AdvisoryOpportunityRow>) {
   if (!data) {
     return null;
   }
@@ -167,16 +171,20 @@ function OpportunityCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>) 
   );
 }
 
-function QueuePositionCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>) {
+function QueuePositionCell({
+  data,
+}: ICellRendererParams<AdvisoryOpportunityRow>) {
   return data ? (
     <div className={styles.compactCell}>
-      <strong>{data.rank}</strong>
+      <strong>{data.rank ?? "Unranked"}</strong>
       <span>{data.score}</span>
     </div>
   ) : null;
 }
 
-function ReviewPostureCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>) {
+function ReviewPostureCell({
+  data,
+}: ICellRendererParams<AdvisoryOpportunityRow>) {
   return data ? (
     <div className={styles.compactCell}>
       <strong>{data.priority}</strong>
@@ -185,7 +193,9 @@ function ReviewPostureCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>
   ) : null;
 }
 
-function SourceEvidenceCell({ data }: ICellRendererParams<AdvisoryOpportunityRow>) {
+function SourceEvidenceCell({
+  data,
+}: ICellRendererParams<AdvisoryOpportunityRow>) {
   return data ? (
     <div className={styles.compactCell}>
       <strong>{data.sourceSignals}</strong>
