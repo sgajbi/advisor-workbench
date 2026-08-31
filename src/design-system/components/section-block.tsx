@@ -11,6 +11,7 @@ export default function SectionBlock({
   actions,
   children,
   className,
+  headerClassName,
   bodyClassName,
   id,
 }: {
@@ -19,6 +20,7 @@ export default function SectionBlock({
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  headerClassName?: string;
   bodyClassName?: string;
   id?: string;
 }) {
@@ -27,7 +29,12 @@ export default function SectionBlock({
   return (
     <Panel id={id} className={cx("section-block", className)}>
       {hasHeader ? (
-        <SectionHeader title={title ?? "Section"} subtitle={subtitle} actions={actions} />
+        <SectionHeader
+          title={title ?? "Section"}
+          subtitle={subtitle}
+          actions={actions}
+          className={headerClassName}
+        />
       ) : null}
       <div className={cx("section-block-body", bodyClassName)}>{children}</div>
     </Panel>
