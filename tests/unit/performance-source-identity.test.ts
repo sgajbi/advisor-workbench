@@ -7,6 +7,7 @@ import type {
 
 import {
   doPerformanceSummaryAndDetailsShareReviewContext,
+  isPerformanceAnalyticalSourceCurrent,
   isPerformanceDetailsSourceCurrent,
   isPerformanceSummarySourceCurrent,
 } from "../../src/apps/performance/performance-source-identity";
@@ -182,6 +183,61 @@ describe("performance source identity", () => {
         historicalIdentity,
       ),
     ).toBe(false);
+  });
+
+  it.each([
+    ["portfolio", { portfolio_id: "PF_OTHER" }],
+    ["period", { period: "1Y" }],
+    ["basis", { detail_basis: "GROSS" }],
+    ["contribution dimension", { contribution_dimension: "issuer" }],
+    ["attribution dimension", { attribution_dimension: "issuer" }],
+    ["frequency", { chart_frequency: "daily" }],
+    ["benchmark", { benchmark_code: "BMK_OTHER" }],
+  ])("rejects analytical evidence with a different %s", (_name, overrides) => {
+    const source = {
+      ...buildPerformanceWorkspaceSummary(),
+      attribution_dimension: "asset_class",
+      ...overrides,
+    };
+
+    expect(
+      isPerformanceAnalyticalSourceCurrent(source, {
+        portfolioId: "PF_1001",
+        period: "YTD",
+        detailBasis: "NET",
+        contributionDimension: "asset_class",
+        attributionDimension: "asset_class",
+        chartFrequency: "monthly",
+        benchmark: "BMK_GLOBAL_BALANCED_60_40",
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts explicit source-declared normalization but not an unexplained mismatch", () => {
+    const source = {
+      ...buildPerformanceWorkspaceSummary(),
+      attribution_dimension: "asset_class",
+    };
+    const identity = {
+      portfolioId: "PF_1001",
+      period: "YTD",
+      detailBasis: "NET",
+      attributionDimension: "issuer",
+      chartFrequency: "weekly",
+      benchmark: "BMK_GLOBAL_BALANCED_60_40",
+    };
+
+    expect(
+      isPerformanceAnalyticalSourceCurrent(
+        {
+          ...source,
+          requested_attribution_dimension_supported: false,
+          requested_chart_frequency_supported: false,
+        },
+        identity,
+      ),
+    ).toBe(true);
+    expect(isPerformanceAnalyticalSourceCurrent(source, identity)).toBe(false);
   });
 
   it("requires summary and detail to share one effective review context", () => {

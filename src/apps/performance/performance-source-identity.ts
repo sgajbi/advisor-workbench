@@ -4,7 +4,8 @@ import type {
 } from "@/features/workbench/types";
 import {
   arePerformanceReviewContextsCoherent,
-  isPerformanceReviewContextCurrent
+  isPerformanceReviewContextCurrent,
+  type PerformanceReviewContextSource,
 } from "./performance-review-context";
 
 export type PerformanceSourceIdentity = Readonly<{
@@ -14,7 +15,27 @@ export type PerformanceSourceIdentity = Readonly<{
   reportEndDate?: string;
   asOfDate?: string;
   reportingCurrency?: string;
+  detailBasis?: string;
+  contributionDimension?: string;
+  attributionDimension?: string;
+  chartFrequency?: string;
+  benchmark?: string | null;
 }>;
+
+type PerformanceAnalyticalSource = PerformanceReviewContextSource &
+  Readonly<{
+    portfolio_id: string;
+    period: string;
+    report_start_date?: string | null;
+    report_end_date?: string | null;
+    detail_basis: string;
+    contribution_dimension?: string;
+    attribution_dimension: string;
+    chart_frequency: string;
+    benchmark_code: string | null;
+    requested_chart_frequency_supported?: boolean;
+    requested_attribution_dimension_supported?: boolean;
+  }>;
 
 function confirmsRequestedWindow(
   source: Readonly<{
@@ -34,6 +55,41 @@ function confirmsRequestedWindow(
     source.report_start_date === identity.reportStartDate &&
     source.report_end_date === identity.reportEndDate
   );
+}
+
+export function isPerformanceAnalyticalSourceCurrent(
+  source: PerformanceAnalyticalSource,
+  identity: PerformanceSourceIdentity,
+): boolean {
+  return (
+    source.portfolio_id === identity.portfolioId &&
+    (!identity.period || source.period === identity.period) &&
+    confirmsRequestedWindow(source, identity) &&
+    (!identity.detailBasis || source.detail_basis === identity.detailBasis) &&
+    (!identity.contributionDimension ||
+      source.contribution_dimension === identity.contributionDimension) &&
+    matchesRequestedOrNormalized(
+      source.attribution_dimension,
+      identity.attributionDimension,
+      source.requested_attribution_dimension_supported,
+    ) &&
+    matchesRequestedOrNormalized(
+      source.chart_frequency,
+      identity.chartFrequency,
+      source.requested_chart_frequency_supported,
+    ) &&
+    (identity.benchmark === undefined ||
+      source.benchmark_code === identity.benchmark) &&
+    isPerformanceReviewContextCurrent(source, identity)
+  );
+}
+
+function matchesRequestedOrNormalized(
+  actual: string,
+  requested: string | undefined,
+  requestedValueSupported: boolean | undefined,
+): boolean {
+  return !requested || actual === requested || requestedValueSupported === false;
 }
 
 export function isPerformanceSummarySourceCurrent(

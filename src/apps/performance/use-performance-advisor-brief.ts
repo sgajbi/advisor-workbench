@@ -15,9 +15,9 @@ import type {
 import { isConfirmedAdvisorBriefReviewTransition } from "./advisor-brief/advisor-brief-review-transition";
 import {
   arePerformanceReviewContextsCoherent,
-  isPerformanceReviewContextCurrent,
   type PerformanceReviewContextSource,
 } from "./performance-review-context";
+import { isPerformanceAnalyticalSourceCurrent } from "./performance-source-identity";
 
 type PerformanceAdvisorBriefRequest = {
   portfolioId: string;
@@ -97,9 +97,18 @@ export function usePerformanceAdvisorBrief({
           return;
         }
         if (
-          !isPerformanceReviewContextCurrent(response, {
+          !isPerformanceAnalyticalSourceCurrent(response, {
+            portfolioId,
+            period,
+            reportStartDate,
+            reportEndDate,
             asOfDate,
             reportingCurrency,
+            detailBasis,
+            contributionDimension,
+            attributionDimension,
+            chartFrequency,
+            benchmark: benchmark ?? null,
           }) ||
           !arePerformanceReviewContextsCoherent(response, sourceContext)
         ) {
@@ -191,9 +200,18 @@ export function usePerformanceAdvisorBrief({
         }
 
         if (
-          !isPerformanceReviewContextCurrent(response, {
+          !isPerformanceAnalyticalSourceCurrent(response, {
+            portfolioId,
+            period,
+            reportStartDate,
+            reportEndDate,
             asOfDate,
             reportingCurrency,
+            detailBasis,
+            contributionDimension,
+            attributionDimension,
+            chartFrequency,
+            benchmark: benchmark ?? null,
           }) ||
           !arePerformanceReviewContextsCoherent(response, sourceContext) ||
           !isConfirmedAdvisorBriefReviewTransition({
