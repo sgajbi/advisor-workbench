@@ -17,9 +17,15 @@ vi.mock("../../src/features/workbench/api", () => ({
 function buildHorizonComparison(
   overrides: Partial<WorkbenchPerformanceHorizonComparison> = {}
 ): WorkbenchPerformanceHorizonComparison {
+  const baseline = buildPerformanceHorizonComparison();
+  const reportEndDate = overrides.report_end_date ?? baseline.report_end_date;
   return {
-    ...buildPerformanceHorizonComparison(),
+    ...baseline,
     ...overrides,
+    rows: (overrides.rows ?? baseline.rows).map((row) => ({
+      ...row,
+      period_end: reportEndDate,
+    })),
   } as WorkbenchPerformanceHorizonComparison;
 }
 

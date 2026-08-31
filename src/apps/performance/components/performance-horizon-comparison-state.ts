@@ -118,6 +118,7 @@ export function isHorizonComparisonCurrent(
       response.report_start_date === request.reportStartDate) &&
     (!request.reportEndDate ||
       response.report_end_date === request.reportEndDate) &&
+    response.rows.every((row) => row.period_end === response.report_end_date) &&
     (!request.asOfDate || response.as_of_date === request.asOfDate) &&
     (!request.reportingCurrency ||
       response.reporting_currency?.toUpperCase() ===
