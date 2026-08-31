@@ -24,6 +24,7 @@ import {
 import PortfolioMemoryRecommendedActionsRail from "@/features/workbench/components/portfolio-memory-recommended-actions-rail";
 import PortfolioMemorySelectedEventDetail from "@/features/workbench/components/portfolio-memory-selected-event-detail";
 import PortfolioMemoryTimelineCard from "@/features/workbench/components/portfolio-memory-timeline-card";
+import styles from "@/features/workbench/components/portfolio-memory-panel.module.css";
 
 type Props = {
   response: DpmPortfolioMemoryGatewayResponse | null;
@@ -60,9 +61,10 @@ export default function PortfolioMemoryPanel({
     <SectionBlock
       title="Portfolio Memory"
       subtitle="Mandate activity, evidence, and review history for this portfolio."
-      className="portfolio-memory-panel"
+      className={styles.panel}
+      headerClassName={styles.header}
       actions={
-        <div className="portfolio-memory-badge-row">
+        <div className={styles.badgeRow}>
           <SemanticBadge tone={portfolioMemoryBadgeTone(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
@@ -79,15 +81,15 @@ export default function PortfolioMemoryPanel({
         />
       ) : null}
 
-      <div className="portfolio-memory-status-strip">
-        <MetricRow label="Latest Memory Event" value={model.latestMemoryEvent} />
-        <MetricRow label="Memory Coverage" value={model.memoryCoverage} />
-        <MetricRow label="Open Follow-ups" value={model.openFollowUps} />
-        <MetricRow label="Evidence Links" value={model.evidenceLinks} />
+      <div className={styles.statusStrip}>
+        <MetricRow className={styles.metric} label="Latest Memory Event" value={model.latestMemoryEvent} />
+        <MetricRow className={styles.metric} label="Memory Coverage" value={model.memoryCoverage} />
+        <MetricRow className={styles.metric} label="Open Follow-ups" value={model.openFollowUps} />
+        <MetricRow className={styles.metric} label="Evidence Links" value={model.evidenceLinks} />
       </div>
 
       {model.reasonCodes.length > 0 ? (
-        <div className="portfolio-memory-reason-row">
+        <div className={styles.reasonRow}>
           {model.reasonCodes.map((reason) => (
             <SemanticBadge key={reason} tone={portfolioMemoryBadgeTone(reason)}>
               {formatBusinessReason(reason)}
@@ -97,50 +99,64 @@ export default function PortfolioMemoryPanel({
       ) : null}
 
       {model.sourceFacetRows.length > 0 || model.sourceBoundaryRows.length > 0 ? (
-        <div className="portfolio-memory-status-strip" aria-label="Portfolio memory source facets">
+        <div className={styles.statusStrip} aria-label="Portfolio memory source facets">
           {model.sourceFacetRows.slice(0, 4).map((row) => (
             <MetricRow
               key={row.key}
+              className={styles.metric}
               label={row.family === "system" ? "Source Owner" : "Source Type"}
               value={`${row.label} (${row.count})`}
             />
           ))}
           {model.sourceBoundaryRows.slice(0, 2).map((boundary) => (
-            <MetricRow key={boundary} label="Search Boundary" value={boundary} />
+            <MetricRow
+              key={boundary}
+              className={styles.metric}
+              label="Search Boundary"
+              value={boundary}
+            />
           ))}
         </div>
       ) : sourceSearchErrorMessage ? (
-        <div className="portfolio-memory-reason-row">
+        <div className={styles.reasonRow}>
           <SemanticBadge tone="warn">Source-family posture unavailable</SemanticBadge>
         </div>
       ) : null}
 
-      <div className="portfolio-memory-filter-row" aria-label="Portfolio memory event filters">
+      <div className={styles.filterRow} aria-label="Portfolio memory event filters">
         <button
           type="button"
-          className={activeEventType === "ALL" ? "is-active" : undefined}
+          className={
+            activeEventType === "ALL"
+              ? `${styles.filterButton} ${styles.filterButtonActive}`
+              : styles.filterButton
+          }
           onClick={() => setActiveEventType("ALL")}
         >
           All
-          <span>{model.eventCount}</span>
+          <span className={styles.filterCount}>{model.eventCount}</span>
         </button>
         {model.eventTypeRows.map((row) => (
           <button
             type="button"
             key={row.key}
-            className={activeEventType === row.eventType ? "is-active" : undefined}
+            className={
+              activeEventType === row.eventType
+                ? `${styles.filterButton} ${styles.filterButtonActive}`
+                : styles.filterButton
+            }
             onClick={() => {
               setActiveEventType(row.eventType);
               setSelectedEventId(null);
             }}
           >
             {businessStateLabel(row.eventType)}
-            <span>{row.count}</span>
+            <span className={styles.filterCount}>{row.count}</span>
           </button>
         ))}
       </div>
 
-      <div className="portfolio-memory-workspace">
+      <div className={styles.workspace}>
         <PortfolioMemoryTimelineCard
           activeEventType={activeEventType}
           eventCount={model.eventCount}

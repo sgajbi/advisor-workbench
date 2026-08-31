@@ -3,6 +3,7 @@
 import { ActionButton, AnalyticsTable, SemanticBadge, Text } from "@/design-system";
 import { portfolioMemoryEvidenceAvailability } from "@/features/workbench/portfolio-memory-panel-helpers";
 import type { PortfolioMemoryEventRow } from "@/features/workbench/portfolio-memory-view-model";
+import styles from "@/features/workbench/components/portfolio-memory-panel.module.css";
 
 type Props = {
   activeEventType: string;
@@ -20,17 +21,19 @@ export default function PortfolioMemoryTimelineCard({
   onSelectEvent,
 }: Props) {
   return (
-    <div className="portfolio-memory-timeline-card">
-      <div className="portfolio-memory-card-header">
+    <div className={styles.timelineCard}>
+      <div className={styles.cardHeader}>
         <Text as="h3" variant="subsectionTitle">
           Historical Event Log
         </Text>
-        <span>{eventCount} events</span>
+        <span className={styles.cardCount}>{eventCount} events</span>
       </div>
       <AnalyticsTable
         ariaLabel="Portfolio memory event timeline"
+        className={styles.table}
         variant="analysis"
         density="compact"
+        tableMinWidth={900}
         columns={[
           { key: "time", label: "Date/Time" },
           { key: "event", label: "Event" },
@@ -43,13 +46,13 @@ export default function PortfolioMemoryTimelineCard({
           key: row.key,
           className:
             selectedEventId === row.eventId
-              ? "portfolio-memory-selected-row"
+              ? styles.selectedRow
               : undefined,
           ariaLabel: row.displayId,
           onClick: () => onSelectEvent(row.eventId),
           cells: [
             row.eventTime,
-            <strong key={`${row.key}-event`} className="portfolio-memory-event-title">
+            <strong key={`${row.key}-event`} className={styles.eventTitle}>
               {row.eventLabel}
             </strong>,
             row.category,
@@ -63,6 +66,7 @@ export default function PortfolioMemoryTimelineCard({
             <ActionButton
               key={`${row.key}-action`}
               priority="quiet"
+              className={styles.rowAction}
               onClick={() => onSelectEvent(row.eventId)}
             >
               {row.actionLabel}
