@@ -105,10 +105,11 @@ The broader sequence across Allocation, Positions, Transactions, Income, and Cas
   evidence are qualified in the same way rather than being treated as healthy merely because the
   request returned successfully.
 - Exposes period, as-of, reporting-currency, export, and additional-workflow controls only within
-  current source capability. Historical review is available for a partial aggregate capability only
-  when every dated module used by this screen is source-supported, and the native date control is
-  bounded by the source-published availability range. Rebalance remains labelled as the latest
-  source run. Reporting-currency selection remains disabled until the aggregate restatement
+  current source capability. Historical review is available only when the aggregate capability is
+  source-supported, and the native date control is bounded by the source-published availability
+  range. A partial capability remains disabled because the current refresh does not replace every
+  workspace-shell module atomically. Rebalance remains labelled as the latest source run.
+  Reporting-currency selection remains disabled until the aggregate restatement
   capability is supported. Record filters stay on the record screens where their effect is visible; Portfolio
   Review does not imply that a record filter restates whole-portfolio measures or readiness. When
   a complete dated book summary is returned, its totals, valuation date, and position-coverage
@@ -176,7 +177,7 @@ Shared endpoint detail remains in [API Surface](API-Surface) and ownership flow 
 | Selected portfolio unavailable | After the single automatic request settles without a confirmed portfolio review, **Selected portfolio unavailable** explains that no other portfolio was substituted | Open **My book** to choose an available portfolio; there is no background request loop or unimplemented page-local Retry |
 | Partial or degraded | Available book facts remain visible with the affected source or supporting analytical scope in **Source Limitations**; a ready book is qualified to **Partial** when a selected or standard-period response is unavailable, warned, partial, or not retrievable | Use the dated book evidence that remains visible; do not use an unavailable return and open the owning specialist screen if the analytical scope is required |
 | Warning without partial failure | The source warning is visible as qualified performance evidence and prevents an unqualified ready posture | Review the exact warning and use only the evidenced return/benchmark scope |
-| Historical or unsupported scope | The date control is enabled only across a complete source-supported dated module set and constrained to the published range; rebalance remains the latest source run. Unsupported currency restatement stays disabled with the source reason. While dated details load, existing totals and holdings readiness retain their actual valuation scope; a complete dated book summary replaces totals, valuation date, and position-coverage readiness together. A dated zero-position summary cannot inherit current holdings readiness | Keep the effective source scope; do not relabel latest evidence as historical or restated |
+| Historical or unsupported scope | The date control is enabled only when the aggregate historical capability is source-supported and is constrained to the published range; a partial aggregate remains disabled because the current refresh cannot replace every workspace-shell module atomically. Rebalance remains the latest source run. Unsupported currency restatement stays disabled with the source reason. While dated details load, existing totals and holdings readiness retain their actual valuation scope; a complete dated book summary replaces totals, valuation date, and position-coverage readiness together. A dated zero-position summary cannot inherit current holdings readiness | Keep the effective source scope; do not relabel latest evidence as historical or restated |
 | Empty supporting detail | Source-backed zero or unavailable supporting detail remains distinct from the portfolio headline | Open the owning record screen before concluding that activity or exposure is absent |
 | Permission blocked | Portfolio Review has no dedicated authenticated-principal permission panel today; a failed catalogue or workspace read remains unavailable | Do not add browser authority headers; follow #436 and the operations runbook |
 | Error | Catalogue or workspace failures fail closed to unavailable context; partial source failures remain visible within an otherwise usable review | Re-enter through **My book** or retry the owning specialist screen; escalate if the same scope persists |

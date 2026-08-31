@@ -163,7 +163,7 @@ describe("PortfolioWorkspaceToolbar", () => {
     ).not.toBeNull();
   });
 
-  it("enables a partial historical capability only after the screen modules are proven", () => {
+  it("uses the published date range for a supported historical capability", () => {
     const onControlsChange = vi.fn();
     render(
       <PortfolioWorkspaceToolbar
@@ -192,8 +192,8 @@ describe("PortfolioWorkspaceToolbar", () => {
           usesCustomDateRange: false,
           hasHistoricalGap: true,
           currencyOptions: ["USD"],
-          historicalSnapshotState: "partial",
-          historicalSnapshotReason: "Dated portfolio records are supported.",
+          historicalSnapshotState: "supported",
+          historicalSnapshotReason: "Historical portfolio records are supported.",
           supportsHistoricalSnapshots: true,
           historicalDateRange: {
             earliest: "2024-01-15",
@@ -215,7 +215,7 @@ describe("PortfolioWorkspaceToolbar", () => {
     expect(dateControl).toHaveAttribute("max", "2026-05-12");
     expect(
       screen.getByText(
-        "Portfolio records use the selected business date; rebalance remains the latest source run."
+        "Some work areas use the latest available book state."
       )
     ).toBeInTheDocument();
 
