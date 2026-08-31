@@ -79,7 +79,7 @@
       },
       {
         "path": "src/features/workbench/manage-workspace.module.css",
-        "maxGlobalEscapes": 605
+        "maxGlobalEscapes": 551
       }
     ]
   },
@@ -110,6 +110,7 @@
     "performance-risk-window-toolbar",
     "performance-return-path-chart-stage",
     "performance-return-path-single-observation",
+    "portfolio-memory-",
     "page-container",
     "workbench-split",
     "workbench-col",
