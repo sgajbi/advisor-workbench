@@ -2032,14 +2032,9 @@ test.describe('Performance workbench smoke', () => {
       '2026-04-21T03:22:00Z',
     );
     await page.evaluate(() => window.scrollTo({ top: 0 }));
-    await page.screenshot({
-      path: 'output/playwright/issue-786-advisor-brief-reviewed-1440.png',
-      fullPage: true,
-      animations: 'disabled',
-    });
     await reviewEvidence.scrollIntoViewIfNeeded();
     await reviewEvidence.screenshot({
-      path: 'output/playwright/issue-786-human-review-evidence-1440.png',
+      path: 'output/playwright/issue-965-human-review-evidence-1440.png',
       animations: 'disabled',
     });
 
@@ -2072,7 +2067,7 @@ test.describe('Performance workbench smoke', () => {
     });
     await expect(supportDetails).not.toHaveAttribute('open', '');
 
-    for (const width of [1440, 1024, 720, 519]) {
+    for (const width of [1440, 1024, 768, 519]) {
       await page.setViewportSize({ width, height: 1000 });
       await review.scrollIntoViewIfNeeded();
       await expect(review).toBeVisible();
@@ -2081,14 +2076,14 @@ test.describe('Performance workbench smoke', () => {
         scrollWidth: document.documentElement.scrollWidth,
       }));
       expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(2);
+      await page.evaluate(() => window.scrollTo({ top: 0 }));
+      await page.screenshot({
+        path: `output/playwright/issue-965-adviser-brief-css-ownership-${width}.png`,
+        fullPage: true,
+        animations: 'disabled',
+      });
     }
 
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
-    await page.screenshot({
-      path: 'output/playwright/issue-786-advisor-brief-reviewed-519.png',
-      fullPage: true,
-      animations: 'disabled',
-    });
     await runtime.assertStylesAreHeadManaged();
     expect(runtime.snapshot()).toEqual([]);
   });

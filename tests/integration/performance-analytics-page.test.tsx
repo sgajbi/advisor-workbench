@@ -953,7 +953,9 @@ describe("PerformanceAnalyticsPage", () => {
     expect(screen.getByLabelText("Adviser brief mode intro")).not.toHaveTextContent(
       "Internal working narrative"
     );
-    expect(document.querySelector(".performance-advisor-brief-shell")).toBeTruthy();
+    expect(
+      screen.getByRole("region", { name: "Performance adviser brief workspace" })
+    ).toBeInTheDocument();
   });
 
   it("shows Advisor Brief as a first-class mode and allows source drilldown back to Summary and Analysis", async () => {
