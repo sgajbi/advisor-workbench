@@ -149,6 +149,51 @@ describe("portfolio record screen data", () => {
     });
   });
 
+  it("keeps source-supported historical record reads available while aggregate review stays disabled", async () => {
+    const shell = buildPortfolioWorkspace({
+      control_capabilities: {
+        historical_snapshots: {
+          state: "supported",
+          reason: "Dated portfolio records are available.",
+          requested_as_of_date: "2025-12-31",
+          effective_as_of_date: "2025-12-31",
+          earliest_available_as_of_date: "2024-01-15",
+          latest_available_as_of_date: "2026-05-12",
+          module_capabilities: [],
+        },
+        reporting_currency_restatement: {
+          state: "unsupported",
+          reason: "Reporting-currency restatement is unavailable.",
+          requested_reporting_currency: null,
+          effective_reporting_currency: "USD",
+          supported_currencies: ["USD"],
+          module_capabilities: [],
+        },
+      },
+    });
+    const historicalDate = "2025-12-31";
+    apiMocks.getPortfolioWorkspaceShell.mockResolvedValueOnce(shell);
+    apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValueOnce({
+      as_of_date: historicalDate,
+      portfolio: shell.portfolio,
+      positions: [],
+    });
+
+    const result = await loadPortfolioRecordScreenData({
+      searchParams: Promise.resolve({
+        portfolioId: shell.portfolio.portfolio_id,
+        asOfDate: historicalDate,
+      }),
+    });
+
+    expect(apiMocks.getPortfolioWorkspaceSummaryDetails).toHaveBeenCalledWith(
+      shell.portfolio.portfolio_id,
+      expect.objectContaining({ asOfDate: historicalDate }),
+    );
+    expect(result.reviewContextError).toBeUndefined();
+    expect(result.workspace?.as_of_date).toBe(historicalDate);
+  });
+
   it("stops before detail reads when the record surface cannot support the period", async () => {
     const shell = await apiMocks.getPortfolioWorkspaceShell();
     const result = await loadPortfolioRecordScreenData({
