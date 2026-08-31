@@ -705,6 +705,70 @@ describe("PerformanceAdvisorBriefMode", () => {
     expect(screen.getByLabelText("Review rationale")).toHaveValue("");
   });
 
+  it("withholds the prior brief while a replacement review context is pending", async () => {
+    vi.mocked(getWorkbenchPerformanceAdvisorBriefClient)
+      .mockReset()
+      .mockResolvedValueOnce(readyAdvisorBriefResponse)
+      .mockImplementationOnce(() => new Promise(() => undefined));
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    const { rerender } = render(
+      <PerformanceAdvisorBriefMode
+        workspace={workspace}
+        capabilities={getPerformanceWorkspaceCapabilities(workspace)}
+        period={workspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={workspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    await screen.findByText(
+      "Gateway advisor brief is ready with source-grounded talking points."
+    );
+
+    const nextWorkspace = {
+      ...workspace,
+      as_of_date: "2026-02-23",
+      requested_as_of_date: "2026-02-23",
+      effective_as_of_date: "2026-02-23",
+      report_end_date: "2026-02-23",
+    };
+    rerender(
+      <PerformanceAdvisorBriefMode
+        workspace={nextWorkspace}
+        capabilities={getPerformanceWorkspaceCapabilities(nextWorkspace)}
+        period={nextWorkspace.period}
+        detailBasis="NET"
+        contributionDimension="asset_class"
+        attributionDimension="asset_class"
+        chartFrequency="monthly"
+        benchmark={nextWorkspace.benchmark_code ?? undefined}
+        onRequestChange={vi.fn()}
+        isUpdating={false}
+        isDetailsPending={false}
+        onSelectMode={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByText(
+        "Gateway advisor brief is ready with source-grounded talking points."
+      )
+    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Adviser brief supportability")).toHaveTextContent(
+        "Generating"
+      );
+      expect(getWorkbenchPerformanceAdvisorBriefClient).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it.each([
     ["AWAITING_REVIEW", true, "Awaiting review", "warn"],
     ["ACCEPTED", false, "Accepted for internal use", "success"],
