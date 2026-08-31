@@ -248,10 +248,7 @@ export function usePerformanceAdvisorBrief({
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
-        setReviewActionFeedback({
-          state: "success",
-          message: getReviewActionSuccessMessage(payload.action_type),
-        });
+        setReviewActionFeedback(getReviewActionSuccessFeedback(payload.action_type));
         return response;
       } catch (error: unknown) {
         if (reviewActionSequenceRef.current === actionRequestId) {
@@ -300,19 +297,34 @@ export function usePerformanceAdvisorBrief({
   };
 }
 
-function getReviewActionSuccessMessage(
+function getReviewActionSuccessFeedback(
   actionType: WorkbenchAdvisorBriefWorkflowPackRunReviewActionRequest["action_type"]
-): string {
+): AdvisorBriefReviewFeedback {
   switch (actionType) {
     case "ACCEPT":
-      return "The brief was accepted for its permitted internal workflow use.";
+      return {
+        state: "success",
+        message: "The brief was accepted for its permitted internal workflow use.",
+      };
     case "REJECT":
-      return "The brief was rejected and the source review record was updated.";
+      return {
+        state: "success",
+        message: "The brief was rejected and the source review record was updated.",
+      };
     case "REVISE":
-      return "Revision was requested and the replacement brief reference was recorded.";
+      return {
+        state: "success",
+        message: "Revision was requested and the replacement brief reference was recorded.",
+      };
     case "SUPERSEDE":
-      return "The brief was marked as superseded by the replacement brief.";
+      return {
+        state: "success",
+        message: "The brief was marked as superseded by the replacement brief.",
+      };
     case "ABANDON":
-      return "The brief was withdrawn from further internal use.";
+      return {
+        state: "success",
+        message: "The brief was withdrawn from further internal use.",
+      };
   }
 }
