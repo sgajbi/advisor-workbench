@@ -1,6 +1,7 @@
 type PerformanceRiskSource = Readonly<{
   portfolio_id: string;
   period: string;
+  detail_basis?: string;
   as_of_date: string;
   benchmark_code?: string | null;
   state?: string;
@@ -8,12 +9,13 @@ type PerformanceRiskSource = Readonly<{
 }>;
 
 type RiskPeriod = Readonly<
-  { start_date: string; end_date: string } & Record<string, unknown>
+  { key: string; start_date: string; end_date: string } & Record<string, unknown>
 >;
 
 export type PerformanceRiskSourceIdentity = Readonly<{
   portfolioId: string;
   period: string;
+  detailBasis?: string;
   asOfDate: string;
   benchmark: string | null;
   reportStartDate?: string;
@@ -32,6 +34,7 @@ export function isPerformanceRiskSourceCurrent(
   const sourceIdentityMatches =
     source.portfolio_id === identity.portfolioId &&
     source.period === identity.period &&
+    (identity.detailBasis === undefined || source.detail_basis === identity.detailBasis) &&
     source.as_of_date === identity.asOfDate &&
     (source.benchmark_code ?? null) === identity.benchmark;
   if (!sourceIdentityMatches) {
@@ -120,9 +123,10 @@ function hasRequestedRiskWindow(
     return Boolean(
       periods?.length &&
         periods.every(
-        (period) =>
-          period.end_date === identity.asOfDate &&
-          hasRiskSeriesWithinPeriod(period),
+          (period) =>
+            period.key === identity.period &&
+            period.end_date === identity.asOfDate &&
+            hasRiskSeriesWithinPeriod(period),
         ),
     );
   }
@@ -132,6 +136,7 @@ function hasRequestedRiskWindow(
     periods?.length &&
       periods.every(
         (period) =>
+          period.key === identity.period &&
           (!identity.reportStartDate || period.start_date === identity.reportStartDate) &&
           (!identity.reportEndDate || period.end_date === identity.reportEndDate) &&
           hasRiskSeriesWithinPeriod(period),
@@ -357,6 +362,8 @@ function readRiskPeriods(
       typeof period === "object" &&
       "start_date" in period &&
       typeof period.start_date === "string" &&
+      "key" in period &&
+      typeof period.key === "string" &&
       "end_date" in period &&
       typeof period.end_date === "string",
   )

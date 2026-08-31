@@ -383,6 +383,7 @@ export function buildFixtureRiskSummary(
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -585,6 +586,7 @@ export function buildFixtureRiskDrawdown(
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -707,6 +709,7 @@ export function buildFixtureRiskRolling(
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -901,6 +904,7 @@ export function buildFixtureRiskAttribution(
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -1030,6 +1034,7 @@ export function buildUnavailableRiskSummary({
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -1124,6 +1129,7 @@ export function buildUnavailableRiskDrawdown({
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -1172,6 +1178,7 @@ export function buildUnavailableRiskRolling({
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -1201,10 +1208,12 @@ export function buildUnavailableRiskRolling({
 export function buildUnavailableRiskAttribution({
   workspace,
   period,
+  detailBasis,
   detail,
 }: {
   workspace: WorkbenchPerformanceWorkspace;
   period: string;
+  detailBasis: string;
   detail: string;
 }): WorkbenchRiskAttributionResponse {
   return {
@@ -1212,6 +1221,7 @@ export function buildUnavailableRiskAttribution({
     contract_version: "risk-workspace.v1",
     portfolio_id: workspace.portfolio.portfolio_id,
     period,
+    detail_basis: requireRiskDetailBasis(detailBasis),
     as_of_date: workspace.as_of_date,
     benchmark_code: workspace.benchmark_code,
     source_service: "lotus-risk",
@@ -1236,6 +1246,13 @@ export function buildUnavailableRiskAttribution({
       cache_status: "miss",
     },
   };
+}
+
+function requireRiskDetailBasis(value: string): "NET" | "GROSS" {
+  if (value === "NET" || value === "GROSS") {
+    return value;
+  }
+  throw new TypeError("Risk detail basis must be NET or GROSS.");
 }
 
 function buildStateViewModel(
