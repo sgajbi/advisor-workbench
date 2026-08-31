@@ -80,6 +80,9 @@ advice approval, or client-publication authority.
   Frequency.
 - Applies the selection as one source transaction; downstream analysis inherits the confirmed
   context and does not repeat horizon or benchmark controls.
+- Passes the governed review date and reporting currency to summary, detail, and historical
+  attribution. Historical evidence is admitted only for the matching context; a rejected currency
+  request stays an explicit restatement limitation rather than becoming an empty chart.
 - Keeps the prior confirmed view under its original labels while a new selection is pending or
   failed; commits controls, Review Context, analytics, and canonical URL only after source success.
 - Locks conflicting source changes while pending, announces pending and confirmation without moving
@@ -139,6 +142,8 @@ remains in [API Surface](API-Surface), and ownership flow remains in [Integratio
 | Source selection pending | Prior evidence remains under its prior labels; requested context and confirmation progress are announced | Wait for the matching source contracts; conflicting source controls remain locked |
 | Source selection failed | Prior confirmed evidence remains labelled, with requested versus confirmed context and exact retry | Retry the same selection or continue using only the prior confirmed view |
 | Source selection confirmed | Controls, Review Context, analytics, and URL identify one matching source-confirmed context | Continue the investigation without a mode change |
+| Currency accepted but not verified | Contribution, attribution, and history retain portfolio base-currency labels with one visible limitation | Use base-currency evidence only; do not describe it as restated |
+| Historical restatement rejected | No trend rows are presented as a valid absence; the source rejection remains visible | Retry a supported context or use the confirmed base-currency view |
 | Ready, multiple observations | Exact history chart and table plus attribution and contribution detail | Continue the analysis |
 | Ready, one observation | **Attribution Observation**, exact table, and a visible no-trend qualification | Use the observation without inferring a pattern |
 | Ready, no observations | Source-confirmed unavailable explanation | Qualify the review using the returned reason or evidence posture |
@@ -184,6 +189,8 @@ copy another product's layout, visual identity, wording, calculations, or unsupp
 - Focused component tests prove multi-, single-, and zero-observation presentation; recoverable 503
   failure versus valid absence; permission-blocked posture; exact retry; focus restoration; and stale
   request fencing.
+- Review-context tests prove date/currency request propagation, applied versus unverified display
+  currency, explicit rejection, and coherent source identity across Summary, Analysis, and history.
 - Integration tests prove the Analysis mode uses the one-observation contract without rendering a
   false trend chart and keeps detail confirmation separate from historical evidence.
 - The owned optimized-production `PB_SG_GLOBAL_BAL_001` journey deliberately receives a 503 for

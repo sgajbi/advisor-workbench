@@ -161,6 +161,63 @@ is not applicable. Focused evidence is the exact allowlist unit contract, ten-fa
 matrix, correlation validation, mutation-tested architecture gate, protected review/CI, exact-main
 validation, wiki publication/parity, and clean branch restoration.
 
+## Portfolio and Performance review context: source acceptance before presentation (#46)
+
+### Business job
+
+An advisor must be able to choose an available portfolio review date once and carry that context
+into Performance without comparing figures from different dates or currencies. A requested
+reporting currency must never relabel base-currency figures unless the calculation source proves
+that the restatement was applied.
+
+### Research inputs
+
+Research was refreshed on 2026-08-31 from current official sources:
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/platforms/solutions/aladdin-wealth)
+   for connected portfolio review and advisor workflows rather than detached analytical tools.
+2. [IBM Carbon dropdown usage](https://carbondesignsystem.com/components/dropdown/usage/) for concise,
+   bounded selection from known business options and explicit disabled-state explanation.
+3. [W3C WAI-ARIA listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) for predictable
+   native selection and keyboard behavior without creating a bespoke composite control.
+4. [SAP Fiori filter bar](https://experience.sap.com/fiori-design-web/filter-bar/) for one visible
+   review context governing the analytical evidence that follows.
+
+### Adopted
+
+1. Keep review date and reporting currency in the existing governed URL context and pass them
+   through the Workbench BFF to every affected Performance read and review action.
+2. Enable historical Portfolio Review when the aggregate capability is partial only if every dated
+   module used by the screen is source-supported; constrain the native date control to the
+   source-published availability range. Rebalance remains explicitly the latest source run.
+3. Admit Performance summary and detail only when requested and effective date/currency evidence is
+   coherent. Treat `accepted_unverified`, `rejected`, and `unavailable` as base-currency
+   presentation states; only `applied` may change the displayed currency.
+4. Preserve usable base-currency evidence with one compact business limitation instead of blocking
+   the complete workflow or repeating technical diagnostics across panels.
+5. Carry the same review context through historical attribution, Advisor Brief reads, and review
+   actions so a decision cannot be recorded against a different analytical scope.
+
+### Rejected
+
+1. Browser-side foreign-exchange conversion, inferred historical availability, or fallback dates.
+2. Treating an accepted request as proof that restatement occurred.
+3. Enabling a partial aggregate capability without verifying every dated module used by the screen.
+4. A custom date picker or currency selector when native and existing Workbench controls already
+   provide the required keyboard and responsive behavior.
+5. Showing mixed summary/detail evidence under one review label or converting a rejected trend
+   request into an empty chart.
+
+### Implementation and validation decision
+
+Workbench #46 owns this cross-screen context slice. Gateway and Performance retain calculation,
+restatement, effective-date, and capability authority. Focused contract, view-model, component,
+integration, and optimized-production browser tests prove request propagation, coherent admission,
+base-currency fallback, historical capability gating, and source-state recovery. The Portfolio
+Review, Performance Summary, Performance Analysis, and Performance Advisor Brief guides change
+because their current capability and support truth changed; wiki source must be published after
+merge. Canonical live proof remains separate from deterministic fixture-browser proof.
+
 ## Performance review controls: one context, inherited comparison, progressive detail
 
 ### Business job

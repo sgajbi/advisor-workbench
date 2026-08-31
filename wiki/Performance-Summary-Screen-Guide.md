@@ -12,7 +12,7 @@ strategy, approve a recommendation, or publish a client report.
 | --- | --- |
 | Canonical route | `/performance?portfolioId={portfolio_id}`; Summary is the default mode, while source-confirmed `asOfDate`, `period`, and `reportingCurrency` remain in the address when supplied by the entering workflow |
 | Navigation | **Performance** in the global workspace navigation, then **Performance Overview** in the selected-portfolio rail |
-| Supported scope | One Gateway-backed portfolio, one source-confirmed Performance reporting window, return basis, frequency, and benchmark selection; source valuation date and base currency remain read-only evidence |
+| Supported scope | One Gateway-backed portfolio, one coherent source-confirmed Performance reporting window, review date, reporting-currency state, return basis, frequency, and benchmark selection |
 | Primary reading order | Shell review context, one analysis control bar, portfolio and benchmark outcome, Return History, inherited horizon comparison, then contributor leadership |
 | Primary next action | Explain the confirmed outcome, investigate a source limitation, continue to Performance Analysis, or prepare an internal Advisor Brief |
 
@@ -45,7 +45,9 @@ and portfolio-shell responses in parallel and withholds analytical detail when t
 window identity conflicts.
 
 When Performance cannot apply a carried review date or reporting-currency restatement, the strip
-states that limitation without changing the source evidence. Dated return windows and observations
+states that limitation without changing the source evidence. `accepted_unverified`, `rejected`, and
+`unavailable` currency states remain visibly in portfolio base currency; only a coherent `applied`
+state changes the displayed currency. Dated return windows and observations
 may repeat their own dates because those dates define the calculation evidence, not portfolio
 identity.
 
@@ -108,12 +110,11 @@ or moving focus away from the active rail or source control.
 - Requires an explicit source-catalogue portfolio. A missing, repeated, malformed, or unavailable
   identity produces a business recovery state before analytical reads; Workbench never substitutes
   the canonical demo portfolio or the first catalogue result.
-- Keeps carried cross-workspace review context separate from Performance request identity. A
-  supplied valuation date or reporting currency remains in the governed URL for adjacent
-  workspaces, but the current Performance contracts do not accept either as a caller-controlled
-  analytical selector. Workbench does not send unsupported parameters or claim a currency
-  restatement; it presents the source valuation date and base currency with an explicit capability
-  notice. Summary or detail payloads with another portfolio or reporting period are withheld.
+- Passes a carried valuation date and reporting currency through the Workbench BFF to Performance
+  summary and detail. Both responses must confirm one coherent requested/effective context before
+  the workspace is admitted. Workbench presents the requested currency only when both sources
+  publish `applied` with the matching effective currency; unverified, rejected, unavailable, mixed,
+  or mismatched evidence remains in portfolio base currency with one explicit limitation.
 - Enters the standard `YTD` period when no reporting selection is present; Workbench does not attach
   a portfolio-specific fixed start or end date. Explicit windows are sent only after the URL or
   advisor selection supplies them.
@@ -178,7 +179,7 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | --- | --- | --- |
 | Portfolio identity, base currency, booking context, and selected mandate | Formats the selected workspace and navigation context | Gateway over Core portfolio contracts |
 | Reporting window, return basis, frequency, benchmark options, portfolio return, benchmark return, active return, annualised return, and cash-flow-aware return | Validates and presents the returned contract; does not recalculate performance | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/summary`, composing Core portfolio/reference/benchmark context with Performance analytics |
-| Source valuation date and base currency | Presents returned source metadata as read-only context and states that caller-controlled date selection and reporting-currency restatement are not supported by this contract | Gateway summary/details composition over Core and Performance authority |
+| Requested and effective review date, requested and effective reporting currency, and currency state | Sends the governed context, admits only coherent summary/detail evidence, and changes the displayed currency only for a matching `applied` state | Gateway summary/details composition over Core and Performance authority |
 | Return-path observations and source capability posture | Presents one observation as exact comparison evidence and charts two or more observations without interpolating missing values | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Contribution rows, dimensions, coverage, source-economics and smoothing status, reason codes, contracts, snapshots, attribution support, warnings, and partial failures | Builds decision-focused ranking and a business-first supportability conclusion from the same returned evidence; preserves exact technical values in **Calculation evidence** and fails closed for unknown values | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/details` over Performance authority |
 | Zero, one, or multiple horizon observations | Chooses a truthful empty, exact-table, or comparison presentation without manufacturing rows | Gateway `GET /api/v1/workbench/{portfolio_id}/performance/horizon-comparison` over Performance authority |
@@ -199,7 +200,10 @@ detail remains in [API Surface](API-Surface), and ownership flow remains in
 | Initial loading | Bounded workspace loading with no fabricated performance result | Wait for the selected portfolio contract |
 | Missing or ambiguous portfolio | **Review context needs attention** with no portfolio lookup or analytical request for missing/invalid identity | Return to **My book** and select a source-confirmed portfolio |
 | Portfolio not in source catalogue | Explicit no-substitution recovery after the bounded catalogue read; no performance summary is requested | Choose another portfolio from **My book** |
-| Carried valuation date or reporting currency | Compact capability notice beside source valuation-date and base-currency evidence; analytics remain available because these values were not sent as unsupported selectors | Use the source-confirmed Performance basis; continue to a supporting workspace when a controlled date or currency workflow is required |
+| Applied review context | Review Context, Summary, and detail confirm the same requested/effective date and an applied currency state | Continue with the confirmed analytical scope |
+| Currency accepted but not verified | Performance remains in portfolio base currency with one compact restatement limitation | Use base-currency figures only; do not describe them as restated |
+| Rejected or unavailable context | Prior confirmed evidence remains under its prior labels, or affected evidence stays unavailable; the exact business limitation remains visible | Retry a supported context or continue with the last confirmed evidence |
+| Mixed source context | Summary and detail are not admitted as one workspace | Retry; do not compare or narrate figures from different source contexts |
 | Ready | Confirmed scope, headline outcome, return path, horizon context, contributors, and supportability | Continue the review |
 | Selection pending | Requested and source-confirmed contexts shown separately; prior figures keep their confirmed labels and controls are locked | Wait for both summary and detail confirmation |
 | Selection failed | Persistent **Selection not applied** evidence, HTTP status when known, retained confirmed context, and **Retry selection** | Retry the exact request or use the confirmed view |
@@ -258,9 +262,9 @@ superiority.
 ## Evidence And Validation
 
 - Focused state tests prove pending, summary failure, detail failure, exact retry, permission block,
-  stale-response fencing, atomic source-confirmed commit behavior, period mismatch rejection, and
-  that carried valuation date and reporting currency are neither sent nor misrepresented as
-  Performance request identity.
+  stale-response fencing, atomic source-confirmed commit behavior, period and review-context
+  mismatch rejection, request propagation, and base-currency presentation unless restatement is
+  coherently applied.
 - Shared-component tests prove polite pending and compact source-confirmed announcements, assertive
   failure, exact requested/confirmed context, native retry behavior, and responsive ownership.
   Client tests prove the five-second confirmation lifecycle, identical-input suppression, obsolete
