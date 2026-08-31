@@ -6,9 +6,9 @@ import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbe
 import type { WorkbenchPerformanceAttributionTrend } from "@/features/workbench/types";
 import {
   arePerformanceReviewContextsCoherent,
-  isPerformanceReviewContextCurrent,
   type PerformanceReviewContextSource,
 } from "../performance-review-context";
+import { isPerformanceAnalyticalSourceCurrent } from "../performance-source-identity";
 import {
   SourceEvidenceMismatchError,
   useSourceConfirmedResource,
@@ -35,7 +35,7 @@ export type PerformanceAttributionTrendState =
       httpStatus: null;
     }
   | {
-      status: "error" | "permission_blocked";
+      status: "context_mismatch" | "error" | "permission_blocked";
       trend: null;
       httpStatus: number | null;
     };
@@ -44,7 +44,10 @@ export function usePerformanceAttributionTrend(
   request: PerformanceAttributionTrendRequest,
   sourceContext: PerformanceReviewContextSource,
 ) {
-  const requestKey = useMemo(() => buildPerformanceAttributionTrendRequestKey(request), [request]);
+  const requestKey = useMemo(
+    () => buildPerformanceAttributionTrendRequestKey(request, sourceContext),
+    [request, sourceContext],
+  );
   const load = useCallback(async () => {
     const trend = await getWorkbenchPerformanceAttributionTrendClient(request.portfolioId, {
       period: request.period,
@@ -59,7 +62,10 @@ export function usePerformanceAttributionTrend(
     });
 
     if (
-      !isPerformanceReviewContextCurrent(trend, request) ||
+      !isPerformanceAnalyticalSourceCurrent(trend, {
+        ...request,
+        benchmark: request.benchmark ?? null,
+      }) ||
       !arePerformanceReviewContextsCoherent(trend, sourceContext)
     ) {
       throw new SourceEvidenceMismatchError(
@@ -78,7 +84,7 @@ export function usePerformanceAttributionTrend(
         : {
             status:
               resource.state.status === "source_mismatch"
-                ? "error"
+                ? "context_mismatch"
                 : resource.state.status,
             trend: null,
             httpStatus: resource.state.httpStatus
@@ -88,7 +94,8 @@ export function usePerformanceAttributionTrend(
 }
 
 export function buildPerformanceAttributionTrendRequestKey(
-  request: PerformanceAttributionTrendRequest
+  request: PerformanceAttributionTrendRequest,
+  sourceContext: PerformanceReviewContextSource,
 ): string {
   return JSON.stringify({
     portfolioId: request.portfolioId,
@@ -100,6 +107,14 @@ export function buildPerformanceAttributionTrendRequestKey(
     reportStartDate: request.reportStartDate ?? null,
     reportEndDate: request.reportEndDate ?? null,
     asOfDate: request.asOfDate ?? null,
-    reportingCurrency: request.reportingCurrency ?? null
+    reportingCurrency: request.reportingCurrency ?? null,
+    sourceContext: {
+      asOfDate: sourceContext.as_of_date,
+      requestedAsOfDate: sourceContext.requested_as_of_date,
+      effectiveAsOfDate: sourceContext.effective_as_of_date,
+      requestedReportingCurrency: sourceContext.requested_reporting_currency,
+      effectiveReportingCurrency: sourceContext.effective_reporting_currency,
+      reportingCurrencyState: sourceContext.reporting_currency_state,
+    },
   });
 }

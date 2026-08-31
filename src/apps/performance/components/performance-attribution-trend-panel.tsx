@@ -303,6 +303,16 @@ export default function PerformanceAttributionTrendPanel({
               surface="analysis"
             />
           </div>
+        ) : state.status === "context_mismatch" ? (
+          <div role="alert" aria-live="assertive" aria-atomic="true">
+            <ScreenStatePanel
+              kind="unavailable"
+              title="Attribution history does not match this review"
+              body="The source response did not confirm the selected portfolio, period, analytical basis, dimensions, benchmark, frequency, or review window. No attribution history has been presented."
+              hint="Refresh the performance review before relying on attribution history."
+              surface="analysis"
+            />
+          </div>
         ) : state.status === "error" ? (
           <div role="alert" aria-live="assertive" aria-atomic="true">
             <ScreenStatePanel

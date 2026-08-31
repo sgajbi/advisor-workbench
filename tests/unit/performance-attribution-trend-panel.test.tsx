@@ -288,7 +288,7 @@ describe("PerformanceAttributionTrendPanel", () => {
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Attribution history could not be refreshed",
+      "Attribution history does not match this review",
     );
     expect(screen.queryByLabelText("Attribution observation table")).not.toBeInTheDocument();
   });
@@ -466,6 +466,72 @@ describe("PerformanceAttributionTrendPanel", () => {
       expect(screen.queryByText("Obsolete evidence")).not.toBeInTheDocument();
     });
     expect(screen.getByText("Current evidence")).toBeInTheDocument();
+  });
+
+  it("withholds attribution history from a different analytical scope", async () => {
+    getTrendMock.mockResolvedValue(buildTrendContract({ period: "1Y" }));
+
+    render(<PerformanceAttributionTrendPanel {...buildProps()} />);
+
+    expect(
+      await screen.findByText("Attribution history does not match this review"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("2026-01")).not.toBeInTheDocument();
+  });
+
+  it("reloads attribution history when the confirmed source context changes", async () => {
+    const requestedContext = {
+      ...SOURCE_CONTEXT,
+      requested_reporting_currency: "SGD",
+      effective_reporting_currency: "USD",
+    };
+    const appliedContext = {
+      ...requestedContext,
+      effective_reporting_currency: "SGD",
+      reporting_currency_state: "applied" as const,
+    };
+    getTrendMock
+      .mockResolvedValueOnce(
+        buildTrendContract({
+          requested_reporting_currency: "SGD",
+          effective_reporting_currency: "USD",
+        }),
+      )
+      .mockResolvedValueOnce(
+        buildTrendContract({
+          requested_reporting_currency: "SGD",
+          effective_reporting_currency: "SGD",
+          reporting_currency_state: "applied",
+          rows: [
+            {
+              ...buildTrendContract().rows[0],
+              period_label: "Applied context evidence",
+            },
+          ],
+        }),
+      );
+
+    const { rerender } = render(
+      <PerformanceAttributionTrendPanel
+        {...buildProps({
+          reportingCurrency: "SGD",
+          sourceContext: requestedContext,
+        })}
+      />,
+    );
+    await screen.findByText("2026-01");
+
+    rerender(
+      <PerformanceAttributionTrendPanel
+        {...buildProps({
+          reportingCurrency: "SGD",
+          sourceContext: appliedContext,
+        })}
+      />,
+    );
+
+    expect(await screen.findByText("Applied context evidence")).toBeInTheDocument();
+    expect(getTrendMock).toHaveBeenCalledTimes(2);
   });
 
   it("shows a normalization notice when the trend endpoint adjusts unsupported controls", async () => {
