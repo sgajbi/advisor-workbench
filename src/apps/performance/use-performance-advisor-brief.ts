@@ -75,6 +75,7 @@ export function usePerformanceAdvisorBrief({
   const [reviewActionFeedback, setReviewActionFeedback] =
     useState<AdvisorBriefReviewFeedback>(IDLE_REVIEW_FEEDBACK);
   const [refreshSequence, setRefreshSequence] = useState(0);
+  const [settledRequestContextKey, setSettledRequestContextKey] = useState<string | null>(null);
   const requestSequenceRef = useRef(0);
   const reviewActionSequenceRef = useRef(0);
   const requestIdentity = useMemo<PerformanceSourceIdentity>(
@@ -110,18 +111,26 @@ export function usePerformanceAdvisorBrief({
       isPerformanceAnalyticalSourceCurrent(advisorBrief, requestIdentity) &&
       arePerformanceReviewContextsCoherent(advisorBrief, sourceContext),
   );
+  const requestContextKey = useMemo(
+    () =>
+      JSON.stringify([
+        requestIdentity,
+        sourceContext.as_of_date,
+        sourceContext.requested_as_of_date,
+        sourceContext.effective_as_of_date,
+        sourceContext.requested_reporting_currency,
+        sourceContext.effective_reporting_currency,
+        sourceContext.reporting_currency_state,
+      ]),
+    [requestIdentity, sourceContext]
+  );
+  const requestContextIsSettled = settledRequestContextKey === requestContextKey;
   const currentAdvisorBrief = advisorBriefIsCurrent ? advisorBrief : null;
   const activeRunId = currentAdvisorBrief?.workflow_pack_run?.run_id ?? null;
 
   useEffect(() => {
     const requestId = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestId;
-    setAdvisorBrief(null);
-    setAdvisorBriefUnavailable(false);
-    setAdvisorBriefPermissionBlocked(false);
-    setIsLoading(true);
-    setIsApplyingReviewAction(false);
-    setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
 
     void getWorkbenchPerformanceAdvisorBriefClient(portfolioId, {
       period,
@@ -150,6 +159,9 @@ export function usePerformanceAdvisorBrief({
         setAdvisorBrief(response);
         setAdvisorBriefUnavailable(false);
         setAdvisorBriefPermissionBlocked(false);
+        setIsApplyingReviewAction(false);
+        setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
+        setSettledRequestContextKey(requestContextKey);
       })
       .catch((error: unknown) => {
         if (requestSequenceRef.current !== requestId) {
@@ -158,6 +170,9 @@ export function usePerformanceAdvisorBrief({
         setAdvisorBrief(null);
         setAdvisorBriefUnavailable(!isWorkbenchPermissionBlockedError(error));
         setAdvisorBriefPermissionBlocked(isWorkbenchPermissionBlockedError(error));
+        setIsApplyingReviewAction(false);
+        setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
+        setSettledRequestContextKey(requestContextKey);
       })
       .finally(() => {
         if (requestSequenceRef.current !== requestId) {
@@ -184,6 +199,7 @@ export function usePerformanceAdvisorBrief({
     reportStartDate,
     reportingCurrency,
     requestIdentity,
+    requestContextKey,
     sourceContext,
   ]);
 
@@ -196,6 +212,7 @@ export function usePerformanceAdvisorBrief({
     setIsLoading(true);
     setIsApplyingReviewAction(false);
     setReviewActionFeedback(IDLE_REVIEW_FEEDBACK);
+    setSettledRequestContextKey(null);
     setRefreshSequence((current) => current + 1);
   }, []);
 
@@ -287,11 +304,15 @@ export function usePerformanceAdvisorBrief({
 
   return {
     advisorBrief: currentAdvisorBrief,
-    advisorBriefUnavailable,
-    advisorBriefPermissionBlocked,
-    isLoading: isLoading || (advisorBrief !== null && !advisorBriefIsCurrent),
-    isApplyingReviewAction,
-    reviewActionFeedback,
+    advisorBriefUnavailable: requestContextIsSettled && advisorBriefUnavailable,
+    advisorBriefPermissionBlocked:
+      requestContextIsSettled && advisorBriefPermissionBlocked,
+    isLoading:
+      isLoading || !requestContextIsSettled || (advisorBrief !== null && !advisorBriefIsCurrent),
+    isApplyingReviewAction: requestContextIsSettled && isApplyingReviewAction,
+    reviewActionFeedback: requestContextIsSettled
+      ? reviewActionFeedback
+      : IDLE_REVIEW_FEEDBACK,
     applyReviewAction,
     refresh,
   };
