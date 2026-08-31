@@ -6,6 +6,13 @@ import PerformanceAttributionTrendPanel from "../../src/apps/performance/compone
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const getTrendMock = vi.fn();
+const REVIEW_CONTEXT_EVIDENCE = {
+  requested_as_of_date: null,
+  effective_as_of_date: "2026-03-27",
+  requested_reporting_currency: null,
+  effective_reporting_currency: "USD",
+  reporting_currency_state: "accepted_unverified" as const,
+};
 
 vi.mock("echarts-for-react", () => ({
   default: ({
@@ -38,6 +45,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       contract_version: "v1",
       portfolio_id: "PF_1001",
       as_of_date: "2026-03-27",
+      ...REVIEW_CONTEXT_EVIDENCE,
       period: "YTD",
       report_start_date: "2026-01-01",
       report_end_date: "2026-03-27",
@@ -160,6 +168,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       contract_version: "v1",
       portfolio_id: "PF_1001",
       as_of_date: "2026-03-27",
+      ...REVIEW_CONTEXT_EVIDENCE,
       period: "YTD",
       report_start_date: "2026-01-01",
       report_end_date: "2026-03-27",
@@ -192,6 +201,39 @@ describe("PerformanceAttributionTrendPanel", () => {
     expect(
       document.querySelector(".performance-analysis-state-panel-unavailable .module-state-panel"),
     ).toBeTruthy();
+  });
+
+  it.each([
+    {
+      state: "rejected" as const,
+      expected:
+        "Attribution history remains unavailable because the requested SGD restatement was not accepted. Source evidence remains in USD.",
+    },
+    {
+      state: "accepted_unverified" as const,
+      expected:
+        "Attribution history is unavailable for this selection. The requested SGD restatement is not source-verified, so no restated history has been inferred.",
+    },
+    {
+      state: "unavailable" as const,
+      expected:
+        "Attribution history is unavailable because reporting-currency evidence for SGD could not be confirmed.",
+    },
+  ])("keeps $state currency evidence explicit when no trend rows are supplied", async ({
+    state,
+    expected,
+  }) => {
+    getTrendMock.mockResolvedValue({
+      ...buildTrendContract(),
+      requested_reporting_currency: "SGD",
+      effective_reporting_currency: "USD",
+      reporting_currency_state: state,
+      rows: [],
+    });
+
+    render(<PerformanceAttributionTrendPanel {...buildProps()} reportingCurrency="SGD" />);
+
+    expect(await screen.findByText(expected)).toBeInTheDocument();
   });
 
   it("renders one published observation without implying a time trend", async () => {
@@ -394,6 +436,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       contract_version: "v1",
       portfolio_id: "PF_1001",
       as_of_date: "2026-03-27",
+      ...REVIEW_CONTEXT_EVIDENCE,
       period: "YTD",
       report_start_date: "2026-01-01",
       report_end_date: "2026-03-27",
@@ -453,6 +496,7 @@ describe("PerformanceAttributionTrendPanel", () => {
       contract_version: "v1",
       portfolio_id: "PF_1001",
       as_of_date: "2026-03-27",
+      ...REVIEW_CONTEXT_EVIDENCE,
       period: "YTD",
       report_start_date: "2026-01-01",
       report_end_date: "2026-03-27",
@@ -526,6 +570,7 @@ function buildTrendContract(overrides: Partial<Awaited<ReturnType<typeof getTren
     contract_version: "v1",
     portfolio_id: "PF_1001",
     as_of_date: "2026-03-27",
+    ...REVIEW_CONTEXT_EVIDENCE,
     period: "YTD",
     report_start_date: "2026-01-01",
     report_end_date: "2026-03-27",

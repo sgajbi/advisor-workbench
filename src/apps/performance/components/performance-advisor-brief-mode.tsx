@@ -46,6 +46,8 @@ export default function PerformanceAdvisorBriefMode(props: PerformanceAdvisorBri
     benchmark: workspace.benchmark_code ?? benchmark ?? null,
     reportStartDate: workspace.report_start_date,
     reportEndDate: workspace.report_end_date,
+    asOfDate: workspace.requested_as_of_date,
+    reportingCurrency: workspace.requested_reporting_currency,
   });
 
   return <PerformanceAdvisorBriefModeSession key={sessionKey} {...props} />;
@@ -90,6 +92,8 @@ function PerformanceAdvisorBriefModeSession({
       benchmark: workspace.benchmark_code ?? benchmark ?? null,
       reportStartDate: workspace.report_start_date,
       reportEndDate: workspace.report_end_date,
+      asOfDate: workspace.requested_as_of_date ?? undefined,
+      reportingCurrency: workspace.requested_reporting_currency ?? undefined,
     },
     isDetailsPending,
   });

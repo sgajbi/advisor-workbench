@@ -226,7 +226,7 @@ describe("PerformanceAnalyticsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps analytics usable while explaining unsupported review date and currency controls", async () => {
+  it("keeps analytics usable with a confirmed review date and unverified currency restatement", async () => {
     installPerformancePageFetchMock();
 
     await renderPerformancePage({
@@ -237,8 +237,12 @@ describe("PerformanceAnalyticsPage", () => {
 
     expect(screen.getByTestId("review-context-strip")).toBeInTheDocument();
     expect(screen.queryByTestId("workbench-context-notice")).not.toBeInTheDocument();
-    expect(screen.getByText(/source valuation date 24 Feb 2026/i)).toBeInTheDocument();
-    expect(screen.getByText(/restatement to EUR is not supported/i)).toBeInTheDocument();
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent("23 Feb 2026");
+    expect(
+      screen.getByText(
+        /remains in portfolio base currency USD because restatement to EUR has not been verified/i,
+      ),
+    ).toBeInTheDocument();
     expect(await findWorkflowControl(/^Performance overview/i)).toBeInTheDocument();
     expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
     expect(await screen.findByText("Performance Drivers")).toBeInTheDocument();
@@ -247,10 +251,13 @@ describe("PerformanceAnalyticsPage", () => {
     expect(
       fetchMock.mock.calls.some(([input]) => {
         const url = input.toString();
-        return url.includes("/performance/summary") &&
-          (url.includes("as_of_date") || url.includes("reporting_currency"));
+        return (
+          url.includes("/performance/summary") &&
+          url.includes("as_of_date=2026-02-23") &&
+          url.includes("reporting_currency=EUR")
+        );
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("withholds a stale explicit source window before analytical detail is requested", async () => {

@@ -21,6 +21,8 @@ type Props = {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
   onRequestChange?: (patch: PerformanceWorkspaceRequestPatch) => void;
 };
 
@@ -48,6 +50,8 @@ export default function PerformanceAttributionTrendPanel({
   benchmark,
   reportStartDate,
   reportEndDate,
+  asOfDate,
+  reportingCurrency,
   onRequestChange,
 }: Props) {
   const request = useMemo(
@@ -60,8 +64,10 @@ export default function PerformanceAttributionTrendPanel({
       benchmark,
       reportStartDate,
       reportEndDate,
+      asOfDate,
+      reportingCurrency,
     }),
-    [attributionDimension, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate],
+    [asOfDate, attributionDimension, benchmark, chartFrequency, detailBasis, period, portfolioId, reportEndDate, reportStartDate, reportingCurrency],
   );
   const { state, refresh, requestKey } = usePerformanceAttributionTrend(request);
   const refreshButtonRef = useRef<HTMLButtonElement>(null);

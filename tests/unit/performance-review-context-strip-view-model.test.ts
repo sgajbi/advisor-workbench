@@ -59,9 +59,23 @@ describe("performance review context strip view model", () => {
     expect(model.sourceState).toBe("partial");
   });
 
-  it("leaves an absent performance date unconfirmed for the shared strip", () => {
+  it("shows a reporting currency only when the source proves it was applied", () => {
     const workspace = buildSupportedPerformanceScenario().workspace;
-    workspace.as_of_date = "";
+    workspace.requested_reporting_currency = "SGD";
+    workspace.effective_reporting_currency = "SGD";
+    workspace.reporting_currency_state = "applied";
+
+    expect(
+      buildPerformanceReviewContextStrip({
+        workspace,
+        portfolioContext: null,
+      }).currency,
+    ).toEqual({ kind: "reporting", value: "SGD" });
+  });
+
+  it("leaves an absent effective performance date unconfirmed for the shared strip", () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    workspace.effective_as_of_date = "";
 
     expect(
       buildPerformanceReviewContextStrip({

@@ -13,6 +13,14 @@ import {
   buildUnavailableContributionPerformanceScenario,
 } from "../fixtures/performance-workspace-fixtures";
 
+const REVIEW_CONTEXT_EVIDENCE = {
+  requested_as_of_date: null,
+  effective_as_of_date: "2026-02-24",
+  requested_reporting_currency: null,
+  effective_reporting_currency: "USD",
+  reporting_currency_state: "accepted_unverified" as const,
+};
+
 function buildGatewayAdvisorBriefFixture(
   workspace: WorkbenchPerformanceWorkspace,
   overrides: Partial<WorkbenchPerformanceAdvisorBrief> = {},
@@ -23,6 +31,11 @@ function buildGatewayAdvisorBriefFixture(
     portfolio_id: workspace.portfolio.portfolio_id,
     portfolio: workspace.portfolio,
     as_of_date: workspace.as_of_date,
+    requested_as_of_date: workspace.requested_as_of_date,
+    effective_as_of_date: workspace.effective_as_of_date,
+    requested_reporting_currency: workspace.requested_reporting_currency,
+    effective_reporting_currency: workspace.effective_reporting_currency,
+    reporting_currency_state: workspace.reporting_currency_state,
     period: workspace.period,
     report_start_date: workspace.report_start_date,
     report_end_date: workspace.report_end_date,
@@ -977,6 +990,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-risk-brief",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1053,6 +1067,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-risk-ready",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1129,6 +1144,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-partial-brief",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1178,6 +1194,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-partial-brief",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1228,6 +1245,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-empty-source-refs",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1275,6 +1293,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-timestamp-only-ai-audit",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1331,6 +1350,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-workflow-pack",
         contract_version: "v1",
         portfolio_id: "PF_1001",
@@ -1460,6 +1480,7 @@ describe("buildPerformanceAdvisorBriefViewModel", () => {
     const brief = buildPerformanceAdvisorBriefViewModel({
       workspace: scenario.workspace,
       advisorBrief: {
+        ...REVIEW_CONTEXT_EVIDENCE,
         correlation_id: "corr-workflow-pack-superseded",
         contract_version: "v1",
         portfolio_id: "PF_1001",

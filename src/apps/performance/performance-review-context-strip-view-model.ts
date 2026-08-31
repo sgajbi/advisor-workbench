@@ -11,6 +11,7 @@ import type {
 } from "@/features/workbench/types";
 import type { PortfolioWorkspace } from "@/apps/portfolio/types";
 import { buildPortfolioReviewContextSource } from "@/apps/portfolio/portfolio-review-context-strip-view-model";
+import { getPerformanceDisplayCurrency } from "./performance-review-context";
 
 type PerformanceContextSource =
   | WorkbenchPerformanceWorkspace
@@ -32,15 +33,19 @@ export function buildPerformanceReviewContextStrip({
 
   if (portfolioContext && contextMatchesPerformance) {
     const portfolioSource = buildPortfolioReviewContextSource(portfolioContext);
+    const displayCurrency = workspace
+      ? getPerformanceDisplayCurrency(workspace, workspace.portfolio.base_currency)
+      : portfolioSource.baseCurrency;
     return buildReviewContextStripModel(
       {
         ...portfolioSource,
-        businessDate: workspace?.as_of_date
-          ? formatBusinessDateValue(workspace.as_of_date, { nullDisplay: "" }) || null
+        businessDate: workspace?.effective_as_of_date
+          ? formatBusinessDateValue(workspace.effective_as_of_date, { nullDisplay: "" }) || null
           : portfolioSource.businessDate,
         baseCurrency:
           workspace?.portfolio.base_currency ?? portfolioSource.baseCurrency,
-        acceptedReportingCurrency: null,
+        acceptedReportingCurrency:
+          workspace?.reporting_currency_state === "applied" ? displayCurrency : null,
       },
       notice,
     );
@@ -55,9 +60,13 @@ export function buildPerformanceReviewContextStrip({
         workspace.portfolio.booking_center_code,
       ),
       businessDate:
-        formatBusinessDateValue(workspace.as_of_date, { nullDisplay: "" }) ||
+        formatBusinessDateValue(workspace.effective_as_of_date, { nullDisplay: "" }) ||
         null,
       baseCurrency: workspace.portfolio.base_currency,
+      acceptedReportingCurrency:
+        workspace.reporting_currency_state === "applied"
+          ? getPerformanceDisplayCurrency(workspace, workspace.portfolio.base_currency)
+          : null,
     }, notice ?? {
         label: "Portfolio context limited",
         message:

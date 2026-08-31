@@ -4,9 +4,8 @@ import { useCallback, useMemo } from "react";
 
 import { getWorkbenchPerformanceAttributionTrendClient } from "@/features/workbench/api";
 import type { WorkbenchPerformanceAttributionTrend } from "@/features/workbench/types";
-import {
-  useSourceConfirmedResource,
-} from "./use-source-confirmed-resource";
+import { isPerformanceReviewContextCurrent } from "../performance-review-context";
+import { useSourceConfirmedResource } from "./use-source-confirmed-resource";
 
 type PerformanceAttributionTrendRequest = {
   portfolioId: string;
@@ -17,6 +16,8 @@ type PerformanceAttributionTrendRequest = {
   benchmark?: string;
   reportStartDate?: string;
   reportEndDate?: string;
+  asOfDate?: string;
+  reportingCurrency?: string;
 };
 
 export type PerformanceAttributionTrendState =
@@ -34,8 +35,8 @@ export type PerformanceAttributionTrendState =
 
 export function usePerformanceAttributionTrend(request: PerformanceAttributionTrendRequest) {
   const requestKey = useMemo(() => buildPerformanceAttributionTrendRequestKey(request), [request]);
-  const load = useCallback(
-    () => getWorkbenchPerformanceAttributionTrendClient(request.portfolioId, {
+  const load = useCallback(async () => {
+    const trend = await getWorkbenchPerformanceAttributionTrendClient(request.portfolioId, {
       period: request.period,
       chartFrequency: request.chartFrequency,
       attributionDimension: request.attributionDimension,
@@ -43,9 +44,18 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
       benchmark: request.benchmark,
       reportStartDate: request.reportStartDate,
       reportEndDate: request.reportEndDate,
-    }),
-    [request],
-  );
+      asOfDate: request.asOfDate,
+      reportingCurrency: request.reportingCurrency
+    });
+
+    if (!isPerformanceReviewContextCurrent(trend, request)) {
+      throw new TypeError(
+        "Performance attribution history does not confirm the requested review context."
+      );
+    }
+
+    return trend;
+  }, [request]);
   const resource = useSourceConfirmedResource({ requestKey, load });
   const state: PerformanceAttributionTrendState =
     resource.state.status === "ready"
@@ -55,14 +65,14 @@ export function usePerformanceAttributionTrend(request: PerformanceAttributionTr
         : {
             status: resource.state.status,
             trend: null,
-            httpStatus: resource.state.httpStatus,
+            httpStatus: resource.state.httpStatus
           };
 
   return { state, refresh: resource.refresh, requestKey: resource.requestKey };
 }
 
 export function buildPerformanceAttributionTrendRequestKey(
-  request: PerformanceAttributionTrendRequest,
+  request: PerformanceAttributionTrendRequest
 ): string {
   return JSON.stringify({
     portfolioId: request.portfolioId,
@@ -73,5 +83,7 @@ export function buildPerformanceAttributionTrendRequestKey(
     benchmark: request.benchmark ?? null,
     reportStartDate: request.reportStartDate ?? null,
     reportEndDate: request.reportEndDate ?? null,
+    asOfDate: request.asOfDate ?? null,
+    reportingCurrency: request.reportingCurrency ?? null
   });
 }
