@@ -1010,7 +1010,13 @@ Container runtime rules:
    certification claims. The buyer-facing boundary is documented in
    `wiki/Technology-Risk-and-Runtime-Support.md` and the architecture decision in
    `docs/architecture/workbench-production-runtime-decision.md`.
-10. `docs/architecture/workbench-runtime-state-inventory.v1.json` is the executable statelessness
+11. Workbench images built by local Compose and protected CI carry
+    `com.lotus.repository.checkout` with the exact resolved checkout root. This is immutable local
+    ownership evidence for Platform `compose-ownership-labels-v2` cleanup after a container has
+    gone; project name alone, an absent label, a sibling checkout, or a nested worktree is not
+    sufficient. Keep `docker-compose.yml`, `docker-compose.ci-local.yml`, protected direct-build
+    commands, and `tests/unit/docker-image-provenance-governance.test.ts` aligned.
+12. `docs/architecture/workbench-runtime-state-inventory.v1.json` is the executable statelessness
     boundary. `npm run quality:runtime-state` reconciles every detected module-scope state holder,
     rejects unreviewed framework caching and Server Actions, prohibits server use of browser caches,
     and requires rolling deployment identity outside development. `npm run scale:proof` uses two
