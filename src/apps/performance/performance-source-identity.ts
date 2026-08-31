@@ -48,7 +48,7 @@ function confirmsRequestedWindow(
   identity: PerformanceSourceIdentity
 ): boolean {
   if (identity.period !== "EXPLICIT") {
-    return !identity.asOfDate || source.report_end_date === source.effective_as_of_date;
+    return source.report_end_date === source.effective_as_of_date;
   }
   return (
     Boolean(identity.reportStartDate) &&

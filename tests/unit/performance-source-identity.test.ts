@@ -185,6 +185,26 @@ describe("performance source identity", () => {
     ).toBe(false);
   });
 
+  it("binds a current preset period to the source-confirmed valuation date", () => {
+    const summary = buildPerformanceWorkspaceSummary();
+    const details = buildPerformanceWorkspaceDetails();
+
+    expect(isPerformanceSummarySourceCurrent(summary, identity)).toBe(true);
+    expect(isPerformanceDetailsSourceCurrent(details, identity)).toBe(true);
+    expect(
+      isPerformanceSummarySourceCurrent(
+        { ...summary, report_end_date: "2026-03-31" },
+        identity,
+      ),
+    ).toBe(false);
+    expect(
+      isPerformanceDetailsSourceCurrent(
+        { ...details, report_end_date: "2026-03-31" },
+        identity,
+      ),
+    ).toBe(false);
+  });
+
   it.each([
     ["portfolio", { portfolio_id: "PF_OTHER" }],
     ["period", { period: "1Y" }],

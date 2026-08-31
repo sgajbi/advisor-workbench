@@ -711,11 +711,16 @@ function applyRequestedHorizonContext(
   response: WorkbenchPerformanceHorizonComparison,
   requestUrl: URL,
 ): WorkbenchPerformanceHorizonComparison {
+  const contextualResponse = applyRequestedPerformanceReviewContext(response, requestUrl);
   return {
-    ...applyRequestedPerformanceReviewContext(response, requestUrl),
+    ...contextualResponse,
     reporting_currency:
       requestUrl.searchParams.get('reporting_currency') ??
       response.reporting_currency,
+    rows: response.rows.map((row) => ({
+      ...row,
+      period_end: contextualResponse.report_end_date,
+    })),
   };
 }
 

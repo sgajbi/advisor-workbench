@@ -219,7 +219,7 @@ describe("PerformanceSummaryMode", () => {
     );
   });
 
-  it("requests horizon economics only in the source-confirmed display currency", () => {
+  it("requests horizon economics in the requested currency until the source confirms it", () => {
     const scenario = buildSupportedPerformanceScenario();
     scenario.workspace.requested_reporting_currency = "SGD";
     scenario.workspace.effective_reporting_currency = "USD";
@@ -251,7 +251,7 @@ describe("PerformanceSummaryMode", () => {
     );
 
     expect(multiHorizonPanelMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ reportingCurrency: "USD" }),
+      expect.objectContaining({ reportingCurrency: "SGD" }),
       undefined,
     );
   });

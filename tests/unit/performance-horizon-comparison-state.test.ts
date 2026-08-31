@@ -18,6 +18,20 @@ describe("performance-horizon-comparison-state", () => {
     asOfDate: "2026-03-27",
     reportingCurrency: "SGD",
   };
+  const buildCurrentComparison = () => {
+    const comparison = buildPerformanceHorizonComparison("PF_1001");
+    return {
+      ...comparison,
+      report_start_date: "2026-01-01",
+      report_end_date: "2026-03-27",
+      as_of_date: "2026-03-27",
+      reporting_currency: "SGD",
+      rows: comparison.rows.map((row) => ({
+        ...row,
+        period_end: "2026-03-27",
+      })),
+    };
+  };
 
   it("builds a stable cache key from governed analytical inputs", () => {
     const baseline = buildPerformanceHorizonComparisonCacheKey({
@@ -85,12 +99,7 @@ describe("performance-horizon-comparison-state", () => {
     ["currency", { reporting_currency: "USD" }],
   ])("rejects horizon evidence with a different %s", (_label, override) => {
     const comparison = {
-      ...buildPerformanceHorizonComparison("PF_1001"),
-      portfolio_id: "PF_1001",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-27",
-      as_of_date: "2026-03-27",
-      reporting_currency: "SGD",
+      ...buildCurrentComparison(),
       ...override,
     };
 
@@ -99,12 +108,7 @@ describe("performance-horizon-comparison-state", () => {
 
   it("accepts only explicit source-declared frequency normalization", () => {
     const normalized = {
-      ...buildPerformanceHorizonComparison("PF_1001"),
-      portfolio_id: "PF_1001",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-27",
-      as_of_date: "2026-03-27",
-      reporting_currency: "SGD",
+      ...buildCurrentComparison(),
       chart_frequency: "quarterly",
       requested_chart_frequency_supported: false,
     };
@@ -120,12 +124,7 @@ describe("performance-horizon-comparison-state", () => {
 
   it("requires benchmark absence when no benchmark was requested", () => {
     const comparison = {
-      ...buildPerformanceHorizonComparison("PF_1001"),
-      portfolio_id: "PF_1001",
-      report_start_date: "2026-01-01",
-      report_end_date: "2026-03-27",
-      as_of_date: "2026-03-27",
-      reporting_currency: "SGD",
+      ...buildCurrentComparison(),
       benchmark_code: null,
     };
     const unassignedRequest = { ...request, benchmark: undefined };
@@ -137,5 +136,18 @@ describe("performance-horizon-comparison-state", () => {
         unassignedRequest,
       ),
     ).toBe(false);
+  });
+
+  it("rejects a horizon response containing a stale nested period", () => {
+    const currentComparison = buildCurrentComparison();
+    const comparison = {
+      ...currentComparison,
+      rows: currentComparison.rows.map((row, index) =>
+        index === 0 ? { ...row, period_end: "2026-03-26" } : row,
+      ),
+    };
+
+    expect(isHorizonComparisonCurrent(comparison, request)).toBe(false);
+    expect(isHorizonComparisonCurrent(currentComparison, request)).toBe(true);
   });
 });
