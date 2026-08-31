@@ -301,6 +301,59 @@ describe("useIdeaPresentationReceipts", () => {
     await waitFor(() => expect(recordReceipt).toHaveBeenCalledTimes(1));
   });
 
+  it("invalidates an asynchronous receipt draft when the document becomes hidden", async () => {
+    let resolveDigest!: (value: ArrayBuffer) => void;
+    const digest = vi
+      .spyOn(globalThis.crypto.subtle, "digest")
+      .mockImplementationOnce(
+        () =>
+          new Promise<ArrayBuffer>((resolve) => {
+            resolveDigest = resolve;
+          }),
+      );
+    render(<Harness candidateIds={["idea-025"]} />);
+    const visibilityObserver = await observer();
+
+    await act(async () => {
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => expect(digest).toHaveBeenCalledTimes(1));
+
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "hidden",
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+      resolveDigest(new ArrayBuffer(32));
+      await Promise.resolve();
+    });
+    expect(recordReceipt).not.toHaveBeenCalled();
+
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      value: "visible",
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+      visibilityObserver.emit([
+        {
+          target: marker("idea-025"),
+          isIntersecting: true,
+          intersectionRatio: 1,
+        },
+      ]);
+    });
+    await waitFor(() => expect(recordReceipt).toHaveBeenCalledTimes(1));
+    expect(digest).toHaveBeenCalledTimes(2);
+  });
+
   it("does not duplicate a recorded candidate after rerender or repeated intersection", async () => {
     const view = render(<Harness candidateIds={["idea-025"]} />);
     const visibilityObserver = await observer();

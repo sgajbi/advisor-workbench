@@ -232,7 +232,7 @@ export function useIdeaPresentationReceipts({
       return;
     }
 
-    const generation = ++observationGeneration.current;
+    let generation = ++observationGeneration.current;
     const activeDraftingCandidates = draftingCandidates.current;
     const observed = new Set<Element>();
     const intersecting = new Map<Element, boolean>();
@@ -299,6 +299,8 @@ export function useIdeaPresentationReceipts({
       }
     };
     const handleDocumentVisibilityChange = () => {
+      generation = ++observationGeneration.current;
+      activeDraftingCandidates.clear();
       intersecting.clear();
       intersectionObserver.takeRecords();
       intersectionObserver.disconnect();
