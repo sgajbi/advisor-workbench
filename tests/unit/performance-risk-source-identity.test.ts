@@ -8,6 +8,7 @@ import {
 const IDENTITY = {
   portfolioId: "PF_1001",
   period: "YTD",
+  detailBasis: "NET",
   asOfDate: "2026-02-24",
   benchmark: "BMK_GLOBAL_BALANCED_60_40",
 } as const;
@@ -15,11 +16,12 @@ const IDENTITY = {
 const SOURCE = {
   portfolio_id: "PF_1001",
   period: "YTD",
+  detail_basis: "NET",
   as_of_date: "2026-02-24",
   benchmark_code: "BMK_GLOBAL_BALANCED_60_40",
   payload: {
     periods: [
-      { start_date: "2026-01-01", end_date: "2026-02-24" },
+      { key: "YTD", start_date: "2026-01-01", end_date: "2026-02-24" },
     ],
   },
 } as const;
@@ -32,11 +34,28 @@ describe("performance risk source identity", () => {
   it.each([
     ["portfolio", { portfolio_id: "PF_FOREIGN" }],
     ["period", { period: "1Y" }],
+    ["detail basis", { detail_basis: "GROSS" }],
     ["as-of date", { as_of_date: "2026-02-23" }],
     ["benchmark", { benchmark_code: "BMK_OTHER" }],
   ])("rejects %s drift", (_field, patch) => {
     expect(
       isPerformanceRiskSourceCurrent({ ...SOURCE, ...patch }, IDENTITY),
+    ).toBe(false);
+  });
+
+  it("rejects a preset result published for another horizon", () => {
+    expect(
+      isPerformanceRiskSourceCurrent(
+        {
+          ...SOURCE,
+          payload: {
+            periods: [
+              { key: "1Y", start_date: "2025-02-25", end_date: "2026-02-24" },
+            ],
+          },
+        },
+        IDENTITY,
+      ),
     ).toBe(false);
   });
 
@@ -65,6 +84,7 @@ describe("performance risk source identity", () => {
       payload: {
         periods: [
           {
+            key: "EXPLICIT",
             start_date: "2025-02-25",
             end_date: "2026-02-24",
           },
@@ -80,6 +100,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "EXPLICIT",
                 start_date: "2025-03-01",
                 end_date: "2026-02-24",
               },
@@ -132,8 +153,8 @@ describe("performance risk source identity", () => {
       ...SOURCE,
       payload: {
         periods: [
-          { start_date: "2026-01-01", end_date: "2026-02-24" },
-          { start_date: "2026-02-01", end_date: "2026-02-24" },
+          { key: "YTD", start_date: "2026-01-01", end_date: "2026-02-24" },
+          { key: "YTD", start_date: "2026-02-01", end_date: "2026-02-24" },
         ],
       },
     };
@@ -145,7 +166,7 @@ describe("performance risk source identity", () => {
           ...source,
           payload: {
             periods: [
-              { start_date: "2026-01-01", end_date: "2026-03-27" },
+              { key: "YTD", start_date: "2026-01-01", end_date: "2026-03-27" },
             ],
           },
         },
@@ -157,7 +178,7 @@ describe("performance risk source identity", () => {
   it.each([
     ["missing", undefined],
     ["empty", { periods: [] }],
-    ["malformed", { periods: [{ start_date: "2026-01-01" }] }],
+    ["malformed", { periods: [{ key: "YTD", start_date: "2026-01-01" }] }],
   ])("rejects a ready preset payload with %s period evidence", (_label, payload) => {
     expect(
       isPerformanceRiskSourceCurrent(
@@ -199,6 +220,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-01-01",
                 end_date: "2026-02-24",
                 ...detail,
@@ -219,6 +241,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-01-01",
                 end_date: "2026-02-24",
                 underwater_series: [
@@ -242,6 +265,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-02-25",
                 end_date: "2026-02-24",
                 underwater_series: [],
@@ -262,6 +286,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-01-01",
                 end_date: "2026-02-24",
                 underwater_series: [
@@ -325,6 +350,7 @@ describe("performance risk source identity", () => {
           payload: {
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-01-01",
                 end_date: "2026-02-24",
                 ...drawdownEvidence,
@@ -352,6 +378,7 @@ describe("performance risk source identity", () => {
         },
         periods: [
           {
+            key: "YTD",
             start_date: "2026-01-01",
             end_date: "2026-02-24",
             attribution_sets: [
@@ -389,6 +416,7 @@ describe("performance risk source identity", () => {
             ...source.payload,
             periods: [
               {
+                key: "YTD",
                 start_date: "2026-01-01",
                 end_date: "2026-02-24",
                 attribution_sets: [

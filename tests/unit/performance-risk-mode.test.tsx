@@ -661,7 +661,7 @@ describe("PerformanceRiskMode", () => {
         as_of_date: "2026-02-23",
       })
       .mockResolvedValueOnce(
-        buildFixtureRiskSummary(scenario.workspace, "YTD", "GROSS"),
+        buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
       )
       .mockResolvedValueOnce(
         buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
@@ -691,6 +691,9 @@ describe("PerformanceRiskMode", () => {
     rerender(buildRiskModeElement(scenario, { detailBasis: "GROSS" }));
     await waitFor(() => {
       expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByLabelText("Risk snapshot headline metrics"),
+      ).not.toBeInTheDocument();
     });
 
     rerender(buildRiskModeElement(scenario, { detailBasis: "NET" }));
