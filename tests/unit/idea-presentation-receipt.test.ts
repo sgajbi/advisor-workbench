@@ -138,8 +138,8 @@ describe("Idea presentation receipt contract", () => {
       getRandomValues: browserCrypto.getRandomValues.bind(browserCrypto),
     });
     try {
-      await expect(digestVisibleCandidateIds(["idea-025"])).resolves.toMatch(
-        /^sha256:[0-9a-f]{64}$/,
+      await expect(digestVisibleCandidateIds(["idea-025"])).resolves.toBe(
+        "sha256:d20471a41fce629375cd37b4a92ec884ee06c3ec16ab84444761c655757a65ff",
       );
       expect(createIdeaPresentationIdempotencyKey()).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
@@ -159,14 +159,11 @@ describe("Idea presentation receipt contract", () => {
         (_, index) => `idea-${index + 1}`,
       ),
     },
-  ])(
-    "rejects an invalid visible candidate set",
-    async ({ candidateIds }) => {
-      await expect(digestVisibleCandidateIds(candidateIds)).rejects.toThrow(
-        "Visible Idea candidate evidence is incomplete or inconsistent.",
-      );
-    },
-  );
+  ])("rejects an invalid visible candidate set", async ({ candidateIds }) => {
+    await expect(digestVisibleCandidateIds(candidateIds)).rejects.toThrow(
+      "Visible Idea candidate evidence is incomplete or inconsistent.",
+    );
+  });
 
   it.each(["accepted", "replayed"])(
     "accepts exact durable %s source evidence",
