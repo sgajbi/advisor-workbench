@@ -225,6 +225,28 @@ describe("performance risk source identity", () => {
     },
   );
 
+  it("preserves source-declared failure evidence without analytical payloads", () => {
+    const sourceUnavailable = {
+      ...SOURCE,
+      state: "unavailable",
+      payload: null,
+      correlation_id: "corr-source-unavailable",
+    };
+
+    expect(
+      requireCurrentPerformanceRiskSource(sourceUnavailable, {
+        ...IDENTITY,
+        includeUnderwaterSeries: true,
+      }),
+    ).toBe(sourceUnavailable);
+    expect(
+      isPerformanceRiskSourceCurrent(
+        { ...sourceUnavailable, state: "ready" },
+        { ...IDENTITY, includeUnderwaterSeries: true },
+      ),
+    ).toBe(false);
+  });
+
   it("fails closed before a stale response can be cached or rendered", () => {
     expect(() =>
       requireCurrentPerformanceRiskSource(
