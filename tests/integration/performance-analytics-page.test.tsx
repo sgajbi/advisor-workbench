@@ -244,7 +244,10 @@ describe("PerformanceAnalyticsPage", () => {
       ),
     ).toBeInTheDocument();
     expect(await findWorkflowControl(/^Performance overview/i)).toBeInTheDocument();
-    expect(await screen.findByLabelText("Multi-horizon returns")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Horizon comparison not available for this review"),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Multi-horizon returns")).not.toBeInTheDocument();
     expect(await screen.findByText("Performance Drivers")).toBeInTheDocument();
 
     const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -253,6 +256,16 @@ describe("PerformanceAnalyticsPage", () => {
         const url = input.toString();
         return (
           url.includes("/performance/summary") &&
+          url.includes("as_of_date=2026-02-23") &&
+          url.includes("reporting_currency=EUR")
+        );
+      }),
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some(([input]) => {
+        const url = input.toString();
+        return (
+          url.includes("/performance/horizon-comparison") &&
           url.includes("as_of_date=2026-02-23") &&
           url.includes("reporting_currency=EUR")
         );
