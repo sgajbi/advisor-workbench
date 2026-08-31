@@ -129,6 +129,7 @@ export async function loadPortfolioRecordScreenData({
       summaryDetails,
       controls,
       performanceWindow,
+      selectedPortfolioId,
     )
   ) {
     return {

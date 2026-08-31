@@ -22,6 +22,8 @@ const CONTROLS: PortfolioWorkspaceControls = {
   hideEmptyModules: true,
   focusExceptions: true,
 };
+const PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
+const SOURCE_PORTFOLIO = { portfolio_id: PORTFOLIO_ID } as const;
 
 describe("portfolio workspace control patch", () => {
   it.each([
@@ -98,14 +100,14 @@ describe("portfolio review-context controls", () => {
   it("hydrates only source-supported portfolio controls", () => {
     expect(
       resolvePortfolioReviewControls(workspace, {
-        asOfDate: "2026-06-30",
+        asOfDate: "2026-08-21",
         period: "YTD",
         reportingCurrency: "SGD",
       }),
     ).toMatchObject({
       status: "valid",
       controls: {
-        asOfDate: "2026-06-30",
+        asOfDate: "2026-08-21",
         timeWindow: "YTD",
         reportingCurrency: "SGD",
       },
@@ -166,10 +168,18 @@ describe("portfolio review-context controls", () => {
     [null, false],
     [{}, false],
     [{ as_of_date: "2026-08-20" }, false],
-    [{ as_of_date: "2026-08-21" }, true],
     [
       {
         as_of_date: "2026-08-21",
+        portfolio: { portfolio_id: "PB_WRONG" },
+      },
+      false,
+    ],
+    [{ as_of_date: "2026-08-21", portfolio: SOURCE_PORTFOLIO }, true],
+    [
+      {
+        as_of_date: "2026-08-21",
+        portfolio: SOURCE_PORTFOLIO,
         income_summary: { reporting_currency: "SGD" },
         performance: { period: "YTD", report_end_date: "2026-08-21" },
       },
@@ -178,6 +188,7 @@ describe("portfolio review-context controls", () => {
     [
       {
         as_of_date: "2026-08-21",
+        portfolio: SOURCE_PORTFOLIO,
         income_summary: { reporting_currency: "SGD" },
         performance: { period: "30D" },
       },
@@ -186,6 +197,7 @@ describe("portfolio review-context controls", () => {
     [
       {
         as_of_date: "2026-08-21",
+        portfolio: SOURCE_PORTFOLIO,
         activity_summary: { reporting_currency: "USD" },
       },
       false,
@@ -193,6 +205,7 @@ describe("portfolio review-context controls", () => {
     [
       {
         as_of_date: "2026-08-21",
+        portfolio: SOURCE_PORTFOLIO,
         income_summary: { reporting_currency: "SGD" },
         activity_summary: { reporting_currency: "EUR" },
       },
@@ -206,7 +219,7 @@ describe("portfolio review-context controls", () => {
           timeWindow: CONTROLS.timeWindow,
           reportStartDate: "2026-01-01",
           reportEndDate: CONTROLS.asOfDate,
-        }),
+        }, PORTFOLIO_ID),
       ).toBe(expected);
     },
   );
@@ -220,6 +233,7 @@ describe("portfolio review-context controls", () => {
             period: "YTD",
             report_end_date: "2026-08-20",
           },
+          portfolio: SOURCE_PORTFOLIO,
         },
         { ...CONTROLS, asOfDate: "2026-08-21", timeWindow: "YTD" },
         {
@@ -227,8 +241,17 @@ describe("portfolio review-context controls", () => {
           reportStartDate: "2026-01-01",
           reportEndDate: "2026-08-21",
         },
+        PORTFOLIO_ID,
       ),
     ).toBe(false);
+  });
+
+  it("keeps historical review unavailable until every rendered module refreshes", () => {
+    expect(
+      resolvePortfolioReviewControls(workspace, {
+        asOfDate: "2026-06-30",
+      }),
+    ).toEqual({ status: "invalid", issues: ["unsupported_as_of_date"] });
   });
 
   it("matches the default 30D control to its exact EXPLICIT source window", () => {
@@ -248,9 +271,11 @@ describe("portfolio review-context controls", () => {
             report_start_date: performanceWindow.reportStartDate,
             report_end_date: performanceWindow.reportEndDate,
           },
+          portfolio: SOURCE_PORTFOLIO,
         },
         controls,
         performanceWindow,
+        PORTFOLIO_ID,
       ),
     ).toBe(true);
     expect(
@@ -262,9 +287,11 @@ describe("portfolio review-context controls", () => {
             report_start_date: "2026-07-21",
             report_end_date: performanceWindow.reportEndDate,
           },
+          portfolio: SOURCE_PORTFOLIO,
         },
         controls,
         performanceWindow,
+        PORTFOLIO_ID,
       ),
     ).toBe(false);
   });

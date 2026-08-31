@@ -19,6 +19,7 @@ describe("portfolio record screen data", () => {
     apiMocks.getPortfolioWorkspaceShell.mockResolvedValue(shell);
     apiMocks.getPortfolioWorkspaceSummaryDetails.mockResolvedValue({
       as_of_date: shell.as_of_date,
+      portfolio: shell.portfolio,
       positions: [],
     });
     apiMocks.getPortfolioWorkspaceDetailedDetails.mockResolvedValue({

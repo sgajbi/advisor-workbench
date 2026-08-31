@@ -145,6 +145,7 @@ export function hasPortfolioSourceControlOverride(
 export function isPortfolioReviewResponseCurrent<
   Response extends Readonly<{
     as_of_date?: string;
+    portfolio?: Readonly<{ portfolio_id: string }>;
     income_summary?: Readonly<{ reporting_currency: string }> | null;
     activity_summary?: Readonly<{ reporting_currency: string }> | null;
     performance?: Readonly<{
@@ -160,8 +161,12 @@ export function isPortfolioReviewResponseCurrent<
     "asOfDate" | "reportingCurrency" | "timeWindow"
   >,
   performanceWindow: PortfolioPerformanceWindowRequest,
+  expectedPortfolioId: string,
 ): response is Response & Readonly<{ as_of_date: string }> {
-  if (response?.as_of_date !== controls.asOfDate) {
+  if (
+    response?.portfolio?.portfolio_id !== expectedPortfolioId ||
+    response.as_of_date !== controls.asOfDate
+  ) {
     return false;
   }
   if (
