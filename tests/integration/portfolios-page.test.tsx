@@ -132,7 +132,48 @@ describe("PortfolioFoundationPage", () => {
   });
 
   it("hydrates a supported review period from the governed URL context", async () => {
-    stubPortfolioApis();
+    const baseFetch = stubPortfolioApis();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL) => {
+        const url = input.toString();
+        if (url.includes("/book")) {
+          return jsonResponse({
+            as_of_date: "2026-02-24",
+            summary: {
+              assets_under_management_base: 1250000,
+              invested_market_value_base: 1145000,
+              cash_market_value_base: 105000,
+              cash_weight_pct: 8.4,
+              position_count: 12,
+              cash_balance_count: 2,
+            },
+            allocation_views: [],
+            top_positions: [],
+            positions: [],
+          });
+        }
+        if (url.includes("/performance-snapshot")) {
+          const period = url.includes("period=MTD")
+            ? "MTD"
+            : url.includes("period=QTD")
+              ? "QTD"
+              : "YTD";
+          return jsonResponse({
+            period,
+            as_of_date: "2026-02-24",
+            report_end_date: "2026-02-24",
+            portfolio_return_pct: 2.5,
+            benchmark_return_pct: 2.1,
+            excess_return_pct: 0.4,
+            warnings: [],
+            partial_failures: [],
+            sparkline: [],
+          });
+        }
+        return baseFetch(input);
+      }),
+    );
 
     render(
       await PortfolioFoundationPage({
@@ -145,8 +186,9 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    expect(screen.getByRole("radio", { name: "YTD" })).toBeChecked();
-    expect(screen.getByText(/Period YTD\./i)).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "YTD" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("radio", { name: "YTD" })).toBeChecked();
+    expect(await screen.findByText(/Period YTD\./i)).toBeInTheDocument();
   });
 
   it("does not request analytical detail for unsupported portfolio context", async () => {
@@ -637,3 +679,10 @@ describe("PortfolioFoundationPage", () => {
     expect(screen.queryByLabelText("Projected cashflow chart in USD")).not.toBeInTheDocument();
   }, 30000);
 });
+
+function jsonResponse(payload: unknown): Response {
+  return {
+    ok: true,
+    json: async () => payload,
+  } as Response;
+}
