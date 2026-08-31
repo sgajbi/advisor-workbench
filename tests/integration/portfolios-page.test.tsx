@@ -140,6 +140,13 @@ describe("PortfolioFoundationPage", () => {
         if (url.includes("/book")) {
           return jsonResponse({
             as_of_date: "2026-02-24",
+            portfolio: {
+              portfolio_id: "PORT_UI_1001",
+              display_name: "Portfolio UI 1001",
+              client_id: "CLIENT_UI_1001",
+              base_currency: "USD",
+              booking_center_code: "Singapore",
+            },
             summary: {
               assets_under_management_base: 1250000,
               invested_market_value_base: 1145000,

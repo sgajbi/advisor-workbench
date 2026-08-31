@@ -428,7 +428,7 @@ describe("portfolio view model", () => {
     expect(context.supportsReportingCurrencyRestatement).toBe(false);
   });
 
-  it("enables historical snapshots only when gateway marks the control as supported", () => {
+  it("keeps historical selection disabled until every rendered module can refresh", () => {
     const workspace = buildWorkspace();
     workspace.control_capabilities = {
       ...workspace.control_capabilities!,
@@ -452,8 +452,9 @@ describe("portfolio view model", () => {
     expect(context.historicalSnapshotReason).toBe(
       "Gateway confirms historical snapshot support across the workspace."
     );
-    expect(context.supportsHistoricalSnapshots).toBe(true);
+    expect(context.supportsHistoricalSnapshots).toBe(false);
     expect(context.selectedAsOfDate).toBe("2025-06-01");
+    expect(context.hasHistoricalGap).toBe(true);
   });
 
   it("derives portfolio readiness, activity, and workflow models", () => {
