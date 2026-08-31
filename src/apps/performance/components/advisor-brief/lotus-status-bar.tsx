@@ -97,24 +97,16 @@ export default function LotusStatusBar({
         <SemanticBadge
           tone={getStatusTone(status)}
           emphasis="strong"
-          className={cx(
-            styles.toolbarChip,
-            styles.toolbarChipPrimary
-          )}
         >
           {getStatusLabel(status)}
         </SemanticBadge>
         <SemanticBadge
           tone={status === "ready" ? "success" : status === "partial" ? "warn" : "default"}
-          className={styles.toolbarChip}
         >
           {getEvidenceLabel(status)}
         </SemanticBadge>
         {status === "partial" ? (
-          <SemanticBadge
-            tone="warn"
-            className={styles.toolbarChip}
-          >
+          <SemanticBadge tone="warn">
             Partial Evidence
           </SemanticBadge>
         ) : null}
