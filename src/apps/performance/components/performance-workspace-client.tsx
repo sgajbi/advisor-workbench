@@ -644,6 +644,8 @@ export default function PerformanceWorkspaceClient({
         workspace: workspace ?? summary,
         portfolioContext: initialPortfolioContext,
         notice: shellContextNotice,
+        currencyPresentation:
+          mode === "risk" ? "portfolio_base" : "source_confirmed",
       })}
     >
       <PerformanceWorkspaceView

@@ -73,6 +73,21 @@ describe("performance review context strip view model", () => {
     ).toEqual({ kind: "reporting", value: "SGD" });
   });
 
+  it("keeps Risk Review in portfolio base currency until its contract supports restatement", () => {
+    const workspace = buildSupportedPerformanceScenario().workspace;
+    workspace.requested_reporting_currency = "SGD";
+    workspace.effective_reporting_currency = "SGD";
+    workspace.reporting_currency_state = "applied";
+
+    expect(
+      buildPerformanceReviewContextStrip({
+        workspace,
+        portfolioContext: null,
+        currencyPresentation: "portfolio_base",
+      }).currency,
+    ).toEqual({ kind: "base", value: "USD" });
+  });
+
   it("leaves an absent effective performance date unconfirmed for the shared strip", () => {
     const workspace = buildSupportedPerformanceScenario().workspace;
     workspace.effective_as_of_date = "";

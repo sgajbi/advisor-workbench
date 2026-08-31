@@ -21,10 +21,12 @@ export function buildPerformanceReviewContextStrip({
   workspace,
   portfolioContext,
   notice,
+  currencyPresentation = "source_confirmed",
 }: {
   workspace: PerformanceContextSource | null;
   portfolioContext: PortfolioWorkspace | null;
   notice?: ReviewContextStripModel["notice"];
+  currencyPresentation?: "source_confirmed" | "portfolio_base";
 }): ReviewContextStripModel {
   const performancePortfolioId = workspace?.portfolio_id ?? null;
   const contextMatchesPerformance =
@@ -45,7 +47,10 @@ export function buildPerformanceReviewContextStrip({
         baseCurrency:
           workspace?.portfolio.base_currency ?? portfolioSource.baseCurrency,
         acceptedReportingCurrency:
-          workspace?.reporting_currency_state === "applied" ? displayCurrency : null,
+          currencyPresentation === "source_confirmed" &&
+          workspace?.reporting_currency_state === "applied"
+            ? displayCurrency
+            : null,
       },
       notice,
     );
@@ -64,6 +69,7 @@ export function buildPerformanceReviewContextStrip({
         null,
       baseCurrency: workspace.portfolio.base_currency,
       acceptedReportingCurrency:
+        currencyPresentation === "source_confirmed" &&
         workspace.reporting_currency_state === "applied"
           ? getPerformanceDisplayCurrency(workspace, workspace.portfolio.base_currency)
           : null,
