@@ -294,10 +294,11 @@ export async function getPortfolioCatalog(): Promise<PortfolioCatalogResponse["i
 }
 
 export async function getPortfolioWorkspaceShell(
-  portfolioId: string
+  portfolioId: string,
+  options: { signal?: AbortSignal } = {},
 ): Promise<PortfolioWorkspace | null> {
   try {
-    return await fetchPortfolioWorkspaceShell(portfolioId);
+    return await fetchPortfolioWorkspaceShell(portfolioId, options);
   } catch {
     return null;
   }
@@ -335,12 +336,13 @@ export async function getRequiredPortfolioBook(
 }
 
 async function fetchPortfolioWorkspaceShell(
-  portfolioId: string
+  portfolioId: string,
+  options: { signal?: AbortSignal } = {},
 ): Promise<PortfolioWorkspace | null> {
   const summaryPayload = await fetchPortfolioJson<PortfolioWorkspaceSummaryResponse>(
     resolvePortfolioRequestTarget(),
     `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/workspace`,
-    { useCache: false }
+    { signal: options.signal }
   );
   if (!summaryPayload) {
     return null;
@@ -417,7 +419,8 @@ export async function getPortfolioWorkspaceSummaryDetails(
     reportEndDate: string;
     usesCustomDateRange?: boolean;
     includeWorkflowActions?: boolean;
-  }
+  },
+  options: { signal?: AbortSignal } = {},
 ): Promise<PortfolioWorkspaceSummaryDetails | null> {
   try {
     const performanceQuery = buildPortfolioPerformanceWindowQuery(params);
@@ -441,7 +444,7 @@ export async function getPortfolioWorkspaceSummaryDetails(
       fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
         resolvePortfolioRequestTarget(),
         performancePath,
-        { query }
+        { query, signal: options.signal }
       )
     );
     const selectedStandardPeriodIndex = params.usesCustomDateRange
@@ -452,14 +455,14 @@ export async function getPortfolioWorkspaceSummaryDetails(
       : fetchPortfolioJson<PortfolioPerformanceSnapshotResponse>(
           resolvePortfolioRequestTarget(),
           performancePath,
-          { query: performanceQuery }
+          { query: performanceQuery, signal: options.signal }
         );
     const includeWorkflowActions = params.includeWorkflowActions !== false;
     const workflowRequest = includeWorkflowActions
       ? fetchPortfolioJson<PortfolioWorkflowResponse>(
           resolvePortfolioRequestTarget(),
           `${portfolioPath}/workflow`,
-          { query: workflowQuery }
+          { query: workflowQuery, signal: options.signal }
         )
       : Promise.resolve(null);
     const [summaryResults, workflowResults] = await Promise.all([
@@ -467,17 +470,17 @@ export async function getPortfolioWorkspaceSummaryDetails(
         fetchPortfolioJson<PortfolioBookResponse>(
           resolvePortfolioRequestTarget(),
           `${portfolioPath}/book`,
-          { query: bookQuery }
+          { query: bookQuery, signal: options.signal }
         ),
         fetchPortfolioJson<PortfolioIncomeSummaryResponse>(
           resolvePortfolioRequestTarget(),
           `${portfolioPath}/income-summary`,
-          { query: summaryQuery }
+          { query: summaryQuery, signal: options.signal }
         ),
         fetchPortfolioJson<PortfolioActivitySummaryResponse>(
           resolvePortfolioRequestTarget(),
           `${portfolioPath}/activity-summary`,
-          { query: summaryQuery }
+          { query: summaryQuery, signal: options.signal }
         ),
         selectedPerformanceRequest,
         ...standardPerformanceRequests,
@@ -1028,6 +1031,7 @@ async function fetchPortfolioJson<T>(
     useCache?: boolean;
     forceRefresh?: boolean;
     query?: URLSearchParams;
+    signal?: AbortSignal;
   } = {}
 ): Promise<T | null> {
   // Server-rendered portfolio truth must be independent of process history so
@@ -1065,6 +1069,7 @@ async function fetchPortfolioJson<T>(
       async () => {
         const response = await fetch(url, {
           cache: "no-store",
+          signal: options.signal,
           ...(target === "client"
             ? { headers: buildAnalyticsUiCorrelationHeaders() }
             : {}),
