@@ -124,6 +124,19 @@ describe("ProofPackSummary", () => {
 
     expect(screen.getByText("Evidence pack is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM proof pack (503)")).toBeInTheDocument();
+    for (const label of [
+      "Evidence status",
+      "Approval readiness",
+      "Mandate coverage",
+      "Report readiness",
+    ]) {
+      const metric = screen.getByText(label).parentElement;
+      expect(metric).not.toBeNull();
+      expect(within(metric as HTMLElement).getByText("Unavailable")).toBeInTheDocument();
+    }
+    expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
+    expect(screen.queryByText("Complete")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ready")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Load evidence" })).toBeDisabled();
   });
