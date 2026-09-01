@@ -351,7 +351,7 @@ function buildCopilotActions({
   const proofPackBlockedReason = resolveProofPackMemoBlockedReason({
     currentProofPackId,
     historicalProofPackId,
-    sourceError: data.proofPackError,
+    sourceError: data.proofPackError ?? data.outcomeReviewError,
     supportabilityState: proofPackModel.supportabilityState,
     aiEvidenceInputAvailable: proofPackModel.aiEvidenceInputAvailable,
   });

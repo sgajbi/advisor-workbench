@@ -46,7 +46,10 @@ composition, narrow-width stacking, and zero page-level horizontal overflow.
 Exact-head review also found that inaccessible wave, exception, outcome-review, quality-score and
 evidence-pack sources could be described as confirmed empty. The action mapping now checks each
 source error before empty-state copy, presents a business-safe temporarily-unavailable blocker,
-and keeps Prepare disabled. A table-driven component regression proves all six workflows.
+and keeps Prepare disabled. Evidence-pack discovery also inherits the outcome-review source error
+because that read supplies the historical pack identity before the pack can be loaded. A
+table-driven component regression proves all six workflows, and a focused regression proves the
+realistic outcome-review-error-only discovery path.
 
 ## Validation
 
@@ -55,7 +58,7 @@ npx vitest run tests/unit/dpm-copilot-workspace.test.tsx tests/unit/dpm-copilot-
 Result before exact-head review fix: 3 files, 43 tests passed
 
 npm test -- --run tests/unit/dpm-copilot-workspace.test.tsx tests/unit/manage-workspace-components.test.tsx
-Result after exact-head review fix: 2 files, 34 tests passed
+Result after exact-head review fixes: 2 files, 35 tests passed
 
 npm run typecheck
 Result: passed
