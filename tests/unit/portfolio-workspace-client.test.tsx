@@ -826,6 +826,131 @@ describe("PortfolioWorkspaceClient", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("discloses when a scheduled Portfolio refresh is paused offline", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({ positions: [] }),
+    );
+    const view = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    onlineManager.setOnline(false);
+
+    await act(async () => {
+      await view.queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        view.queryClient.getQueryState(workspaceQueryKey(initialWorkspace))
+          ?.fetchStatus,
+      ).toBe("paused");
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Portfolio refresh is waiting for connectivity",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "it may be out of date",
+    );
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "1001550.05",
+    );
+    expect(getShellWorkspaceMock).not.toHaveBeenCalled();
+
+    getShellWorkspaceMock.mockResolvedValueOnce(initialWorkspace);
+    onlineManager.setOnline(true);
+
+    await waitFor(() => expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Portfolio refresh is waiting for connectivity"),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("discloses when a scheduled Portfolio detail refresh is paused offline", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        summary: {
+          ...initialWorkspace.summary,
+          market_value_base: 2000000.25,
+        },
+        positions: [{ security_id: "EQ_1" }],
+      }),
+    );
+    const view = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    const summaryQuery = view.queryClient
+      .getQueryCache()
+      .findAll({
+        queryKey: portfolioQueryKeys.summaryDetailsRoot(
+          "MANUAL_PB_USD_001",
+        ),
+      })
+      .find(
+        (query) => query.getObserversCount() > 0 && query.state.data !== undefined,
+      );
+    expect(summaryQuery).toBeDefined();
+    onlineManager.setOnline(false);
+
+    await act(async () => {
+      await view.queryClient.invalidateQueries({
+        queryKey: summaryQuery!.queryKey,
+        exact: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        view.queryClient.getQueryState(summaryQuery!.queryKey)?.fetchStatus,
+      ).toBe("paused");
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Portfolio detail refresh is waiting for connectivity",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "they may be out of date",
+    );
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "2000000.25",
+    );
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+
+    onlineManager.setOnline(true);
+
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(
+        screen.queryByText(
+          "Portfolio detail refresh is waiting for connectivity",
+        ),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("stores a refreshed shell under its returned generation and restores the authoritative server generation on revisit", async () => {
     const initialWorkspace = buildWorkspace();
     const refreshedWorkspace = {

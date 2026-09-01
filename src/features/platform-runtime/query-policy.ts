@@ -2,18 +2,28 @@ export const WORKBENCH_QUERY_STALE_TIME_MS = 30_000;
 export const WORKBENCH_QUERY_GC_TIME_MS = 300_000;
 
 type WorkbenchQueryStatus = "pending" | "error" | "success";
+type WorkbenchQueryFetchStatus = "fetching" | "paused" | "idle";
+
+const WORKBENCH_QUERY_MIN_REVALIDATION_INTERVAL_MS = 1_000;
 
 export function getWorkbenchQueryRevalidationInterval(
   dataUpdatedAt: number,
   status: WorkbenchQueryStatus,
+  fetchStatus: WorkbenchQueryFetchStatus,
   now = Date.now(),
-): number {
+): number | false {
+  if (fetchStatus !== "idle") {
+    return false;
+  }
   if (status === "error" || dataUpdatedAt <= 0) {
     return WORKBENCH_QUERY_STALE_TIME_MS;
   }
   return Math.min(
     WORKBENCH_QUERY_STALE_TIME_MS,
-    Math.max(1, WORKBENCH_QUERY_STALE_TIME_MS - (now - dataUpdatedAt)),
+    Math.max(
+      WORKBENCH_QUERY_MIN_REVALIDATION_INTERVAL_MS,
+      WORKBENCH_QUERY_STALE_TIME_MS - (now - dataUpdatedAt),
+    ),
   );
 }
 
