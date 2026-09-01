@@ -371,6 +371,29 @@ describe("DpmCopilotWorkspace", () => {
     }
   });
 
+  it("keeps current evidence-pack discovery unavailable when outcome reviews cannot be read", () => {
+    const data = buildManageWorkspaceData({
+      outcomeReviews: null,
+      outcomeReviewError: "DPM outcome review endpoint unavailable.",
+      proofPack: null,
+      proofPackError: null,
+    });
+
+    render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
+
+    const blocker = "Current evidence pack temporarily unavailable";
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        blocker,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: `Evidence Pack Decision Memo unavailable: ${blocker}`,
+      }),
+    ).toBeDisabled();
+  });
+
   it("keeps historical proof-pack lineage visible without presenting it as actionable", () => {
     const data = buildManageWorkspaceData();
 
