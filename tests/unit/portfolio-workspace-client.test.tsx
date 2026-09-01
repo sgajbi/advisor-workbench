@@ -575,8 +575,14 @@ describe("PortfolioWorkspaceClient", () => {
       refetchType: "none",
     });
     getShellWorkspaceMock.mockResolvedValueOnce(null);
-    getSummaryDetailsMock.mockResolvedValue(
-      confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+    getSummaryDetailsMock.mockImplementation(
+      (_portfolioId: string, params: { asOfDate?: string }) =>
+        Promise.resolve(
+          confirmedDetails({
+            as_of_date: params.asOfDate,
+            positions: [],
+          }),
+        ),
     );
 
     render(
@@ -610,6 +616,39 @@ describe("PortfolioWorkspaceClient", () => {
         name: "Retry portfolio overview refresh",
       }),
     ).toBeEnabled();
+
+    const refreshedWorkspace = {
+      ...buildWorkspace(),
+      as_of_date: "2026-03-29",
+      summary: {
+        ...buildWorkspace().summary,
+        market_value_base: 2000000.25,
+      },
+      warnings: ["valuation_source_refreshed"],
+    } satisfies PortfolioWorkspace;
+    getShellWorkspaceMock.mockResolvedValueOnce(refreshedWorkspace);
+    await act(async () => {
+      within(screen.getByRole("alert"))
+        .getByRole("button", { name: "Retry portfolio overview refresh" })
+        .click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "29 Mar 2026",
+    );
+    expect(
+      firstVisit.queryClient.getQueryState(
+        portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+      )?.status,
+    ).toBe("success");
+    expect(
+      screen.queryByText("Portfolio overview could not be refreshed"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps confirmed Portfolio detail visible when a stale refresh is unavailable", async () => {
