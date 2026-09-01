@@ -123,20 +123,20 @@ describe("OutcomeReviewPanel", () => {
     expect(screen.getByText("Ready for adviser review")).toBeInTheDocument();
     expect(screen.getAllByText("Within expected tolerance").length).toBeGreaterThan(0);
     expect(screen.getByText("72.4%")).toBeInTheDocument();
-    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Report preparationReady"
-    );
-    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "AI-assisted review summaryReady"
-    );
-    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Source evidenceAvailable"
+    expect(screen.queryByLabelText("Selected outcome review readiness")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Outcome review decision summary")).toHaveTextContent(
+      "Ready for adviser review",
     );
     expect(screen.queryByText("or_1")).not.toBeInTheDocument();
     expect(screen.queryByText("rr_1")).not.toBeInTheDocument();
     expect(screen.getByText("Drift reduction")).toBeInTheDocument();
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Available").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByLabelText("Outcome review evidence availability")).toHaveTextContent(
+      "Expected outcome Available",
+    );
+    expect(screen.getByLabelText("Outcome review evidence availability")).toHaveTextContent(
+      "Realised outcome Available",
+    );
     expect(screen.getByRole("link", { name: /Review mandate impact/ })).toHaveAttribute(
       "href",
       "#outcome-review-detail"

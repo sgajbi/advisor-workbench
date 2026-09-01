@@ -8,7 +8,7 @@ import type {
 } from "../../src/features/workbench/outcome-review-view-model";
 
 describe("OutcomeReviewSummary", () => {
-  it("renders source-backed review posture, evidence status, and supportability reasons", () => {
+  it("renders the three decision facts and supportability reasons without duplicate readiness", () => {
     render(
       <OutcomeReviewSummary
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -18,15 +18,15 @@ describe("OutcomeReviewSummary", () => {
     );
 
     expect(screen.queryByText("Outcome review data is unavailable")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
+    expect(screen.getByLabelText("Outcome review decision summary")).toHaveTextContent(
       "Ready for adviser review",
     );
-    expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
+    expect(screen.getByLabelText("Outcome review decision summary")).toHaveTextContent(
       "Within expected tolerance",
     );
-    expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent("72.4%");
-    expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
-      "Available",
+    expect(screen.getByLabelText("Outcome review decision summary")).toHaveTextContent("72.4%");
+    expect(screen.getByLabelText("Outcome review decision summary")).not.toHaveTextContent(
+      "Evidence pack",
     );
     expect(screen.getByText("Report preparation ready")).toBeInTheDocument();
     expect(screen.queryByText(/or_1|rr_1|wave_1|sha256/i)).not.toBeInTheDocument();
@@ -56,9 +56,7 @@ describe("OutcomeReviewSummary", () => {
 
     expect(screen.getByText("Outcome review is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM outcome reviews (503)")).toBeInTheDocument();
-    expect(screen.getByLabelText("Outcome review status summary")).toHaveTextContent(
-      "Not available",
-    );
+    expect(screen.getByLabelText("Outcome review decision summary")).toHaveTextContent("N/A");
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(screen.getByText(/Front-office operations/)).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
