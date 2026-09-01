@@ -414,7 +414,12 @@ describe("WorkbenchPage", () => {
     );
 
     expect(screen.getAllByRole("heading", { name: "Evidence Pack" }).length).toBeGreaterThan(0);
-    expect(screen.getByText("Evidence Areas")).toBeInTheDocument();
+    expect(screen.getByText("Evidence pack is unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Load evidence" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Evidence areas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Next actions" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("evidence-pack-detail")).not.toBeInTheDocument();
     expect(screen.queryByText("Mandate Alignment")).not.toBeInTheDocument();
     expect(screen.queryByText("Ready for advisor review")).not.toBeInTheDocument();
     expect(screen.queryByText("Signature Pending")).not.toBeInTheDocument();
