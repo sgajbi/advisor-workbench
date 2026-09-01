@@ -4,10 +4,12 @@ import { useMemo, useRef, useState } from "react";
 
 import {
   ActionButton,
-  MetricRow,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
+  Text,
+  useAdmittedSourceSelection,
+  WorkbenchWorklist,
 } from "@/design-system";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import {
@@ -27,6 +29,8 @@ import { requestDpmProofPackAiPmMemo } from "@/features/workbench/proof-pack-api
 import { buildProofPackPanelModel } from "@/features/workbench/proof-pack-view-model";
 import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-state";
 import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
+
+import styles from "./dpm-copilot-workspace.module.css";
 
 type CopilotAction = {
   key: DpmAiWorkflowFamily;
@@ -62,15 +66,22 @@ export default function DpmCopilotWorkspace({
   });
   const requestSequenceRef = useRef(0);
   const actions = useMemo(
-    () => buildCopilotActions({ data, currentProofPack, portfolioId, mandateId: mandateId ?? null }),
-    [currentProofPack, data, mandateId, portfolioId]
+    () =>
+      buildCopilotActions({
+        data,
+        currentProofPack,
+        portfolioId,
+        mandateId: mandateId ?? null,
+      }),
+    [currentProofPack, data, mandateId, portfolioId],
   );
   const currentContextKeys = useMemo(
     () => new Set(actions.map((action) => action.contextKey)),
     [actions],
   );
   const pending =
-    actionState.pending && currentContextKeys.has(actionState.pending.contextKey)
+    actionState.pending &&
+    currentContextKeys.has(actionState.pending.contextKey)
       ? actionState.pending
       : null;
   const result =
@@ -82,6 +93,14 @@ export default function DpmCopilotWorkspace({
       ? actionState.error
       : null;
   const readyCount = actions.filter((action) => !action.blockedReason).length;
+  const selectionScopeKey = JSON.stringify([portfolioId, mandateId ?? null]);
+  const [selectedKey, setSelectedKey] = useAdmittedSourceSelection({
+    scopeKey: selectionScopeKey,
+    admittedKeys: actions.map((action) => action.key),
+    sourceResolved: true,
+  });
+  const selectedAction =
+    actions.find((action) => action.key === selectedKey) ?? actions[0];
 
   async function runAction(action: CopilotAction) {
     if (action.blockedReason || pending) {
@@ -120,7 +139,8 @@ export default function DpmCopilotWorkspace({
         result: null,
         error: {
           contextKey: action.contextKey,
-          message: error instanceof Error ? error.message : `${action.label} failed.`,
+          message:
+            error instanceof Error ? error.message : `${action.label} failed.`,
         },
       });
     }
@@ -129,37 +149,147 @@ export default function DpmCopilotWorkspace({
   return (
     <SectionBlock
       title="Decision-support workflows"
-      subtitle="Prepare review-required material from current portfolio evidence. Evidence, permitted use, and decision authority remain explicit."
-      className="dpm-copilot-workspace"
+      subtitle="Choose a source-backed workflow, confirm its input, then prepare material for human review."
+      className={styles.workspace}
+      id="pm-copilot-workspace"
       actions={
-        <div className="dpm-copilot-badge-row" aria-label="Portfolio manager copilot status">
+        <div
+          className={styles.workspaceStatus}
+          aria-label="Portfolio manager copilot status"
+        >
           <SemanticBadge tone={readyCount > 0 ? "success" : "warn"}>
-            {readyCount} workflows available
+            {readyCount} of {actions.length} available
           </SemanticBadge>
-          <SemanticBadge>Human review governed</SemanticBadge>
-          <SemanticBadge>Internal decision support</SemanticBadge>
         </div>
       }
     >
-      <div className="dpm-copilot-status-strip">
-        <MetricRow layout="stacked" label="Portfolio" value={portfolioId} />
-        <MetricRow layout="stacked" label="Mandate" value={mandateId ?? "N/A"} />
-        <MetricRow
-          layout="stacked"
-          label="Available Workflows"
-          value={`${readyCount} of ${actions.length}`}
+      {selectedAction ? (
+        <WorkbenchWorklist
+          ariaLabel="Portfolio manager decision-support workflows"
+          relationshipIdBase="pm-copilot-workflow"
+          eyebrow="Workflow queue"
+          title="Select review material to prepare"
+          description="Review the source input and availability before preparing material."
+          items={actions.map((action) => ({
+            key: action.key,
+            title: action.label,
+            status: (
+              <SemanticBadge
+                tone={copilotActionTone(action, pending, result, error)}
+              >
+                {copilotActionStatus(action, pending, result, error)}
+              </SemanticBadge>
+            ),
+            facts: [
+              {
+                label: action.referenceLabel,
+                value: action.reference ?? "Not available",
+              },
+            ],
+          }))}
+          selectedKey={selectedAction.key}
+          onSelectionChange={setSelectedKey}
+          decisionLabel="Selected decision-support workflow"
+          decision={
+            <SelectedCopilotWorkflow
+              action={selectedAction}
+              pending={pending}
+              result={
+                result?.contextKey === selectedAction.contextKey
+                  ? result.outcome
+                  : null
+              }
+              error={
+                error?.contextKey === selectedAction.contextKey
+                  ? error.message
+                  : null
+              }
+              onPrepare={() => void runAction(selectedAction)}
+            />
+          }
+          className={styles.decisionWorkspace}
         />
-        <MetricRow
-          layout="stacked"
-          label="Decision Authority"
-          value="Portfolio manager and investment control"
-        />
-        <MetricRow layout="stacked" label="Permitted Use" value="Internal decision support" />
-        <MetricRow
-          layout="stacked"
-          label="Restricted Use"
-          value="Client communication and order execution"
-        />
+      ) : null}
+
+      <div
+        className={styles.operatingBoundary}
+        aria-label="Operating boundaries"
+      >
+        <Text variant="microLabel">Human review required</Text>
+        <Text variant="bodySmall">
+          Internal decision support only. Portfolio manager and investment
+          control retain decision authority; client communication and order
+          execution are not supported.
+        </Text>
+      </div>
+    </SectionBlock>
+  );
+}
+
+function SelectedCopilotWorkflow({
+  action,
+  pending,
+  result,
+  error,
+  onPrepare,
+}: {
+  action: CopilotAction;
+  pending: ActionState["pending"];
+  result: DpmAiWorkflowOutcome | null;
+  error: string | null;
+  onPrepare: () => void;
+}) {
+  const isPending = pending?.contextKey === action.contextKey;
+
+  return (
+    <article
+      className={styles.decisionPanel}
+      data-copilot-workflow={action.key}
+      data-testid="pm-copilot-selected-workflow"
+    >
+      <header className={styles.decisionHeader}>
+        <Text variant="microLabel">Selected workflow</Text>
+        <Text as="h3" variant="subsectionTitle">
+          {action.label}
+        </Text>
+        <Text variant="secondary">{action.detail}</Text>
+      </header>
+
+      <dl
+        className={styles.decisionFacts}
+        aria-label="Selected workflow evidence"
+      >
+        <div>
+          <dt>{action.referenceLabel}</dt>
+          <dd>{action.reference ?? "Not available"}</dd>
+        </div>
+        <div>
+          <dt>Readiness</dt>
+          <dd>{action.blockedReason ?? "Available to prepare"}</dd>
+        </div>
+      </dl>
+
+      <div className={styles.decisionAction}>
+        <Text variant="bodySmall">
+          Prepared material remains review-required and is not approved for
+          client use.
+        </Text>
+        <ActionButton
+          priority={action.blockedReason ? "quiet" : "secondary"}
+          disabled={Boolean(action.blockedReason) || Boolean(pending)}
+          onClick={onPrepare}
+          aria-label={
+            action.blockedReason
+              ? `${action.label} unavailable: ${action.blockedReason}`
+              : `Prepare ${action.label}`
+          }
+        >
+          {action.blockedReason
+            ? "Unavailable"
+            : isPending
+              ? "Preparing"
+              : "Prepare"}
+        </ActionButton>
       </div>
 
       {error ? (
@@ -167,55 +297,37 @@ export default function DpmCopilotWorkspace({
           kind="partial"
           surface="portfolio"
           title="Copilot request needs attention"
-          body={error.message}
+          body={error}
         />
       ) : null}
-      {result ? (
-        <DpmAiWorkflowResult outcome={result.outcome} focusOnMount />
-      ) : null}
-
-      <div className="dpm-copilot-action-grid">
-        {actions.map((action) => (
-          <section key={action.key} className="dpm-copilot-action-card">
-            <div>
-              <strong>{action.label}</strong>
-              <span>{action.detail}</span>
-            </div>
-            <MetricRow label={action.referenceLabel} value={action.reference ?? "Not available"} />
-            <MetricRow
-              label="Readiness"
-              value={action.blockedReason ? action.blockedReason : "Available to prepare"}
-            />
-            <ActionButton
-              priority={action.blockedReason ? "quiet" : "secondary"}
-              disabled={Boolean(action.blockedReason) || Boolean(pending)}
-              onClick={() => void runAction(action)}
-              aria-label={
-                action.blockedReason
-                  ? `${action.label} unavailable: ${action.blockedReason}`
-                  : `Prepare ${action.label}`
-              }
-            >
-              {action.blockedReason
-                ? "Unavailable"
-                : pending?.key === action.key
-                  ? "Preparing"
-                  : "Prepare"}
-            </ActionButton>
-          </section>
-        ))}
-      </div>
-
-      <ScreenStatePanel
-        kind="partial"
-        surface="portfolio"
-        title="Operating boundaries"
-        body={
-          "This workspace requests bounded workflow-pack runs only. It does not generate prompts in the browser, store generated summary text, rank PMs, contact clients, approve trades, route orders, claim OMS execution, or infer missing source facts."
-        }
-      />
-    </SectionBlock>
+      {result ? <DpmAiWorkflowResult outcome={result} focusOnMount /> : null}
+    </article>
   );
+}
+
+function copilotActionStatus(
+  action: CopilotAction,
+  pending: ActionState["pending"],
+  result: ActionState["result"],
+  error: ActionState["error"],
+) {
+  if (pending?.contextKey === action.contextKey) return "Preparing";
+  if (result?.contextKey === action.contextKey) return "Prepared";
+  if (error?.contextKey === action.contextKey) return "Needs attention";
+  return action.blockedReason ? "Unavailable" : "Available";
+}
+
+function copilotActionTone(
+  action: CopilotAction,
+  pending: ActionState["pending"],
+  result: ActionState["result"],
+  error: ActionState["error"],
+): "default" | "success" | "warn" {
+  if (pending?.contextKey === action.contextKey) return "default";
+  if (result?.contextKey === action.contextKey) return "success";
+  if (error?.contextKey === action.contextKey || action.blockedReason)
+    return "warn";
+  return "success";
 }
 
 function buildCopilotActions({
@@ -230,12 +342,11 @@ function buildCopilotActions({
   mandateId: string | null;
 }): CopilotAction[] {
   const proofPackModel = buildProofPackPanelModel(currentProofPack);
-  const currentProofPackId = proofPackModel.proofPackId === "N/A"
-    ? null
-    : proofPackModel.proofPackId;
+  const currentProofPackId =
+    proofPackModel.proofPackId === "N/A" ? null : proofPackModel.proofPackId;
   const historicalProofPackId = readFirstString(
     firstArrayItem(data.outcomeReviews?.data, "items"),
-    ["proof_pack_id"]
+    ["proof_pack_id"],
   );
   const proofPackReference = currentProofPackId ?? historicalProofPackId;
   const proofPackBlockedReason = resolveProofPackMemoBlockedReason({
@@ -244,27 +355,39 @@ function buildCopilotActions({
     supportabilityState: proofPackModel.supportabilityState,
     aiEvidenceInputAvailable: proofPackModel.aiEvidenceInputAvailable,
   });
-  const waveId = readFirstString(firstArrayItem(data.waves?.data, "items"), ["wave_id"]);
-  const exceptionId = readFirstString(firstArrayItem(data.commandCenterExceptions?.data, "items"), [
-    "exception_id",
+  const waveId = readFirstString(firstArrayItem(data.waves?.data, "items"), [
+    "wave_id",
   ]);
-  const outcomeReviewId = readFirstString(firstArrayItem(data.outcomeReviews?.data, "items"), [
-    "outcome_review_id",
-  ]);
+  const exceptionId = readFirstString(
+    firstArrayItem(data.commandCenterExceptions?.data, "items"),
+    ["exception_id"],
+  );
+  const outcomeReviewId = readFirstString(
+    firstArrayItem(data.outcomeReviews?.data, "items"),
+    ["outcome_review_id"],
+  );
   const scoreRunId =
-    readFirstString(firstArrayItem(data.pmOperatingQualityScoreRuns?.data, "items"), [
+    readFirstString(
+      firstArrayItem(data.pmOperatingQualityScoreRuns?.data, "items"),
+      ["score_run_id"],
+    ) ??
+    readFirstString(data.pmOperatingQualityScoreRuns?.supportability, [
       "score_run_id",
-    ]) ?? readFirstString(data.pmOperatingQualityScoreRuns?.supportability, ["score_run_id"]);
+    ]);
 
   const actions: Array<Omit<CopilotAction, "contextKey">> = [
     {
       key: "proof-pack-memo",
       label: "Evidence Pack Decision Memo",
-      detail: "Prepare a review-required portfolio decision memo from the current evidence pack.",
-      referenceLabel: currentProofPackId ? "Evidence pack" : "Historical evidence pack",
+      detail:
+        "Prepare a review-required portfolio decision memo from the current evidence pack.",
+      referenceLabel: currentProofPackId
+        ? "Evidence pack"
+        : "Historical evidence pack",
       reference: proofPackReference,
       blockedReason: proofPackBlockedReason,
-      run: () => requestDpmProofPackAiPmMemo({ proofPackId: currentProofPackId ?? "" }),
+      run: () =>
+        requestDpmProofPackAiPmMemo({ proofPackId: currentProofPackId ?? "" }),
     },
     {
       key: "wave-memo",
@@ -278,7 +401,8 @@ function buildCopilotActions({
     {
       key: "operations-handoff",
       label: "Operations Handoff Summary",
-      detail: "Request support-only handoff posture for operations and investment control.",
+      detail:
+        "Request support-only handoff posture for operations and investment control.",
       referenceLabel: "Reference",
       reference: waveId,
       blockedReason: waveId ? null : "No rebalance wave available",
@@ -302,20 +426,26 @@ function buildCopilotActions({
     {
       key: "outcome-narrative",
       label: "Outcome Narrative",
-      detail: "Request PM/CIO/control summary over realized outcome-review evidence.",
+      detail:
+        "Request PM/CIO/control summary over realized outcome-review evidence.",
       referenceLabel: "Reference",
       reference: outcomeReviewId,
       blockedReason: outcomeReviewId ? null : "No outcome review available",
-      run: () => requestDpmOutcomeReviewAiNarrative({ outcomeReviewId: outcomeReviewId ?? "" }),
+      run: () =>
+        requestDpmOutcomeReviewAiNarrative({
+          outcomeReviewId: outcomeReviewId ?? "",
+        }),
     },
     {
       key: "pm-quality-summary",
       label: "PM Quality Support Summary",
-      detail: "Request support-only summary posture over Manage PM operating-quality evidence.",
+      detail:
+        "Request support-only summary posture over Manage PM operating-quality evidence.",
       referenceLabel: "Reference",
       reference: scoreRunId,
       blockedReason: scoreRunId ? null : "No PM quality score run available",
-      run: () => requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
+      run: () =>
+        requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
     },
   ];
   return actions.map((action) => ({
@@ -354,7 +484,10 @@ function resolveProofPackMemoBlockedReason({
   return null;
 }
 
-function firstArrayItem(source: unknown, key: string): Record<string, unknown> | null {
+function firstArrayItem(
+  source: unknown,
+  key: string,
+): Record<string, unknown> | null {
   const values = asRecord(source)[key];
   return Array.isArray(values) ? asRecord(values[0]) : null;
 }

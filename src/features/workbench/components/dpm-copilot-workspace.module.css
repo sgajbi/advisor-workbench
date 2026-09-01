@@ -1,0 +1,121 @@
+.workspace {
+  min-width: 0;
+}
+
+.workspaceStatus {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.decisionWorkspace {
+  min-width: 0;
+}
+
+.decisionPanel {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-tile);
+  background: var(--surface-primary);
+  box-shadow: var(--elevation-subtle);
+}
+
+.decisionHeader {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.decisionHeader p {
+  max-width: 48rem;
+  margin: 0;
+}
+
+.decisionFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  padding: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--border);
+}
+
+.decisionFacts > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--surface-secondary);
+}
+
+.decisionFacts dt {
+  color: var(--text-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: var(--tracking-label);
+  line-height: var(--type-label-line-height);
+}
+
+.decisionFacts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: var(--type-body-small-size);
+  font-weight: 600;
+  line-height: var(--type-body-small-line-height);
+}
+
+.decisionAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.decisionAction p {
+  max-width: 38rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.operatingBoundary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.operatingBoundary p {
+  max-width: 64rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+@media (max-width: 519px) {
+  .workspaceStatus {
+    justify-content: flex-start;
+  }
+
+  .decisionFacts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .decisionAction,
+  .operatingBoundary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .decisionAction button {
+    width: 100%;
+  }
+}
