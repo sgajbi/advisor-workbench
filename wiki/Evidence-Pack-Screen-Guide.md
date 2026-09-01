@@ -10,7 +10,7 @@ rebalance context.
 | Route | `/workbench/{portfolioId}?mode=proof` |
 | Authority | `lotus-manage:RFC-0040` through Gateway; bounded Lotus AI memo support |
 | Handoff | Retrieves report-ready input but does not generate or deliver a report |
-| Known wording gap | **Generate client report** overstates the current GET handoff; tracked in #798 |
+| Decision flow | Source posture → prepare/load recovery → evidence areas → one next-action region → progressive detail |
 
 ## Business Purpose
 
@@ -27,24 +27,27 @@ assess coverage, and prepare bounded downstream material without rebuilding proo
 ## Workflow Position
 
 Prepare a pack from a source rebalance run, load the current pack, review sections and coverage,
-then retrieve report-ready input or request a review-required PM memo only where the source says the
-handoff is available.
+then check report readiness, load the source summary, or request a review-required advisor memo only
+where the source says the handoff is available. When the pack is unavailable, the screen withholds
+the unusable evidence table and downstream handoffs and keeps only source failure and recovery.
 
 ## Implemented Capabilities
 
 - Prepares and loads a Manage proof pack.
 - Presents sections, coverage, source references, documents, and handoff readiness.
-- Loads source Markdown and report-ready input.
+- Loads source Markdown and checks source-confirmed report readiness.
 - Requests a governed, review-required PM memo over the exact source pack.
+- Keeps each downstream destination in one next-action region beside the evidence it depends on.
 
 ## Decisions And Actions
 
 | Action | Current effect |
 | --- | --- |
-| Prepare evidence pack | Requests Manage to materialise source-owned evidence |
-| Load source detail | Retrieves the selected pack or source Markdown |
-| Retrieve report input | Gets Manage report-ready input; no report is generated |
-| Prepare PM memo | Requests bounded AI support over the exact source pack |
+| Prepare evidence | Requests Manage to materialise source-owned evidence |
+| Load evidence | Retrieves the selected source pack |
+| Load evidence summary | Retrieves source Markdown for review |
+| Check report readiness | Gets Manage report-ready input; no report is generated |
+| Open advisor memo | Requests bounded, review-required AI support over the exact source pack |
 
 ## Information And Source Authority
 
@@ -60,7 +63,7 @@ owners only when a later supported handoff invokes them; this screen currently d
 | Empty | Prepare or load a source pack |
 | Partial | Resolve the named missing section or source dependency |
 | Blocked or unsupported | Review the source restriction; downstream action stays unavailable |
-| Unavailable | Retry after Gateway/Manage recovery |
+| Unavailable | Review the named source failure, then prepare or reload evidence; downstream controls stay hidden until evidence is retrieved |
 
 ## Workbench Boundaries
 
@@ -81,11 +84,13 @@ execution. Report-input retrieval is not client-report generation.
 - `tests/unit/proof-pack-workspace.test.tsx`
 - `tests/unit/proof-pack-view-model.test.ts`
 - `tests/e2e/manage-proof-copilot-workspace.spec.ts`
+- `docs/evidence/issue-981-evidence-pack-ownership/evidence-pack/`
 
 ## First Support Step
 
 Confirm the selected rebalance reference, pack identifier, source coverage, and handoff readiness.
-Do not use the current report action label as proof that a report exists.
+**Check report readiness** proves only that source evidence is available to the reporting workflow;
+it does not prove that a report was generated, rendered, approved, archived, delivered, or released.
 
 ## Related Documentation
 
