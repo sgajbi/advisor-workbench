@@ -75,6 +75,7 @@
     "test:e2e:manage:portfolio-memory": "node scripts/testing/run-manage-smoke-scenario.mjs portfolio-memory",
     "test:e2e:manage:rebalance-waves": "node scripts/testing/run-manage-smoke-scenario.mjs rebalance-waves",
     "test:e2e:manage:mandate-health": "node scripts/testing/run-manage-smoke-scenario.mjs mandate-health",
+    "test:e2e:manage:pm-quality": "node scripts/testing/run-manage-smoke-scenario.mjs pm-quality",
     "test:e2e:manage:outcome-reviews": "node scripts/testing/run-manage-smoke-scenario.mjs outcome-reviews",
     "test:e2e:manage:proof-copilot": "node scripts/testing/run-manage-smoke-scenario.mjs proof-copilot",
     "test:e2e:intake:readiness": "playwright test tests/e2e/intake-first-action-readiness.spec.ts",

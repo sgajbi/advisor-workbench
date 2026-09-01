@@ -199,6 +199,13 @@
             "Mandate Health preserves source truth across partial and complete attention views"
           ]
         },
+        "pm-quality": {
+          "fixture_value": "pm-quality",
+          "spec": "tests/e2e/manage-pm-operating-quality-workspace.spec.ts",
+          "expected_tests": [
+            "PM Operating Quality keeps supervisory evidence dense, source-backed, and keyboard reachable"
+          ]
+        },
         "outcome-reviews": {
           "fixture_value": "outcome-reviews",
           "spec": "tests/e2e/manage-outcome-reviews-workspace.spec.ts",
