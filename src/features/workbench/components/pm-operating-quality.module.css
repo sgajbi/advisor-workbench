@@ -78,6 +78,11 @@
   margin-top: 10px;
 }
 
+.compactStatePanel {
+  --space-2: 2px;
+  --space-5: 8px;
+}
+
 .workspace {
   display: grid;
   align-items: start;
@@ -253,9 +258,16 @@
 .reviewActionGrid {
   display: grid;
   align-items: start;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   gap: 12px;
   margin-top: 14px;
+}
+
+.evidenceGrid {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+}
+
+.reviewActionGrid {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .controlForm {

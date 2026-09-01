@@ -130,6 +130,7 @@ export default function PmOperatingQualityPanel({
     Boolean(loadError) ||
     Boolean(actionError) ||
     model.state === "empty" ||
+    model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
 
@@ -157,6 +158,11 @@ export default function PmOperatingQualityPanel({
       {shouldShowStatePanel ? (
         <ScreenStatePanel
           kind={loadError || actionError ? "partial" : stateCopy.kind}
+          className={
+            !loadError && !actionError && model.state === "partial"
+              ? styles.compactStatePanel
+              : undefined
+          }
           surface="portfolio"
           title={loadError || actionError ? "PM operating quality needs attention" : stateCopy.title}
           body={loadError || actionError?.body || stateCopy.body}
