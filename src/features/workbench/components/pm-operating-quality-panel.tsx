@@ -212,7 +212,7 @@ export default function PmOperatingQualityPanel({
         }}
       />
 
-      <div className={styles.workspace}>
+      <div className={styles.workspace} data-testid="pm-operating-quality-workspace">
         <PmOperatingQualityScoreRunCard
           model={model}
           pendingScorePreview={pendingAction}

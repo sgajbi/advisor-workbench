@@ -42,7 +42,7 @@ export default function PmOperatingQualityScoreRunCard({
   onPersistFairness,
 }: Props) {
   return (
-    <div className={styles.primaryCard}>
+    <div className={styles.primaryCard} data-testid="pm-operating-quality-score-run-card">
       <div className={styles.cardHeader}>
         <Text as="h3" variant="subsectionTitle">
           Score-Run Evidence

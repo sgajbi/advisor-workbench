@@ -93,7 +93,10 @@ export default function PmOperatingQualitySummaryInvocationsCard({
               label={hasDetail ? undefined : "No detail"}
             />
           </div>
-          <div aria-label="PM operating quality summary generation status">
+          <div
+            className={styles.reviewActionStatus}
+            aria-label="PM operating quality summary generation status"
+          >
             <MetricRow
               label="Gateway Read State"
               value={
