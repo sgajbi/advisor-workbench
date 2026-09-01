@@ -45,4 +45,20 @@ describe("OutcomeReviewEvidenceGrid", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/order|OMS|execution|fill|settlement/i)).not.toBeInTheDocument();
   });
+
+  it("does not overstate a complete absence of source evidence as partial", () => {
+    render(
+      <OutcomeReviewEvidenceGrid
+        expectedSnapshotHash="N/A"
+        realizedSnapshotHash="N/A"
+        proofPackId="N/A"
+        readyEvidenceCount={0}
+      />
+    );
+
+    const grid = screen.getByLabelText("Outcome review evidence availability");
+
+    expect(grid).toHaveTextContent("Source evidence Not available");
+    expect(grid).not.toHaveTextContent("Source evidence Partial");
+  });
 });
