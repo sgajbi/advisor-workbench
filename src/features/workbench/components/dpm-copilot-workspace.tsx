@@ -10,6 +10,7 @@ import {
   Text,
   useAdmittedSourceSelection,
   WorkbenchWorklist,
+  type WorkbenchWorklistItem,
 } from "@/design-system";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import {
@@ -32,10 +33,9 @@ import type { ManageWorkspaceData } from "@/features/workbench/manage-workspace-
 
 import styles from "./dpm-copilot-workspace.module.css";
 
-type CopilotAction = {
+type CopilotAction = WorkbenchWorklistItem<DpmAiWorkflowFamily> & {
   key: DpmAiWorkflowFamily;
   contextKey: string;
-  label: string;
   detail: string;
   referenceLabel: string;
   reference: string | null;
@@ -139,8 +139,8 @@ export default function DpmCopilotWorkspace({
         result: null,
         error: {
           contextKey: action.contextKey,
-          message:
-            error instanceof Error ? error.message : `${action.label} failed.`,
+            message:
+              error instanceof Error ? error.message : `${action.title} failed.`,
         },
       });
     }
@@ -149,7 +149,7 @@ export default function DpmCopilotWorkspace({
   return (
     <SectionBlock
       title="Decision-support workflows"
-      subtitle="Choose a source-backed workflow, confirm its input, then prepare material for human review."
+      subtitle="Choose a workflow, confirm its portfolio evidence, then prepare material for human review."
       className={styles.workspace}
       id="pm-copilot-workspace"
       actions={
@@ -171,8 +171,7 @@ export default function DpmCopilotWorkspace({
           title="Select review material to prepare"
           description="Review the source input and availability before preparing material."
           items={actions.map((action) => ({
-            key: action.key,
-            title: action.label,
+            ...action,
             status: (
               <SemanticBadge
                 tone={copilotActionTone(action, pending, result, error)}
@@ -250,7 +249,7 @@ function SelectedCopilotWorkflow({
       <header className={styles.decisionHeader}>
         <Text variant="microLabel">Selected workflow</Text>
         <Text as="h3" variant="subsectionTitle">
-          {action.label}
+          {action.title}
         </Text>
         <Text variant="secondary">{action.detail}</Text>
       </header>
@@ -280,8 +279,8 @@ function SelectedCopilotWorkflow({
           onClick={onPrepare}
           aria-label={
             action.blockedReason
-              ? `${action.label} unavailable: ${action.blockedReason}`
-              : `Prepare ${action.label}`
+              ? `${action.title} unavailable: ${action.blockedReason}`
+              : `Prepare ${action.title}`
           }
         >
           {action.blockedReason
@@ -378,7 +377,7 @@ function buildCopilotActions({
   const actions: Array<Omit<CopilotAction, "contextKey">> = [
     {
       key: "proof-pack-memo",
-      label: "Evidence Pack Decision Memo",
+      title: "Evidence Pack Decision Memo",
       detail:
         "Prepare a review-required portfolio decision memo from the current evidence pack.",
       referenceLabel: currentProofPackId
@@ -391,7 +390,7 @@ function buildCopilotActions({
     },
     {
       key: "wave-memo",
-      label: "Wave PM Memo",
+      title: "Wave PM Memo",
       detail: "Request PM review commentary for a Manage-owned rebalance wave.",
       referenceLabel: "Reference",
       reference: waveId,
@@ -400,9 +399,9 @@ function buildCopilotActions({
     },
     {
       key: "operations-handoff",
-      label: "Operations Handoff Summary",
+      title: "Operations Handoff Summary",
       detail:
-        "Request support-only handoff posture for operations and investment control.",
+        "Request a support-only handoff summary for operations and investment control.",
       referenceLabel: "Reference",
       reference: waveId,
       blockedReason: waveId ? null : "No rebalance wave available",
@@ -410,7 +409,7 @@ function buildCopilotActions({
     },
     {
       key: "exception-summary",
-      label: "Exception Summary",
+      title: "Exception Summary",
       detail: "Request triage support over a Manage monitoring exception.",
       referenceLabel: "Reference",
       reference: exceptionId,
@@ -425,7 +424,7 @@ function buildCopilotActions({
     },
     {
       key: "outcome-narrative",
-      label: "Outcome Narrative",
+      title: "Outcome Narrative",
       detail:
         "Request PM/CIO/control summary over realized outcome-review evidence.",
       referenceLabel: "Reference",
@@ -438,9 +437,9 @@ function buildCopilotActions({
     },
     {
       key: "pm-quality-summary",
-      label: "PM Quality Support Summary",
+      title: "PM Quality Support Summary",
       detail:
-        "Request support-only summary posture over Manage PM operating-quality evidence.",
+        "Request a support-only summary of portfolio-management operating-quality evidence.",
       referenceLabel: "Reference",
       reference: scoreRunId,
       blockedReason: scoreRunId ? null : "No PM quality score run available",

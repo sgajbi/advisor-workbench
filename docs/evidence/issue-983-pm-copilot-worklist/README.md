@@ -13,6 +13,7 @@ global-authority deletion, a simpler decision composition, and measured rendered
 | `dpm-copilot-*` global escape arms | 12 | 0 |
 | Manage module global escapes | 271 | 259 |
 | Manage module lines | 1,523 | 1,468 |
+| Product-copy findings | 230 | 227 |
 | Page height at 1440px | 2,477px | 2,093px (-15.5%) |
 | Page height at 1024px | 3,635px | 2,087px (-42.6%) |
 | Page height at 768px | 3,819px | 2,840px (-25.6%) |
