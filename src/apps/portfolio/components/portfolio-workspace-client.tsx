@@ -398,10 +398,17 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    queryClient.setQueryData(
-      portfolioQueryKeys.reviewContextIntent(),
-      `${initialWorkspaceSourceKey}|idle`,
-    );
+    const intentKey = portfolioQueryKeys.reviewContextIntent();
+    queryClient.setQueryData(intentKey, `${initialWorkspaceSourceKey}|idle`);
+    return () => {
+      queryClient.setQueryData(
+        intentKey,
+        `${initialWorkspaceSourceKey}|inactive`,
+      );
+      void queryClient.cancelQueries({
+        queryKey: portfolioQueryKeys.summaryDetailsRoot(selectedPortfolioId),
+      });
+    };
   }, [initialWorkspaceSourceKey, queryClient, selectedPortfolioId]);
   const summaryResponseIsCurrent = Boolean(
     summaryRequest &&

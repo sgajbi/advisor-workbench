@@ -398,6 +398,40 @@ describe("PortfolioWorkspaceClient", () => {
     );
   });
 
+  it("cancels a pending context confirmation when the workspace is handed off", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
+    const visit = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    let completeConfirmation:
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        completeConfirmation = resolve;
+      }),
+    );
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+
+    visit.unmount();
+    await act(async () => {
+      completeConfirmation?.(
+        confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+      );
+      await Promise.resolve();
+    });
+
+    expect(routerPushMock).not.toHaveBeenCalled();
+  });
+
   it("rejects control confirmation completed against an older shell generation", async () => {
     getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
     const { queryClient } = render(
