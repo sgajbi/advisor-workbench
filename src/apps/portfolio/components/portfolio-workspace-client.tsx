@@ -273,13 +273,16 @@ export default function PortfolioWorkspaceClient({
 
   useEffect(() => {
     const shellWorkspace = shellQuery.data;
+    const serverSnapshotChanged =
+      workspaceDraft.sourceKey !== initialWorkspaceSourceKey;
     if (
-      workspaceState ||
-      !shellWorkspace ||
-      !isPortfolioWorkspaceIdentityConfirmed(
-        shellWorkspace,
-        selectedPortfolioId,
-      )
+      !serverSnapshotChanged &&
+      (!shellWorkspace ||
+        workspaceState === shellWorkspace ||
+        !isPortfolioWorkspaceIdentityConfirmed(
+          shellWorkspace,
+          selectedPortfolioId,
+        ))
     ) {
       return;
     }
@@ -287,6 +290,25 @@ export default function PortfolioWorkspaceClient({
     let cancelled = false;
     void Promise.resolve().then(() => {
       if (cancelled) {
+        return;
+      }
+      if (serverSnapshotChanged) {
+        if (selectedPortfolioId && confirmedInitialWorkspace) {
+          queryClient.setQueryData(
+            portfolioQueryKeys.workspace(selectedPortfolioId),
+            confirmedInitialWorkspace,
+          );
+        }
+        setWorkspaceState(confirmedInitialWorkspace);
+        return;
+      }
+      if (
+        !shellWorkspace ||
+        !isPortfolioWorkspaceIdentityConfirmed(
+          shellWorkspace,
+          selectedPortfolioId,
+        )
+      ) {
         return;
       }
       setControls((current) => {
@@ -302,10 +324,14 @@ export default function PortfolioWorkspaceClient({
       cancelled = true;
     };
   }, [
+    confirmedInitialWorkspace,
+    initialWorkspaceSourceKey,
+    queryClient,
     selectedPortfolioId,
     setControls,
     setWorkspaceState,
     shellQuery.data,
+    workspaceDraft.sourceKey,
     workspaceState,
   ]);
 
