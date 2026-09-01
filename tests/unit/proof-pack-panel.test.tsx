@@ -138,11 +138,11 @@ describe("ProofPackPanel", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Evidence Pack" })).toBeInTheDocument();
-    expect(screen.getByText("Evidence Status")).toBeInTheDocument();
-    expect(screen.getByText("Approval Readiness")).toBeInTheDocument();
+    expect(document.querySelector("#evidence-pack-panel")).toBeInTheDocument();
+    expect(screen.getByText("Evidence status")).toBeInTheDocument();
+    expect(screen.getByText("Approval readiness")).toBeInTheDocument();
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
-    expect(screen.getByText("Mandate Coverage")).toBeInTheDocument();
+    expect(screen.getByText("Mandate coverage")).toBeInTheDocument();
     expect(screen.getAllByText("Mandate Alignment").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Ready for advisor review").length).toBeGreaterThan(0);
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
@@ -150,9 +150,10 @@ describe("ProofPackPanel", () => {
     expect(screen.queryByText("sha256:risk")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Load summary" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Generate client report" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Open advisor memo" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Load evidence summary/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Check report readiness/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Open advisor memo/ })).toBeEnabled();
+    expect(screen.getAllByRole("button")).toHaveLength(5);
   });
 
   it("prepares an evidence pack from the rebalance snapshot run", async () => {
@@ -225,7 +226,7 @@ describe("ProofPackPanel", () => {
     );
 
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Load summary" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Load evidence summary/ })).toBeEnabled();
   });
 
   it("retains a published pack across a mode remount with a new transport correlation", async () => {
@@ -342,14 +343,14 @@ describe("ProofPackPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Load evidence" }));
     await waitFor(() => expect(getDpmProofPack).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "Load summary" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Load evidence summary/ }));
     await waitFor(() => expect(getDpmProofPackMarkdown).toHaveBeenCalledWith("ppack_1"));
     expect(await screen.findByLabelText("Evidence pack summary preview")).toHaveTextContent(
       "Ready."
     );
-    fireEvent.click(screen.getByRole("button", { name: "Generate client report" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Check report readiness/ }));
     await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
-    fireEvent.click(screen.getByRole("button", { name: "Open advisor memo" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Open advisor memo/ }));
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" })
     );
@@ -372,6 +373,8 @@ describe("ProofPackPanel", () => {
 
     expect(screen.getByText("Evidence pack is unavailable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch DPM proof pack (503)")).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Evidence areas" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Evidence pack next actions")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeDisabled();
   });
 });

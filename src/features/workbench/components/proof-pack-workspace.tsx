@@ -1,8 +1,12 @@
 "use client";
 
 import { AnalyticsTable } from "@/design-system";
-import { ProofPackAvailabilityBadge, ProofPackStateBadge } from "@/features/workbench/components/proof-pack-badges";
+import {
+  ProofPackAvailabilityBadge,
+  ProofPackStateBadge,
+} from "@/features/workbench/components/proof-pack-badges";
 import type { ProofPackPanelModel } from "@/features/workbench/proof-pack-view-model";
+import styles from "./proof-pack.module.css";
 
 type ProofPackWorkspaceProps = {
   model: ProofPackPanelModel;
@@ -27,16 +31,22 @@ export default function ProofPackWorkspace({
 
   return (
     <>
-      <div className="proof-pack-workspace-grid">
-        <div className="proof-pack-card">
-          <div className="proof-pack-card-header">
-            <h3>Evidence Areas</h3>
+      <div className={styles.workspaceGrid}>
+        <section
+          className={styles.evidenceCard}
+          aria-labelledby="evidence-pack-areas-heading"
+        >
+          <div className={styles.cardHeader}>
+            <h3 id="evidence-pack-areas-heading">Evidence areas</h3>
             <span>{model.evidenceRows.length} areas</span>
           </div>
           <AnalyticsTable
             ariaLabel="Evidence areas"
+            className={styles.evidenceTable}
             variant="analysis"
             density="compact"
+            scrollRegionLabel="Evidence areas table"
+            tableMinWidth={680}
             columns={[
               { key: "area", label: "Evidence Area" },
               { key: "status", label: "Status" },
@@ -57,44 +67,70 @@ export default function ProofPackWorkspace({
               body: "Evidence areas are not available yet.",
             }}
           />
-        </div>
+        </section>
 
-        <div className="proof-pack-action-stack" aria-label="Recommended evidence actions">
-          <button
-            type="button"
-            disabled={!proofPackId || !model.aiEvidenceInputAvailable || actionDisabled}
-            onClick={onRequestAiPmMemo}
+        <section
+          className={styles.nextActions}
+          aria-labelledby="evidence-pack-next-actions-heading"
+        >
+          <div className={styles.nextActionsHeader}>
+            <h3 id="evidence-pack-next-actions-heading">Next actions</h3>
+            <span>Continue from reviewed evidence</span>
+          </div>
+          <div
+            className={styles.actionStack}
+            aria-label="Evidence pack next actions"
           >
-            <strong>Open advisor memo</strong>
-            <span>Prepare advisor handoff commentary from the evidence pack.</span>
-          </button>
-          <button
-            type="button"
-            disabled={!proofPackId || !model.reportInputAvailable || actionDisabled}
-            onClick={onLoadReportInput}
-          >
-            <strong>Generate client report</strong>
-            <span>Use the report-ready evidence payload for client-facing material.</span>
-          </button>
-          <button
-            type="button"
-            disabled={!proofPackId || !model.markdownAvailable || actionDisabled}
-            onClick={onLoadMarkdown}
-          >
-            <strong>Load evidence summary</strong>
-            <span>Open the evidence summary returned by Gateway.</span>
-          </button>
-          <a href={`/workbench/${encodeURIComponent(portfolioId)}?mode=reviews`}>Return to outcome review</a>
-        </div>
+            <button
+              type="button"
+              disabled={
+                !proofPackId || !model.aiEvidenceInputAvailable || actionDisabled
+              }
+              onClick={onRequestAiPmMemo}
+            >
+              <strong>Open advisor memo</strong>
+              <span>
+                Prepare advisor handoff commentary from the evidence pack.
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={
+                !proofPackId || !model.reportInputAvailable || actionDisabled
+              }
+              onClick={onLoadReportInput}
+            >
+              <strong>Check report readiness</strong>
+              <span>
+                Confirm that source evidence is ready for the reporting workflow.
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={
+                !proofPackId || !model.markdownAvailable || actionDisabled
+              }
+              onClick={onLoadMarkdown}
+            >
+              <strong>Load evidence summary</strong>
+              <span>Open the source evidence summary for review.</span>
+            </button>
+            <a
+              href={`/workbench/${encodeURIComponent(portfolioId)}?mode=reviews`}
+            >
+              Return to outcome review
+            </a>
+          </div>
+        </section>
       </div>
 
-      <div className="proof-pack-detail-grid">
-        <section className="proof-pack-detail-card">
+      <div className={styles.detailGrid} data-testid="evidence-pack-detail">
+        <section className={styles.detailCard}>
           <h3>Detail: {model.selectedEvidenceTitle}</h3>
           <p>{model.selectedEvidenceSummary}</p>
-          <div className="proof-pack-subgrid">
+          <div className={styles.detailSubgrid}>
             <div>
-              <h4>Coverage Checklist</h4>
+              <h4>Coverage checklist</h4>
               <ul>
                 {model.coverageItems.length ? (
                   model.coverageItems.map((item) => <li key={item.key}>{item.area}</li>)
@@ -104,8 +140,8 @@ export default function ProofPackWorkspace({
               </ul>
             </div>
             <div>
-              <h4>Supporting Documents</h4>
-              <div className="proof-pack-document-list">
+              <h4>Supporting documents</h4>
+              <div className={styles.documentList}>
                 {model.documents.length ? (
                   model.documents.map((document) => (
                     <span key={document.key}>
@@ -123,10 +159,10 @@ export default function ProofPackWorkspace({
             </div>
           </div>
         </section>
-        <section className="proof-pack-rationale-card">
-          <h3>Advisor Rationale</h3>
+        <section className={styles.rationaleCard}>
+          <h3>Advisor rationale</h3>
           <p>{model.advisorRationale}</p>
-          <div className="proof-pack-handoff-row" aria-label="Evidence pack handoff status">
+          <div className={styles.handoffRow} aria-label="Evidence pack handoff status">
             <ProofPackAvailabilityBadge label="Summary" available={model.markdownAvailable} />
             <ProofPackAvailabilityBadge label="Report" available={model.reportInputAvailable} />
             <ProofPackAvailabilityBadge label="Memo" available={model.aiEvidenceInputAvailable} />

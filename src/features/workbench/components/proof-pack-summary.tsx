@@ -1,12 +1,18 @@
 "use client";
 
-import { ActionButton, MetricRow, ScreenStatePanel, Text } from "@/design-system";
+import {
+  ActionButton,
+  ScreenStatePanel,
+  Text,
+  WorkbenchSummaryMetricStrip,
+} from "@/design-system";
 import { ProofPackStateBadge } from "@/features/workbench/components/proof-pack-badges";
 import type { ProofPackPanelModel, ProofPackPanelState } from "@/features/workbench/proof-pack-view-model";
 import {
   proofPackStatePanelCopy,
   shouldShowProofPackStatePanel,
 } from "@/features/workbench/proof-pack-panel-helpers";
+import styles from "./proof-pack.module.css";
 
 type ProofPackSummaryProps = {
   model: ProofPackPanelModel;
@@ -19,9 +25,6 @@ type ProofPackSummaryProps = {
   errorMessage?: string | null;
   onGenerateProofPack: () => void;
   onLoadProofPack: () => void;
-  onLoadMarkdown: () => void;
-  onLoadReportInput: () => void;
-  onRequestAiPmMemo: () => void;
 };
 
 export default function ProofPackSummary({
@@ -35,9 +38,6 @@ export default function ProofPackSummary({
   errorMessage,
   onGenerateProofPack,
   onLoadProofPack,
-  onLoadMarkdown,
-  onLoadReportInput,
-  onRequestAiPmMemo,
 }: ProofPackSummaryProps) {
   const stateCopy = proofPackStatePanelCopy(model.state as ProofPackPanelState, portfolioId);
   const showStatePanel = shouldShowProofPackStatePanel(model.state, errorMessage);
@@ -54,40 +54,45 @@ export default function ProofPackSummary({
         />
       ) : null}
 
-      <div className="proof-pack-status-strip">
-        <MetricRow label="Evidence Status" value={model.evidenceStatusLabel} />
-        <MetricRow label="Approval Readiness" value={model.approvalReadinessLabel} />
-        <MetricRow label="Mandate Coverage" value={model.mandateCoverageLabel} />
-        <MetricRow label="Report Readiness" value={model.reportReadinessLabel} />
-      </div>
+      <WorkbenchSummaryMetricStrip
+        ariaLabel="Evidence pack decision summary"
+        className={styles.decisionSummary}
+        itemClassName={styles.decisionItem}
+        layout="custom"
+        items={[
+          {
+            key: "evidence-status",
+            label: "Evidence status",
+            value: model.evidenceStatusLabel,
+            unavailable: model.state === "unavailable",
+          },
+          {
+            key: "approval-readiness",
+            label: "Approval readiness",
+            value: model.approvalReadinessLabel,
+            unavailable: model.state === "unavailable",
+          },
+          {
+            key: "mandate-coverage",
+            label: "Mandate coverage",
+            value: model.mandateCoverageLabel,
+            unavailable: model.state === "unavailable",
+          },
+          {
+            key: "report-readiness",
+            label: "Report readiness",
+            value: model.reportReadinessLabel,
+            unavailable: model.state === "unavailable",
+          },
+        ]}
+      />
 
-      <div className="proof-pack-action-row" aria-label="Evidence pack actions">
+      <div className={styles.lifecycleActions} aria-label="Evidence pack lifecycle actions">
         <ActionButton priority="secondary" onClick={onGenerateProofPack} disabled={!rebalanceRunId || actionPending}>
           {pendingAction === "Generate proof pack" ? "Preparing" : "Prepare evidence"}
         </ActionButton>
         <ActionButton priority="secondary" onClick={onLoadProofPack} disabled={!proofPackId || actionPending}>
           {pendingAction === "Load proof pack" ? "Loading" : "Load evidence"}
-        </ActionButton>
-        <ActionButton
-          priority="secondary"
-          onClick={onLoadMarkdown}
-          disabled={!proofPackId || !model.markdownAvailable || actionPending}
-        >
-          {pendingAction === "Load summary" ? "Loading summary" : "Load summary"}
-        </ActionButton>
-        <ActionButton
-          priority="secondary"
-          onClick={onLoadReportInput}
-          disabled={!proofPackId || !model.reportInputAvailable || actionPending}
-        >
-          Generate client report
-        </ActionButton>
-        <ActionButton
-          priority="secondary"
-          onClick={onRequestAiPmMemo}
-          disabled={!proofPackId || !model.aiEvidenceInputAvailable || actionPending}
-        >
-          {pendingAction === "Open advisor memo" ? "Opening memo" : "Open advisor memo"}
         </ActionButton>
       </div>
 
@@ -97,12 +102,12 @@ export default function ProofPackSummary({
         </Text>
       ) : (
         <Text variant="secondary" className="muted">
-          Evidence pack actions are backed by the Gateway proof-pack endpoints for the selected mandate.
+          Review the current evidence before continuing to reporting or advisor commentary.
         </Text>
       )}
 
       {model.supportabilityReasons.length > 0 ? (
-        <div className="proof-pack-reason-row">
+        <div className={styles.reasonRow}>
           {model.supportabilityReasons.map((reason) => (
             <ProofPackStateBadge key={reason} state={reason} reason />
           ))}

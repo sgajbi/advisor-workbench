@@ -1,10 +1,6 @@
 "use client";
 
 import { SectionBlock } from "@/design-system";
-import {
-  ProofPackAvailabilityBadge,
-  ProofPackStateBadge,
-} from "@/features/workbench/components/proof-pack-badges";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import ProofPackSummary from "@/features/workbench/components/proof-pack-summary";
 import ProofPackWorkspace from "@/features/workbench/components/proof-pack-workspace";
@@ -16,6 +12,7 @@ import type {
 import { deriveProofPackContext } from "@/features/workbench/proof-pack-view-model";
 import { useProofPackActions } from "@/features/workbench/use-proof-pack-actions";
 import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-state";
+import styles from "./proof-pack.module.css";
 
 type Props = {
   portfolioId: string;
@@ -62,15 +59,8 @@ export default function ProofPackPanel({
 
   return (
     <SectionBlock
-      title="Evidence Pack"
-      subtitle="Mandate evidence, approval readiness, and client handoff support."
-      className="proof-pack-panel"
-      actions={
-        <div className="proof-pack-badge-row">
-          <ProofPackStateBadge state={model.supportabilityState} />
-          <ProofPackAvailabilityBadge label="Evidence" statusLabel={model.evidenceStatusLabel} />
-        </div>
-      }
+      id="evidence-pack-panel"
+      className={styles.panel}
     >
       <ProofPackSummary
         model={model}
@@ -83,9 +73,6 @@ export default function ProofPackPanel({
         errorMessage={resolvedErrorMessage}
         onGenerateProofPack={generateProofPack}
         onLoadProofPack={loadProofPack}
-        onLoadMarkdown={loadMarkdown}
-        onLoadReportInput={loadReportInput}
-        onRequestAiPmMemo={requestAiPmMemo}
       />
 
       {aiMemoOutcome ? (
@@ -97,18 +84,20 @@ export default function ProofPackPanel({
         />
       ) : null}
 
-      <ProofPackWorkspace
-        model={model}
-        portfolioId={portfolioId}
-        proofPackId={proofPackId}
-        pendingAction={pendingAction}
-        onRequestAiPmMemo={requestAiPmMemo}
-        onLoadReportInput={loadReportInput}
-        onLoadMarkdown={loadMarkdown}
-      />
+      {model.state !== "unavailable" ? (
+        <ProofPackWorkspace
+          model={model}
+          portfolioId={portfolioId}
+          proofPackId={proofPackId}
+          pendingAction={pendingAction}
+          onRequestAiPmMemo={requestAiPmMemo}
+          onLoadReportInput={loadReportInput}
+          onLoadMarkdown={loadMarkdown}
+        />
+      ) : null}
 
       {markdown ? (
-        <pre className="proof-pack-markdown-preview" aria-label="Evidence pack summary preview">
+        <pre className={styles.markdownPreview} aria-label="Evidence pack summary preview">
           {markdown}
         </pre>
       ) : null}

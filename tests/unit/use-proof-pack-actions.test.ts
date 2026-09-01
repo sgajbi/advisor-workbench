@@ -170,7 +170,7 @@ describe("useProofPackActions", () => {
 
     act(() => result.current.loadReportInput());
     await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
-    await waitFor(() => expect(result.current.handoffStatus).toBe("Client report ready for generation."));
+    await waitFor(() => expect(result.current.handoffStatus).toBe("Report-ready evidence is available."));
 
     act(() => result.current.requestAiPmMemo());
     await waitFor(() => expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_1" }));
@@ -181,6 +181,24 @@ describe("useProofPackActions", () => {
       humanReview: { state: "review-required" },
       clientUse: "internal-only",
     });
+  });
+
+  it("does not present report readiness when Gateway says the evidence is unavailable", async () => {
+    vi.mocked(getDpmProofPackReportInput).mockResolvedValue({
+      ...readyProofPack,
+      supportability: {
+        ...readyProofPack.supportability,
+        report_input_available: false,
+      },
+    });
+    const { result } = renderProofPackActions();
+
+    act(() => result.current.loadReportInput());
+
+    await waitFor(() => expect(getDpmProofPackReportInput).toHaveBeenCalledWith("ppack_1"));
+    await waitFor(() =>
+      expect(result.current.handoffStatus).toBe("Report-ready evidence is not available.")
+    );
   });
 
   it("removes a memo outcome when generation replaces its source proof pack", async () => {
