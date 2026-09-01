@@ -107,6 +107,7 @@ export default function ManageMandateHealth({ data }: Props) {
 
   return (
     <SectionBlock
+      id="mandate-health-panel"
       title={MANAGE_WORKFLOW_LABELS.mandateReview}
       subtitle="Review mandate posture, select an attention item, and inspect its source-owned next step and evidence."
       className={styles.panel}

@@ -2891,7 +2891,7 @@ export async function validateDpmCommandCenterPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  const mandatePanel = workbenchPanelByClass(page, "manage-mandate-panel");
+  const mandatePanel = page.locator("article#mandate-health-panel");
   await expect(
     mandatePanel.getByRole("heading", { name: "Mandate review", exact: true }),
   ).toBeVisible({

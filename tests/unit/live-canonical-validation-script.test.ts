@@ -1535,6 +1535,12 @@ describe("canonical live validation script", () => {
     expect(script).toContain("validateDpmCopilotWorkspace");
     expect(browserWorkflowModule).toContain("validateDpmCommandCenterPanel");
     expect(browserWorkflowModule).toContain(
+      'page.locator("article#mandate-health-panel")',
+    );
+    expect(browserWorkflowModule).not.toContain(
+      'workbenchPanelByClass(page, "manage-mandate-panel")',
+    );
+    expect(browserWorkflowModule).toContain(
       'name: "Portfolio Memory",\n      exact: true',
     );
     expect(browserWorkflowModule).toContain("Portfolio memory event timeline");

@@ -52,6 +52,7 @@ describe("Mandate Health CSS ownership", () => {
     const legacyStylesheet = readFileSync(legacyStylesheetPath, "utf8");
 
     expect(component).toContain('import styles from "./manage-mandate-health.module.css"');
+    expect(component).toContain('id="mandate-health-panel"');
     expect(stylesheet).not.toContain(":global(");
 
     for (const prefix of retiredPrefixes) {
