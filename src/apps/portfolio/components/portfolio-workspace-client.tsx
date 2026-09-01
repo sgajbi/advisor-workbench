@@ -250,6 +250,7 @@ export default function PortfolioWorkspaceClient({
   const shellQuery = useQuery({
     queryKey: portfolioQueryKeys.workspace(selectedPortfolioId ?? "unselected"),
     enabled: Boolean(selectedPortfolioId),
+    retry: false,
     initialData: confirmedInitialWorkspace ?? undefined,
     queryFn: async ({ signal }) => {
       recordPortfolioShellRecoveryLifecycle("automatic_attempt");

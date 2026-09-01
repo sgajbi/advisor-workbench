@@ -17,7 +17,10 @@ import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
-import { workbenchStrictQueryDefaults } from "../../src/features/platform-runtime/query-policy";
+import {
+  workbenchQueryDefaults,
+  workbenchStrictQueryDefaults,
+} from "../../src/features/platform-runtime/query-policy";
 
 const getSummaryDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
@@ -1385,6 +1388,16 @@ describe("PortfolioWorkspaceClient", () => {
     );
     getSummaryDetailsMock.mockResolvedValue(null);
 
+    const retryingQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          ...workbenchQueryDefaults,
+          retry: 1,
+          retryDelay: 0,
+        },
+      },
+    });
+
     render(
       <StrictMode>
         <PortfolioWorkspaceClient
@@ -1401,6 +1414,7 @@ describe("PortfolioWorkspaceClient", () => {
           initialWorkspace={null}
         />
       </StrictMode>,
+      retryingQueryClient,
     );
 
     await waitFor(() => {
