@@ -45,6 +45,36 @@
     "documentWidth": 768
   },
   {
+    "width": 721,
+    "height": 900,
+    "panelTop": 498.25,
+    "panelRight": 672.203125,
+    "decisionTop": 636.25,
+    "decisionRight": 655.203125,
+    "timelineTop": 891.4375,
+    "timelineRight": 654.203125,
+    "detailTop": 1464.625,
+    "detailRight": 655.203125,
+    "documentHeight": 2621,
+    "clientWidth": 721,
+    "documentWidth": 721
+  },
+  {
+    "width": 561,
+    "height": 900,
+    "panelTop": 538.640625,
+    "panelRight": 524.203125,
+    "decisionTop": 676.640625,
+    "decisionRight": 507.203125,
+    "timelineTop": 1067.828125,
+    "timelineRight": 506.203125,
+    "detailTop": 1700.203125,
+    "detailRight": 507.203125,
+    "documentHeight": 3181,
+    "clientWidth": 561,
+    "documentWidth": 561
+  },
+  {
     "width": 519,
     "height": 844,
     "panelTop": 524.640625,
