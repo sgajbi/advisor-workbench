@@ -1,4 +1,5 @@
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
@@ -26,6 +27,7 @@ import {
   getWorkbenchRiskRollingClient,
   getWorkbenchRiskSummaryClient,
 } from "../../src/features/workbench/api";
+import { workbenchStrictQueryDefaults } from "../../src/features/platform-runtime/query-policy";
 import {
   buildBenchmarkUnassignedPerformanceScenario,
   buildSupportedPerformanceScenario,
@@ -51,7 +53,20 @@ function renderRiskMode(
     isDetailsPending?: boolean;
   } = {},
 ) {
-  return render(buildRiskModeElement(scenario, options));
+  return render(buildRiskModeElement(scenario, options), {
+    wrapper: createQueryWrapper(),
+  });
+}
+
+function createQueryWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: workbenchStrictQueryDefaults },
+  });
+  return function QueryWrapper({ children }: React.PropsWithChildren) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  };
 }
 
 function buildRiskModeElement(
@@ -459,6 +474,7 @@ describe("PerformanceRiskMode", () => {
         isUpdating={false}
         isDetailsPending={false}
       />,
+      { wrapper: createQueryWrapper() },
     );
 
     await waitFor(() => {
@@ -520,7 +536,7 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
   });
 
-  it("withholds settled Risk evidence synchronously when the active scope changes", async () => {
+  it("withholds only basis-dependent evidence when the active basis changes", async () => {
     const scenario = buildSupportedPerformanceScenario();
     vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
       buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
@@ -546,7 +562,10 @@ describe("PerformanceRiskMode", () => {
           detailBasis,
           isDetailsPending: false,
         }),
-      { initialProps: { detailBasis: "NET" } },
+      {
+        initialProps: { detailBasis: "NET" },
+        wrapper: createQueryWrapper(),
+      },
     );
     await waitFor(() => {
       expect(result.current.riskSummary?.detail_basis).toBe("NET");
@@ -577,7 +596,7 @@ describe("PerformanceRiskMode", () => {
     rerender({ detailBasis: "GROSS" });
 
     expect(result.current.riskSummary).toBeNull();
-    expect(result.current.riskConcentration).toBeNull();
+    expect(result.current.riskConcentration).not.toBeNull();
     expect(result.current.riskAttribution).toBeNull();
     expect(result.current.riskDrawdown).toBeNull();
     expect(result.current.riskRolling).toBeNull();
@@ -691,7 +710,7 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(3);
   });
 
-  it("discards deferred Risk detail when the review scope changes", async () => {
+  it("fences deferred Risk detail by query key and reuses it on a fresh return", async () => {
     const scenario = buildSupportedPerformanceScenario();
     const ytdDrawdownDetail = buildFixtureRiskDrawdown(
       scenario.workspace,
@@ -800,7 +819,10 @@ describe("PerformanceRiskMode", () => {
           detailBasis: "NET",
           isDetailsPending: false,
         }),
-      { initialProps: { period: "YTD" } },
+      {
+        initialProps: { period: "YTD" },
+        wrapper: createQueryWrapper(),
+      },
     );
     await waitFor(() => expect(result.current.riskSummary).not.toBeNull());
     act(() => {
@@ -829,8 +851,8 @@ describe("PerformanceRiskMode", () => {
       result.current.requestRollingDetail();
     });
     await waitFor(() => {
-      expect(drawdownDetailRequests).toBe(2);
-      expect(rollingDetailRequests).toBe(2);
+      expect(drawdownDetailRequests).toBe(1);
+      expect(rollingDetailRequests).toBe(1);
       expect(result.current.riskDrawdownDetail?.period).toBe("YTD");
       expect(result.current.riskRollingDetail?.period).toBe("YTD");
     });
@@ -1424,6 +1446,11 @@ describe("PerformanceRiskMode", () => {
           groupingDimension: "SECTOR",
         },
       );
+    });
+    await waitFor(() => {
+      expect(
+        screen.getByRole("radio", { name: "Asset Class" }),
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("radio", { name: "Asset Class" }));
 
