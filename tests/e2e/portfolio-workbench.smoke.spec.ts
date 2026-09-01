@@ -744,6 +744,70 @@ test.describe('Portfolio workbench smoke', () => {
     browserRuntime.assertClean();
   });
 
+  test('portfolio revisit reuses fresh detail truth and refetches after stale time', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'query-freshness',
+      'Portfolio Query freshness proof requires the governed owned-fixture scenario.'
+    );
+    test.setTimeout(75_000);
+    const performanceRequests: string[] = [];
+    page.on('request', (browserRequest) => {
+      const url = browserRequest.url();
+      if (
+        url.includes('/api/bff/api/v1/portfolio/portfolios/') &&
+        url.includes('/performance-snapshot')
+      ) {
+        performanceRequests.push(url);
+      }
+    });
+
+    const session = await openPortfolioReview(page, request);
+    expect(session).toEqual({ portfolioId: 'PB_SG_GLOBAL_BAL_001', available: true });
+    await expect(page.getByText('MTD return')).toBeVisible();
+    await expect.poll(() => performanceRequests.length).toBeGreaterThan(0);
+    const initialRequestCount = performanceRequests.length;
+
+    await page.getByRole('link', { name: 'Open Performance' }).click();
+    await expect(page).toHaveURL(/\/performance\?/);
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
+    await expect(page.getByText('MTD return')).toBeVisible();
+    expect(performanceRequests).toHaveLength(initialRequestCount);
+
+    await page.waitForTimeout(30_100);
+    await page.getByRole('link', { name: 'Open Performance' }).click();
+    await expect(page).toHaveURL(/\/performance\?/);
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
+    await expect(page.getByText('MTD return')).toBeVisible();
+    await expect.poll(() => performanceRequests.length).toBe(initialRequestCount * 2);
+
+    const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
+    if (evidenceDirectory) {
+      await mkdir(evidenceDirectory, { recursive: true });
+      await writeFile(
+        resolve(evidenceDirectory, 'portfolio-query-freshness-evidence.json'),
+        `${JSON.stringify(
+          {
+            generatedAtUtc: new Date().toISOString(),
+            portfolioId: session.portfolioId,
+            governedStaleTimeMs: 30_000,
+            initialDetailRequestCount: initialRequestCount,
+            freshRevisitDetailRequestCount: initialRequestCount,
+            staleRevisitDetailRequestCount: performanceRequests.length,
+            observedPath: 'performance-snapshot',
+          },
+          null,
+          2
+        )}\n`,
+        'utf8'
+      );
+    }
+  });
+
   test('historical review stays unavailable until aggregate evidence can refresh atomically', async ({
     page,
     request,

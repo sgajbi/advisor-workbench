@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import DetailCard from "./detail-card";
 import { cx } from "../utils/cx";
 
@@ -48,9 +50,9 @@ export default function ActionListCard({
               </div>
             </div>
             <div className="portfolio-workflow-actions">
-              <a href={item.href} className="portfolio-workflow-cta">
+              <Link href={item.href} className="portfolio-workflow-cta">
                 {item.ctaLabel}
-              </a>
+              </Link>
             </div>
           </div>
         ))}
