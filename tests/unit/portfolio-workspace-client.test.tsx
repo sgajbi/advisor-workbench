@@ -868,6 +868,35 @@ describe("PortfolioWorkspaceClient", () => {
     expect(
       firstVisit.queryClient.getQueryData(workspaceQueryKey(initialWorkspace)),
     ).toEqual(initialWorkspace);
+    const initialGenerationState = firstVisit.queryClient.getQueryState(
+      workspaceQueryKey(initialWorkspace),
+    );
+    const refreshedGenerationState = firstVisit.queryClient.getQueryState(
+      workspaceQueryKey(refreshedWorkspace),
+    );
+    expect(refreshedGenerationState!.dataUpdatedAt).toBeGreaterThan(
+      initialGenerationState!.dataUpdatedAt,
+    );
+
+    getShellWorkspaceMock.mockResolvedValueOnce(null);
+    const recoveryVisit = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={null}
+      />,
+      firstVisit.queryClient,
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Portfolio overview could not be refreshed",
+    );
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "2000000.25",
+    );
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "29 Mar 2026",
+    );
+    recoveryVisit.unmount();
 
     render(
       <PortfolioWorkspaceClient
