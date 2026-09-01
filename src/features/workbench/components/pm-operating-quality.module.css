@@ -1,4 +1,6 @@
 .panel {
+  container-name: pm-operating-quality;
+  container-type: inline-size;
   border-color: #c6c6cd;
   border-radius: 6px;
   background: #ffffff;
@@ -345,17 +347,11 @@
   min-height: 86px;
 }
 
-@media (max-width: 1200px) {
-  .commandReadiness,
-  .actionError,
+@container pm-operating-quality (max-width: 75rem) {
   .operationEvidence,
-  .workspace,
-  .evidenceGrid,
-  .reviewActionGrid,
-  .controlFormGrid,
   .detailGrid,
   .detailStack {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   }
 
   .governanceStack {
@@ -363,7 +359,15 @@
   }
 }
 
-@media (max-width: 640px) {
+@container pm-operating-quality (max-width: 40rem) {
+  .commandReadiness,
+  .actionError,
+  .operationEvidence,
+  .evidenceGrid,
+  .reviewActionGrid,
+  .controlFormGrid,
+  .detailGrid,
+  .detailStack,
   .governanceStack {
     grid-template-columns: 1fr;
   }

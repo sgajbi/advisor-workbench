@@ -71,6 +71,9 @@ describe("PM Operating Quality CSS ownership", () => {
     const stylesheet = readFileSync(stylesheetPath, "utf8");
 
     expect(stylesheet).toMatch(
+      /\.panel\s*\{[\s\S]*?container-name: pm-operating-quality;[\s\S]*?container-type: inline-size;/,
+    );
+    expect(stylesheet).toMatch(
       /\.workspace\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
     );
     expect(stylesheet).toMatch(
@@ -80,11 +83,15 @@ describe("PM Operating Quality CSS ownership", () => {
       /\.governanceStack\s*\{[\s\S]*?grid-template-columns: repeat\(5, minmax\(0, 1fr\)\);/,
     );
     expect(stylesheet).toMatch(
-      /@media \(max-width: 1200px\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?repeat\(2, minmax\(0, 1fr\)\)/,
+      /@container pm-operating-quality \(max-width: 75rem\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?repeat\(2, minmax\(0, 1fr\)\)/,
     );
     expect(stylesheet).toMatch(
-      /@media \(max-width: 640px\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?grid-template-columns: 1fr;/,
+      /@container pm-operating-quality \(max-width: 75rem\)[\s\S]*?\.operationEvidence,[\s\S]*?\.detailGrid,[\s\S]*?\.detailStack\s*\{[\s\S]*?repeat\(auto-fit, minmax\(min\(100%, 10rem\), 1fr\)\)/,
     );
+    expect(stylesheet).toMatch(
+      /@container pm-operating-quality \(max-width: 40rem\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?grid-template-columns: 1fr;/,
+    );
+    expect(stylesheet).not.toContain("@media (max-width: 1200px)");
     expect(stylesheet).toContain("overflow-wrap: anywhere");
   });
 });

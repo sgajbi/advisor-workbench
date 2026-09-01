@@ -101,22 +101,34 @@ test("PM Operating Quality keeps supervisory evidence dense, source-backed, and 
     await expect(selectedRun).toBeFocused();
 
     const geometry = await page.evaluate(() => {
+      const panel = document.querySelector<HTMLElement>("article#pm-operating-quality-panel");
       const source = document.querySelector<HTMLElement>(
         '[data-testid="pm-operating-quality-source-evidence"]',
       );
       const workspace = document.querySelector<HTMLElement>(
         '[data-testid="pm-operating-quality-workspace"]',
       );
-      if (!source || !workspace) {
+      if (!panel || !source || !workspace) {
         throw new Error("PM Operating Quality geometry is unavailable.");
       }
+      const panelStyle = getComputedStyle(panel);
       return {
+        panelInlineSize:
+          panel.clientWidth -
+          Number.parseFloat(panelStyle.paddingLeft) -
+          Number.parseFloat(panelStyle.paddingRight),
         sourceColumns: getComputedStyle(source).gridTemplateColumns.split(" ").length,
         workspaceColumns: getComputedStyle(workspace).gridTemplateColumns.split(" ").length,
+        governanceColumns: getComputedStyle(
+          document.querySelector<HTMLElement>(
+            '[data-testid="pm-operating-quality-governance-metrics"]',
+          )!,
+        ).gridTemplateColumns.split(" ").length,
       };
     });
     expect(geometry.sourceColumns).toBeGreaterThanOrEqual(1);
     expect(geometry.workspaceColumns).toBe(1);
+    expect(geometry.governanceColumns).toBe(geometry.panelInlineSize <= 640 ? 1 : 2);
 
     if (viewport.width > 1200) {
       expect(

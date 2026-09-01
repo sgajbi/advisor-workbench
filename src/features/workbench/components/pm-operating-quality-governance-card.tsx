@@ -14,7 +14,10 @@ export default function PmOperatingQualityGovernanceCard({ model }: Props) {
       <Text as="h3" variant="subsectionTitle">
         Governance Posture
       </Text>
-      <div className={styles.governanceStack}>
+      <div
+        className={styles.governanceStack}
+        data-testid="pm-operating-quality-governance-metrics"
+      >
         <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
         <MetricRow label="Score Preview Readiness" value={model.scoreRunPreviewReadiness} />
         <MetricRow label="Summary Readiness" value={model.summaryRequestReadiness} />
