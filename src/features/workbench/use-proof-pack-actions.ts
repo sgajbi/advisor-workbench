@@ -76,7 +76,17 @@ export function useProofPackActions({
   const resolvedMandateId =
     mandateId ?? contextMandateId ?? (model.mandateId !== "N/A" ? model.mandateId : null);
   const aiMemoOutcome =
-    aiMemo?.proofPackId === proofPackId ? aiMemo.outcome : null;
+    model.state !== "unavailable" && aiMemo?.proofPackId === proofPackId
+      ? aiMemo.outcome
+      : null;
+  const visibleMarkdown = model.state !== "unavailable" ? markdown : null;
+
+  function adoptProofPack(nextProofPack: DpmProofPackGatewayResponse) {
+    setPublishedProofPack(nextProofPack);
+    setMarkdown(null);
+    setAiMemo(null);
+    onProofPackChange?.(nextProofPack);
+  }
 
   async function runAction(label: string, action: () => Promise<void>) {
     if (pendingAction) {
@@ -105,8 +115,7 @@ export function useProofPackActions({
     }
     void runAction("Load proof pack", async () => {
       const loaded = await getDpmProofPack(proofPackId);
-      setPublishedProofPack(loaded);
-      onProofPackChange?.(loaded);
+      adoptProofPack(loaded);
       setHandoffStatus("Evidence pack loaded.");
     });
   }
@@ -120,8 +129,7 @@ export function useProofPackActions({
         rebalanceRunId,
         mandateId: resolvedMandateId,
       });
-      setPublishedProofPack(generated);
-      onProofPackChange?.(generated);
+      adoptProofPack(generated);
       setHandoffStatus("Evidence pack prepared.");
     });
   }
@@ -178,7 +186,7 @@ export function useProofPackActions({
     actionError,
     handoffStatus,
     aiMemoOutcome,
-    markdown,
+    markdown: visibleMarkdown,
     generateProofPack,
     loadProofPack,
     loadMarkdown,
