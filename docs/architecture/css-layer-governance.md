@@ -109,7 +109,7 @@ and rebalance-status selector families had no production React consumer, so they
 than migrated. The resulting exact ratchets are 98 lines and 1,940 normalized bytes for
 `legacy-feature-overrides.css` at that tranche, and 10,990 lines and 240,422 normalized bytes for
 `legacy-global.css`. Issue #978 subsequently lowered the exact legacy-feature budget to 67 lines
-and 1,344 normalized bytes; issue #981 lowered it again to 29 lines and 583 normalized bytes and
+and 1,344 normalized bytes; issue #981 lowered it again to 27 lines and 581 normalized bytes and
 lowered `legacy-global.css` to 10,987 lines and 240,346 normalized bytes. The retired families are forbidden from returning; future product work must
 use the active Workbench container and source-backed screen architecture.
 

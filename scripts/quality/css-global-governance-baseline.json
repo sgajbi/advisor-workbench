@@ -179,8 +179,8 @@
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
-      "maxLines": 29,
-      "maxBytes": 583
+        "maxLines": 27,
+        "maxBytes": 581
     },
     {
       "path": "src/styles/global/base.css",
