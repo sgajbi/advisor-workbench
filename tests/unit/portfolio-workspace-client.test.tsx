@@ -23,18 +23,23 @@ const getShellWorkspaceMock = vi.fn();
 const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
 
-function render(ui: React.ReactNode) {
-  const queryClient = new QueryClient({
+function render(
+  ui: React.ReactNode,
+  queryClient = new QueryClient({
     defaultOptions: {
       queries: workbenchStrictQueryDefaults,
     },
-  });
+  }),
+) {
 
-  return testingLibraryRender(ui, {
-    wrapper: ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    ),
-  });
+  return {
+    ...testingLibraryRender(ui, {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      ),
+    }),
+    queryClient,
+  };
 }
 
 vi.mock("next/navigation", () => ({
@@ -500,6 +505,45 @@ describe("PortfolioWorkspaceClient", () => {
       expect(screen.getByTestId("view-mode")).toHaveTextContent("detailed");
     });
 
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses fresh Portfolio detail truth when the workspace is revisited", async () => {
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        positions: [{ security_id: "EQ_1" }],
+      }),
+    );
+    const portfolio = {
+      portfolio_id: "MANUAL_PB_USD_001",
+      display_name: "MANUAL_PB_USD_001",
+      base_currency: "USD",
+      client_id: "MANUAL_CIF_001",
+      booking_center_code: "Singapore",
+    };
+    const firstVisit = render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    firstVisit.unmount();
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+      firstVisit.queryClient,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("position-count")).toHaveTextContent("1");
+    });
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
