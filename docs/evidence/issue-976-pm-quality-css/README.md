@@ -11,14 +11,16 @@ on a wide screen.
 
 | Measure | Before | After | Result |
 | --- | ---: | ---: | ---: |
-| Wide-screen full-page height at 1440px | 9,715px | 6,969px | 2,746px / 28.3% reduction |
+| Wide-screen full-page height at 1440px | 9,715px | 6,834px | 2,881px / 29.7% reduction |
 | Legacy Manage stylesheet | 2,731 lines | 2,269 lines | 462 lines removed |
 | Legacy global escapes | 485 | 408 | 77 escapes removed |
 | PM-quality selectors left in legacy stylesheet | 77 | 0 | component ownership complete |
 | PM-quality CSS-module global escapes | — | 0 | locally scoped boundary |
 
 The browser proof also verifies source authority, exact score-run identity, keyboard reachability,
-responsive layout at 1440/1024/768/519px, and absence of page-level horizontal overflow.
+panel-width-responsive layout at 1440/1024/768/519px, and absence of page-level horizontal
+overflow. Metric grids now reflow against their Workbench panel capacity rather than the outer
+browser width, preventing fragmented supervisory evidence when adjacent rails remain visible.
 
 ## Design and engineering decisions
 
