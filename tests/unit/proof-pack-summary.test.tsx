@@ -50,9 +50,6 @@ function renderSummary(overrides: Partial<ComponentProps<typeof ProofPackSummary
     handoffStatus: null,
     onGenerateProofPack: vi.fn(),
     onLoadProofPack: vi.fn(),
-    onLoadMarkdown: vi.fn(),
-    onLoadReportInput: vi.fn(),
-    onRequestAiPmMemo: vi.fn(),
     ...overrides,
   };
 
@@ -64,31 +61,29 @@ describe("ProofPackSummary", () => {
   it("renders source-backed proof-pack posture without leaking identifiers", () => {
     renderSummary();
 
-    expect(screen.getByText("Evidence Status")).toBeInTheDocument();
+    expect(screen.getByText("Evidence status")).toBeInTheDocument();
     expect(screen.getByText("Available")).toBeInTheDocument();
-    expect(screen.getByText("Approval Readiness")).toBeInTheDocument();
+    expect(screen.getByText("Approval readiness")).toBeInTheDocument();
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
-    expect(screen.getByText("Mandate Coverage")).toBeInTheDocument();
+    expect(screen.getByText("Mandate coverage")).toBeInTheDocument();
     expect(screen.getByText("Evidence pack ready")).toBeInTheDocument();
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
   });
 
-  it("delegates primary evidence actions and keeps unsupported controls absent", () => {
+  it("delegates lifecycle actions without repeating downstream handoffs", () => {
     const props = renderSummary();
 
     fireEvent.click(screen.getByRole("button", { name: "Prepare evidence" }));
     fireEvent.click(screen.getByRole("button", { name: "Load evidence" }));
-    fireEvent.click(screen.getByRole("button", { name: "Load summary" }));
-    fireEvent.click(screen.getByRole("button", { name: "Generate client report" }));
-    fireEvent.click(screen.getByRole("button", { name: "Open advisor memo" }));
 
     expect(props.onGenerateProofPack).toHaveBeenCalledTimes(1);
     expect(props.onLoadProofPack).toHaveBeenCalledTimes(1);
-    expect(props.onLoadMarkdown).toHaveBeenCalledTimes(1);
-    expect(props.onLoadReportInput).toHaveBeenCalledTimes(1);
-    expect(props.onRequestAiPmMemo).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Evidence pack lifecycle actions")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /summary/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /report/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /memo/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send client message/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
@@ -114,9 +109,6 @@ describe("ProofPackSummary", () => {
     expect(screen.getByText("Failed to fetch DPM proof pack (503)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Load evidence" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Load summary" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Generate client report" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Open advisor memo" })).toBeDisabled();
   });
 
   it("shows bounded handoff messages from parent-owned Gateway actions", () => {

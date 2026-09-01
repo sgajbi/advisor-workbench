@@ -112,12 +112,14 @@ describe("ProofPackWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^Open advisor memo/ }));
-    fireEvent.click(screen.getByRole("button", { name: /^Generate client report/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Check report readiness/ }));
     fireEvent.click(screen.getByRole("button", { name: /^Load evidence summary/ }));
 
     expect(onRequestAiPmMemo).toHaveBeenCalledTimes(1);
     expect(onLoadReportInput).toHaveBeenCalledTimes(1);
     expect(onLoadMarkdown).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Evidence pack next actions")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Generate client report/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /send client message/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /route order/i })).not.toBeInTheDocument();
@@ -148,7 +150,7 @@ describe("ProofPackWorkspace", () => {
     expect(screen.getByText("No completed coverage items returned.")).toBeInTheDocument();
     expect(screen.getByText("No supporting document references returned")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Open advisor memo/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^Generate client report/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Check report readiness/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /^Load evidence summary/ })).toBeDisabled();
   });
 });

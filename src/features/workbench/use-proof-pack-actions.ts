@@ -141,10 +141,12 @@ export function useProofPackActions({
     if (!proofPackId) {
       return;
     }
-    void runAction("Generate client report", async () => {
+    void runAction("Check report readiness", async () => {
       const response = await getDpmProofPackReportInput(proofPackId);
       setHandoffStatus(
-        `Client report ${response.supportability.report_input_available ? "ready for generation" : "not available"}.`
+        response.supportability.report_input_available
+          ? "Report-ready evidence is available."
+          : "Report-ready evidence is not available."
       );
     });
   }
