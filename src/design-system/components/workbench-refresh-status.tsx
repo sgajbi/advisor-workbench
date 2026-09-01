@@ -23,7 +23,7 @@ export type WorkbenchRefreshStatusProps =
   | (WorkbenchRefreshStatusCommonProps & {
       kind: "failed";
       message: string;
-      requestedContext: string;
+      requestedContext?: string;
       onRetry?: () => void;
       retrying?: boolean;
       retryLabel?: string;
@@ -58,10 +58,12 @@ export default function WorkbenchRefreshStatus(props: WorkbenchRefreshStatusProp
           <p className={styles.title}>{title}</p>
           <p className={styles.message}>{props.message}</p>
           <dl className={styles.context}>
-            <div className={styles.contextItem}>
-              <dt>Requested</dt>
-              <dd>{props.requestedContext}</dd>
-            </div>
+            {props.requestedContext ? (
+              <div className={styles.contextItem}>
+                <dt>Requested</dt>
+                <dd>{props.requestedContext}</dd>
+              </div>
+            ) : null}
             <div className={styles.contextItem}>
               <dt>Source-confirmed</dt>
               <dd>{confirmedContext}</dd>

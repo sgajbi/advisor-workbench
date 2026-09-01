@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfolio-workspace-client";
+import { portfolioQueryKeys } from "../../src/apps/portfolio/portfolio-query-keys";
 import { buildInitialPortfolioControls } from "../../src/apps/portfolio/view-model";
 import {
   getAnalyticsUiMetricEvents,
@@ -547,6 +548,59 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps confirmed Portfolio detail visible when a stale refresh is unavailable", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        summary: {
+          ...buildWorkspace().summary,
+          market_value_base: 2000000.25,
+        },
+        positions: [{ security_id: "EQ_1" }],
+      }),
+    );
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    const [detailQuery] = queryClient.getQueryCache().findAll({
+      queryKey: portfolioQueryKeys.summaryDetailsRoot(
+        "MANUAL_PB_USD_001",
+      ),
+    });
+    expect(detailQuery).toBeDefined();
+    const queryKey = detailQuery!.queryKey;
+    const confirmedDetail = queryClient.getQueryData(queryKey);
+    getSummaryDetailsMock.mockResolvedValueOnce(null);
+
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey, exact: true });
+    });
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
+    });
+    expect(queryClient.getQueryData(queryKey)).toEqual(confirmedDetail);
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "2000000.25",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio detail could not be refreshed",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The previous portfolio view remains active while the refresh is retried.",
+    );
+  });
+
   it("restores source-confirmed controls when automatic detail rejects URL-derived context", async () => {
     const initialWorkspace = buildWorkspace();
     getSummaryDetailsMock.mockResolvedValue(
@@ -593,7 +647,9 @@ describe("PortfolioWorkspaceClient", () => {
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
     );
-    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    });
     expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
       "MANUAL_PB_USD_001",
       expect.objectContaining({ asOfDate: "2026-03-28", timeWindow: "30D" }),
@@ -630,7 +686,9 @@ describe("PortfolioWorkspaceClient", () => {
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
     );
-    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    });
     expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
       "MANUAL_PB_USD_001",
       expect.objectContaining({ asOfDate: "2026-03-28", timeWindow: "30D" }),

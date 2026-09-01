@@ -64,6 +64,23 @@ type PortfolioControlTransition = {
   requestedControls: PortfolioWorkspaceControls;
 };
 
+async function queryPortfolioWorkspaceSummaryDetails(
+  portfolioId: string,
+  params: Parameters<typeof getPortfolioWorkspaceSummaryDetails>[1],
+  signal: AbortSignal,
+) {
+  const details = await getPortfolioWorkspaceSummaryDetails(
+    portfolioId,
+    params,
+    { signal },
+  );
+  signal.throwIfAborted();
+  if (!details) {
+    throw new Error("Portfolio review detail is unavailable.");
+  }
+  return details;
+}
+
 export default function PortfolioWorkspaceClient({
   portfolios,
   selectedPortfolioId,
@@ -283,15 +300,12 @@ export default function PortfolioWorkspaceClient({
         )
       : [...portfolioQueryKeys.all, "summary-details", "unselected"],
     enabled: Boolean(selectedPortfolioId && workspaceState && summaryRequest),
-    queryFn: async ({ signal }) => {
-      const details = await getPortfolioWorkspaceSummaryDetails(
+    queryFn: ({ signal }) =>
+      queryPortfolioWorkspaceSummaryDetails(
         selectedPortfolioId!,
         summaryRequest!.params,
-        { signal },
-      );
-      signal.throwIfAborted();
-      return details;
-    },
+        signal,
+      ),
   });
   useEffect(() => {
     if (!selectedPortfolioId) {
@@ -314,11 +328,10 @@ export default function PortfolioWorkspaceClient({
     }
   }, [initialWorkspaceSourceKey, queryClient, selectedPortfolioId]);
   const summaryResponseIsCurrent = Boolean(
-    summaryQuery.isSuccess &&
     summaryRequest &&
     selectedPortfolioId &&
     isPortfolioReviewResponseCurrent(
-      summaryQuery.data,
+      summaryQuery.data ?? null,
       controls,
       summaryRequest.params,
       selectedPortfolioId,
@@ -334,7 +347,7 @@ export default function PortfolioWorkspaceClient({
 
   useEffect(() => {
     if (
-      !summaryQuery.isSuccess ||
+      (!summaryQuery.isSuccess && !summaryQuery.isError) ||
       !summaryRequest ||
       !selectedPortfolioId ||
       !workspaceState
@@ -398,6 +411,7 @@ export default function PortfolioWorkspaceClient({
     setControls,
     summaryQuery.data,
     summaryQuery.dataUpdatedAt,
+    summaryQuery.isError,
     summaryQuery.isSuccess,
     summaryRequest,
     summaryResponseIsCurrent,
@@ -462,15 +476,12 @@ export default function PortfolioWorkspaceClient({
     try {
       details = await queryClient.fetchQuery({
         queryKey,
-        queryFn: async ({ signal }) => {
-          const response = await getPortfolioWorkspaceSummaryDetails(
+        queryFn: ({ signal }) =>
+          queryPortfolioWorkspaceSummaryDetails(
             selectedPortfolioId,
             request.params,
-            { signal },
-          );
-          signal.throwIfAborted();
-          return response;
-        },
+            signal,
+          ),
       });
     } catch (error) {
       if (isCancelledError(error)) {
@@ -615,6 +626,16 @@ export default function PortfolioWorkspaceClient({
                         activeControlTransition.requestedControls,
                       )
                     }
+                  />
+                ) : summaryQuery.isRefetchError && summaryQuery.data ? (
+                  <WorkbenchRefreshStatus
+                    kind="failed"
+                    eyebrow="Portfolio review"
+                    title="Portfolio detail could not be refreshed"
+                    message="The previous portfolio view remains active while the refresh is retried."
+                    confirmedContext={formatPortfolioControlContext(controls)}
+                    onRetry={() => void summaryQuery.refetch()}
+                    retryLabel="Retry portfolio detail refresh"
                   />
                 ) : null}
               </>
