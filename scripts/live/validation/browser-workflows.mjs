@@ -3234,10 +3234,7 @@ export async function validatePmOperatingQualityPanel(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=quality`, {
     timeout: timeoutMs,
   });
-  const qualityPanel = workbenchPanelByClass(
-    page,
-    "pm-operating-quality-panel",
-  );
+  const qualityPanel = page.locator("article#pm-operating-quality-panel");
   await expect(
     qualityPanel.getByRole("heading", {
       name: "PM Operating Quality",
@@ -3246,7 +3243,7 @@ export async function validatePmOperatingQualityPanel(
   ).toBeVisible({
     timeout: timeoutMs,
   });
-  const qualityStatusStrip = qualityPanel.locator(".pm-quality-status-strip");
+  const qualityStatusStrip = qualityPanel.getByTestId("pm-operating-quality-source-evidence");
   for (const label of [
     "Policy",
     "Selected Quality Run",
