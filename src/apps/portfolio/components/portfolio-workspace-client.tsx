@@ -294,16 +294,27 @@ export default function PortfolioWorkspaceClient({
       }
     },
   });
+  const awaitsShellSourceConfirmation = Boolean(
+    !confirmedInitialWorkspace && shellQuery.isFetching,
+  );
   const activeShellRequestStatus = !selectedPortfolioId
     ? "idle"
-    : isPortfolioWorkspaceIdentityConfirmed(
+    : awaitsShellSourceConfirmation || shellQuery.isPending
+      ? "loading"
+      : isPortfolioWorkspaceIdentityConfirmed(
           shellQuery.data,
           selectedPortfolioId,
         )
       ? "loaded"
-      : shellQuery.isPending || shellQuery.isFetching
-        ? "loading"
-        : "unavailable";
+      : "unavailable";
+
+  useEffect(
+    () => () => {
+      if (confirmedInitialWorkspace) {
+        queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace);
+      }
+    }, [confirmedInitialWorkspace, queryClient, shellQueryKey],
+  );
 
   useEffect(() => {
     const shellWorkspace = shellQuery.data;
@@ -311,7 +322,8 @@ export default function PortfolioWorkspaceClient({
       workspaceDraft.sourceKey !== initialWorkspaceSourceKey;
     if (
       !serverSnapshotChanged &&
-      (!shellWorkspace ||
+      (awaitsShellSourceConfirmation ||
+        !shellWorkspace ||
         workspaceState === shellWorkspace ||
         !isPortfolioWorkspaceIdentityConfirmed(
           shellWorkspace,
@@ -344,6 +356,20 @@ export default function PortfolioWorkspaceClient({
       ) {
         return;
       }
+      const refreshedSourceGeneration =
+        buildPortfolioWorkspaceSourceGeneration(
+          selectedPortfolioId,
+          shellWorkspace,
+        );
+      if (refreshedSourceGeneration !== initialWorkspaceSourceKey) {
+        queryClient.setQueryData(
+          portfolioQueryKeys.workspaceSource(
+            selectedPortfolioId,
+            refreshedSourceGeneration,
+          ),
+          shellWorkspace,
+        );
+      }
       setControls((current) => {
         if (
           workspaceState &&
@@ -363,6 +389,7 @@ export default function PortfolioWorkspaceClient({
       cancelled = true;
     };
   }, [
+    awaitsShellSourceConfirmation,
     confirmedInitialWorkspace,
     initialWorkspaceSourceKey,
     queryClient,
@@ -605,8 +632,12 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    const currentShell =
-      queryClient.getQueryData<PortfolioWorkspace>(shellQueryKey);
+    const currentShell = queryClient.getQueryData<PortfolioWorkspace>(
+      portfolioQueryKeys.workspaceSource(
+        selectedPortfolioId,
+        workspaceSourceGeneration,
+      ),
+    );
     if (
       buildPortfolioWorkspaceSourceGeneration(
         selectedPortfolioId,
@@ -707,6 +738,17 @@ export default function PortfolioWorkspaceClient({
     visibleControlTransition?.status === "failed";
   const portfolioRefreshStatus = controlTransitionRequiresAction ? (
     controlTransitionStatus
+  ) : awaitsShellSourceConfirmation && shellQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Confirming current portfolio overview"
+      message="Previously viewed portfolio facts remain withheld until the current overview is confirmed."
+      requestedContext={`${shellQuery.data.portfolio.display_name} · Current overview`}
+      confirmedContext={formatPortfolioControlContext(
+        buildInitialPortfolioControls(shellQuery.data),
+      )}
+    />
   ) : detailGenerationPending ? (
     <WorkbenchRefreshStatus
       kind="pending"
