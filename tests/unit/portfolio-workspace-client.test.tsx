@@ -6,7 +6,11 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  onlineManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
@@ -223,6 +227,7 @@ function confirmedDetails<Details extends Record<string, unknown>>(
 
 describe("PortfolioWorkspaceClient", () => {
   afterEach(() => {
+    onlineManager.setOnline(true);
     getShellWorkspaceMock.mockReset();
     getSummaryDetailsMock.mockReset();
     routerPushMock.mockReset();
@@ -742,6 +747,7 @@ describe("PortfolioWorkspaceClient", () => {
           }),
         ),
     );
+    onlineManager.setOnline(false);
 
     render(
       <PortfolioWorkspaceClient
@@ -752,14 +758,17 @@ describe("PortfolioWorkspaceClient", () => {
       firstVisit.queryClient,
     );
 
-    await waitFor(() => {
-      expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
-    });
     expect(
       await screen.findByText("Confirming current portfolio overview"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
     expect(screen.getByTestId("market-value")).toHaveTextContent("none");
+    expect(getShellWorkspaceMock).not.toHaveBeenCalled();
+
+    onlineManager.setOnline(true);
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    });
 
     await act(async () => {
       failRecovery?.(null);
@@ -863,6 +872,15 @@ describe("PortfolioWorkspaceClient", () => {
         workspaceQueryKey(refreshedWorkspace),
       ),
     ).toEqual(refreshedWorkspace);
+    expect(
+      firstVisit.queryClient
+        .getQueryCache()
+        .find({
+          queryKey: workspaceQueryKey(refreshedWorkspace),
+          exact: true,
+        })
+        ?.getObserversCount(),
+    ).toBe(1);
 
     firstVisit.unmount();
     expect(

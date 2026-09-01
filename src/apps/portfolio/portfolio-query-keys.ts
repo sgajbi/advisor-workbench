@@ -15,6 +15,8 @@ export const portfolioQueryKeys = {
     ] as const,
   reviewContextIntent: () =>
     ["portfolio", "workspace", "review-context-intent"] as const,
+  activeShellGeneration: (portfolioId: string) =>
+    ["portfolio", "workspace", portfolioId, "active-shell-generation"] as const,
   summaryDetailsRoot: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId, "summary-details"] as const,
   summaryDetails: (

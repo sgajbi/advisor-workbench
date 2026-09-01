@@ -121,5 +121,13 @@ describe("portfolioQueryKeys", () => {
       "workspace",
       "review-context-intent",
     ]);
+    expect(
+      portfolioQueryKeys.activeShellGeneration("PB_SG_GLOBAL_BAL_001"),
+    ).toEqual([
+      "portfolio",
+      "workspace",
+      "PB_SG_GLOBAL_BAL_001",
+      "active-shell-generation",
+    ]);
   });
 });
