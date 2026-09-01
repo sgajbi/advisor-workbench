@@ -43,6 +43,7 @@ export default function ProofPackSummary({
   const stateCopy = proofPackStatePanelCopy(model.state as ProofPackPanelState, portfolioId);
   const showStatePanel = shouldShowProofPackStatePanel(model.state, errorMessage);
   const actionPending = Boolean(pendingAction);
+  const evidenceUnavailable = model.state === "unavailable";
 
   return (
     <>
@@ -65,25 +66,25 @@ export default function ProofPackSummary({
             key: "evidence-status",
             label: "Evidence status",
             value: proofPackSupportabilityLabel(model.supportabilityState),
-            unavailable: model.state === "unavailable",
+            unavailable: evidenceUnavailable,
           },
           {
             key: "approval-readiness",
             label: "Approval readiness",
-            value: model.approvalReadinessLabel,
-            unavailable: model.state === "unavailable",
+            value: evidenceUnavailable ? "Unavailable" : model.approvalReadinessLabel,
+            unavailable: evidenceUnavailable,
           },
           {
             key: "mandate-coverage",
             label: "Mandate coverage",
-            value: model.mandateCoverageLabel,
-            unavailable: model.state === "unavailable",
+            value: evidenceUnavailable ? "Unavailable" : model.mandateCoverageLabel,
+            unavailable: evidenceUnavailable,
           },
           {
             key: "report-readiness",
             label: "Report readiness",
-            value: model.reportReadinessLabel,
-            unavailable: model.state === "unavailable",
+            value: evidenceUnavailable ? "Unavailable" : model.reportReadinessLabel,
+            unavailable: evidenceUnavailable,
           },
         ]}
       />
