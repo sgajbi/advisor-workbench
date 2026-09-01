@@ -56,6 +56,7 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
     scenarios: new Set([
       "overview",
       "mandate-health",
+      "pm-quality",
       "outcome-reviews",
       "portfolio-memory",
       "proof-copilot",
