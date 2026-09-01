@@ -548,6 +548,70 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
+  it("retains a cached Portfolio overview and exposes a failed stale shell refresh", async () => {
+    const portfolio = {
+      portfolio_id: "MANUAL_PB_USD_001",
+      display_name: "MANUAL_PB_USD_001",
+      base_currency: "USD",
+      client_id: "MANUAL_CIF_001",
+      booking_center_code: "Singapore",
+    };
+    const firstVisit = render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+        "MANUAL_PB_USD_001",
+      );
+    });
+    firstVisit.unmount();
+    await firstVisit.queryClient.invalidateQueries({
+      queryKey: portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+      exact: true,
+      refetchType: "none",
+    });
+    getShellWorkspaceMock.mockResolvedValueOnce(null);
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+    );
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={null}
+      />,
+      firstVisit.queryClient,
+    );
+
+    await waitFor(() => {
+      expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(
+        firstVisit.queryClient.getQueryState(
+          portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+        )?.status,
+      ).toBe("error");
+    });
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
+      "MANUAL_PB_USD_001",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio overview could not be refreshed",
+    );
+    expect(
+      within(screen.getByRole("alert")).getByRole("button", {
+        name: "Retry portfolio overview refresh",
+      }),
+    ).toBeEnabled();
+  });
+
   it("keeps confirmed Portfolio detail visible when a stale refresh is unavailable", async () => {
     getSummaryDetailsMock.mockResolvedValueOnce(
       confirmedDetails({
@@ -665,7 +729,7 @@ describe("PortfolioWorkspaceClient", () => {
     );
   });
 
-  it("shows a stale refresh failure instead of an earlier confirmation notice", async () => {
+  it("prioritizes current control work over an earlier confirmation or refresh failure", async () => {
     const initialDetail = confirmedDetails({
       as_of_date: "2026-03-28",
       positions: [{ security_id: "EQ_1" }],
@@ -731,6 +795,41 @@ describe("PortfolioWorkspaceClient", () => {
     );
     expect(
       screen.queryByText("Review context confirmed"),
+    ).not.toBeInTheDocument();
+
+    let resolveOneYearDetail:
+      | ((value: Partial<PortfolioWorkspace> | null) => void)
+      | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveOneYearDetail = resolve;
+      }),
+    );
+    await act(async () => {
+      screen.getByRole("button", { name: "Select 1Y" }).click();
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Confirming review context",
+    );
+    expect(
+      screen.queryByText("Portfolio detail could not be refreshed"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveOneYearDetail?.(null);
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Review context was not changed",
+      );
+    });
+    expect(
+      within(screen.getByRole("alert")).getByRole("button", {
+        name: "Retry portfolio review context",
+      }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByText("Portfolio detail could not be refreshed"),
     ).not.toBeInTheDocument();
   });
 
