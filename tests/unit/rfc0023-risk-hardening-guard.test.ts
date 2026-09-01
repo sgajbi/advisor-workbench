@@ -10,6 +10,34 @@ function readRepoFile(relativePath: string) {
 }
 
 describe("RFC-0023 risk hardening architecture guard", () => {
+  it("keeps Performance Risk response state under governed Query ownership", () => {
+    const contractHook = readRepoFile(
+      "src/apps/performance/use-performance-risk-contract.ts",
+    );
+    const requiredPatterns = [
+      "useQuery(",
+      "useQueryClient()",
+      "performanceRiskSummaryQueryOptions",
+      "performanceRiskConcentrationQueryOptions",
+      "performanceRiskAttributionQueryOptions",
+      "performanceRiskDrawdownQueryOptions",
+      "performanceRiskRollingQueryOptions",
+    ];
+    const forbiddenPatterns = [
+      "CacheRef",
+      "requestSequenceRef",
+      "useRef<Map",
+      "JSON.stringify",
+    ];
+
+    expect(
+      requiredPatterns.filter((pattern) => !contractHook.includes(pattern)),
+    ).toEqual([]);
+    expect(
+      forbiddenPatterns.filter((pattern) => contractHook.includes(pattern)),
+    ).toEqual([]);
+  });
+
   it("keeps hardened risk panels on shared methodology access instead of persistent methodology blocks", () => {
     const hardenedPanelFiles = [
       "src/apps/performance/components/risk/risk-snapshot-panel.tsx",
