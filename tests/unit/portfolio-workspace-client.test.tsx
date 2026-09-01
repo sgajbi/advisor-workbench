@@ -829,7 +829,10 @@ describe("PortfolioWorkspaceClient", () => {
   it("discloses when a scheduled Portfolio refresh is paused offline", async () => {
     const initialWorkspace = buildWorkspace();
     getSummaryDetailsMock.mockResolvedValue(
-      confirmedDetails({ positions: [] }),
+      confirmedDetails({
+        as_of_date: initialWorkspace.as_of_date,
+        positions: [],
+      }),
     );
     const view = render(
       <PortfolioWorkspaceClient
@@ -1115,6 +1118,144 @@ describe("PortfolioWorkspaceClient", () => {
       expect(
         screen.queryByText("Refreshing portfolio detail"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps an overview refresh failure visible while detail refreshes", async () => {
+    const initialWorkspace = buildWorkspace();
+    const confirmedDetail = confirmedDetails({
+      as_of_date: "2026-03-28",
+      positions: [],
+    });
+    let resolveDetailRefresh:
+      ((value: typeof confirmedDetail | null) => void) | undefined;
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(confirmedDetail)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveDetailRefresh = resolve;
+        }),
+      );
+    getShellWorkspaceMock
+      .mockResolvedValueOnce(initialWorkspace)
+      .mockResolvedValueOnce(null);
+    const view = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={null}
+      />,
+    );
+    await waitFor(() => expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await view.queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Portfolio overview could not be refreshed",
+    );
+    const detailQuery = view.queryClient
+      .getQueryCache()
+      .findAll({
+        queryKey: portfolioQueryKeys.summaryDetailsRoot(
+          "MANUAL_PB_USD_001",
+        ),
+      })
+      .find((query) => query.getObserversCount() > 0);
+    expect(detailQuery).toBeDefined();
+
+    await act(async () => {
+      void view.queryClient.invalidateQueries({
+        queryKey: detailQuery!.queryKey,
+        exact: true,
+      });
+    });
+    await waitFor(() => {
+      expect(
+        view.queryClient.getQueryState(detailQuery!.queryKey)?.fetchStatus,
+      ).toBe("fetching");
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio overview could not be refreshed",
+    );
+    expect(
+      screen.queryByText("Refreshing portfolio detail"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveDetailRefresh?.(confirmedDetail);
+    });
+  });
+
+  it("keeps a detail refresh failure visible while the overview refreshes", async () => {
+    const initialWorkspace = buildWorkspace();
+    const confirmedDetail = confirmedDetails({
+      as_of_date: "2026-03-28",
+      positions: [],
+    });
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(confirmedDetail)
+      .mockResolvedValueOnce(null);
+    let resolveShellRefresh:
+      ((value: PortfolioWorkspace | null) => void) | undefined;
+    getShellWorkspaceMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveShellRefresh = resolve;
+      }),
+    );
+    const view = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    const detailQuery = view.queryClient
+      .getQueryCache()
+      .findAll({
+        queryKey: portfolioQueryKeys.summaryDetailsRoot(
+          "MANUAL_PB_USD_001",
+        ),
+      })
+      .find((query) => query.getObserversCount() > 0);
+    expect(detailQuery).toBeDefined();
+
+    await act(async () => {
+      await view.queryClient.invalidateQueries({
+        queryKey: detailQuery!.queryKey,
+        exact: true,
+      });
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Portfolio detail could not be refreshed",
+    );
+
+    await act(async () => {
+      void view.queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+    await waitFor(() => {
+      expect(
+        view.queryClient.getQueryState(workspaceQueryKey(initialWorkspace))
+          ?.fetchStatus,
+      ).toBe("fetching");
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio detail could not be refreshed",
+    );
+    expect(
+      screen.queryByText("Refreshing portfolio overview"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveShellRefresh?.(initialWorkspace);
     });
   });
 
