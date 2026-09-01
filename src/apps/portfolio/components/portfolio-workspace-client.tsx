@@ -243,14 +243,23 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    setControls((current) => {
-      const defaults = buildInitialPortfolioControls(shellWorkspace);
-      return {
-        ...defaults,
-        timeWindow: current.timeWindow,
-      };
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) {
+        return;
+      }
+      setControls((current) => {
+        const defaults = buildInitialPortfolioControls(shellWorkspace);
+        return {
+          ...defaults,
+          timeWindow: current.timeWindow,
+        };
+      });
+      setWorkspaceState(shellWorkspace);
     });
-    setWorkspaceState(shellWorkspace);
+    return () => {
+      cancelled = true;
+    };
   }, [
     selectedPortfolioId,
     setControls,
@@ -333,46 +342,52 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    const details = summaryQuery.data;
-    const sourceOverrideRequested = hasPortfolioSourceControlOverride(
-      controls,
-      workspaceState,
-    );
-    if (summaryResponseIsCurrent) {
-      if (sourceOverrideRequested) {
-        setControlTransition({
-          sourceKey: initialWorkspaceSourceKey,
-          status: "confirmed",
-          requestedControls: controls,
-        });
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) {
+        return;
       }
-      return;
-    }
-
-    const requestedControls = controls;
-    if (sourceOverrideRequested) {
-      const confirmedControls = restorePortfolioSourceControls(
+      const sourceOverrideRequested = hasPortfolioSourceControlOverride(
         controls,
         workspaceState,
       );
-      setControls(confirmedControls);
-      replaceRoute(
-        buildPortfolioReviewHref({
-          pathname,
-          searchParams: new URLSearchParams(searchParamsString),
-          portfolioId: selectedPortfolioId,
-          controls: confirmedControls,
-        }),
-        { scroll: false },
-      );
-    }
-    if (sourceOverrideRequested) {
-      setControlTransition({
-        sourceKey: initialWorkspaceSourceKey,
-        status: "failed",
-        requestedControls,
-      });
-    }
+      if (summaryResponseIsCurrent) {
+        if (sourceOverrideRequested) {
+          setControlTransition({
+            sourceKey: initialWorkspaceSourceKey,
+            status: "confirmed",
+            requestedControls: controls,
+          });
+        }
+        return;
+      }
+
+      const requestedControls = controls;
+      if (sourceOverrideRequested) {
+        const confirmedControls = restorePortfolioSourceControls(
+          controls,
+          workspaceState,
+        );
+        setControls(confirmedControls);
+        replaceRoute(
+          buildPortfolioReviewHref({
+            pathname,
+            searchParams: new URLSearchParams(searchParamsString),
+            portfolioId: selectedPortfolioId,
+            controls: confirmedControls,
+          }),
+          { scroll: false },
+        );
+        setControlTransition({
+          sourceKey: initialWorkspaceSourceKey,
+          status: "failed",
+          requestedControls,
+        });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [
     controls,
     initialWorkspaceSourceKey,
