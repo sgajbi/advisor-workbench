@@ -27,6 +27,7 @@ export type WorkbenchRefreshStatusProps =
       onRetry?: () => void;
       retrying?: boolean;
       retryLabel?: string;
+      retryText?: string;
     });
 
 export default function WorkbenchRefreshStatus(props: WorkbenchRefreshStatusProps) {
@@ -79,7 +80,7 @@ export default function WorkbenchRefreshStatus(props: WorkbenchRefreshStatusProp
           disabled={props.retrying ?? false}
           aria-label={props.retryLabel ?? "Retry performance selection"}
         >
-          {props.retrying ? "Retrying…" : "Retry selection"}
+          {props.retrying ? "Retrying…" : (props.retryText ?? "Retry selection")}
         </ActionButton>
       ) : null}
     </section>
