@@ -8,6 +8,7 @@ import OutcomeReviewDetailContext from "./outcome-review-detail-context";
 import OutcomeReviewDetailHeader from "./outcome-review-detail-header";
 import OutcomeReviewMandateImpactSection from "./outcome-review-mandate-impact-section";
 import OutcomeReviewRationaleEvidenceSection from "./outcome-review-rationale-evidence-section";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   primaryReview: OutcomeReviewListItem;
@@ -28,7 +29,7 @@ export default function OutcomeReviewDetailPanel({
 }: Props) {
   return (
     <div
-      className="outcome-review-detail-panel"
+      className={styles.detailPanel}
       id="outcome-review-detail"
       data-testid="selected-outcome-review-detail"
       data-outcome-review-id={primaryReview.outcomeReviewId}
@@ -47,7 +48,7 @@ export default function OutcomeReviewDetailPanel({
         sourceReferenceCount={primaryReview.lineage.length}
       />
 
-      <div className="outcome-review-detail-grid">
+      <div className={styles.detailGrid}>
         <OutcomeReviewMandateImpactSection
           mandateImpact={primaryReview.mandateImpact}
           dimensions={primaryReview.dimensions}

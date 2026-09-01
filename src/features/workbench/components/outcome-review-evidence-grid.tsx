@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  outcomeReviewAvailabilityClass,
-  outcomeReviewAvailabilityLabel,
-} from "@/features/workbench/outcome-review-panel-helpers";
+import { outcomeReviewAvailabilityLabel } from "@/features/workbench/outcome-review-panel-helpers";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   expectedSnapshotHash: string;
@@ -20,23 +18,29 @@ export default function OutcomeReviewEvidenceGrid({
   readyEvidenceCount,
 }: Props) {
   return (
-    <div className="outcome-review-evidence-grid" aria-label="Outcome review evidence availability">
-      <span className={outcomeReviewAvailabilityClass(expectedSnapshotHash)}>
+    <div className={styles.evidenceGrid} aria-label="Outcome review evidence availability">
+      <span className={evidenceClassName(expectedSnapshotHash !== "N/A")}>
         {MANAGE_OUTCOME_REVIEW_LABELS.expectedOutcome}{" "}
         {outcomeReviewAvailabilityLabel(expectedSnapshotHash)}
       </span>
-      <span className={outcomeReviewAvailabilityClass(realizedSnapshotHash)}>
+      <span className={evidenceClassName(realizedSnapshotHash !== "N/A")}>
         {MANAGE_OUTCOME_REVIEW_LABELS.realisedOutcome}{" "}
         {outcomeReviewAvailabilityLabel(realizedSnapshotHash)}
       </span>
-      <span className={outcomeReviewAvailabilityClass(proofPackId)}>
+      <span className={evidenceClassName(proofPackId !== "N/A")}>
         {MANAGE_OUTCOME_REVIEW_LABELS.evidencePack}{" "}
         {outcomeReviewAvailabilityLabel(proofPackId)}
       </span>
-      <span className={readyEvidenceCount >= 3 ? "is-available" : "is-muted"}>
+      <span className={evidenceClassName(readyEvidenceCount >= 3)}>
         {MANAGE_OUTCOME_REVIEW_LABELS.sourceEvidence}{" "}
         {readyEvidenceCount >= 3 ? "Available" : "Partial"}
       </span>
     </div>
   );
+}
+
+function evidenceClassName(available: boolean): string {
+  return `${styles.evidenceItem} ${
+    available ? styles.evidenceAvailable : styles.evidenceUnavailable
+  }`;
 }

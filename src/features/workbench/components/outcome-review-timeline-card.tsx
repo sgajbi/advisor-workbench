@@ -6,6 +6,7 @@ import type { OutcomeReviewListItem } from "@/features/workbench/outcome-review-
 import { outcomeReviewBadgeTone } from "@/features/workbench/outcome-review-panel-helpers";
 
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   items: OutcomeReviewListItem[];
@@ -13,8 +14,8 @@ type Props = {
 
 export default function OutcomeReviewTimelineCard({ items }: Props) {
   return (
-    <div className="outcome-review-card outcome-review-timeline-card">
-      <div className="outcome-review-card-header">
+    <div className={`${styles.card} ${styles.timelineCard}`}>
+      <div className={styles.cardHeader}>
         <h3>{MANAGE_OUTCOME_REVIEW_LABELS.reviewTimeline}</h3>
         <span>{items.length} returned</span>
       </div>
@@ -22,6 +23,7 @@ export default function OutcomeReviewTimelineCard({ items }: Props) {
         ariaLabel="Outcome reviews"
         variant="portfolio"
         density="compact"
+        className={styles.table}
         columns={[
           { key: "review", label: "Review" },
           { key: "window", label: "Window" },

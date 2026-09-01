@@ -27,39 +27,8 @@
   overflow-wrap: anywhere;
 }
 
-.outcome-review-panel .section-block-body,
 .proof-pack-panel .section-block-body {
   gap: 0.75rem;
-}
-
-.outcome-review-badge-row,
-.outcome-review-reason-row,
-.outcome-review-report-actions,
-.outcome-review-hash-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.outcome-review-report-actions {
-  justify-content: flex-start;
-}
-
-.outcome-review-status-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.outcome-review-hash-strip {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.outcome-review-hash-strip span {
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 .proof-pack-badge-row,

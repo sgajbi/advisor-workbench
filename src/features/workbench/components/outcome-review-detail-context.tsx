@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./outcome-review.module.css";
+
 type Props = {
   updatedAt: string;
   retentionUntil: string;
@@ -12,7 +14,7 @@ export default function OutcomeReviewDetailContext({
   sourceReferenceCount,
 }: Props) {
   return (
-    <div className="outcome-review-detail-context" aria-label="Selected review evidence status">
+    <div className={styles.detailContext} aria-label="Selected review evidence status">
       <span>Updated {updatedAt}</span>
       <span>Retained until {retentionUntil}</span>
       <span>{sourceReferenceCount} source references</span>
