@@ -1,25 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { hashKey, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
-import {
-  getWorkbenchRiskAttributionClient,
-  getWorkbenchRiskConcentrationClient,
-  getWorkbenchRiskDrawdownClient,
-  getWorkbenchRiskRollingClient,
-  getWorkbenchRiskSummaryClient,
-  isWorkbenchPermissionBlockedError,
-} from "@/features/workbench/api";
+import { isWorkbenchPermissionBlockedError } from "@/features/workbench/api";
 import type {
   WorkbenchPerformanceWorkspace,
   WorkbenchRiskAttributionResponse,
   WorkbenchRiskConcentrationResponse,
   WorkbenchRiskDrawdownResponse,
-  WorkbenchRiskModuleState,
   WorkbenchRiskRollingResponse,
   WorkbenchRiskSummaryResponse,
 } from "@/features/workbench/types";
 
+import {
+  getPerformanceRiskSourceState,
+  performanceRiskAttributionQueryOptions,
+  performanceRiskConcentrationQueryOptions,
+  performanceRiskDrawdownQueryOptions,
+  performanceRiskRollingQueryOptions,
+  performanceRiskSummaryQueryOptions,
+} from "./performance-risk-query-options";
+import {
+  buildPerformanceRiskQueryContext,
+  performanceRiskQueryKeys,
+} from "./performance-risk-query-keys";
 import {
   buildUnavailableRiskAttribution,
   buildUnavailableRiskConcentration,
@@ -27,10 +32,13 @@ import {
   buildUnavailableRiskRolling,
   buildUnavailableRiskSummary,
 } from "./risk-workspace-view-model";
-import {
-  requireCurrentPerformanceRiskSource,
-  type PerformanceRiskSourceIdentity,
-} from "./performance-risk-source-identity";
+
+type PerformanceRiskResponse =
+  | WorkbenchRiskSummaryResponse
+  | WorkbenchRiskConcentrationResponse
+  | WorkbenchRiskAttributionResponse
+  | WorkbenchRiskDrawdownResponse
+  | WorkbenchRiskRollingResponse;
 
 type PerformanceRiskContractState = {
   riskSummary: WorkbenchRiskSummaryResponse | null;
@@ -58,10 +66,13 @@ type AttributionSelectionState = {
   groupingDimension: string;
 };
 
-type RiskFetchResult<Response> = Readonly<{
-  value: Response | null;
-  cacheable: boolean;
-}>;
+type RiskQueryResult<Response> = {
+  data: Response | undefined;
+  error: Error | null;
+  isFetching: boolean;
+  isPending: boolean;
+  isStale: boolean;
+};
 
 export function usePerformanceRiskContract({
   workspace,
@@ -74,114 +85,16 @@ export function usePerformanceRiskContract({
   detailBasis: string;
   isDetailsPending: boolean;
 }): PerformanceRiskContractState {
-  const workspaceRef = useRef(workspace);
-  const summaryCacheRef = useRef<Map<string, WorkbenchRiskSummaryResponse>>(
-    new Map(),
+  const queryClient = useQueryClient();
+  const context = useMemo(
+    () => buildPerformanceRiskQueryContext(workspace, period),
+    [period, workspace],
   );
-  const concentrationCacheRef = useRef<
-    Map<string, WorkbenchRiskConcentrationResponse>
-  >(new Map());
-  const attributionCacheRef = useRef<
-    Map<string, WorkbenchRiskAttributionResponse>
-  >(new Map());
-  const drawdownCacheRef = useRef<Map<string, WorkbenchRiskDrawdownResponse>>(
-    new Map(),
-  );
-  const drawdownDetailCacheRef = useRef<
-    Map<string, WorkbenchRiskDrawdownResponse>
-  >(new Map());
-  const rollingCacheRef = useRef<Map<string, WorkbenchRiskRollingResponse>>(
-    new Map(),
-  );
-  const rollingDetailCacheRef = useRef<
-    Map<string, WorkbenchRiskRollingResponse>
-  >(new Map());
-  const requestSequenceRef = useRef(0);
-  const drawdownDetailRequestSequenceRef = useRef(0);
-  const rollingDetailRequestSequenceRef = useRef(0);
-  const attributionRequestSequenceRef = useRef(0);
-  const [riskSummary, setRiskSummary] =
-    useState<WorkbenchRiskSummaryResponse | null>(null);
-  const [riskConcentration, setRiskConcentration] =
-    useState<WorkbenchRiskConcentrationResponse | null>(null);
-  const [riskAttribution, setRiskAttribution] =
-    useState<WorkbenchRiskAttributionResponse | null>(null);
-  const [riskDrawdown, setRiskDrawdown] =
-    useState<WorkbenchRiskDrawdownResponse | null>(null);
-  const [riskDrawdownDetail, setRiskDrawdownDetail] =
-    useState<WorkbenchRiskDrawdownResponse | null>(null);
-  const [riskRolling, setRiskRolling] =
-    useState<WorkbenchRiskRollingResponse | null>(null);
-  const [riskRollingDetail, setRiskRollingDetail] =
-    useState<WorkbenchRiskRollingResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAttributionLoading, setIsAttributionLoading] = useState(false);
-  const [primaryStateKey, setPrimaryStateKey] = useState<string | null>(null);
-  const [attributionStateKey, setAttributionStateKey] = useState<string | null>(
-    null,
-  );
-  const [drawdownDetailStateKey, setDrawdownDetailStateKey] = useState<
-    string | null
-  >(null);
-  const [rollingDetailStateKey, setRollingDetailStateKey] = useState<
-    string | null
-  >(null);
-  const [drawdownDetailLoadingKey, setDrawdownDetailLoadingKey] = useState<
-    string | null
-  >(null);
-  const [rollingDetailLoadingKey, setRollingDetailLoadingKey] = useState<
-    string | null
-  >(null);
-  const riskWindowParams = useMemo(
-    () =>
-      period === "EXPLICIT"
-        ? {
-            reportStartDate: workspace.report_start_date,
-            reportEndDate: workspace.report_end_date,
-          }
-        : {},
-    [period, workspace.report_end_date, workspace.report_start_date],
-  );
-  const riskAsOfDate = getRiskAsOfDate(workspace);
-  const riskSourceIdentity = useMemo<PerformanceRiskSourceIdentity>(
-    () => ({
-      portfolioId: workspace.portfolio.portfolio_id,
-      period,
-      detailBasis,
-      asOfDate: riskAsOfDate,
-      benchmark: workspace.benchmark_code ?? null,
-      ...riskWindowParams,
-    }),
-    [
-      period,
-      detailBasis,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-  const attributionScopeKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
+  const queriesEnabled = !isDetailsPending;
+  const attributionScopeKey = hashKey([
+    ...performanceRiskQueryKeys.review(context),
+    detailBasis,
+  ]);
   const [attributionSelection, setAttributionSelection] =
     useState<AttributionSelectionState>({
       scopeKey: attributionScopeKey,
@@ -197,735 +110,205 @@ export function usePerformanceRiskContract({
       ? attributionSelection.groupingDimension
       : "SECTOR";
 
-  useEffect(() => {
-    workspaceRef.current = workspace;
-  }, [workspace]);
-
-  const summaryKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-      }),
-    [
+  const summaryQuery = useQuery({
+    ...performanceRiskSummaryQueryOptions(context, detailBasis),
+    enabled: queriesEnabled,
+  });
+  const concentrationQuery = useQuery({
+    ...performanceRiskConcentrationQueryOptions(context),
+    enabled: queriesEnabled,
+  });
+  const drawdownQuery = useQuery({
+    ...performanceRiskDrawdownQueryOptions(context, detailBasis, false),
+    enabled: queriesEnabled,
+  });
+  const rollingQuery = useQuery({
+    ...performanceRiskRollingQueryOptions(context, detailBasis, false),
+    enabled: queriesEnabled,
+  });
+  const attributionQuery = useQuery({
+    ...performanceRiskAttributionQueryOptions(
+      context,
       detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-
-  const concentrationKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-      }),
-    [
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-
-  const drawdownKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-        includeUnderwaterSeries: false,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-
-  const drawdownDetailKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-        includeUnderwaterSeries: true,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-
-  const rollingKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-        includeTimeSeries: false,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-
-  const rollingDetailKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-        includeTimeSeries: true,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
-  );
-  const primaryScopeKey = JSON.stringify([
-    summaryKey,
-    concentrationKey,
-    drawdownKey,
-    rollingKey,
-  ]);
-  const isDrawdownDetailLoading =
-    drawdownDetailLoadingKey === drawdownDetailKey;
-  const isRollingDetailLoading = rollingDetailLoadingKey === rollingDetailKey;
-
-  useEffect(() => {
-    drawdownDetailRequestSequenceRef.current += 1;
-    rollingDetailRequestSequenceRef.current += 1;
-  }, [drawdownDetailKey, rollingDetailKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.resolve().then(() => {
-      if (cancelled) {
-        return;
-      }
-      if (isDetailsPending) {
-        setRiskSummary(null);
-        setRiskConcentration(null);
-        setRiskAttribution(null);
-        setRiskDrawdown(null);
-        setRiskDrawdownDetail(null);
-        setRiskRolling(null);
-        setRiskRollingDetail(null);
-        setPrimaryStateKey(null);
-        setIsLoading(true);
-        setIsAttributionLoading(false);
-        setDrawdownDetailLoadingKey(null);
-        setRollingDetailLoadingKey(null);
-        return;
-      }
-
-      const cachedSummary = summaryCacheRef.current.get(summaryKey) ?? null;
-      const cachedConcentration =
-        concentrationCacheRef.current.get(concentrationKey) ?? null;
-      const cachedDrawdown = drawdownCacheRef.current.get(drawdownKey) ?? null;
-      const cachedRolling = rollingCacheRef.current.get(rollingKey) ?? null;
-
-      setRiskSummary(cachedSummary);
-      setRiskConcentration(cachedConcentration);
-      setRiskDrawdown(cachedDrawdown);
-      setRiskDrawdownDetail(
-        drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null,
-      );
-      setDrawdownDetailStateKey(drawdownDetailKey);
-      setRiskRolling(cachedRolling);
-      setRiskRollingDetail(
-        rollingDetailCacheRef.current.get(rollingDetailKey) ?? null,
-      );
-      setRollingDetailStateKey(rollingDetailKey);
-
-      const needsSummary = !cachedSummary;
-      const needsConcentration = !cachedConcentration;
-      const needsDrawdown = !cachedDrawdown;
-      const needsRolling = !cachedRolling;
-      if (
-        !needsSummary &&
-        !needsConcentration &&
-        !needsDrawdown &&
-        !needsRolling
-      ) {
-        setPrimaryStateKey(primaryScopeKey);
-        setIsLoading(false);
-        return;
-      }
-
-      const requestId = requestSequenceRef.current + 1;
-      requestSequenceRef.current = requestId;
-      setIsLoading(true);
-
-      const summaryPromise = needsSummary
-        ? getWorkbenchRiskSummaryClient(workspace.portfolio.portfolio_id, {
-            period,
-            detailBasis,
-            benchmark: workspace.benchmark_code ?? undefined,
-            ...riskWindowParams,
-            asOfDate: riskAsOfDate,
-            reportingCurrency: workspace.portfolio.base_currency,
-          })
-            .then<RiskFetchResult<WorkbenchRiskSummaryResponse>>((response) => {
-              const value = requireCurrentPerformanceRiskSource(
-                response,
-                riskSourceIdentity,
-              );
-              return { value, cacheable: isCacheableRiskResponse(value) };
-            })
-            .catch((error: unknown) => ({
-              value: buildUnavailableRiskSummary({
-                workspace: workspaceRef.current,
-                period,
-                detailBasis,
-                detail: buildRiskFetchFailureDetail(error, "Risk summary"),
-                permissionBlocked: isWorkbenchPermissionBlockedError(error),
-              }),
-              cacheable: false,
-            }))
-        : Promise.resolve({ value: cachedSummary, cacheable: false });
-
-      const concentrationPromise = needsConcentration
-        ? getWorkbenchRiskConcentrationClient(
-            workspace.portfolio.portfolio_id,
-            {
-              period,
-              benchmark: workspace.benchmark_code ?? undefined,
-              ...riskWindowParams,
-              asOfDate: riskAsOfDate,
-              reportingCurrency: workspace.portfolio.base_currency,
-            },
-          )
-            .then<RiskFetchResult<WorkbenchRiskConcentrationResponse>>(
-              (response) => {
-                const value = requireCurrentPerformanceRiskSource(response, {
-                  ...riskSourceIdentity,
-                  detailBasis: undefined,
-                  windowEvidence: "point_in_time",
-                });
-                return { value, cacheable: isCacheableRiskResponse(value) };
-              },
-            )
-            .catch((error: unknown) => ({
-              value: buildUnavailableRiskConcentration({
-                workspace: workspaceRef.current,
-                period,
-                detail: buildRiskFetchFailureDetail(
-                  error,
-                  "Risk concentration",
-                ),
-                permissionBlocked: isWorkbenchPermissionBlockedError(error),
-              }),
-              cacheable: false,
-            }))
-        : Promise.resolve({ value: cachedConcentration, cacheable: false });
-
-      const drawdownPromise = needsDrawdown
-        ? getWorkbenchRiskDrawdownClient(workspace.portfolio.portfolio_id, {
-            period,
-            detailBasis,
-            benchmark: workspace.benchmark_code ?? undefined,
-            ...riskWindowParams,
-            asOfDate: riskAsOfDate,
-            reportingCurrency: workspace.portfolio.base_currency,
-            includeUnderwaterSeries: false,
-          })
-            .then<RiskFetchResult<WorkbenchRiskDrawdownResponse>>(
-              (response) => {
-                const value = requireCurrentPerformanceRiskSource(response, {
-                  ...riskSourceIdentity,
-                  includeUnderwaterSeries: false,
-                });
-                return { value, cacheable: isCacheableRiskResponse(value) };
-              },
-            )
-            .catch((error: unknown) => ({
-              value: buildUnavailableRiskDrawdown({
-                workspace: workspaceRef.current,
-                period,
-                detailBasis,
-                detail: buildRiskFetchFailureDetail(error, "Risk drawdown"),
-                includeUnderwaterSeries: false,
-                permissionBlocked: isWorkbenchPermissionBlockedError(error),
-              }),
-              cacheable: false,
-            }))
-        : Promise.resolve({ value: cachedDrawdown, cacheable: false });
-
-      const rollingPromise = needsRolling
-        ? getWorkbenchRiskRollingClient(workspace.portfolio.portfolio_id, {
-            period,
-            detailBasis,
-            benchmark: workspace.benchmark_code ?? undefined,
-            ...riskWindowParams,
-            asOfDate: riskAsOfDate,
-            reportingCurrency: workspace.portfolio.base_currency,
-            includeTimeSeries: false,
-          })
-            .then<RiskFetchResult<WorkbenchRiskRollingResponse>>((response) => {
-              const value = requireCurrentPerformanceRiskSource(response, {
-                ...riskSourceIdentity,
-                includeTimeSeries: false,
-              });
-              return { value, cacheable: isCacheableRiskResponse(value) };
-            })
-            .catch((error: unknown) => ({
-              value: buildUnavailableRiskRolling({
-                workspace: workspaceRef.current,
-                period,
-                detailBasis,
-                detail: buildRiskFetchFailureDetail(error, "Risk rolling"),
-                includeTimeSeries: false,
-                permissionBlocked: isWorkbenchPermissionBlockedError(error),
-              }),
-              cacheable: false,
-            }))
-        : Promise.resolve({ value: cachedRolling, cacheable: false });
-
-      void Promise.all([
-        summaryPromise,
-        concentrationPromise,
-        drawdownPromise,
-        rollingPromise,
-      ]).then(([nextSummary, nextConcentration, nextDrawdown, nextRolling]) => {
-        if (cancelled || requestSequenceRef.current !== requestId) {
-          return;
-        }
-        if (nextSummary.value) {
-          if (nextSummary.cacheable) {
-            summaryCacheRef.current.set(summaryKey, nextSummary.value);
-          }
-          setRiskSummary(nextSummary.value);
-        }
-        if (nextConcentration.value) {
-          if (nextConcentration.cacheable) {
-            concentrationCacheRef.current.set(
-              concentrationKey,
-              nextConcentration.value,
-            );
-          }
-          setRiskConcentration(nextConcentration.value);
-        }
-        if (nextDrawdown.value) {
-          if (nextDrawdown.cacheable) {
-            drawdownCacheRef.current.set(drawdownKey, nextDrawdown.value);
-          }
-          setRiskDrawdown(nextDrawdown.value);
-        }
-        if (nextRolling.value) {
-          if (nextRolling.cacheable) {
-            rollingCacheRef.current.set(rollingKey, nextRolling.value);
-          }
-          setRiskRolling(nextRolling.value);
-        }
-        setPrimaryStateKey(primaryScopeKey);
-        setIsLoading(false);
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    concentrationKey,
-    detailBasis,
-    drawdownDetailKey,
-    drawdownKey,
-    isDetailsPending,
-    period,
-    primaryScopeKey,
-    riskWindowParams,
-    rollingDetailKey,
-    rollingKey,
-    summaryKey,
-    riskAsOfDate,
-    riskSourceIdentity,
-    workspace.benchmark_code,
-    workspace.portfolio.base_currency,
-    workspace.portfolio.portfolio_id,
-  ]);
-
-  const attributionKey = useMemo(
-    () =>
-      JSON.stringify({
-        portfolioId: workspace.portfolio.portfolio_id,
-        period,
-        detailBasis,
-        benchmark: workspace.benchmark_code ?? null,
-        ...riskWindowParams,
-        asOfDate: riskAsOfDate,
-        reportingCurrency: workspace.portfolio.base_currency,
-        attributionType: selectedAttributionType,
-        groupingDimension: selectedGroupingDimension,
-      }),
-    [
-      detailBasis,
-      period,
-      riskWindowParams,
       selectedAttributionType,
       selectedGroupingDimension,
-      riskAsOfDate,
-      workspace.benchmark_code,
-      workspace.portfolio.base_currency,
-      workspace.portfolio.portfolio_id,
-    ],
+    ),
+    enabled: queriesEnabled,
+  });
+  const drawdownDetailOptions = performanceRiskDrawdownQueryOptions(
+    context,
+    detailBasis,
+    true,
+  );
+  const drawdownDetailQuery = useQuery({
+    ...drawdownDetailOptions,
+    enabled: false,
+  });
+  const rollingDetailOptions = performanceRiskRollingQueryOptions(
+    context,
+    detailBasis,
+    true,
+  );
+  const rollingDetailQuery = useQuery({
+    ...rollingDetailOptions,
+    enabled: false,
+  });
+
+  const riskSummary = currentRiskResponse(
+    summaryQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskSummary({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk summary"),
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
+  );
+  const riskConcentration = currentRiskResponse(
+    concentrationQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskConcentration({
+        workspace,
+        period,
+        detail: buildRiskFetchFailureDetail(error, "Risk concentration"),
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
+  );
+  const riskDrawdown = currentRiskResponse(
+    drawdownQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskDrawdown({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk drawdown"),
+        includeUnderwaterSeries: false,
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
+  );
+  const riskRolling = currentRiskResponse(
+    rollingQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskRolling({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk rolling"),
+        includeTimeSeries: false,
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
+  );
+  const riskAttribution = currentRiskResponse(
+    attributionQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskAttribution({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk attribution"),
+      }),
+  );
+  const riskDrawdownDetail = currentRiskResponse(
+    drawdownDetailQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskDrawdown({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk drawdown detail"),
+        includeUnderwaterSeries: true,
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
+  );
+  const riskRollingDetail = currentRiskResponse(
+    rollingDetailQuery,
+    isDetailsPending,
+    (error) =>
+      buildUnavailableRiskRolling({
+        workspace,
+        period,
+        detailBasis,
+        detail: buildRiskFetchFailureDetail(error, "Risk rolling detail"),
+        includeTimeSeries: true,
+        permissionBlocked: isWorkbenchPermissionBlockedError(error),
+      }),
   );
 
   const requestAttribution = (
     attributionType: string,
     groupingDimension: string,
   ) => {
-    if (isDetailsPending) {
-      return;
-    }
-    setAttributionSelection({
-      scopeKey: attributionScopeKey,
-      attributionType,
-      groupingDimension,
-    });
-  };
-
-  useEffect(() => {
-    if (isDetailsPending) {
-      return;
-    }
-    const cachedResponse =
-      attributionCacheRef.current.get(attributionKey) ?? null;
-    if (cachedResponse) {
-      setRiskAttribution(cachedResponse);
-      setAttributionStateKey(attributionKey);
-      setIsAttributionLoading(false);
-      return;
-    }
-    const requestId = attributionRequestSequenceRef.current + 1;
-    attributionRequestSequenceRef.current = requestId;
-    setIsAttributionLoading(true);
-    void getWorkbenchRiskAttributionClient(workspace.portfolio.portfolio_id, {
-      period,
-      detailBasis,
-      benchmark: workspace.benchmark_code ?? undefined,
-      ...riskWindowParams,
-      asOfDate: riskAsOfDate,
-      reportingCurrency: workspace.portfolio.base_currency,
-      attributionType: selectedAttributionType,
-      groupingDimension: selectedGroupingDimension,
-    })
-      .then((response) => {
-        if (attributionRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        const currentResponse = requireCurrentPerformanceRiskSource(response, {
-          ...riskSourceIdentity,
-          attributionType: selectedAttributionType,
-          groupingDimension: selectedGroupingDimension,
-        });
-        if (isCacheableRiskResponse(currentResponse)) {
-          attributionCacheRef.current.set(attributionKey, currentResponse);
-        }
-        setRiskAttribution(currentResponse);
-        setAttributionStateKey(attributionKey);
-        setIsAttributionLoading(false);
-      })
-      .catch(() => {
-        const unavailableResponse = buildUnavailableRiskAttribution({
-          workspace: workspaceRef.current,
-          period,
-          detailBasis,
-          detail: "Risk attribution fetch failed.",
-        });
-        if (attributionRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        setRiskAttribution(unavailableResponse);
-        setAttributionStateKey(attributionKey);
-        setIsAttributionLoading(false);
+    if (!isDetailsPending) {
+      setAttributionSelection({
+        scopeKey: attributionScopeKey,
+        attributionType,
+        groupingDimension,
       });
-  }, [
-    attributionKey,
-    detailBasis,
-    isDetailsPending,
-    period,
-    riskWindowParams,
-    selectedAttributionType,
-    selectedGroupingDimension,
-    riskAsOfDate,
-    riskSourceIdentity,
-    workspace.benchmark_code,
-    workspace.portfolio.base_currency,
-    workspace.portfolio.portfolio_id,
-  ]);
-
+    }
+  };
   const requestDrawdownDetail = () => {
-    if (isDetailsPending) {
-      return;
+    if (!isDetailsPending) {
+      void queryClient.fetchQuery(drawdownDetailOptions).catch(() => undefined);
     }
-    const cachedDetail =
-      drawdownDetailCacheRef.current.get(drawdownDetailKey) ?? null;
-    if (cachedDetail) {
-      setRiskDrawdownDetail(cachedDetail);
-      setDrawdownDetailStateKey(drawdownDetailKey);
-      return;
-    }
-    const requestId = drawdownDetailRequestSequenceRef.current + 1;
-    drawdownDetailRequestSequenceRef.current = requestId;
-    const requestWorkspace = workspace;
-    const requestPeriod = period;
-    const requestDetailBasis = detailBasis;
-    const requestKey = drawdownDetailKey;
-    const requestIdentity = {
-      ...riskSourceIdentity,
-      includeUnderwaterSeries: true as const,
-    };
-    setDrawdownDetailLoadingKey(requestKey);
-    void getWorkbenchRiskDrawdownClient(
-      requestWorkspace.portfolio.portfolio_id,
-      {
-        period: requestPeriod,
-        detailBasis: requestDetailBasis,
-        benchmark: requestWorkspace.benchmark_code ?? undefined,
-        ...getRiskWindowParams(requestWorkspace, requestPeriod),
-        asOfDate: getRiskAsOfDate(requestWorkspace),
-        reportingCurrency: requestWorkspace.portfolio.base_currency,
-        includeUnderwaterSeries: true,
-      },
-    )
-      .then((response) => {
-        const currentResponse = requireCurrentPerformanceRiskSource(
-          response,
-          requestIdentity,
-        );
-        if (drawdownDetailRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        if (isCacheableRiskResponse(currentResponse)) {
-          drawdownDetailCacheRef.current.set(requestKey, currentResponse);
-        }
-        setRiskDrawdownDetail(currentResponse);
-        setDrawdownDetailStateKey(requestKey);
-        setDrawdownDetailLoadingKey(null);
-      })
-      .catch((error: unknown) => {
-        if (drawdownDetailRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        const unavailableResponse = buildUnavailableRiskDrawdown({
-          workspace: requestWorkspace,
-          period: requestPeriod,
-          detailBasis: requestDetailBasis,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Risk drawdown detail fetch failed.",
-          includeUnderwaterSeries: true,
-        });
-        setRiskDrawdownDetail(unavailableResponse);
-        setDrawdownDetailStateKey(requestKey);
-        setDrawdownDetailLoadingKey(null);
-      });
   };
-
   const requestRollingDetail = () => {
-    if (isDetailsPending) {
-      return;
+    if (!isDetailsPending) {
+      void queryClient.fetchQuery(rollingDetailOptions).catch(() => undefined);
     }
-    const cachedDetail =
-      rollingDetailCacheRef.current.get(rollingDetailKey) ?? null;
-    if (cachedDetail) {
-      setRiskRollingDetail(cachedDetail);
-      setRollingDetailStateKey(rollingDetailKey);
-      return;
-    }
-    const requestId = rollingDetailRequestSequenceRef.current + 1;
-    rollingDetailRequestSequenceRef.current = requestId;
-    const requestWorkspace = workspace;
-    const requestPeriod = period;
-    const requestDetailBasis = detailBasis;
-    const requestKey = rollingDetailKey;
-    const requestIdentity = {
-      ...riskSourceIdentity,
-      includeTimeSeries: true as const,
-    };
-    setRollingDetailLoadingKey(requestKey);
-    void getWorkbenchRiskRollingClient(
-      requestWorkspace.portfolio.portfolio_id,
-      {
-        period: requestPeriod,
-        detailBasis: requestDetailBasis,
-        benchmark: requestWorkspace.benchmark_code ?? undefined,
-        ...getRiskWindowParams(requestWorkspace, requestPeriod),
-        asOfDate: getRiskAsOfDate(requestWorkspace),
-        reportingCurrency: requestWorkspace.portfolio.base_currency,
-        includeTimeSeries: true,
-      },
-    )
-      .then((response) => {
-        const currentResponse = requireCurrentPerformanceRiskSource(
-          response,
-          requestIdentity,
-        );
-        if (rollingDetailRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        if (isCacheableRiskResponse(currentResponse)) {
-          rollingDetailCacheRef.current.set(requestKey, currentResponse);
-        }
-        setRiskRollingDetail(currentResponse);
-        setRollingDetailStateKey(requestKey);
-        setRollingDetailLoadingKey(null);
-      })
-      .catch((error: unknown) => {
-        if (rollingDetailRequestSequenceRef.current !== requestId) {
-          return;
-        }
-        const unavailableResponse = buildUnavailableRiskRolling({
-          workspace: requestWorkspace,
-          period: requestPeriod,
-          detailBasis: requestDetailBasis,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Risk rolling detail fetch failed.",
-          includeTimeSeries: true,
-        });
-        setRiskRollingDetail(unavailableResponse);
-        setRollingDetailStateKey(requestKey);
-        setRollingDetailLoadingKey(null);
-      });
   };
 
   return {
-    riskSummary: currentRiskValue(
-      riskSummary,
-      primaryStateKey,
-      primaryScopeKey,
-      isDetailsPending,
-    ),
-    riskConcentration: currentRiskValue(
-      riskConcentration,
-      primaryStateKey,
-      primaryScopeKey,
-      isDetailsPending,
-    ),
-    riskAttribution: currentRiskValue(
-      riskAttribution,
-      attributionStateKey,
-      attributionKey,
-      isDetailsPending,
-    ),
-    riskDrawdown: currentRiskValue(
-      riskDrawdown,
-      primaryStateKey,
-      primaryScopeKey,
-      isDetailsPending,
-    ),
-    riskDrawdownDetail: currentRiskValue(
-      riskDrawdownDetail,
-      drawdownDetailStateKey,
-      drawdownDetailKey,
-      isDetailsPending,
-    ),
-    riskRolling: currentRiskValue(
-      riskRolling,
-      primaryStateKey,
-      primaryScopeKey,
-      isDetailsPending,
-    ),
-    riskRollingDetail: currentRiskValue(
-      riskRollingDetail,
-      rollingDetailStateKey,
-      rollingDetailKey,
-      isDetailsPending,
-    ),
+    riskSummary,
+    riskConcentration,
+    riskAttribution,
+    riskDrawdown,
+    riskDrawdownDetail,
+    riskRolling,
+    riskRollingDetail,
     isLoading:
-      isDetailsPending || primaryStateKey !== primaryScopeKey || isLoading,
-    isAttributionLoading:
       isDetailsPending ||
-      attributionStateKey !== attributionKey ||
-      isAttributionLoading,
-    isDrawdownDetailLoading,
-    isRollingDetailLoading,
+      isQueryAwaitingCurrentSource(summaryQuery) ||
+      isQueryAwaitingCurrentSource(concentrationQuery) ||
+      isQueryAwaitingCurrentSource(drawdownQuery) ||
+      isQueryAwaitingCurrentSource(rollingQuery),
+    isAttributionLoading:
+      isDetailsPending || isQueryAwaitingCurrentSource(attributionQuery),
+    isDrawdownDetailLoading: drawdownDetailQuery.isFetching,
+    isRollingDetailLoading: rollingDetailQuery.isFetching,
     requestAttribution,
     requestDrawdownDetail,
     requestRollingDetail,
   };
 }
 
-function currentRiskValue<Value>(
-  value: Value | null,
-  settledKey: string | null,
-  activeKey: string,
-  isPending: boolean,
-): Value | null {
-  return !isPending && settledKey === activeKey ? value : null;
+function currentRiskResponse<Response extends PerformanceRiskResponse>(
+  query: RiskQueryResult<Response>,
+  isDetailsPending: boolean,
+  buildUnavailable: (error: unknown) => Response,
+): Response | null {
+  if (isDetailsPending) {
+    return null;
+  }
+  if (query.error) {
+    return (
+      getPerformanceRiskSourceState<Response>(query.error) ??
+      buildUnavailable(query.error)
+    );
+  }
+  return isQueryAwaitingCurrentSource(query) ? null : (query.data ?? null);
 }
 
-function getRiskWindowParams(
-  workspace: WorkbenchPerformanceWorkspace,
-  period: string,
-) {
-  return period === "EXPLICIT"
-    ? {
-        reportStartDate: workspace.report_start_date,
-        reportEndDate: workspace.report_end_date,
-      }
-    : {};
-}
-
-function getRiskAsOfDate(workspace: WorkbenchPerformanceWorkspace): string {
-  return workspace.report_end_date?.trim() || workspace.as_of_date;
+function isQueryAwaitingCurrentSource<Response>(
+  query: RiskQueryResult<Response>,
+): boolean {
+  return query.isPending || (query.isFetching && query.isStale);
 }
 
 function buildRiskFetchFailureDetail(error: unknown, label: string): string {
@@ -933,14 +316,4 @@ function buildRiskFetchFailureDetail(error: unknown, label: string): string {
     return `${label} is permission-blocked for this caller context.`;
   }
   return error instanceof Error ? error.message : `${label} fetch failed.`;
-}
-
-function isCacheableRiskResponse(response: {
-  state: WorkbenchRiskModuleState;
-  payload: unknown;
-}): boolean {
-  return (
-    (response.state === "ready" || response.state === "partial") &&
-    response.payload !== null
-  );
 }
