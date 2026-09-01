@@ -931,6 +931,38 @@ export default function PortfolioWorkspaceClient({
         buildInitialPortfolioControls(shellQuery.data),
       )}
     />
+  ) : summaryQuery.isError && workspaceState ? (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Portfolio review"
+      title={
+        summaryQuery.data
+          ? "Portfolio detail could not be refreshed"
+          : "Portfolio detail is unavailable"
+      }
+      message={
+        summaryQuery.data
+          ? "The previous portfolio view remains active while the refresh is retried."
+          : "The portfolio overview remains visible, but positions and analysis could not be confirmed."
+      }
+      confirmedContext={formatPortfolioControlContext(controls)}
+      onRetry={() => void summaryQuery.refetch()}
+      retrying={summaryQuery.isFetching}
+      retryLabel="Retry portfolio detail refresh"
+    />
+  ) : !serverSnapshotReconciliationPending &&
+    shellQuery.isRefetchError &&
+    shellQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Portfolio review"
+      title="Portfolio overview could not be refreshed"
+      message="The previous portfolio view remains active while the refresh is retried."
+      confirmedContext={formatPortfolioControlContext(controls)}
+      onRetry={() => void shellQuery.refetch()}
+      retrying={shellQuery.isFetching}
+      retryLabel="Retry portfolio overview refresh"
+    />
   ) : shellRefreshPaused && shellQuery.data ? (
     <WorkbenchRefreshStatus
       kind="pending"
@@ -975,38 +1007,6 @@ export default function PortfolioWorkspaceClient({
       message="Positions and analysis are being confirmed for the latest portfolio overview."
       requestedContext={formatPortfolioControlContext(controls)}
       confirmedContext={formatPortfolioControlContext(controls)}
-    />
-  ) : summaryQuery.isError && workspaceState ? (
-    <WorkbenchRefreshStatus
-      kind="failed"
-      eyebrow="Portfolio review"
-      title={
-        summaryQuery.data
-          ? "Portfolio detail could not be refreshed"
-          : "Portfolio detail is unavailable"
-      }
-      message={
-        summaryQuery.data
-          ? "The previous portfolio view remains active while the refresh is retried."
-          : "The portfolio overview remains visible, but positions and analysis could not be confirmed."
-      }
-      confirmedContext={formatPortfolioControlContext(controls)}
-      onRetry={() => void summaryQuery.refetch()}
-      retrying={summaryQuery.isFetching}
-      retryLabel="Retry portfolio detail refresh"
-    />
-  ) : !serverSnapshotReconciliationPending &&
-    shellQuery.isRefetchError &&
-    shellQuery.data ? (
-    <WorkbenchRefreshStatus
-      kind="failed"
-      eyebrow="Portfolio review"
-      title="Portfolio overview could not be refreshed"
-      message="The previous portfolio view remains active while the refresh is retried."
-      confirmedContext={formatPortfolioControlContext(controls)}
-      onRetry={() => void shellQuery.refetch()}
-      retrying={shellQuery.isFetching}
-      retryLabel="Retry portfolio overview refresh"
     />
   ) : (
     controlTransitionStatus
