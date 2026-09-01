@@ -51,6 +51,8 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
     { width: 1440, height: 1000 },
     { width: 1024, height: 900 },
     { width: 768, height: 900 },
+    { width: 721, height: 900 },
+    { width: 561, height: 900 },
     { width: 519, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
