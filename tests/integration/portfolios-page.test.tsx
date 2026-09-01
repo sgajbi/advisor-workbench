@@ -23,6 +23,14 @@ function render(ui: React.ReactNode) {
   });
 }
 
+async function expectPortfolioReviewReady() {
+  expect(
+    await screen.findByText(
+      "Review portfolio value, returns, liquidity, exceptions, and the next business action.",
+    ),
+  ).toHaveClass("workbench-page-header-subtitle");
+}
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
   useRouter: () => ({ push: routerPushMock }),
@@ -261,7 +269,7 @@ describe("PortfolioFoundationPage", () => {
     expect(within(pageHeader as HTMLElement).getByRole("heading", { name: /^Portfolio Review$/i }))
       .toHaveClass("workbench-page-header-title");
     expect(
-      within(pageHeader as HTMLElement).getByText(
+      await within(pageHeader as HTMLElement).findByText(
         "Review portfolio value, returns, liquidity, exceptions, and the next business action."
       )
     ).toHaveClass("workbench-page-header-subtitle");
@@ -496,9 +504,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
-    });
+    await expectPortfolioReviewReady();
 
     expect(screen.queryByRole("heading", { name: /Book Context/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /Reporting Readiness/i })).not.toBeInTheDocument();
@@ -573,9 +579,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
-    });
+    await expectPortfolioReviewReady();
 
     expect(screen.queryByRole("heading", { name: /Portfolio Allocation/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Asset Class" })).not.toBeInTheDocument();
@@ -620,9 +624,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
-    });
+    await expectPortfolioReviewReady();
 
     expect(document.getElementById("portfolio-drilldown")).toBeFalsy();
     expect(screen.queryByRole("heading", { name: /Liquidity and Projected Cash/i })).not.toBeInTheDocument();
@@ -649,9 +651,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
-    });
+    await expectPortfolioReviewReady();
 
     expect(screen.queryByText("Allocation is unavailable for this portfolio.")).not.toBeInTheDocument();
     expect(screen.queryByText("Top holdings are unavailable for this portfolio.")).not.toBeInTheDocument();
@@ -676,6 +676,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
+    await expectPortfolioReviewReady();
     expect(screen.getAllByText("Blocking controls active").length).toBeGreaterThanOrEqual(1);
   }, 30000);
 
@@ -689,9 +690,7 @@ describe("PortfolioFoundationPage", () => {
       }),
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: /^Portfolio Review$/i })).toBeInTheDocument();
-    });
+    await expectPortfolioReviewReady();
 
     expect(screen.queryByText("Allocation is partially available")).not.toBeInTheDocument();
     expect(screen.queryByText("Top holdings are not ranked yet")).not.toBeInTheDocument();
