@@ -1770,6 +1770,12 @@ describe("canonical live validation script", () => {
     }
     expect(script).toContain("sourceReview: outcomeReviewItems[0]");
     expect(browserWorkflowModule).toContain("#evidence-pack-panel");
+    expect(browserWorkflowModule).toMatch(
+      /page\.getByRole\("heading", \{[\s\S]{0,100}name: "Evidence Pack",[\s\S]{0,50}level: 1,[\s\S]{0,50}exact: true/u,
+    );
+    expect(browserWorkflowModule).not.toMatch(
+      /proofPackPanel\.getByRole\("heading", \{[\s\S]{0,100}name: "Evidence Pack"/u,
+    );
     expect(browserWorkflowModule).toContain("requireVisible");
     expect(browserWorkflowModule).toContain("Return history");
     expect(browserWorkflowModule).toContain(

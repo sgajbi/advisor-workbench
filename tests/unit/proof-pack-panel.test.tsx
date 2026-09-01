@@ -377,4 +377,28 @@ describe("ProofPackPanel", () => {
     expect(screen.queryByLabelText("Evidence pack next actions")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Prepare evidence" })).toBeDisabled();
   });
+
+  it("withholds stale workspace data when source supportability is unavailable", () => {
+    render(
+      <ProofPackPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        outcomeReviews={outcomeReviews}
+        rebalanceSnapshot={rebalanceSnapshot}
+        initialProofPack={{
+          ...readyProofPack,
+          supportability: {
+            ...readyProofPack.supportability,
+            state: "UNAVAILABLE",
+            reason_codes: ["PROOF_PACK_SOURCE_UNAVAILABLE"],
+          },
+        }}
+      />
+    );
+
+    expect(screen.getByText("Evidence pack is unavailable")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Evidence areas" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Evidence pack next actions")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ready for advisor review")).not.toBeInTheDocument();
+  });
 });

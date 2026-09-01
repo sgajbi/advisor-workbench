@@ -228,4 +228,20 @@ describe("proof pack view model", () => {
     expect(model.state).toBe("blocked");
     expect(model.supportabilityReasons).toEqual(["PROOF_PACK_SOURCE_BLOCKED"]);
   });
+
+  it("fails closed when Manage marks a retained proof pack unavailable", () => {
+    const model = buildProofPackPanelModel({
+      ...proofPackResponse,
+      supportability: {
+        ...proofPackResponse.supportability,
+        state: "UNAVAILABLE",
+        reason_codes: ["PROOF_PACK_SOURCE_UNAVAILABLE"],
+      },
+    });
+
+    expect(model.state).toBe("unavailable");
+    expect(model.proofPackId).toBe("ppack_1");
+    expect(model.sections).toHaveLength(2);
+    expect(model.supportabilityReasons).toEqual(["PROOF_PACK_SOURCE_UNAVAILABLE"]);
+  });
 });
