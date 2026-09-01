@@ -58,6 +58,11 @@ type WorkspaceStateDraft = {
   workspace: PortfolioWorkspace | null;
 };
 
+type ShellGenerationDraft = {
+  sourceKey: string;
+  activeGeneration: string;
+};
+
 type PortfolioControlStateDraft = {
   sourceKey: string;
   controls: PortfolioWorkspaceControls;
@@ -138,6 +143,38 @@ export default function PortfolioWorkspaceClient({
       ),
     [confirmedInitialWorkspace, selectedPortfolioId],
   );
+  const [shellGenerationDraft, setShellGenerationDraft] =
+    useState<ShellGenerationDraft>({
+      sourceKey: initialWorkspaceSourceKey,
+      activeGeneration: initialWorkspaceSourceKey,
+    });
+  const activeShellGeneration =
+    shellGenerationDraft.sourceKey === initialWorkspaceSourceKey
+      ? shellGenerationDraft.activeGeneration
+      : initialWorkspaceSourceKey;
+  const setActiveShellGeneration = useCallback(
+    (activeGeneration: string) => {
+      if (selectedPortfolioId) {
+        queryClient.setQueryData(
+          portfolioQueryKeys.activeShellGeneration(selectedPortfolioId),
+          activeGeneration,
+        );
+      }
+      setShellGenerationDraft({
+        sourceKey: initialWorkspaceSourceKey,
+        activeGeneration,
+      });
+    },
+    [initialWorkspaceSourceKey, queryClient, selectedPortfolioId],
+  );
+  useEffect(() => {
+    if (selectedPortfolioId) {
+      queryClient.setQueryData(
+        portfolioQueryKeys.activeShellGeneration(selectedPortfolioId),
+        activeShellGeneration,
+      );
+    }
+  }, [activeShellGeneration, queryClient, selectedPortfolioId]);
   const initialControlValues = useMemo(
     () =>
       confirmedInitialWorkspace && initialControls
@@ -247,20 +284,39 @@ export default function PortfolioWorkspaceClient({
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState],
   );
+  const activeGenerationShell = useMemo(
+    () =>
+      workspaceState &&
+      buildPortfolioWorkspaceSourceGeneration(
+        selectedPortfolioId,
+        workspaceState,
+      ) === activeShellGeneration
+        ? workspaceState
+        : undefined,
+    [activeShellGeneration, selectedPortfolioId, workspaceState],
+  );
   const shellQueryKey = useMemo(
     () =>
       portfolioQueryKeys.workspaceSource(
         selectedPortfolioId ?? "unselected",
-        initialWorkspaceSourceKey,
+        activeShellGeneration,
       ),
-    [initialWorkspaceSourceKey, selectedPortfolioId],
+    [activeShellGeneration, selectedPortfolioId],
   );
   const retainedShellAfterServerFailure = useMemo(
     () =>
-      confirmedInitialWorkspace || !selectedPortfolioId
+      activeGenerationShell ||
+      activeShellGeneration !== initialWorkspaceSourceKey ||
+      !selectedPortfolioId
         ? undefined
         : findLatestConfirmedPortfolioShell(queryClient, selectedPortfolioId),
-    [confirmedInitialWorkspace, queryClient, selectedPortfolioId],
+    [
+      activeGenerationShell,
+      activeShellGeneration,
+      initialWorkspaceSourceKey,
+      queryClient,
+      selectedPortfolioId,
+    ],
   );
   const shellQuery = useQuery({
     queryKey: shellQueryKey,
@@ -271,10 +327,14 @@ export default function PortfolioWorkspaceClient({
         state.dataUpdatedAt,
         state.status,
       ),
-    refetchOnMount: confirmedInitialWorkspace ? true : "always",
-    initialData: confirmedInitialWorkspace ?? retainedShellAfterServerFailure,
+    refetchOnMount:
+      activeShellGeneration === initialWorkspaceSourceKey &&
+      !confirmedInitialWorkspace
+        ? "always"
+        : true,
+    initialData: activeGenerationShell ?? retainedShellAfterServerFailure,
     initialDataUpdatedAt:
-      confirmedInitialWorkspace || !retainedShellAfterServerFailure
+      activeGenerationShell || !retainedShellAfterServerFailure
         ? undefined
         : 0,
     queryFn: async ({ signal }) => {
@@ -295,7 +355,9 @@ export default function PortfolioWorkspaceClient({
     },
   });
   const awaitsShellSourceConfirmation = Boolean(
-    !confirmedInitialWorkspace && shellQuery.isFetching,
+    !confirmedInitialWorkspace &&
+    activeShellGeneration === initialWorkspaceSourceKey &&
+    (shellQuery.isFetching || shellQuery.fetchStatus === "paused"),
   );
   const activeShellRequestStatus = !selectedPortfolioId
     ? "idle"
@@ -310,15 +372,15 @@ export default function PortfolioWorkspaceClient({
 
   useEffect(
     () => () => {
-      if (confirmedInitialWorkspace) {
+      if (activeGenerationShell) {
         const currentShellState =
           queryClient.getQueryState<PortfolioWorkspace>(shellQueryKey);
         const cachedGeneration = buildPortfolioWorkspaceSourceGeneration(
           selectedPortfolioId,
           currentShellState?.data ?? null,
         );
-        if (cachedGeneration !== initialWorkspaceSourceKey) {
-          queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace, {
+        if (cachedGeneration !== activeShellGeneration) {
+          queryClient.setQueryData(shellQueryKey, activeGenerationShell, {
             updatedAt: Math.max(
               0,
               (currentShellState?.dataUpdatedAt ?? 1) - 1,
@@ -327,8 +389,8 @@ export default function PortfolioWorkspaceClient({
         }
       }
     }, [
-      confirmedInitialWorkspace,
-      initialWorkspaceSourceKey,
+      activeGenerationShell,
+      activeShellGeneration,
       queryClient,
       selectedPortfolioId,
       shellQueryKey,
@@ -361,6 +423,7 @@ export default function PortfolioWorkspaceClient({
         if (selectedPortfolioId && confirmedInitialWorkspace) {
           queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace);
         }
+        setActiveShellGeneration(initialWorkspaceSourceKey);
         setWorkspaceState(confirmedInitialWorkspace);
         return;
       }
@@ -380,7 +443,10 @@ export default function PortfolioWorkspaceClient({
           selectedPortfolioId,
           shellWorkspace,
         );
-      if (refreshedSourceGeneration !== initialWorkspaceSourceKey) {
+      if (
+        !shellQuery.isError &&
+        refreshedSourceGeneration !== activeShellGeneration
+      ) {
         queryClient.setQueryData(
           portfolioQueryKeys.workspaceSource(
             selectedPortfolioId,
@@ -389,6 +455,7 @@ export default function PortfolioWorkspaceClient({
           shellWorkspace,
           { updatedAt: shellQuery.dataUpdatedAt },
         );
+        setActiveShellGeneration(refreshedSourceGeneration);
       }
       setControls((current) => {
         if (
@@ -409,16 +476,19 @@ export default function PortfolioWorkspaceClient({
       cancelled = true;
     };
   }, [
+    activeShellGeneration,
     awaitsShellSourceConfirmation,
     confirmedInitialWorkspace,
     initialWorkspaceSourceKey,
     queryClient,
     selectedPortfolioId,
+    setActiveShellGeneration,
     setControls,
     setWorkspaceState,
     shellQueryKey,
     shellQuery.data,
     shellQuery.dataUpdatedAt,
+    shellQuery.isError,
     workspaceDraft.sourceKey,
     workspaceState,
   ]);
@@ -653,10 +723,23 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
+    const currentActiveShellGeneration =
+      queryClient.getQueryData<string>(
+        portfolioQueryKeys.activeShellGeneration(selectedPortfolioId),
+      ) ?? activeShellGeneration;
+    if (currentActiveShellGeneration !== workspaceSourceGeneration) {
+      setControlTransition({
+        sourceKey: initialWorkspaceSourceKey,
+        status: "failed",
+        requestedControls,
+      });
+      return;
+    }
+
     const currentShell = queryClient.getQueryData<PortfolioWorkspace>(
       portfolioQueryKeys.workspaceSource(
         selectedPortfolioId,
-        workspaceSourceGeneration,
+        currentActiveShellGeneration,
       ),
     );
     if (
