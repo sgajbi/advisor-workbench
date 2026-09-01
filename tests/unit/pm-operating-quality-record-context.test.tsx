@@ -15,6 +15,7 @@ const model = {
       state: "READY",
       score: "88.00",
       asOfDate: "2026-05-13",
+      sourceService: "lotus-manage",
     },
     {
       key: "run-2",
@@ -25,6 +26,7 @@ const model = {
       state: "REVIEW_REQUIRED",
       score: "74.00",
       asOfDate: "2026-05-13",
+      sourceService: "lotus-manage",
     },
   ],
   fairnessAnalysisRows: [

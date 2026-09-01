@@ -32,6 +32,7 @@ const baseModel: PmOperatingQualityPanelModel = {
       sourceRefs: "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001",
       reasonCodes: "PM_QUALITY_READY",
       contentHash: "sha256:hidden",
+      sourceService: "lotus-manage",
     },
   ],
   fairnessSegmentRequests: [],

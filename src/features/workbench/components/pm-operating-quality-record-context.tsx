@@ -55,11 +55,13 @@ export default function PmOperatingQualityRecordContext({
 
       <div className={styles.grid}>
         <RecordGroup
+          className={styles.scoreRunGroup}
           title="Quality runs"
           count={model.scoreRunRows.length}
           emptyCopy="No portfolio-manager quality runs were returned by Gateway."
         >
           <WorkbenchRecordSelector
+            className={styles.scoreRunSelector}
             ariaLabel="PM operating quality score-run selection"
             selectedKey={selection.scoreRunId}
             onSelectionChange={onScoreRunSelection}
@@ -75,6 +77,11 @@ export default function PmOperatingQualityRecordContext({
               ],
               nextAction: "Support summary and invocation use this quality run.",
               disabled: selectionLocked,
+              sourceEvidence: {
+                source: row.sourceService,
+                identity: row.scoreRunId,
+                state: row.state,
+              },
             }))}
           />
         </RecordGroup>
@@ -138,12 +145,14 @@ export default function PmOperatingQualityRecordContext({
 }
 
 function RecordGroup({
+  className,
   title,
   count,
   emptyCopy,
   pendingCopy = null,
   children,
 }: {
+  className?: string;
   title: string;
   count: number;
   emptyCopy: string;
@@ -151,7 +160,7 @@ function RecordGroup({
   children: ReactNode;
 }) {
   return (
-    <section className={styles.group} aria-label={title}>
+    <section className={`${styles.group} ${className ?? ""}`.trim()} aria-label={title}>
       <div className={styles.groupHeading}>
         <h4>{title}</h4>
         <span>{count}</span>
