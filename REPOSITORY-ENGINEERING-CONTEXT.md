@@ -843,6 +843,14 @@ that statically imports every record workspace. `npm run build` runs the determi
 `quality:portfolio-record-bundles` gate after Next.js compilation and must keep AG Grid out of the
 Cashflow and Income initial graphs while retaining it for the three grid workflows.
 
+Portfolio Review browser source state belongs to the root TanStack Query client. Canonical keys must
+include every source-changing review dimension; fresh reuse follows the shared 30-second stale and
+five-minute garbage-collection policy; deliberate review-context confirmation uses exact
+invalidation; and transport remains a cancellable, `no-store` Gateway/BFF read. Do not restore a
+module-level response, in-flight, token, or compatibility cache in `src/apps/portfolio/api.ts` or
+the workspace component. A failed stale refetch may retain the prior confirmed response as prior
+evidence, but must not present it as newly source-confirmed.
+
 Position source status is projected through
 `src/apps/portfolio/portfolio-position-state-view-model.ts`. Only an explicit normalized
 `CURRENT` source value is positive. Missing position status is **Not reported**, any other

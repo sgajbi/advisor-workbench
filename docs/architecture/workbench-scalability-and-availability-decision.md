@@ -32,9 +32,13 @@ non-authoritative. The allowed categories are:
 5. per-instance telemetry that is bounded and aggregated outside the application by the platform
    metrics stack.
 
-Server-rendered portfolio reads now bypass the module response cache. Each render recontacts Gateway,
-so two replicas cannot disagree because one process retained an older URL response. Client-side reuse
-remains a presentation optimization and cannot create source truth.
+Portfolio transport has no module response cache. Each server render recontacts Gateway, so two
+replicas cannot disagree because one process retained an older URL response. In the browser, the
+application-owned TanStack Query client is the sole owner of Portfolio shell and summary-detail
+reuse: source-complete keys, the governed 30-second stale policy, five-minute garbage collection,
+explicit invalidation, and cancellable `no-store` BFF reads bound reuse to the selected review
+context. A stale or failed refetch retains the prior confirmed response as prior evidence; it does
+not relabel that response as newly source-confirmed.
 
 Analytics counters and histograms retain bounded aggregate series independently from a 1,024-event
 diagnostic ring. Attention deduplication and panel-failure tracking are bounded, metric contexts come

@@ -146,7 +146,9 @@ wording, calculations, or unsupported capability.
 
 - `tests/unit/portfolio-allocation-panel.test.tsx` proves available, unsupported, failed, retry,
   focus-stable, keyboard, empty, and superseded-response behavior.
-- `tests/unit/portfolio-api.test.ts` proves cache and forced-refresh request semantics.
+- `tests/unit/portfolio-api.test.ts` proves uncached BFF transport and explicit source recheck
+  semantics; application-level reuse belongs to the governed Query client rather than this API
+  adapter.
 - `tests/e2e/portfolio-workbench.smoke.spec.ts` proves the optimized-production journey with
   `PB_SG_GLOBAL_BAL_001`: retained direct evidence, keyboard contributor review, forced source
   recheck, confirmed recovery, compact exact-value priority, zero page overflow, and clean browser
