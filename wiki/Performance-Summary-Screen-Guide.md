@@ -186,7 +186,7 @@ client communication, portfolio instruction, trade, order, execution, settlement
 | Horizon loading, failure, permission block, exact retry, success-only cache, and obsolete-request fencing | Owns browser request state independently from Summary selection confirmation | Workbench over the matching Gateway response |
 | Pending, failed, requested, and source-confirmed selection context | Owns the browser transaction state; never relabels retained source data | Workbench over the matching Gateway responses |
 | Portfolio, valuation date, period, and reporting-currency navigation context | Parses one atomic governed cross-workspace context, rejects repeated or malformed values, and serializes supported fields once in stable order; record and batch identities remain local to their owning workspaces | Workbench navigation over source-confirmed identities; no new Performance capability is inferred |
-| Back and Forward mode or analytical selection | Synchronizes server-confirmed route props into the mounted workspace, resets caches as one boundary, and fences obsolete responses | Browser history plus matching Gateway responses |
+| Back and Forward mode or analytical selection | Synchronizes server-confirmed route props into the mounted workspace; complete query identity fences obsolete responses while still-fresh exact Risk evidence remains reusable | Browser history plus matching Gateway responses |
 | Retry | Repeats the exact failed selection through the Workbench BFF | Gateway and Performance |
 
 Workbench uses the BFF and Gateway. It does not call Performance or Core directly. Shared contract

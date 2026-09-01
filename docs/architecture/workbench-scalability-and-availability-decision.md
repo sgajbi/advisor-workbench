@@ -40,6 +40,13 @@ explicit invalidation, and cancellable `no-store` BFF reads bound reuse to the s
 context. A stale or failed refetch retains the prior confirmed response as prior evidence; it does
 not relabel that response as newly source-confirmed.
 
+Performance Risk uses that same application-owned Query client for its five primary Gateway reads
+and on-demand series detail. Complete portfolio, window, basis, benchmark, currency, attribution,
+and series-shape keys fence concurrent and obsolete responses. Fresh mode revisits reuse exact
+source-admitted evidence; stale revisits revalidate before the screen presents the evidence as
+current. Source-declared failure states and identity-mismatched responses remain non-reusable.
+There is no parallel hook-local response cache or request-sequence state machine.
+
 Analytics counters and histograms retain bounded aggregate series independently from a 1,024-event
 diagnostic ring. Attention deduplication and panel-failure tracking are bounded, metric contexts come
 from the reviewed surface registry, and source prose is reduced to a closed reason vocabulary. A
