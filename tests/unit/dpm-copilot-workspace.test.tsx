@@ -1,4 +1,11 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import DpmCopilotWorkspace from "../../src/features/workbench/components/dpm-copilot-workspace";
@@ -64,9 +71,13 @@ describe("DpmCopilotWorkspace", () => {
 
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
     );
-    expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({ proofPackId: "ppack_001" });
+    expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({
+      proofPackId: "ppack_001",
+    });
 
     const heading = await screen.findByRole("heading", {
       name: "Portfolio decision memo",
@@ -83,7 +94,11 @@ describe("DpmCopilotWorkspace", () => {
 
     fireEvent.click(screen.getByText("How this was prepared"));
     expect(screen.getByText("Source evidence attached")).toBeVisible();
-    expect(screen.getByText("Human review required")).toBeVisible();
+    expect(
+      within(screen.getByLabelText("Latest decision-support result")).getByText(
+        "Human review required",
+      ),
+    ).toBeVisible();
     expect(screen.getByText("Internal working use only")).toBeVisible();
     expect(screen.getByText("Freshness not reported")).toBeVisible();
     expect(
@@ -121,7 +136,9 @@ describe("DpmCopilotWorkspace", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
     );
 
     const nextData = buildManageWorkspaceData();
@@ -139,10 +156,15 @@ describe("DpmCopilotWorkspace", () => {
     expect(
       screen.queryByRole("heading", { name: "Portfolio decision memo" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("PB_SG_GLOBAL_GROWTH_002")).toBeInTheDocument();
-    expect(screen.getByText("ppack_002")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }),
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        "ppack_002",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
     ).toBeEnabled();
   });
 
@@ -168,12 +190,24 @@ describe("DpmCopilotWorkspace", () => {
       </ManageProofPackStateProvider>,
     );
 
-    expect(screen.getByText("ppack_server_001")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_002" }));
-    expect(screen.getByText("ppack_published_002")).toBeInTheDocument();
+    const selectedWorkflow = () =>
+      within(screen.getByTestId("pm-copilot-selected-workflow"));
+    expect(
+      selectedWorkflow().getByText("ppack_server_001"),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Publish ppack_published_002" }),
+    );
+    expect(
+      selectedWorkflow().getByText("ppack_published_002"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("ppack_server_001")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
+    );
     await waitFor(() =>
       expect(requestDpmProofPackAiPmMemo).toHaveBeenCalledWith({
         proofPackId: "ppack_published_002",
@@ -201,14 +235,24 @@ describe("DpmCopilotWorkspace", () => {
       </ManageProofPackStateProvider>,
     );
 
-    expect(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" })).toBeEnabled();
-    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_stale" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
+    ).toBeEnabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Publish ppack_published_stale" }),
+    );
     expect(
       screen.getByRole("button", {
         name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
       }),
     ).toBeDisabled();
-    expect(screen.getByText("ppack_published_stale")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        "ppack_published_stale",
+      ),
+    ).toBeInTheDocument();
     expect(requestDpmProofPackAiPmMemo).not.toHaveBeenCalled();
   });
 
@@ -237,9 +281,19 @@ describe("DpmCopilotWorkspace", () => {
         name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
       }),
     ).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Publish ppack_published_ready" }));
-    expect(screen.getByRole("button", { name: "Prepare Evidence Pack Decision Memo" })).toBeEnabled();
-    expect(screen.getByText("ppack_published_ready")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Publish ppack_published_ready" }),
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "Prepare Evidence Pack Decision Memo",
+      }),
+    ).toBeEnabled();
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        "ppack_published_ready",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("keeps unavailable actions disabled and names their business blocker", () => {
@@ -254,7 +308,12 @@ describe("DpmCopilotWorkspace", () => {
     });
     expect(unavailableAction).toBeDisabled();
     expect(unavailableAction).toHaveTextContent("Unavailable");
-    expect(screen.getByText("No current evidence pack available")).toBeInTheDocument();
+    fireEvent.click(unavailableAction);
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        "No current evidence pack available",
+      ),
+    ).toBeInTheDocument();
     expect(requestDpmExceptionSummary).not.toHaveBeenCalled();
     expect(requestDpmWaveAiPmMemo).not.toHaveBeenCalled();
     expect(requestDpmOperationsHandoffSummary).not.toHaveBeenCalled();
@@ -267,14 +326,21 @@ describe("DpmCopilotWorkspace", () => {
 
     render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
 
-    expect(screen.getByText("Historical evidence pack")).toBeInTheDocument();
-    expect(screen.getByText("ppack_1")).toBeInTheDocument();
+    const selectedWorkflow = within(
+      screen.getByTestId("pm-copilot-selected-workflow"),
+    );
+    expect(
+      selectedWorkflow.getByText("Historical evidence pack"),
+    ).toBeInTheDocument();
+    expect(selectedWorkflow.getByText("ppack_1")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
         name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",
       }),
     ).toBeDisabled();
-    expect(screen.getByText("Current evidence pack unavailable")).toBeInTheDocument();
+    expect(
+      selectedWorkflow.getByText("Current evidence pack unavailable"),
+    ).toBeInTheDocument();
     expect(requestDpmProofPackAiPmMemo).not.toHaveBeenCalled();
   });
 
@@ -289,7 +355,11 @@ describe("DpmCopilotWorkspace", () => {
         name: "Evidence Pack Decision Memo unavailable: Decision-support evidence unavailable",
       }),
     ).toBeDisabled();
-    expect(screen.getByText("Decision-support evidence unavailable")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+        "Decision-support evidence unavailable",
+      ),
+    ).toBeInTheDocument();
     expect(requestDpmProofPackAiPmMemo).not.toHaveBeenCalled();
   });
 
@@ -297,7 +367,10 @@ describe("DpmCopilotWorkspace", () => {
     "keeps a %s proof pack non-actionable even when its evidence flag is inconsistent",
     (state) => {
       const data = buildManageWorkspaceData();
-      data.proofPack = buildProofPack({ aiEvidenceInputAvailable: true, state });
+      data.proofPack = buildProofPack({
+        aiEvidenceInputAvailable: true,
+        state,
+      });
 
       render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
 
@@ -306,10 +379,43 @@ describe("DpmCopilotWorkspace", () => {
           name: "Evidence Pack Decision Memo unavailable: Current evidence pack not ready",
         }),
       ).toBeDisabled();
-      expect(screen.getByText("Current evidence pack not ready")).toBeInTheDocument();
+      expect(
+        within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+          "Current evidence pack not ready",
+        ),
+      ).toBeInTheDocument();
       expect(requestDpmProofPackAiPmMemo).not.toHaveBeenCalled();
     },
   );
+
+  it("moves through the workflow queue and returns focus from the selected decision", () => {
+    const data = buildManageWorkspaceData();
+    data.proofPack = buildProofPack({ aiEvidenceInputAvailable: true });
+
+    render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
+
+    const options = screen.getAllByRole("option");
+    options[0]?.focus();
+    fireEvent.keyDown(options[0]!, { key: "ArrowDown" });
+
+    expect(options[1]).toHaveFocus();
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(
+      within(screen.getByTestId("pm-copilot-selected-workflow")).getByRole(
+        "heading",
+        { name: "Wave PM Memo" },
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(options[1]!, { key: "Enter" });
+    const decision = screen.getByRole("region", {
+      name: "Selected decision-support workflow",
+    });
+    expect(decision).toHaveFocus();
+
+    fireEvent.keyDown(decision, { key: "Escape" });
+    expect(options[1]).toHaveFocus();
+  });
 });
 
 function buildProofPack({
