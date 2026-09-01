@@ -8,6 +8,7 @@ import {
 } from "@/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewDimensionRow } from "@/features/workbench/outcome-review-view-model";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   dimensions: OutcomeReviewDimensionRow[];
@@ -19,6 +20,7 @@ export default function OutcomeReviewDimensionTable({ dimensions }: Props) {
       ariaLabel="Outcome review dimensions"
       variant="analysis"
       density="compact"
+      className={styles.detailTable}
       columns={[
         { key: "dimension", label: "Dimension" },
         { key: "expected", label: MANAGE_OUTCOME_REVIEW_LABELS.expectedOutcome, align: "right" },

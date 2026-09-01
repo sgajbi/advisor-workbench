@@ -2,6 +2,7 @@
 
 import { SemanticBadge } from "@/design-system";
 import { outcomeReviewSupportReasonLabel } from "@/features/workbench/outcome-review-panel-helpers";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   supportabilityReasons: string[];
@@ -26,7 +27,7 @@ export default function OutcomeReviewReasonRow({
 
   return (
     <div
-      className="outcome-review-reason-row"
+      className={styles.reasonRow}
       aria-label="Outcome review availability reasons"
     >
       {reasons.map((reason) => (

@@ -5,7 +5,6 @@ import {
   buildOutcomeReviewStatePanelCopy,
   countReadyOutcomeReviewEvidence,
   describeOutcomeNarrativeRun,
-  outcomeReviewAvailabilityClass,
   outcomeReviewAvailabilityLabel,
   outcomeReviewBadgeTone,
   outcomeReviewDimensionLabel,
@@ -115,8 +114,6 @@ describe("outcome review panel helpers", () => {
     expect(countReadyOutcomeReviewEvidence(null)).toBe(0);
     expect(outcomeReviewAvailabilityLabel("ppack_1")).toBe("Available");
     expect(outcomeReviewAvailabilityLabel("N/A")).toBe("Not available");
-    expect(outcomeReviewAvailabilityClass("ppack_1")).toBe("is-available");
-    expect(outcomeReviewAvailabilityClass("N/A")).toBe("is-muted");
   });
 
   it("returns compact report and AI handoff messages", () => {

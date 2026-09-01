@@ -11,6 +11,7 @@ import {
 } from "@/features/workbench/outcome-review-panel-helpers";
 
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   boundary: OutcomeReviewClientCommunicationBoundaryView;
@@ -18,36 +19,36 @@ type Props = {
 
 export default function OutcomeReviewClientBoundaryCard({ boundary }: Props) {
   return (
-    <div className="outcome-review-client-boundary" aria-label="Client communication boundary">
-      <div className="outcome-review-client-boundary-header">
+    <div className={styles.clientBoundary} aria-label="Client communication boundary">
+      <div className={styles.clientBoundaryHeader}>
         <h4>{MANAGE_OUTCOME_REVIEW_LABELS.clientCommunicationControls}</h4>
         <SemanticBadge tone={outcomeReviewBadgeTone(boundary.state)}>
           {businessStateLabel(boundary.state)}
         </SemanticBadge>
       </div>
       <p>{boundary.summary}</p>
-      <div className="outcome-review-client-boundary-grid">
-        <span>
+      <div className={styles.clientBoundaryGrid}>
+        <span className={styles.clientBoundaryFact}>
           <strong>Communication</strong>
           {boundary.clientCommunicationProjected ? "Projected" : "Not projected"}
         </span>
-        <span>
+        <span className={styles.clientBoundaryFact}>
           <strong>Approval</strong>
           {boundary.clientApprovalProjected ? "Projected" : "Not projected"}
         </span>
-        <span>
+        <span className={styles.clientBoundaryFact}>
           <strong>Required record</strong>
           {outcomeReviewRequiredRecordLabel(boundary.requiredSourceProduct)}
         </span>
-        <span>
+        <span className={styles.clientBoundaryFact}>
           <strong>Reason</strong>
           {outcomeReviewBoundaryReasonLabel(boundary.reasonCode)}
         </span>
       </div>
       {boundary.blockedCapabilities.length > 0 ? (
-        <details className="outcome-review-client-boundary-details">
+        <details className={styles.clientBoundaryDetails}>
           <summary>View blocked client actions</summary>
-          <div className="outcome-review-client-boundary-capabilities">
+          <div className={styles.clientBoundaryCapabilities}>
             {boundary.blockedCapabilities.map((capability) => (
               <SemanticBadge key={capability} tone="danger">
                 {outcomeReviewBlockedCapabilityLabel(capability)}

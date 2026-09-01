@@ -79,7 +79,7 @@
       },
       {
         "path": "src/features/workbench/manage-workspace.module.css",
-        "maxGlobalEscapes": 408
+        "maxGlobalEscapes": 325
       }
     ]
   },
@@ -119,6 +119,7 @@
     "mandate-review-",
     "mandate-source-",
     "mandate-technical-",
+    "outcome-review-",
     "page-container",
     "workbench-split",
     "workbench-col",
@@ -177,8 +178,8 @@
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
-      "maxLines": 98,
-      "maxBytes": 1940
+      "maxLines": 67,
+      "maxBytes": 1344
     },
     {
       "path": "src/styles/global/base.css",

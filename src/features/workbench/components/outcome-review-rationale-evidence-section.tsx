@@ -4,6 +4,7 @@ import type { OutcomeReviewClientCommunicationBoundaryView } from "@/features/wo
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 import OutcomeReviewClientBoundaryCard from "./outcome-review-client-boundary-card";
 import OutcomeReviewEvidenceGrid from "./outcome-review-evidence-grid";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   clientRationale: string;
@@ -23,9 +24,9 @@ export default function OutcomeReviewRationaleEvidenceSection({
   readyEvidenceCount,
 }: Props) {
   return (
-    <section aria-label="Outcome review rationale and evidence">
+    <section className={styles.detailSection} aria-label="Outcome review rationale and evidence">
       <h4>{MANAGE_OUTCOME_REVIEW_LABELS.internalOutcomeRationale}</h4>
-      <div className="outcome-review-rationale">
+      <div className={styles.rationale}>
         <p>{clientRationale}</p>
       </div>
       {clientCommunicationBoundary ? (

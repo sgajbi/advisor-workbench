@@ -2,6 +2,7 @@
 
 import { WorkbenchSummaryMetricStrip } from "@/design-system";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   reviewPosture: string | null | undefined;
@@ -17,6 +18,7 @@ export default function OutcomeReviewDecisionSummary({
   return (
     <WorkbenchSummaryMetricStrip
       ariaLabel="Outcome review decision summary"
+      className={styles.decisionSummary}
       items={[
         {
           key: "review-posture",

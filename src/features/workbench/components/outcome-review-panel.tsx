@@ -10,6 +10,7 @@ import DpmAiWorkflowResult from "./dpm-ai-workflow-result";
 import OutcomeReviewHandoffMessages from "./outcome-review-handoff-messages";
 import OutcomeReviewSummary from "./outcome-review-summary";
 import OutcomeReviewWorkspace from "./outcome-review-workspace";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   portfolioId: string;
@@ -39,7 +40,9 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     <SectionBlock
       title={MANAGE_OUTCOME_REVIEW_LABELS.panelTitle}
       subtitle={MANAGE_OUTCOME_REVIEW_LABELS.screenDescription}
-      className="outcome-review-panel"
+      className={styles.panel}
+      headerClassName={styles.panelHeader}
+      bodyClassName={styles.panelBody}
     >
       <OutcomeReviewSummary
         portfolioId={portfolioId}

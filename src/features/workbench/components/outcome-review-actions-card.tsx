@@ -2,6 +2,7 @@
 
 import type { OutcomeReviewListItem } from "@/features/workbench/outcome-review-view-model";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   primaryReview: OutcomeReviewListItem;
@@ -19,11 +20,11 @@ export default function OutcomeReviewActionsCard({
   onRequestAiNarrative,
 }: Props) {
   return (
-    <div className="outcome-review-card outcome-review-actions-card">
-      <div className="outcome-review-card-header">
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
         <h3>{MANAGE_OUTCOME_REVIEW_LABELS.recommendedActions}</h3>
       </div>
-      <div className="outcome-review-action-stack">
+      <div className={styles.actionStack}>
         <a href="#outcome-review-detail">
           <strong>Review mandate impact</strong>
           <span>Assess outcome dimensions against the mandate objective.</span>

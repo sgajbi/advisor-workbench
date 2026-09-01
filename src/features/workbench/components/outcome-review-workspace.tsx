@@ -9,6 +9,7 @@ import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewDetailPanel from "./outcome-review-detail-panel";
 import OutcomeReviewSourceLineageCard from "./outcome-review-source-lineage-card";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
+import styles from "./outcome-review.module.css";
 
 type Props = {
   items: OutcomeReviewListItem[];
@@ -46,7 +47,7 @@ export default function OutcomeReviewWorkspace({
 }: Props) {
   return (
     <>
-      <div className="outcome-review-workspace-grid">
+      <div className={styles.workspaceGrid}>
         <OutcomeReviewTimelineCard items={items} />
 
         <OutcomeReviewActionsCard
