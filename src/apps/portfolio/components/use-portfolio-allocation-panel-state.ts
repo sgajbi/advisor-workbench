@@ -262,7 +262,6 @@ export function usePortfolioAllocationPanelState({
       asOfDate,
       reportingCurrency,
       lookThroughMode: "prefer_look_through",
-      forceRefresh: true,
     });
     if (requestSequence !== coverageRequestSequence.current) {
       return;

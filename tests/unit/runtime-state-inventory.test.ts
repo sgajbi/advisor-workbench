@@ -396,15 +396,40 @@ describe("runtime state inventory", () => {
     );
   });
 
-  it("rejects server use of the browser response cache", () => {
+  it("rejects server use of any declared browser response cache", () => {
     const evidence = loadEvidence();
-    evidence.sourceFiles["src/apps/portfolio/api.ts"] = evidence.sourceFiles[
-      "src/apps/portfolio/api.ts"
-    ].replace('target === "client" &&', "");
+    evidence.inventory.stateHolders.push({
+      id: "example-browser-response-cache",
+      file: "src/features/example-cache.ts",
+      symbols: ["responseCache"],
+      classification: "browser_guarded_cache",
+      purpose: "Test-only browser response reuse.",
+      bounds: "One bounded browser realm.",
+      replicaBehavior: "Independent browser-local cache.",
+      businessAuthority: false,
+      sessionAuthority: false,
+    });
+    evidence.discoveredStateHolders.push({
+      file: "src/features/example-cache.ts",
+      symbol: "responseCache",
+    });
+    evidence.sourceFiles["src/features/example-cache.ts"] =
+      "const responseCache = createCache(); responseCache.set('key', 'value');";
 
     expect(validateRuntimeStateInventory(evidence)).toContain(
-      "browser-guarded cache portfolio-browser-request-cache must fail closed outside the client target",
+      "browser-guarded cache example-browser-response-cache must fail closed outside the client target",
     );
+  });
+
+  it("keeps Portfolio source freshness free of module-owned mutable caches", () => {
+    expect(
+      baselineEvidence.discoveredStateHolders.filter(({ file }) =>
+        [
+          "src/apps/portfolio/api.ts",
+          "src/apps/portfolio/components/portfolio-workspace-client.tsx",
+        ].includes(file),
+      ),
+    ).toEqual([]);
   });
 
   it("rejects removal of rolling deployment identity protection", () => {

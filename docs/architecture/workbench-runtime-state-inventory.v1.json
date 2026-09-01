@@ -31,21 +31,6 @@
       "sessionAuthority": false
     },
     {
-      "id": "portfolio-browser-request-cache",
-      "file": "src/apps/portfolio/api.ts",
-      "symbols": [
-        "portfolioApiResponseCache",
-        "portfolioApiInflightRequests",
-        "portfolioApiRequestTokens"
-      ],
-      "classification": "browser_guarded_cache",
-      "purpose": "Browser request reuse and in-flight request coalescing only.",
-      "bounds": "Browser-session lifetime; server use is prohibited and source refresh can clear matching entries.",
-      "replicaBehavior": "Unused for server rendering; Gateway is contacted independently by every replica.",
-      "businessAuthority": false,
-      "sessionAuthority": false
-    },
-    {
       "id": "ai-provider-mode-lookups",
       "file": "src/design-system/ai-provider-posture.ts",
       "symbols": ["DETERMINISTIC_PROVIDER_MODES", "LIVE_PROVIDER_MODES"],
