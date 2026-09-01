@@ -3392,8 +3392,9 @@ export async function validateProofPackPanel(
   });
   const proofPackPanel = page.locator("#evidence-pack-panel");
   await expect(
-    proofPackPanel.getByRole("heading", {
+    page.getByRole("heading", {
       name: "Evidence Pack",
+      level: 1,
       exact: true,
     }),
   ).toBeVisible({

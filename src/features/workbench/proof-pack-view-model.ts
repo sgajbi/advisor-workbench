@@ -217,6 +217,9 @@ function resolvePanelState(
   if (supportabilityState === "UNSUPPORTED") {
     return "unsupported";
   }
+  if (supportabilityState === "UNAVAILABLE") {
+    return "unavailable";
+  }
   if (supportabilityState === "DEGRADED" || supportabilityState === "PARTIAL") {
     return proofPackId !== "N/A" ? "partial" : "unavailable";
   }
