@@ -78,7 +78,8 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 14px;
 }
@@ -218,7 +219,8 @@
 
 .governanceStack {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0 16px;
 }
 
 .governanceStack > div {
@@ -227,8 +229,11 @@
   border-top: 1px solid #e0e3e5;
 }
 
-.governanceStack > div:first-child {
-  border-top: 0;
+.governanceStack > p {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e3e5;
 }
 
 .governanceStack strong,
@@ -245,6 +250,7 @@
 .evidenceGrid,
 .reviewActionGrid {
   display: grid;
+  align-items: start;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   gap: 12px;
   margin-top: 14px;
@@ -285,7 +291,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.reviewActionDetail > div:not(.cardHeader),
+.reviewActionStatus > div,
 .detailGrid > div,
 .fairnessPreviewPosture > div,
 .detailStack > div {
@@ -297,8 +303,9 @@
   border-right: 1px solid #e0e3e5;
 }
 
-.reviewActionDetail > div:not(.cardHeader) {
-  min-height: 76px;
+.reviewActionStatus > div {
+  min-height: 56px;
+  padding-block: 8px;
   border-bottom: 1px solid #e0e3e5;
 }
 
@@ -348,6 +355,16 @@
   .controlFormGrid,
   .detailGrid,
   .detailStack {
+    grid-template-columns: 1fr;
+  }
+
+  .governanceStack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .governanceStack {
     grid-template-columns: 1fr;
   }
 }

@@ -10,7 +10,7 @@ type Props = {
 
 export default function PmOperatingQualityGovernanceCard({ model }: Props) {
   return (
-    <aside className={styles.governanceCard}>
+    <aside className={styles.governanceCard} data-testid="pm-operating-quality-governance-card">
       <Text as="h3" variant="subsectionTitle">
         Governance Posture
       </Text>
