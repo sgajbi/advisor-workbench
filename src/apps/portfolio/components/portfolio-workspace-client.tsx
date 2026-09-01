@@ -318,36 +318,28 @@ export default function PortfolioWorkspaceClient({
       selectedPortfolioId,
     ],
   );
-  const [serverSnapshotReconciliation] = useState<{
-    sourceKey: string;
-    previousDataUpdatedAt: number;
-  } | null>(() => {
-    const cachedShell = queryClient.getQueryData<PortfolioWorkspace>(
-      shellQueryKey,
-    );
-    const cachedShellState = queryClient.getQueryState(shellQueryKey);
-    return confirmedInitialWorkspace &&
-      activeShellGeneration === initialWorkspaceSourceKey &&
-      cachedShell &&
-      cachedShellState &&
-      buildPortfolioWorkspaceSourceGeneration(
-        selectedPortfolioId,
-        cachedShell,
-      ) === initialWorkspaceSourceKey
-      ? {
-          sourceKey: initialWorkspaceSourceKey,
-          previousDataUpdatedAt: cachedShellState.dataUpdatedAt,
-        }
-      : null;
-  });
-  const serverSnapshotReconciliationPending =
-    serverSnapshotReconciliation?.sourceKey === initialWorkspaceSourceKey &&
-    queryClient.getQueryState(shellQueryKey)?.dataUpdatedAt ===
-      serverSnapshotReconciliation.previousDataUpdatedAt;
+  const cachedShellStateForServerReconciliation =
+    confirmedInitialWorkspace &&
+    activeShellGeneration === initialWorkspaceSourceKey
+      ? queryClient.getQueryState<PortfolioWorkspace>(shellQueryKey)
+      : undefined;
+  const cachedShellForServerReconciliation =
+    cachedShellStateForServerReconciliation?.data;
+  const serverSnapshotReconciliationPending = Boolean(
+    confirmedInitialWorkspace &&
+    cachedShellForServerReconciliation &&
+    buildPortfolioWorkspaceSourceGeneration(
+      selectedPortfolioId,
+      cachedShellForServerReconciliation,
+    ) === initialWorkspaceSourceKey &&
+    (cachedShellForServerReconciliation !== confirmedInitialWorkspace ||
+      cachedShellStateForServerReconciliation?.status !== "success"),
+  );
   const shellQuery = useQuery({
     queryKey: shellQueryKey,
     enabled: Boolean(selectedPortfolioId),
     retry: false,
+    structuralSharing: false,
     refetchInterval: ({ state }) =>
       getWorkbenchQueryRevalidationInterval(
         state.dataUpdatedAt,
@@ -393,15 +385,15 @@ export default function PortfolioWorkspaceClient({
     queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace, {
       updatedAt: Math.max(
         Date.now(),
-        serverSnapshotReconciliation.previousDataUpdatedAt + 1,
+        (cachedShellStateForServerReconciliation?.dataUpdatedAt ?? 0) + 1,
       ),
     });
   }, [
     activeShellGeneration,
+    cachedShellStateForServerReconciliation?.dataUpdatedAt,
     confirmedInitialWorkspace,
     initialWorkspaceSourceKey,
     queryClient,
-    serverSnapshotReconciliation,
     serverSnapshotReconciliationPending,
     shellQueryKey,
   ]);
@@ -906,7 +898,16 @@ export default function PortfolioWorkspaceClient({
   const controlTransitionRequiresAction =
     visibleControlTransition?.status === "pending" ||
     visibleControlTransition?.status === "failed";
-  const portfolioRefreshStatus = controlTransitionRequiresAction ? (
+  const portfolioRefreshStatus = detailSourceConfirmationPaused ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Portfolio detail is waiting for connectivity"
+      message="Positions and analysis remain withheld until connectivity returns and the current portfolio detail is confirmed."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
+  ) : controlTransitionRequiresAction ? (
     controlTransitionStatus
   ) : awaitsShellSourceConfirmation && shellQuery.data ? (
     <WorkbenchRefreshStatus
@@ -925,15 +926,6 @@ export default function PortfolioWorkspaceClient({
       eyebrow="Portfolio review"
       title="Portfolio refresh is waiting for connectivity"
       message="The last confirmed portfolio view remains visible, but it may be out of date until connectivity returns and the refresh completes."
-      requestedContext={formatPortfolioControlContext(controls)}
-      confirmedContext={formatPortfolioControlContext(controls)}
-    />
-  ) : detailSourceConfirmationPaused ? (
-    <WorkbenchRefreshStatus
-      kind="pending"
-      eyebrow="Portfolio review"
-      title="Portfolio detail is waiting for connectivity"
-      message="Positions and analysis remain withheld until connectivity returns and the current portfolio detail is confirmed."
       requestedContext={formatPortfolioControlContext(controls)}
       confirmedContext={formatPortfolioControlContext(controls)}
     />

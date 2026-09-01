@@ -908,7 +908,7 @@ describe("PortfolioWorkspaceClient", () => {
       }),
     );
 
-    render(
+    const view = render(
       <PortfolioWorkspaceClient
         portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
         selectedPortfolioId="MANUAL_PB_USD_001"
@@ -932,13 +932,43 @@ describe("PortfolioWorkspaceClient", () => {
       screen.queryByText("Portfolio overview could not be refreshed"),
     ).not.toBeInTheDocument();
     expect(getShellWorkspaceMock).not.toHaveBeenCalled();
+
+    await expect(
+      queryClient.fetchQuery({
+        queryKey,
+        staleTime: 0,
+        retry: false,
+        queryFn: async () => {
+          throw new Error("Later Gateway failure");
+        },
+      }),
+    ).rejects.toThrow("Later Gateway failure");
+    expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
+    const refreshedServerSnapshot = { ...initialWorkspace };
+
+    view.rerender(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={refreshedServerSnapshot}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(queryKey)?.status).toBe("success");
+    });
+    expect(queryClient.getQueryData(queryKey)).toBe(refreshedServerSnapshot);
+    expect(
+      screen.queryByText("Portfolio overview could not be refreshed"),
+    ).not.toBeInTheDocument();
+    expect(getShellWorkspaceMock).not.toHaveBeenCalled();
   });
 
   it("discloses when first Portfolio detail confirmation is paused offline", async () => {
     const initialWorkspace = buildWorkspace();
     getSummaryDetailsMock.mockResolvedValue(
       confirmedDetails({
-        as_of_date: "2026-03-28",
+        as_of_date: "2026-03-20",
         positions: [],
       }),
     );
@@ -949,6 +979,11 @@ describe("PortfolioWorkspaceClient", () => {
         portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
         selectedPortfolioId="MANUAL_PB_USD_001"
         initialWorkspace={initialWorkspace}
+        initialControls={{
+          ...buildInitialPortfolioControls(initialWorkspace),
+          asOfDate: "2026-03-20",
+          timeWindow: "YTD",
+        }}
       />,
     );
 
@@ -958,6 +993,9 @@ describe("PortfolioWorkspaceClient", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Positions and analysis remain withheld",
     );
+    expect(
+      screen.queryByText("Confirming review context"),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
     expect(screen.getByTestId("market-value")).toHaveTextContent("none");
     expect(getSummaryDetailsMock).not.toHaveBeenCalled();
