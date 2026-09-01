@@ -31,6 +31,14 @@ definition-list placement now live in `manage-evidence-rail.module.css` and are 
 component's imported class map. Do not restore the retired `manage-evidence-rail*` global class
 contract or repair this component from the Manage workspace stylesheet.
 
+Manage Outcome Review follows the same component-owner rule. Its panel, three-fact decision
+summary, timeline, actions, source profile, selected-review detail, client-communication boundary,
+and evidence states live in `outcome-review.module.css` with zero global escapes. Issue #978 removed
+83 escape arms from `manage-workspace.module.css` and the stale Outcome Review declarations from
+`legacy-feature-overrides.css`; `outcome-review-*` selectors are forbidden from returning to a
+governed global layer. The shared summary-metric primitive exposes a value-class hook so a screen
+can truthfully wrap business states without reaching into the primitive through a global selector.
+
 `PortfolioScreenRail` is the first shared cross-route component migrated under this ownership
 model. Its presentation is colocated in
 `src/apps/portfolio/components/portfolio-screen-rail.module.css`; page-specific shells may own
@@ -90,8 +98,9 @@ Issue #780 applied the same ownership rule to the unreachable pre-BFF Workbench 
 The legacy page container, split view, generated position table, constraint rail, summary posture,
 and rebalance-status selector families had no production React consumer, so they were deleted rather
 than migrated. The resulting exact ratchets are 98 lines and 1,940 normalized bytes for
-`legacy-feature-overrides.css`, and 10,990 lines and 240,422 normalized bytes for
-`legacy-global.css`. The retired families are forbidden from returning; future product work must
+`legacy-feature-overrides.css` at that tranche, and 10,990 lines and 240,422 normalized bytes for
+`legacy-global.css`. Issue #978 subsequently lowered the exact legacy-feature budget to 67 lines
+and 1,344 normalized bytes. The retired families are forbidden from returning; future product work must
 use the active Workbench container and source-backed screen architecture.
 
 Issue #958 applied consumer-first deletion to the superseded DPM wave command-centre presentation.

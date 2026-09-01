@@ -1,0 +1,62 @@
+[
+  {
+    "width": 1440,
+    "height": 1000,
+    "panelTop": 274.6875,
+    "panelRight": 1047.203125,
+    "decisionTop": 412.6875,
+    "decisionRight": 1030.203125,
+    "timelineTop": 639.875,
+    "timelineRight": 1029.203125,
+    "detailTop": 1110.0625,
+    "detailRight": 1030.203125,
+    "documentHeight": 2283,
+    "clientWidth": 1440,
+    "documentWidth": 1440
+  },
+  {
+    "width": 1024,
+    "height": 900,
+    "panelTop": 414.28125,
+    "panelRight": 970.734375,
+    "decisionTop": 552.28125,
+    "decisionRight": 953.734375,
+    "timelineTop": 779.46875,
+    "timelineRight": 952.734375,
+    "detailTop": 1352.65625,
+    "detailRight": 953.734375,
+    "documentHeight": 2453,
+    "clientWidth": 1024,
+    "documentWidth": 1024
+  },
+  {
+    "width": 768,
+    "height": 900,
+    "panelTop": 453.46875,
+    "panelRight": 719.203125,
+    "decisionTop": 591.46875,
+    "decisionRight": 702.203125,
+    "timelineTop": 818.65625,
+    "timelineRight": 701.203125,
+    "detailTop": 1391.84375,
+    "detailRight": 702.203125,
+    "documentHeight": 2548,
+    "clientWidth": 768,
+    "documentWidth": 768
+  },
+  {
+    "width": 519,
+    "height": 844,
+    "panelTop": 524.640625,
+    "panelRight": 482.203125,
+    "decisionTop": 662.640625,
+    "decisionRight": 465.203125,
+    "timelineTop": 1089.015625,
+    "timelineRight": 464.203125,
+    "detailTop": 1721.390625,
+    "detailRight": 465.203125,
+    "documentHeight": 3202,
+    "clientWidth": 519,
+    "documentWidth": 519
+  }
+]
