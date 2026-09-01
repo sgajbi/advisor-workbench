@@ -40,6 +40,7 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     <SectionBlock
       title={MANAGE_OUTCOME_REVIEW_LABELS.panelTitle}
       subtitle={MANAGE_OUTCOME_REVIEW_LABELS.screenDescription}
+      id="outcome-review-panel"
       className={styles.panel}
       headerClassName={styles.panelHeader}
       bodyClassName={styles.panelBody}

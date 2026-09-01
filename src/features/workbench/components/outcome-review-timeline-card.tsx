@@ -24,6 +24,7 @@ export default function OutcomeReviewTimelineCard({ items }: Props) {
         variant="portfolio"
         density="compact"
         className={styles.table}
+        scrollRegionLabel="Outcome review timeline"
         columns={[
           { key: "review", label: "Review" },
           { key: "window", label: "Window" },
