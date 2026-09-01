@@ -727,7 +727,12 @@ describe("PortfolioWorkspaceClient", () => {
       );
     });
     firstVisit.unmount();
-    getShellWorkspaceMock.mockResolvedValueOnce(null);
+    let failRecovery: ((value: null) => void) | undefined;
+    getShellWorkspaceMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        failRecovery = resolve;
+      }),
+    );
     getSummaryDetailsMock.mockImplementation(
       (_portfolioId: string, params: { asOfDate?: string }) =>
         Promise.resolve(
@@ -750,6 +755,16 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => {
       expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
     });
+    expect(
+      await screen.findByText("Confirming current portfolio overview"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+    expect(screen.getByTestId("market-value")).toHaveTextContent("none");
+
+    await act(async () => {
+      failRecovery?.(null);
+    });
+
     await waitFor(() => {
       expect(
         firstVisit.queryClient.getQueryState(workspaceQueryKey(null))?.status,
@@ -800,6 +815,77 @@ describe("PortfolioWorkspaceClient", () => {
     expect(
       screen.queryByText("Portfolio overview could not be refreshed"),
     ).not.toBeInTheDocument();
+  });
+
+  it("stores a refreshed shell under its returned generation and restores the authoritative server generation on revisit", async () => {
+    const initialWorkspace = buildWorkspace();
+    const refreshedWorkspace = {
+      ...initialWorkspace,
+      as_of_date: "2026-03-29",
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    getSummaryDetailsMock.mockImplementation(
+      (_portfolioId: string, params: { asOfDate?: string }) =>
+        Promise.resolve(
+          confirmedDetails({
+            as_of_date: params.asOfDate,
+            positions: [],
+          }),
+        ),
+    );
+    getShellWorkspaceMock.mockResolvedValueOnce(refreshedWorkspace);
+    const firstVisit = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await firstVisit.queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    expect(
+      firstVisit.queryClient.getQueryData(
+        workspaceQueryKey(refreshedWorkspace),
+      ),
+    ).toEqual(refreshedWorkspace);
+
+    firstVisit.unmount();
+    expect(
+      firstVisit.queryClient.getQueryData(workspaceQueryKey(initialWorkspace)),
+    ).toEqual(initialWorkspace);
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+      firstVisit.queryClient,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "1001550.05",
+      );
+    });
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "28 Mar 2026",
+    );
   });
 
   it("keeps confirmed Portfolio detail visible when a stale refresh is unavailable", async () => {
