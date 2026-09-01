@@ -6,19 +6,19 @@ export const portfolioQueryKeys = {
   all: ["portfolio"] as const,
   workspace: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId] as const,
-  serverSource: (portfolioId: string) =>
-    ["portfolio", "workspace", portfolioId, "server-source"] as const,
   reviewContextIntent: () =>
     ["portfolio", "workspace", "review-context-intent"] as const,
   summaryDetailsRoot: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId, "summary-details"] as const,
   summaryDetails: (
     portfolioId: string,
+    sourceGeneration: string,
     params: PortfolioSummaryDetailsParams,
   ) =>
     [
       ...portfolioQueryKeys.summaryDetailsRoot(portfolioId),
       {
+        sourceGeneration,
         asOfDate: params.asOfDate ?? null,
         reportingCurrency: params.reportingCurrency ?? null,
         includeProjected: params.includeProjected ?? false,
