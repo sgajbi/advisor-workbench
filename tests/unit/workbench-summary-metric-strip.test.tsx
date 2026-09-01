@@ -36,7 +36,12 @@ describe("WorkbenchSummaryMetricStrip", () => {
       <WorkbenchSummaryMetricStrip
         ariaLabel="Return strip"
         items={[
-          { key: "portfolio", label: "Portfolio Return", value: "5.40%" },
+          {
+            key: "portfolio",
+            label: "Portfolio Return",
+            value: "5.40%",
+            valueClassName: "screen-owned-value",
+          },
           {
             key: "benchmark",
             label: "Benchmark Return",
@@ -56,7 +61,8 @@ describe("WorkbenchSummaryMetricStrip", () => {
     );
     expect(screen.getByText("5.40%")).toHaveClass(
       "ui-text-metric-value-m",
-      "workbench-summary-metric-value"
+      "workbench-summary-metric-value",
+      "screen-owned-value",
     );
     expect(screen.getByText("Relative returns incomplete")).toHaveClass(
       "ui-text-body-small",

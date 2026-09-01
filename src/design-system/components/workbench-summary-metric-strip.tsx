@@ -11,6 +11,7 @@ export type WorkbenchSummaryMetricStripItem = {
   definition?: React.ReactNode;
   unavailable?: boolean;
   className?: string;
+  valueClassName?: string;
 };
 
 export default function WorkbenchSummaryMetricStrip({
@@ -56,7 +57,11 @@ export default function WorkbenchSummaryMetricStrip({
             </Text>
             <Text
               variant="metricValueM"
-              className={cx("workbench-summary-metric-value", styles.value)}
+              className={cx(
+                "workbench-summary-metric-value",
+                styles.value,
+                item.valueClassName,
+              )}
             >
               {item.value}
             </Text>

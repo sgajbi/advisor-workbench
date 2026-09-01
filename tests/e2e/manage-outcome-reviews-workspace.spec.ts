@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
@@ -12,8 +12,8 @@ import {
 test.describe.configure({ mode: "serial" });
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
-const evidenceDirectory = process.env.ISSUE_799_EVIDENCE_DIR
-  ? path.resolve(process.env.ISSUE_799_EVIDENCE_DIR, "outcome-reviews")
+const evidenceDirectory = process.env.OUTCOME_REVIEW_EVIDENCE_DIR
+  ? path.resolve(process.env.OUTCOME_REVIEW_EVIDENCE_DIR, "outcome-reviews")
   : null;
 let fixtureGateway: ManageFixtureGateway | null = null;
 
@@ -45,6 +45,7 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
   test.skip(!fixtureGateway, "Owned Manage fixture is not active.");
   test.setTimeout(180_000);
   const runtime = observeBrowserRuntimeFailures(page);
+  const measurements: Array<Record<string, number>> = [];
 
   for (const viewport of [
     { width: 1440, height: 1000 },
@@ -72,18 +73,14 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
       "confirmed",
     );
 
-    const statusSummary = page.getByLabel("Outcome review status summary");
-    await expect(statusSummary).toContainText("Review status");
-    await expect(statusSummary).toContainText("Ready for adviser review");
-    await expect(statusSummary).toContainText("Comparison outcome");
-    await expect(statusSummary).toContainText("Within expected tolerance");
-    await expect(statusSummary).toContainText("72.4%");
-
-    const readiness = page.getByLabel("Selected outcome review readiness");
-    await expect(readiness).toContainText("Review window");
-    await expect(readiness).toContainText("Report preparation");
-    await expect(readiness).toContainText("AI-assisted review summary");
-    await expect(readiness).toContainText("Source evidenceAvailable");
+    const decisionSummary = page.getByLabel("Outcome review decision summary");
+    await expect(decisionSummary).toContainText("Review status");
+    await expect(decisionSummary).toContainText("Ready for adviser review");
+    await expect(decisionSummary).toContainText("Comparison outcome");
+    await expect(decisionSummary).toContainText("Within expected tolerance");
+    await expect(decisionSummary).toContainText("72.4%");
+    await expect(decisionSummary).not.toContainText("Evidence pack");
+    await expect(page.getByLabel("Selected outcome review readiness")).toHaveCount(0);
 
     const evidenceAvailability = page.getByLabel(
       "Outcome review evidence availability",
@@ -157,31 +154,29 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForFunction(() => window.scrollY === 0);
     const geometry = await page.evaluate(() => {
-      const panel = document.querySelector<HTMLElement>(".outcome-review-panel");
-      const status = document.querySelector<HTMLElement>(
-        ".outcome-review-status-strip",
+      const panel = document.querySelector<HTMLElement>("#outcome-review-panel");
+      const decision = document.querySelector<HTMLElement>(
+        '[aria-label="Outcome review decision summary"]',
       );
-      const readinessBand = document.querySelector<HTMLElement>(
-        ".outcome-review-readiness-band",
-      );
-      const workspace = document.querySelector<HTMLElement>(
-        ".outcome-review-workspace-grid",
+      const timeline = document.querySelector<HTMLElement>(
+        '[role="region"][aria-label="Outcome review timeline"]',
       );
       const detail = document.querySelector<HTMLElement>(
-        ".outcome-review-detail-panel",
+        '[data-testid="selected-outcome-review-detail"]',
       );
-      if (!panel || !status || !readinessBand || !workspace || !detail) {
+      if (!panel || !decision || !timeline || !detail) {
         throw new Error("Outcome-review workspace geometry is unavailable.");
       }
       return {
         panelTop: panel.getBoundingClientRect().top,
         panelRight: panel.getBoundingClientRect().right,
-        statusRight: status.getBoundingClientRect().right,
-        readinessRight: readinessBand.getBoundingClientRect().right,
-        workspaceRight: workspace.getBoundingClientRect().right,
+        decisionTop: decision.getBoundingClientRect().top,
+        decisionRight: decision.getBoundingClientRect().right,
+        timelineTop: timeline.getBoundingClientRect().top,
+        timelineRight: timeline.getBoundingClientRect().right,
+        detailTop: detail.getBoundingClientRect().top,
         detailRight: detail.getBoundingClientRect().right,
-        statusColumns: getComputedStyle(status).gridTemplateColumns.split(" ").length,
-        readinessColumns: getComputedStyle(readinessBand).gridTemplateColumns.split(" ").length,
+        documentHeight: document.documentElement.scrollHeight,
         clientWidth: document.documentElement.clientWidth,
         documentWidth: document.documentElement.scrollWidth,
       };
@@ -191,23 +186,15 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
       geometry.documentWidth,
       `Outcome reviews has page-level horizontal overflow at ${viewport.width}px.`,
     ).toBeLessThanOrEqual(geometry.clientWidth);
-    expect(geometry.statusRight).toBeLessThanOrEqual(geometry.panelRight);
-    expect(geometry.readinessRight).toBeLessThanOrEqual(geometry.panelRight);
-    expect(geometry.workspaceRight).toBeLessThanOrEqual(geometry.panelRight);
+    expect(geometry.decisionRight).toBeLessThanOrEqual(geometry.panelRight);
+    expect(geometry.timelineRight).toBeLessThanOrEqual(geometry.panelRight);
     expect(geometry.detailRight).toBeLessThanOrEqual(geometry.panelRight);
+    expect(geometry.decisionTop).toBeLessThan(geometry.timelineTop);
+    expect(geometry.timelineTop).toBeLessThan(geometry.detailTop);
     if (viewport.width === 1440) {
       expect(geometry.panelTop).toBeLessThan(900);
-      expect(geometry.statusColumns).toBe(2);
-      expect(geometry.readinessColumns).toBe(2);
     }
-    if (viewport.width === 1024 || viewport.width === 768) {
-      expect(geometry.statusColumns).toBe(2);
-      expect(geometry.readinessColumns).toBe(2);
-    }
-    if (viewport.width === 519) {
-      expect(geometry.statusColumns).toBe(1);
-      expect(geometry.readinessColumns).toBe(1);
-    }
+    measurements.push({ width: viewport.width, height: viewport.height, ...geometry });
 
     await page.mouse.move(0, 0);
     const screenshot = await page.screenshot({ fullPage: true });
@@ -225,6 +212,14 @@ test("Outcome reviews keeps comparison truth, evidence, and next actions distinc
       body: screenshot,
       contentType: "image/png",
     });
+  }
+
+  if (evidenceDirectory) {
+    await writeFile(
+      path.join(evidenceDirectory, "rendered-measurements.json"),
+      `${JSON.stringify(measurements, null, 2)}\n`,
+      "utf8",
+    );
   }
 
   await runtime.assertStylesAreHeadManaged();
