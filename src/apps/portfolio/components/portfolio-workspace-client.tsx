@@ -311,9 +311,28 @@ export default function PortfolioWorkspaceClient({
   useEffect(
     () => () => {
       if (confirmedInitialWorkspace) {
-        queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace);
+        const currentShellState =
+          queryClient.getQueryState<PortfolioWorkspace>(shellQueryKey);
+        const cachedGeneration = buildPortfolioWorkspaceSourceGeneration(
+          selectedPortfolioId,
+          currentShellState?.data ?? null,
+        );
+        if (cachedGeneration !== initialWorkspaceSourceKey) {
+          queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace, {
+            updatedAt: Math.max(
+              0,
+              (currentShellState?.dataUpdatedAt ?? 1) - 1,
+            ),
+          });
+        }
       }
-    }, [confirmedInitialWorkspace, queryClient, shellQueryKey],
+    }, [
+      confirmedInitialWorkspace,
+      initialWorkspaceSourceKey,
+      queryClient,
+      selectedPortfolioId,
+      shellQueryKey,
+    ],
   );
 
   useEffect(() => {
@@ -368,6 +387,7 @@ export default function PortfolioWorkspaceClient({
             refreshedSourceGeneration,
           ),
           shellWorkspace,
+          { updatedAt: shellQuery.dataUpdatedAt },
         );
       }
       setControls((current) => {
@@ -398,6 +418,7 @@ export default function PortfolioWorkspaceClient({
     setWorkspaceState,
     shellQueryKey,
     shellQuery.data,
+    shellQuery.dataUpdatedAt,
     workspaceDraft.sourceKey,
     workspaceState,
   ]);
