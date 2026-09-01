@@ -1,5 +1,12 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render as testingLibraryRender,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
@@ -27,11 +34,21 @@ import {
   installPerformancePageFetchScenario,
 } from "../fixtures/performance-workspace-server-fixtures";
 import { expectReviewContextOwns } from "../review-context-census";
+import { workbenchStrictQueryDefaults } from "../../src/features/platform-runtime/query-policy";
 
 const replaceMock = vi.fn();
 const pushMock = vi.fn();
 const RETURN_PATH_EVIDENCE_NAME =
   /^Time-weighted return path · Net of fees (?:chart|single observation comparison)$/;
+
+function render(ui: React.ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: workbenchStrictQueryDefaults },
+  });
+  return testingLibraryRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/performance",
@@ -1092,17 +1109,19 @@ describe("PerformanceAnalyticsPage", () => {
       )
     ).toBe(true);
     expect(screen.getByLabelText("Risk mode status")).not.toHaveTextContent("Stateful only");
-    expect(screen.getByLabelText("Primary risk review")).toHaveTextContent(
+    expect(await screen.findByLabelText("Primary risk review")).toHaveTextContent(
       "Posture, drawdown, and concentration"
     );
-    expect(screen.getByLabelText("Secondary risk analysis")).toHaveTextContent(
+    expect(await screen.findByLabelText("Secondary risk analysis")).toHaveTextContent(
       "Rolling stability and contributors"
     );
-    expect(screen.getByLabelText("Risk snapshot headline metrics")).toHaveTextContent("Volatility");
-    expect(screen.getByLabelText("Historical risk attribution table")).toHaveTextContent(
+    expect(await screen.findByLabelText("Risk snapshot headline metrics")).toHaveTextContent(
+      "Volatility"
+    );
+    expect(await screen.findByLabelText("Historical risk attribution table")).toHaveTextContent(
       "Technology"
     );
-    expect(screen.getByLabelText("Rolling risk summary table")).toHaveTextContent("Typical");
+    expect(await screen.findByLabelText("Rolling risk summary table")).toHaveTextContent("Typical");
     expect(screen.getByLabelText("Risk concentration indicator strip")).toHaveTextContent(
       "Portfolio concentration index"
     );
@@ -1165,7 +1184,7 @@ describe("PerformanceAnalyticsPage", () => {
         )
       ).toBe(true);
     });
-    fireEvent.click(screen.getByRole("radio", { name: "Asset Class" }));
+    fireEvent.click(await screen.findByRole("radio", { name: "Asset Class" }));
 
     await waitFor(() => {
       expect(
