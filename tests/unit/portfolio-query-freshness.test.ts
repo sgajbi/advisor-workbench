@@ -25,15 +25,24 @@ describe("Portfolio Query freshness", () => {
       .fn<() => Promise<{ version: number }>>()
       .mockResolvedValueOnce({ version: 1 })
       .mockResolvedValueOnce({ version: 2 });
-    const queryKey = portfolioQueryKeys.workspace("PB_SG_GLOBAL_BAL_001");
+    const queryKey = portfolioQueryKeys.workspaceSource(
+      "PB_SG_GLOBAL_BAL_001",
+      "generation-1",
+    );
 
-    await expect(queryClient.fetchQuery({ queryKey, queryFn })).resolves.toEqual({ version: 1 });
-    await expect(queryClient.fetchQuery({ queryKey, queryFn })).resolves.toEqual({ version: 1 });
+    await expect(
+      queryClient.fetchQuery({ queryKey, queryFn }),
+    ).resolves.toEqual({ version: 1 });
+    await expect(
+      queryClient.fetchQuery({ queryKey, queryFn }),
+    ).resolves.toEqual({ version: 1 });
     expect(queryFn).toHaveBeenCalledTimes(1);
 
     await vi.advanceTimersByTimeAsync(WORKBENCH_QUERY_STALE_TIME_MS + 1);
 
-    await expect(queryClient.fetchQuery({ queryKey, queryFn })).resolves.toEqual({ version: 2 });
+    await expect(
+      queryClient.fetchQuery({ queryKey, queryFn }),
+    ).resolves.toEqual({ version: 2 });
     expect(queryFn).toHaveBeenCalledTimes(2);
     queryClient.clear();
   });
@@ -47,7 +56,10 @@ describe("Portfolio Query freshness", () => {
           resolveSource = resolve;
         }),
     );
-    const queryKey = portfolioQueryKeys.workspace("PB_SG_GLOBAL_BAL_001");
+    const queryKey = portfolioQueryKeys.workspaceSource(
+      "PB_SG_GLOBAL_BAL_001",
+      "generation-1",
+    );
 
     const first = queryClient.fetchQuery({ queryKey, queryFn });
     const second = queryClient.fetchQuery({ queryKey, queryFn });
@@ -63,7 +75,9 @@ describe("Portfolio Query freshness", () => {
 
   it("invalidates a Portfolio detail family without affecting another portfolio", async () => {
     const queryClient = createQueryClient();
-    const primaryKey = portfolioQueryKeys.summaryDetailsRoot("PB_SG_GLOBAL_BAL_001");
+    const primaryKey = portfolioQueryKeys.summaryDetailsRoot(
+      "PB_SG_GLOBAL_BAL_001",
+    );
     const otherKey = portfolioQueryKeys.summaryDetailsRoot("PB_SG_GROWTH_002");
     queryClient.setQueryData(primaryKey, { version: 1 });
     queryClient.setQueryData(otherKey, { version: 1 });
@@ -77,7 +91,10 @@ describe("Portfolio Query freshness", () => {
 
   it("retains previously confirmed Portfolio truth when a stale refetch fails", async () => {
     const queryClient = createQueryClient();
-    const queryKey = portfolioQueryKeys.workspace("PB_SG_GLOBAL_BAL_001");
+    const queryKey = portfolioQueryKeys.workspaceSource(
+      "PB_SG_GLOBAL_BAL_001",
+      "generation-1",
+    );
     queryClient.setQueryData(queryKey, { version: 1 });
     await queryClient.invalidateQueries({ queryKey, exact: true });
 

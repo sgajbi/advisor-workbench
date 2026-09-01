@@ -14,6 +14,25 @@ const baseParams = {
 const sourceGeneration = "portfolio-shell-generation-1";
 
 describe("portfolioQueryKeys", () => {
+  it("separates server shell generations under one Portfolio root", () => {
+    const first = portfolioQueryKeys.workspaceSource(
+      "PB_SG_GLOBAL_BAL_001",
+      "portfolio-shell-generation-1",
+    );
+    const second = portfolioQueryKeys.workspaceSource(
+      "PB_SG_GLOBAL_BAL_001",
+      "portfolio-shell-generation-2",
+    );
+
+    expect(first).not.toEqual(second);
+    expect(first.slice(0, 3)).toEqual(
+      portfolioQueryKeys.workspaceRoot("PB_SG_GLOBAL_BAL_001"),
+    );
+    expect(second.slice(0, 3)).toEqual(
+      portfolioQueryKeys.workspaceRoot("PB_SG_GLOBAL_BAL_001"),
+    );
+  });
+
   it("separates every source-changing Portfolio review dimension", () => {
     const baseline = portfolioQueryKeys.summaryDetails(
       "PB_SG_GLOBAL_BAL_001",

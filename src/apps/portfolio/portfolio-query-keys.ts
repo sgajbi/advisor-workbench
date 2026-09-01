@@ -1,11 +1,18 @@
 import type { PortfolioSummaryDetailsRequest } from "./portfolio-workspace-client-view-model";
+import type { PortfolioWorkspace } from "./types";
 
 type PortfolioSummaryDetailsParams = PortfolioSummaryDetailsRequest["params"];
 
 export const portfolioQueryKeys = {
   all: ["portfolio"] as const,
-  workspace: (portfolioId: string) =>
+  workspaceRoot: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId] as const,
+  workspaceSource: (portfolioId: string, sourceGeneration: string) =>
+    [
+      ...portfolioQueryKeys.workspaceRoot(portfolioId),
+      "shell",
+      { sourceGeneration },
+    ] as const,
   reviewContextIntent: () =>
     ["portfolio", "workspace", "review-context-intent"] as const,
   summaryDetailsRoot: (portfolioId: string) =>
@@ -29,3 +36,13 @@ export const portfolioQueryKeys = {
       },
     ] as const,
 };
+
+export function buildPortfolioWorkspaceSourceGeneration(
+  selectedPortfolioId: string | null,
+  workspace: PortfolioWorkspace | null,
+): string {
+  return JSON.stringify({
+    selectedPortfolioId,
+    initialWorkspace: workspace,
+  });
+}
