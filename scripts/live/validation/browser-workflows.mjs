@@ -3390,7 +3390,7 @@ export async function validateProofPackPanel(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=proof`, {
     timeout: timeoutMs,
   });
-  const proofPackPanel = workbenchPanelByClass(page, "proof-pack-panel");
+  const proofPackPanel = page.locator("#evidence-pack-panel");
   await expect(
     proofPackPanel.getByRole("heading", {
       name: "Evidence Pack",
