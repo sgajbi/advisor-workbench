@@ -369,7 +369,7 @@ export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
   state?: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmPmOperatingQualityGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const query = new URLSearchParams();
   query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
@@ -388,7 +388,7 @@ export async function listDpmPmOperatingQualityFairnessAnalyses(params?: {
     "dpm.pm-operating-quality.fairness-analyses.list",
     async () =>
       await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
+        target,
         "/dpm/command-center/pm-operating-quality/fairness-analyses",
         "DPM PM operating quality fairness analyses",
         query
@@ -421,7 +421,7 @@ export async function listDpmPmOperatingQualityReviewActions(params?: {
   asOfDate?: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmPmOperatingQualityGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const query = new URLSearchParams();
   query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
@@ -443,7 +443,7 @@ export async function listDpmPmOperatingQualityReviewActions(params?: {
     "dpm.pm-operating-quality.review-actions.list",
     async () =>
       await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
+        target,
         "/dpm/command-center/pm-operating-quality/review-actions",
         "DPM PM operating quality review actions",
         query
@@ -610,7 +610,7 @@ export async function listDpmPmOperatingQualitySummaryInvocations(params?: {
   asOfDate?: string;
   limit?: number;
   offset?: number;
-}): Promise<DpmPmOperatingQualityGatewayResponse> {
+}, target: WorkbenchRequestTarget = "server"): Promise<DpmPmOperatingQualityGatewayResponse> {
   const dpmContext = resolveDefaultDpmContext();
   const query = new URLSearchParams();
   query.set("as_of_date", params?.asOfDate ?? dpmContext.commandCenterAsOfDate);
@@ -632,7 +632,7 @@ export async function listDpmPmOperatingQualitySummaryInvocations(params?: {
     "dpm.pm-operating-quality.summary-invocations.list",
     async () =>
       await fetchWorkbenchResource<DpmPmOperatingQualityGatewayResponse>(
-        "server",
+        target,
         "/dpm/command-center/pm-operating-quality/summary-invocations",
         "DPM PM operating quality summary invocations",
         query

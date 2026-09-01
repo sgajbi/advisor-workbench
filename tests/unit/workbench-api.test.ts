@@ -3378,6 +3378,48 @@ describe("workbench api", () => {
     expect(correlationId).not.toContain("PM_SG");
   });
 
+  it("refreshes PM-quality persisted source collections through the governed BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-pmq-refresh",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            supportability: {
+              source_service: "lotus-manage",
+              authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+              state: "READY",
+              reason_codes: ["PM_QUALITY_READY"],
+              blocked_actions: [],
+            },
+            data: { items: [] },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    await listDpmPmOperatingQualityFairnessAnalyses({ limit: 10 }, "client");
+    await listDpmPmOperatingQualityReviewActions({ limit: 10 }, "client");
+    await listDpmPmOperatingQualitySummaryInvocations({ limit: 10 }, "client");
+
+    const calls = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
+      ([url]) => url.toString(),
+    );
+    expect(calls).toHaveLength(3);
+    expect(calls.every((url) => url.startsWith("/api/bff/api/v1/"))).toBe(true);
+    expect(calls).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("/pm-operating-quality/fairness-analyses?"),
+        expect.stringContaining("/pm-operating-quality/review-actions?"),
+        expect.stringContaining("/pm-operating-quality/summary-invocations?"),
+      ]),
+    );
+  });
+
   it("builds bounded PM-quality summary-invocation correlation ids without source identifiers", () => {
     const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
 
