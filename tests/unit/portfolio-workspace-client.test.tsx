@@ -386,6 +386,67 @@ describe("PortfolioWorkspaceClient", () => {
     );
   });
 
+  it("rejects control confirmation completed against an older shell generation", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    routerPushMock.mockReset();
+
+    let confirmOldGeneration:
+      | ((value: Partial<PortfolioWorkspace>) => void)
+      | undefined;
+    getSummaryDetailsMock
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          confirmOldGeneration = resolve;
+        }),
+      )
+      .mockResolvedValue(
+        confirmedDetails({
+          as_of_date: "2026-03-28",
+          positions: [],
+        }),
+      );
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+
+    const refreshedShell = {
+      ...buildWorkspace(),
+      summary: {
+        ...buildWorkspace().summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    await act(async () => {
+      queryClient.setQueryData(
+        portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+        refreshedShell,
+      );
+    });
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(3));
+
+    await act(async () => {
+      confirmOldGeneration?.(
+        confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+      );
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Review context was not changed",
+    );
+    expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
+    expect(routerPushMock).not.toHaveBeenCalled();
+  });
+
   it("does not commit an in-flight control request after portfolio identity changes", async () => {
     getSummaryDetailsMock.mockResolvedValueOnce({ positions: [] });
     const firstWorkspace = buildWorkspace("MANUAL_PB_USD_001");
