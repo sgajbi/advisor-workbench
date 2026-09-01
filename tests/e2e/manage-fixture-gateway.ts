@@ -981,12 +981,16 @@ export function getPmQualityFixtureScoreRuns() {
       pmId: "PM_SG_001",
       bookId: "PM_BOOK_SG_BALANCED",
       score: "90.00",
+      state: "READY",
+      reasonCodes: ["PM_QUALITY_READY"],
     }),
     pmQualityScoreRun({
       scoreRunId: "pmq_run_002",
       pmId: "PM_SG_002",
       bookId: "PM_BOOK_SG_INCOME",
       score: "86.50",
+      state: "PENDING_REVIEW",
+      reasonCodes: ["PM_QUALITY_PENDING_REVIEW"],
     }),
   ];
 }
@@ -996,11 +1000,15 @@ function pmQualityScoreRun({
   pmId,
   bookId,
   score,
+  state,
+  reasonCodes,
 }: {
   scoreRunId: string;
   pmId: string;
   bookId: string;
   score: string;
+  state: string;
+  reasonCodes: string[];
 }) {
   return {
     score_run_id: scoreRunId,
@@ -1008,11 +1016,11 @@ function pmQualityScoreRun({
     book_id: bookId,
     policy_id: "pmq_sg_dpm",
     policy_version: "2026.05",
-    state: "READY",
+    state,
     score,
     as_of_date: "2026-05-13",
     content_hash: `sha256:${scoreRunId}`,
-    reason_codes: ["PM_QUALITY_READY"],
+    reason_codes: reasonCodes,
     forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
     source_refs: [
       {
