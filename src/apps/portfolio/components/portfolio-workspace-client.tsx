@@ -931,6 +931,24 @@ export default function PortfolioWorkspaceClient({
         buildInitialPortfolioControls(shellQuery.data),
       )}
     />
+  ) : summaryQuery.isError &&
+    workspaceState &&
+    !serverSnapshotReconciliationPending &&
+    shellQuery.isRefetchError &&
+    shellQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Portfolio review"
+      title="Portfolio overview and detail could not be refreshed"
+      message="The previous portfolio view remains active while both source reads are retried."
+      confirmedContext={formatPortfolioControlContext(controls)}
+      onRetry={() => {
+        void Promise.all([shellQuery.refetch(), summaryQuery.refetch()]);
+      }}
+      retrying={shellQuery.isFetching || summaryQuery.isFetching}
+      retryLabel="Retry portfolio overview and detail refresh"
+      retryText="Retry both"
+    />
   ) : summaryQuery.isError && workspaceState ? (
     <WorkbenchRefreshStatus
       kind="failed"

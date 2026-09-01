@@ -1187,7 +1187,29 @@ describe("PortfolioWorkspaceClient", () => {
     ).not.toBeInTheDocument();
 
     await act(async () => {
-      resolveDetailRefresh?.(confirmedDetail);
+      resolveDetailRefresh?.(null);
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Portfolio overview and detail could not be refreshed",
+    );
+    const retryBoth = within(screen.getByRole("alert")).getByRole("button", {
+      name: "Retry portfolio overview and detail refresh",
+    });
+    expect(retryBoth).toHaveTextContent("Retry both");
+
+    getShellWorkspaceMock.mockResolvedValueOnce(initialWorkspace);
+    getSummaryDetailsMock.mockResolvedValueOnce(confirmedDetail);
+    await act(async () => {
+      retryBoth.click();
+    });
+    await waitFor(() => expect(getShellWorkspaceMock).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(3));
+    await waitFor(() => {
+      expect(
+        screen.queryByText(
+          "Portfolio overview and detail could not be refreshed",
+        ),
+      ).not.toBeInTheDocument();
     });
   });
 
