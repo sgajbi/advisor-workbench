@@ -7607,3 +7607,62 @@ source-confirmed browser proof form the regression boundary. Repository context 
 change because the durable owner and exact CSS ratchet change. PM Copilot business purpose,
 contracts, actions, limitations, and operating behavior remain unchanged, so its existing screen
 guide remains accurate and repo-local wiki source does not change.
+
+## 2026-09-01 — PM Copilot source-backed decision worklist (#983)
+
+### Business workflow question
+
+How can a portfolio manager compare six source-backed decision-support workflows, understand the
+selected input and blocker, and prepare exactly one review-required output without scanning a card
+gallery or losing the relationship between the workflow and its result?
+
+### Evidence consulted
+
+1. [BlackRock Aladdin Wealth](https://www.blackrock.com/aladdin/products/aladdin-wealth) describes
+   a connected wealth platform that brings portfolio analysis and next actions into the adviser's
+   workflow rather than distributing context across separate tools.
+2. [BlackRock on AI-enabled advisers](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor)
+   frames generated material as a first draft for adviser review, not autonomous advice.
+3. [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework)
+   requires human oversight to be appropriate to the task and operating context.
+4. [FINRA Regulatory Notice 24-09](https://www.finra.org/rules-guidance/notices/24-09) confirms that
+   existing supervisory obligations continue to apply when firms use generative AI.
+5. Exact Workbench main showed six equal action cards, 10 separate governance/context summaries,
+   six simultaneous Prepare controls, 12 `dpm-copilot-*` global escape arms, and source-confirmed
+   rendered heights of 2,477/3,635/3,819/4,644 pixels at 1440/1024/768/519.
+
+### Adopted decisions
+
+1. Reuse `WorkbenchWorklist`: source/status queue on the left, selected workflow decision and
+   result on the right, with the existing responsive stack at narrower widths.
+2. Keep unavailable workflows selectable so the portfolio manager can inspect their exact business
+   blocker, but disable Prepare until source evidence supports the action.
+3. Show one Prepare control for the selected workflow. The default workflow remains one click;
+   another workflow requires deliberate selection before preparation.
+4. Keep the result inside the selected workflow decision area and mark the corresponding queue row
+   **Prepared**. Do not move generated material above unrelated workflows.
+5. Retain one compact availability badge and one operating-boundary line. Review context continues
+   to own portfolio and mandate identity; Workbench does not restate them inside Copilot.
+6. Move presentation beside the component in a zero-escape CSS Module, delete all 12 Manage escape
+   arms, and add a forbidden-prefix fitness rule.
+
+### Rejected decisions
+
+1. A chat prompt, sparkle treatment, generic AI badge, or browser-written workflow instructions.
+2. Browser-owned readiness, ranking, source fallback, provider selection, approval, client-use, or
+   execution policy.
+3. A new component library or one-off selector/detail implementation when the governed Workbench
+   worklist already owns keyboard behavior and responsive composition.
+4. Mixing source-state/provider lifecycle work from #894/#895 or wider #791 state-model work into
+   this presentation and workflow tranche.
+
+### Validation and publication decision
+
+Workbench #983 is the bounded child of #492. Focused tests prove action/result identity, blocked
+selection, source-context fencing, keyboard Arrow/Enter/Escape behavior, local CSS ownership, and
+global-prefix retirement. The optimized source-confirmed browser proves six workflows, one Prepare
+action, selected-decision-before-result order, responsive composition, and zero page overflow at
+1440/1024/768/519. Page height falls to 2,093/2,087/2,840/3,556 pixels, a 15–43% reduction. The PM
+Copilot business workflow and reading order changed, so its screen guide changes and repo-local wiki
+publication is required after merge. Existing repository context already directs decision queues to
+`WorkbenchWorklist`; no context change is needed.
