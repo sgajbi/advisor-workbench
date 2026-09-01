@@ -700,6 +700,7 @@ describe("PM operating quality view model", () => {
     expect(model.policyRows).toHaveLength(1);
     expect(model.scoreRunRows).toHaveLength(1);
     expect(model.scoreRunRows[0].score).toBe("90.00");
+    expect(model.scoreRunRows[0].sourceService).toBe("lotus-manage");
     expect(model.scoreRunRows[0].sourceRefs).toBe(
       "System: lotus-manage | Product: PmOperatingQualityScoreRun | ID: pmq_run_001"
     );

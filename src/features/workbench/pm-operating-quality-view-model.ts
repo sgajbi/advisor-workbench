@@ -41,6 +41,7 @@ export type PmOperatingQualityScoreRunRow = {
   sourceRefs: string;
   reasonCodes: string;
   contentHash: string;
+  sourceService: string;
 };
 
 export type PmOperatingQualityFairnessSegmentRequest = {
@@ -728,6 +729,7 @@ function buildScoreRunRows(
         readString(record, "score_run_hash") ||
         readString(record, "payload_hash") ||
         "N/A",
+      sourceService: response.source_service,
     };
   });
 }
