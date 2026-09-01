@@ -1,7 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  isCancelledError,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   WorkbenchRefreshStatus,
@@ -26,6 +31,7 @@ import {
   restorePortfolioSourceControls,
 } from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
+import { portfolioQueryKeys } from "../portfolio-query-keys";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
   buildInitialPortfolioControls,
@@ -33,7 +39,6 @@ import {
   buildPortfolioWorkspaceContext,
   derivePortfolioWorkspace,
   getOrderedWorkflowCues,
-  type PortfolioTimeWindow,
   type PortfolioWorkspaceControls,
 } from "../view-model";
 import PortfolioUnavailableWorkspace from "./portfolio-unavailable-workspace";
@@ -43,23 +48,9 @@ import { buildUnavailableReviewContextStrip } from "@/shell/review-context-strip
 import PortfolioWorkspaceToolbar from "./portfolio-workspace-toolbar";
 import PortfolioWorkspaceView from "./portfolio-workspace";
 
-const summaryDetailsInflightRequests = new Map<
-  string,
-  ReturnType<typeof getPortfolioWorkspaceSummaryDetails>
->();
-const shellInflightRequests = new Map<
-  string,
-  ReturnType<typeof getPortfolioWorkspaceShell>
->();
-
 type WorkspaceStateDraft = {
   sourceKey: string;
   workspace: PortfolioWorkspace | null;
-};
-
-type ShellRequestState = {
-  sourceKey: string;
-  status: "idle" | "loading" | "loaded" | "unavailable";
 };
 
 type PortfolioControlStateDraft = {
@@ -86,7 +77,11 @@ export default function PortfolioWorkspaceClient({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const pushRoute = router.push;
+  const replaceRoute = router.replace;
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
+  const queryClient = useQueryClient();
   const confirmedInitialWorkspace = isPortfolioWorkspaceIdentityConfirmed(
     initialWorkspace,
     selectedPortfolioId,
@@ -139,24 +134,10 @@ export default function PortfolioWorkspaceClient({
     sourceKey: initialWorkspaceSourceKey,
     workspace: confirmedInitialWorkspace,
   });
-  const initialShellRequestState: ShellRequestState = {
-    sourceKey: initialWorkspaceSourceKey,
-    status: confirmedInitialWorkspace ? "loaded" : "idle",
-  };
-  const shellRequestRef = useRef<ShellRequestState>(initialShellRequestState);
-  const [shellRequestState, setShellRequestState] = useState<ShellRequestState>(
-    initialShellRequestState,
-  );
   const workspaceState =
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
       ? workspaceDraft.workspace
       : confirmedInitialWorkspace;
-  const activeShellRequestStatus =
-    shellRequestState.sourceKey === initialWorkspaceSourceKey
-      ? shellRequestState.status
-      : confirmedInitialWorkspace
-        ? "loaded"
-        : "idle";
   const setWorkspaceState = useCallback(
     (
       next:
@@ -178,12 +159,6 @@ export default function PortfolioWorkspaceClient({
     [confirmedInitialWorkspace, initialWorkspaceSourceKey],
   );
   const interactiveReady = useClientMounted();
-  const summaryRequestRef = useRef<{
-    key: string;
-    status: "loading" | "loaded";
-  } | null>(null);
-  const controlRequestSequence = useRef(0);
-  const controlRequestSourceKey = useRef(initialWorkspaceSourceKey);
   const [controlTransition, setControlTransition] =
     useState<PortfolioControlTransition | null>(null);
   const initialControlTransition = useMemo<PortfolioControlTransition | null>(
@@ -213,216 +188,204 @@ export default function PortfolioWorkspaceClient({
     activeControlTransition?.status === "pending" &&
     Boolean(
       confirmedInitialWorkspace &&
-        hasPortfolioSourceControlOverride(
-          activeControlTransition.requestedControls,
-          confirmedInitialWorkspace,
-        ),
+      hasPortfolioSourceControlOverride(
+        activeControlTransition.requestedControls,
+        confirmedInitialWorkspace,
+      ),
     );
   const context = useMemo(
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState],
   );
-
-  useEffect(() => {
-    if (controlRequestSourceKey.current !== initialWorkspaceSourceKey) {
-      controlRequestSourceKey.current = initialWorkspaceSourceKey;
-      controlRequestSequence.current += 1;
-    }
-  }, [initialWorkspaceSourceKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadShellWorkspace() {
-      if (shellRequestRef.current.sourceKey !== initialWorkspaceSourceKey) {
-        const resetState: ShellRequestState = {
-          sourceKey: initialWorkspaceSourceKey,
-          status: confirmedInitialWorkspace ? "loaded" : "idle",
-        };
-        shellRequestRef.current = resetState;
-        setShellRequestState(resetState);
-      }
-      if (
-        !selectedPortfolioId ||
-        workspaceState ||
-        confirmedInitialWorkspace ||
-        shellRequestRef.current.status !== "idle"
-      ) {
-        return;
-      }
-
-      const loadingState: ShellRequestState = {
-        sourceKey: initialWorkspaceSourceKey,
-        status: "loading",
-      };
-      shellRequestRef.current = loadingState;
-      setShellRequestState(loadingState);
-      const shellWorkspace =
-        await getPortfolioWorkspaceShellOnce(selectedPortfolioId);
-      if (cancelled) {
-        return;
-      }
-
-      if (
+  const shellQuery = useQuery({
+    queryKey: portfolioQueryKeys.workspace(selectedPortfolioId ?? "unselected"),
+    enabled: Boolean(selectedPortfolioId),
+    initialData: confirmedInitialWorkspace ?? undefined,
+    queryFn: async ({ signal }) => {
+      recordPortfolioShellRecoveryLifecycle("automatic_attempt");
+      const shellWorkspace = await getPortfolioWorkspaceShell(
+        selectedPortfolioId!,
+        { signal },
+      );
+      signal.throwIfAborted();
+      recordPortfolioShellRecoveryLifecycle(
         isPortfolioWorkspaceIdentityConfirmed(
           shellWorkspace,
           selectedPortfolioId,
         )
-      ) {
-        setControls((current) => {
-          const defaults = buildInitialPortfolioControls(shellWorkspace);
-          return {
-            ...defaults,
-            timeWindow: current.timeWindow,
-          };
-        });
-        setWorkspaceState(shellWorkspace);
-        const loadedState: ShellRequestState = {
-          sourceKey: initialWorkspaceSourceKey,
-          status: "loaded",
-        };
-        shellRequestRef.current = loadedState;
-        setShellRequestState(loadedState);
-        recordPortfolioShellRecoveryLifecycle("ready");
-        return;
-      }
-      const unavailableState: ShellRequestState = {
-        sourceKey: initialWorkspaceSourceKey,
-        status: "unavailable",
-      };
-      shellRequestRef.current = unavailableState;
-      setShellRequestState(unavailableState);
-      recordPortfolioShellRecoveryLifecycle("unavailable");
+          ? "ready"
+          : "unavailable",
+      );
+      return shellWorkspace;
+    },
+  });
+  const activeShellRequestStatus = !selectedPortfolioId
+    ? "idle"
+    : isPortfolioWorkspaceIdentityConfirmed(
+          shellQuery.data,
+          selectedPortfolioId,
+        )
+      ? "loaded"
+      : shellQuery.isPending || shellQuery.isFetching
+        ? "loading"
+        : "unavailable";
+
+  useEffect(() => {
+    const shellWorkspace = shellQuery.data;
+    if (
+      workspaceState ||
+      !shellWorkspace ||
+      !isPortfolioWorkspaceIdentityConfirmed(
+        shellWorkspace,
+        selectedPortfolioId,
+      )
+    ) {
+      return;
     }
 
-    void loadShellWorkspace();
-
-    return () => {
-      cancelled = true;
-      if (
-        shellRequestRef.current.sourceKey === initialWorkspaceSourceKey &&
-        shellRequestRef.current.status === "loading"
-      ) {
-        shellRequestRef.current = {
-          sourceKey: initialWorkspaceSourceKey,
-          status: "idle",
-        };
-      }
-    };
+    setControls((current) => {
+      const defaults = buildInitialPortfolioControls(shellWorkspace);
+      return {
+        ...defaults,
+        timeWindow: current.timeWindow,
+      };
+    });
+    setWorkspaceState(shellWorkspace);
   }, [
-    confirmedInitialWorkspace,
-    initialWorkspaceSourceKey,
     selectedPortfolioId,
     setControls,
     setWorkspaceState,
+    shellQuery.data,
     workspaceState,
   ]);
 
+  const summaryRequest = useMemo(
+    () =>
+      selectedPortfolioId && workspaceState
+        ? buildPortfolioSummaryDetailsRequest(selectedPortfolioId, context)
+        : null,
+    [context, selectedPortfolioId, workspaceState],
+  );
+  const summaryQuery = useQuery({
+    queryKey: summaryRequest
+      ? portfolioQueryKeys.summaryDetails(
+          selectedPortfolioId!,
+          summaryRequest.params,
+        )
+      : [...portfolioQueryKeys.all, "summary-details", "unselected"],
+    enabled: Boolean(selectedPortfolioId && workspaceState && summaryRequest),
+    queryFn: async ({ signal }) => {
+      const details = await getPortfolioWorkspaceSummaryDetails(
+        selectedPortfolioId!,
+        summaryRequest!.params,
+        { signal },
+      );
+      signal.throwIfAborted();
+      return details;
+    },
+  });
   useEffect(() => {
-    let cancelled = false;
+    if (!selectedPortfolioId) {
+      return;
+    }
 
-    async function loadSummaryDetails() {
-      if (!selectedPortfolioId || !workspaceState) {
-        return;
+    const sourceKey = portfolioQueryKeys.serverSource(selectedPortfolioId);
+    const previousSource = queryClient.getQueryData<string>(sourceKey);
+    queryClient.setQueryData(sourceKey, initialWorkspaceSourceKey);
+    queryClient.setQueryData(
+      portfolioQueryKeys.reviewContextIntent(),
+      `${initialWorkspaceSourceKey}|idle`,
+    );
+    if (previousSource && previousSource !== initialWorkspaceSourceKey) {
+      const detailRoot =
+        portfolioQueryKeys.summaryDetailsRoot(selectedPortfolioId);
+      void queryClient
+        .cancelQueries({ queryKey: detailRoot })
+        .then(() => queryClient.refetchQueries({ queryKey: detailRoot }));
+    }
+  }, [initialWorkspaceSourceKey, queryClient, selectedPortfolioId]);
+  const summaryResponseIsCurrent = Boolean(
+    summaryQuery.isSuccess &&
+    summaryRequest &&
+    selectedPortfolioId &&
+    isPortfolioReviewResponseCurrent(
+      summaryQuery.data,
+      controls,
+      summaryRequest.params,
+      selectedPortfolioId,
+    ),
+  );
+  const resolvedWorkspaceState = useMemo(
+    () =>
+      workspaceState && summaryResponseIsCurrent
+        ? mergePortfolioWorkspace(workspaceState, summaryQuery.data!)
+        : workspaceState,
+    [summaryQuery.data, summaryResponseIsCurrent, workspaceState],
+  );
+
+  useEffect(() => {
+    if (
+      !summaryQuery.isSuccess ||
+      !summaryRequest ||
+      !selectedPortfolioId ||
+      !workspaceState
+    ) {
+      return;
+    }
+
+    const details = summaryQuery.data;
+    const sourceOverrideRequested = hasPortfolioSourceControlOverride(
+      controls,
+      workspaceState,
+    );
+    if (summaryResponseIsCurrent) {
+      if (sourceOverrideRequested) {
+        setControlTransition({
+          sourceKey: initialWorkspaceSourceKey,
+          status: "confirmed",
+          requestedControls: controls,
+        });
       }
+      return;
+    }
 
-      const request = buildPortfolioSummaryDetailsRequest(
-        selectedPortfolioId,
-        context,
-      );
-      const scopedRequestKey = `${initialWorkspaceSourceKey}|${request.key}`;
-      if (summaryRequestRef.current?.key === scopedRequestKey) {
-        return;
-      }
-
-      summaryRequestRef.current = { key: scopedRequestKey, status: "loading" };
-      const details = await getPortfolioWorkspaceSummaryDetailsOnce(
-        scopedRequestKey,
-        selectedPortfolioId,
-        request.params,
-      );
-      if (cancelled) {
-        return;
-      }
-
-      const responseIsCurrent = isPortfolioReviewResponseCurrent(
-        details,
-        controls,
-        request.params,
-        selectedPortfolioId,
-      );
-      const sourceOverrideRequested = hasPortfolioSourceControlOverride(
+    const requestedControls = controls;
+    if (sourceOverrideRequested) {
+      const confirmedControls = restorePortfolioSourceControls(
         controls,
         workspaceState,
       );
-      let completedRequestKey = scopedRequestKey;
-      if (responseIsCurrent) {
-        setWorkspaceState((current) =>
-          current ? mergePortfolioWorkspace(current, details) : current,
-        );
-        if (sourceOverrideRequested) {
-          setControlTransition({
-            sourceKey: initialWorkspaceSourceKey,
-            status: "confirmed",
-            requestedControls: controls,
-          });
-        }
-      } else {
-        const requestedControls = controls;
-        if (sourceOverrideRequested) {
-          const confirmedControls = restorePortfolioSourceControls(
-            controls,
-            workspaceState,
-          );
-          const confirmedContext = buildPortfolioWorkspaceContext(
-            workspaceState,
-            confirmedControls,
-          );
-          const confirmedRequest = buildPortfolioSummaryDetailsRequest(
-            selectedPortfolioId,
-            confirmedContext,
-          );
-          completedRequestKey = `${initialWorkspaceSourceKey}|${confirmedRequest.key}`;
-          setControls(confirmedControls);
-          router.replace(
-            buildPortfolioReviewHref({
-              pathname,
-              searchParams: searchParams ?? new URLSearchParams(),
-              portfolioId: selectedPortfolioId,
-              controls: confirmedControls,
-            }),
-            { scroll: false },
-          );
-        }
-        if (details || sourceOverrideRequested) {
-          setControlTransition({
-            sourceKey: initialWorkspaceSourceKey,
-            status: "failed",
-            requestedControls,
-          });
-        }
-      }
-      summaryRequestRef.current = {
-        key: completedRequestKey,
-        status: "loaded",
-      };
+      setControls(confirmedControls);
+      replaceRoute(
+        buildPortfolioReviewHref({
+          pathname,
+          searchParams: new URLSearchParams(searchParamsString),
+          portfolioId: selectedPortfolioId,
+          controls: confirmedControls,
+        }),
+        { scroll: false },
+      );
     }
-
-    void loadSummaryDetails();
-
-    return () => {
-      cancelled = true;
-    };
+    if (sourceOverrideRequested) {
+      setControlTransition({
+        sourceKey: initialWorkspaceSourceKey,
+        status: "failed",
+        requestedControls,
+      });
+    }
   }, [
-    context,
     controls,
     initialWorkspaceSourceKey,
     pathname,
-    router,
-    searchParams,
+    replaceRoute,
+    searchParamsString,
     selectedPortfolioId,
     setControls,
-    setWorkspaceState,
+    summaryQuery.data,
+    summaryQuery.dataUpdatedAt,
+    summaryQuery.isSuccess,
+    summaryRequest,
+    summaryResponseIsCurrent,
     workspaceState,
   ]);
 
@@ -430,8 +393,8 @@ export default function PortfolioWorkspaceClient({
     () =>
       awaitsInitialSourceConfirmation
         ? null
-        : derivePortfolioWorkspace(workspaceState, controls),
-    [awaitsInitialSourceConfirmation, controls, workspaceState],
+        : derivePortfolioWorkspace(resolvedWorkspaceState, controls),
+    [awaitsInitialSourceConfirmation, controls, resolvedWorkspaceState],
   );
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
     const nextControls = applyPortfolioControlPatch(controls, patch);
@@ -450,7 +413,6 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    const requestId = ++controlRequestSequence.current;
     const requestedContext = buildPortfolioWorkspaceContext(
       workspaceState,
       requestedControls,
@@ -459,19 +421,57 @@ export default function PortfolioWorkspaceClient({
       selectedPortfolioId,
       requestedContext,
     );
-    const scopedRequestKey = `${initialWorkspaceSourceKey}|${request.key}`;
+    const queryKey = portfolioQueryKeys.summaryDetails(
+      selectedPortfolioId,
+      request.params,
+    );
+    const intent = `${initialWorkspaceSourceKey}|${request.key}`;
+    const intentKey = portfolioQueryKeys.reviewContextIntent();
+    queryClient.setQueryData(intentKey, intent);
     setControlTransition({
       sourceKey: initialWorkspaceSourceKey,
       status: "pending",
       requestedControls,
     });
 
-    const details = await getPortfolioWorkspaceSummaryDetailsOnce(
-      scopedRequestKey,
-      selectedPortfolioId,
-      request.params,
-    );
-    if (requestId !== controlRequestSequence.current) {
+    await queryClient.cancelQueries({
+      queryKey: portfolioQueryKeys.summaryDetailsRoot(selectedPortfolioId),
+    });
+    if (queryClient.getQueryData(intentKey) !== intent) {
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey, exact: true });
+    let details: Awaited<
+      ReturnType<typeof getPortfolioWorkspaceSummaryDetails>
+    >;
+    try {
+      details = await queryClient.fetchQuery({
+        queryKey,
+        queryFn: async ({ signal }) => {
+          const response = await getPortfolioWorkspaceSummaryDetails(
+            selectedPortfolioId,
+            request.params,
+            { signal },
+          );
+          signal.throwIfAborted();
+          return response;
+        },
+      });
+    } catch (error) {
+      if (isCancelledError(error)) {
+        return;
+      }
+      if (queryClient.getQueryData(intentKey) !== intent) {
+        return;
+      }
+      setControlTransition({
+        sourceKey: initialWorkspaceSourceKey,
+        status: "failed",
+        requestedControls,
+      });
+      return;
+    }
+    if (queryClient.getQueryData(intentKey) !== intent) {
       return;
     }
 
@@ -491,15 +491,11 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    summaryRequestRef.current = { key: scopedRequestKey, status: "loaded" };
-    setWorkspaceState((current) =>
-      current ? mergePortfolioWorkspace(current, details) : current,
-    );
     setControls(requestedControls);
-    router.push(
+    pushRoute(
       buildPortfolioReviewHref({
         pathname,
-        searchParams: searchParams ?? new URLSearchParams(),
+        searchParams: new URLSearchParams(searchParamsString),
         portfolioId: selectedPortfolioId,
         controls: requestedControls,
       }),
@@ -557,8 +553,8 @@ export default function PortfolioWorkspaceClient({
               ? "ready"
               : awaitsInitialSourceConfirmation ||
                   (selectedPortfolioId &&
-                  (activeShellRequestStatus === "idle" ||
-                    activeShellRequestStatus === "loading"))
+                    (activeShellRequestStatus === "idle" ||
+                      activeShellRequestStatus === "loading"))
                 ? "loading"
                 : "unavailable"
           }
@@ -587,7 +583,9 @@ export default function PortfolioWorkspaceClient({
                   onControlsChange={handleControlsChange}
                   onExport={handleExport}
                   quickActions={
-                    workspaceState ? getOrderedWorkflowCues(workspaceState) : []
+                    resolvedWorkspaceState
+                      ? getOrderedWorkflowCues(resolvedWorkspaceState)
+                      : []
                   }
                   contextChangePending={
                     activeControlTransition?.status === "pending"
@@ -682,48 +680,6 @@ function formatPortfolioControlContext(
   controls: PortfolioWorkspaceControls,
 ): string {
   return `${formatBusinessDateValue(controls.asOfDate)} · ${controls.timeWindow} · ${controls.reportingCurrency}`;
-}
-
-function getPortfolioWorkspaceSummaryDetailsOnce(
-  requestKey: string,
-  portfolioId: string,
-  params: {
-    asOfDate?: string;
-    reportingCurrency?: string;
-    includeProjected?: boolean;
-    timeWindow: PortfolioTimeWindow;
-    reportStartDate: string;
-    reportEndDate: string;
-    usesCustomDateRange?: boolean;
-  },
-) {
-  const existingRequest = summaryDetailsInflightRequests.get(requestKey);
-  if (existingRequest) {
-    return existingRequest;
-  }
-
-  const request = getPortfolioWorkspaceSummaryDetails(
-    portfolioId,
-    params,
-  ).finally(() => {
-    summaryDetailsInflightRequests.delete(requestKey);
-  });
-  summaryDetailsInflightRequests.set(requestKey, request);
-  return request;
-}
-
-function getPortfolioWorkspaceShellOnce(portfolioId: string) {
-  const existingRequest = shellInflightRequests.get(portfolioId);
-  if (existingRequest) {
-    return existingRequest;
-  }
-
-  recordPortfolioShellRecoveryLifecycle("automatic_attempt");
-  const request = getPortfolioWorkspaceShell(portfolioId).finally(() => {
-    shellInflightRequests.delete(portfolioId);
-  });
-  shellInflightRequests.set(portfolioId, request);
-  return request;
 }
 
 function buildPortfolioWorkspaceSourceKey(

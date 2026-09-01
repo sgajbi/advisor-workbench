@@ -69,4 +69,18 @@ describe("portfolioQueryKeys", () => {
       portfolioQueryKeys.summaryDetailsRoot("PB_SG_GLOBAL_BAL_001"),
     );
   });
+
+  it("keeps server-source and latest-intent coordination inside Query ownership", () => {
+    expect(portfolioQueryKeys.serverSource("PB_SG_GLOBAL_BAL_001")).toEqual([
+      "portfolio",
+      "workspace",
+      "PB_SG_GLOBAL_BAL_001",
+      "server-source",
+    ]);
+    expect(portfolioQueryKeys.reviewContextIntent()).toEqual([
+      "portfolio",
+      "workspace",
+      "review-context-intent",
+    ]);
+  });
 });

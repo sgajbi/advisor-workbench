@@ -1,5 +1,12 @@
 import React, { StrictMode } from "react";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  render as testingLibraryRender,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
@@ -9,11 +16,26 @@ import {
   getAnalyticsUiMetricEvents,
   resetAnalyticsUiMetricEvents,
 } from "../../src/features/analytics-observability/metrics";
+import { workbenchStrictQueryDefaults } from "../../src/features/platform-runtime/query-policy";
 
 const getSummaryDetailsMock = vi.fn();
 const getShellWorkspaceMock = vi.fn();
 const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
+
+function render(ui: React.ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: workbenchStrictQueryDefaults,
+    },
+  });
+
+  return testingLibraryRender(ui, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
@@ -239,10 +261,12 @@ describe("PortfolioWorkspaceClient", () => {
     getSummaryDetailsMock
       .mockResolvedValueOnce({ positions: [] })
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(confirmedDetails({
-        as_of_date: "2026-03-28",
-        positions: [],
-      }));
+      .mockResolvedValueOnce(
+        confirmedDetails({
+          as_of_date: "2026-03-28",
+          positions: [],
+        }),
+      );
     render(
       <PortfolioWorkspaceClient
         portfolios={[
@@ -319,6 +343,9 @@ describe("PortfolioWorkspaceClient", () => {
 
     await act(async () => {
       screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+    await act(async () => {
       screen.getByRole("button", { name: "Select 1Y" }).click();
     });
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(3));
@@ -416,14 +443,16 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("does not duplicate summary fetches in strict mode and preserves explicit detail changes", async () => {
     getShellWorkspaceMock.mockResolvedValue(buildWorkspace());
-    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
-      positions: [{ security_id: "EQ_1" }],
-      top_positions: [],
-      allocations: [],
-      allocation_views: [],
-      income_summary: null,
-      activity_summary: null,
-    }));
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        positions: [{ security_id: "EQ_1" }],
+        top_positions: [],
+        allocations: [],
+        allocation_views: [],
+        income_summary: null,
+        activity_summary: null,
+      }),
+    );
     render(
       <StrictMode>
         <PortfolioWorkspaceClient
@@ -449,15 +478,19 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
-    expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
-      asOfDate: "2026-03-28",
-      reportingCurrency: "USD",
-      includeProjected: false,
-      timeWindow: "30D",
-      reportStartDate: "2026-02-26",
-      reportEndDate: "2026-03-28",
-      usesCustomDateRange: false,
-    });
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      {
+        asOfDate: "2026-03-28",
+        reportingCurrency: "USD",
+        includeProjected: false,
+        timeWindow: "30D",
+        reportStartDate: "2026-02-26",
+        reportEndDate: "2026-03-28",
+        usesCustomDateRange: false,
+      },
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
 
     await act(async () => {
       screen.getByRole("button", { name: "Switch Detailed" }).click();
@@ -472,13 +505,15 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("restores source-confirmed controls when automatic detail rejects URL-derived context", async () => {
     const initialWorkspace = buildWorkspace();
-    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
-      as_of_date: initialWorkspace.as_of_date,
-      summary: {
-        ...initialWorkspace.summary,
-        market_value_base: 2000000.25,
-      },
-    }));
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: initialWorkspace.as_of_date,
+        summary: {
+          ...initialWorkspace.summary,
+          market_value_base: 2000000.25,
+        },
+      }),
+    );
 
     render(
       <PortfolioWorkspaceClient
@@ -497,12 +532,13 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledWith(
       "MANUAL_PB_USD_001",
       expect.objectContaining({ asOfDate: "2026-03-20" }),
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Review context was not changed",
     );
     expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Review context was not changed",
-    );
     expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
       "28 Mar 2026",
     );
@@ -513,7 +549,12 @@ describe("PortfolioWorkspaceClient", () => {
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
     );
-    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({ asOfDate: "2026-03-28", timeWindow: "30D" }),
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
     expect(routerPushMock).not.toHaveBeenCalled();
   });
 
@@ -545,7 +586,12 @@ describe("PortfolioWorkspaceClient", () => {
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
     );
-    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({ asOfDate: "2026-03-28", timeWindow: "30D" }),
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
   });
 
   it("withholds the current shell while source proof for URL-derived context is pending", async () => {
@@ -590,9 +636,9 @@ describe("PortfolioWorkspaceClient", () => {
     expect(strip).toHaveTextContent("Business dateNot confirmed");
     expect(strip).not.toHaveTextContent("28 Mar 2026");
     expect(strip).not.toHaveTextContent("20 Mar 2026");
-    expect(within(strip).getByText("Base currency").parentElement).toHaveTextContent(
-      "Not confirmed",
-    );
+    expect(
+      within(strip).getByText("Base currency").parentElement,
+    ).toHaveTextContent("Not confirmed");
   });
 
   it("promotes an alternate currency only after source detail confirms it", async () => {
@@ -614,12 +660,14 @@ describe("PortfolioWorkspaceClient", () => {
         module_capabilities: [],
       },
     };
-    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
-      as_of_date: initialWorkspace.as_of_date,
-      income_summary: { reporting_currency: "SGD" },
-      activity_summary: { reporting_currency: "SGD" },
-      positions: [],
-    }));
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: initialWorkspace.as_of_date,
+        income_summary: { reporting_currency: "SGD" },
+        activity_summary: { reporting_currency: "SGD" },
+        positions: [],
+      }),
+    );
 
     render(
       <PortfolioWorkspaceClient
@@ -644,15 +692,17 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("renders default 30D holdings after the source confirms its EXPLICIT window", async () => {
     const initialWorkspace = buildWorkspace();
-    getSummaryDetailsMock.mockResolvedValue(confirmedDetails({
-      as_of_date: initialWorkspace.as_of_date,
-      positions: [{ security_id: "EQ_1" }],
-      performance: {
-        period: "EXPLICIT",
-        report_start_date: "2026-02-26",
-        report_end_date: "2026-03-28",
-      },
-    }));
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: initialWorkspace.as_of_date,
+        positions: [{ security_id: "EQ_1" }],
+        performance: {
+          period: "EXPLICIT",
+          report_start_date: "2026-02-26",
+          report_end_date: "2026-03-28",
+        },
+      }),
+    );
 
     render(
       <PortfolioWorkspaceClient
@@ -802,19 +852,26 @@ describe("PortfolioWorkspaceClient", () => {
     });
 
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1);
-    expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
+    expect(getShellWorkspaceMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
     await waitFor(() => {
       expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
     });
-    expect(getSummaryDetailsMock).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
-      asOfDate: "2026-03-28",
-      reportingCurrency: "USD",
-      includeProjected: false,
-      timeWindow: "30D",
-      reportStartDate: "2026-02-26",
-      reportEndDate: "2026-03-28",
-      usesCustomDateRange: false,
-    });
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      {
+        asOfDate: "2026-03-28",
+        reportingCurrency: "USD",
+        includeProjected: false,
+        timeWindow: "30D",
+        reportStartDate: "2026-02-26",
+        reportEndDate: "2026-03-28",
+        usesCustomDateRange: false,
+      },
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
   });
 
   it("withholds a foreign server-rendered shell and never publishes its identity", async () => {
@@ -838,7 +895,10 @@ describe("PortfolioWorkspaceClient", () => {
         "unavailable",
       );
     });
-    expect(getShellWorkspaceMock).toHaveBeenCalledWith("MANUAL_PB_USD_001");
+    expect(getShellWorkspaceMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
     expect(getSummaryDetailsMock).not.toHaveBeenCalled();
   });
 
@@ -939,7 +999,10 @@ describe("PortfolioWorkspaceClient", () => {
     );
 
     await waitFor(() => {
-      expect(getShellWorkspaceMock).toHaveBeenCalledWith("PORTFOLIO_A");
+      expect(getShellWorkspaceMock).toHaveBeenCalledWith(
+        "PORTFOLIO_A",
+        expect.objectContaining({ signal: expect.any(Object) }),
+      );
     });
 
     rerender(
@@ -951,7 +1014,10 @@ describe("PortfolioWorkspaceClient", () => {
     );
 
     await waitFor(() => {
-      expect(getShellWorkspaceMock).toHaveBeenCalledWith("PORTFOLIO_B");
+      expect(getShellWorkspaceMock).toHaveBeenCalledWith(
+        "PORTFOLIO_B",
+        expect.objectContaining({ signal: expect.any(Object) }),
+      );
     });
     expect(getShellWorkspaceMock).toHaveBeenCalledTimes(2);
     expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
@@ -976,6 +1042,7 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledWith(
       "PORTFOLIO_B",
       expect.any(Object),
+      expect.objectContaining({ signal: expect.any(Object) }),
     );
     expect(getShellRecoveryStates()).toEqual(["loading", "loading", "ready"]);
   });
