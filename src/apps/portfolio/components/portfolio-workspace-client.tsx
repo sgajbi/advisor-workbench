@@ -318,6 +318,32 @@ export default function PortfolioWorkspaceClient({
       selectedPortfolioId,
     ],
   );
+  const [serverSnapshotReconciliation] = useState<{
+    sourceKey: string;
+    previousDataUpdatedAt: number;
+  } | null>(() => {
+    const cachedShell = queryClient.getQueryData<PortfolioWorkspace>(
+      shellQueryKey,
+    );
+    const cachedShellState = queryClient.getQueryState(shellQueryKey);
+    return confirmedInitialWorkspace &&
+      activeShellGeneration === initialWorkspaceSourceKey &&
+      cachedShell &&
+      cachedShellState &&
+      buildPortfolioWorkspaceSourceGeneration(
+        selectedPortfolioId,
+        cachedShell,
+      ) === initialWorkspaceSourceKey
+      ? {
+          sourceKey: initialWorkspaceSourceKey,
+          previousDataUpdatedAt: cachedShellState.dataUpdatedAt,
+        }
+      : null;
+  });
+  const serverSnapshotReconciliationPending =
+    serverSnapshotReconciliation?.sourceKey === initialWorkspaceSourceKey &&
+    queryClient.getQueryState(shellQueryKey)?.dataUpdatedAt ===
+      serverSnapshotReconciliation.previousDataUpdatedAt;
   const shellQuery = useQuery({
     queryKey: shellQueryKey,
     enabled: Boolean(selectedPortfolioId),
@@ -328,9 +354,10 @@ export default function PortfolioWorkspaceClient({
         state.status,
         state.fetchStatus,
       ),
-    refetchOnMount:
-      activeShellGeneration === initialWorkspaceSourceKey &&
-      !confirmedInitialWorkspace
+    refetchOnMount: serverSnapshotReconciliationPending
+      ? false
+      : activeShellGeneration === initialWorkspaceSourceKey &&
+          !confirmedInitialWorkspace
         ? "always"
         : true,
     initialData: activeGenerationShell ?? retainedShellAfterServerFailure,
@@ -355,6 +382,29 @@ export default function PortfolioWorkspaceClient({
       }
     },
   });
+  useEffect(() => {
+    if (
+      !serverSnapshotReconciliationPending ||
+      !confirmedInitialWorkspace ||
+      activeShellGeneration !== initialWorkspaceSourceKey
+    ) {
+      return;
+    }
+    queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace, {
+      updatedAt: Math.max(
+        Date.now(),
+        serverSnapshotReconciliation.previousDataUpdatedAt + 1,
+      ),
+    });
+  }, [
+    activeShellGeneration,
+    confirmedInitialWorkspace,
+    initialWorkspaceSourceKey,
+    queryClient,
+    serverSnapshotReconciliation,
+    serverSnapshotReconciliationPending,
+    shellQueryKey,
+  ]);
   const awaitsShellSourceConfirmation = Boolean(
     !confirmedInitialWorkspace &&
     activeShellGeneration === initialWorkspaceSourceKey &&
@@ -363,6 +413,7 @@ export default function PortfolioWorkspaceClient({
   const shellRefreshPaused = Boolean(
     shellQuery.data &&
     shellQuery.fetchStatus === "paused" &&
+    !serverSnapshotReconciliationPending &&
     !awaitsShellSourceConfirmation,
   );
   const activeShellRequestStatus = !selectedPortfolioId
@@ -640,6 +691,9 @@ export default function PortfolioWorkspaceClient({
   const detailGenerationPending = Boolean(
     workspaceState && summaryRequest && summaryQuery.isPending,
   );
+  const detailSourceConfirmationPaused = Boolean(
+    detailGenerationPending && summaryQuery.fetchStatus === "paused",
+  );
   const detailRefreshPaused = Boolean(
     summaryQuery.data &&
     summaryQuery.fetchStatus === "paused" &&
@@ -874,6 +928,15 @@ export default function PortfolioWorkspaceClient({
       requestedContext={formatPortfolioControlContext(controls)}
       confirmedContext={formatPortfolioControlContext(controls)}
     />
+  ) : detailSourceConfirmationPaused ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Portfolio detail is waiting for connectivity"
+      message="Positions and analysis remain withheld until connectivity returns and the current portfolio detail is confirmed."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
   ) : detailRefreshPaused ? (
     <WorkbenchRefreshStatus
       kind="pending"
@@ -911,7 +974,9 @@ export default function PortfolioWorkspaceClient({
       retrying={summaryQuery.isFetching}
       retryLabel="Retry portfolio detail refresh"
     />
-  ) : shellQuery.isRefetchError && shellQuery.data ? (
+  ) : !serverSnapshotReconciliationPending &&
+    shellQuery.isRefetchError &&
+    shellQuery.data ? (
     <WorkbenchRefreshStatus
       kind="failed"
       eyebrow="Portfolio review"

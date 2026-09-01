@@ -861,9 +861,11 @@ describe("PortfolioWorkspaceClient", () => {
       "it may be out of date",
     );
     expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
-    expect(screen.getByTestId("market-value")).toHaveTextContent(
-      "1001550.05",
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "1001550.05",
+      );
+    });
     expect(getShellWorkspaceMock).not.toHaveBeenCalled();
 
     getShellWorkspaceMock.mockResolvedValueOnce(initialWorkspace);
@@ -875,6 +877,100 @@ describe("PortfolioWorkspaceClient", () => {
         screen.queryByText("Portfolio refresh is waiting for connectivity"),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("reconciles a same-generation server snapshot over retained Query error state", async () => {
+    const initialWorkspace = buildWorkspace();
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: workbenchStrictQueryDefaults },
+    });
+    const queryKey = workspaceQueryKey(initialWorkspace);
+    const staleTimestamp = Date.now() - 60_000;
+    queryClient.setQueryData(queryKey, initialWorkspace, {
+      updatedAt: staleTimestamp,
+    });
+    await expect(
+      queryClient.fetchQuery({
+        queryKey,
+        staleTime: 0,
+        retry: false,
+        queryFn: async () => {
+          throw new Error("Earlier Gateway failure");
+        },
+      }),
+    ).rejects.toThrow("Earlier Gateway failure");
+    expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        summary: initialWorkspace.summary,
+        positions: [],
+      }),
+    );
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+      queryClient,
+    );
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(queryKey)?.status).toBe("success");
+    });
+    expect(queryClient.getQueryState(queryKey)!.dataUpdatedAt).toBeGreaterThan(
+      staleTimestamp,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "1001550.05",
+      );
+    });
+    expect(
+      screen.queryByText("Portfolio overview could not be refreshed"),
+    ).not.toBeInTheDocument();
+    expect(getShellWorkspaceMock).not.toHaveBeenCalled();
+  });
+
+  it("discloses when first Portfolio detail confirmation is paused offline", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        positions: [],
+      }),
+    );
+    onlineManager.setOnline(false);
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Portfolio detail is waiting for connectivity"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Positions and analysis remain withheld",
+    );
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+    expect(screen.getByTestId("market-value")).toHaveTextContent("none");
+    expect(getSummaryDetailsMock).not.toHaveBeenCalled();
+
+    onlineManager.setOnline(true);
+
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    });
+    expect(
+      screen.queryByText("Portfolio detail is waiting for connectivity"),
+    ).not.toBeInTheDocument();
   });
 
   it("discloses when a scheduled Portfolio detail refresh is paused offline", async () => {
