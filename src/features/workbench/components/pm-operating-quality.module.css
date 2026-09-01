@@ -1,0 +1,353 @@
+.panel {
+  border-color: #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(19, 27, 46, 0.04),
+    0 10px 28px rgba(19, 27, 46, 0.05);
+}
+
+.header {
+  margin: -18px -18px 0;
+  padding: 18px;
+  border-bottom: 1px solid #c6c6cd;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 251, 0.92));
+}
+
+.header h2 {
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: 0;
+}
+
+.badgeRow,
+.reasonRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 12px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #e0e3e5;
+}
+
+.statusStrip > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 96px;
+  padding: 14px 16px;
+  border-top: 0;
+  background: #ffffff;
+}
+
+.statusStrip span,
+.commandReadiness span,
+.operationEvidence span,
+.governanceStack span,
+.reviewActionDetail span,
+.detailGrid span,
+.detailStack span {
+  color: #45464d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.statusStrip strong {
+  color: #131b2e;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 19px;
+  overflow-wrap: anywhere;
+}
+
+.reasonRow {
+  margin-top: 10px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.primaryCard,
+.governanceCard,
+.fairnessDetail,
+.reviewActionDetail {
+  overflow: hidden;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #c6c6cd;
+  background: #f7f9fb;
+}
+
+.cardHeader span {
+  color: #725b26;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.table {
+  border-color: #c6c6cd;
+  box-shadow: 0 1px 2px rgba(19, 27, 46, 0.03);
+}
+
+.commandReadiness,
+.operationEvidence,
+.actionError,
+.reviewActionStatus,
+.detailGrid,
+.fairnessPreviewPosture,
+.detailStack {
+  display: grid;
+  background: #ffffff;
+}
+
+.commandReadiness {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 1.2fr);
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.operationEvidence {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.commandReadiness > div,
+.operationEvidence > div,
+.actionError > div {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 0;
+  border-right: 1px solid #e0e3e5;
+}
+
+.commandReadiness > div {
+  min-height: 72px;
+}
+
+.operationEvidence > div {
+  min-height: 68px;
+}
+
+.commandReadiness > div:last-child,
+.operationEvidence > div:last-child,
+.actionError > div:last-child,
+.fairnessPreviewPosture > div:last-child,
+.detailGrid > div:last-child,
+.detailStack > div:last-child {
+  border-right: 0;
+}
+
+.commandReadiness strong,
+.operationEvidence strong {
+  color: #131b2e;
+  font-size: 12px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+
+.actionError {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #f3c5c1;
+  background: #fff7f6;
+}
+
+.actionError > div {
+  min-height: 62px;
+  border-right-color: #f3c5c1;
+}
+
+.actionError span {
+  color: #93000a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.actionError strong {
+  color: #191c1e;
+  font-size: 12px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+}
+
+.governanceCard {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.governanceStack {
+  display: grid;
+  gap: 10px;
+}
+
+.governanceStack > div {
+  min-height: 58px;
+  padding: 10px 0;
+  border-top: 1px solid #e0e3e5;
+}
+
+.governanceStack > div:first-child {
+  border-top: 0;
+}
+
+.governanceStack strong,
+.reviewActionDetail strong,
+.detailGrid strong,
+.detailStack strong,
+.fairnessPreviewPosture strong {
+  color: #131b2e;
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.evidenceGrid,
+.reviewActionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.controlForm {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #c6c6cd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.controlFormGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rationale {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.fairnessDetail {
+  grid-column: 1 / -1;
+}
+
+.reviewActionStatus {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reviewActionDetail > div:not(.cardHeader),
+.detailGrid > div,
+.fairnessPreviewPosture > div,
+.detailStack > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 0;
+  border-right: 1px solid #e0e3e5;
+}
+
+.reviewActionDetail > div:not(.cardHeader) {
+  min-height: 76px;
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.detailGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-bottom: 1px solid #e0e3e5;
+}
+
+.detailGrid > div {
+  min-height: 82px;
+}
+
+.fairnessPreviewPosture {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 1.2fr);
+  border-bottom: 1px solid #e0e3e5;
+  background: #fffdf8;
+}
+
+.fairnessPreviewPosture > div {
+  min-height: 76px;
+}
+
+.fairnessPreviewPosture span {
+  color: #725b26;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.detailStack {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.detailStack > div {
+  min-height: 86px;
+}
+
+@media (max-width: 1200px) {
+  .commandReadiness,
+  .actionError,
+  .operationEvidence,
+  .workspace,
+  .evidenceGrid,
+  .reviewActionGrid,
+  .controlFormGrid,
+  .detailGrid,
+  .detailStack {
+    grid-template-columns: 1fr;
+  }
+}

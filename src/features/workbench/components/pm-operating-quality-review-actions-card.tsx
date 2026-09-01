@@ -1,6 +1,7 @@
 "use client";
 
 import { MetricRow, Text } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualityReviewActionControl from "@/features/workbench/components/pm-operating-quality-review-action-control";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
@@ -57,9 +58,9 @@ export default function PmOperatingQualityReviewActionsCard({
         />
       ) : null}
 
-      <div className="pm-quality-review-action-grid">
-        <div className="pm-quality-review-action-detail">
-          <div className="pm-quality-card-header">
+      <div className={styles.reviewActionGrid}>
+        <div className={styles.reviewActionDetail}>
+          <div className={styles.cardHeader}>
             <Text as="h3" variant="subsectionTitle">
               Supervisory Review Action Detail
             </Text>
@@ -69,7 +70,7 @@ export default function PmOperatingQualityReviewActionsCard({
             />
           </div>
           <div
-            className="pm-quality-review-action-status"
+            className={styles.reviewActionStatus}
             aria-label="PM operating quality supervisory review action status"
           >
             <MetricRow

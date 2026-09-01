@@ -5,6 +5,7 @@ import {
   MetricRow,
   Text,
 } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
 import type {
   PmQualityActionError,
@@ -41,12 +42,12 @@ export default function PmOperatingQualityScoreRunCard({
   onPersistFairness,
 }: Props) {
   return (
-    <div className="pm-quality-primary-card">
-      <div className="pm-quality-card-header">
+    <div className={styles.primaryCard}>
+      <div className={styles.cardHeader}>
         <Text as="h3" variant="subsectionTitle">
           Score-Run Evidence
         </Text>
-        <div className="pm-quality-action-row">
+        <div className={styles.actionRow}>
           <ActionButton
             priority="secondary"
             onClick={onPreviewScoreRun}
@@ -78,7 +79,7 @@ export default function PmOperatingQualityScoreRunCard({
         </div>
       </div>
       {actionMessage ? <Text variant="secondary">{actionMessage}</Text> : null}
-      <div className="pm-quality-command-readiness" aria-label="PM operating quality command readiness">
+      <div className={styles.commandReadiness} aria-label="PM operating quality command readiness">
         <MetricRow label="Score Preview Command" value={model.scoreRunPreviewReadiness} />
         <MetricRow label="Summary Request" value={model.summaryRequestReadiness} />
         <MetricRow label="Fairness Preview Command" value={model.fairnessPreviewReadiness} />
@@ -89,13 +90,13 @@ export default function PmOperatingQualityScoreRunCard({
         />
       </div>
       {actionError ? (
-        <div className="pm-quality-action-error" aria-label="PM operating quality action error status">
+        <div className={styles.actionError} aria-label="PM operating quality action error status">
           <MetricRow label="Status Class" value={actionError.statusClass} />
           <MetricRow label="Gateway Status" value={actionError.status} />
           <MetricRow label="Error Source" value={actionError.source} />
         </div>
       ) : null}
-      <div className="pm-quality-operation-evidence" aria-label="PM operating quality operation evidence">
+      <div className={styles.operationEvidence} aria-label="PM operating quality operation evidence">
         <MetricRow label="Operation" value={model.operationEvidence.operation} />
         <MetricRow label="Correlation" value={model.operationEvidence.correlationId} />
         <MetricRow label="Contract" value={model.operationEvidence.contractVersion} />
@@ -104,7 +105,7 @@ export default function PmOperatingQualityScoreRunCard({
       </div>
       {fairnessCreateEvidence ? (
         <div
-          className="pm-quality-operation-evidence"
+          className={styles.operationEvidence}
           aria-label="PM operating quality persisted fairness create evidence"
         >
           <MetricRow label="Persisted Analysis" value={fairnessCreateEvidence.fairnessAnalysisId} />
@@ -113,7 +114,7 @@ export default function PmOperatingQualityScoreRunCard({
           <MetricRow label="Create Upstream Status" value={fairnessCreateEvidence.upstreamStatus} />
         </div>
       ) : null}
-      <div className="pm-quality-operation-evidence" aria-label="PM operating quality support summary status">
+      <div className={styles.operationEvidence} aria-label="PM operating quality support summary status">
         <MetricRow label="Summary Status" value={model.summaryPosture.status} />
         <MetricRow label="Review Posture" value={model.summaryPosture.reviewState} />
         <MetricRow label="Workflow Authority" value={model.summaryPosture.workflowAuthority} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { MetricRow, Text } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
 
 type Props = {
@@ -9,11 +10,11 @@ type Props = {
 
 export default function PmOperatingQualityGovernanceCard({ model }: Props) {
   return (
-    <aside className="pm-quality-governance-card">
+    <aside className={styles.governanceCard}>
       <Text as="h3" variant="subsectionTitle">
         Governance Posture
       </Text>
-      <div className="pm-quality-governance-stack">
+      <div className={styles.governanceStack}>
         <MetricRow label="Forbidden Uses" value={model.forbiddenUsePosture} />
         <MetricRow label="Score Preview Readiness" value={model.scoreRunPreviewReadiness} />
         <MetricRow label="Summary Readiness" value={model.summaryRequestReadiness} />
