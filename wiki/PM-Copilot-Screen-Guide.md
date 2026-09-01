@@ -89,8 +89,9 @@ The browser uses only the Workbench BFF. See [API Surface](API-Surface) and
 | --- | --- | --- |
 | Loading | No workflow success is claimed | Wait for source responses |
 | Ready | Source reference, readiness, and Prepare action are visible | Review before preparing |
+| Source unavailable | The affected workflow names the temporarily unavailable source; no empty-state claim or Prepare action is shown | Re-contact the owning source before retrying |
 | Partial or blocked | Available workflows remain usable; the affected action names its business blocker | Resolve the owning evidence gap |
-| Empty | No current reference is available | Prepare or load evidence in the owning Manage mode |
+| Confirmed empty | The owning source responded but no current reference is available | Prepare or load evidence in the owning Manage mode |
 | Historical only | Historical reference is visible but Prepare remains disabled | Obtain a current source pack |
 | Request pending | Duplicate actions are disabled | Wait for the current request |
 | Error | Business-safe failure is shown without discarding other workflow readiness | Retry only against the unchanged source context |
@@ -114,8 +115,8 @@ until its source-recorded human-review and permitted-use posture says otherwise.
 ## Evidence And Validation
 
 - `tests/unit/dpm-copilot-workspace.test.tsx` proves current-pack preference, supportability changes,
-  exact request identity, historical fail-closed behavior, stale-result fencing, and keyboard
-  queue-to-decision navigation.
+  exact request identity, historical fail-closed behavior, source-unavailable versus confirmed-empty
+  blockers, stale-result fencing, and keyboard queue-to-decision navigation.
 - `tests/e2e/manage-proof-copilot-workspace.spec.ts` proves the real Evidence Pack to Copilot journey,
   exact source GET and memo POST identities, one selected Prepare action, decision/result order,
   responsive layout, and no page-level overflow at 1440, 1024, 768, and 519 pixels.
