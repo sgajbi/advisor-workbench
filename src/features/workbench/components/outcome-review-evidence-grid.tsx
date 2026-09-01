@@ -33,10 +33,20 @@ export default function OutcomeReviewEvidenceGrid({
       </span>
       <span className={evidenceClassName(readyEvidenceCount >= 3)}>
         {MANAGE_OUTCOME_REVIEW_LABELS.sourceEvidence}{" "}
-        {readyEvidenceCount >= 3 ? "Available" : "Partial"}
+        {sourceEvidenceAvailabilityLabel(readyEvidenceCount)}
       </span>
     </div>
   );
+}
+
+function sourceEvidenceAvailabilityLabel(readyEvidenceCount: number): string {
+  if (readyEvidenceCount === 0) {
+    return "Not available";
+  }
+  if (readyEvidenceCount >= 3) {
+    return "Available";
+  }
+  return "Partial";
 }
 
 function evidenceClassName(available: boolean): string {
