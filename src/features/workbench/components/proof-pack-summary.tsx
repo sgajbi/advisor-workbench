@@ -10,6 +10,7 @@ import { ProofPackStateBadge } from "@/features/workbench/components/proof-pack-
 import type { ProofPackPanelModel, ProofPackPanelState } from "@/features/workbench/proof-pack-view-model";
 import {
   proofPackStatePanelCopy,
+  proofPackSupportabilityLabel,
   shouldShowProofPackStatePanel,
 } from "@/features/workbench/proof-pack-panel-helpers";
 import styles from "./proof-pack.module.css";
@@ -63,7 +64,7 @@ export default function ProofPackSummary({
           {
             key: "evidence-status",
             label: "Evidence status",
-            value: model.evidenceStatusLabel,
+            value: proofPackSupportabilityLabel(model.supportabilityState),
             unavailable: model.state === "unavailable",
           },
           {

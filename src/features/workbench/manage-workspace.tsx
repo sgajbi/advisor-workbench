@@ -212,6 +212,7 @@ function renderManageMode(
             errorMessage={data.wavesError}
           />
           <ProofPackPanel
+            showEmbeddedHeading
             portfolioId={data.portfolio.portfolio.portfolio_id}
             mandateId={mandateId}
             outcomeReviews={data.outcomeReviews}

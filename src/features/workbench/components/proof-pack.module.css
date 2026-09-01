@@ -5,6 +5,15 @@
   box-shadow: var(--elevation-subtle);
 }
 
+.embeddedHeading {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
 .lifecycleActions,
 .reasonRow,
 .handoffRow {
@@ -89,12 +98,11 @@
 .cardHeader span,
 .nextActionsHeader span {
   color: var(--text-muted);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0;
   line-height: 1.45;
   text-align: right;
-  text-transform: uppercase;
 }
 
 .evidenceTable {
