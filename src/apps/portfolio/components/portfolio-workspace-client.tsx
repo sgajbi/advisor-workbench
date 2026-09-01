@@ -15,6 +15,7 @@ import {
 } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
+import { WORKBENCH_QUERY_STALE_TIME_MS } from "@/features/platform-runtime/query-policy";
 
 import {
   getPortfolioWorkspaceShell,
@@ -265,6 +266,7 @@ export default function PortfolioWorkspaceClient({
     queryKey: shellQueryKey,
     enabled: Boolean(selectedPortfolioId),
     retry: false,
+    refetchInterval: WORKBENCH_QUERY_STALE_TIME_MS,
     refetchOnMount: confirmedInitialWorkspace ? true : "always",
     initialData: confirmedInitialWorkspace ?? retainedShellAfterServerFailure,
     initialDataUpdatedAt:
@@ -385,6 +387,7 @@ export default function PortfolioWorkspaceClient({
         )
       : [...portfolioQueryKeys.all, "summary-details", "unselected"],
     enabled: Boolean(selectedPortfolioId && workspaceState && summaryRequest),
+    refetchInterval: WORKBENCH_QUERY_STALE_TIME_MS,
     queryFn: ({ signal }) =>
       queryPortfolioWorkspaceSummaryDetails(
         selectedPortfolioId!,

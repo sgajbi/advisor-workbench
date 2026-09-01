@@ -60,7 +60,7 @@
           "fixture_value": "cashflow",
           "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
           "expected_tests": [
-            "portfolio revisit reuses fresh detail truth and refetches after stale time"
+            "portfolio revisit reuses fresh detail truth and an open review revalidates after stale time"
           ]
         },
         "positions-status": {

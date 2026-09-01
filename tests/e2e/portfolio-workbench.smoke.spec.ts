@@ -744,7 +744,7 @@ test.describe('Portfolio workbench smoke', () => {
     browserRuntime.assertClean();
   });
 
-  test('portfolio revisit reuses fresh detail truth and refetches after stale time', async ({
+  test('portfolio revisit reuses fresh detail truth and an open review revalidates after stale time', async ({
     page,
     request,
   }) => {
@@ -778,12 +778,15 @@ test.describe('Portfolio workbench smoke', () => {
     expect(performanceRequests).toHaveLength(initialRequestCount);
 
     await page.waitForTimeout(30_100);
+    await expect.poll(() => performanceRequests.length).toBe(initialRequestCount * 2);
+    const openWorkspaceRevalidationRequestCount = performanceRequests.length;
+
     await page.getByRole('link', { name: 'Open Performance' }).click();
     await expect(page).toHaveURL(/\/performance\?/);
     await page.goBack({ waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /^Portfolio Review$/i })).toBeVisible();
     await expect(page.getByText('MTD return')).toBeVisible();
-    await expect.poll(() => performanceRequests.length).toBe(initialRequestCount * 2);
+    expect(performanceRequests).toHaveLength(openWorkspaceRevalidationRequestCount);
 
     const evidenceDirectory = process.env.PORTFOLIO_E2E_EVIDENCE_DIR;
     if (evidenceDirectory) {
@@ -797,7 +800,8 @@ test.describe('Portfolio workbench smoke', () => {
             governedStaleTimeMs: 30_000,
             initialDetailRequestCount: initialRequestCount,
             freshRevisitDetailRequestCount: initialRequestCount,
-            staleRevisitDetailRequestCount: performanceRequests.length,
+            openWorkspaceRevalidationRequestCount,
+            postRevalidationRevisitRequestCount: performanceRequests.length,
             observedPath: 'performance-snapshot',
           },
           null,
