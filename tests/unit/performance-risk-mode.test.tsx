@@ -58,10 +58,11 @@ function renderRiskMode(
   });
 }
 
-function createQueryWrapper() {
-  const queryClient = new QueryClient({
+function createQueryWrapper(
+  queryClient = new QueryClient({
     defaultOptions: { queries: workbenchStrictQueryDefaults },
-  });
+  }),
+) {
   return function QueryWrapper({ children }: React.PropsWithChildren) {
     return (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -534,6 +535,47 @@ describe("PerformanceRiskMode", () => {
     expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(2);
     expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(2);
+  });
+
+  it("reuses fresh Risk evidence after the review surface unmounts and returns", async () => {
+    const scenario = buildSupportedPerformanceScenario();
+    vi.mocked(getWorkbenchRiskSummaryClient).mockResolvedValue(
+      buildFixtureRiskSummary(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskConcentrationClient).mockResolvedValue(
+      buildFixtureRiskConcentration(scenario.workspace, "YTD"),
+    );
+    vi.mocked(getWorkbenchRiskAttributionClient).mockResolvedValue(
+      buildFixtureRiskAttribution(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskDrawdownClient).mockResolvedValue(
+      buildFixtureRiskDrawdown(scenario.workspace, "YTD", "NET"),
+    );
+    vi.mocked(getWorkbenchRiskRollingClient).mockResolvedValue(
+      buildFixtureRiskRolling(scenario.workspace, "YTD", "NET"),
+    );
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: workbenchStrictQueryDefaults },
+    });
+    const wrapper = createQueryWrapper(queryClient);
+
+    const firstVisit = render(buildRiskModeElement(scenario), { wrapper });
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("Risk snapshot headline metrics"),
+      ).toBeVisible();
+    });
+    firstVisit.unmount();
+
+    render(buildRiskModeElement(scenario), { wrapper });
+    expect(
+      screen.getByLabelText("Risk snapshot headline metrics"),
+    ).toBeVisible();
+    expect(getWorkbenchRiskSummaryClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskConcentrationClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskAttributionClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskDrawdownClient).toHaveBeenCalledTimes(1);
+    expect(getWorkbenchRiskRollingClient).toHaveBeenCalledTimes(1);
   });
 
   it("withholds only basis-dependent evidence when the active basis changes", async () => {
