@@ -868,13 +868,30 @@ describe("PortfolioWorkspaceClient", () => {
     });
     expect(getShellWorkspaceMock).not.toHaveBeenCalled();
 
-    getShellWorkspaceMock.mockResolvedValueOnce(initialWorkspace);
+    let resolveShellRefresh:
+      ((value: PortfolioWorkspace | null) => void) | undefined;
+    getShellWorkspaceMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveShellRefresh = resolve;
+      }),
+    );
     onlineManager.setOnline(true);
 
     await waitFor(() => expect(getShellWorkspaceMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Refreshing portfolio overview",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("prior evidence");
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "1001550.05",
+    );
+
+    await act(async () => {
+      resolveShellRefresh?.(initialWorkspace);
+    });
     await waitFor(() => {
       expect(
-        screen.queryByText("Portfolio refresh is waiting for connectivity"),
+        screen.queryByText("Refreshing portfolio overview"),
       ).not.toBeInTheDocument();
     });
   });
@@ -1013,16 +1030,23 @@ describe("PortfolioWorkspaceClient", () => {
 
   it("discloses when a scheduled Portfolio detail refresh is paused offline", async () => {
     const initialWorkspace = buildWorkspace();
-    getSummaryDetailsMock.mockResolvedValue(
-      confirmedDetails({
-        as_of_date: "2026-03-28",
-        summary: {
-          ...initialWorkspace.summary,
-          market_value_base: 2000000.25,
-        },
-        positions: [{ security_id: "EQ_1" }],
-      }),
-    );
+    const confirmedDetail = confirmedDetails({
+      as_of_date: "2026-03-28",
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+      positions: [{ security_id: "EQ_1" }],
+    });
+    let resolveDetailRefresh:
+      ((value: typeof confirmedDetail | null) => void) | undefined;
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(confirmedDetail)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveDetailRefresh = resolve;
+        }),
+      );
     const view = render(
       <PortfolioWorkspaceClient
         portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
@@ -1076,11 +1100,20 @@ describe("PortfolioWorkspaceClient", () => {
     onlineManager.setOnline(true);
 
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Refreshing portfolio detail",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("prior evidence");
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "2000000.25",
+    );
+
+    await act(async () => {
+      resolveDetailRefresh?.(confirmedDetail);
+    });
     await waitFor(() => {
       expect(
-        screen.queryByText(
-          "Portfolio detail refresh is waiting for connectivity",
-        ),
+        screen.queryByText("Refreshing portfolio detail"),
       ).not.toBeInTheDocument();
     });
   });
