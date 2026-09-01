@@ -326,6 +326,7 @@ export default function PortfolioWorkspaceClient({
       getWorkbenchQueryRevalidationInterval(
         state.dataUpdatedAt,
         state.status,
+        state.fetchStatus,
       ),
     refetchOnMount:
       activeShellGeneration === initialWorkspaceSourceKey &&
@@ -358,6 +359,11 @@ export default function PortfolioWorkspaceClient({
     !confirmedInitialWorkspace &&
     activeShellGeneration === initialWorkspaceSourceKey &&
     (shellQuery.isFetching || shellQuery.fetchStatus === "paused"),
+  );
+  const shellRefreshPaused = Boolean(
+    shellQuery.data &&
+    shellQuery.fetchStatus === "paused" &&
+    !awaitsShellSourceConfirmation,
   );
   const activeShellRequestStatus = !selectedPortfolioId
     ? "idle"
@@ -513,6 +519,7 @@ export default function PortfolioWorkspaceClient({
       getWorkbenchQueryRevalidationInterval(
         state.dataUpdatedAt,
         state.status,
+        state.fetchStatus,
       ),
     queryFn: ({ signal }) =>
       queryPortfolioWorkspaceSummaryDetails(
@@ -632,6 +639,11 @@ export default function PortfolioWorkspaceClient({
 
   const detailGenerationPending = Boolean(
     workspaceState && summaryRequest && summaryQuery.isPending,
+  );
+  const detailRefreshPaused = Boolean(
+    summaryQuery.data &&
+    summaryQuery.fetchStatus === "paused" &&
+    !detailGenerationPending,
   );
   const workspace = useMemo(
     () =>
@@ -852,6 +864,24 @@ export default function PortfolioWorkspaceClient({
       confirmedContext={formatPortfolioControlContext(
         buildInitialPortfolioControls(shellQuery.data),
       )}
+    />
+  ) : shellRefreshPaused && shellQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Portfolio refresh is waiting for connectivity"
+      message="The last confirmed portfolio view remains visible, but it may be out of date until connectivity returns and the refresh completes."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
+  ) : detailRefreshPaused ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Portfolio detail refresh is waiting for connectivity"
+      message="The last confirmed positions and analysis remain visible, but they may be out of date until connectivity returns and the refresh completes."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
     />
   ) : detailGenerationPending ? (
     <WorkbenchRefreshStatus

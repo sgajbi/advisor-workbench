@@ -26,6 +26,7 @@ describe("Portfolio Query freshness", () => {
       getWorkbenchQueryRevalidationInterval(
         now - 20_000,
         "success",
+        "idle",
         now,
       ),
     ).toBe(10_000);
@@ -33,16 +34,34 @@ describe("Portfolio Query freshness", () => {
       getWorkbenchQueryRevalidationInterval(
         now - WORKBENCH_QUERY_STALE_TIME_MS,
         "success",
+        "idle",
         now,
       ),
-    ).toBe(1);
+    ).toBe(1_000);
     expect(
       getWorkbenchQueryRevalidationInterval(
         now - WORKBENCH_QUERY_STALE_TIME_MS,
         "error",
+        "idle",
         now,
       ),
     ).toBe(WORKBENCH_QUERY_STALE_TIME_MS);
+    expect(
+      getWorkbenchQueryRevalidationInterval(
+        now - WORKBENCH_QUERY_STALE_TIME_MS,
+        "success",
+        "fetching",
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      getWorkbenchQueryRevalidationInterval(
+        now - WORKBENCH_QUERY_STALE_TIME_MS,
+        "success",
+        "paused",
+        now,
+      ),
+    ).toBe(false);
   });
 
   it("reuses fresh source truth and refetches it after the governed stale time", async () => {
