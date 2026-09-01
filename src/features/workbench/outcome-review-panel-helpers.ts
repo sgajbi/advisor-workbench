@@ -114,16 +114,6 @@ export function outcomeReviewAvailabilityClass(value: string): string {
   return value && value !== "N/A" ? "is-available" : "is-muted";
 }
 
-export function outcomeReviewSourceEvidenceStatus(
-  readyEvidenceCount: number,
-): string {
-  return readyEvidenceCount >= 3
-    ? "Available"
-    : readyEvidenceCount > 0
-      ? "Partial"
-      : "Not available";
-}
-
 export function outcomeReviewSupportReasonLabel(reason: string): string {
   const knownLabels: Record<string, string> = {
     READY_FOR_REPORT_INPUT: `${MANAGE_OUTCOME_REVIEW_LABELS.reportPreparation} ready`,

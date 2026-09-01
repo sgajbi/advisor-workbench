@@ -3,10 +3,7 @@
 import { SectionBlock } from "@/design-system";
 import type { DpmOutcomeReviewGatewayResponse } from "@/features/workbench/types";
 import { buildOutcomeReviewPanelModel } from "@/features/workbench/outcome-review-view-model";
-import {
-  countReadyOutcomeReviewEvidence,
-  outcomeReviewSourceEvidenceStatus,
-} from "@/features/workbench/outcome-review-panel-helpers";
+import { countReadyOutcomeReviewEvidence } from "@/features/workbench/outcome-review-panel-helpers";
 import { useOutcomeReviewHandoffs } from "@/features/workbench/use-outcome-review-handoffs";
 import { MANAGE_OUTCOME_REVIEW_LABELS } from "@/features/workbench/manage-terminology";
 import DpmAiWorkflowResult from "./dpm-ai-workflow-result";
@@ -36,8 +33,6 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
     requestOutcomeAiNarrative,
   } = useOutcomeReviewHandoffs({ primaryReview });
   const readyEvidenceCount = countReadyOutcomeReviewEvidence(primaryReview);
-  const sourceEvidenceStatus =
-    outcomeReviewSourceEvidenceStatus(readyEvidenceCount);
   const evidencePackHref = `/workbench/${encodeURIComponent(portfolioId)}?mode=proof`;
 
   return (
@@ -61,7 +56,6 @@ export default function OutcomeReviewPanel({ portfolioId, response, errorMessage
           sourceBoundary={model.sourceBoundary}
           evidencePackHref={evidencePackHref}
           readyEvidenceCount={readyEvidenceCount}
-          sourceEvidenceStatus={sourceEvidenceStatus}
           reportJobAvailable={reportJobAvailable}
           reportJobPending={reportJobPending}
           aiNarrativeAvailable={aiNarrativeAvailable}

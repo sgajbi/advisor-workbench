@@ -7,7 +7,6 @@ import type {
 } from "@/features/workbench/outcome-review-view-model";
 import OutcomeReviewActionsCard from "./outcome-review-actions-card";
 import OutcomeReviewDetailPanel from "./outcome-review-detail-panel";
-import OutcomeReviewReadinessBand from "./outcome-review-readiness-band";
 import OutcomeReviewSourceLineageCard from "./outcome-review-source-lineage-card";
 import OutcomeReviewTimelineCard from "./outcome-review-timeline-card";
 
@@ -18,7 +17,6 @@ type Props = {
   sourceBoundary?: OutcomeReviewSourceBoundary;
   evidencePackHref: string;
   readyEvidenceCount: number;
-  sourceEvidenceStatus: string;
   reportJobAvailable: boolean;
   reportJobPending: boolean;
   aiNarrativeAvailable: boolean;
@@ -39,7 +37,6 @@ export default function OutcomeReviewWorkspace({
   },
   evidencePackHref,
   readyEvidenceCount,
-  sourceEvidenceStatus,
   reportJobAvailable,
   reportJobPending,
   aiNarrativeAvailable,
@@ -49,13 +46,6 @@ export default function OutcomeReviewWorkspace({
 }: Props) {
   return (
     <>
-      <OutcomeReviewReadinessBand
-        reviewWindow={primaryReview.reviewWindow}
-        reportInputBlocked={primaryReview.reportInputBlocked}
-        aiEvidenceBlocked={primaryReview.aiEvidenceBlocked}
-        sourceEvidenceStatus={sourceEvidenceStatus}
-      />
-
       <div className="outcome-review-workspace-grid">
         <OutcomeReviewTimelineCard items={items} />
 

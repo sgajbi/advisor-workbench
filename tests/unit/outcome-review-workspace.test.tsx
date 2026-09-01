@@ -20,7 +20,6 @@ describe("OutcomeReviewWorkspace", () => {
         clientCommunicationBoundary={clientCommunicationBoundary()}
         evidencePackHref="/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
         readyEvidenceCount={4}
-        sourceEvidenceStatus="Available"
         reportJobAvailable
         reportJobPending={false}
         aiNarrativeAvailable
@@ -30,9 +29,7 @@ describe("OutcomeReviewWorkspace", () => {
       />
     );
 
-    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Source evidenceAvailable"
-    );
+    expect(screen.queryByLabelText("Selected outcome review readiness")).not.toBeInTheDocument();
     expect(screen.getByText("Review timeline")).toBeInTheDocument();
     expect(screen.getByText("Recommended actions")).toBeInTheDocument();
     expect(screen.getByText("Selected review detail")).toBeInTheDocument();
@@ -68,7 +65,6 @@ describe("OutcomeReviewWorkspace", () => {
         clientCommunicationBoundary={clientCommunicationBoundary()}
         evidencePackHref="/workbench/PB_SG_GLOBAL_BAL_001?mode=proof"
         readyEvidenceCount={2}
-        sourceEvidenceStatus="Partial"
         reportJobAvailable={false}
         reportJobPending={false}
         aiNarrativeAvailable={false}
@@ -78,9 +74,7 @@ describe("OutcomeReviewWorkspace", () => {
       />
     );
 
-    expect(screen.getByLabelText("Selected outcome review readiness")).toHaveTextContent(
-      "Report preparationBlocked"
-    );
+    expect(screen.queryByLabelText("Selected outcome review readiness")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Request report" })).toBeDisabled();
     expect(
       screen.getByRole("button", {

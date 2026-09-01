@@ -9,7 +9,6 @@ import {
   outcomeReviewAvailabilityLabel,
   outcomeReviewBadgeTone,
   outcomeReviewDimensionLabel,
-  outcomeReviewSourceEvidenceStatus,
   shouldShowOutcomeReviewStatePanel,
 } from "../../src/features/workbench/outcome-review-panel-helpers";
 import type { OutcomeReviewListItem } from "../../src/features/workbench/outcome-review-view-model";
@@ -118,9 +117,6 @@ describe("outcome review panel helpers", () => {
     expect(outcomeReviewAvailabilityLabel("N/A")).toBe("Not available");
     expect(outcomeReviewAvailabilityClass("ppack_1")).toBe("is-available");
     expect(outcomeReviewAvailabilityClass("N/A")).toBe("is-muted");
-    expect(outcomeReviewSourceEvidenceStatus(3)).toBe("Available");
-    expect(outcomeReviewSourceEvidenceStatus(1)).toBe("Partial");
-    expect(outcomeReviewSourceEvidenceStatus(0)).toBe("Not available");
   });
 
   it("returns compact report and AI handoff messages", () => {

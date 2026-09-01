@@ -2,10 +2,9 @@ import type {
   OutcomeReviewListItem,
   OutcomeReviewPanelModel,
 } from "@/features/workbench/outcome-review-view-model";
-import { outcomeReviewAvailabilityLabel } from "@/features/workbench/outcome-review-panel-helpers";
+import OutcomeReviewDecisionSummary from "./outcome-review-decision-summary";
 import OutcomeReviewReasonRow from "./outcome-review-reason-row";
 import OutcomeReviewStatePanel from "./outcome-review-state-panel";
-import OutcomeReviewStatusStrip from "./outcome-review-status-strip";
 
 type Props = {
   portfolioId: string;
@@ -20,10 +19,6 @@ export default function OutcomeReviewSummary({
   primaryReview,
   errorMessage,
 }: Props) {
-  const evidencePackStatus = outcomeReviewAvailabilityLabel(
-    primaryReview?.proofPackId ?? "N/A",
-  );
-
   return (
     <>
       <OutcomeReviewStatePanel
@@ -32,11 +27,10 @@ export default function OutcomeReviewSummary({
         errorMessage={errorMessage}
       />
 
-      <OutcomeReviewStatusStrip
+      <OutcomeReviewDecisionSummary
         reviewPosture={primaryReview?.reviewPostureLabel}
         outcomeStatus={primaryReview?.outcomeStatusLabel}
         driftImprovement={primaryReview?.driftImprovementLabel}
-        evidencePackStatus={evidencePackStatus}
       />
 
       <OutcomeReviewReasonRow
