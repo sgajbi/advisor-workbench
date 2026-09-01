@@ -74,4 +74,24 @@ describe("Portfolio Query freshness", () => {
     expect(queryClient.getQueryState(otherKey)?.isInvalidated).toBe(false);
     queryClient.clear();
   });
+
+  it("retains previously confirmed Portfolio truth when a stale refetch fails", async () => {
+    const queryClient = createQueryClient();
+    const queryKey = portfolioQueryKeys.workspace("PB_SG_GLOBAL_BAL_001");
+    queryClient.setQueryData(queryKey, { version: 1 });
+    await queryClient.invalidateQueries({ queryKey, exact: true });
+
+    await expect(
+      queryClient.fetchQuery({
+        queryKey,
+        queryFn: async () => {
+          throw new Error("Gateway unavailable");
+        },
+      }),
+    ).rejects.toThrow("Gateway unavailable");
+
+    expect(queryClient.getQueryData(queryKey)).toEqual({ version: 1 });
+    expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
+    queryClient.clear();
+  });
 });
