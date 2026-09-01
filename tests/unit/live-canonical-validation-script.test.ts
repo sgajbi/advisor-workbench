@@ -1745,6 +1745,15 @@ describe("canonical live validation script", () => {
     expect(browserWorkflowModule).toContain(
       'getByLabel("Mandate health summary")',
     );
+    expect(browserWorkflowModule).toContain(
+      'page.locator("article#pm-operating-quality-panel")',
+    );
+    expect(browserWorkflowModule).toContain(
+      'getByTestId("pm-operating-quality-source-evidence")',
+    );
+    expect(browserWorkflowModule).not.toContain(
+      'locator(".pm-quality-status-strip")',
+    );
     expect(browserWorkflowModule).toContain("outcome-review-panel");
     expect(browserWorkflowModule).toContain(
       "buildOutcomeReviewSourceEvidenceProof(sourceReview)",
