@@ -43,11 +43,19 @@ queue, selected decision, primary action, result and document geometry. The brow
 six workflow options, one Prepare action, selected action before result, desktop side-by-side
 composition, narrow-width stacking, and zero page-level horizontal overflow.
 
+Exact-head review also found that inaccessible wave, exception, outcome-review, quality-score and
+evidence-pack sources could be described as confirmed empty. The action mapping now checks each
+source error before empty-state copy, presents a business-safe temporarily-unavailable blocker,
+and keeps Prepare disabled. A table-driven component regression proves all six workflows.
+
 ## Validation
 
 ```text
 npx vitest run tests/unit/dpm-copilot-workspace.test.tsx tests/unit/dpm-copilot-workspace-css-ownership.test.ts tests/unit/live-canonical-validation-script.test.ts --coverage=false
-Result: 3 files, 43 tests passed
+Result before exact-head review fix: 3 files, 43 tests passed
+
+npm test -- --run tests/unit/dpm-copilot-workspace.test.tsx tests/unit/manage-workspace-components.test.tsx
+Result after exact-head review fix: 2 files, 34 tests passed
 
 npm run typecheck
 Result: passed

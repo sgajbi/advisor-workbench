@@ -321,6 +321,56 @@ describe("DpmCopilotWorkspace", () => {
     expect(requestDpmPmOperatingQualitySummary).not.toHaveBeenCalled();
   });
 
+  it("distinguishes inaccessible source evidence from a confirmed empty workflow", () => {
+    const data = buildManageWorkspaceData({
+      proofPack: null,
+      proofPackError: "Evidence pack endpoint unavailable.",
+      waves: null,
+      wavesError: "DPM wave endpoint unavailable.",
+      commandCenterExceptions: null,
+      commandCenterExceptionsError: "DPM exception endpoint unavailable.",
+      outcomeReviews: null,
+      outcomeReviewError: "DPM outcome review endpoint unavailable.",
+      pmOperatingQualityScoreRuns: null,
+      pmOperatingQualityScoreRunsError:
+        "DPM PM operating quality score-run endpoint unavailable.",
+    });
+
+    render(<DpmCopilotWorkspace data={data} mandateId="mandate_001" />);
+
+    const unavailableWorkflows = [
+      [
+        "Evidence Pack Decision Memo",
+        "Current evidence pack temporarily unavailable",
+      ],
+      ["Wave PM Memo", "Rebalance wave data temporarily unavailable"],
+      [
+        "Operations Handoff Summary",
+        "Rebalance wave data temporarily unavailable",
+      ],
+      ["Exception Summary", "Monitoring exceptions temporarily unavailable"],
+      ["Outcome Narrative", "Outcome reviews temporarily unavailable"],
+      [
+        "PM Quality Support Summary",
+        "PM quality evidence temporarily unavailable",
+      ],
+    ] as const;
+
+    for (const [title, blocker] of unavailableWorkflows) {
+      fireEvent.click(screen.getByRole("option", { name: new RegExp(title) }));
+      expect(
+        within(screen.getByTestId("pm-copilot-selected-workflow")).getByText(
+          blocker,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", {
+          name: `${title} unavailable: ${blocker}`,
+        }),
+      ).toBeDisabled();
+    }
+  });
+
   it("keeps historical proof-pack lineage visible without presenting it as actionable", () => {
     const data = buildManageWorkspaceData();
 

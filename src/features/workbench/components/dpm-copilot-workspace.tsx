@@ -351,6 +351,7 @@ function buildCopilotActions({
   const proofPackBlockedReason = resolveProofPackMemoBlockedReason({
     currentProofPackId,
     historicalProofPackId,
+    sourceError: data.proofPackError,
     supportabilityState: proofPackModel.supportabilityState,
     aiEvidenceInputAvailable: proofPackModel.aiEvidenceInputAvailable,
   });
@@ -373,6 +374,26 @@ function buildCopilotActions({
     readFirstString(data.pmOperatingQualityScoreRuns?.supportability, [
       "score_run_id",
     ]);
+  const waveBlockedReason = waveId
+    ? null
+    : data.wavesError
+      ? "Rebalance wave data temporarily unavailable"
+      : "No rebalance wave available";
+  const exceptionBlockedReason = exceptionId
+    ? null
+    : data.commandCenterExceptionsError
+      ? "Monitoring exceptions temporarily unavailable"
+      : "No monitoring exception available";
+  const outcomeReviewBlockedReason = outcomeReviewId
+    ? null
+    : data.outcomeReviewError
+      ? "Outcome reviews temporarily unavailable"
+      : "No outcome review available";
+  const scoreRunBlockedReason = scoreRunId
+    ? null
+    : data.pmOperatingQualityScoreRunsError
+      ? "PM quality evidence temporarily unavailable"
+      : "No PM quality score run available";
 
   const actions: Array<Omit<CopilotAction, "contextKey">> = [
     {
@@ -394,7 +415,7 @@ function buildCopilotActions({
       detail: "Request PM review commentary for a Manage-owned rebalance wave.",
       referenceLabel: "Reference",
       reference: waveId,
-      blockedReason: waveId ? null : "No rebalance wave available",
+      blockedReason: waveBlockedReason,
       run: () => requestDpmWaveAiPmMemo(waveId ?? ""),
     },
     {
@@ -404,7 +425,7 @@ function buildCopilotActions({
         "Request a support-only handoff summary for operations and investment control.",
       referenceLabel: "Reference",
       reference: waveId,
-      blockedReason: waveId ? null : "No rebalance wave available",
+      blockedReason: waveBlockedReason,
       run: () => requestDpmOperationsHandoffSummary(waveId ?? ""),
     },
     {
@@ -413,7 +434,7 @@ function buildCopilotActions({
       detail: "Request triage support over a Manage monitoring exception.",
       referenceLabel: "Reference",
       reference: exceptionId,
-      blockedReason: exceptionId ? null : "No monitoring exception available",
+      blockedReason: exceptionBlockedReason,
       run: () =>
         requestDpmExceptionSummary({
           exceptionId: exceptionId ?? "",
@@ -429,7 +450,7 @@ function buildCopilotActions({
         "Request PM/CIO/control summary over realized outcome-review evidence.",
       referenceLabel: "Reference",
       reference: outcomeReviewId,
-      blockedReason: outcomeReviewId ? null : "No outcome review available",
+      blockedReason: outcomeReviewBlockedReason,
       run: () =>
         requestDpmOutcomeReviewAiNarrative({
           outcomeReviewId: outcomeReviewId ?? "",
@@ -442,7 +463,7 @@ function buildCopilotActions({
         "Request a support-only summary of portfolio-management operating-quality evidence.",
       referenceLabel: "Reference",
       reference: scoreRunId,
-      blockedReason: scoreRunId ? null : "No PM quality score run available",
+      blockedReason: scoreRunBlockedReason,
       run: () =>
         requestDpmPmOperatingQualitySummary({ scoreRunId: scoreRunId ?? "" }),
     },
@@ -461,15 +482,20 @@ function buildCopilotActions({
 function resolveProofPackMemoBlockedReason({
   currentProofPackId,
   historicalProofPackId,
+  sourceError,
   supportabilityState,
   aiEvidenceInputAvailable,
 }: {
   currentProofPackId: string | null;
   historicalProofPackId: string | null;
+  sourceError: string | null;
   supportabilityState: string;
   aiEvidenceInputAvailable: boolean;
 }): string | null {
   if (!currentProofPackId) {
+    if (sourceError) {
+      return "Current evidence pack temporarily unavailable";
+    }
     return historicalProofPackId
       ? "Current evidence pack unavailable"
       : "No current evidence pack available";
