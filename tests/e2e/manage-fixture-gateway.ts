@@ -91,6 +91,13 @@ export async function startManageFixtureGateway({
       );
       return;
     }
+    if (process.env.MANAGE_E2E_FIXTURE === "pm-quality") {
+      const pmQualityResponse = pmQualityFixtureResponse(path);
+      if (pmQualityResponse) {
+        sendJson(response, pmQualityResponse);
+        return;
+      }
+    }
     if (path === "/api/v1/dpm/command-center/waves") {
       sendJson(response, waveEnvelope());
       return;
@@ -891,6 +898,99 @@ function campaignEnvelope(correlationId: string) {
       count: 2,
     },
   };
+}
+
+function pmQualityFixtureResponse(path: string): Record<string, unknown> | null {
+  const sourceRef = {
+    source_system: "lotus-manage",
+    source_product: "PmOperatingQualityScoreRun",
+    source_id: "pmq_run_001",
+  };
+  const base = (data: Record<string, unknown>, correlationId: string, count: number) => ({
+    correlation_id: correlationId,
+    contract_version: "v1",
+    source_service: "lotus-manage",
+    upstream_status: 200,
+    supportability: {
+      source_service: "lotus-manage",
+      authority: "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
+      state: "READY",
+      reason_codes: ["PM_QUALITY_READY"],
+      blocked_actions: [],
+      policy_id: "pmq_sg_dpm",
+      policy_version: "2026.05",
+      count,
+    },
+    data,
+  });
+
+  if (path === "/api/v1/dpm/command-center/pm-operating-quality/policies") {
+    return base(
+      {
+        policies: [
+          {
+            policy_id: "pmq_sg_dpm",
+            policy_version: "2026.05",
+            enabled: true,
+            state: "READY",
+            as_of_date: "2026-05-13",
+          },
+        ],
+      },
+      "corr-pmq-policies-fixture",
+      1,
+    );
+  }
+  if (path === "/api/v1/dpm/command-center/pm-operating-quality/score-runs") {
+    return base(
+      {
+        score_runs: [
+          {
+            score_run_id: "pmq_run_001",
+            pm_id: "PM_SG_001",
+            book_id: "PM_BOOK_SG_BALANCED",
+            policy_id: "pmq_sg_dpm",
+            policy_version: "2026.05",
+            state: "READY",
+            score: "90.00",
+            as_of_date: "2026-05-13",
+            content_hash: "sha256:pm-quality-fixture",
+            reason_codes: ["PM_QUALITY_READY"],
+            forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+            source_refs: [sourceRef],
+          },
+        ],
+        fairness_segments: [
+          {
+            segment_id: "mandate_balanced",
+            segment_type: "MANDATE_TYPE",
+            display_name: "Balanced DPM Mandates",
+            score_run_ids: ["pmq_run_001"],
+            source_refs: [sourceRef],
+          },
+          {
+            segment_id: "mandate_income",
+            segment_type: "MANDATE_TYPE",
+            display_name: "Income DPM Mandates",
+            score_run_ids: ["pmq_run_002"],
+            source_refs: [sourceRef],
+          },
+        ],
+      },
+      "corr-pmq-score-runs-fixture",
+      1,
+    );
+  }
+  if (path === "/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses") {
+    return base({ fairness_analyses: [] }, "corr-pmq-fairness-fixture", 0);
+  }
+  if (path === "/api/v1/dpm/command-center/pm-operating-quality/review-actions") {
+    return base({ review_actions: [] }, "corr-pmq-review-actions-fixture", 0);
+  }
+  if (path === "/api/v1/dpm/command-center/pm-operating-quality/summary-invocations") {
+    return base({ summary_invocations: [] }, "corr-pmq-summaries-fixture", 0);
+  }
+  return null;
 }
 
 function campaignDefinition(
