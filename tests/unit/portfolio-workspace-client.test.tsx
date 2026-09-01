@@ -820,6 +820,55 @@ describe("PortfolioWorkspaceClient", () => {
     ).toBeEnabled();
   });
 
+  it("surfaces unavailable detail for the first read of a refreshed shell generation", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(
+        confirmedDetails({
+          as_of_date: initialWorkspace.as_of_date,
+          positions: [{ security_id: "EQ_1" }],
+        }),
+      )
+      .mockResolvedValueOnce(null);
+    const refreshedShell = {
+      ...initialWorkspace,
+      as_of_date: "2026-03-29",
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    getShellWorkspaceMock.mockResolvedValueOnce(refreshedShell);
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Portfolio detail is unavailable",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "positions and analysis could not be confirmed",
+    );
+    expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
+    expect(
+      within(screen.getByRole("alert")).getByRole("button", {
+        name: "Retry portfolio detail refresh",
+      }),
+    ).toBeEnabled();
+  });
+
   it("rejects mismatched stale detail before it replaces confirmed Portfolio truth", async () => {
     getSummaryDetailsMock.mockResolvedValueOnce(
       confirmedDetails({

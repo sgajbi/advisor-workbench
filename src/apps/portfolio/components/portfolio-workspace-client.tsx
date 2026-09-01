@@ -666,12 +666,20 @@ export default function PortfolioWorkspaceClient({
     activeControlTransition?.status === "failed";
   const portfolioRefreshStatus = controlTransitionRequiresAction ? (
     controlTransitionStatus
-  ) : summaryQuery.isRefetchError && summaryQuery.data ? (
+  ) : summaryQuery.isError && workspaceState ? (
     <WorkbenchRefreshStatus
       kind="failed"
       eyebrow="Portfolio review"
-      title="Portfolio detail could not be refreshed"
-      message="The previous portfolio view remains active while the refresh is retried."
+      title={
+        summaryQuery.data
+          ? "Portfolio detail could not be refreshed"
+          : "Portfolio detail is unavailable"
+      }
+      message={
+        summaryQuery.data
+          ? "The previous portfolio view remains active while the refresh is retried."
+          : "The portfolio overview remains visible, but positions and analysis could not be confirmed."
+      }
       confirmedContext={formatPortfolioControlContext(controls)}
       onRetry={() => void summaryQuery.refetch()}
       retrying={summaryQuery.isFetching}
