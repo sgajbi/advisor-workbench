@@ -77,6 +77,9 @@ describe("PM Operating Quality CSS ownership", () => {
       /\.workspace\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
     );
     expect(stylesheet).toMatch(
+      /\.reviewActionGrid\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
+    );
+    expect(stylesheet).toMatch(
       /\.statusStrip\s*\{[\s\S]*?repeat\(auto-fit, minmax\(min\(100%, 12rem\), 1fr\)\)/,
     );
     expect(stylesheet).toMatch(

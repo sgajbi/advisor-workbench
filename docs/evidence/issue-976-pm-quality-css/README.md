@@ -11,7 +11,7 @@ on a wide screen.
 
 | Measure | Before | After | Result |
 | --- | ---: | ---: | ---: |
-| Wide-screen full-page height at 1440px | 9,715px | 6,913px | 2,802px / 28.8% reduction |
+| Wide-screen full-page height at 1440px | 9,715px | 6,470px | 3,245px / 33.4% reduction |
 | Legacy Manage stylesheet | 2,731 lines | 2,269 lines | 462 lines removed |
 | Legacy global escapes | 485 | 408 | 77 escapes removed |
 | PM-quality selectors left in legacy stylesheet | 77 | 0 | component ownership complete |
