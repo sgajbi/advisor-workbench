@@ -408,6 +408,12 @@ export default function PortfolioWorkspaceClient({
     !serverSnapshotReconciliationPending &&
     !awaitsShellSourceConfirmation,
   );
+  const shellRefreshInFlight = Boolean(
+    shellQuery.data &&
+    shellQuery.fetchStatus === "fetching" &&
+    !serverSnapshotReconciliationPending &&
+    !awaitsShellSourceConfirmation,
+  );
   const activeShellRequestStatus = !selectedPortfolioId
     ? "idle"
     : awaitsShellSourceConfirmation || shellQuery.isPending
@@ -691,6 +697,11 @@ export default function PortfolioWorkspaceClient({
     summaryQuery.fetchStatus === "paused" &&
     !detailGenerationPending,
   );
+  const detailRefreshInFlight = Boolean(
+    summaryQuery.data &&
+    summaryQuery.fetchStatus === "fetching" &&
+    !detailGenerationPending,
+  );
   const workspace = useMemo(
     () =>
       awaitsInitialSourceConfirmation || detailGenerationPending
@@ -929,12 +940,30 @@ export default function PortfolioWorkspaceClient({
       requestedContext={formatPortfolioControlContext(controls)}
       confirmedContext={formatPortfolioControlContext(controls)}
     />
+  ) : shellRefreshInFlight ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Refreshing portfolio overview"
+      message="The previously retrieved portfolio overview remains visible as prior evidence until updated figures arrive."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
   ) : detailRefreshPaused ? (
     <WorkbenchRefreshStatus
       kind="pending"
       eyebrow="Portfolio review"
       title="Portfolio detail refresh is waiting for connectivity"
       message="The last confirmed positions and analysis remain visible, but they may be out of date until connectivity returns and the refresh completes."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
+  ) : detailRefreshInFlight ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Refreshing portfolio detail"
+      message="The previously retrieved positions and analysis remain visible as prior evidence until updated figures arrive."
       requestedContext={formatPortfolioControlContext(controls)}
       confirmedContext={formatPortfolioControlContext(controls)}
     />
