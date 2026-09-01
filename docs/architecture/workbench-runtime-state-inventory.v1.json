@@ -46,17 +46,6 @@
       "sessionAuthority": false
     },
     {
-      "id": "portfolio-browser-inflight-coalescing",
-      "file": "src/apps/portfolio/components/portfolio-workspace-client.tsx",
-      "symbols": ["summaryDetailsInflightRequests", "shellInflightRequests"],
-      "classification": "browser_inflight",
-      "purpose": "Coalesce matching browser requests while a promise is unsettled.",
-      "bounds": "Entries are deleted when each request settles.",
-      "replicaBehavior": "Browser-owned and independent of Workbench server replicas.",
-      "businessAuthority": false,
-      "sessionAuthority": false
-    },
-    {
       "id": "ai-provider-mode-lookups",
       "file": "src/design-system/ai-provider-posture.ts",
       "symbols": ["DETERMINISTIC_PROVIDER_MODES", "LIVE_PROVIDER_MODES"],
