@@ -327,6 +327,7 @@ describe("WorkbenchPage", () => {
     expect(screen.getByRole("heading", { name: "Active Rebalance" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Campaign administration" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Candidate Source Review" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Evidence Pack" })).toBeInTheDocument();
     expect(screen.getAllByText("Apple and Tesla holdings review").length).toBeGreaterThan(0);
     expect(await screen.findByText("Source evidence current")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Governance action" }));

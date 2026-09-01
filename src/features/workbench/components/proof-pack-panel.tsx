@@ -15,6 +15,7 @@ import { useManageProofPackState } from "@/features/workbench/manage-proof-pack-
 import styles from "./proof-pack.module.css";
 
 type Props = {
+  showEmbeddedHeading?: boolean;
   portfolioId: string;
   mandateId?: string | null;
   outcomeReviews: DpmOutcomeReviewGatewayResponse | null;
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export default function ProofPackPanel({
+  showEmbeddedHeading = false,
   portfolioId,
   mandateId,
   outcomeReviews,
@@ -62,6 +64,9 @@ export default function ProofPackPanel({
       id="evidence-pack-panel"
       className={styles.panel}
     >
+      {showEmbeddedHeading ? (
+        <h2 className={styles.embeddedHeading}>Evidence Pack</h2>
+      ) : null}
       <ProofPackSummary
         model={model}
         portfolioId={portfolioId}

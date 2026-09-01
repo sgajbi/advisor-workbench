@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -61,8 +61,9 @@ describe("ProofPackSummary", () => {
   it("renders source-backed proof-pack posture without leaking identifiers", () => {
     renderSummary();
 
-    expect(screen.getByText("Evidence status")).toBeInTheDocument();
-    expect(screen.getByText("Available")).toBeInTheDocument();
+    const evidenceStatus = screen.getByText("Evidence status").parentElement;
+    expect(evidenceStatus).not.toBeNull();
+    expect(within(evidenceStatus as HTMLElement).getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("Approval readiness")).toBeInTheDocument();
     expect(screen.getByText("Signature Pending")).toBeInTheDocument();
     expect(screen.getByText("Mandate coverage")).toBeInTheDocument();
@@ -70,6 +71,22 @@ describe("ProofPackSummary", () => {
     expect(screen.queryByText("ppack_1")).not.toBeInTheDocument();
     expect(screen.queryByText("sha256:proof-pack")).not.toBeInTheDocument();
     expect(screen.queryByText("lotus-manage")).not.toBeInTheDocument();
+  });
+
+  it("keeps degraded source evidence explicit even when a pack id is available", () => {
+    renderSummary({
+      model: {
+        ...readyModel,
+        state: "partial",
+        supportabilityState: "DEGRADED",
+        supportabilityReasons: [],
+        evidenceStatusLabel: "Available",
+      },
+    });
+
+    expect(screen.getByText("Evidence status")).toBeInTheDocument();
+    expect(screen.getByText("Degraded")).toBeInTheDocument();
+    expect(screen.queryByText("Available")).not.toBeInTheDocument();
   });
 
   it("delegates lifecycle actions without repeating downstream handoffs", () => {

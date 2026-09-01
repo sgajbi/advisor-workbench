@@ -5,6 +5,7 @@ import {
   proofPackAvailabilityTone,
   proofPackBadgeTone,
   proofPackStatePanelCopy,
+  proofPackSupportabilityLabel,
   readProofPackAiWorkflowPackStatus,
   readProofPackMarkdown,
   shouldShowProofPackStatePanel,
@@ -42,6 +43,13 @@ describe("proof pack panel helpers", () => {
     expect(proofPackBadgeTone("PENDING_REVIEW")).toBe("warn");
     expect(proofPackBadgeTone("BLOCKED")).toBe("danger");
     expect(proofPackBadgeTone("UNKNOWN")).toBe("default");
+  });
+
+  it("keeps partial and degraded supportability distinct in business language", () => {
+    expect(proofPackSupportabilityLabel("READY")).toBe("Ready");
+    expect(proofPackSupportabilityLabel("PARTIAL")).toBe("Partially available");
+    expect(proofPackSupportabilityLabel("DEGRADED")).toBe("Degraded");
+    expect(proofPackSupportabilityLabel("UNAVAILABLE")).toBe("Unavailable");
   });
 
   it("keeps unavailable-state copy deterministic and portfolio-scoped", () => {

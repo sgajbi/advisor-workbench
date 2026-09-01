@@ -26,6 +26,17 @@ export function proofPackBadgeTone(state: string): ProofPackBadgeTone {
   return "default";
 }
 
+export function proofPackSupportabilityLabel(state: string): string {
+  const normalized = state.trim().toUpperCase();
+  if (normalized === "PARTIAL") {
+    return "Partially available";
+  }
+  if (normalized === "DEGRADED") {
+    return "Degraded";
+  }
+  return businessStateLabel(normalized);
+}
+
 export function proofPackStatePanelCopy(
   state: ProofPackPanelState,
   portfolioId: string
