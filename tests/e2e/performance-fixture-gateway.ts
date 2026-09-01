@@ -46,6 +46,11 @@ export type PerformanceFixtureGateway = {
   requests: {
     summary: number;
     details: number;
+    riskSummary: number;
+    riskConcentration: number;
+    riskDrawdown: number;
+    riskRolling: number;
+    riskAttribution: number;
   };
 };
 
@@ -60,7 +65,15 @@ export async function startPerformanceFixtureGateway({
   let detailsRefreshFailuresRemaining = scenario === 'refresh-integrity' ? 1 : 0;
   let trendRefreshFailuresRemaining = scenario === 'trend-integrity' ? 1 : 0;
   let horizonRefreshFailuresRemaining = scenario === 'horizon-integrity' ? 1 : 0;
-  const requests = { summary: 0, details: 0 };
+  const requests = {
+    summary: 0,
+    details: 0,
+    riskSummary: 0,
+    riskConcentration: 0,
+    riskDrawdown: 0,
+    riskRolling: 0,
+    riskAttribution: 0,
+  };
   const reviewedAdvisorBriefs = new Map<string, WorkbenchPerformanceAdvisorBrief>();
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
@@ -242,6 +255,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/summary')) {
+      requests.riskSummary += 1;
       const workspace = buildRiskFixtureWorkspace(portfolioId);
       sendJson(response, {
         ...buildFixtureRiskSummary(
@@ -254,6 +268,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/concentration')) {
+      requests.riskConcentration += 1;
       const workspace = buildRiskFixtureWorkspace(portfolioId);
       sendJson(response, {
         ...buildFixtureRiskConcentration(
@@ -265,6 +280,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/drawdown')) {
+      requests.riskDrawdown += 1;
       const workspace = buildRiskFixtureWorkspace(portfolioId);
       sendJson(
         response,
@@ -281,6 +297,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/rolling')) {
+      requests.riskRolling += 1;
       const workspace = buildRiskFixtureWorkspace(portfolioId);
       sendJson(
         response,
@@ -297,6 +314,7 @@ export async function startPerformanceFixtureGateway({
       return;
     }
     if (requestUrl.pathname.endsWith('/risk/attribution')) {
+      requests.riskAttribution += 1;
       const workspace = buildRiskFixtureWorkspace(portfolioId);
       sendJson(
         response,
@@ -348,7 +366,6 @@ export async function startPerformanceFixtureGateway({
     close: () => close(server),
   };
 }
-
 function buildRiskFixtureWorkspace(portfolioId: string): WorkbenchPerformanceWorkspace {
   const summary = buildPerformanceWorkspaceSummary(portfolioId);
   return {
