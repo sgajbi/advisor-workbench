@@ -49,7 +49,7 @@ export function performanceRiskSummaryQueryOptions(
 ) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
-    queryKey: performanceRiskQueryKeys.summary(context, detailBasis),
+    queryKey: performanceRiskQueryKeys.riskSummary(context, detailBasis),
     queryFn: async () =>
       admitPerformanceRiskResponse(
         await getWorkbenchRiskSummaryClient(context.portfolioId, {

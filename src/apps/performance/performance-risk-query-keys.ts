@@ -26,7 +26,7 @@ export const performanceRiskQueryKeys = {
         benchmark: context.benchmark,
       },
     ] as const,
-  summary: (context: PerformanceRiskQueryContext, detailBasis: string) =>
+  riskSummary: (context: PerformanceRiskQueryContext, detailBasis: string) =>
     [
       ...performanceRiskQueryKeys.review(context),
       "summary",

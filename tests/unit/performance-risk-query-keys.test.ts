@@ -11,7 +11,7 @@ const workspace = buildPerformanceWorkspace("PB_SG_GLOBAL_BAL_001");
 describe("performanceRiskQueryKeys", () => {
   it("includes every source-changing review dimension", () => {
     const context = buildPerformanceRiskQueryContext(workspace, "YTD");
-    const baseline = performanceRiskQueryKeys.summary(context, "NET");
+    const baseline = performanceRiskQueryKeys.riskSummary(context, "NET");
     const variants = [
       { ...context, portfolioId: "PB_SG_GROWTH_002" },
       { ...context, period: "1Y" },
@@ -21,11 +21,11 @@ describe("performanceRiskQueryKeys", () => {
     ];
 
     for (const variant of variants) {
-      expect(performanceRiskQueryKeys.summary(variant, "NET")).not.toEqual(
+      expect(performanceRiskQueryKeys.riskSummary(variant, "NET")).not.toEqual(
         baseline,
       );
     }
-    expect(performanceRiskQueryKeys.summary(context, "GROSS")).not.toEqual(
+    expect(performanceRiskQueryKeys.riskSummary(context, "GROSS")).not.toEqual(
       baseline,
     );
   });
