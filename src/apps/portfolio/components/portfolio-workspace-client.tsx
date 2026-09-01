@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   isCancelledError,
+  type QueryClient,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -31,7 +32,10 @@ import {
   restorePortfolioSourceControls,
 } from "../portfolio-workspace-controls";
 import { buildPortfolioSummaryDetailsRequest } from "../portfolio-workspace-client-view-model";
-import { portfolioQueryKeys } from "../portfolio-query-keys";
+import {
+  buildPortfolioWorkspaceSourceGeneration,
+  portfolioQueryKeys,
+} from "../portfolio-query-keys";
 import type { PortfolioCatalogResponse, PortfolioWorkspace } from "../types";
 import {
   buildInitialPortfolioControls,
@@ -94,12 +98,7 @@ async function queryPortfolioWorkspaceSummaryDetails(
   );
   signal.throwIfAborted();
   if (
-    !isPortfolioReviewResponseCurrent(
-      details,
-      controls,
-      params,
-      portfolioId,
-    )
+    !isPortfolioReviewResponseCurrent(details, controls, params, portfolioId)
   ) {
     throw new Error("Portfolio review detail is unavailable.");
   }
@@ -132,7 +131,7 @@ export default function PortfolioWorkspaceClient({
     : null;
   const initialWorkspaceSourceKey = useMemo(
     () =>
-      buildPortfolioWorkspaceSourceKey(
+      buildPortfolioWorkspaceSourceGeneration(
         selectedPortfolioId,
         confirmedInitialWorkspace,
       ),
@@ -182,7 +181,7 @@ export default function PortfolioWorkspaceClient({
       : confirmedInitialWorkspace;
   const workspaceSourceGeneration = useMemo(
     () =>
-      buildPortfolioWorkspaceSourceKey(
+      buildPortfolioWorkspaceSourceGeneration(
         selectedPortfolioId,
         workspaceState,
       ),
@@ -247,11 +246,31 @@ export default function PortfolioWorkspaceClient({
     () => buildPortfolioWorkspaceContext(workspaceState, controls),
     [controls, workspaceState],
   );
+  const shellQueryKey = useMemo(
+    () =>
+      portfolioQueryKeys.workspaceSource(
+        selectedPortfolioId ?? "unselected",
+        initialWorkspaceSourceKey,
+      ),
+    [initialWorkspaceSourceKey, selectedPortfolioId],
+  );
+  const retainedShellAfterServerFailure = useMemo(
+    () =>
+      confirmedInitialWorkspace || !selectedPortfolioId
+        ? undefined
+        : findLatestConfirmedPortfolioShell(queryClient, selectedPortfolioId),
+    [confirmedInitialWorkspace, queryClient, selectedPortfolioId],
+  );
   const shellQuery = useQuery({
-    queryKey: portfolioQueryKeys.workspace(selectedPortfolioId ?? "unselected"),
+    queryKey: shellQueryKey,
     enabled: Boolean(selectedPortfolioId),
     retry: false,
-    initialData: confirmedInitialWorkspace ?? undefined,
+    refetchOnMount: confirmedInitialWorkspace ? true : "always",
+    initialData: confirmedInitialWorkspace ?? retainedShellAfterServerFailure,
+    initialDataUpdatedAt:
+      confirmedInitialWorkspace || !retainedShellAfterServerFailure
+        ? undefined
+        : 0,
     queryFn: async ({ signal }) => {
       recordPortfolioShellRecoveryLifecycle("automatic_attempt");
       try {
@@ -303,10 +322,7 @@ export default function PortfolioWorkspaceClient({
       }
       if (serverSnapshotChanged) {
         if (selectedPortfolioId && confirmedInitialWorkspace) {
-          queryClient.setQueryData(
-            portfolioQueryKeys.workspace(selectedPortfolioId),
-            confirmedInitialWorkspace,
-          );
+          queryClient.setQueryData(shellQueryKey, confirmedInitialWorkspace);
         }
         setWorkspaceState(confirmedInitialWorkspace);
         return;
@@ -318,9 +334,7 @@ export default function PortfolioWorkspaceClient({
           shellWorkspace,
           selectedPortfolioId,
         ) ||
-        queryClient.getQueryData(
-          portfolioQueryKeys.workspace(selectedPortfolioId),
-        ) !== shellWorkspace
+        queryClient.getQueryData(shellQueryKey) !== shellWorkspace
       ) {
         return;
       }
@@ -349,6 +363,7 @@ export default function PortfolioWorkspaceClient({
     selectedPortfolioId,
     setControls,
     setWorkspaceState,
+    shellQueryKey,
     shellQuery.data,
     workspaceDraft.sourceKey,
     workspaceState,
@@ -564,11 +579,10 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    const currentShell = queryClient.getQueryData<PortfolioWorkspace>(
-      portfolioQueryKeys.workspace(selectedPortfolioId),
-    );
+    const currentShell =
+      queryClient.getQueryData<PortfolioWorkspace>(shellQueryKey);
     if (
-      buildPortfolioWorkspaceSourceKey(
+      buildPortfolioWorkspaceSourceGeneration(
         selectedPortfolioId,
         currentShell ?? null,
       ) !== workspaceSourceGeneration
@@ -643,9 +657,7 @@ export default function PortfolioWorkspaceClient({
       transition={activeControlTransition}
       confirmedControls={controls}
       onRetry={() =>
-        void confirmPortfolioControls(
-          activeControlTransition.requestedControls,
-        )
+        void confirmPortfolioControls(activeControlTransition.requestedControls)
       }
     />
   ) : null;
@@ -819,12 +831,23 @@ function formatPortfolioControlContext(
   return `${formatBusinessDateValue(controls.asOfDate)} · ${controls.timeWindow} · ${controls.reportingCurrency}`;
 }
 
-function buildPortfolioWorkspaceSourceKey(
-  selectedPortfolioId: string | null,
-  initialWorkspace: PortfolioWorkspace | null,
-): string {
-  return JSON.stringify({
-    selectedPortfolioId,
-    initialWorkspace,
-  });
+function findLatestConfirmedPortfolioShell(
+  queryClient: QueryClient,
+  portfolioId: string,
+): PortfolioWorkspace | undefined {
+  const shellQueries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: portfolioQueryKeys.workspaceRoot(portfolioId) })
+    .filter((query) => query.queryKey[3] === "shell")
+    .sort(
+      (left, right) => right.state.dataUpdatedAt - left.state.dataUpdatedAt,
+    );
+
+  for (const query of shellQueries) {
+    const workspace = query.state.data as PortfolioWorkspace | undefined;
+    if (isPortfolioWorkspaceIdentityConfirmed(workspace, portfolioId)) {
+      return workspace;
+    }
+  }
+  return undefined;
 }

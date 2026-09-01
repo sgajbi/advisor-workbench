@@ -11,7 +11,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
 import PortfolioWorkspaceClient from "../../src/apps/portfolio/components/portfolio-workspace-client";
-import { portfolioQueryKeys } from "../../src/apps/portfolio/portfolio-query-keys";
+import {
+  buildPortfolioWorkspaceSourceGeneration,
+  portfolioQueryKeys,
+} from "../../src/apps/portfolio/portfolio-query-keys";
 import { buildInitialPortfolioControls } from "../../src/apps/portfolio/view-model";
 import {
   getAnalyticsUiMetricEvents,
@@ -35,15 +38,26 @@ function render(
     },
   }),
 ) {
-
   return {
     ...testingLibraryRender(ui, {
       wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       ),
     }),
     queryClient,
   };
+}
+
+function workspaceQueryKey(
+  workspace: PortfolioWorkspace | null,
+  portfolioId = "MANUAL_PB_USD_001",
+) {
+  return portfolioQueryKeys.workspaceSource(
+    portfolioId,
+    buildPortfolioWorkspaceSourceGeneration(portfolioId, workspace),
+  );
 }
 
 vi.mock("next/navigation", () => ({
@@ -86,9 +100,7 @@ vi.mock(
         <div data-testid="view-mode">{controls.viewMode}</div>
         <div data-testid="time-window">{controls.timeWindow}</div>
         <div data-testid="as-of-date">{controls.asOfDate}</div>
-        <div data-testid="reporting-currency">
-          {controls.reportingCurrency}
-        </div>
+        <div data-testid="reporting-currency">{controls.reportingCurrency}</div>
         <button
           type="button"
           onClick={() => onControlsChange({ viewMode: "detailed" })}
@@ -399,8 +411,7 @@ describe("PortfolioWorkspaceClient", () => {
     routerPushMock.mockReset();
 
     let confirmOldGeneration:
-      | ((value: Partial<PortfolioWorkspace>) => void)
-      | undefined;
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
     getSummaryDetailsMock
       .mockReturnValueOnce(
         new Promise((resolve) => {
@@ -428,7 +439,7 @@ describe("PortfolioWorkspaceClient", () => {
     } satisfies PortfolioWorkspace;
     await act(async () => {
       queryClient.setQueryData(
-        portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+        workspaceQueryKey(buildWorkspace()),
         refreshedShell,
       );
     });
@@ -618,6 +629,49 @@ describe("PortfolioWorkspaceClient", () => {
     expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
   });
 
+  it("promotes a newer server shell over cached Portfolio truth on revisit", async () => {
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({ as_of_date: "2026-03-28", positions: [] }),
+    );
+    const portfolio = buildPortfolioCatalog("MANUAL_PB_USD_001")[0]!;
+    const firstVisit = render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    firstVisit.unmount();
+
+    const newerServerWorkspace = {
+      ...buildWorkspace(),
+      as_of_date: "2026-03-29",
+      summary: {
+        ...buildWorkspace().summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={[portfolio]}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={newerServerWorkspace}
+      />,
+      firstVisit.queryClient,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "29 Mar 2026",
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+  });
+
   it("retains a cached Portfolio overview and exposes a failed stale shell refresh", async () => {
     const portfolio = {
       portfolio_id: "MANUAL_PB_USD_001",
@@ -639,11 +693,6 @@ describe("PortfolioWorkspaceClient", () => {
       );
     });
     firstVisit.unmount();
-    await firstVisit.queryClient.invalidateQueries({
-      queryKey: portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
-      exact: true,
-      refetchType: "none",
-    });
     getShellWorkspaceMock.mockResolvedValueOnce(null);
     getSummaryDetailsMock.mockImplementation(
       (_portfolioId: string, params: { asOfDate?: string }) =>
@@ -669,9 +718,7 @@ describe("PortfolioWorkspaceClient", () => {
     });
     await waitFor(() => {
       expect(
-        firstVisit.queryClient.getQueryState(
-          portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
-        )?.status,
+        firstVisit.queryClient.getQueryState(workspaceQueryKey(null))?.status,
       ).toBe("error");
     });
     expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
@@ -712,9 +759,7 @@ describe("PortfolioWorkspaceClient", () => {
       "29 Mar 2026",
     );
     expect(
-      firstVisit.queryClient.getQueryState(
-        portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
-      )?.status,
+      firstVisit.queryClient.getQueryState(workspaceQueryKey(null))?.status,
     ).toBe("success");
     expect(
       screen.queryByText("Portfolio overview could not be refreshed"),
@@ -746,9 +791,7 @@ describe("PortfolioWorkspaceClient", () => {
       );
     });
     const [detailQuery] = queryClient.getQueryCache().findAll({
-      queryKey: portfolioQueryKeys.summaryDetailsRoot(
-        "MANUAL_PB_USD_001",
-      ),
+      queryKey: portfolioQueryKeys.summaryDetailsRoot("MANUAL_PB_USD_001"),
     });
     expect(detailQuery).toBeDefined();
     const queryKey = detailQuery!.queryKey;
@@ -763,9 +806,7 @@ describe("PortfolioWorkspaceClient", () => {
       expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
     });
     expect(queryClient.getQueryData(queryKey)).toEqual(confirmedDetail);
-    expect(screen.getByTestId("market-value")).toHaveTextContent(
-      "2000000.25",
-    );
+    expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Portfolio detail could not be refreshed",
     );
@@ -804,9 +845,7 @@ describe("PortfolioWorkspaceClient", () => {
       );
     });
     const [detailQuery] = queryClient.getQueryCache().findAll({
-      queryKey: portfolioQueryKeys.summaryDetailsRoot(
-        "MANUAL_PB_USD_001",
-      ),
+      queryKey: portfolioQueryKeys.summaryDetailsRoot("MANUAL_PB_USD_001"),
     });
     expect(detailQuery).toBeDefined();
     const queryKey = detailQuery!.queryKey;
@@ -830,9 +869,7 @@ describe("PortfolioWorkspaceClient", () => {
       expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
     });
     expect(queryClient.getQueryData(queryKey)).toEqual(confirmedDetail);
-    expect(screen.getByTestId("market-value")).toHaveTextContent(
-      "2000000.25",
-    );
+    expect(screen.getByTestId("market-value")).toHaveTextContent("2000000.25");
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Portfolio detail could not be refreshed",
     );
@@ -871,9 +908,7 @@ describe("PortfolioWorkspaceClient", () => {
     const ytdQuery = queryClient
       .getQueryCache()
       .findAll({
-        queryKey: portfolioQueryKeys.summaryDetailsRoot(
-          "MANUAL_PB_USD_001",
-        ),
+        queryKey: portfolioQueryKeys.summaryDetailsRoot("MANUAL_PB_USD_001"),
       })
       .find(({ queryKey }) => {
         const context = queryKey[queryKey.length - 1] as {
@@ -907,8 +942,7 @@ describe("PortfolioWorkspaceClient", () => {
     ).not.toBeInTheDocument();
 
     let resolveOneYearDetail:
-      | ((value: Partial<PortfolioWorkspace> | null) => void)
-      | undefined;
+      ((value: Partial<PortfolioWorkspace> | null) => void) | undefined;
     getSummaryDetailsMock.mockReturnValueOnce(
       new Promise((resolve) => {
         resolveOneYearDetail = resolve;
@@ -1288,7 +1322,7 @@ describe("PortfolioWorkspaceClient", () => {
       },
     } satisfies PortfolioWorkspace;
     queryClient.setQueryData(
-      portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+      workspaceQueryKey(initialWorkspace),
       synchronizedShell,
     );
     getSummaryDetailsMock.mockResolvedValue(
