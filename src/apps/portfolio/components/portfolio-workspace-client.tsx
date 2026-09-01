@@ -516,7 +516,7 @@ export default function PortfolioWorkspaceClient({
       workspaceSourceGeneration,
       request.params,
     );
-    const intent = `${initialWorkspaceSourceKey}|${request.key}`;
+    const intent = `${workspaceSourceGeneration}|${request.key}`;
     const intentKey = portfolioQueryKeys.reviewContextIntent();
     queryClient.setQueryData(intentKey, intent);
     setControlTransition({
@@ -561,6 +561,23 @@ export default function PortfolioWorkspaceClient({
       return;
     }
     if (queryClient.getQueryData(intentKey) !== intent) {
+      return;
+    }
+
+    const currentShell = queryClient.getQueryData<PortfolioWorkspace>(
+      portfolioQueryKeys.workspace(selectedPortfolioId),
+    );
+    if (
+      buildPortfolioWorkspaceSourceKey(
+        selectedPortfolioId,
+        currentShell ?? null,
+      ) !== workspaceSourceGeneration
+    ) {
+      setControlTransition({
+        sourceKey: initialWorkspaceSourceKey,
+        status: "failed",
+        requestedControls,
+      });
       return;
     }
 
