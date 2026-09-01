@@ -44,8 +44,8 @@ describe("E2E scenario governance gate", () => {
   it("accepts the complete repository registry", () => {
     const result = runChecker();
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("22 scenarios");
-    expect(result.stdout).toContain("61 registered executions");
+    expect(result.stdout).toContain("23 scenarios");
+    expect(result.stdout).toContain("62 registered executions");
   }, GOVERNANCE_TEST_TIMEOUT_MS);
 
   it("fails when a registered test no longer exists", () => {
