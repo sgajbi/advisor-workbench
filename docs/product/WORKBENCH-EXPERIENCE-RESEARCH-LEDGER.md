@@ -7645,6 +7645,9 @@ gallery or losing the relationship between the workflow and its result?
    to own portfolio and mandate identity; Workbench does not restate them inside Copilot.
 6. Move presentation beside the component in a zero-escape CSS Module, delete all 12 Manage escape
    arms, and add a forbidden-prefix fitness rule.
+7. Reuse the typed action registry directly as the worklist title authority. Replace technical
+   **source-backed** and **posture** expressions with portfolio-evidence and summary language, and
+   ratchet the product-copy inventory from 230 to 227 findings.
 
 ### Rejected decisions
 
