@@ -652,25 +652,40 @@ export default function PortfolioWorkspaceClient({
     URL.revokeObjectURL(downloadUrl);
   }
 
+  const sourceGenerationConfirmationPending = Boolean(
+    summaryQuery.isPending &&
+    workspaceState &&
+    hasPortfolioSourceControlOverride(controls, workspaceState),
+  );
+  const visibleControlTransition: PortfolioControlTransition | null =
+    sourceGenerationConfirmationPending
+      ? {
+          sourceKey: initialWorkspaceSourceKey,
+          status: "pending",
+          requestedControls: controls,
+        }
+      : activeControlTransition;
   const acceptedReportingCurrency =
     workspace &&
-    activeControlTransition?.status === "confirmed" &&
-    activeControlTransition.requestedControls.reportingCurrency !==
+    visibleControlTransition?.status === "confirmed" &&
+    visibleControlTransition.requestedControls.reportingCurrency !==
       workspace.portfolio.base_currency
-      ? activeControlTransition.requestedControls.reportingCurrency
+      ? visibleControlTransition.requestedControls.reportingCurrency
       : undefined;
-  const controlTransitionStatus = activeControlTransition ? (
+  const controlTransitionStatus = visibleControlTransition ? (
     <PortfolioControlTransitionStatus
-      transition={activeControlTransition}
+      transition={visibleControlTransition}
       confirmedControls={controls}
       onRetry={() =>
-        void confirmPortfolioControls(activeControlTransition.requestedControls)
+        void confirmPortfolioControls(
+          visibleControlTransition.requestedControls,
+        )
       }
     />
   ) : null;
   const controlTransitionRequiresAction =
-    activeControlTransition?.status === "pending" ||
-    activeControlTransition?.status === "failed";
+    visibleControlTransition?.status === "pending" ||
+    visibleControlTransition?.status === "failed";
   const portfolioRefreshStatus = controlTransitionRequiresAction ? (
     controlTransitionStatus
   ) : summaryQuery.isError && workspaceState ? (

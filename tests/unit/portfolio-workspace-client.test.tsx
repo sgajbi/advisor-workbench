@@ -1449,6 +1449,78 @@ describe("PortfolioWorkspaceClient", () => {
     );
   });
 
+  it("reconfirms non-default controls when the shell generation advances", async () => {
+    const initialWorkspace = buildWorkspace();
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(
+        confirmedDetails({
+          as_of_date: initialWorkspace.as_of_date,
+          positions: [],
+        }),
+      )
+      .mockResolvedValueOnce(
+        confirmedDetails({
+          as_of_date: initialWorkspace.as_of_date,
+          positions: [],
+        }),
+      );
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+      />,
+    );
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+    expect(
+      await screen.findByText("Review context confirmed"),
+    ).toBeInTheDocument();
+
+    let confirmNewGeneration:
+      ((value: Partial<PortfolioWorkspace>) => void) | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        confirmNewGeneration = resolve;
+      }),
+    );
+    const refreshedShell = {
+      ...initialWorkspace,
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    getShellWorkspaceMock.mockResolvedValueOnce(refreshedShell);
+    await act(async () => {
+      await queryClient.invalidateQueries({
+        queryKey: workspaceQueryKey(initialWorkspace),
+        exact: true,
+      });
+    });
+
+    expect(
+      await screen.findByText("Confirming review context"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Review context confirmed"),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      confirmNewGeneration?.(
+        confirmedDetails({
+          as_of_date: initialWorkspace.as_of_date,
+          positions: [],
+        }),
+      );
+    });
+    expect(
+      await screen.findByText("Review context confirmed"),
+    ).toBeInTheDocument();
+  });
+
   it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
     const recoveredWorkspace = buildWorkspace();
 
