@@ -599,6 +599,139 @@ describe("PortfolioWorkspaceClient", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "The previous portfolio view remains active while the refresh is retried.",
     );
+    expect(
+      within(screen.getByRole("alert")).getByRole("button", {
+        name: "Retry portfolio detail refresh",
+      }),
+    ).toBeEnabled();
+  });
+
+  it("rejects mismatched stale detail before it replaces confirmed Portfolio truth", async () => {
+    getSummaryDetailsMock.mockResolvedValueOnce(
+      confirmedDetails({
+        as_of_date: "2026-03-28",
+        summary: {
+          ...buildWorkspace().summary,
+          market_value_base: 2000000.25,
+        },
+        positions: [{ security_id: "EQ_1" }],
+      }),
+    );
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    const [detailQuery] = queryClient.getQueryCache().findAll({
+      queryKey: portfolioQueryKeys.summaryDetailsRoot(
+        "MANUAL_PB_USD_001",
+      ),
+    });
+    expect(detailQuery).toBeDefined();
+    const queryKey = detailQuery!.queryKey;
+    const confirmedDetail = queryClient.getQueryData(queryKey);
+    getSummaryDetailsMock.mockResolvedValueOnce(
+      confirmedDetails({
+        as_of_date: "2026-03-20",
+        summary: {
+          ...buildWorkspace().summary,
+          market_value_base: 3000000.5,
+        },
+        positions: [{ security_id: "EQ_2" }],
+      }),
+    );
+
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey, exact: true });
+    });
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(queryKey)?.status).toBe("error");
+    });
+    expect(queryClient.getQueryData(queryKey)).toEqual(confirmedDetail);
+    expect(screen.getByTestId("market-value")).toHaveTextContent(
+      "2000000.25",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio detail could not be refreshed",
+    );
+  });
+
+  it("shows a stale refresh failure instead of an earlier confirmation notice", async () => {
+    const initialDetail = confirmedDetails({
+      as_of_date: "2026-03-28",
+      positions: [{ security_id: "EQ_1" }],
+    });
+    const ytdDetail = confirmedDetails({
+      as_of_date: "2026-03-28",
+      positions: [{ security_id: "EQ_2" }],
+    });
+    getSummaryDetailsMock
+      .mockResolvedValueOnce(initialDetail)
+      .mockResolvedValueOnce(ytdDetail)
+      .mockResolvedValueOnce(null);
+    const { queryClient } = render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={buildWorkspace()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1);
+    });
+    await act(async () => {
+      screen.getByRole("button", { name: "Select YTD" }).click();
+    });
+    await waitFor(() => {
+      expect(screen.getByText("Review context confirmed")).toBeInTheDocument();
+    });
+    const ytdQuery = queryClient
+      .getQueryCache()
+      .findAll({
+        queryKey: portfolioQueryKeys.summaryDetailsRoot(
+          "MANUAL_PB_USD_001",
+        ),
+      })
+      .find(({ queryKey }) => {
+        const context = queryKey[queryKey.length - 1] as {
+          timeWindow?: string;
+        };
+        return context.timeWindow === "YTD";
+      });
+    expect(ytdQuery).toBeDefined();
+    const confirmedYtdDetail = queryClient.getQueryData(ytdQuery!.queryKey);
+
+    await act(async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ytdQuery!.queryKey,
+        exact: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(queryClient.getQueryState(ytdQuery!.queryKey)?.status).toBe(
+        "error",
+      );
+    });
+    expect(queryClient.getQueryData(ytdQuery!.queryKey)).toEqual(
+      confirmedYtdDetail,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Portfolio detail could not be refreshed",
+    );
+    expect(
+      screen.queryByText("Review context confirmed"),
+    ).not.toBeInTheDocument();
   });
 
   it("restores source-confirmed controls when automatic detail rejects URL-derived context", async () => {
