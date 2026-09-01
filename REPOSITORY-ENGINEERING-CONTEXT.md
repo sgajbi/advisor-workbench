@@ -270,6 +270,11 @@ Current repository posture:
     evidence rail, and PM Copilot. When a source-confirmed pack is loaded or published in-session,
     Copilot action readiness, visible lineage, context identity, and request payload must all derive
     from that same resolved pack; no consumer may retain an older server-rendered pack identity.
+    Evidence Pack owns its presentation in a colocated zero-escape CSS Module. It renders prepare
+    and load once as lifecycle recovery, then summary, report-readiness, and advisor-memo handoffs
+    once beside retrieved evidence. When source evidence is unavailable, hide the unusable evidence
+    table and downstream handoffs rather than rendering disabled success-path furniture. Report-input
+    retrieval may be labelled only as a readiness check; it must never imply report generation.
     Manage surfaces also preserve Gateway-provided
     action-register supportability from the portfolio overview `rebalance_snapshot`; missing
     supportability is shown as unknown/N/A rather than as verified zero activity.

@@ -39,6 +39,15 @@ and evidence states live in `outcome-review.module.css` with zero global escapes
 governed global layer. The shared summary-metric primitive exposes a value-class hook so a screen
 can truthfully wrap business states without reaching into the primitive through a global selector.
 
+Manage Evidence Pack follows the same owner-and-simplify rule. Its summary, lifecycle recovery,
+evidence ledger, next actions, detail, rationale, focus, and responsive composition live in
+`proof-pack.module.css` with zero global escapes. Issue #981 removed all 54 `proof-pack-*` escape
+arms from `manage-workspace.module.css`, lowered that exact budget from 325 to 271, and removed the
+last stale declarations from the governed legacy layers. The prefix is forbidden from returning to
+global CSS. Keep prepare/load controls beside pack posture, keep downstream handoffs in one region
+beside retrieved evidence, and do not repair this component family through the Manage workspace or
+legacy cascade.
+
 `PortfolioScreenRail` is the first shared cross-route component migrated under this ownership
 model. Its presentation is colocated in
 `src/apps/portfolio/components/portfolio-screen-rail.module.css`; page-specific shells may own
@@ -100,7 +109,8 @@ and rebalance-status selector families had no production React consumer, so they
 than migrated. The resulting exact ratchets are 98 lines and 1,940 normalized bytes for
 `legacy-feature-overrides.css` at that tranche, and 10,990 lines and 240,422 normalized bytes for
 `legacy-global.css`. Issue #978 subsequently lowered the exact legacy-feature budget to 67 lines
-and 1,344 normalized bytes. The retired families are forbidden from returning; future product work must
+and 1,344 normalized bytes; issue #981 lowered it again to 29 lines and 583 normalized bytes and
+lowered `legacy-global.css` to 10,987 lines and 240,346 normalized bytes. The retired families are forbidden from returning; future product work must
 use the active Workbench container and source-backed screen architecture.
 
 Issue #958 applied consumer-first deletion to the superseded DPM wave command-centre presentation.
