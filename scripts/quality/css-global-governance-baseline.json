@@ -79,7 +79,7 @@
       },
       {
         "path": "src/features/workbench/manage-workspace.module.css",
-        "maxGlobalEscapes": 485
+        "maxGlobalEscapes": 408
       }
     ]
   },
@@ -111,6 +111,8 @@
     "performance-return-path-chart-stage",
     "performance-return-path-single-observation",
     "portfolio-memory-",
+    "pm-operating-quality-panel",
+    "pm-quality-",
     "manage-mandate-panel",
     "mandate-attention-",
     "mandate-health-",
