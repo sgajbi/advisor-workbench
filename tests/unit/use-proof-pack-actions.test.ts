@@ -245,6 +245,50 @@ describe("useProofPackActions", () => {
     expect(result.current.aiMemoOutcome).toBeNull();
   });
 
+  it("clears cached handoffs when a refresh makes the same pack unavailable", async () => {
+    const unavailableProofPack: DpmProofPackGatewayResponse = {
+      ...readyProofPack,
+      correlation_id: "corr-rfc40-unavailable",
+      supportability: {
+        ...readyProofPack.supportability,
+        state: "UNAVAILABLE",
+        reason_codes: ["PROOF_PACK_SOURCE_UNAVAILABLE"],
+      },
+    };
+    vi.mocked(getDpmProofPackMarkdown).mockResolvedValue({
+      ...readyProofPack,
+      data: { markdown: "# Proof Pack\n\nReady." },
+    });
+    vi.mocked(requestDpmProofPackAiPmMemo).mockResolvedValue({
+      correlation_id: "corr-rfc40-ai-memo",
+      contract_version: "v1",
+      source_service: "lotus-ai",
+      evidence_source_service: "lotus-manage",
+      manage_upstream_status: 200,
+      ai_upstream_status: 200,
+      supportability: readyProofPack.supportability,
+      ai_evidence_input: { proof_pack_id: "ppack_1" },
+      memo_request: { requested_outputs: ["pm_memo"] },
+      data: buildDpmAiWorkflowExecution("proof-pack-memo", {
+        runId: "packrun_ppack_1",
+      }),
+    });
+    vi.mocked(getDpmProofPack).mockResolvedValue(unavailableProofPack);
+    const { result } = renderProofPackActions();
+
+    act(() => result.current.loadMarkdown());
+    await waitFor(() => expect(result.current.markdown).toContain("Ready."));
+    act(() => result.current.requestAiPmMemo());
+    await waitFor(() => expect(result.current.aiMemoOutcome).not.toBeNull());
+
+    act(() => result.current.loadProofPack());
+    await waitFor(() => expect(result.current.model.state).toBe("unavailable"));
+
+    expect(result.current.proofPackId).toBe("ppack_1");
+    expect(result.current.markdown).toBeNull();
+    expect(result.current.aiMemoOutcome).toBeNull();
+  });
+
   it("does not call Gateway when required proof-pack or rebalance identifiers are absent", async () => {
     const { result } = renderHook(() =>
       useProofPackActions({
