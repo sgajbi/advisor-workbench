@@ -98,20 +98,6 @@
   grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
 }
 
-.manageScope :global(.dpm-copilot-status-strip),
-.manageScope :global(.dpm-copilot-action-grid) {
-  display: grid;
-  gap: 12px;
-}
-
-.manageScope :global(.dpm-copilot-status-strip) {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.manageScope :global(.dpm-copilot-action-grid) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .manageScope :global(.dpm-wave-decision-support) {
   display: grid;
   gap: 12px;
@@ -145,45 +131,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-}
-
-.manageScope :global(.dpm-copilot-badge-row) {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.manageScope :global(.dpm-copilot-action-card) {
-  display: grid;
-  gap: 10px;
-  min-height: 190px;
-  padding: 14px;
-  border: 1px solid #d6dbe0;
-  border-left: 3px solid #725b26;
-  border-radius: 4px;
-  background: #ffffff;
-}
-
-.manageScope :global(.dpm-copilot-action-card > div:first-child) {
-  display: grid;
-  gap: 4px;
-}
-
-.manageScope :global(.dpm-copilot-action-card strong) {
-  color: #191c1e;
-  font-size: 14px;
-  line-height: 19px;
-}
-
-.manageScope :global(.dpm-copilot-action-card span) {
-  color: #45464d;
-  font-size: 12px;
-  line-height: 17px;
-}
-
-.manageScope :global(.dpm-copilot-action-card .action-button) {
-  justify-self: start;
 }
 
 .manageScope :global(.manage-recommended-action-list) {
@@ -1458,8 +1405,6 @@
 @media (max-width: 1200px) {
   .manageScope :global(.manage-mandate-primary-grid),
   .manageScope :global(.manage-mandate-secondary-grid),
-  .manageScope :global(.dpm-copilot-status-strip),
-  .manageScope :global(.dpm-copilot-action-grid),
   .manageScope :global(.dpm-wave-decision-support-status),
   .manageScope :global(.construction-alternatives-summary),
   .manageScope :global(.execution-acknowledgement-summary),
