@@ -23,9 +23,6 @@ import {
   type WorkbenchAnalyticsUiObservationContext,
 } from "@/features/analytics-observability/metrics";
 
-const portfolioApiResponseCache = new Map<string, unknown>();
-const portfolioApiInflightRequests = new Map<string, Promise<unknown>>();
-const portfolioApiRequestTokens = new Map<string, symbol>();
 type PortfolioRequestTarget = ServiceRequestTarget;
 type ObservedPortfolioOperation = Extract<
   (typeof WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES)[number]["operation"],
@@ -327,7 +324,6 @@ export async function getRequiredPortfolioBook(
 ): Promise<PortfolioBookResponse> {
   const book = await fetchPortfolioBook(portfolioId, {
     ...params,
-    forceRefresh: true,
   });
   if (!book) {
     throw new Error("Portfolio book evidence is unavailable.");
@@ -391,7 +387,6 @@ async function fetchPortfolioBook(
   params: {
     asOfDate?: string;
     reportingCurrency?: string;
-    forceRefresh?: boolean;
   }
 ): Promise<PortfolioBookResponse | null> {
   const bookQuery = new URLSearchParams();
@@ -404,7 +399,7 @@ async function fetchPortfolioBook(
   return await fetchPortfolioJson<PortfolioBookResponse>(
     resolvePortfolioRequestTarget(),
     `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/book`,
-    { query: bookQuery, forceRefresh: params.forceRefresh }
+    { query: bookQuery }
   );
 }
 
@@ -824,7 +819,6 @@ export async function getPortfolioAllocationViews(
     asOfDate?: string;
     reportingCurrency?: string;
     lookThroughMode?: PortfolioLookThroughMode;
-    forceRefresh?: boolean;
   } = {}
 ): Promise<PortfolioAllocationResponse | null> {
   try {
@@ -840,7 +834,7 @@ export async function getPortfolioAllocationViews(
     const payload = await fetchPortfolioJson<unknown>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/allocations`,
-      { query: searchParams, forceRefresh: params.forceRefresh }
+      { query: searchParams }
     );
     return isPortfolioAllocationResponse(payload) ? payload : null;
   } catch {
@@ -854,7 +848,6 @@ export async function getPortfolioProjectedCashflow(
     asOfDate?: string;
     horizonDays?: number;
     includeProjected?: boolean;
-    forceRefresh?: boolean;
   } = {}
 ): Promise<PortfolioProjectedCashflowResponse | null> {
   try {
@@ -872,7 +865,7 @@ export async function getPortfolioProjectedCashflow(
     const payload = await fetchPortfolioJson<PortfolioProjectedCashflowResponse>(
       resolvePortfolioRequestTarget(),
       `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/projected-cashflow`,
-      { query: searchParams, forceRefresh: params.forceRefresh }
+      { query: searchParams }
     );
     if (!payload) {
       return null;
@@ -881,12 +874,6 @@ export async function getPortfolioProjectedCashflow(
   } catch {
     return null;
   }
-}
-
-export function resetPortfolioApiRequestCache() {
-  portfolioApiResponseCache.clear();
-  portfolioApiInflightRequests.clear();
-  portfolioApiRequestTokens.clear();
 }
 
 export function mergePortfolioWorkspace(
@@ -1028,82 +1015,26 @@ async function fetchPortfolioJson<T>(
   target: PortfolioRequestTarget,
   path: string,
   options: {
-    useCache?: boolean;
-    forceRefresh?: boolean;
     query?: URLSearchParams;
     signal?: AbortSignal;
   } = {}
 ): Promise<T | null> {
-  // Server-rendered portfolio truth must be independent of process history so
-  // identical Workbench replicas cannot diverge behind a load balancer. The
-  // module cache is a browser-only request optimisation; Gateway remains the
-  // authority for every server render.
-  const useCache = target === "client" && (options.useCache ?? true);
   const url = buildPortfolioApiUrl(target, path, options.query);
-
-  if (useCache && options.forceRefresh) {
-    portfolioApiResponseCache.delete(url);
-    portfolioApiInflightRequests.delete(url);
-    portfolioApiRequestTokens.delete(url);
-  }
-
-  if (useCache && portfolioApiResponseCache.has(url)) {
-    return portfolioApiResponseCache.get(url) as T;
-  }
-
-  if (useCache) {
-    const existingRequest = portfolioApiInflightRequests.get(url);
-    if (existingRequest) {
-      return (await existingRequest) as T;
-    }
-  }
-
-  const requestToken = Symbol(url);
-  if (useCache) {
-    portfolioApiRequestTokens.set(url, requestToken);
-  }
-  const request = (async () => {
-    let shouldCacheResponse = true;
-    const payload = await observeWorkbenchAnalyticsRequest(
-      observedPortfolioSurface(path),
-      async () => {
-        const response = await fetch(url, {
-          cache: "no-store",
-          signal: options.signal,
-          ...(target === "client"
-            ? { headers: buildAnalyticsUiCorrelationHeaders() }
-            : {}),
-        });
-        if (!response.ok) {
-          shouldCacheResponse = false;
-          return null;
-        }
-
-        return (await response.json()) as T;
+  return await observeWorkbenchAnalyticsRequest(
+    observedPortfolioSurface(path),
+    async () => {
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal: options.signal,
+        ...(target === "client"
+          ? { headers: buildAnalyticsUiCorrelationHeaders() }
+          : {}),
+      });
+      if (!response.ok) {
+        return null;
       }
-    );
-    if (
-      useCache &&
-      shouldCacheResponse &&
-      portfolioApiRequestTokens.get(url) === requestToken
-    ) {
-      portfolioApiResponseCache.set(url, payload);
-    }
-    return payload;
-  })();
 
-  if (useCache) {
-    portfolioApiInflightRequests.set(url, request);
-  }
-
-  try {
-    return await request;
-  } finally {
-    if (useCache && portfolioApiInflightRequests.get(url) === request) {
-      portfolioApiInflightRequests.delete(url);
+      return (await response.json()) as T;
     }
-    if (useCache && portfolioApiRequestTokens.get(url) === requestToken) {
-      portfolioApiRequestTokens.delete(url);
-    }
-  }
+  );
 }

@@ -1,8 +1,27 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render as testingLibraryRender,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { workbenchStrictQueryDefaults } from "../../src/features/platform-runtime/query-policy";
 
 const routerPushMock = vi.fn();
+
+function render(ui: React.ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: workbenchStrictQueryDefaults },
+  });
+  return testingLibraryRender(ui, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/portfolio",
@@ -90,7 +109,6 @@ vi.mock("ag-grid-react", () => ({
 }));
 
 import PortfolioFoundationPage from "../../src/app/portfolios/page";
-import { resetPortfolioApiRequestCache } from "../../src/apps/portfolio/api";
 import {
   buildCombinedPartialPortfolioOverrides,
   stubPortfolioApis,
@@ -99,7 +117,6 @@ import { expectReviewContextOwns } from "../review-context-census";
 
 describe("PortfolioFoundationPage", () => {
   afterEach(() => {
-    resetPortfolioApiRequestCache();
     window.localStorage.clear();
     vi.unstubAllGlobals();
     routerPushMock.mockReset();

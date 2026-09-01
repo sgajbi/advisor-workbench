@@ -81,7 +81,6 @@ export function usePortfolioProjectedCashflow({
         asOfDate,
         horizonDays: selectedHorizonDays,
         includeProjected: true,
-        ...(retrySequence > 0 ? { forceRefresh: true } : {}),
       });
 
       if (cancelled) {

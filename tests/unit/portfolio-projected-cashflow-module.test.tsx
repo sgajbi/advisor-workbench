@@ -183,7 +183,6 @@ describe("PortfolioProjectedCashflowModule", () => {
       asOfDate: "2026-03-28",
       horizonDays: 10,
       includeProjected: true,
-      forceRefresh: true,
     });
     expect(getPortfolioProjectedCashflow).toHaveBeenCalledWith("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
@@ -214,7 +213,6 @@ describe("PortfolioProjectedCashflowModule", () => {
       asOfDate: "2026-03-28",
       horizonDays: 10,
       includeProjected: true,
-      forceRefresh: true,
     });
   });
 
@@ -237,7 +235,6 @@ describe("PortfolioProjectedCashflowModule", () => {
       asOfDate: "2026-03-28",
       horizonDays: 10,
       includeProjected: true,
-      forceRefresh: true,
     });
   });
 
@@ -264,7 +261,6 @@ describe("PortfolioProjectedCashflowModule", () => {
       asOfDate: "2026-03-28",
       horizonDays: 10,
       includeProjected: true,
-      forceRefresh: true,
     });
   });
 

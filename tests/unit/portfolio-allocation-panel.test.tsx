@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PortfolioAllocationPanel from "../../src/apps/portfolio/components/portfolio-allocation-panel";
 import type { PortfolioAllocationView } from "../../src/apps/portfolio/types";
-import { resetPortfolioApiRequestCache } from "../../src/apps/portfolio/api";
 
 const allocationViews: PortfolioAllocationView[] = [
   {
@@ -26,7 +25,6 @@ const allocationViews: PortfolioAllocationView[] = [
 describe("PortfolioAllocationPanel", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-    resetPortfolioApiRequestCache();
   });
 
   it("hydrates strategic allocation views, enables live region support, and emits selections", async () => {

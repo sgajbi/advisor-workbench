@@ -11,7 +11,6 @@ import {
   getPortfolioWorkspaceShell,
   getPortfolioWorkspaceSummaryDetails,
   mergePortfolioWorkspace,
-  resetPortfolioApiRequestCache,
 } from "../../src/apps/portfolio/api";
 import {
   getAnalyticsUiMetricEvents,
@@ -22,7 +21,6 @@ import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-compone
 describe("portfolio api", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-    resetPortfolioApiRequestCache();
     resetAnalyticsUiMetricEvents();
   });
 
@@ -269,7 +267,7 @@ describe("portfolio api", () => {
     expect(requestedUrl).toContain("reporting_currency=USD");
   });
 
-  it("forces required book evidence past cache without allowing an older read to replace it", async () => {
+  it("keeps concurrent book reads independent and recontacts the source", async () => {
     const staleBook = {
       positions: [{ security_id: "STALE", instrument_name: "Stale holding", quantity: 1 }],
       top_positions: [],
@@ -295,7 +293,8 @@ describe("portfolio api", () => {
           await new Promise<Response>((resolve) => {
             resolveCurrent = resolve;
           })
-      );
+      )
+      .mockResolvedValueOnce(jsonResponse(currentBook));
     vi.stubGlobal("fetch", fetchSpy);
     const params = { asOfDate: "2026-04-10", reportingCurrency: "USD" };
 
@@ -307,9 +306,9 @@ describe("portfolio api", () => {
     resolveStale?.(jsonResponse(staleBook));
     expect((await staleRequest)?.positions[0]?.security_id).toBe("STALE");
 
-    const cached = await getPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
-    expect(cached?.positions[0]?.security_id).toBe("CURRENT");
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const latest = await getPortfolioBook("PB_SG_GLOBAL_BAL_001", params);
+    expect(latest?.positions[0]?.security_id).toBe("CURRENT");
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it("keeps shell workspace compatible when gateway omits optional performance fields", async () => {
@@ -1679,7 +1678,7 @@ describe("portfolio api", () => {
     ).resolves.toBeNull();
   });
 
-  it("reuses cached BFF responses for identical requests", async () => {
+  it("leaves identical transport reads uncached for Query ownership", async () => {
     const fetchSpy = vi.fn(async (input: string | URL) => {
       const url = input.toString();
 
@@ -1776,7 +1775,7 @@ describe("portfolio api", () => {
     });
 
     const requestedUrls = fetchSpy.mock.calls.map((call) => String(call[0]));
-    expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(1);
+    expect(requestedUrls.filter((url) => url.includes("/transactions")).length).toBe(2);
     expect(
       requestedUrls.filter(
         (url) =>
@@ -1785,7 +1784,7 @@ describe("portfolio api", () => {
           url.includes("reporting_currency=USD") &&
           url.includes("include_projected=false")
       ).length
-    ).toBe(1);
+    ).toBe(2);
     expect(requestedUrls.filter((url) => url.includes("/allocations")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/positions")).length).toBe(0);
     expect(
@@ -1797,7 +1796,7 @@ describe("portfolio api", () => {
           url.includes("end_date=2026-03-28") &&
           url.includes("reporting_currency=USD")
       ).length
-    ).toBe(1);
+    ).toBe(2);
     expect(
       requestedUrls.filter(
         (url) =>
@@ -1807,7 +1806,7 @@ describe("portfolio api", () => {
           url.includes("end_date=2026-03-28") &&
           url.includes("reporting_currency=USD")
       ).length
-    ).toBe(1);
+    ).toBe(2);
     expect(
       requestedUrls.filter(
         (url) =>
@@ -1816,7 +1815,7 @@ describe("portfolio api", () => {
           url.includes("report_start_date=2026-03-01") &&
           url.includes("report_end_date=2026-03-28")
       ).length
-    ).toBe(1);
+    ).toBe(2);
     expect(requestedUrls.filter((url) => url.includes("/performance/summary")).length).toBe(0);
     expect(requestedUrls.filter((url) => url.includes("/performance/details")).length).toBe(0);
   });
@@ -1960,13 +1959,14 @@ describe("portfolio api", () => {
     );
   });
 
-  it("coalesces identical in-flight ledger requests into a single fetch", async () => {
-    const pendingRequest: { resolve?: (value: Response) => void } = {};
-    const fetchSpy = vi.fn(
-      () =>
-        new Promise<Response>((resolve) => {
-          pendingRequest.resolve = resolve;
-        })
+  it("keeps in-flight ledger reads independent for Query ownership", async () => {
+    const fetchSpy = vi.fn(async () =>
+      jsonResponse({
+        total: 1,
+        skip: 0,
+        limit: 200,
+        transactions: [{ transaction_id: "TX_1" }],
+      })
     );
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -1983,22 +1983,9 @@ describe("portfolio api", () => {
       limit: 200,
     });
 
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-
-    if (pendingRequest.resolve) {
-      pendingRequest.resolve(
-        jsonResponse({
-          total: 1,
-          skip: 0,
-          limit: 200,
-          transactions: [{ transaction_id: "TX_1" }],
-        })
-      );
-    }
-
     const [firstResult, secondResult] = await Promise.all([firstRequest, secondRequest]);
     expect(firstResult).toEqual(secondResult);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
   it("requests projected cashflow with the selected horizon", async () => {
@@ -2081,7 +2068,6 @@ describe("portfolio api", () => {
     const refreshed = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 10,
-      forceRefresh: true,
     });
 
     expect(first?.cashflow_outlook).toBeNull();
@@ -2089,7 +2075,7 @@ describe("portfolio api", () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("does not let a superseded projected-cashflow request overwrite refreshed evidence", async () => {
+  it("keeps concurrent projected-cashflow reads independent and recontacts the source", async () => {
     const stale = {
       correlation_id: "corr-stale",
       contract_version: "v1",
@@ -2127,7 +2113,8 @@ describe("portfolio api", () => {
           await new Promise<Response>((resolve) => {
             resolveAvailable = resolve;
           })
-      );
+      )
+      .mockResolvedValueOnce(jsonResponse(available));
     vi.stubGlobal("fetch", fetchSpy);
 
     const staleRequest = getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
@@ -2137,7 +2124,6 @@ describe("portfolio api", () => {
     const refreshedRequest = getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 10,
-      forceRefresh: true,
     });
 
     resolveAvailable?.(jsonResponse(available));
@@ -2145,12 +2131,12 @@ describe("portfolio api", () => {
     resolveStale?.(jsonResponse(stale));
     expect((await staleRequest)?.correlation_id).toBe("corr-stale");
 
-    const cached = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
+    const latest = await getPortfolioProjectedCashflow("MANUAL_PB_USD_001", {
       asOfDate: "2026-03-28",
       horizonDays: 10,
     });
-    expect(cached?.correlation_id).toBe("corr-available");
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(latest?.correlation_id).toBe("corr-available");
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
   });
 
   it("passes reporting currency through to detailed liquidity requests", async () => {
