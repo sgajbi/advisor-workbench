@@ -79,7 +79,7 @@
       },
       {
         "path": "src/features/workbench/manage-workspace.module.css",
-        "maxGlobalEscapes": 325
+        "maxGlobalEscapes": 271
       }
     ]
   },
@@ -142,6 +142,7 @@
     "portfolio-income-activity",
     "portfolio-primary-view-tabs",
     "portfolio-summary-band",
+    "proof-pack-",
     "portfolio-cashflow",
     "portfolio-segmented-control",
     "portfolio-screen-rail",
@@ -178,8 +179,8 @@
     {
       "path": "src/styles/global/legacy-feature-overrides.css",
       "owner": "legacy feature overrides preserved in original cascade order",
-      "maxLines": 67,
-      "maxBytes": 1344
+      "maxLines": 29,
+      "maxBytes": 583
     },
     {
       "path": "src/styles/global/base.css",
@@ -196,8 +197,8 @@
     {
       "path": "src/styles/global/legacy-global.css",
       "owner": "legacy global feature selectors pending migration beside owning components",
-      "maxLines": 10990,
-      "maxBytes": 240422
+      "maxLines": 10987,
+      "maxBytes": 240346
     }
   ]
 }
