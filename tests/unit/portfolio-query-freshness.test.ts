@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { portfolioQueryKeys } from "../../src/apps/portfolio/portfolio-query-keys";
 import {
+  getWorkbenchQueryRevalidationInterval,
   WORKBENCH_QUERY_STALE_TIME_MS,
   workbenchStrictQueryDefaults,
 } from "../../src/features/platform-runtime/query-policy";
@@ -16,6 +17,32 @@ function createQueryClient() {
 describe("Portfolio Query freshness", () => {
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("schedules revalidation from confirmed data age", () => {
+    const now = 100_000;
+
+    expect(
+      getWorkbenchQueryRevalidationInterval(
+        now - 20_000,
+        "success",
+        now,
+      ),
+    ).toBe(10_000);
+    expect(
+      getWorkbenchQueryRevalidationInterval(
+        now - WORKBENCH_QUERY_STALE_TIME_MS,
+        "success",
+        now,
+      ),
+    ).toBe(1);
+    expect(
+      getWorkbenchQueryRevalidationInterval(
+        now - WORKBENCH_QUERY_STALE_TIME_MS,
+        "error",
+        now,
+      ),
+    ).toBe(WORKBENCH_QUERY_STALE_TIME_MS);
   });
 
   it("reuses fresh source truth and refetches it after the governed stale time", async () => {

@@ -15,7 +15,7 @@ import {
 } from "@/design-system";
 import { useClientMounted } from "@/design-system/hooks/use-client-mounted";
 import { formatBusinessDateValue } from "@/design-system/utils/financial-formatters";
-import { WORKBENCH_QUERY_STALE_TIME_MS } from "@/features/platform-runtime/query-policy";
+import { getWorkbenchQueryRevalidationInterval } from "@/features/platform-runtime/query-policy";
 
 import {
   getPortfolioWorkspaceShell,
@@ -266,7 +266,11 @@ export default function PortfolioWorkspaceClient({
     queryKey: shellQueryKey,
     enabled: Boolean(selectedPortfolioId),
     retry: false,
-    refetchInterval: WORKBENCH_QUERY_STALE_TIME_MS,
+    refetchInterval: ({ state }) =>
+      getWorkbenchQueryRevalidationInterval(
+        state.dataUpdatedAt,
+        state.status,
+      ),
     refetchOnMount: confirmedInitialWorkspace ? true : "always",
     initialData: confirmedInitialWorkspace ?? retainedShellAfterServerFailure,
     initialDataUpdatedAt:
@@ -387,7 +391,11 @@ export default function PortfolioWorkspaceClient({
         )
       : [...portfolioQueryKeys.all, "summary-details", "unselected"],
     enabled: Boolean(selectedPortfolioId && workspaceState && summaryRequest),
-    refetchInterval: WORKBENCH_QUERY_STALE_TIME_MS,
+    refetchInterval: ({ state }) =>
+      getWorkbenchQueryRevalidationInterval(
+        state.dataUpdatedAt,
+        state.status,
+      ),
     queryFn: ({ signal }) =>
       queryPortfolioWorkspaceSummaryDetails(
         selectedPortfolioId!,
@@ -504,12 +512,20 @@ export default function PortfolioWorkspaceClient({
     workspaceState,
   ]);
 
+  const detailGenerationPending = Boolean(
+    workspaceState && summaryRequest && summaryQuery.isPending,
+  );
   const workspace = useMemo(
     () =>
-      awaitsInitialSourceConfirmation
+      awaitsInitialSourceConfirmation || detailGenerationPending
         ? null
         : derivePortfolioWorkspace(resolvedWorkspaceState, controls),
-    [awaitsInitialSourceConfirmation, controls, resolvedWorkspaceState],
+    [
+      awaitsInitialSourceConfirmation,
+      controls,
+      detailGenerationPending,
+      resolvedWorkspaceState,
+    ],
   );
   function handleControlsChange(patch: Partial<PortfolioWorkspaceControls>) {
     const nextControls = applyPortfolioControlPatch(controls, patch);
@@ -691,6 +707,15 @@ export default function PortfolioWorkspaceClient({
     visibleControlTransition?.status === "failed";
   const portfolioRefreshStatus = controlTransitionRequiresAction ? (
     controlTransitionStatus
+  ) : detailGenerationPending ? (
+    <WorkbenchRefreshStatus
+      kind="pending"
+      eyebrow="Portfolio review"
+      title="Refreshing portfolio detail"
+      message="Positions and analysis are being confirmed for the latest portfolio overview."
+      requestedContext={formatPortfolioControlContext(controls)}
+      confirmedContext={formatPortfolioControlContext(controls)}
+    />
   ) : summaryQuery.isError && workspaceState ? (
     <WorkbenchRefreshStatus
       kind="failed"
@@ -744,6 +769,7 @@ export default function PortfolioWorkspaceClient({
             workspace
               ? "ready"
               : awaitsInitialSourceConfirmation ||
+                  detailGenerationPending ||
                   (selectedPortfolioId &&
                     (activeShellRequestStatus === "idle" ||
                       activeShellRequestStatus === "loading"))

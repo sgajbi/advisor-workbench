@@ -770,6 +770,7 @@ test.describe('Portfolio workbench smoke', () => {
     await expect.poll(() => performanceRequests.length).toBeGreaterThan(0);
     const initialRequestCount = performanceRequests.length;
 
+    await page.waitForTimeout(20_000);
     await page.getByRole('link', { name: 'Open Performance' }).click();
     await expect(page).toHaveURL(/\/performance\?/);
     await page.goBack({ waitUntil: 'domcontentloaded' });
@@ -777,8 +778,9 @@ test.describe('Portfolio workbench smoke', () => {
     await expect(page.getByText('MTD return')).toBeVisible();
     expect(performanceRequests).toHaveLength(initialRequestCount);
 
-    await page.waitForTimeout(30_100);
-    await expect.poll(() => performanceRequests.length).toBe(initialRequestCount * 2);
+    await expect
+      .poll(() => performanceRequests.length, { timeout: 12_000 })
+      .toBe(initialRequestCount * 2);
     const openWorkspaceRevalidationRequestCount = performanceRequests.length;
 
     await page.getByRole('link', { name: 'Open Performance' }).click();
@@ -798,6 +800,7 @@ test.describe('Portfolio workbench smoke', () => {
             generatedAtUtc: new Date().toISOString(),
             portfolioId: session.portfolioId,
             governedStaleTimeMs: 30_000,
+            freshRevisitAtApproximateAgeMs: 20_000,
             initialDetailRequestCount: initialRequestCount,
             freshRevisitDetailRequestCount: initialRequestCount,
             openWorkspaceRevalidationRequestCount,

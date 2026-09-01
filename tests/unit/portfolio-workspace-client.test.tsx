@@ -755,7 +755,9 @@ describe("PortfolioWorkspaceClient", () => {
         firstVisit.queryClient.getQueryState(workspaceQueryKey(null))?.status,
       ).toBe("error");
     });
-    expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    await waitFor(() => {
+      expect(screen.getByTestId("shell-status")).toHaveTextContent("ready");
+    });
     expect(screen.getByTestId("portfolio-id")).toHaveTextContent(
       "MANUAL_PB_USD_001",
     );
@@ -862,8 +864,7 @@ describe("PortfolioWorkspaceClient", () => {
           as_of_date: initialWorkspace.as_of_date,
           positions: [{ security_id: "EQ_1" }],
         }),
-      )
-      .mockResolvedValueOnce(null);
+      );
     const refreshedShell = {
       ...initialWorkspace,
       as_of_date: "2026-03-29",
@@ -882,11 +883,29 @@ describe("PortfolioWorkspaceClient", () => {
     );
     await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(1));
 
+    let failNewGeneration: ((value: null) => void) | undefined;
+    getSummaryDetailsMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        failNewGeneration = resolve;
+      }),
+    );
+
     await act(async () => {
       await queryClient.invalidateQueries({
         queryKey: workspaceQueryKey(initialWorkspace),
         exact: true,
       });
+    });
+
+    await waitFor(() => expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2));
+    expect(
+      await screen.findByText("Refreshing portfolio detail"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("shell-status")).toHaveTextContent("loading");
+    expect(screen.getByTestId("market-value")).toHaveTextContent("none");
+
+    await act(async () => {
+      failNewGeneration?.(null);
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1093,14 +1112,7 @@ describe("PortfolioWorkspaceClient", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Review context was not changed",
     );
-    expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
-    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
-      "28 Mar 2026",
-    );
-    expect(screen.getByTestId("review-context-strip")).not.toHaveTextContent(
-      "20 Mar 2026",
-    );
     expect(routerReplaceMock).toHaveBeenCalledWith(
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
       { scroll: false },
@@ -1108,6 +1120,17 @@ describe("PortfolioWorkspaceClient", () => {
     await waitFor(() => {
       expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
     });
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    expect(screen.getByTestId("review-context-strip")).toHaveTextContent(
+      "28 Mar 2026",
+    );
+    expect(screen.getByTestId("review-context-strip")).not.toHaveTextContent(
+      "20 Mar 2026",
+    );
     expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
       "MANUAL_PB_USD_001",
       expect.objectContaining({ asOfDate: "2026-03-28", timeWindow: "30D" }),
@@ -1138,7 +1161,6 @@ describe("PortfolioWorkspaceClient", () => {
         "Review context was not changed",
       );
     });
-    expect(screen.getByTestId("market-value")).toHaveTextContent("1001550.05");
     expect(screen.getByTestId("time-window")).toHaveTextContent("30D");
     expect(routerReplaceMock).toHaveBeenCalledWith(
       "/portfolio?portfolioId=MANUAL_PB_USD_001&asOfDate=2026-03-28&period=30D&reportingCurrency=USD",
@@ -1146,6 +1168,11 @@ describe("PortfolioWorkspaceClient", () => {
     );
     await waitFor(() => {
       expect(getSummaryDetailsMock).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "1001550.05",
+      );
     });
     expect(getSummaryDetailsMock).toHaveBeenLastCalledWith(
       "MANUAL_PB_USD_001",
