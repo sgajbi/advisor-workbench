@@ -11,7 +11,7 @@ identity, human review, permitted use, and prohibited downstream actions explici
 | Canonical route | `/workbench/{portfolioId}?mode=copilot` |
 | Navigation | **Mandate management**, then **Copilot** |
 | Supported scope | One selected portfolio and the workflow references returned through Gateway |
-| Primary reading order | Portfolio and mandate, available workflows, latest result, source reference, readiness, then action |
+| Primary reading order | Workflow availability, source/status queue, selected source and readiness, Prepare, result, then operating boundary |
 | Evidence posture | Generated material remains separate from source evidence and requires human review |
 
 ## Business Purpose
@@ -36,7 +36,8 @@ These uses do not imply production entitlement or autonomous decision authority.
 1. Start in [Manage Overview](Manage-Overview-Screen-Guide) and resolve material mandate attention.
 2. Prepare or load the current pack in **Evidence Pack** when a decision memo is required.
 3. Move to **PM Copilot** without changing portfolio context.
-4. Confirm the visible evidence-pack reference and readiness before selecting **Prepare**.
+4. Select a workflow from the queue, then confirm its exact source reference and readiness in the
+   decision area before choosing **Prepare**.
 5. Review the returned material, evidence disclosure, limitations, human-review state, and permitted
    use. Continue only in the owning business workflow.
 
@@ -48,8 +49,13 @@ authorise a memo after a newer pack is published.
 
 - Presents proof-pack decision memo, rebalance memo, operations handoff, monitoring-exception,
   outcome-review, and PM operating-quality workflow families from typed Gateway responses.
+- Presents those workflows as one compact worklist with one selected decision area rather than six
+  competing action cards. Arrow keys change selection, Enter opens the decision, and Escape returns
+  focus to the selected workflow.
 - Binds the Evidence Pack Decision Memo label, source reference, readiness, request fence, and
   mutation payload to one current evidence pack.
+- Keeps unavailable workflows selectable for blocker review while disabling their Prepare action.
+- Keeps the latest result with its selected workflow and exposes only one Prepare action at a time.
 - Keeps historical evidence-pack references visible as lineage but non-actionable.
 - Invalidates a prior pending result or error when its portfolio, mandate, workflow, or source
   reference no longer matches the visible context.
@@ -108,10 +114,11 @@ until its source-recorded human-review and permitted-use posture says otherwise.
 ## Evidence And Validation
 
 - `tests/unit/dpm-copilot-workspace.test.tsx` proves current-pack preference, supportability changes,
-  exact request identity, historical fail-closed behavior, and stale-result fencing.
+  exact request identity, historical fail-closed behavior, stale-result fencing, and keyboard
+  queue-to-decision navigation.
 - `tests/e2e/manage-proof-copilot-workspace.spec.ts` proves the real Evidence Pack to Copilot journey,
-  exact source GET and memo POST identities, keyboard-reachable navigation, responsive layout, and
-  no page-level overflow at 1440 and 768 pixels.
+  exact source GET and memo POST identities, one selected Prepare action, decision/result order,
+  responsive layout, and no page-level overflow at 1440, 1024, 768, and 519 pixels.
 - `npm run test:e2e:manage:proof-copilot` is the owned deterministic browser command. Its output is
   fixture evidence, not canonical live-source, deployment, production, or bank-acceptance proof.
 
