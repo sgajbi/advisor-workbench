@@ -448,8 +448,11 @@ describe("WorkbenchPage", () => {
     expect(
       screen.getByRole("heading", { name: "Decision-support workflows", level: 2 }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Historical evidence pack")).toBeInTheDocument();
-    expect(screen.getByText("ppack_1")).toBeInTheDocument();
+    const selectedWorkflow = within(
+      screen.getByTestId("pm-copilot-selected-workflow"),
+    );
+    expect(selectedWorkflow.getByText("Historical evidence pack")).toBeInTheDocument();
+    expect(selectedWorkflow.getByText("ppack_1")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
         name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",

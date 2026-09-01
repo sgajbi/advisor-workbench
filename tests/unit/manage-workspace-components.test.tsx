@@ -631,21 +631,38 @@ describe("manage workspace split components", () => {
     render(<DpmCopilotWorkspace data={buildManageWorkspaceData()} mandateId="mandate_001" />);
 
     expect(screen.getByRole("heading", { name: "Decision-support workflows" })).toBeInTheDocument();
-    expect(screen.getByText("Evidence Pack Decision Memo")).toBeInTheDocument();
-    expect(screen.getByText("Wave PM Memo")).toBeInTheDocument();
-    expect(screen.getByText("Operations Handoff Summary")).toBeInTheDocument();
-    expect(screen.getByText("Exception Summary")).toBeInTheDocument();
-    expect(screen.getByText("Outcome Narrative")).toBeInTheDocument();
-    expect(screen.getByText("PM Quality Support Summary")).toBeInTheDocument();
-    expect(screen.getByText("Human review governed")).toBeInTheDocument();
-    expect(screen.getByLabelText("Status Internal decision support")).toBeInTheDocument();
-    expect(screen.getAllByRole("button")).toHaveLength(6);
-    expect(screen.getAllByRole("button", { name: /^Prepare / })).toHaveLength(5);
+    const worklist = screen.getByRole("listbox", {
+      name: "Portfolio manager decision-support workflows",
+    });
+    expect(within(worklist).getAllByRole("option")).toHaveLength(6);
+    for (const workflow of [
+      "Evidence Pack Decision Memo",
+      "Wave PM Memo",
+      "Operations Handoff Summary",
+      "Exception Summary",
+      "Outcome Narrative",
+      "PM Quality Support Summary",
+    ]) {
+      expect(within(worklist).getByText(workflow)).toBeInTheDocument();
+    }
+    const decision = screen.getByRole("region", {
+      name: "Selected decision-support workflow",
+    });
     expect(
-      screen.getByRole("button", {
+      within(decision).getByRole("heading", { name: "Evidence Pack Decision Memo" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Operating boundaries")).toHaveTextContent(
+      "Human review required",
+    );
+    expect(screen.getByLabelText("Operating boundaries")).toHaveTextContent(
+      "Internal decision support only",
+    );
+    expect(
+      within(decision).getByRole("button", {
         name: "Evidence Pack Decision Memo unavailable: Current evidence pack unavailable",
       }),
     ).toBeDisabled();
+    expect(within(decision).getAllByRole("button")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /client/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /order/i })).not.toBeInTheDocument();
   });
