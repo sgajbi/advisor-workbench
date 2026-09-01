@@ -56,6 +56,13 @@
             "portfolio review stays decision-focused and keeps detail work on dedicated screens"
           ]
         },
+        "query-freshness": {
+          "fixture_value": "cashflow",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "portfolio revisit reuses fresh detail truth and refetches after stale time"
+          ]
+        },
         "positions-status": {
           "fixture_value": "positions-status",
           "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",

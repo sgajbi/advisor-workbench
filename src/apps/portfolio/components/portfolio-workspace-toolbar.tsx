@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -193,6 +194,7 @@ export default function PortfolioWorkspaceToolbar({
               <Box key={action.key}>
                 {index ? <Divider sx={{ mb: 1 }} /> : null}
                 <Button
+                  component={Link}
                   href={action.href}
                   size="small"
                   variant="text"
