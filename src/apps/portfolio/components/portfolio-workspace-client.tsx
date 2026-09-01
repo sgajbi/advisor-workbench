@@ -180,6 +180,14 @@ export default function PortfolioWorkspaceClient({
     workspaceDraft.sourceKey === initialWorkspaceSourceKey
       ? workspaceDraft.workspace
       : confirmedInitialWorkspace;
+  const workspaceSourceGeneration = useMemo(
+    () =>
+      buildPortfolioWorkspaceSourceKey(
+        selectedPortfolioId,
+        workspaceState,
+      ),
+    [selectedPortfolioId, workspaceState],
+  );
   const setWorkspaceState = useCallback(
     (
       next:
@@ -304,14 +312,24 @@ export default function PortfolioWorkspaceClient({
       }
       if (
         !shellWorkspace ||
+        !selectedPortfolioId ||
         !isPortfolioWorkspaceIdentityConfirmed(
           shellWorkspace,
           selectedPortfolioId,
-        )
+        ) ||
+        queryClient.getQueryData(
+          portfolioQueryKeys.workspace(selectedPortfolioId),
+        ) !== shellWorkspace
       ) {
         return;
       }
       setControls((current) => {
+        if (
+          workspaceState &&
+          hasPortfolioSourceControlOverride(current, workspaceState)
+        ) {
+          return current;
+        }
         const defaults = buildInitialPortfolioControls(shellWorkspace);
         return {
           ...defaults,
@@ -346,6 +364,7 @@ export default function PortfolioWorkspaceClient({
     queryKey: summaryRequest
       ? portfolioQueryKeys.summaryDetails(
           selectedPortfolioId!,
+          workspaceSourceGeneration,
           summaryRequest.params,
         )
       : [...portfolioQueryKeys.all, "summary-details", "unselected"],
@@ -363,20 +382,10 @@ export default function PortfolioWorkspaceClient({
       return;
     }
 
-    const sourceKey = portfolioQueryKeys.serverSource(selectedPortfolioId);
-    const previousSource = queryClient.getQueryData<string>(sourceKey);
-    queryClient.setQueryData(sourceKey, initialWorkspaceSourceKey);
     queryClient.setQueryData(
       portfolioQueryKeys.reviewContextIntent(),
       `${initialWorkspaceSourceKey}|idle`,
     );
-    if (previousSource && previousSource !== initialWorkspaceSourceKey) {
-      const detailRoot =
-        portfolioQueryKeys.summaryDetailsRoot(selectedPortfolioId);
-      void queryClient
-        .cancelQueries({ queryKey: detailRoot })
-        .then(() => queryClient.refetchQueries({ queryKey: detailRoot }));
-    }
   }, [initialWorkspaceSourceKey, queryClient, selectedPortfolioId]);
   const summaryResponseIsCurrent = Boolean(
     summaryRequest &&
@@ -503,6 +512,7 @@ export default function PortfolioWorkspaceClient({
     );
     const queryKey = portfolioQueryKeys.summaryDetails(
       selectedPortfolioId,
+      workspaceSourceGeneration,
       request.params,
     );
     const intent = `${initialWorkspaceSourceKey}|${request.key}`;

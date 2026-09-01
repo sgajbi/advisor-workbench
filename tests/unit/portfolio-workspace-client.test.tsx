@@ -71,6 +71,8 @@ vi.mock(
       controls: {
         viewMode: "summary" | "detailed";
         timeWindow: "30D" | "YTD" | "1Y";
+        asOfDate: string;
+        reportingCurrency: string;
       };
       onControlsChange: (patch: {
         viewMode?: "summary" | "detailed";
@@ -80,6 +82,10 @@ vi.mock(
       <div>
         <div data-testid="view-mode">{controls.viewMode}</div>
         <div data-testid="time-window">{controls.timeWindow}</div>
+        <div data-testid="as-of-date">{controls.asOfDate}</div>
+        <div data-testid="reporting-currency">
+          {controls.reportingCurrency}
+        </div>
         <button
           type="button"
           onClick={() => onControlsChange({ viewMode: "detailed" })}
@@ -1186,6 +1192,80 @@ describe("PortfolioWorkspaceClient", () => {
         "2000000.25",
       );
     });
+  });
+
+  it("preserves confirmed review controls while synchronizing a newer shell generation", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: workbenchStrictQueryDefaults },
+    });
+    const initialWorkspace = buildWorkspace();
+    initialWorkspace.control_capabilities = {
+      historical_snapshots: {
+        state: "supported",
+        reason: "available",
+        requested_as_of_date: initialWorkspace.as_of_date,
+        effective_as_of_date: initialWorkspace.as_of_date,
+        module_capabilities: [],
+      },
+      reporting_currency_restatement: {
+        state: "supported",
+        reason: "available",
+        requested_reporting_currency: null,
+        effective_reporting_currency: "USD",
+        supported_currencies: ["USD", "SGD"],
+        module_capabilities: [],
+      },
+    };
+    const synchronizedShell = {
+      ...initialWorkspace,
+      summary: {
+        ...initialWorkspace.summary,
+        market_value_base: 2000000.25,
+      },
+    } satisfies PortfolioWorkspace;
+    queryClient.setQueryData(
+      portfolioQueryKeys.workspace("MANUAL_PB_USD_001"),
+      synchronizedShell,
+    );
+    getSummaryDetailsMock.mockResolvedValue(
+      confirmedDetails({
+        as_of_date: "2026-03-20",
+        positions: [],
+      }),
+    );
+    const initialControls = {
+      ...buildInitialPortfolioControls(initialWorkspace),
+      asOfDate: "2026-03-20",
+      reportingCurrency: "SGD",
+      timeWindow: "YTD" as const,
+    };
+
+    render(
+      <PortfolioWorkspaceClient
+        portfolios={buildPortfolioCatalog("MANUAL_PB_USD_001")}
+        selectedPortfolioId="MANUAL_PB_USD_001"
+        initialWorkspace={initialWorkspace}
+        initialControls={initialControls}
+      />,
+      queryClient,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("market-value")).toHaveTextContent(
+        "2000000.25",
+      );
+    });
+    expect(screen.getByTestId("as-of-date")).toHaveTextContent("2026-03-20");
+    expect(screen.getByTestId("reporting-currency")).toHaveTextContent("SGD");
+    expect(screen.getByTestId("time-window")).toHaveTextContent("YTD");
+    expect(getSummaryDetailsMock).toHaveBeenCalledWith(
+      "MANUAL_PB_USD_001",
+      expect.objectContaining({
+        asOfDate: "2026-03-20",
+        reportingCurrency: "SGD",
+      }),
+      expect.objectContaining({ signal: expect.any(Object) }),
+    );
   });
 
   it("recovers by fetching the portfolio shell when the server-rendered shell is unavailable", async () => {
