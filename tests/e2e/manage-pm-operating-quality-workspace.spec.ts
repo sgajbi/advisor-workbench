@@ -5,9 +5,11 @@ import { expect, test } from "@playwright/test";
 
 import { observeBrowserRuntimeFailures } from "./browser-runtime-reliability";
 import {
+  getPmQualityFixtureScoreRuns,
   startManageFixtureGateway,
   type ManageFixtureGateway,
 } from "./manage-fixture-gateway";
+import { assertExactSourceRenderProof } from "../../scripts/live/validation/source-render-proof.mjs";
 
 test.describe.configure({ mode: "serial" });
 
@@ -66,11 +68,30 @@ test("PM Operating Quality keeps supervisory evidence dense, source-backed, and 
       "lotus-manage:RFC-0042/PM_OPERATING_QUALITY",
     );
     await expect(sourceEvidence).toHaveAttribute("data-score-run-id", "pmq_run_001");
+    await expect(sourceEvidence).toHaveAttribute("data-score-run-state", "READY");
     await expect(panel.getByText("Balanced DPM Mandates", { exact: true })).toBeVisible();
     await expect(panel.getByText("No portfolio-manager quality runs were returned")).toHaveCount(0);
 
     const scoreRuns = panel.getByRole("listbox", {
       name: "PM operating quality score-run selection",
+    });
+    const expectedScoreRuns = getPmQualityFixtureScoreRuns().map((scoreRun) => ({
+      source: "lotus-manage",
+      identity: scoreRun.score_run_id,
+      state: scoreRun.state,
+    }));
+    const renderedScoreRuns = scoreRuns.locator("[data-source-render-row]");
+    await expect(renderedScoreRuns).toHaveCount(expectedScoreRuns.length);
+    assertExactSourceRenderProof({
+      screen: "PM Operating Quality",
+      expectedRows: expectedScoreRuns,
+      renderedRows: await renderedScoreRuns.evaluateAll((elements) =>
+        elements.map((element) => ({
+          source: element.getAttribute("data-source") ?? "",
+          identity: element.getAttribute("data-source-identity") ?? "",
+          state: element.getAttribute("data-source-state") ?? "",
+        })),
+      ),
     });
     const selectedRun = scoreRuns.getByRole("option", {
       name: /PM_SG_001 \/ PM_BOOK_SG_BALANCED/,

@@ -901,11 +901,6 @@ function campaignEnvelope(correlationId: string) {
 }
 
 function pmQualityFixtureResponse(path: string): Record<string, unknown> | null {
-  const sourceRef = {
-    source_system: "lotus-manage",
-    source_product: "PmOperatingQualityScoreRun",
-    source_id: "pmq_run_001",
-  };
   const base = (data: Record<string, unknown>, correlationId: string, count: number) => ({
     correlation_id: correlationId,
     contract_version: "v1",
@@ -942,43 +937,29 @@ function pmQualityFixtureResponse(path: string): Record<string, unknown> | null 
     );
   }
   if (path === "/api/v1/dpm/command-center/pm-operating-quality/score-runs") {
+    const scoreRuns = getPmQualityFixtureScoreRuns();
     return base(
       {
-        score_runs: [
-          {
-            score_run_id: "pmq_run_001",
-            pm_id: "PM_SG_001",
-            book_id: "PM_BOOK_SG_BALANCED",
-            policy_id: "pmq_sg_dpm",
-            policy_version: "2026.05",
-            state: "READY",
-            score: "90.00",
-            as_of_date: "2026-05-13",
-            content_hash: "sha256:pm-quality-fixture",
-            reason_codes: ["PM_QUALITY_READY"],
-            forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
-            source_refs: [sourceRef],
-          },
-        ],
+        score_runs: scoreRuns,
         fairness_segments: [
           {
             segment_id: "mandate_balanced",
             segment_type: "MANDATE_TYPE",
             display_name: "Balanced DPM Mandates",
             score_run_ids: ["pmq_run_001"],
-            source_refs: [sourceRef],
+            source_refs: scoreRuns[0].source_refs,
           },
           {
             segment_id: "mandate_income",
             segment_type: "MANDATE_TYPE",
             display_name: "Income DPM Mandates",
             score_run_ids: ["pmq_run_002"],
-            source_refs: [sourceRef],
+            source_refs: scoreRuns[1].source_refs,
           },
         ],
       },
       "corr-pmq-score-runs-fixture",
-      1,
+      scoreRuns.length,
     );
   }
   if (path === "/api/v1/dpm/command-center/pm-operating-quality/fairness-analyses") {
@@ -991,6 +972,56 @@ function pmQualityFixtureResponse(path: string): Record<string, unknown> | null 
     return base({ summary_invocations: [] }, "corr-pmq-summaries-fixture", 0);
   }
   return null;
+}
+
+export function getPmQualityFixtureScoreRuns() {
+  return [
+    pmQualityScoreRun({
+      scoreRunId: "pmq_run_001",
+      pmId: "PM_SG_001",
+      bookId: "PM_BOOK_SG_BALANCED",
+      score: "90.00",
+    }),
+    pmQualityScoreRun({
+      scoreRunId: "pmq_run_002",
+      pmId: "PM_SG_002",
+      bookId: "PM_BOOK_SG_INCOME",
+      score: "86.50",
+    }),
+  ];
+}
+
+function pmQualityScoreRun({
+  scoreRunId,
+  pmId,
+  bookId,
+  score,
+}: {
+  scoreRunId: string;
+  pmId: string;
+  bookId: string;
+  score: string;
+}) {
+  return {
+    score_run_id: scoreRunId,
+    pm_id: pmId,
+    book_id: bookId,
+    policy_id: "pmq_sg_dpm",
+    policy_version: "2026.05",
+    state: "READY",
+    score,
+    as_of_date: "2026-05-13",
+    content_hash: `sha256:${scoreRunId}`,
+    reason_codes: ["PM_QUALITY_READY"],
+    forbidden_uses: ["protected_class_inference", "autonomous_pm_ranking"],
+    source_refs: [
+      {
+        source_system: "lotus-manage",
+        source_product: "PmOperatingQualityScoreRun",
+        source_id: scoreRunId,
+      },
+    ],
+  };
 }
 
 function campaignDefinition(
