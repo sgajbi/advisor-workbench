@@ -1508,6 +1508,24 @@ describe("design-system components", () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
+  it("does not repeat context when a refresh failed without a new selection", () => {
+    render(
+      <WorkbenchRefreshStatus
+        kind="failed"
+        eyebrow="Portfolio review"
+        title="Portfolio detail could not be refreshed"
+        message="The previous portfolio view remains active while the refresh is retried."
+        confirmedContext="28 Mar 2026 · USD · 30D"
+      />
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(within(alert).queryByText("Requested")).not.toBeInTheDocument();
+    expect(within(alert).getByText("Source-confirmed")).toBeInTheDocument();
+    expect(within(alert).getByText("28 Mar 2026 · USD · 30D"))
+      .toBeInTheDocument();
+  });
+
   it("announces a compact source-confirmed refresh without moving focus or repeating context", () => {
     render(<button type="button">Continue analysis</button>);
     const continuingTask = screen.getByRole("button", { name: "Continue analysis" });
