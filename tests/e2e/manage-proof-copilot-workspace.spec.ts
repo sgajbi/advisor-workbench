@@ -17,7 +17,9 @@ const evidencePackDirectory = process.env.ISSUE_981_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_981_EVIDENCE_DIR, "evidence-pack")
   : null;
 const proofCopilotEvidenceRoot =
-  process.env.ISSUE_967_EVIDENCE_DIR ?? process.env.ISSUE_861_EVIDENCE_DIR;
+  process.env.ISSUE_983_EVIDENCE_DIR ??
+  process.env.ISSUE_967_EVIDENCE_DIR ??
+  process.env.ISSUE_861_EVIDENCE_DIR;
 const proofCopilotEvidenceDirectory = proofCopilotEvidenceRoot
   ? path.resolve(proofCopilotEvidenceRoot, "proof-copilot")
   : null;
@@ -54,6 +56,7 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
   const runtime = observeBrowserRuntimeFailures(page);
   const unavailableMeasurements: Array<Record<string, number>> = [];
   const readyMeasurements: Array<Record<string, number>> = [];
+  const copilotMeasurements: Array<Record<string, number>> = [];
 
   for (const viewport of [
     { width: 1440, height: 1000 },
@@ -226,7 +229,10 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
   await expect(
     page.getByRole("heading", { name: "PM Copilot", level: 1 }),
   ).toBeVisible();
-  await expect(page.getByText(manageProofPackFixtureIds.published, { exact: true })).toBeVisible();
+  const selectedWorkflow = page.getByTestId("pm-copilot-selected-workflow");
+  await expect(
+    selectedWorkflow.getByText(manageProofPackFixtureIds.published, { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText(manageProofPackFixtureIds.initial, { exact: true })).toHaveCount(0);
 
   const prepareMemo = page.getByRole("button", {
@@ -246,8 +252,9 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
   await expect(preparationDisclosure).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(preparationDisclosure.locator("..")).toHaveAttribute("open", "");
-  await expect(page.getByText("Human review required", { exact: true })).toBeVisible();
-  await expect(page.getByText("Internal working use only", { exact: true })).toBeVisible();
+  const latestResult = page.getByLabel("Latest decision-support result");
+  await expect(latestResult.getByText("Human review required", { exact: true })).toBeVisible();
+  await expect(latestResult.getByText("Internal working use only", { exact: true })).toBeVisible();
 
   for (const viewport of [
     { width: 1440, height: 1000 },
@@ -257,14 +264,67 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
   ]) {
     await page.setViewportSize(viewport);
     await expect(prepareMemo).toBeVisible();
-    const geometry = await page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      documentWidth: document.documentElement.scrollWidth,
-    }));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const geometry = await page.evaluate(() => {
+      const workspace = document.querySelector<HTMLElement>("#pm-copilot-workspace");
+      const worklist = document.querySelector<HTMLElement>(
+        "#pm-copilot-workspace [data-workbench-record-selector]",
+      );
+      const decision = document.querySelector<HTMLElement>(
+        '#pm-copilot-workspace [data-testid="pm-copilot-selected-workflow"]',
+      );
+      const action = document.querySelector<HTMLElement>(
+        '#pm-copilot-workspace button[aria-label="Prepare Evidence Pack Decision Memo"]',
+      );
+      const result = document.querySelector<HTMLElement>(
+        '#pm-copilot-workspace [aria-label="Latest decision-support result"]',
+      );
+      if (!workspace || !worklist || !decision || !action || !result) {
+        throw new Error("PM Copilot decision-worklist geometry is unavailable.");
+      }
+      const absoluteTop = (element: HTMLElement) =>
+        element.getBoundingClientRect().top + window.scrollY;
+      return {
+        workspaceTop: absoluteTop(workspace),
+        workspaceRight: workspace.getBoundingClientRect().right,
+        worklistTop: absoluteTop(worklist),
+        worklistLeft: worklist.getBoundingClientRect().left,
+        worklistRight: worklist.getBoundingClientRect().right,
+        decisionTop: absoluteTop(decision),
+        decisionLeft: decision.getBoundingClientRect().left,
+        decisionRight: decision.getBoundingClientRect().right,
+        primaryActionTop: absoluteTop(action),
+        resultTop: absoluteTop(result),
+        documentHeight: document.documentElement.scrollHeight,
+        clientWidth: document.documentElement.clientWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        workflowCount: document.querySelectorAll(
+          '#pm-copilot-workspace [role="option"]',
+        ).length,
+        prepareActionCount: document.querySelectorAll(
+          '#pm-copilot-workspace button[aria-label^="Prepare "]',
+        ).length,
+      };
+    });
     expect(
       geometry.documentWidth,
       `PM Copilot has page-level horizontal overflow at ${viewport.width}px.`,
     ).toBeLessThanOrEqual(geometry.clientWidth);
+    expect(geometry.worklistRight).toBeLessThanOrEqual(geometry.workspaceRight);
+    expect(geometry.decisionRight).toBeLessThanOrEqual(geometry.workspaceRight);
+    expect(geometry.primaryActionTop).toBeLessThan(geometry.resultTop);
+    expect(geometry.workflowCount).toBe(6);
+    expect(geometry.prepareActionCount).toBe(1);
+    if (viewport.width >= 1024) {
+      expect(geometry.worklistLeft).toBeLessThan(geometry.decisionLeft);
+    } else {
+      expect(geometry.worklistTop).toBeLessThan(geometry.decisionTop);
+    }
+    copilotMeasurements.push({
+      width: viewport.width,
+      height: viewport.height,
+      ...geometry,
+    });
     const screenshot = await page.screenshot({ fullPage: true });
     if (proofCopilotEvidenceDirectory) {
       await mkdir(proofCopilotEvidenceDirectory, { recursive: true });
@@ -280,6 +340,14 @@ test("PM Copilot follows the source-confirmed evidence pack across Manage modes"
       body: screenshot,
       contentType: "image/png",
     });
+  }
+
+  if (proofCopilotEvidenceDirectory) {
+    await writeFile(
+      path.join(proofCopilotEvidenceDirectory, "rendered-measurements.json"),
+      `${JSON.stringify(copilotMeasurements, null, 2)}\n`,
+      "utf8",
+    );
   }
 
   await runtime.assertStylesAreHeadManaged();

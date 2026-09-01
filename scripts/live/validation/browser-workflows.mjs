@@ -3331,7 +3331,7 @@ export async function validateDpmCopilotWorkspace(
   await navigateForBusinessProof(page, `${workbenchBaseUrl}/workbench/${portfolioId}?mode=copilot`, {
     timeout: timeoutMs,
   });
-  const copilotWorkspace = workbenchPanelByClass(page, "dpm-copilot-workspace");
+  const copilotWorkspace = page.locator("#pm-copilot-workspace");
   await expect(
     page.getByRole("heading", {
       name: "PM Copilot",
@@ -3352,28 +3352,29 @@ export async function validateDpmCopilotWorkspace(
   await expect(page.getByLabel("Portfolio manager copilot status")).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(copilotWorkspace.getByText("Human review governed", { exact: true })).toBeVisible({
+  await expect(copilotWorkspace.getByRole("listbox", {
+    name: "Portfolio manager decision-support workflows",
+  })).toBeVisible({
     timeout: timeoutMs,
   });
-  await expect(
-    copilotWorkspace.getByLabel("Status Internal decision support"),
-  ).toBeVisible({
+  await expect(copilotWorkspace.getByRole("option")).toHaveCount(6);
+  await expect(copilotWorkspace.getByRole("region", {
+    name: "Selected decision-support workflow",
+  })).toBeVisible({
     timeout: timeoutMs,
   });
-  for (const label of [
-    "Decision Authority",
-    "Portfolio manager and investment control",
-    "Permitted Use",
-    "Restricted Use",
-    "Client communication and order execution",
-    "Operating boundaries",
-  ]) {
-    await expect(
-      copilotWorkspace.getByText(label, { exact: true }),
-    ).toBeVisible({
-      timeout: timeoutMs,
-    });
-  }
+  const operatingBoundaries = copilotWorkspace.getByLabel("Operating boundaries");
+  await expect(operatingBoundaries).toContainText("Human review required");
+  await expect(operatingBoundaries).toContainText("Internal decision support only");
+  await expect(operatingBoundaries).toContainText(
+    "Portfolio manager and investment control retain decision authority",
+  );
+  await expect(operatingBoundaries).toContainText(
+    "client communication and order execution are not supported",
+  );
+  await expect(copilotWorkspace.getByRole("button", {
+    name: /^(Prepare .+|.+ unavailable: .+)$/,
+  })).toHaveCount(1);
   await screenshotRegisteredPanel(page, "dpm.copilot_workspace");
 }
 

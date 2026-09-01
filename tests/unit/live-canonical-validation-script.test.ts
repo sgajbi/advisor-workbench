@@ -99,17 +99,21 @@ describe("canonical live validation script", () => {
     );
     expect(workflowSource).not.toContain("PM Copilot Workspace");
     for (const businessControl of [
-      "Human review governed",
-      "Internal decision support",
-      "Decision Authority",
-      "Portfolio manager and investment control",
-      "Permitted Use",
-      "Restricted Use",
-      "Client communication and order execution",
+      "Portfolio manager copilot status",
+      "Portfolio manager decision-support workflows",
+      "Selected decision-support workflow",
+      "Human review required",
+      "Internal decision support only",
       "Operating boundaries",
     ]) {
       expect(componentSource).toContain(businessControl);
       expect(workflowSource).toContain(businessControl);
+    }
+    for (const operatingBoundary of [
+      "Portfolio manager and investment control retain decision authority",
+      "client communication and order execution are not supported",
+    ]) {
+      expect(workflowSource).toContain(operatingBoundary);
     }
     for (const retiredTechnicalCopy of [
       "Gateway only",
