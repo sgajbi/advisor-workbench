@@ -98,9 +98,10 @@ when their destination cannot interpret them; they do not become inferred cross-
 
 User decisions create browser history with `push`; `replace` is reserved for source normalization
 of the current entry. Back and Forward synchronize the matching source-backed props into the
-mounted workspace, invalidate obsolete requests and caches as one boundary, and keep focus on the
-stable visible control. Query-key remounts are not an acceptable history mechanism because they
-discard focus and local interaction continuity.
+mounted workspace; complete query identity fences obsolete responses while the governed freshness
+policy can reuse exact matching source evidence. The stable visible control retains focus.
+Query-key remounts are not an acceptable history mechanism because they discard focus and local
+interaction continuity.
 
 `ReviewContextStrip` presents the source-confirmed orientation consistently across Portfolio,
 Performance, Mandate Management, Advice, and Reporting. Routine business facts use sentence-case

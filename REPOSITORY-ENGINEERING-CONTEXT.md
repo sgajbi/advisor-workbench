@@ -851,6 +851,15 @@ module-level response, in-flight, token, or compatibility cache in `src/apps/por
 the workspace component. A failed stale refetch may retain the prior confirmed response as prior
 evidence, but must not present it as newly source-confirmed.
 
+Performance Risk browser source state follows the same root TanStack Query ownership. Summary,
+concentration, drawdown, rolling, attribution, and requested detail reads use complete typed keys,
+the shared 30-second stale and five-minute garbage-collection policy, and exact source-identity
+admission. A fresh Risk revisit reuses those responses without repaying Gateway reads; a stale
+revisit withholds prior evidence while it revalidates. Source-declared unavailable or blocked
+responses and identity-mismatched responses are never admitted as reusable data. Do not restore
+hook-local response Maps, request-sequence refs, JSON cache keys, or mirrored response state in
+`use-performance-risk-contract.ts`.
+
 Position source status is projected through
 `src/apps/portfolio/portfolio-position-state-view-model.ts`. Only an explicit normalized
 `CURRENT` source value is positive. Missing position status is **Not reported**, any other

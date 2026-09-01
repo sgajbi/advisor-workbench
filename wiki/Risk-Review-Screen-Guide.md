@@ -102,6 +102,9 @@ mandate-waiver authority, investment advice, order approval, or client-publicati
   disabled source option stays disabled with its reason.
 - Preserves ready, partial, unavailable, blocked, warning, partial-failure, methodology-version,
   cache, and correlation posture from the Gateway/Risk contract family.
+- Reuses exact source-admitted Risk evidence for a brief return to the screen through the governed
+  Workbench query policy. After that freshness window, the screen checks Gateway again before
+  presenting the evidence as current; unavailable, blocked, or mismatched responses are not reused.
 - Keeps absent, unavailable, date-misaligned, undefined-limit, and unavailable-measure evidence
   explicit. Workbench does not calculate a missing limit or headroom or infer a portfolio all-clear.
 - Reflows the exact evidence and comparison at desktop, tablet, and 519-pixel widths without requiring
