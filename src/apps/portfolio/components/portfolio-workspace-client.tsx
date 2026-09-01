@@ -64,6 +64,20 @@ type PortfolioControlTransition = {
   requestedControls: PortfolioWorkspaceControls;
 };
 
+async function queryPortfolioWorkspaceShell(
+  portfolioId: string,
+  signal: AbortSignal,
+) {
+  const shellWorkspace = await getPortfolioWorkspaceShell(portfolioId, {
+    signal,
+  });
+  signal.throwIfAborted();
+  if (!isPortfolioWorkspaceIdentityConfirmed(shellWorkspace, portfolioId)) {
+    throw new Error("Portfolio overview is unavailable.");
+  }
+  return shellWorkspace;
+}
+
 async function queryPortfolioWorkspaceSummaryDetails(
   portfolioId: string,
   params: Parameters<typeof getPortfolioWorkspaceSummaryDetails>[1],
@@ -231,20 +245,19 @@ export default function PortfolioWorkspaceClient({
     initialData: confirmedInitialWorkspace ?? undefined,
     queryFn: async ({ signal }) => {
       recordPortfolioShellRecoveryLifecycle("automatic_attempt");
-      const shellWorkspace = await getPortfolioWorkspaceShell(
-        selectedPortfolioId!,
-        { signal },
-      );
-      signal.throwIfAborted();
-      recordPortfolioShellRecoveryLifecycle(
-        isPortfolioWorkspaceIdentityConfirmed(
-          shellWorkspace,
-          selectedPortfolioId,
-        )
-          ? "ready"
-          : "unavailable",
-      );
-      return shellWorkspace;
+      try {
+        const shellWorkspace = await queryPortfolioWorkspaceShell(
+          selectedPortfolioId!,
+          signal,
+        );
+        recordPortfolioShellRecoveryLifecycle("ready");
+        return shellWorkspace;
+      } catch (error) {
+        if (!signal.aborted) {
+          recordPortfolioShellRecoveryLifecycle("unavailable");
+        }
+        throw error;
+      }
     },
   });
   const activeShellRequestStatus = !selectedPortfolioId
@@ -571,6 +584,47 @@ export default function PortfolioWorkspaceClient({
       workspace.portfolio.base_currency
       ? activeControlTransition.requestedControls.reportingCurrency
       : undefined;
+  const controlTransitionStatus = activeControlTransition ? (
+    <PortfolioControlTransitionStatus
+      transition={activeControlTransition}
+      confirmedControls={controls}
+      onRetry={() =>
+        void confirmPortfolioControls(
+          activeControlTransition.requestedControls,
+        )
+      }
+    />
+  ) : null;
+  const controlTransitionRequiresAction =
+    activeControlTransition?.status === "pending" ||
+    activeControlTransition?.status === "failed";
+  const portfolioRefreshStatus = controlTransitionRequiresAction ? (
+    controlTransitionStatus
+  ) : summaryQuery.isRefetchError && summaryQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Portfolio review"
+      title="Portfolio detail could not be refreshed"
+      message="The previous portfolio view remains active while the refresh is retried."
+      confirmedContext={formatPortfolioControlContext(controls)}
+      onRetry={() => void summaryQuery.refetch()}
+      retrying={summaryQuery.isFetching}
+      retryLabel="Retry portfolio detail refresh"
+    />
+  ) : shellQuery.isRefetchError && shellQuery.data ? (
+    <WorkbenchRefreshStatus
+      kind="failed"
+      eyebrow="Portfolio review"
+      title="Portfolio overview could not be refreshed"
+      message="The previous portfolio view remains active while the refresh is retried."
+      confirmedContext={formatPortfolioControlContext(controls)}
+      onRetry={() => void shellQuery.refetch()}
+      retrying={shellQuery.isFetching}
+      retryLabel="Retry portfolio overview refresh"
+    />
+  ) : (
+    controlTransitionStatus
+  );
 
   return (
     <PortfolioPageLayout
@@ -630,28 +684,7 @@ export default function PortfolioWorkspaceClient({
                     activeControlTransition?.status === "pending"
                   }
                 />
-                {summaryQuery.isRefetchError && summaryQuery.data ? (
-                  <WorkbenchRefreshStatus
-                    kind="failed"
-                    eyebrow="Portfolio review"
-                    title="Portfolio detail could not be refreshed"
-                    message="The previous portfolio view remains active while the refresh is retried."
-                    confirmedContext={formatPortfolioControlContext(controls)}
-                    onRetry={() => void summaryQuery.refetch()}
-                    retrying={summaryQuery.isFetching}
-                    retryLabel="Retry portfolio detail refresh"
-                  />
-                ) : activeControlTransition ? (
-                  <PortfolioControlTransitionStatus
-                    transition={activeControlTransition}
-                    confirmedControls={controls}
-                    onRetry={() =>
-                      void confirmPortfolioControls(
-                        activeControlTransition.requestedControls,
-                      )
-                    }
-                  />
-                ) : null}
+                {portfolioRefreshStatus}
               </>
             )
           }
