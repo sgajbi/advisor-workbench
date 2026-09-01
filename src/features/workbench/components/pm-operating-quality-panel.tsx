@@ -130,7 +130,6 @@ export default function PmOperatingQualityPanel({
     Boolean(loadError) ||
     Boolean(actionError) ||
     model.state === "empty" ||
-    model.state === "partial" ||
     model.state === "blocked" ||
     model.state === "unavailable";
 

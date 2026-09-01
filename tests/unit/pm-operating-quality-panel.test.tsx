@@ -383,6 +383,10 @@ describe("PmOperatingQualityPanel", () => {
     expect(sourceEvidence).toHaveAttribute("data-score-run-id", "pmq_run_001");
     expect(sourceEvidence).toHaveAttribute("data-score-run-state", "READY");
     expect(sourceEvidence).toHaveAttribute("data-fairness-analysis-id", "N/A");
+    expect(
+      screen.queryByText("PM operating quality evidence is partial"),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("Pending review").length).toBeGreaterThan(0);
     expect(screen.getByText("Score-Run Evidence")).toBeInTheDocument();
     expect(screen.getByText("Governance Posture")).toBeInTheDocument();
     expect(
