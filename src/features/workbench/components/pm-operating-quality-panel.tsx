@@ -10,6 +10,7 @@ import {
 import PmOperatingQualityFairnessEvidenceCard from "@/features/workbench/components/pm-operating-quality-fairness-evidence-card";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
 import PmOperatingQualityGovernanceCard from "@/features/workbench/components/pm-operating-quality-governance-card";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualityPolicyCard from "@/features/workbench/components/pm-operating-quality-policy-card";
 import PmOperatingQualityRecordContext from "@/features/workbench/components/pm-operating-quality-record-context";
 import PmOperatingQualityReviewActionsCard from "@/features/workbench/components/pm-operating-quality-review-actions-card";
@@ -135,11 +136,13 @@ export default function PmOperatingQualityPanel({
 
   return (
     <SectionBlock
+      id="pm-operating-quality-panel"
       title="PM Operating Quality"
       subtitle="Gateway-backed supervisory evidence for Manage-owned PM policy and score-run posture."
-      className="pm-operating-quality-panel"
+      className={styles.panel}
+      headerClassName={styles.header}
       actions={
-        <div className="pm-quality-badge-row">
+        <div className={styles.badgeRow}>
           <SemanticBadge tone={toneForState(model.supportabilityState)}>
             {businessStateLabel(model.supportabilityState)}
           </SemanticBadge>
@@ -162,7 +165,7 @@ export default function PmOperatingQualityPanel({
       ) : null}
 
       <div
-        className="pm-quality-status-strip"
+        className={styles.statusStrip}
         data-testid="pm-operating-quality-source-evidence"
         data-panel-state={loadError || actionError ? "partial" : model.state}
         data-attention-state={loadError || actionError ? "required" : "clear"}
@@ -182,7 +185,7 @@ export default function PmOperatingQualityPanel({
         <MetricRow label="Authority" value={model.authority} />
       </div>
 
-      <div className="pm-quality-reason-row">
+      <div className={styles.reasonRow}>
         {model.reasonCodes.length > 0 ? (
           model.reasonCodes.map((reason) => (
             <SemanticBadge key={reason} tone={toneForState(reason)}>
@@ -209,7 +212,7 @@ export default function PmOperatingQualityPanel({
         }}
       />
 
-      <div className="pm-quality-workspace">
+      <div className={styles.workspace}>
         <PmOperatingQualityScoreRunCard
           model={model}
           pendingScorePreview={pendingAction}

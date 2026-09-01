@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton, MetricRow, Text } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import type {
   PmQualityCommandOption,
@@ -37,17 +38,17 @@ export default function PmOperatingQualitySummaryInvocationControl({
 }: Props) {
   return (
     <div
-      className="pm-quality-review-action-form"
+      className={styles.controlForm}
       aria-label="PM operating quality summary-invocation control"
     >
-      <div className="pm-quality-card-header">
+      <div className={styles.cardHeader}>
         <Text as="h3" variant="subsectionTitle">
           Summary Invocation Control
         </Text>
         <PmOperatingQualityStateBadge state={readiness.state} />
       </div>
-      <div className="pm-quality-review-action-form-grid">
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-requested-by">
+      <div className={styles.controlFormGrid}>
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-requested-by">
           Requested by
           <input
             id="pm-quality-summary-requested-by"
@@ -56,7 +57,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("requestedBy", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-state">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-state">
           Invocation state
           <select
             id="pm-quality-summary-state"
@@ -69,7 +70,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             <option value="RECORDED">Recorded</option>
           </select>
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-ref">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-ref">
           Bank summary ref
           <input
             id="pm-quality-summary-ref"
@@ -78,7 +79,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("summaryRef", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-pack-name">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-pack-name">
           Workflow pack
           <input
             id="pm-quality-summary-pack-name"
@@ -87,7 +88,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("workflowPackName", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-pack-version">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-pack-version">
           Workflow pack version
           <input
             id="pm-quality-summary-pack-version"
@@ -96,7 +97,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("workflowPackVersion", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-workflow-run">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-workflow-run">
           Workflow run id
           <input
             id="pm-quality-summary-workflow-run"
@@ -105,7 +106,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("workflowRunId", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-artifact">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-artifact">
           Artifact ref
           <input
             id="pm-quality-summary-artifact"
@@ -114,7 +115,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
             onChange={(event) => onFormChange("artifactRef", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-summary-content-hash">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-summary-content-hash">
           Content hash
           <input
             id="pm-quality-summary-content-hash"
@@ -125,7 +126,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
         </label>
       </div>
       <div
-        className="pm-quality-command-readiness"
+        className={styles.commandReadiness}
         aria-label="PM operating quality summary-invocation readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
@@ -164,7 +165,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
           value="Invocation evidence only; no generated summary text, prompt body, model response, PM ranking, client communication, trade, order, OMS, execution, fills, or settlement action is enabled"
         />
       </div>
-      <div className="pm-quality-action-row">
+      <div className={styles.actionRow}>
         <ActionButton
           priority="secondary"
           onClick={onPreview}
@@ -182,7 +183,7 @@ export default function PmOperatingQualitySummaryInvocationControl({
       </div>
       {createEvidence ? (
         <div
-          className="pm-quality-operation-evidence"
+          className={styles.operationEvidence}
           aria-label="PM operating quality persisted summary-invocation evidence"
         >
           <MetricRow label="Summary Invocation" value={createEvidence.summaryInvocationId} />

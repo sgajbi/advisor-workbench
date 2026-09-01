@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton, MetricRow, Text } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import type {
   PmQualityReviewTargetOption,
@@ -39,17 +40,17 @@ export default function PmOperatingQualityReviewActionControl({
 
   return (
     <div
-      className="pm-quality-review-action-form"
+      className={styles.controlForm}
       aria-label="PM operating quality supervisory review-action control"
     >
-      <div className="pm-quality-card-header">
+      <div className={styles.cardHeader}>
         <Text as="h3" variant="subsectionTitle">
           Supervisory Action Control
         </Text>
         <PmOperatingQualityStateBadge state={readiness.state} />
       </div>
-      <div className="pm-quality-review-action-form-grid">
-        <label className="workbench-field-label" htmlFor="pm-quality-review-actor">
+      <div className={styles.controlFormGrid}>
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-actor">
           Supervisor actor
           <input
             id="pm-quality-review-actor"
@@ -58,7 +59,7 @@ export default function PmOperatingQualityReviewActionControl({
             onChange={(event) => onFormChange("actorId", event.target.value)}
           />
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-review-target-type">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-target-type">
           Target type
           <select
             id="pm-quality-review-target-type"
@@ -70,7 +71,7 @@ export default function PmOperatingQualityReviewActionControl({
             <option value="FAIRNESS_ANALYSIS">Fairness analysis</option>
           </select>
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-review-action-type">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-action-type">
           Action type
           <select
             id="pm-quality-review-action-type"
@@ -83,7 +84,7 @@ export default function PmOperatingQualityReviewActionControl({
             <option value="REQUEST_POLICY_REVIEW">Request policy review</option>
           </select>
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-review-action-state">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-action-state">
           Action state
           <select
             id="pm-quality-review-action-state"
@@ -96,7 +97,7 @@ export default function PmOperatingQualityReviewActionControl({
             <option value="EVIDENCE_REQUESTED">Evidence requested</option>
           </select>
         </label>
-        <label className="workbench-field-label" htmlFor="pm-quality-review-ref">
+        <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-ref">
           Bank review ref
           <input
             id="pm-quality-review-ref"
@@ -106,18 +107,18 @@ export default function PmOperatingQualityReviewActionControl({
           />
         </label>
       </div>
-      <label className="workbench-field-label" htmlFor="pm-quality-review-rationale">
+      <label className={`${styles.fieldLabel} workbench-field-label`} htmlFor="pm-quality-review-rationale">
         Bounded supervisory rationale
         <textarea
           id="pm-quality-review-rationale"
-          className="workbench-input"
+          className={`${styles.rationale} workbench-input`}
           value={form.boundedRationale}
           onChange={(event) => onFormChange("boundedRationale", event.target.value)}
           rows={3}
         />
       </label>
       <div
-        className="pm-quality-command-readiness"
+        className={styles.commandReadiness}
         aria-label="PM operating quality review-action readiness"
       >
         <MetricRow label="Preview Readiness" value={readiness.detail} />
@@ -145,7 +146,7 @@ export default function PmOperatingQualityReviewActionControl({
           value="Supervisory record only; no PM ranking, HR, conduct, client communication, trade, order, OMS, execution, fills, or settlement action is enabled"
         />
       </div>
-      <div className="pm-quality-action-row">
+      <div className={styles.actionRow}>
         <ActionButton
           priority="secondary"
           onClick={onPreview}
@@ -163,7 +164,7 @@ export default function PmOperatingQualityReviewActionControl({
       </div>
       {createEvidence ? (
         <div
-          className="pm-quality-operation-evidence"
+          className={styles.operationEvidence}
           aria-label="PM operating quality persisted review-action evidence"
         >
           <MetricRow label="Review Action" value={createEvidence.reviewActionId} />

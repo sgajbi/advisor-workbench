@@ -1,6 +1,7 @@
 "use client";
 
 import { AnalyticsTable, MetricRow, Text } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualitySummaryInvocationControl from "@/features/workbench/components/pm-operating-quality-summary-invocation-control";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import DpmAiWorkflowResult from "@/features/workbench/components/dpm-ai-workflow-result";
@@ -81,9 +82,9 @@ export default function PmOperatingQualitySummaryInvocationsCard({
         />
       ) : null}
 
-      <div className="pm-quality-review-action-grid">
-        <div className="pm-quality-review-action-detail">
-          <div className="pm-quality-card-header">
+      <div className={styles.reviewActionGrid}>
+        <div className={styles.reviewActionDetail}>
+          <div className={styles.cardHeader}>
             <Text as="h3" variant="subsectionTitle">
               Summary Invocation Detail
             </Text>
@@ -127,6 +128,8 @@ export default function PmOperatingQualitySummaryInvocationsCard({
         </div>
 
         <AnalyticsTable
+          className={styles.table}
+          tableMinWidth={780}
           ariaLabel="PM operating quality summary invocations"
           variant="analysis"
           density="compact"

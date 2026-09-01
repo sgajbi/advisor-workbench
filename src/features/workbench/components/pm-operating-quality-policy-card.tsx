@@ -1,6 +1,7 @@
 "use client";
 
 import { AnalyticsTable } from "@/design-system";
+import styles from "@/features/workbench/components/pm-operating-quality.module.css";
 import PmOperatingQualityStateBadge from "@/features/workbench/components/pm-operating-quality-state-badge";
 import { formatPmQualityReasonCodeList } from "@/features/workbench/pm-operating-quality-panel-helpers";
 import type { PmOperatingQualityPanelModel } from "@/features/workbench/pm-operating-quality-view-model";
@@ -12,6 +13,8 @@ type Props = {
 export default function PmOperatingQualityPolicyCard({ model }: Props) {
   return (
     <AnalyticsTable
+      className={styles.table}
+      tableMinWidth={780}
       ariaLabel="PM operating quality policies"
       variant="analysis"
       density="compact"
