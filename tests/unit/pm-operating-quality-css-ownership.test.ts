@@ -67,17 +67,23 @@ describe("PM Operating Quality CSS ownership", () => {
     expect(canonicalWorkflow).not.toContain('locator(".pm-quality-status-strip")');
   });
 
-  it("preserves a dense supervisory hierarchy that collapses at workstation widths", () => {
+  it("uses full-width evidence and a responsive governance metric strip", () => {
     const stylesheet = readFileSync(stylesheetPath, "utf8");
 
     expect(stylesheet).toMatch(
-      /\.workspace\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) minmax\(270px, 340px\);/,
+      /\.workspace\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/,
     );
     expect(stylesheet).toMatch(
       /\.statusStrip\s*\{[\s\S]*?repeat\(auto-fit, minmax\(min\(100%, 12rem\), 1fr\)\)/,
     );
     expect(stylesheet).toMatch(
-      /@media \(max-width: 1200px\)[\s\S]*?\.workspace,[\s\S]*?grid-template-columns: 1fr;/,
+      /\.governanceStack\s*\{[\s\S]*?grid-template-columns: repeat\(5, minmax\(0, 1fr\)\);/,
+    );
+    expect(stylesheet).toMatch(
+      /@media \(max-width: 1200px\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?repeat\(2, minmax\(0, 1fr\)\)/,
+    );
+    expect(stylesheet).toMatch(
+      /@media \(max-width: 640px\)[\s\S]*?\.governanceStack\s*\{[\s\S]*?grid-template-columns: 1fr;/,
     );
     expect(stylesheet).toContain("overflow-wrap: anywhere");
   });
