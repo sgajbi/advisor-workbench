@@ -74,6 +74,16 @@ type RiskQueryResult<Response> = {
   isStale: boolean;
 };
 
+const RISK_FETCH_FAILURE_DETAIL = {
+  summary: "Risk summary could not be loaded.",
+  concentration: "Risk concentration could not be loaded.",
+  drawdown: "Risk drawdown could not be loaded.",
+  rolling: "Rolling risk could not be loaded.",
+  attribution: "Risk attribution could not be loaded.",
+  drawdownDetail: "Underwater-path detail could not be loaded.",
+  rollingDetail: "Rolling-series detail could not be loaded.",
+} as const;
+
 export function usePerformanceRiskContract({
   workspace,
   period,
@@ -162,7 +172,7 @@ export function usePerformanceRiskContract({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk summary"),
+        detail: RISK_FETCH_FAILURE_DETAIL.summary,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
   );
@@ -173,7 +183,7 @@ export function usePerformanceRiskContract({
       buildUnavailableRiskConcentration({
         workspace,
         period,
-        detail: buildRiskFetchFailureDetail(error, "Risk concentration"),
+        detail: RISK_FETCH_FAILURE_DETAIL.concentration,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
   );
@@ -185,7 +195,7 @@ export function usePerformanceRiskContract({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk drawdown"),
+        detail: RISK_FETCH_FAILURE_DETAIL.drawdown,
         includeUnderwaterSeries: false,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
@@ -198,7 +208,7 @@ export function usePerformanceRiskContract({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk rolling"),
+        detail: RISK_FETCH_FAILURE_DETAIL.rolling,
         includeTimeSeries: false,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
@@ -206,12 +216,12 @@ export function usePerformanceRiskContract({
   const riskAttribution = currentRiskResponse(
     attributionQuery,
     isDetailsPending,
-    (error) =>
+    () =>
       buildUnavailableRiskAttribution({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk attribution"),
+        detail: RISK_FETCH_FAILURE_DETAIL.attribution,
       }),
   );
   const riskDrawdownDetail = currentRiskResponse(
@@ -222,7 +232,7 @@ export function usePerformanceRiskContract({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk drawdown detail"),
+        detail: RISK_FETCH_FAILURE_DETAIL.drawdownDetail,
         includeUnderwaterSeries: true,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
@@ -235,7 +245,7 @@ export function usePerformanceRiskContract({
         workspace,
         period,
         detailBasis,
-        detail: buildRiskFetchFailureDetail(error, "Risk rolling detail"),
+        detail: RISK_FETCH_FAILURE_DETAIL.rollingDetail,
         includeTimeSeries: true,
         permissionBlocked: isWorkbenchPermissionBlockedError(error),
       }),
@@ -309,11 +319,4 @@ function isQueryAwaitingCurrentSource<Response>(
   query: RiskQueryResult<Response>,
 ): boolean {
   return query.isPending || (query.isFetching && query.isStale);
-}
-
-function buildRiskFetchFailureDetail(error: unknown, label: string): string {
-  if (isWorkbenchPermissionBlockedError(error)) {
-    return `${label} is permission-blocked for this caller context.`;
-  }
-  return error instanceof Error ? error.message : `${label} fetch failed.`;
 }
