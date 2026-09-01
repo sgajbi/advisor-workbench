@@ -9883,9 +9883,6 @@
     padding: 0.78rem;
   }
 
-  .proof-pack-status-strip {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* Portfolio Stitch design-system normalization: institutional density, operational UI

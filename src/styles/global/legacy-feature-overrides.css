@@ -1,5 +1,4 @@
 /* Governed global layer: legacy feature overrides preserved in original cascade order. */
-
 .report-batch-operations-panel .section-block-body {
   gap: 0.75rem;
 }
@@ -24,44 +23,5 @@
 .report-batch-status-strip span,
 .report-batch-run-summary span {
   min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.proof-pack-panel .section-block-body {
-  gap: 0.75rem;
-}
-
-.proof-pack-badge-row,
-.proof-pack-action-row,
-.proof-pack-reason-row,
-.proof-pack-handoff-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.proof-pack-status-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.proof-pack-panel .analytics-table-frame {
-  margin-top: 0.35rem;
-}
-
-.proof-pack-markdown-preview {
-  max-height: 18rem;
-  min-width: 0;
-  overflow: auto;
-  padding: 0.75rem;
-  border: var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--surface-secondary);
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  line-height: 1.45;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
