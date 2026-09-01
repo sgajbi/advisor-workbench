@@ -101,6 +101,7 @@
             "review context is source-confirmed across Performance decision modes",
             "governed review context survives Portfolio to Performance and browser Back",
             "Risk Review renders Gateway mandate evidence without browser-owned policy",
+            "Risk revisit reuses fresh Gateway evidence without parallel cache reads",
             "analysis mode renders live attribution analytics",
             "advisor brief discloses AI, evidence, review, and client-use posture accessibly",
             "Advisor Brief review transaction requires confirmation and renders source-recorded proof",
@@ -119,6 +120,9 @@
             ],
             "risk-review": [
               "Risk Review renders Gateway mandate evidence without browser-owned policy"
+            ],
+            "risk-query-freshness": [
+              "Risk revisit reuses fresh Gateway evidence without parallel cache reads"
             ],
             "advisor-brief-review": [
               "Advisor Brief review transaction requires confirmation and renders source-recorded proof"

@@ -60,6 +60,7 @@
     "test:e2e:performance:analysis-controls": "node scripts/testing/run-performance-smoke-scenario.mjs analysis-controls",
     "test:e2e:performance:return-path-density": "node scripts/testing/run-performance-smoke-scenario.mjs populated --focus return-path-density",
     "test:e2e:performance:risk-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --focus risk-review",
+    "test:e2e:performance:risk-query-freshness": "node scripts/testing/run-performance-smoke-scenario.mjs populated --focus risk-query-freshness",
     "test:e2e:performance:advisor-brief-review": "node scripts/testing/run-performance-smoke-scenario.mjs populated --focus advisor-brief-review",
     "test:e2e:performance:evidence-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs populated --focus evidence-assurance",
     "test:e2e:performance:evidence-period-assurance": "node scripts/testing/run-performance-smoke-scenario.mjs unknown-period",

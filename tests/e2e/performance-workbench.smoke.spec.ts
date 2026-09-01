@@ -1523,6 +1523,41 @@ test.describe('Performance workbench smoke', () => {
     expect(runtime.snapshot()).toEqual([]);
   });
 
+  test('Risk revisit reuses fresh Gateway evidence without parallel cache reads', async ({
+    page,
+    request,
+  }) => {
+    test.skip(
+      process.env.PERFORMANCE_E2E_FIXTURE !== 'populated',
+      'This deterministic Risk revisit proof requires the populated performance fixture.',
+    );
+    test.setTimeout(90_000);
+    const runtime = observeBrowserRuntimeFailures(page);
+    const session = await openPerformanceWorkbench(page, request);
+    expect(session.available).toBe(true);
+    expect(fixtureGateway).not.toBeNull();
+    const baseline = readPrimaryRiskRequestCounts();
+    const firstRiskRead = incrementRiskRequestCounts(baseline);
+
+    await (await openPerformanceWorkflowStep(page, /^Risk review/i)).click();
+    await expect(
+      page.getByRole('region', { name: 'Risk executive overview' }),
+    ).toBeVisible();
+    await expect.poll(() => readPrimaryRiskRequestCounts()).toEqual(firstRiskRead);
+
+    await (await openPerformanceWorkflowStep(page, /^Performance overview/i)).click();
+    await expect(page.getByLabel('Executive return strip')).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('mode')).toBeNull();
+    await (await openPerformanceWorkflowStep(page, /^Risk review/i)).click();
+    await expect(
+      page.getByRole('region', { name: 'Risk executive overview' }),
+    ).toBeVisible();
+
+    expect(readPrimaryRiskRequestCounts()).toEqual(firstRiskRead);
+    await runtime.assertStylesAreHeadManaged();
+    expect(runtime.snapshot()).toEqual([]);
+  });
+
   test('refresh failure keeps source-confirmed performance context and recovers without stale labels', async ({
     page,
     request,
@@ -2374,3 +2409,22 @@ test.describe('Performance workbench smoke', () => {
     expect(fixtureGateway?.requests.details).toBe(0);
   });
 });
+
+function readPrimaryRiskRequestCounts() {
+  const requests = fixtureGateway?.requests;
+  return {
+    summary: requests?.riskSummary ?? 0,
+    concentration: requests?.riskConcentration ?? 0,
+    drawdown: requests?.riskDrawdown ?? 0,
+    rolling: requests?.riskRolling ?? 0,
+    attribution: requests?.riskAttribution ?? 0,
+  };
+}
+
+function incrementRiskRequestCounts(
+  counts: ReturnType<typeof readPrimaryRiskRequestCounts>,
+) {
+  return Object.fromEntries(
+    Object.entries(counts).map(([name, count]) => [name, count + 1]),
+  );
+}
