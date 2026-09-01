@@ -249,6 +249,12 @@ Current repository posture:
     support boundary, supportability, report-input posture, AI-evidence posture, and
     Gateway-backed governed AI narrative requests without client-side outcome calculation or
     source-owner store querying.
+    The primary scan path presents review status, comparison outcome, and drift improvement once,
+    before the source-ranked timeline, recommended actions, source profile, and selected-review
+    detail. Report preparation, AI support, source evidence, and client-communication controls stay
+    at their point of action or evidence rather than repeating in a second readiness dashboard.
+    The timeline is an explicitly labelled scroll region when exact columns exceed its capacity;
+    the page itself must not overflow.
     Manage-owned `client_communication_boundary` posture is rendered as a no-client-communication
     boundary when present; Workbench must not create client messaging, approval, delivery, or
     communication-audit workflows from outcome-review evidence.
@@ -325,6 +331,9 @@ Current repository posture:
     Module, so an unchanged aggregate escape count cannot conceal their return. Manage Review Evidence
     rail presentation belongs to `manage-evidence-rail.module.css`; do not restore its retired
     global class contract inside `manage-workspace.module.css`.
+    Outcome Review presentation belongs to `outcome-review.module.css`, which has a zero-escape
+    budget. Do not restore `outcome-review-*` selectors to the Manage or governed global layers;
+    extend the owning component or shared primitive through typed class hooks instead.
     The Rebalance workspace is owned by the shared `SectionBlock`/`Panel` and `AnalyticsTable`
     primitives plus its active `rebalance-*` composition. The superseded
     `dpm-wave-command-center-*` selector family has no presentation authority and is forbidden from

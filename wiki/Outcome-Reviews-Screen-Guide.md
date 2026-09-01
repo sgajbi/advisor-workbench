@@ -13,7 +13,7 @@ infer mandate compliance, approve client communication, or report execution.
 | Canonical route | `/workbench/{portfolioId}?mode=reviews` |
 | Navigation | **Manage**, then **Outcome reviews** in the selected-portfolio workspace |
 | Supported scope | One selected portfolio and the cursor-bounded outcome reviews returned by Manage through Gateway |
-| Primary reading order | Review posture and comparison outcome, handoff readiness, review timeline, selected outcome detail, mandate impact, evidence sources, then supported actions |
+| Primary reading order | Review status, comparison outcome, drift improvement, review timeline, recommended actions, source profile, then selected outcome detail and evidence |
 | Evidence posture | Expected snapshot, realised snapshot, evidence pack, lineage, report preparation, AI-assisted review summary, and client-communication controls remain separate source-backed facts |
 
 Route access is not proof that a review, evidence pack, report, AI-assisted output, client approval,
@@ -54,11 +54,11 @@ client-delivery authority, trade approval, order-routing authority, or execution
 1. Enter from [Manage Overview](Manage-Overview-Screen-Guide) for the selected portfolio.
 2. Read **Review posture** and **Comparison outcome** separately. Review posture states the next
    workflow condition; comparison outcome states what Manage recorded against expected tolerance.
-3. Confirm the review window and whether report preparation, the AI-assisted review summary, and
-   source evidence are ready or blocked.
-4. Use **Review timeline** to compare returned reviews, then read the selected review detail. The
+3. Use **Review timeline** to confirm the review window and compare returned reviews, then read the selected review detail. The
    current implementation presents the first source-ranked review; it does not invent a browser
    ranking.
+4. Use **Recommended actions** only where source evidence permits the evidence-pack or AI-assisted
+   handoff. Report preparation remains beside the selected-review detail where that request acts.
 5. Review updated time, retention date, mandate impact, expected and realised dimensions, variance,
    internal rationale, client-communication controls, and evidence availability.
 6. Open the evidence pack only when Manage returned a proof-pack reference.
@@ -79,6 +79,9 @@ client-delivery authority, trade approval, order-routing authority, or execution
   **Review required**.
 - Keeps comparison outcome separate from **Ready for adviser review**, **Adviser review pending**,
   **Escalation required**, and **Needs attention** workflow posture.
+- Presents review status, comparison outcome, and drift improvement once in the primary decision
+  summary. Review-window, evidence, report, AI, and client-communication posture remain beside the
+  timeline, action, or evidence they govern rather than repeating in a readiness dashboard.
 - Preserves a source-authored business outcome summary when it is not a machine-state alias; the
   browser does not overwrite source narrative with a stronger mandate claim.
 - Presents known handoff reason codes as **Report preparation ready**, **Report preparation
@@ -189,11 +192,13 @@ superiority.
   through Gateway and renders the source comparison without exposing review ids or hashes.
 - `tests/e2e/manage-outcome-reviews-workspace.spec.ts` proves the optimized production screen at
   1440, 1024, 768, and 519 pixels with one screen heading, one AI-assisted action, readable
-  two-column decision summaries, progressive source/client-control detail, no page-level overflow,
+  component-owned decision summaries, progressive source/client-control detail, an explicitly
+  labelled scroll boundary for the exact timeline columns, no page-level overflow,
   no raw known source commands or contract names in the business path, and keyboard activation that
   hands focus to the returned AI-assisted review heading.
 - Reviewable rendered evidence is committed under
-  `docs/evidence/issue-799-product-vocabulary/outcome-reviews/`.
+  `docs/evidence/issue-978-outcome-review-ownership/outcome-reviews/`; the earlier vocabulary proof
+  remains under `docs/evidence/issue-799-product-vocabulary/outcome-reviews/`.
 - `scripts/live/validation/browser-workflows.mjs` remains the governed canonical Manage browser
   entrypoint. Protected PR, exact-main, and canonical populated evidence remain separate release
   controls and must not be inferred from fixture-backed optimized-production proof.

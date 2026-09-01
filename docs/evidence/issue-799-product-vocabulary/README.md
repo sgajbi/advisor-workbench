@@ -21,7 +21,7 @@ page-level horizontal overflow.
 ## Command
 
 ```powershell
-$env:ISSUE_799_EVIDENCE_DIR='<lotus-workbench>\docs\evidence\issue-799-product-vocabulary'
+$env:OUTCOME_REVIEW_EVIDENCE_DIR='<lotus-workbench>\docs\evidence\issue-799-product-vocabulary'
 $env:MANAGE_E2E_FIXTURE_PORT='18179'
 $env:MANAGE_E2E_WORKBENCH_PORT='31079'
 npm run test:e2e:manage:outcome-reviews
