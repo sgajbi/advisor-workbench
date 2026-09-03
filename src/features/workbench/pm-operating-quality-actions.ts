@@ -1,4 +1,9 @@
 import type { DpmPmOperatingQualityGatewayResponse } from "./types";
+import type { DpmAiWorkflowOutcome } from "./dpm-ai-workflow-disclosure";
+import type {
+  PmOperatingQualityPanelModel,
+  PmOperatingQualitySelection,
+} from "./pm-operating-quality-view-model";
 
 export type PmQualityActionError = {
   body: string;
@@ -191,3 +196,68 @@ function classifyGatewayStatus(status: string): string {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
+
+// ---------------------------------------------------------------------------
+// The panel-facing contract of usePmOperatingQualityActions (#989): the server-
+// provided source evidence it accepts and the derived, Query-owned posture the
+// PM operating-quality panel renders. Kept beside the other panel-facing types
+// so the contract and its vocabulary live in one place.
+// ---------------------------------------------------------------------------
+
+export type UsePmOperatingQualityActionsInput = {
+  policies: DpmPmOperatingQualityGatewayResponse | null;
+  scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
+  fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
+  reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
+  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
+};
+
+export type UsePmOperatingQualityActionsResult = {
+  model: PmOperatingQualityPanelModel;
+  selection: PmOperatingQualitySelection;
+  pendingFairnessDetail: boolean;
+  pendingReviewActionDetail: boolean;
+  pendingAction: boolean;
+  pendingFairnessAction: boolean;
+  pendingFairnessCreateAction: boolean;
+  pendingSummaryAction: boolean;
+  pendingReviewActionPreview: boolean;
+  pendingReviewActionCreate: boolean;
+  pendingSummaryInvocationPreview: boolean;
+  pendingSummaryInvocationCreate: boolean;
+  selectionLocked: boolean;
+  actionError: PmQualityActionError | null;
+  actionMessage: string | null;
+  summaryOutcome: DpmAiWorkflowOutcome | null;
+  fairnessCreateEvidence: PmQualityFairnessCreateEvidence | null;
+  reviewActionCreateEvidence: PmQualityReviewActionEvidence | null;
+  summaryInvocationCreateEvidence: PmQualitySummaryInvocationEvidence | null;
+  reviewActionForm: PmQualityReviewActionForm;
+  summaryInvocationForm: PmQualitySummaryInvocationForm;
+  reviewActionTargetOptions: PmQualityReviewTargetOption[];
+  summaryInvocationScoreRunOptions: PmQualityCommandOption[];
+  summaryInvocationReviewActionOptions: PmQualityCommandOption[];
+  reviewActionReadiness: { state: string; detail: string };
+  summaryInvocationReadiness: { state: string; detail: string };
+  reviewActionPreviewReady: boolean;
+  summaryInvocationPreviewReady: boolean;
+  setReviewActionFormValue: (field: keyof PmQualityReviewActionForm, value: string) => void;
+  setSummaryInvocationFormValue: (
+    field: keyof PmQualitySummaryInvocationForm,
+    value: string
+  ) => void;
+  selectScoreRun: (scoreRunId: string) => void;
+  selectFairnessAnalysis: (fairnessAnalysisId: string) => Promise<void>;
+  selectReviewAction: (reviewActionId: string) => Promise<void>;
+  previewScoreRun: () => Promise<void>;
+  previewFairnessAnalysis: () => Promise<void>;
+  createFairnessAnalysis: () => Promise<void>;
+  requestSupportSummary: () => Promise<void>;
+  previewReviewAction: () => Promise<void>;
+  createReviewAction: () => Promise<void>;
+  previewSummaryInvocation: () => Promise<void>;
+  createSummaryInvocation: () => Promise<void>;
+};

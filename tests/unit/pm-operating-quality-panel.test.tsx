@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as baseRender, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-operating-quality-panel";
@@ -353,13 +354,26 @@ const summaryInvocationDetail: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return baseRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
+
 describe("PmOperatingQualityPanel", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("renders PM quality evidence without exposing hashes or claiming ranking decisions", () => {
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={policies}
         scoreRuns={scoreRuns}
@@ -492,7 +506,7 @@ describe("PmOperatingQualityPanel", () => {
   });
 
   it("explains when score-run preview is blocked by missing policy context", () => {
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={{
           ...policies,
@@ -527,7 +541,7 @@ describe("PmOperatingQualityPanel", () => {
       new Error("Failed to fetch preview DPM PM operating quality score run (409)")
     );
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
     fireEvent.click(screen.getByRole("button", { name: "Preview Score Run" }));
 
     await waitFor(() => {
@@ -558,7 +572,7 @@ describe("PmOperatingQualityPanel", () => {
   });
 
   it("explains when fairness preview is blocked by missing source-defined segments", () => {
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={policies}
         scoreRuns={{
@@ -587,7 +601,7 @@ describe("PmOperatingQualityPanel", () => {
   });
 
   it("keeps Manage action-register blocks visible before command execution", () => {
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={policies}
         scoreRuns={{
@@ -675,7 +689,7 @@ describe("PmOperatingQualityPanel", () => {
       },
     });
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
     fireEvent.click(screen.getByRole("button", { name: "Preview Fairness" }));
 
     await waitFor(() => {
@@ -737,7 +751,7 @@ describe("PmOperatingQualityPanel", () => {
       fairnessAnalysisResponse
     );
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
     fireEvent.click(screen.getByRole("button", { name: "Persist Fairness" }));
 
     await waitFor(() => {
@@ -783,7 +797,7 @@ describe("PmOperatingQualityPanel", () => {
   it("requests a review-required PM quality support summary through Gateway", async () => {
     vi.mocked(requestDpmPmOperatingQualitySummary).mockResolvedValue(summaryResponse);
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
     fireEvent.click(screen.getByRole("button", { name: "Request Support Summary" }));
 
     await waitFor(() => {
@@ -904,7 +918,7 @@ describe("PmOperatingQualityPanel", () => {
       summaryInvocationDetail
     );
 
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={policies}
         scoreRuns={multiScoreRuns}
@@ -961,7 +975,7 @@ describe("PmOperatingQualityPanel", () => {
       summaryInvocationDetail
     );
 
-    render(
+    renderWithQueryClient(
       <PmOperatingQualityPanel
         policies={policies}
         scoreRuns={scoreRuns}

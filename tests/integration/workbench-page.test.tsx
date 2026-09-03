@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render as baseRender, screen, within } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import WorkbenchPage from "../../src/app/workbench/[portfolioId]/page";
@@ -13,6 +14,19 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return baseRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
+
 describe("WorkbenchPage", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -23,7 +37,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_1001" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_1001" }),
         searchParams: Promise.resolve({
@@ -110,7 +124,7 @@ describe("WorkbenchPage", () => {
       })
     );
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_404" }),
         searchParams: Promise.resolve({}),
@@ -132,7 +146,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_1001" }),
         searchParams: Promise.resolve({
@@ -167,7 +181,7 @@ describe("WorkbenchPage", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_1001" }),
         searchParams: Promise.resolve({}),
@@ -186,7 +200,7 @@ describe("WorkbenchPage", () => {
   it("renders mandate health as a focused manage surface", async () => {
     vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_1101" })));
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_1101" }),
         searchParams: Promise.resolve({ mode: "mandate" }),
@@ -209,7 +223,7 @@ describe("WorkbenchPage", () => {
   it("renders construction as its own manage surface instead of the full operations stack", async () => {
     vi.stubGlobal("fetch", vi.fn(createManageFetch({ portfolioId: "PF_2001" })));
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_2001" }),
         searchParams: Promise.resolve({ mode: "construction" }),
@@ -229,7 +243,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_2101" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_2101" }),
         searchParams: Promise.resolve({ mode: "memory" }),
@@ -253,7 +267,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_2501" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_2501" }),
         searchParams: Promise.resolve({ mode: "quality" }),
@@ -316,7 +330,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_3001" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_3001" }),
         searchParams: Promise.resolve({ mode: "waves" }),
@@ -382,7 +396,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_4001" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_4001" }),
         searchParams: Promise.resolve({ mode: "reviews" }),
@@ -407,7 +421,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_5001" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_5001" }),
         searchParams: Promise.resolve({ mode: "proof" }),
@@ -437,7 +451,7 @@ describe("WorkbenchPage", () => {
     const fetchMock = vi.fn(createManageFetch({ portfolioId: "PF_5101" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       await WorkbenchPage({
         params: Promise.resolve({ portfolioId: "PF_5101" }),
         searchParams: Promise.resolve({ mode: "copilot" }),
