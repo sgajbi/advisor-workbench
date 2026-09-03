@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   buildDpmPmOperatingQualitySummaryInvocationCorrelationId,
   buildDpmPmOperatingQualityReviewActionCorrelationId,
@@ -25,140 +26,53 @@ import {
   readPmQualityFairnessAnalysisId,
   readPmQualityReviewActionId,
   readPmQualitySummaryInvocationId,
-  type PmQualityActionError,
-  type PmQualityCommandOption,
-  type PmQualityFairnessCreateEvidence,
-  type PmQualityReviewActionEvidence,
   type PmQualityReviewActionForm,
-  type PmQualityReviewTargetOption,
-  type PmQualitySummaryInvocationEvidence,
   type PmQualitySummaryInvocationForm,
+  type UsePmOperatingQualityActionsInput,
+  type UsePmOperatingQualityActionsResult,
 } from "@/features/workbench/pm-operating-quality-actions";
 import {
-  buildPmOperatingQualitySelectionKey,
-  buildReviewActionPreviewKey,
-  buildReviewActionRef,
   buildReviewActionRequest,
   buildReviewActionTargetOptions,
-  buildSummaryInvocationPreviewKey,
-  buildSummaryInvocationRef,
   buildSummaryInvocationRequest,
   buildSummaryInvocationReviewActionOptions,
   buildSummaryInvocationScoreRunOptions,
   pmOperatingQualitySelectionEquals,
   readPmOperatingQualitySelection,
-  resolveReviewActionReadiness,
-  resolveReviewActionTarget,
-  resolveReviewTargetType,
-  resolveSummaryInvocationReadiness,
-  resolveSummaryInvocationTarget,
 } from "@/features/workbench/pm-operating-quality-command-model";
+import { usePmOperatingQualityCommandForms } from "@/features/workbench/use-pm-operating-quality-command-forms";
+import {
+  pmOperatingQualityFairnessAnalysisQueryOptions,
+  pmOperatingQualityReviewActionQueryOptions,
+} from "@/features/workbench/pm-operating-quality-query-options";
+import {
+  PM_OPERATING_QUALITY_PERSISTENCE_SCOPE,
+  pmOperatingQualityMutationKeys,
+  pmOperatingQualityQueryKeys,
+} from "@/features/workbench/pm-operating-quality-query-keys";
+import {
+  PM_QUALITY_COMMAND_COPY,
+  PmQualityCommandError,
+  commandPosture,
+  resolveCommandFeedback,
+  type PmQualityCommandVariables,
+  type PmQualitySummaryResult,
+} from "@/features/workbench/pm-operating-quality-command-lifecycle";
+import {
+  usePmOperatingQualitySources,
+  type PmQualityPersistedRecord,
+} from "@/features/workbench/use-pm-operating-quality-sources";
 import {
   buildPmOperatingQualityPanelModel,
-  hasPmOperatingQualityFairnessAnalysis,
-  hasPmOperatingQualityReviewAction,
   matchesPmOperatingQualitySummaryScoreRun,
   type PmOperatingQualitySelection,
   type PmOperatingQualityPanelModel,
 } from "@/features/workbench/pm-operating-quality-view-model";
-import {
-  buildDpmAiWorkflowOutcome,
-  type DpmAiWorkflowOutcome,
-} from "@/features/workbench/dpm-ai-workflow-disclosure";
+import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import type {
   DpmPmOperatingQualityGatewayResponse,
   DpmPmOperatingQualitySummaryResponse,
 } from "@/features/workbench/types";
-
-type UsePmOperatingQualityActionsInput = {
-  policies: DpmPmOperatingQualityGatewayResponse | null;
-  scoreRuns: DpmPmOperatingQualityGatewayResponse | null;
-  fairnessAnalyses?: DpmPmOperatingQualityGatewayResponse | null;
-  fairnessAnalysisDetail?: DpmPmOperatingQualityGatewayResponse | null;
-  reviewActions?: DpmPmOperatingQualityGatewayResponse | null;
-  reviewActionDetail?: DpmPmOperatingQualityGatewayResponse | null;
-  summaryInvocations?: DpmPmOperatingQualityGatewayResponse | null;
-  summaryInvocationDetail?: DpmPmOperatingQualityGatewayResponse | null;
-};
-
-type UsePmOperatingQualityActionsResult = {
-  model: PmOperatingQualityPanelModel;
-  selection: PmOperatingQualitySelection;
-  pendingFairnessDetail: boolean;
-  pendingReviewActionDetail: boolean;
-  pendingAction: boolean;
-  pendingFairnessAction: boolean;
-  pendingFairnessCreateAction: boolean;
-  pendingSummaryAction: boolean;
-  pendingReviewActionPreview: boolean;
-  pendingReviewActionCreate: boolean;
-  pendingSummaryInvocationPreview: boolean;
-  pendingSummaryInvocationCreate: boolean;
-  selectionLocked: boolean;
-  actionError: PmQualityActionError | null;
-  actionMessage: string | null;
-  summaryOutcome: DpmAiWorkflowOutcome | null;
-  fairnessCreateEvidence: PmQualityFairnessCreateEvidence | null;
-  reviewActionCreateEvidence: PmQualityReviewActionEvidence | null;
-  summaryInvocationCreateEvidence: PmQualitySummaryInvocationEvidence | null;
-  reviewActionForm: PmQualityReviewActionForm;
-  summaryInvocationForm: PmQualitySummaryInvocationForm;
-  reviewActionTargetOptions: PmQualityReviewTargetOption[];
-  summaryInvocationScoreRunOptions: PmQualityCommandOption[];
-  summaryInvocationReviewActionOptions: PmQualityCommandOption[];
-  reviewActionReadiness: { state: string; detail: string };
-  summaryInvocationReadiness: { state: string; detail: string };
-  reviewActionPreviewReady: boolean;
-  summaryInvocationPreviewReady: boolean;
-  setReviewActionFormValue: (field: keyof PmQualityReviewActionForm, value: string) => void;
-  setSummaryInvocationFormValue: (
-    field: keyof PmQualitySummaryInvocationForm,
-    value: string
-  ) => void;
-  selectScoreRun: (scoreRunId: string) => void;
-  selectFairnessAnalysis: (fairnessAnalysisId: string) => Promise<void>;
-  selectReviewAction: (reviewActionId: string) => Promise<void>;
-  previewScoreRun: () => Promise<void>;
-  previewFairnessAnalysis: () => Promise<void>;
-  createFairnessAnalysis: () => Promise<void>;
-  requestSupportSummary: () => Promise<void>;
-  previewReviewAction: () => Promise<void>;
-  createReviewAction: () => Promise<void>;
-  previewSummaryInvocation: () => Promise<void>;
-  createSummaryInvocation: () => Promise<void>;
-};
-
-type PmQualitySummaryState = {
-  scoreRunId: string;
-  pending: boolean;
-  response: DpmPmOperatingQualitySummaryResponse | null;
-  outcome: DpmAiWorkflowOutcome | null;
-  error: PmQualityActionError | null;
-};
-
-type PmQualitySelectedDetailState = {
-  recordId: string;
-  pending: boolean;
-  response: DpmPmOperatingQualityGatewayResponse | null;
-};
-
-function retainGatewayResponseBySourceId(
-  current: DpmPmOperatingQualityGatewayResponse[],
-  response: DpmPmOperatingQualityGatewayResponse,
-  readSourceId: (candidate: DpmPmOperatingQualityGatewayResponse) => string | null,
-): DpmPmOperatingQualityGatewayResponse[] {
-  const sourceId = readSourceId(response);
-  if (!sourceId) {
-    return current;
-  }
-  return [
-    ...current.filter((candidate) => {
-      const candidateId = readSourceId(candidate);
-      return Boolean(candidateId && candidateId !== sourceId);
-    }),
-    response,
-  ];
-}
 
 export function usePmOperatingQualityActions({
   policies,
@@ -170,244 +84,426 @@ export function usePmOperatingQualityActions({
   summaryInvocations = null,
   summaryInvocationDetail = null,
 }: UsePmOperatingQualityActionsInput): UsePmOperatingQualityActionsResult {
-  const [previewResponse, setPreviewResponse] =
-    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
-  const [fairnessPreviewResponse, setFairnessPreviewResponse] =
-    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
-  const [retainedFairnessAnalysisResponses, setRetainedFairnessAnalysisResponses] =
-    useState<DpmPmOperatingQualityGatewayResponse[]>([]);
-  const [fairnessRetentionSourceKey, setFairnessRetentionSourceKey] = useState(
-    fairnessAnalyses?.correlation_id ?? null,
-  );
-  const [reviewActionPreviewResponse, setReviewActionPreviewResponse] =
-    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
-  const [reviewActionPreviewKey, setReviewActionPreviewKey] = useState<string | null>(null);
-  const [retainedReviewActionResponses, setRetainedReviewActionResponses] =
-    useState<DpmPmOperatingQualityGatewayResponse[]>([]);
-  const [reviewActionRetentionSourceKey, setReviewActionRetentionSourceKey] = useState(
-    reviewActions?.correlation_id ?? null,
-  );
-  const [summaryInvocationPreviewResponse, setSummaryInvocationPreviewResponse] =
-    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
-  const [summaryInvocationPreviewKey, setSummaryInvocationPreviewKey] =
-    useState<string | null>(null);
-  const [createdSummaryInvocationResponse, setCreatedSummaryInvocationResponse] =
-    useState<DpmPmOperatingQualityGatewayResponse | null>(null);
-  const [fairnessCreateEvidence, setFairnessCreateEvidence] =
-    useState<PmQualityFairnessCreateEvidence | null>(null);
-  const [reviewActionCreateEvidence, setReviewActionCreateEvidence] =
-    useState<PmQualityReviewActionEvidence | null>(null);
-  const [summaryInvocationCreateEvidence, setSummaryInvocationCreateEvidence] =
-    useState<PmQualitySummaryInvocationEvidence | null>(null);
-  const [summaryState, setSummaryState] =
-    useState<PmQualitySummaryState | null>(null);
   const [selectionPreference, setSelectionPreference] = useState<PmOperatingQualitySelection>({
     scoreRunId: null,
     fairnessAnalysisId: null,
     reviewActionId: null,
   });
-  const [selectedFairnessDetail, setSelectedFairnessDetail] =
-    useState<PmQualitySelectedDetailState | null>(null);
-  const [selectedReviewActionDetail, setSelectedReviewActionDetail] =
-    useState<PmQualitySelectedDetailState | null>(null);
-  const summaryRequestSequenceRef = useRef(0);
-  const fairnessDetailSequenceRef = useRef(0);
-  const reviewActionDetailSequenceRef = useRef(0);
-  const persistedActionPendingRef = useRef(false);
-  const [pendingAction, setPendingAction] = useState(false);
-  const [pendingFairnessAction, setPendingFairnessAction] = useState(false);
-  const [pendingFairnessCreateAction, setPendingFairnessCreateAction] = useState(false);
-  const [pendingReviewActionPreview, setPendingReviewActionPreview] = useState(false);
-  const [pendingReviewActionCreate, setPendingReviewActionCreate] = useState(false);
-  const [pendingSummaryInvocationPreview, setPendingSummaryInvocationPreview] = useState(false);
-  const [pendingSummaryInvocationCreate, setPendingSummaryInvocationCreate] = useState(false);
-  const [actionError, setActionError] = useState<PmQualityActionError | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const selectedFairnessDetailResponse =
-    selectedFairnessDetail?.recordId === selectionPreference.fairnessAnalysisId
-      ? selectedFairnessDetail.response
-      : null;
-  const selectedReviewActionDetailResponse =
-    selectedReviewActionDetail?.recordId === selectionPreference.reviewActionId
-      ? selectedReviewActionDetail.response
-      : null;
-  const fairnessCanonicalSourceKey = fairnessAnalyses?.correlation_id ?? null;
-  if (fairnessRetentionSourceKey !== fairnessCanonicalSourceKey) {
-    setFairnessRetentionSourceKey(fairnessCanonicalSourceKey);
-    setRetainedFairnessAnalysisResponses((current) =>
-      current.filter((response) => {
-        const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
-        return Boolean(
-          fairnessAnalysisId &&
-            !hasPmOperatingQualityFairnessAnalysis(fairnessAnalyses, fairnessAnalysisId),
-        );
-      }),
-    );
-  }
-  const reviewActionCanonicalSourceKey = reviewActions?.correlation_id ?? null;
-  if (reviewActionRetentionSourceKey !== reviewActionCanonicalSourceKey) {
-    setReviewActionRetentionSourceKey(reviewActionCanonicalSourceKey);
-    setRetainedReviewActionResponses((current) =>
-      current.filter((response) => {
-        const reviewActionId = readPmQualityReviewActionId(response);
-        return Boolean(
-          reviewActionId &&
-            !hasPmOperatingQualityReviewAction(reviewActions, reviewActionId),
-        );
-      }),
-    );
-  }
-  const sourceModel = buildPmOperatingQualityPanelModel({
-    policies,
-    scoreRuns,
+  const [commandEpoch, setCommandEpoch] = useState(0);
+  const queryClient = useQueryClient();
+  const sources = usePmOperatingQualitySources({
     fairnessAnalyses,
-    fairnessAnalysisDetails: [selectedFairnessDetailResponse, fairnessAnalysisDetail],
-    retainedFairnessAnalyses: retainedFairnessAnalysisResponses,
+    fairnessAnalysisDetail,
     reviewActions,
-    reviewActionDetails: [
-      selectedReviewActionDetailResponse,
-      reviewActionPreviewResponse,
-      reviewActionDetail,
-    ],
-    retainedReviewActions: retainedReviewActionResponses,
+    reviewActionDetail,
     summaryInvocations,
-    summaryInvocationDetail:
-      createdSummaryInvocationResponse ??
-      summaryInvocationPreviewResponse ??
-    summaryInvocationDetail,
-    preview: previewResponse,
-    fairnessPreview: fairnessPreviewResponse,
-    summary: null,
-    selection: selectionPreference,
+    selectedFairnessAnalysisId: selectionPreference.fairnessAnalysisId,
+    selectedReviewActionId: selectionPreference.reviewActionId,
   });
-  const currentSummaryState =
-    summaryState?.scoreRunId === sourceModel.selectedScoreRun?.scoreRunId
-      ? summaryState
+
+  // A source-changing persisted command is complete only when the exact affected list
+  // has refreshed. Awaiting the invalidation inside the mutation keeps `isPending`
+  // truthful through the refresh, and a refresh failure is an explicit error -- never
+  // a completed confirmation over stale source evidence.
+  async function refreshAffectedList(
+    queryKey: readonly unknown[],
+    label: string,
+  ): Promise<void> {
+    try {
+      await queryClient.invalidateQueries({ queryKey, exact: true }, { throwOnError: true });
+    } catch (error) {
+      const underlying = buildPmQualityActionError(error, "source refresh failed");
+      throw new PmQualityCommandError({
+        ...underlying,
+        body: `${label} persisted, but the governed source list refresh failed (${underlying.body}). Reload to confirm the recorded evidence.`,
+      });
+    }
+  }
+
+  function requireReady(state: string, detail: string): void {
+    if (state !== "READY") {
+      throw new PmQualityCommandError(buildPmQualityBlockedActionError(detail));
+    }
+  }
+
+  function requirePolicyIdentity(commandLabel: string): void {
+    if (model.policyId === "N/A" || model.policyVersion === "N/A") {
+      throw new PmQualityCommandError(
+        buildPmQualityBlockedActionError(
+          `PM operating quality policy id/version is required for ${commandLabel}.`,
+        ),
+      );
+    }
+  }
+
+  // Gates that depend on another mutation's outcome read the mutation cache, not the
+  // render closure: observer results propagate a tick after the cache settles, and a
+  // command submitted in that window must still see the truth.
+  function cachedMutationVariables(
+    mutationKey: readonly unknown[],
+    status: "success" | "pending",
+  ): PmQualityCommandVariables | null {
+    const mutation = queryClient
+      .getMutationCache()
+      .find({ mutationKey: mutationKey as unknown[], status });
+    return mutation ? (mutation.state.variables as PmQualityCommandVariables) : null;
+  }
+
+  function persistedCommandInFlight(): boolean {
+    return [
+      pmOperatingQualityMutationKeys.fairnessCreate(),
+      pmOperatingQualityMutationKeys.reviewActionCreate(),
+      pmOperatingQualityMutationKeys.summaryInvocationCreate(),
+    ].some((mutationKey) => Boolean(cachedMutationVariables(mutationKey, "pending")));
+  }
+
+  function requirePreviewedForm(
+    previewMutationKey: readonly unknown[],
+    currentPreviewKey: string,
+    blockedDetail: string,
+  ): void {
+    const previewedVariables = cachedMutationVariables(previewMutationKey, "success");
+    if (previewedVariables?.previewKey !== currentPreviewKey) {
+      throw new PmQualityCommandError(buildPmQualityBlockedActionError(blockedDetail));
+    }
+  }
+
+  const previewScoreRunMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.scoreRunPreview(),
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<DpmPmOperatingQualityGatewayResponse> => {
+      requireReady(model.scoreRunPreviewReadinessState, model.scoreRunPreviewReadiness);
+      return await previewDpmPmOperatingQualityScoreRun({
+        policyId: model.policyId !== "N/A" ? model.policyId : undefined,
+        policyVersion: model.policyVersion !== "N/A" ? model.policyVersion : undefined,
+      });
+    },
+  });
+  const previewFairnessMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.fairnessPreview(),
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<DpmPmOperatingQualityGatewayResponse> => {
+      requireReady(model.fairnessPreviewReadinessState, model.fairnessPreviewReadiness);
+      requirePolicyIdentity("fairness preview");
+      return await previewDpmPmOperatingQualityFairnessAnalysis({
+        policyId: model.policyId,
+        policyVersion: model.policyVersion,
+        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
+        segments: model.fairnessSegmentRequests,
+      });
+    },
+  });
+  const createFairnessMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.fairnessCreate(),
+    scope: { id: PM_OPERATING_QUALITY_PERSISTENCE_SCOPE },
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<PmQualityPersistedRecord> => {
+      requireReady(model.fairnessPreviewReadinessState, model.fairnessPreviewReadiness);
+      requirePolicyIdentity("fairness analysis persistence");
+      const response = await createDpmPmOperatingQualityFairnessAnalysis({
+        policyId: model.policyId,
+        policyVersion: model.policyVersion,
+        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
+        segments: model.fairnessSegmentRequests,
+      });
+      const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
+      let detail: DpmPmOperatingQualityGatewayResponse | null = null;
+      if (fairnessAnalysisId) {
+        detail = await getDpmPmOperatingQualityFairnessAnalysis(fairnessAnalysisId, "client");
+        queryClient.setQueryData(
+          pmOperatingQualityQueryKeys.fairnessAnalysis(fairnessAnalysisId),
+          detail,
+        );
+        setSelectionPreference((current) => ({ ...current, fairnessAnalysisId }));
+      }
+      await refreshAffectedList(sources.fairnessListQueryKey, "Fairness analysis");
+      return { response, detail };
+    },
+  });
+  const summaryMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.supportSummary(),
+    mutationFn: async (
+      variables: PmQualityCommandVariables,
+    ): Promise<PmQualitySummaryResult> => {
+      const scoreRunId = variables.scoreRunId ?? "";
+      if (model.summaryRequestReadinessState !== "READY" || !scoreRunId) {
+        throw new PmQualityCommandError(
+          buildPmQualityBlockedActionError(model.summaryRequestReadiness),
+        );
+      }
+      const response = await requestDpmPmOperatingQualitySummary({ scoreRunId });
+      return {
+        scoreRunId,
+        response: matchesPmOperatingQualitySummaryScoreRun(response, scoreRunId)
+          ? response
+          : null,
+        outcome: buildDpmAiWorkflowOutcome("pm-quality-summary", response, scoreRunId),
+      };
+    },
+  });
+  const previewReviewActionMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.reviewActionPreview(),
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<DpmPmOperatingQualityGatewayResponse> => {
+      requireReady(reviewActionReadiness.state, reviewActionReadiness.detail);
+      const response = await previewDpmPmOperatingQualityReviewAction({
+        request: buildReviewActionRequest(reviewActionForm, model),
+        actorId: reviewActionForm.actorId,
+        correlationId: buildDpmPmOperatingQualityReviewActionCorrelationId(),
+      });
+      // The preview IS Manage-returned evidence for its identity: seed it so the
+      // identity-keyed detail Query does not repay a read for a record that is not
+      // persisted yet (a detail GET for a previewed-only record has no source row).
+      const previewedReviewActionId = readPmQualityReviewActionId(response);
+      if (previewedReviewActionId) {
+        queryClient.setQueryData(
+          pmOperatingQualityQueryKeys.reviewAction(previewedReviewActionId),
+          response,
+        );
+      }
+      return response;
+    },
+  });
+  const createReviewActionMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.reviewActionCreate(),
+    scope: { id: PM_OPERATING_QUALITY_PERSISTENCE_SCOPE },
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<PmQualityPersistedRecord> => {
+      requirePreviewedForm(
+        pmOperatingQualityMutationKeys.reviewActionPreview(),
+        currentReviewActionPreviewKey,
+        "Preview the supervisory review action before recording it.",
+      );
+      requireReady(reviewActionReadiness.state, reviewActionReadiness.detail);
+      const response = await createDpmPmOperatingQualityReviewAction({
+        request: buildReviewActionRequest(reviewActionForm, model),
+        actorId: reviewActionForm.actorId,
+        correlationId: buildDpmPmOperatingQualityReviewActionCorrelationId(),
+      });
+      const reviewActionId = readPmQualityReviewActionId(response);
+      let detail: DpmPmOperatingQualityGatewayResponse | null = null;
+      if (reviewActionId) {
+        detail = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
+        queryClient.setQueryData(
+          pmOperatingQualityQueryKeys.reviewAction(reviewActionId),
+          detail,
+        );
+        setSelectionPreference((current) => ({ ...current, reviewActionId }));
+        setSummaryInvocationFormState((current) => ({ ...current, reviewActionId }));
+      }
+      await refreshAffectedList(sources.reviewActionListQueryKey, "Supervisory review action");
+      return { response, detail };
+    },
+  });
+  const previewSummaryInvocationMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.summaryInvocationPreview(),
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<DpmPmOperatingQualityGatewayResponse> => {
+      requireReady(summaryInvocationReadiness.state, summaryInvocationReadiness.detail);
+      return await previewDpmPmOperatingQualitySummaryInvocation({
+        request: buildSummaryInvocationRequest(summaryInvocationForm),
+        actorId: summaryInvocationForm.requestedBy,
+        correlationId: buildDpmPmOperatingQualitySummaryInvocationCorrelationId(),
+      });
+    },
+  });
+  const createSummaryInvocationMutation = useMutation({
+    mutationKey: pmOperatingQualityMutationKeys.summaryInvocationCreate(),
+    scope: { id: PM_OPERATING_QUALITY_PERSISTENCE_SCOPE },
+    mutationFn: async (
+      _variables: PmQualityCommandVariables,
+    ): Promise<PmQualityPersistedRecord> => {
+      requirePreviewedForm(
+        pmOperatingQualityMutationKeys.summaryInvocationPreview(),
+        currentSummaryInvocationPreviewKey,
+        "Preview the PM quality summary invocation before recording it.",
+      );
+      requireReady(summaryInvocationReadiness.state, summaryInvocationReadiness.detail);
+      const response = await createDpmPmOperatingQualitySummaryInvocation({
+        request: buildSummaryInvocationRequest(summaryInvocationForm),
+        actorId: summaryInvocationForm.requestedBy,
+        correlationId: buildDpmPmOperatingQualitySummaryInvocationCorrelationId(),
+      });
+      const summaryInvocationId = readPmQualitySummaryInvocationId(response);
+      let detail: DpmPmOperatingQualityGatewayResponse | null = null;
+      if (summaryInvocationId) {
+        detail = await getDpmPmOperatingQualitySummaryInvocation(summaryInvocationId, "client");
+      }
+      await refreshAffectedList(
+        sources.summaryInvocationListQueryKey,
+        "PM quality summary invocation",
+      );
+      return { response, detail };
+    },
+  });
+
+  function fenced(variables: PmQualityCommandVariables | undefined): boolean {
+    return variables?.epoch === commandEpoch;
+  }
+  const previewResponse =
+    fenced(previewScoreRunMutation.variables) ? previewScoreRunMutation.data ?? null : null;
+  const fairnessPreviewResponse =
+    fenced(previewFairnessMutation.variables) ? previewFairnessMutation.data ?? null : null;
+  const reviewActionPreviewKey = fenced(previewReviewActionMutation.variables)
+    ? previewReviewActionMutation.variables?.previewKey ?? null
+    : null;
+  const summaryInvocationPreviewKey = fenced(previewSummaryInvocationMutation.variables)
+    ? previewSummaryInvocationMutation.variables?.previewKey ?? null
+    : null;
+  // Preview and freshly-created evidence feed the panel model while they belong to the
+  // current selection epoch; the exposed *PreviewReady/evidence surfaces additionally
+  // fence on the preview key, so a form edit downgrades them before any re-preview.
+  const reviewActionPreviewInModel = fenced(previewReviewActionMutation.variables)
+    ? previewReviewActionMutation.data ?? null
+    : null;
+  const summaryInvocationPreviewInModel = fenced(previewSummaryInvocationMutation.variables)
+    ? previewSummaryInvocationMutation.data ?? null
+    : null;
+  const createdSummaryInvocationInModel = fenced(createSummaryInvocationMutation.variables)
+    ? (createSummaryInvocationMutation.data?.detail ??
+      createSummaryInvocationMutation.data?.response ??
+      null)
+    : null;
+
+  function assembleModel(
+    summary: DpmPmOperatingQualitySummaryResponse | null,
+  ): PmOperatingQualityPanelModel {
+    return buildPmOperatingQualityPanelModel({
+      policies,
+      scoreRuns,
+      fairnessAnalyses: sources.fairnessSource,
+      fairnessAnalysisDetails: [
+        sources.selectedFairnessDetailResponse,
+        fairnessAnalysisDetail,
+      ],
+      retainedFairnessAnalyses: sources.retainedFairnessAnalysisResponses,
+      reviewActions: sources.reviewActionSource,
+      reviewActionDetails: [
+        sources.selectedReviewActionDetailResponse,
+        reviewActionPreviewInModel,
+        reviewActionDetail,
+      ],
+      retainedReviewActions: sources.retainedReviewActionResponses,
+      summaryInvocations: sources.summaryInvocationSource,
+      summaryInvocationDetail:
+        createdSummaryInvocationInModel ??
+        summaryInvocationPreviewInModel ??
+        summaryInvocationDetail,
+      preview: previewResponse,
+      fairnessPreview: fairnessPreviewResponse,
+      summary,
+      selection: selectionPreference,
+    });
+  }
+
+  const sourceModel = assembleModel(null);
+  const summaryResult =
+    fenced(summaryMutation.variables) && summaryMutation.data ? summaryMutation.data : null;
+  const currentSummaryResult =
+    summaryResult?.scoreRunId === sourceModel.selectedScoreRun?.scoreRunId
+      ? summaryResult
       : null;
-  const model = currentSummaryState?.response
-    ? buildPmOperatingQualityPanelModel({
-        policies,
-        scoreRuns,
-        fairnessAnalyses,
-        fairnessAnalysisDetails: [selectedFairnessDetailResponse, fairnessAnalysisDetail],
-        retainedFairnessAnalyses: retainedFairnessAnalysisResponses,
-        reviewActions,
-        reviewActionDetails: [
-          selectedReviewActionDetailResponse,
-          reviewActionPreviewResponse,
-          reviewActionDetail,
-        ],
-        retainedReviewActions: retainedReviewActionResponses,
-        summaryInvocations,
-        summaryInvocationDetail:
-          createdSummaryInvocationResponse ??
-          summaryInvocationPreviewResponse ??
-          summaryInvocationDetail,
-        preview: previewResponse,
-        fairnessPreview: fairnessPreviewResponse,
-        summary: currentSummaryState.response,
-        selection: selectionPreference,
-      })
+  const model = currentSummaryResult?.response
+    ? assembleModel(currentSummaryResult.response)
     : sourceModel;
   const selection = readPmOperatingQualitySelection(model);
   if (!pmOperatingQualitySelectionEquals(selectionPreference, selection)) {
     setSelectionPreference(selection);
   }
-  const currentSelectionKey = buildPmOperatingQualitySelectionKey(selection);
-  const currentSelectionKeyRef = useRef(currentSelectionKey);
-  const currentSelectionRef = useRef(selection);
-  useEffect(() => {
-    currentSelectionKeyRef.current = currentSelectionKey;
-    currentSelectionRef.current = selection;
-  }, [currentSelectionKey, selection]);
-  const pendingSummaryAction = currentSummaryState?.pending ?? false;
-  const summaryOutcome = currentSummaryState?.outcome ?? null;
-  const summaryActionError = currentSummaryState?.error ?? null;
-  const defaultReviewTarget = resolveReviewActionTarget(model);
-  const [reviewActionFormState, setReviewActionFormState] =
-    useState<PmQualityReviewActionForm>(() => ({
-      actorId: "workbench-pm-operating-quality-supervisor",
-      targetType: defaultReviewTarget.targetType,
-      targetId: defaultReviewTarget.targetId,
-      actionType: "REQUEST_EVIDENCE_REMEDIATION",
-      actionState: "REVIEW_REQUIRED",
-      reviewActionRef: defaultReviewTarget.reviewActionRef,
-      boundedRationale:
-        "Record bounded supervisory review for Manage-owned PM operating quality evidence.",
-    }));
-  const reviewTargetType = resolveReviewTargetType(reviewActionFormState.targetType, model);
-  const reviewTargetId =
-    reviewTargetType === "FAIRNESS_ANALYSIS"
-      ? selection.fairnessAnalysisId ?? ""
-      : selection.scoreRunId ?? "";
-  const reviewActionForm: PmQualityReviewActionForm = {
-    ...reviewActionFormState,
-    targetType: reviewTargetType,
-    targetId: reviewTargetId,
-    reviewActionRef: buildReviewActionRef(
-      reviewTargetId,
-      reviewActionFormState.reviewActionRef,
-    ),
-  };
-  if (
-    reviewActionFormState.targetType !== reviewActionForm.targetType ||
-    reviewActionFormState.targetId !== reviewActionForm.targetId
-  ) {
-    setReviewActionFormState(reviewActionForm);
-  }
-  const reviewActionReadiness = resolveReviewActionReadiness({
-    form: reviewActionForm,
-    policyId: model.policyId,
-    policyVersion: model.policyVersion,
-    blockedActions: model.blockedActions,
-  });
-  const currentReviewActionPreviewKey = buildReviewActionPreviewKey(reviewActionForm);
+  const summaryFenced =
+    fenced(summaryMutation.variables) &&
+    summaryMutation.variables?.scoreRunId === selection.scoreRunId;
+  const {
+    reviewActionForm,
+    setReviewActionFormState,
+    summaryInvocationForm,
+    setSummaryInvocationFormState,
+    reviewActionReadiness,
+    summaryInvocationReadiness,
+    currentReviewActionPreviewKey,
+    currentSummaryInvocationPreviewKey,
+  } = usePmOperatingQualityCommandForms(model, selection);
   const reviewActionPreviewReady =
-    Boolean(reviewActionPreviewResponse) &&
+    previewReviewActionMutation.isSuccess &&
     reviewActionPreviewKey === currentReviewActionPreviewKey;
-  const reviewActionTargetOptions = buildReviewActionTargetOptions(model);
-  const summaryInvocationScoreRunOptions = buildSummaryInvocationScoreRunOptions(model);
-  const summaryInvocationReviewActionOptions = buildSummaryInvocationReviewActionOptions(model);
-  const defaultSummaryInvocationTarget = resolveSummaryInvocationTarget(model);
-  const [summaryInvocationFormState, setSummaryInvocationFormState] =
-    useState<PmQualitySummaryInvocationForm>(() => ({
-      requestedBy: "workbench-pm-operating-quality-supervisor",
-      summaryRef: defaultSummaryInvocationTarget.summaryRef,
-      scoreRunId: defaultSummaryInvocationTarget.scoreRunId,
-      reviewActionId: defaultSummaryInvocationTarget.reviewActionId,
-      invocationState: "PENDING_REVIEW",
-      workflowPackName: "pm-operating-quality-summary",
-      workflowPackVersion: model.policyVersion !== "N/A" ? model.policyVersion : "",
-      workflowRunId: "",
-      artifactRef: "",
-      contentHash: "",
-    }));
-  const summaryInvocationForm: PmQualitySummaryInvocationForm = {
-    ...summaryInvocationFormState,
-    scoreRunId: selection.scoreRunId ?? "",
-    reviewActionId: selection.reviewActionId ?? "",
-    summaryRef: buildSummaryInvocationRef(
-      selection.scoreRunId ?? "",
-      summaryInvocationFormState.summaryRef,
-    ),
-  };
-  if (
-    summaryInvocationFormState.scoreRunId !== summaryInvocationForm.scoreRunId ||
-    summaryInvocationFormState.reviewActionId !== summaryInvocationForm.reviewActionId
-  ) {
-    setSummaryInvocationFormState(summaryInvocationForm);
-  }
-  const summaryInvocationReadiness = resolveSummaryInvocationReadiness({
-    form: summaryInvocationForm,
-    policyId: model.policyId,
-    policyVersion: model.policyVersion,
-    blockedActions: model.blockedActions,
-  });
-  const currentSummaryInvocationPreviewKey =
-    buildSummaryInvocationPreviewKey(summaryInvocationForm);
   const summaryInvocationPreviewReady =
-    Boolean(summaryInvocationPreviewResponse) &&
+    previewSummaryInvocationMutation.isSuccess &&
     summaryInvocationPreviewKey === currentSummaryInvocationPreviewKey;
+
+  // One feedback surface: the most recently submitted command that still belongs to
+  // the current selection epoch speaks; everything older is fenced out. Both halves
+  // are read from mutation state, never mirrored into local state.
+  const copy = PM_QUALITY_COMMAND_COPY;
+  const { actionMessage, commandError } = resolveCommandFeedback([
+    commandPosture(previewScoreRunMutation, copy.scoreRunPreview, fenced(previewScoreRunMutation.variables)),
+    commandPosture(previewFairnessMutation, copy.fairnessPreview, fenced(previewFairnessMutation.variables)),
+    commandPosture(createFairnessMutation, copy.fairnessCreate, fenced(createFairnessMutation.variables)),
+    commandPosture(summaryMutation, copy.supportSummary, summaryFenced),
+    commandPosture(previewReviewActionMutation, copy.reviewActionPreview, fenced(previewReviewActionMutation.variables)),
+    commandPosture(createReviewActionMutation, copy.reviewActionCreate, fenced(createReviewActionMutation.variables)),
+    commandPosture(previewSummaryInvocationMutation, copy.summaryInvocationPreview, fenced(previewSummaryInvocationMutation.variables)),
+    commandPosture(createSummaryInvocationMutation, copy.summaryInvocationCreate, fenced(createSummaryInvocationMutation.variables)),
+  ]);
+
+  function beginRecordSelection(nextSelection: PmOperatingQualitySelection): boolean {
+    if (persistedCommandInFlight()) return false;
+    setSelectionPreference(nextSelection);
+    setCommandEpoch((epoch) => epoch + 1);
+    return true;
+  }
+
+  function selectScoreRun(scoreRunId: string) {
+    if (
+      !model.scoreRunRows.some((row) => row.scoreRunId === scoreRunId) ||
+      selection.scoreRunId === scoreRunId
+    ) {
+      return;
+    }
+    beginRecordSelection({ ...selection, scoreRunId });
+  }
+
+  // Selecting a record fences the epoch and warms its identity-keyed detail Query;
+  // Query state owns the selected-record failure and keeps it identity-fenced.
+  async function selectDetailRecord(
+    known: boolean,
+    unchanged: boolean,
+    nextSelection: PmOperatingQualitySelection,
+    fetchDetail: () => Promise<unknown>,
+  ): Promise<void> {
+    if (!known || unchanged) return;
+    if (!beginRecordSelection(nextSelection)) return;
+    await fetchDetail().catch(() => undefined);
+  }
+
+  async function selectFairnessAnalysis(fairnessAnalysisId: string) {
+    await selectDetailRecord(
+      model.fairnessAnalysisRows.some(
+        (row) => row.fairnessAnalysisId === fairnessAnalysisId,
+      ),
+      selection.fairnessAnalysisId === fairnessAnalysisId,
+      { ...selection, fairnessAnalysisId },
+      () =>
+        queryClient.fetchQuery(
+          pmOperatingQualityFairnessAnalysisQueryOptions(fairnessAnalysisId),
+        ),
+    );
+  }
+
+  async function selectReviewAction(reviewActionId: string) {
+    await selectDetailRecord(
+      model.reviewActionRows.some((row) => row.reviewActionId === reviewActionId),
+      selection.reviewActionId === reviewActionId,
+      { ...selection, reviewActionId },
+      () =>
+        queryClient.fetchQuery(pmOperatingQualityReviewActionQueryOptions(reviewActionId)),
+    );
+  }
 
   function setReviewActionFormValue(field: keyof PmQualityReviewActionForm, value: string) {
     if (field === "targetId") {
@@ -418,18 +514,11 @@ export function usePmOperatingQualityActions({
       }
       return;
     }
-    setReviewActionFormState((current) => {
-      if (field === "targetType") {
-        return {
-          ...current,
-          targetType: value,
-        };
-      }
-      return { ...current, [field]: value };
-    });
-    setReviewActionPreviewResponse(null);
-    setReviewActionPreviewKey(null);
-    setReviewActionCreateEvidence(null);
+    setReviewActionFormState((current) =>
+      field === "targetType"
+        ? { ...current, targetType: value }
+        : { ...current, [field]: value },
+    );
   }
 
   function setSummaryInvocationFormValue(
@@ -445,564 +534,111 @@ export function usePmOperatingQualityActions({
       return;
     }
     setSummaryInvocationFormState((current) => ({ ...current, [field]: value }));
-    setSummaryInvocationPreviewResponse(null);
-    setSummaryInvocationPreviewKey(null);
-    setCreatedSummaryInvocationResponse(null);
-    setSummaryInvocationCreateEvidence(null);
   }
 
-  function selectScoreRun(scoreRunId: string) {
-    if (
-      !model.scoreRunRows.some((row) => row.scoreRunId === scoreRunId) ||
-      selection.scoreRunId === scoreRunId
-    ) {
-      return;
-    }
-    beginRecordSelection({ ...selection, scoreRunId });
+  // Command entry points never throw (the mutation carries the failure) and never
+  // double-submit: previews guard on their own pending state, persisted commands on
+  // any in-flight member of the shared persistence scope.
+  function commandEntry(
+    mutation: {
+      isPending: boolean;
+      mutateAsync: (variables: PmQualityCommandVariables) => Promise<unknown>;
+    },
+    kind: "preview" | "persist",
+    extraVariables: () => Partial<PmQualityCommandVariables> = () => ({}),
+  ): () => Promise<void> {
+    return async () => {
+      if (kind === "preview" ? mutation.isPending : persistedCommandInFlight()) return;
+      await mutation
+        .mutateAsync({ epoch: commandEpoch, ...extraVariables() })
+        .catch(() => undefined);
+    };
   }
 
-  async function selectFairnessAnalysis(fairnessAnalysisId: string) {
-    if (
-      !model.fairnessAnalysisRows.some(
-        (row) => row.fairnessAnalysisId === fairnessAnalysisId
-      ) ||
-      selection.fairnessAnalysisId === fairnessAnalysisId
-    ) {
-      return;
-    }
-    const nextSelection = { ...selection, fairnessAnalysisId };
-    if (!beginRecordSelection(nextSelection)) return;
-    const requestSequence = fairnessDetailSequenceRef.current + 1;
-    fairnessDetailSequenceRef.current = requestSequence;
-    setSelectedFairnessDetail({ recordId: fairnessAnalysisId, pending: true, response: null });
-    try {
-      const response = await getDpmPmOperatingQualityFairnessAnalysis(
-        fairnessAnalysisId,
-        "client",
-      );
-      if (
-        requestSequence !== fairnessDetailSequenceRef.current ||
-        currentSelectionRef.current.fairnessAnalysisId !== fairnessAnalysisId
-      ) {
-        return;
-      }
-      setSelectedFairnessDetail({
-        recordId: fairnessAnalysisId,
-        pending: false,
-        response,
-      });
-    } catch (error) {
-      if (
-        requestSequence !== fairnessDetailSequenceRef.current ||
-        currentSelectionRef.current.fairnessAnalysisId !== fairnessAnalysisId
-      ) {
-        return;
-      }
-      setSelectedFairnessDetail({ recordId: fairnessAnalysisId, pending: false, response: null });
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality fairness detail load failed"),
-      );
-    }
-  }
-
-  async function selectReviewAction(reviewActionId: string) {
-    if (
-      !model.reviewActionRows.some((row) => row.reviewActionId === reviewActionId) ||
-      selection.reviewActionId === reviewActionId
-    ) {
-      return;
-    }
-    const nextSelection = { ...selection, reviewActionId };
-    if (!beginRecordSelection(nextSelection)) return;
-    const requestSequence = reviewActionDetailSequenceRef.current + 1;
-    reviewActionDetailSequenceRef.current = requestSequence;
-    setSelectedReviewActionDetail({ recordId: reviewActionId, pending: true, response: null });
-    try {
-      const response = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
-      if (
-        requestSequence !== reviewActionDetailSequenceRef.current ||
-        currentSelectionRef.current.reviewActionId !== reviewActionId
-      ) {
-        return;
-      }
-      setSelectedReviewActionDetail({
-        recordId: reviewActionId,
-        pending: false,
-        response,
-      });
-    } catch (error) {
-      if (
-        requestSequence !== reviewActionDetailSequenceRef.current ||
-        currentSelectionRef.current.reviewActionId !== reviewActionId
-      ) {
-        return;
-      }
-      setSelectedReviewActionDetail({ recordId: reviewActionId, pending: false, response: null });
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality review-action detail load failed"),
-      );
-    }
-  }
-
-  function beginRecordSelection(nextSelection: PmOperatingQualitySelection): boolean {
-    if (persistedActionPendingRef.current) return false;
-    const previousSelection = currentSelectionRef.current;
-    setSelectionPreference(nextSelection);
-    currentSelectionRef.current = nextSelection;
-    currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
-    if (previousSelection.scoreRunId !== nextSelection.scoreRunId) {
-      summaryRequestSequenceRef.current += 1;
-    }
-    if (previousSelection.fairnessAnalysisId !== nextSelection.fairnessAnalysisId) {
-      fairnessDetailSequenceRef.current += 1;
-    }
-    if (previousSelection.reviewActionId !== nextSelection.reviewActionId) {
-      reviewActionDetailSequenceRef.current += 1;
-    }
-    setSummaryState(null);
-    setActionError(null);
-    setActionMessage(null);
-    setReviewActionPreviewResponse(null);
-    setReviewActionPreviewKey(null);
-    setReviewActionCreateEvidence(null);
-    setSummaryInvocationPreviewResponse(null);
-    setSummaryInvocationPreviewKey(null);
-    setSummaryInvocationCreateEvidence(null);
-    setPendingAction(false);
-    setPendingFairnessAction(false);
-    setPendingReviewActionPreview(false);
-    setPendingSummaryInvocationPreview(false);
-    return true;
-  }
-
-  async function previewScoreRun() {
-    if (pendingAction) {
-      return;
-    }
-    if (model.scoreRunPreviewReadinessState !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(model.scoreRunPreviewReadiness));
-      return;
-    }
-    const actionSelectionKey = currentSelectionKey;
-    setPendingAction(true);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await previewDpmPmOperatingQualityScoreRun({
-        policyId: model.policyId !== "N/A" ? model.policyId : undefined,
-        policyVersion: model.policyVersion !== "N/A" ? model.policyVersion : undefined,
-      });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setPreviewResponse(response);
-      setActionMessage("Preview returned Manage operating-quality evidence.");
-    } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setActionError(buildPmQualityActionError(error, "PM operating quality preview failed"));
-    } finally {
-      setPendingAction(false);
-    }
-  }
-
-  async function previewFairnessAnalysis() {
-    if (pendingFairnessAction) {
-      return;
-    }
-    if (model.fairnessPreviewReadinessState !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(model.fairnessPreviewReadiness));
-      return;
-    }
-    if (model.policyId === "N/A" || model.policyVersion === "N/A") {
-      setActionError(
-        buildPmQualityBlockedActionError(
-          "PM operating quality policy id/version is required for fairness preview."
-        )
-      );
-      return;
-    }
-    const actionSelectionKey = currentSelectionKey;
-    setPendingFairnessAction(true);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await previewDpmPmOperatingQualityFairnessAnalysis({
-        policyId: model.policyId,
-        policyVersion: model.policyVersion,
-        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
-        segments: model.fairnessSegmentRequests,
-      });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setFairnessPreviewResponse(response);
-      setActionMessage("Fairness preview returned Manage segment evidence.");
-    } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality fairness preview failed")
-      );
-    } finally {
-      setPendingFairnessAction(false);
-    }
-  }
-
-  async function createFairnessAnalysis() {
-    if (pendingFairnessCreateAction || persistedActionPendingRef.current) {
-      return;
-    }
-    if (model.fairnessPreviewReadinessState !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(model.fairnessPreviewReadiness));
-      return;
-    }
-    if (model.policyId === "N/A" || model.policyVersion === "N/A") {
-      setActionError(
-        buildPmQualityBlockedActionError(
-          "PM operating quality policy id/version is required for fairness analysis persistence."
-        )
-      );
-      return;
-    }
-    persistedActionPendingRef.current = true;
-    setPendingFairnessCreateAction(true);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await createDpmPmOperatingQualityFairnessAnalysis({
-        policyId: model.policyId,
-        policyVersion: model.policyVersion,
-        asOfDate: model.fairnessAsOfDate !== "N/A" ? model.fairnessAsOfDate : undefined,
-        segments: model.fairnessSegmentRequests,
-      });
-      setRetainedFairnessAnalysisResponses((current) =>
-        retainGatewayResponseBySourceId(
-          current,
-          response,
-          readPmQualityFairnessAnalysisId,
-        ),
-      );
-      setFairnessCreateEvidence(buildPmQualityFairnessCreateEvidence(response));
-      const fairnessAnalysisId = readPmQualityFairnessAnalysisId(response);
-      if (fairnessAnalysisId) {
-        const detail = await getDpmPmOperatingQualityFairnessAnalysis(
-          fairnessAnalysisId,
-          "client"
-        );
-        const nextSelection = { ...currentSelectionRef.current, fairnessAnalysisId };
-        setSelectionPreference(nextSelection);
-        currentSelectionRef.current = nextSelection;
-        currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
-        setSelectedFairnessDetail({
-          recordId: fairnessAnalysisId,
-          pending: false,
-          response: detail,
-        });
-        setRetainedFairnessAnalysisResponses((current) =>
-          retainGatewayResponseBySourceId(
-            current,
-            detail,
-            readPmQualityFairnessAnalysisId,
-          ),
-        );
-      }
-      setActionMessage("Persisted fairness analysis returned Manage evidence.");
-    } catch (error) {
-      setActionError(
-        buildPmQualityActionError(
-          error,
-          "PM operating quality fairness analysis persistence failed"
-        )
-      );
-    } finally {
-      persistedActionPendingRef.current = false;
-      setPendingFairnessCreateAction(false);
-    }
-  }
+  const previewScoreRun = commandEntry(previewScoreRunMutation, "preview");
+  const previewFairnessAnalysis = commandEntry(previewFairnessMutation, "preview");
+  const createFairnessAnalysis = commandEntry(createFairnessMutation, "persist");
+  const previewReviewAction = commandEntry(previewReviewActionMutation, "preview", () => ({
+    previewKey: currentReviewActionPreviewKey,
+  }));
+  const createReviewAction = commandEntry(createReviewActionMutation, "persist", () => ({
+    previewKey: currentReviewActionPreviewKey,
+  }));
+  const previewSummaryInvocation = commandEntry(
+    previewSummaryInvocationMutation,
+    "preview",
+    () => ({ previewKey: currentSummaryInvocationPreviewKey }),
+  );
+  const createSummaryInvocation = commandEntry(
+    createSummaryInvocationMutation,
+    "persist",
+    () => ({ previewKey: currentSummaryInvocationPreviewKey }),
+  );
 
   async function requestSupportSummary() {
-    if (model.summaryRequestReadinessState !== "READY" || !model.selectedScoreRun) {
-      setActionError(buildPmQualityBlockedActionError(model.summaryRequestReadiness));
+    const scoreRunId = model.selectedScoreRun?.scoreRunId ?? "";
+    if (
+      scoreRunId &&
+      summaryMutation.isPending &&
+      summaryMutation.variables?.scoreRunId === scoreRunId
+    ) {
       return;
     }
-    const scoreRunId = model.selectedScoreRun.scoreRunId;
-    if (summaryState?.pending && summaryState.scoreRunId === scoreRunId) {
-      return;
-    }
-    const requestSequence = summaryRequestSequenceRef.current + 1;
-    summaryRequestSequenceRef.current = requestSequence;
-    setSummaryState({
-      scoreRunId,
-      pending: true,
-      response: null,
-      outcome: null,
-      error: null,
-    });
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await requestDpmPmOperatingQualitySummary({
-        scoreRunId,
-      });
-      if (
-        requestSequence !== summaryRequestSequenceRef.current ||
-        currentSelectionRef.current.scoreRunId !== scoreRunId
-      ) {
-        return;
-      }
-      setSummaryState({
-        scoreRunId,
-        pending: false,
-        response: matchesPmOperatingQualitySummaryScoreRun(response, scoreRunId)
-          ? response
-          : null,
-        outcome: buildDpmAiWorkflowOutcome(
-          "pm-quality-summary",
-          response,
-          scoreRunId,
-        ),
-        error: null,
-      });
-    } catch (error) {
-      if (
-        requestSequence !== summaryRequestSequenceRef.current ||
-        currentSelectionRef.current.scoreRunId !== scoreRunId
-      ) {
-        return;
-      }
-      setSummaryState({
-        scoreRunId,
-        pending: false,
-        response: null,
-        outcome: null,
-        error: buildPmQualityActionError(
-          error,
-          "PM operating quality support summary request failed",
-        ),
-      });
-    }
+    await summaryMutation
+      .mutateAsync({ epoch: commandEpoch, scoreRunId })
+      .catch(() => undefined);
   }
 
-  async function previewReviewAction() {
-    if (pendingReviewActionPreview) {
-      return;
-    }
-    if (reviewActionReadiness.state !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(reviewActionReadiness.detail));
-      return;
-    }
-    const actionSelectionKey = currentSelectionKey;
-    const previewKey = currentReviewActionPreviewKey;
-    setPendingReviewActionPreview(true);
-    setActionError(null);
-    setActionMessage(null);
-    setReviewActionPreviewResponse(null);
-    setReviewActionPreviewKey(null);
-    setReviewActionCreateEvidence(null);
-    try {
-      const correlationId = buildDpmPmOperatingQualityReviewActionCorrelationId();
-      const response = await previewDpmPmOperatingQualityReviewAction({
-        request: buildReviewActionRequest(reviewActionForm, model),
-        actorId: reviewActionForm.actorId,
-        correlationId,
-      });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setReviewActionPreviewResponse(response);
-      setReviewActionPreviewKey(previewKey);
-      setActionMessage("Review-action preview returned Manage supervisory evidence.");
-    } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality review-action preview failed")
-      );
-    } finally {
-      setPendingReviewActionPreview(false);
-    }
-  }
-
-  async function createReviewAction() {
-    if (pendingReviewActionCreate || persistedActionPendingRef.current) {
-      return;
-    }
-    if (!reviewActionPreviewReady) {
-      setActionError(
-        buildPmQualityBlockedActionError(
-          "Preview the supervisory review action before recording it."
-        )
-      );
-      return;
-    }
-    if (reviewActionReadiness.state !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(reviewActionReadiness.detail));
-      return;
-    }
-    persistedActionPendingRef.current = true;
-    setPendingReviewActionCreate(true);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const correlationId = buildDpmPmOperatingQualityReviewActionCorrelationId();
-      const response = await createDpmPmOperatingQualityReviewAction({
-        request: buildReviewActionRequest(reviewActionForm, model),
-        actorId: reviewActionForm.actorId,
-        correlationId,
-      });
-      setRetainedReviewActionResponses((current) =>
-        retainGatewayResponseBySourceId(
-          current,
-          response,
-          readPmQualityReviewActionId,
-        ),
-      );
-      setReviewActionCreateEvidence(buildPmQualityReviewActionEvidence(response));
-      const reviewActionId = readPmQualityReviewActionId(response);
-      if (reviewActionId) {
-        const detail = await getDpmPmOperatingQualityReviewAction(reviewActionId, "client");
-        const nextSelection = { ...currentSelectionRef.current, reviewActionId };
-        setSelectionPreference(nextSelection);
-        currentSelectionRef.current = nextSelection;
-        currentSelectionKeyRef.current = buildPmOperatingQualitySelectionKey(nextSelection);
-        setSelectedReviewActionDetail({
-          recordId: reviewActionId,
-          pending: false,
-          response: detail,
-        });
-        setRetainedReviewActionResponses((current) =>
-          retainGatewayResponseBySourceId(
-            current,
-            detail,
-            readPmQualityReviewActionId,
-          ),
-        );
-        setSummaryInvocationFormState((current) => ({
-          ...current,
-          reviewActionId,
-        }));
-      }
-      setActionMessage("Recorded Manage-owned supervisory review action.");
-    } catch (error) {
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality review-action create failed")
-      );
-    } finally {
-      persistedActionPendingRef.current = false;
-      setPendingReviewActionCreate(false);
-    }
-  }
-
-  async function previewSummaryInvocation() {
-    if (pendingSummaryInvocationPreview) {
-      return;
-    }
-    if (summaryInvocationReadiness.state !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
-      return;
-    }
-    const actionSelectionKey = currentSelectionKey;
-    const previewKey = currentSummaryInvocationPreviewKey;
-    setPendingSummaryInvocationPreview(true);
-    setActionError(null);
-    setActionMessage(null);
-    setSummaryInvocationPreviewResponse(null);
-    setSummaryInvocationPreviewKey(null);
-    setCreatedSummaryInvocationResponse(null);
-    setSummaryInvocationCreateEvidence(null);
-    try {
-      const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
-      const response = await previewDpmPmOperatingQualitySummaryInvocation({
-        request: buildSummaryInvocationRequest(summaryInvocationForm),
-        actorId: summaryInvocationForm.requestedBy,
-        correlationId,
-      });
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setSummaryInvocationPreviewResponse(response);
-      setSummaryInvocationPreviewKey(previewKey);
-      setActionMessage("Summary-invocation preview returned Manage evidence.");
-    } catch (error) {
-      if (currentSelectionKeyRef.current !== actionSelectionKey) return;
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality summary-invocation preview failed")
-      );
-    } finally {
-      setPendingSummaryInvocationPreview(false);
-    }
-  }
-
-  async function createSummaryInvocation() {
-    if (pendingSummaryInvocationCreate || persistedActionPendingRef.current) {
-      return;
-    }
-    if (!summaryInvocationPreviewReady) {
-      setActionError(
-        buildPmQualityBlockedActionError(
-          "Preview the PM quality summary invocation before recording it."
-        )
-      );
-      return;
-    }
-    if (summaryInvocationReadiness.state !== "READY") {
-      setActionError(buildPmQualityBlockedActionError(summaryInvocationReadiness.detail));
-      return;
-    }
-    persistedActionPendingRef.current = true;
-    setPendingSummaryInvocationCreate(true);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const correlationId = buildDpmPmOperatingQualitySummaryInvocationCorrelationId();
-      const response = await createDpmPmOperatingQualitySummaryInvocation({
-        request: buildSummaryInvocationRequest(summaryInvocationForm),
-        actorId: summaryInvocationForm.requestedBy,
-        correlationId,
-      });
-      setCreatedSummaryInvocationResponse(response);
-      setSummaryInvocationCreateEvidence(buildPmQualitySummaryInvocationEvidence(response));
-      const summaryInvocationId = readPmQualitySummaryInvocationId(response);
-      if (summaryInvocationId) {
-        const detail = await getDpmPmOperatingQualitySummaryInvocation(
-          summaryInvocationId,
-          "client"
-        );
-        setCreatedSummaryInvocationResponse(detail);
-      }
-      setActionMessage("Recorded Manage-owned PM quality summary invocation.");
-    } catch (error) {
-      setActionError(
-        buildPmQualityActionError(error, "PM operating quality summary-invocation create failed")
-      );
-    } finally {
-      persistedActionPendingRef.current = false;
-      setPendingSummaryInvocationCreate(false);
-    }
-  }
+  const persistPending =
+    createFairnessMutation.isPending ||
+    createReviewActionMutation.isPending ||
+    createSummaryInvocationMutation.isPending;
 
   return {
     model,
     selection,
     pendingFairnessDetail:
-      selectedFairnessDetail?.recordId === selection.fairnessAnalysisId &&
-      selectedFairnessDetail.pending,
+      selectionPreference.fairnessAnalysisId === selection.fairnessAnalysisId &&
+      sources.fairnessDetailFetching,
     pendingReviewActionDetail:
-      selectedReviewActionDetail?.recordId === selection.reviewActionId &&
-      selectedReviewActionDetail.pending,
-    pendingAction,
-    pendingFairnessAction,
-    pendingFairnessCreateAction,
-    pendingSummaryAction,
-    pendingReviewActionPreview,
-    pendingReviewActionCreate,
-    pendingSummaryInvocationPreview,
-    pendingSummaryInvocationCreate,
-    selectionLocked:
-      pendingFairnessCreateAction ||
-      pendingReviewActionCreate ||
-      pendingSummaryInvocationCreate,
-    actionError: summaryActionError ?? actionError,
+      selectionPreference.reviewActionId === selection.reviewActionId &&
+      sources.reviewActionDetailFetching,
+    pendingAction: previewScoreRunMutation.isPending,
+    pendingFairnessAction: previewFairnessMutation.isPending,
+    pendingFairnessCreateAction: createFairnessMutation.isPending,
+    pendingSummaryAction: summaryFenced && summaryMutation.isPending,
+    pendingReviewActionPreview: previewReviewActionMutation.isPending,
+    pendingReviewActionCreate: createReviewActionMutation.isPending,
+    pendingSummaryInvocationPreview: previewSummaryInvocationMutation.isPending,
+    pendingSummaryInvocationCreate: createSummaryInvocationMutation.isPending,
+    selectionLocked: persistPending,
+    actionError: sources.selectedDetailError ?? commandError,
     actionMessage,
-    summaryOutcome,
-    fairnessCreateEvidence,
-    reviewActionCreateEvidence,
-    summaryInvocationCreateEvidence,
+    summaryOutcome: summaryFenced ? currentSummaryResult?.outcome ?? null : null,
+    fairnessCreateEvidence:
+      fenced(createFairnessMutation.variables) && createFairnessMutation.data
+        ? buildPmQualityFairnessCreateEvidence(createFairnessMutation.data.response)
+        : null,
+    reviewActionCreateEvidence:
+      fenced(createReviewActionMutation.variables) &&
+      createReviewActionMutation.variables?.previewKey === currentReviewActionPreviewKey &&
+      createReviewActionMutation.data
+        ? buildPmQualityReviewActionEvidence(createReviewActionMutation.data.response)
+        : null,
+    summaryInvocationCreateEvidence:
+      fenced(createSummaryInvocationMutation.variables) &&
+      createSummaryInvocationMutation.variables?.previewKey ===
+        currentSummaryInvocationPreviewKey &&
+      createSummaryInvocationMutation.data
+        ? buildPmQualitySummaryInvocationEvidence(
+            createSummaryInvocationMutation.data.response,
+          )
+        : null,
     reviewActionForm,
     summaryInvocationForm,
-    reviewActionTargetOptions,
-    summaryInvocationScoreRunOptions,
-    summaryInvocationReviewActionOptions,
+    reviewActionTargetOptions: buildReviewActionTargetOptions(model),
+    summaryInvocationScoreRunOptions: buildSummaryInvocationScoreRunOptions(model),
+    summaryInvocationReviewActionOptions: buildSummaryInvocationReviewActionOptions(model),
     reviewActionReadiness,
     summaryInvocationReadiness,
     reviewActionPreviewReady,

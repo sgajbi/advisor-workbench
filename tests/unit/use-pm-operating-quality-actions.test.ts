@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { usePmOperatingQualityActions } from "../../src/features/workbench/use-pm-operating-quality-actions";
@@ -11,6 +13,9 @@ import {
   getDpmPmOperatingQualityFairnessAnalysis,
   getDpmPmOperatingQualityReviewAction,
   getDpmPmOperatingQualitySummaryInvocation,
+  listDpmPmOperatingQualityFairnessAnalyses,
+  listDpmPmOperatingQualityReviewActions,
+  listDpmPmOperatingQualitySummaryInvocations,
   previewDpmPmOperatingQualityFairnessAnalysis,
   previewDpmPmOperatingQualityReviewAction,
   previewDpmPmOperatingQualityScoreRun,
@@ -36,6 +41,9 @@ vi.mock("../../src/features/workbench/pm-operating-quality-api", () => ({
   getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   getDpmPmOperatingQualityReviewAction: vi.fn(),
   getDpmPmOperatingQualitySummaryInvocation: vi.fn(),
+  listDpmPmOperatingQualityFairnessAnalyses: vi.fn(),
+  listDpmPmOperatingQualityReviewActions: vi.fn(),
+  listDpmPmOperatingQualitySummaryInvocations: vi.fn(),
   previewDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
   previewDpmPmOperatingQualityReviewAction: vi.fn(),
   previewDpmPmOperatingQualityScoreRun: vi.fn(),
@@ -288,14 +296,69 @@ const replacementSummaryResponse: DpmPmOperatingQualitySummaryResponse = {
   }),
 };
 
+function fairnessDetailOf(fairness: Record<string, unknown>) {
+  return {
+    ...fairnessAnalysisResponse,
+    supportability: {
+      ...fairnessAnalysisResponse.supportability,
+      fairness_analysis_id: fairness.fairness_analysis_id as string,
+    },
+    data: { fairness_analysis: fairness },
+  } as DpmPmOperatingQualityGatewayResponse;
+}
+
+function reviewActionDetailOf(reviewAction: Record<string, unknown>) {
+  return {
+    ...reviewActionResponse,
+    supportability: {
+      ...reviewActionResponse.supportability,
+      review_action_id: reviewAction.review_action_id as string,
+    },
+    data: { review_action: reviewAction },
+  } as DpmPmOperatingQualityGatewayResponse;
+}
+
 function renderActions(overrides: Partial<Parameters<typeof usePmOperatingQualityActions>[0]> = {}) {
-  return renderHook(() =>
-    usePmOperatingQualityActions({
-      policies,
-      scoreRuns,
-      ...overrides,
-    })
+  seedListReads(overrides);
+  return renderHook(
+    () =>
+      usePmOperatingQualityActions({
+        policies,
+        scoreRuns,
+        ...overrides,
+      }),
+    { wrapper: createQueryWrapper() },
   );
+}
+
+// Persisted commands stay pending until the exact affected source list refreshes, so
+// every render gives the governed list reads a canonical response to return.
+function seedListReads(overrides: Partial<Parameters<typeof usePmOperatingQualityActions>[0]>) {
+  const emptyList = (payload: Record<string, unknown>) => ({
+    ...policies,
+    data: payload,
+  });
+  vi.mocked(listDpmPmOperatingQualityFairnessAnalyses).mockResolvedValue(
+    overrides.fairnessAnalyses ?? emptyList({ fairness_analyses: [] }),
+  );
+  vi.mocked(listDpmPmOperatingQualityReviewActions).mockResolvedValue(
+    overrides.reviewActions ?? emptyList({ review_actions: [] }),
+  );
+  vi.mocked(listDpmPmOperatingQualitySummaryInvocations).mockResolvedValue(
+    overrides.summaryInvocations ?? emptyList({ summary_invocations: [] }),
+  );
+}
+
+function createQueryWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return function QueryWrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children);
+  };
 }
 
 describe("usePmOperatingQualityActions", () => {
@@ -331,7 +394,10 @@ describe("usePmOperatingQualityActions", () => {
     const { result, rerender } = renderHook(
       ({ currentScoreRuns }) =>
         usePmOperatingQualityActions({ policies, scoreRuns: currentScoreRuns }),
-      { initialProps: { currentScoreRuns: multipleScoreRuns } },
+      {
+        initialProps: { currentScoreRuns: multipleScoreRuns },
+        wrapper: createQueryWrapper(),
+      },
     );
 
     act(() => result.current.selectScoreRun("pmq_run_002"));
@@ -357,7 +423,9 @@ describe("usePmOperatingQualityActions", () => {
     expect(requestDpmPmOperatingQualitySummary).toHaveBeenCalledWith({
       scoreRunId: "pmq_run_002",
     });
-    expect(result.current.model.summaryPosture.runId).toBe("packrun_pmq_2");
+    await waitFor(() =>
+      expect(result.current.model.summaryPosture.runId).toBe("packrun_pmq_2"),
+    );
   });
 
   it("loads selected fairness and review-action detail and binds the visible action target", async () => {
@@ -389,14 +457,8 @@ describe("usePmOperatingQualityActions", () => {
       ...reviewActionResponse,
       data: { review_actions: [firstReviewAction, secondReviewAction] },
     };
-    const secondFairnessDetail = {
-      ...fairnessAnalysisResponse,
-      data: { fairness_analysis: secondFairness },
-    };
-    const secondReviewActionDetail = {
-      ...reviewActionResponse,
-      data: { review_action: secondReviewAction },
-    };
+    const secondFairnessDetail = fairnessDetailOf(secondFairness);
+    const secondReviewActionDetail = reviewActionDetailOf(secondReviewAction);
     vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
       secondFairnessDetail,
     );
@@ -408,15 +470,9 @@ describe("usePmOperatingQualityActions", () => {
     );
     const { result } = renderActions({
       fairnessAnalyses: fairnessList,
-      fairnessAnalysisDetail: {
-        ...fairnessAnalysisResponse,
-        data: { fairness_analysis: firstFairness },
-      },
+      fairnessAnalysisDetail: fairnessDetailOf(firstFairness),
       reviewActions: reviewActionList,
-      reviewActionDetail: {
-        ...reviewActionResponse,
-        data: { review_action: firstReviewAction },
-      },
+      reviewActionDetail: reviewActionDetailOf(firstReviewAction),
     });
 
     await act(async () => {
@@ -460,6 +516,45 @@ describe("usePmOperatingQualityActions", () => {
     });
   });
 
+  it("reuses fresh selected fairness detail instead of repaying the source read", async () => {
+    const firstFairness = {
+      ...(fairnessAnalysisResponse.data.fairness_analysis as Record<string, unknown>),
+      fairness_analysis_id: "pmq_fair_001",
+      as_of_date: "2026-05-13",
+    };
+    const secondFairness = {
+      ...firstFairness,
+      fairness_analysis_id: "pmq_fair_002",
+      as_of_date: "2026-05-14",
+    };
+    const fairnessList = {
+      ...fairnessAnalysisResponse,
+      data: { fairness_analyses: [firstFairness, secondFairness] },
+    };
+    const firstFairnessDetail = fairnessDetailOf(firstFairness);
+    const secondFairnessDetail = fairnessDetailOf(secondFairness);
+    vi.mocked(getDpmPmOperatingQualityFairnessAnalysis).mockResolvedValue(
+      secondFairnessDetail,
+    );
+    const { result } = renderActions({
+      fairnessAnalyses: fairnessList,
+      fairnessAnalysisDetail: firstFairnessDetail,
+    });
+
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_001");
+    });
+    await act(async () => {
+      await result.current.selectFairnessAnalysis("pmq_fair_002");
+    });
+
+    expect(getDpmPmOperatingQualityFairnessAnalysis).toHaveBeenCalledTimes(1);
+    expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-14");
+  });
+
   it("discards late selected-detail completion after the supervisor changes record", async () => {
     const firstFairness = {
       ...(fairnessAnalysisResponse.data.fairness_analysis as Record<string, unknown>),
@@ -491,20 +586,14 @@ describe("usePmOperatingQualityActions", () => {
     });
 
     await act(async () => {
-      resolveSecondRequest({
-        ...fairnessAnalysisResponse,
-        data: { fairness_analysis: firstFairness },
-      });
+      resolveSecondRequest(fairnessDetailOf(firstFairness));
       await Promise.resolve();
     });
     expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_001");
     expect(result.current.model.fairnessDetail.asOfDate).toBe("2026-05-13");
 
     await act(async () => {
-      resolveFirstRequest({
-        ...fairnessAnalysisResponse,
-        data: { fairness_analysis: secondFairness },
-      });
+      resolveFirstRequest(fairnessDetailOf(secondFairness));
       await Promise.resolve();
     });
     expect(result.current.selection.fairnessAnalysisId).toBe("pmq_fair_001");
@@ -559,10 +648,7 @@ describe("usePmOperatingQualityActions", () => {
     expect(result.current.pendingFairnessDetail).toBe(true);
 
     await act(async () => {
-      resolveFairness({
-        ...fairnessAnalysisResponse,
-        data: { fairness_analysis: secondFairness },
-      });
+      resolveFairness(fairnessDetailOf(secondFairness));
       await Promise.resolve();
     });
     await waitFor(() => expect(result.current.pendingFairnessDetail).toBe(false));
@@ -679,7 +765,10 @@ describe("usePmOperatingQualityActions", () => {
           scoreRuns,
           fairnessAnalyses,
         }),
-      { initialProps: { fairnessAnalyses: initialFairnessList } },
+      {
+        initialProps: { fairnessAnalyses: initialFairnessList },
+        wrapper: createQueryWrapper(),
+      },
     );
 
     await act(async () => {
@@ -766,13 +855,16 @@ describe("usePmOperatingQualityActions", () => {
           policies,
           scoreRuns: currentScoreRuns,
         }),
-      { initialProps: { currentScoreRuns: scoreRuns } },
+      {
+        initialProps: { currentScoreRuns: scoreRuns },
+        wrapper: createQueryWrapper(),
+      },
     );
 
     await act(async () => {
       await result.current.requestSupportSummary();
     });
-    expect(result.current.summaryOutcome).not.toBeNull();
+    await waitFor(() => expect(result.current.summaryOutcome).not.toBeNull());
 
     rerender({ currentScoreRuns: replacementScoreRuns });
 
@@ -794,7 +886,10 @@ describe("usePmOperatingQualityActions", () => {
           policies,
           scoreRuns: currentScoreRuns,
         }),
-      { initialProps: { currentScoreRuns: scoreRuns } },
+      {
+        initialProps: { currentScoreRuns: scoreRuns },
+        wrapper: createQueryWrapper(),
+      },
     );
 
     act(() => {
@@ -827,10 +922,12 @@ describe("usePmOperatingQualityActions", () => {
       await result.current.requestSupportSummary();
     });
 
-    expect(result.current.summaryOutcome?.disclosure).toMatchObject({
-      availability: "partial",
-      clientUse: "blocked",
-    });
+    await waitFor(() =>
+      expect(result.current.summaryOutcome?.disclosure).toMatchObject({
+        availability: "partial",
+        clientUse: "blocked",
+      }),
+    );
     expect(result.current.model.summaryPosture).toMatchObject({
       status: "Not requested",
       reviewState: "N/A",
@@ -855,7 +952,10 @@ describe("usePmOperatingQualityActions", () => {
           policies,
           scoreRuns: currentScoreRuns,
         }),
-      { initialProps: { currentScoreRuns: scoreRuns } },
+      {
+        initialProps: { currentScoreRuns: scoreRuns },
+        wrapper: createQueryWrapper(),
+      },
     );
 
     act(() => {
@@ -907,11 +1007,13 @@ describe("usePmOperatingQualityActions", () => {
     });
 
     expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
-    expect(result.current.actionError).toEqual(
-      expect.objectContaining({
-        statusClass: "blocked",
-        body: "Preview the supervisory review action before recording it.",
-      })
+    await waitFor(() =>
+      expect(result.current.actionError).toEqual(
+        expect.objectContaining({
+          statusClass: "blocked",
+          body: "Preview the supervisory review action before recording it.",
+        }),
+      ),
     );
 
     await act(async () => {
@@ -1173,11 +1275,13 @@ describe("usePmOperatingQualityActions", () => {
     });
 
     expect(createDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
-    expect(result.current.actionError).toEqual(
-      expect.objectContaining({
-        statusClass: "blocked",
-        body: "Preview the PM quality summary invocation before recording it.",
-      })
+    await waitFor(() =>
+      expect(result.current.actionError).toEqual(
+        expect.objectContaining({
+          statusClass: "blocked",
+          body: "Preview the PM quality summary invocation before recording it.",
+        }),
+      ),
     );
 
     await act(async () => {
@@ -1242,6 +1346,116 @@ describe("usePmOperatingQualityActions", () => {
     expect(renderedDetail).not.toContain("OMS claim must stay hidden");
   });
 
+  it("serializes persisted commands: a second persist cannot start while one is in flight", async () => {
+    let resolveCreate!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction).mockReturnValue(
+      new Promise((resolve) => { resolveCreate = resolve; }),
+    );
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(reviewActionResponse);
+    const { result } = renderActions();
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+    act(() => {
+      void result.current.createReviewAction();
+    });
+    await waitFor(() => expect(result.current.selectionLocked).toBe(true));
+
+    await act(async () => {
+      await result.current.createFairnessAnalysis();
+    });
+    expect(createDpmPmOperatingQualityFairnessAnalysis).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveCreate(reviewActionResponse);
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.selectionLocked).toBe(false));
+  });
+
+  it("holds a persisted command pending until the exact affected list has refreshed", async () => {
+    let resolveListRefetch!: (value: DpmPmOperatingQualityGatewayResponse) => void;
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(reviewActionResponse);
+    const { result } = renderActions({ reviewActions: reviewActionResponse });
+    vi.mocked(listDpmPmOperatingQualityReviewActions).mockReturnValue(
+      new Promise((resolve) => { resolveListRefetch = resolve; }),
+    );
+
+    act(() => {
+      void result.current.previewReviewAction();
+    });
+    await waitFor(() =>
+      expect(previewDpmPmOperatingQualityReviewAction).toHaveBeenCalled(),
+    );
+    act(() => {
+      void result.current.createReviewAction();
+    });
+    await waitFor(() =>
+      expect(createDpmPmOperatingQualityReviewAction).toHaveBeenCalled(),
+    );
+    await waitFor(() =>
+      expect(listDpmPmOperatingQualityReviewActions).toHaveBeenCalled(),
+    );
+    // The record and its detail are persisted, but the command stays pending -- and
+    // selection stays locked -- until the exact affected source list refreshes. Only
+    // the review-action list refetches; the untouched lists are not fanned out to.
+    expect(result.current.pendingReviewActionCreate).toBe(true);
+    expect(result.current.selectionLocked).toBe(true);
+    expect(listDpmPmOperatingQualityFairnessAnalyses).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveListRefetch(reviewActionResponse);
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.pendingReviewActionCreate).toBe(false));
+    await waitFor(() =>
+      expect(result.current.actionMessage).toBe(
+        "Recorded Manage-owned supervisory review action.",
+      ),
+    );
+  });
+
+  it("keeps a failed source refresh explicit and never shows completed confirmation", async () => {
+    vi.mocked(previewDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(createDpmPmOperatingQualityReviewAction).mockResolvedValue(
+      reviewActionResponse,
+    );
+    vi.mocked(getDpmPmOperatingQualityReviewAction).mockResolvedValue(reviewActionResponse);
+    const { result } = renderActions({ reviewActions: reviewActionResponse });
+    vi.mocked(listDpmPmOperatingQualityReviewActions).mockRejectedValue(
+      new Error("HTTP 502 from Gateway"),
+    );
+
+    await act(async () => {
+      await result.current.previewReviewAction();
+    });
+    await act(async () => {
+      await result.current.createReviewAction();
+    });
+
+    expect(createDpmPmOperatingQualityReviewAction).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(result.current.actionError?.body).toContain(
+        "source list refresh failed",
+      ),
+    );
+    expect(result.current.actionMessage).toBeNull();
+    expect(result.current.pendingReviewActionCreate).toBe(false);
+    expect(result.current.selectionLocked).toBe(false);
+  });
+
   it("blocks Gateway calls when source-owned readiness is not available", async () => {
     const { result } = renderActions({
       policies: null,
@@ -1267,11 +1481,13 @@ describe("usePmOperatingQualityActions", () => {
     expect(createDpmPmOperatingQualityReviewAction).not.toHaveBeenCalled();
     expect(previewDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
     expect(createDpmPmOperatingQualitySummaryInvocation).not.toHaveBeenCalled();
-    expect(result.current.actionError).toEqual(
-      expect.objectContaining({
-        statusClass: "blocked",
-        source: "Manage action register via Gateway supportability",
-      })
+    await waitFor(() =>
+      expect(result.current.actionError).toEqual(
+        expect.objectContaining({
+          statusClass: "blocked",
+          source: "Manage action register via Gateway supportability",
+        }),
+      ),
     );
   });
 });

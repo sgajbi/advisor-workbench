@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as baseRender, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import PmOperatingQualityPanel from "../../src/features/workbench/components/pm-operating-quality-panel";
@@ -168,6 +169,19 @@ const reviewActionDetail: DpmPmOperatingQualityGatewayResponse = {
   },
 };
 
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return baseRender(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
+
 describe("PM operating quality fairness-analysis create integration", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -195,7 +209,7 @@ describe("PM operating quality fairness-analysis create integration", () => {
       })
     );
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
     fireEvent.click(screen.getByRole("button", { name: "Persist Fairness" }));
 
     await waitFor(() => {
@@ -255,7 +269,7 @@ describe("PM operating quality fairness-analysis create integration", () => {
       })
     );
 
-    render(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
+    renderWithQueryClient(<PmOperatingQualityPanel policies={policies} scoreRuns={scoreRuns} />);
 
     expect(screen.getByRole("button", { name: "Record Review Action" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Preview Review Action" }));
