@@ -195,8 +195,6 @@ export function useDpmWaveCommandCenterActions({
     useState<WaveBoundValue<string> | null>(null);
   const [waveReadPending, setWaveReadPending] =
     useState<WaveBoundValue<string> | null>(null);
-  const [campaignWaveResponse, setCampaignWaveResponse] =
-    useState<DpmWaveGatewayResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
     useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
   const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
@@ -269,7 +267,7 @@ export function useDpmWaveCommandCenterActions({
     waveProofPackSourceWaveId: selectedSourceWaveId,
     waveItems: waveSources.waveItems,
     waveItemsSourceWaveId: selectedSourceWaveId,
-    actionResponse: campaignWaveResponse ?? waveCommands.actionResponse,
+    actionResponse: waveCommands.actionResponse,
     waveAiMemo: waveCommands.waveAiMemo,
     waveAiMemoSourceWaveId: selectedSourceWaveId,
     operationsHandoffSummary: waveCommands.operationsHandoffSummary,
@@ -552,7 +550,6 @@ export function useDpmWaveCommandCenterActions({
       });
       if (isCurrentCampaignRequest(request)) {
         setCampaignLaunchResponse({ campaignKey: row.key, value: response });
-        setCampaignWaveResponse(response);
       }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {

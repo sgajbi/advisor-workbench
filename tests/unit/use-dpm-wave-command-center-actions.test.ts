@@ -324,7 +324,7 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
 function renderActions(
   definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
   queryClient = createTestQueryClient(),
-  sourceWaveList: DpmWaveGatewayResponse = waveResponse,
+  sourceWaveList: DpmWaveGatewayResponse | null = waveResponse,
 ) {
   const rendered = renderHook(
     () =>
@@ -445,6 +445,19 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await waitFor(() => expect(second.result.current.model.selectedWaveState).toBe("APPROVED"));
     expect(second.result.current.model.correlationId).toBe("corr-wave-updated");
+  });
+
+  it("does not expose cached wave evidence when the server list is unavailable", async () => {
+    const queryClient = createTestQueryClient();
+    const first = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() => expect(first.result.current.model.selectedWaveId).toBe("dwv_001"));
+    first.unmount();
+
+    const second = renderActions(campaignDefinitions, queryClient, null);
+
+    expect(second.result.current.model.selectedWaveId).toBeNull();
+    act(() => second.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
   });
 
   it("routes bounded rebalance actions through Gateway helpers", async () => {
@@ -640,6 +653,7 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("loads campaign evidence, readiness, launch package, and durable launch through Gateway", async () => {
+    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     const { result } = renderActions();
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
@@ -690,6 +704,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.campaignLaunchPosture.launchedWaveId).toBe(
       "dwv_campaign_launch_001"
     );
+    expect(result.current.model.selectedWaveId).toBe("dwv_001");
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
   });
 
   it("keeps campaign launch fail-closed when source readiness is blocked", async () => {
