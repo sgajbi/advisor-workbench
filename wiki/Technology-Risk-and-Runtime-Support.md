@@ -16,7 +16,7 @@ evidence deterministic. This is not a claim that a bank has approved the stack.
 | --- | --- | --- |
 | Build and server runtime | Node `22.23.1` Maintenance LTS | Exact in protected CI and digest-pinned container |
 | Package manager | npm `10.9.8`, bundled with the governed Node release | Exact declaration; npm 10 compatibility range for developers |
-| Application framework | Next.js `15.5.22` Maintenance LTS | Time-bounded acceptance; review required by 2026-09-15 |
+| Application framework | Next.js `15.5.25` Maintenance LTS | Current security backport; time-bounded review required by 2026-09-15 |
 | UI foundation | React `19.1.0` and TypeScript `5.9.3` | Exact manifest and policy reconciliation |
 | Production container | Official Debian Bookworm slim Node image | Immutable digest, standalone output, non-root runtime |
 | Browser automation | Playwright `1.58.2`, Chromium project | Protected smoke evidence; wider browser certification open |
