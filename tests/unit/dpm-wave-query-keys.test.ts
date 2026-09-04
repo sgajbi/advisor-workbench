@@ -20,9 +20,10 @@ describe("DPM wave Query identity", () => {
       dpmWaveQueryKeys.wave("wave-1"),
       dpmWaveQueryKeys.items("wave-1"),
       dpmWaveQueryKeys.proofPack("wave-1"),
+      dpmWaveQueryKeys.confirmationLock("portfolio-1"),
     ];
 
-    expect(new Set(keys.map((key) => JSON.stringify(key)))).toHaveLength(4);
+    expect(new Set(keys.map((key) => JSON.stringify(key)))).toHaveLength(5);
     expect(dpmWaveQueryKeys.items("wave-1")).not.toEqual(
       dpmWaveQueryKeys.items("wave-2"),
     );
