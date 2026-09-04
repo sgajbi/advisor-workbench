@@ -1326,6 +1326,18 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     expect(result.current.model.selectedWaveState).toBe("SIMULATION_READY");
 
+    await act(async () => {
+      await queryClient.fetchQuery({
+        queryKey: dpmWaveQueryKeys.wave("dwv_001"),
+        queryFn: async () => detailDuringPreview,
+        staleTime: 0,
+      });
+    });
+    await waitFor(() =>
+      expect(result.current.model.correlationId).toBe("corr-detail-during-preview"),
+    );
+    expect(result.current.model.selectedWaveState).toBe("APPROVED");
+
     act(() => {
       queryClient.setQueryData(dpmWaveQueryKeys.wave("dwv_001"), approvedResponse, {
         updatedAt: Date.now() + 1_000,

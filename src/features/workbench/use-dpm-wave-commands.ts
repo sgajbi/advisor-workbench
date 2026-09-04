@@ -45,7 +45,7 @@ type DpmWaveCommandVariables = {
 
 type DpmWaveCommandResult = {
   response: DpmWaveGatewayResponse;
-  detailAtAdmission: DpmWaveGatewayResponse | null;
+  detailUpdateCountAtAdmission: number;
   waveId: string | null;
   sourceWaveId: string | null;
 };
@@ -202,11 +202,10 @@ export function useDpmWaveCommands({
       const confirmedResponse = await refreshWaveSources(variables, response);
       const result = {
         response: confirmedResponse,
-        detailAtAdmission: variables.sourceWaveId
-          ? (queryClient.getQueryData<DpmWaveGatewayResponse>(
-              dpmWaveQueryKeys.wave(variables.sourceWaveId),
-            ) ?? null)
-          : null,
+        detailUpdateCountAtAdmission: variables.sourceWaveId
+          ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(variables.sourceWaveId))
+              ?.dataUpdateCount ?? 0)
+          : 0,
         waveId:
           variables.waveId ??
           (variables.refresh === "list"
@@ -337,8 +336,8 @@ export function useDpmWaveCommands({
       activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
-    actionResponseDetailAtAdmission:
-      commandMutation.data?.detailAtAdmission ?? null,
+    actionResponseDetailUpdateCountAtAdmission:
+      commandMutation.data?.detailUpdateCountAtAdmission ?? 0,
     actionResponseIsDirect:
       commandMutation.isSuccess && commandMutation.variables.refresh === "none",
     waveAiMemo: selectedPmMemo,
