@@ -196,6 +196,13 @@
             "Manage Overview keeps the portfolio decision first without repeated destinations"
           ]
         },
+        "mode-loading": {
+          "fixture_value": "mode-loading",
+          "spec": "tests/e2e/manage-mode-data-loading.spec.ts",
+          "expected_tests": [
+            "Manage mode navigation requests only the selected workflow evidence"
+          ]
+        },
         "portfolio-memory": {
           "fixture_value": "portfolio-memory",
           "spec": "tests/e2e/manage-portfolio-memory-workspace.spec.ts",
