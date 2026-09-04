@@ -7,7 +7,9 @@ export type ManageFixtureGateway = {
   close: () => Promise<void>;
   getLastLoadedProofPackId: () => string | null;
   getLastProofPackMemoId: () => string | null;
+  getRequestPaths: () => string[];
   port: number;
+  resetRequestPaths: () => void;
   setMandateHealthExceptionMode: (
     mode: "windows" | "empty" | "unavailable" | "delayed-next",
   ) => void;
@@ -40,9 +42,11 @@ export async function startManageFixtureGateway({
   let activeMandateHealthPortfolioId = portfolioId;
   let lastLoadedProofPackId: string | null = null;
   let lastProofPackMemoId: string | null = null;
+  let requestPaths: string[] = [];
   const server = createServer((request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
     const path = requestUrl.pathname;
+    requestPaths.push(path);
 
     if (path === "/api/v1/platform/capabilities") {
       sendJson(response, {
@@ -91,7 +95,7 @@ export async function startManageFixtureGateway({
       );
       return;
     }
-    if (process.env.MANAGE_E2E_FIXTURE === "pm-quality") {
+    if (["pm-quality", "mode-loading"].includes(process.env.MANAGE_E2E_FIXTURE ?? "")) {
       const pmQualityResponse = pmQualityFixtureResponse(path);
       if (pmQualityResponse) {
         sendJson(response, pmQualityResponse);
@@ -118,14 +122,16 @@ export async function startManageFixtureGateway({
     }
     if (
       path === "/api/v1/dpm/command-center/outcome-reviews" &&
-      ["outcome-reviews", "proof-copilot"].includes(
+      ["outcome-reviews", "proof-copilot", "mode-loading"].includes(
         process.env.MANAGE_E2E_FIXTURE ?? "",
       )
     ) {
       sendJson(
         response,
         outcomeReviewEnvelope(
-          process.env.MANAGE_E2E_FIXTURE === "proof-copilot"
+          ["proof-copilot", "mode-loading"].includes(
+            process.env.MANAGE_E2E_FIXTURE ?? "",
+          )
             ? manageProofPackFixtureIds.initial
             : undefined,
         ),
@@ -156,7 +162,9 @@ export async function startManageFixtureGateway({
       return;
     }
     if (
-      process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
+      ["proof-copilot", "mode-loading"].includes(
+        process.env.MANAGE_E2E_FIXTURE ?? "",
+      ) &&
       path === "/api/v1/dpm/command-center/proof-packs" &&
       request.method === "POST"
     ) {
@@ -188,7 +196,9 @@ export async function startManageFixtureGateway({
       /^\/api\/v1\/dpm\/command-center\/proof-packs\/([^/]+)$/,
     );
     if (
-      process.env.MANAGE_E2E_FIXTURE === "proof-copilot" &&
+      ["proof-copilot", "mode-loading"].includes(
+        process.env.MANAGE_E2E_FIXTURE ?? "",
+      ) &&
       proofPackMatch &&
       request.method === "GET"
     ) {
@@ -358,6 +368,10 @@ export async function startManageFixtureGateway({
     close: () => closeServer(server),
     getLastLoadedProofPackId: () => lastLoadedProofPackId,
     getLastProofPackMemoId: () => lastProofPackMemoId,
+    getRequestPaths: () => [...requestPaths],
+    resetRequestPaths: () => {
+      requestPaths = [];
+    },
     setMandateHealthExceptionMode: (mode) => {
       mandateHealthExceptionMode = mode;
     },

@@ -261,6 +261,15 @@ describe("service addressing", () => {
     expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18150");
   });
 
+  it("allows only the exact process-owned Manage mode-loading fixture loopback", () => {
+    process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
+    process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
+    process.env.MANAGE_E2E_FIXTURE = "mode-loading";
+    process.env.MANAGE_E2E_FIXTURE_PORT = "18150";
+
+    expect(resolveGatewayBaseUrl()).toBe("http://127.0.0.1:18150");
+  });
+
   it("allows only the exact process-owned Manage overview fixture loopback", () => {
     process.env.BFF_BASE_URL = "http://127.0.0.1:18150/";
     process.env.WORKBENCH_E2E_FIXTURE_GATEWAY = "manage";
