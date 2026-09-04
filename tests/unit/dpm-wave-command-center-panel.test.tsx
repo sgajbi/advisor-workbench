@@ -773,6 +773,9 @@ describe("DpmWaveCommandCenterPanel", () => {
       handoff_summary_request: { requested_outputs: ["operations_summary"] },
     });
     vi.mocked(createDpmWave).mockResolvedValue(nextWaveResponse);
+    vi.mocked(getDpmWave).mockImplementation(async (waveId) =>
+      waveId === "dwv_002" ? nextWaveResponse : waveResponse,
+    );
 
     renderWithQueryClient(
       <DpmWaveCommandCenterPanel

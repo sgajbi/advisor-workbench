@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -45,6 +46,11 @@ type WaveAiResult<T> = {
   response: T;
 };
 
+type WaveConfirmationLock = {
+  contextWaveId: string | null;
+  label: string;
+};
+
 export function useDpmWaveCommands({
   portfolioId,
   selectedWaveId,
@@ -55,6 +61,12 @@ export function useDpmWaveCommands({
   listQueryKey: readonly unknown[];
 }) {
   const queryClient = useQueryClient();
+  const [confirmationLock, setConfirmationLock] =
+    useState<WaveConfirmationLock | null>(null);
+  const activeConfirmationLock =
+    confirmationLock?.contextWaveId === selectedWaveId
+      ? confirmationLock
+      : null;
 
   async function refreshWaveSources(
     variables: DpmWaveCommandVariables,
@@ -64,22 +76,39 @@ export function useDpmWaveCommands({
       return response;
     }
     try {
-      const detail = variables.waveId
-        ? await queryClient.fetchQuery({
-            ...dpmWaveDetailQueryOptions(variables.waveId),
-            staleTime: 0,
-          })
-        : response;
+      const expectedWaveId =
+        variables.waveId ??
+        buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
+      if (!expectedWaveId) {
+        throw new Error(
+          "the persisted response did not identify a rebalance wave",
+        );
+      }
+      const detail = await queryClient.fetchQuery({
+        ...dpmWaveDetailQueryOptions(expectedWaveId),
+        staleTime: 0,
+      });
+      const confirmedWaveId = buildDpmWaveCommandCenterModel({
+        waveList: null,
+        waveDetail: detail,
+      }).selectedWaveId;
+      if (confirmedWaveId !== expectedWaveId) {
+        throw new Error(
+          `the refreshed evidence identified ${confirmedWaveId ?? "no wave"} instead of ${expectedWaveId}`,
+        );
+      }
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
       );
-      if (!variables.waveId) {
-        retainCreatedWaveUntilListed(queryClient, listQueryKey, response);
-      }
       return detail;
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "source refresh failed";
+      setConfirmationLock({
+        contextWaveId: variables.sourceWaveId,
+        label: variables.label,
+      });
+      const detail =
+        error instanceof Error ? error.message : "source refresh failed";
       throw new Error(
         `${variables.label} was accepted, but refreshed rebalance evidence could not be loaded (${detail}). Reload before taking the next action.`,
       );
@@ -127,11 +156,15 @@ export function useDpmWaveCommands({
     : selectedWaveId;
 
   function commandInFlight(): boolean {
-    return queryClient.isMutating({ mutationKey: dpmWaveMutationKeys.all }) > 0;
+    return (
+      activeConfirmationLock !== null ||
+      queryClient.isMutating({ mutationKey: dpmWaveMutationKeys.all }) > 0
+    );
   }
 
   function runCommand(variables: DpmWaveCommandVariables): void {
     if (!commandInFlight()) {
+      setConfirmationLock(null);
       commandMutation.mutate(variables);
     }
   }
@@ -176,6 +209,8 @@ export function useDpmWaveCommands({
       : null;
   const pendingAction = commandMutation.isPending
     ? commandMutation.variables.label
+    : activeConfirmationLock
+      ? `${activeConfirmationLock.label} — awaiting source confirmation`
     : pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId
       ? "Prepare PM memo"
       : operationsBriefMutation.isPending && operationsBriefMutation.variables === activeWaveId
@@ -229,7 +264,12 @@ export function useDpmWaveCommands({
         (pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId) ||
         (operationsBriefMutation.isPending &&
           operationsBriefMutation.variables === activeWaveId);
-      if (activeWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
+      if (
+        activeWaveId &&
+        !commandMutation.isPending &&
+        !activeConfirmationLock &&
+        !aiPendingForSelectedWave
+      ) {
         pmMemoMutation.mutate(activeWaveId);
       }
     },
@@ -238,7 +278,12 @@ export function useDpmWaveCommands({
         (pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId) ||
         (operationsBriefMutation.isPending &&
           operationsBriefMutation.variables === activeWaveId);
-      if (activeWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
+      if (
+        activeWaveId &&
+        !commandMutation.isPending &&
+        !activeConfirmationLock &&
+        !aiPendingForSelectedWave
+      ) {
         operationsBriefMutation.mutate(activeWaveId);
       }
     },
@@ -247,22 +292,4 @@ export function useDpmWaveCommands({
 
 function readError(error: Error | null): string | null {
   return error?.message ?? null;
-}
-
-function retainCreatedWaveUntilListed(
-  queryClient: QueryClient,
-  listQueryKey: readonly unknown[],
-  response: DpmWaveGatewayResponse,
-): void {
-  const createdWaveId = buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
-  const refreshedList = queryClient.getQueryData<DpmWaveGatewayResponse>(listQueryKey);
-  const refreshedModel = buildDpmWaveCommandCenterModel({
-    waveList: refreshedList ?? null,
-  });
-  if (
-    createdWaveId &&
-    !refreshedModel.summaryRows.some((row) => row.waveId === createdWaveId)
-  ) {
-    queryClient.setQueryData(listQueryKey, response);
-  }
 }
