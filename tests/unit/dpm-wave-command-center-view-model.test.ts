@@ -168,6 +168,49 @@ describe("DPM wave command-center view model", () => {
     expect(model.proofPackStatus).toBe("BLOCKED");
   });
 
+  it("prefers the exact proof-pack read over older general wave posture", () => {
+    const olderWaveDetail: DpmWaveGatewayResponse = {
+      ...waveListResponse,
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "HANDOFF_READY",
+          proof_pack_posture: {
+            proof_pack_refs: [{ proof_pack_id: "ppack_old" }],
+            handoff_refs: [{ handoff_ref_id: "handoff_old" }],
+            external_execution_claimed: true,
+          },
+        },
+      },
+    };
+    const exactProofPack: DpmWaveGatewayResponse = {
+      ...waveListResponse,
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "HANDOFF_READY",
+          proof_pack_posture: {
+            proof_pack_refs: [{ proof_pack_id: "ppack_current" }],
+            handoff_refs: [{ handoff_ref_id: "handoff_current" }],
+            external_execution_claimed: false,
+          },
+        },
+      },
+    };
+
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveDetail: olderWaveDetail,
+      waveDetailSourceWaveId: "dwv_001",
+      waveProofPack: exactProofPack,
+      waveProofPackSourceWaveId: "dwv_001",
+    });
+
+    expect(model.proofPackRows[0]?.label).toBe("ppack_current");
+    expect(model.handoffRows[0]?.label).toBe("handoff_current");
+    expect(model.externalExecutionClaimed).toBe("No");
+  });
+
   it("keeps proof-pack posture not requested before source evidence is loaded", () => {
     const model = buildDpmWaveCommandCenterModel({ waveList: waveListResponse });
 

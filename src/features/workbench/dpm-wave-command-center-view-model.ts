@@ -287,11 +287,11 @@ export function buildDpmWaveCommandCenterModel(params: {
   const itemData = waveItems?.data ?? params.actionResponse?.data ?? waveDetail?.data;
   const itemRows = buildItemRows(itemData);
   const proofPackPosture = firstRecord(
+    waveProofPackRecord?.proof_pack_posture,
+    waveProofPack?.data.proof_pack_posture,
     waveRecord?.proof_pack_posture,
     params.actionResponse?.data.proof_pack_posture ??
       waveDetail?.data.proof_pack_posture,
-    waveProofPackRecord?.proof_pack_posture,
-    waveProofPack?.data.proof_pack_posture,
     waveItems?.data.proof_pack_posture,
     params.actionResponse?.data,
     waveProofPack?.data,
