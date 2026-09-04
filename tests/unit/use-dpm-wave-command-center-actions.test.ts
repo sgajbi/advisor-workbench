@@ -1294,7 +1294,8 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(approveDpmWave).mockResolvedValue(approvedResponse);
     vi.mocked(getDpmWave).mockResolvedValue(approvedResponse);
     vi.mocked(previewDpmWave).mockResolvedValue(previewResponse);
-    const { result } = renderActions();
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
 
     act(() => result.current.requestApproval());
     await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
@@ -1304,6 +1305,14 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.model.correlationId).toBe("corr-preview-current"),
     );
     expect(result.current.model.selectedWaveState).toBe("SIMULATION_READY");
+
+    act(() => {
+      queryClient.setQueryData(dpmWaveQueryKeys.wave("dwv_001"), approvedResponse, {
+        updatedAt: Date.now() + 1_000,
+      });
+    });
+    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
+    expect(result.current.model.correlationId).toBe("corr-approved");
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
