@@ -8,15 +8,17 @@ import { validateRuntimeSupportPolicy } from "../../scripts/quality/check-runtim
 const root = join(__dirname, "..", "..");
 
 function loadEvidence() {
+  const policy = JSON.parse(
+    readFileSync(
+      join(root, "docs/architecture/workbench-runtime-support-policy.v1.json"),
+      "utf8"
+    )
+  );
+
   return {
     packageJson: JSON.parse(readFileSync(join(root, "package.json"), "utf8")),
     packageLock: JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8")),
-    policy: JSON.parse(
-      readFileSync(
-        join(root, "docs/architecture/workbench-runtime-support-policy.v1.json"),
-        "utf8"
-      )
-    ),
+    policy,
     dockerfile: readFileSync(join(root, "Dockerfile"), "utf8"),
     makefile: readFileSync(join(root, "Makefile"), "utf8"),
     playwrightConfig: readFileSync(join(root, "playwright.config.ts"), "utf8"),
@@ -32,7 +34,7 @@ function loadEvidence() {
       nodeVersion: "22.15.0",
       npmVersion: "10.9.2",
     },
-    today: "2026-08-10",
+    today: policy.reviewedOn,
   };
 }
 
@@ -903,9 +905,9 @@ describe("runtime support policy", () => {
 
   it("rejects future or inverted lifecycle dates", () => {
     const futureReview = loadEvidence();
-    futureReview.policy.reviewedOn = "2026-08-11";
+    futureReview.policy.reviewedOn = futureReview.policy.nextReviewBy;
     const invertedReview = loadEvidence();
-    invertedReview.policy.reviewedOn = "2026-09-16";
+    invertedReview.policy.reviewedOn = "9999-12-31";
 
     expect(validateRuntimeSupportPolicy(futureReview)).toEqual(
       expect.arrayContaining([expect.stringContaining("cannot be in the future")])

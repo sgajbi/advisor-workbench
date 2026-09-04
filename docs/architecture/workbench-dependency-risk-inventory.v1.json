@@ -4,7 +4,7 @@
   "inventoryId": "lotus-workbench-direct-production-dependencies",
   "inventoryVersion": "1.2.0",
   "governedByIssue": "https://github.com/sgajbi/lotus-workbench/issues/618",
-  "reviewedOn": "2026-08-31",
+  "reviewedOn": "2026-09-04",
   "nextReviewBy": "2026-11-10",
   "admissionMode": "blocking",
   "reviewOwner": "workbench-architecture-maintainers",
