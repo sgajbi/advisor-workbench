@@ -42,14 +42,17 @@ export function useDpmWaveListSource({ waveList }: UseDpmWaveSourcesInput) {
 }
 
 /** Owns DPM reads under the selected source identity; campaigns remain a later tranche. */
-export function useDpmSelectedWaveSources(selectedSourceWaveId: string | null) {
+export function useDpmSelectedWaveSources(
+  selectedSourceWaveId: string | null,
+  loadDetail = false,
+) {
   const itemsQuery = useQuery({
     ...dpmWaveItemsQueryOptions(selectedSourceWaveId ?? ""),
     enabled: Boolean(selectedSourceWaveId),
   });
   const detailQuery = useQuery({
     ...dpmWaveDetailQueryOptions(selectedSourceWaveId ?? ""),
-    enabled: false,
+    enabled: Boolean(selectedSourceWaveId) && loadDetail,
   });
   const proofPackQuery = useQuery({
     ...dpmWaveProofPackQueryOptions(selectedSourceWaveId ?? ""),
@@ -60,7 +63,10 @@ export function useDpmSelectedWaveSources(selectedSourceWaveId: string | null) {
     waveDetail: detailQuery.data ?? null,
     waveItems: itemsQuery.data ?? null,
     proofPack: proofPackQuery.data ?? null,
-    sourceError: readQueryError(itemsQuery.error) ?? readQueryError(proofPackQuery.error),
+    sourceError:
+      readQueryError(detailQuery.error) ??
+      readQueryError(itemsQuery.error) ??
+      readQueryError(proofPackQuery.error),
     refreshItems: itemsQuery.refetch,
     openProofPack: proofPackQuery.refetch,
   };

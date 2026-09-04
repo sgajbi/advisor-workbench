@@ -67,10 +67,12 @@ export function useDpmWaveCommands({
   portfolioId,
   selectedWaveId,
   listQueryKey,
+  allowRetainedSelection,
 }: {
   portfolioId: string;
   selectedWaveId: string | null;
   listQueryKey: readonly unknown[];
+  allowRetainedSelection: boolean;
 }) {
   const queryClient = useQueryClient();
   const [confirmationLock, setConfirmationLock] =
@@ -88,6 +90,7 @@ export function useDpmWaveCommands({
     queryClient.getQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey) ??
     null;
   const activeConfirmedCreatedWave =
+    allowRetainedSelection &&
     confirmedCreatedWave &&
     (selectedWaveId === confirmedCreatedWave.listWaveIdAtConfirmation ||
       selectedWaveId === confirmedCreatedWave.waveId)
@@ -279,6 +282,7 @@ export function useDpmWaveCommands({
 
   return {
     activeWaveId,
+    retainedSelectionActive: activeConfirmedCreatedWave !== null,
     actionResponse: selectedCommandResult,
     waveAiMemo: selectedPmMemo,
     operationsHandoffSummary: selectedOperationsBrief,

@@ -773,10 +773,51 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     const secondMount = renderActions(campaignDefinitions, queryClient);
     expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_002");
+    expect(secondMount.result.current.model.selectedWaveState).not.toBe(
+      "SIMULATION_READY",
+    );
+    await waitFor(() =>
+      expect(secondMount.result.current.model.selectedWaveState).toBe("CREATED"),
+    );
 
     vi.mocked(approveDpmWave).mockResolvedValue(createdResponse);
     act(() => secondMount.result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_002"));
+  });
+
+  it("suppresses a retained created wave when the current list load is unavailable", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(
+      campaignDefinitions,
+      queryClient,
+      null,
+    );
+
+    act(() => firstMount.result.current.createRebalance());
+    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    firstMount.unmount();
+
+    const unavailableMount = renderActions(
+      campaignDefinitions,
+      queryClient,
+      null,
+    );
+    expect(unavailableMount.result.current.model.selectedWaveId).toBeNull();
+
+    act(() => unavailableMount.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
   });
 
   it("does not cache exact-read evidence under a different wave identity", async () => {
