@@ -63,9 +63,6 @@ export function useDpmWaveCommands({
     if (variables.refresh === "none") {
       return response;
     }
-    if (variables.waveId) {
-      queryClient.setQueryData(dpmWaveDetailQueryOptions(variables.waveId).queryKey, response);
-    }
     try {
       const detail = variables.waveId
         ? await queryClient.fetchQuery({
