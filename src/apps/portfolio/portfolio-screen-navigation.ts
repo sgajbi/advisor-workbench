@@ -58,6 +58,7 @@ export type PortfolioScreenRailModeItem = {
   status?: string;
   title?: string;
   href?: string;
+  prefetch?: boolean;
   onSelect?: () => void;
 };
 

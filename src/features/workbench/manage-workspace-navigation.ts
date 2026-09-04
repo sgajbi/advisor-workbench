@@ -99,6 +99,7 @@ export function buildManageModeItems(
     detail: mode.detail,
     active: activeMode === mode.key,
     href: buildManageModeHref(reviewContext, mode.key),
+    prefetch: false,
     title: mode.description,
   }));
 }
