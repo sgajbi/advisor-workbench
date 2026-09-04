@@ -648,6 +648,75 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.itemRows[0]?.security).toBe("MSFT US");
   });
 
+  it("prevents a late pre-command detail read from replacing confirmed lifecycle posture", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    const approvedResponse: DpmWaveGatewayResponse = {
+      ...createdResponse,
+      correlation_id: "corr-wave-approved",
+      supportability: {
+        ...createdResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: { wave: { wave_id: "dwv_002", state: "APPROVED" } },
+    };
+    let resolveApproval!: (value: DpmWaveGatewayResponse) => void;
+    let resolveOlderDetail!: (value: DpmWaveGatewayResponse) => void;
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave)
+      .mockResolvedValueOnce(createdResponse)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOlderDetail = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(approvedResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    vi.mocked(approveDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveApproval = resolve;
+      }),
+    );
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    act(() => result.current.requestApproval());
+    await queryClient.invalidateQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+      refetchType: "none",
+    });
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(2));
+
+    act(() => resolveApproval(approvedResponse));
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(
+      queryClient.getQueryData<DpmWaveGatewayResponse>(
+        dpmWaveQueryKeys.wave("dwv_002"),
+      )?.correlation_id,
+    ).toBe("corr-wave-approved");
+
+    await act(async () => {
+      resolveOlderDetail(createdResponse);
+      await Promise.resolve();
+    });
+    expect(
+      queryClient.getQueryData<DpmWaveGatewayResponse>(
+        dpmWaveQueryKeys.wave("dwv_002"),
+      )?.correlation_id,
+    ).toBe("corr-wave-approved");
+  });
+
   it("does not present an accepted mutation response as confirmed wave detail", async () => {
     let resolveWaveRefresh!: (value: DpmWaveGatewayResponse) => void;
     const acceptedResponse: DpmWaveGatewayResponse = {

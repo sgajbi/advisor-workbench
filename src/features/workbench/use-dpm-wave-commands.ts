@@ -134,11 +134,13 @@ export function useDpmWaveCommands({
           response,
           "Persisted create response",
         );
+      const detailOptions = dpmWaveDetailQueryOptions(expectedWaveId);
+      await queryClient.cancelQueries({
+        queryKey: detailOptions.queryKey,
+        exact: true,
+      });
       const detail = await getIdentityConfirmedDpmWaveDetail(expectedWaveId);
-      queryClient.setQueryData(
-        dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
-        detail,
-      );
+      queryClient.setQueryData(detailOptions.queryKey, detail);
       const itemsOptions = dpmWaveItemsQueryOptions(expectedWaveId);
       await queryClient.cancelQueries({
         queryKey: itemsOptions.queryKey,
