@@ -635,15 +635,28 @@ describe("useDpmWaveCommandCenterActions", () => {
       ...createdResponse,
       correlation_id: "corr-wave-created-confirmed",
     };
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      correlation_id: "corr-wave-created-items",
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
     vi.mocked(getDpmWave).mockImplementation(async (waveId) =>
       waveId === "dwv_002" ? confirmedDetail : waveResponse,
+    );
+    vi.mocked(getDpmWaveItems).mockImplementation(async (waveId) =>
+      waveId === "dwv_002" ? confirmedItems : itemResponse,
     );
     const { result } = renderActions();
 
     act(() => result.current.createRebalance());
 
     await waitFor(() => expect(getDpmWave).toHaveBeenCalledWith("dwv_002"));
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_002"));
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
     expect(result.current.model.selectedWaveId).toBe("dwv_002");
     expect(result.current.model.correlationId).toBe(

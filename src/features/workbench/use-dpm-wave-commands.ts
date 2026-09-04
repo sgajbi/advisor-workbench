@@ -17,11 +17,13 @@ import {
   sourceCheckDpmWave,
   stageDpmWave,
 } from "@/features/workbench/dpm-wave-api";
-import { dpmWaveDetailQueryOptions } from "@/features/workbench/dpm-wave-query-options";
+import {
+  dpmWaveDetailQueryOptions,
+  dpmWaveItemsQueryOptions,
+} from "@/features/workbench/dpm-wave-query-options";
 import {
   DPM_WAVE_COMMAND_SCOPE,
   dpmWaveMutationKeys,
-  dpmWaveQueryKeys,
 } from "@/features/workbench/dpm-wave-query-keys";
 import type {
   DpmOperationsHandoffSummaryResponse,
@@ -114,10 +116,10 @@ export function useDpmWaveCommands({
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
         detail,
       );
-      await queryClient.invalidateQueries(
-        { queryKey: dpmWaveQueryKeys.items(expectedWaveId), exact: true },
-        { throwOnError: true },
-      );
+      await queryClient.fetchQuery({
+        ...dpmWaveItemsQueryOptions(expectedWaveId),
+        staleTime: 0,
+      });
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
