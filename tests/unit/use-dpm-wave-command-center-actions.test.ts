@@ -324,12 +324,13 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
 function renderActions(
   definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
   queryClient = createTestQueryClient(),
+  sourceWaveList: DpmWaveGatewayResponse = waveResponse,
 ) {
   const rendered = renderHook(
     () =>
       useDpmWaveCommandCenterActions({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        waveList: waveResponse,
+        waveList: sourceWaveList,
         campaignDefinitions: definitions,
       }),
     {
@@ -418,6 +419,34 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(getDpmWaveItems).toHaveBeenCalledTimes(1);
   });
 
+  it("admits a newer server list when the selected wave identity is unchanged", async () => {
+    const queryClient = createTestQueryClient();
+    const first = renderActions(campaignDefinitions, queryClient);
+    expect(first.result.current.model.selectedWaveState).toBe("SIMULATION_READY");
+    first.unmount();
+
+    const updatedWaveList: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-updated",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: {
+        items: [
+          {
+            ...(waveResponse.data.items as Array<Record<string, unknown>>)[0],
+            state: "APPROVED",
+          },
+        ],
+      },
+    };
+    const second = renderActions(campaignDefinitions, queryClient, updatedWaveList);
+
+    await waitFor(() => expect(second.result.current.model.selectedWaveState).toBe("APPROVED"));
+    expect(second.result.current.model.correlationId).toBe("corr-wave-updated");
+  });
+
   it("routes bounded rebalance actions through Gateway helpers", async () => {
     vi.mocked(previewDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(createDpmWave).mockResolvedValue(waveResponse);
@@ -493,6 +522,43 @@ describe("useDpmWaveCommandCenterActions", () => {
       "client",
     );
     expect(result.current.actionMessage).toBe("Request approval completed.");
+  });
+
+  it("does not present an accepted mutation response as confirmed wave detail", async () => {
+    let resolveWaveRefresh!: (value: DpmWaveGatewayResponse) => void;
+    const acceptedResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-accepted",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "APPROVED",
+        },
+      },
+    };
+    vi.mocked(approveDpmWave).mockResolvedValue(acceptedResponse);
+    vi.mocked(getDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveWaveRefresh = resolve;
+      }),
+    );
+    const { result } = renderActions();
+
+    act(() => result.current.requestApproval());
+
+    await waitFor(() => expect(result.current.pendingAction).toBe("Request approval"));
+    expect(result.current.model.selectedWaveState).toBe("SIMULATION_READY");
+    expect(result.current.model.correlationId).toBe("corr-wave");
+
+    act(() => resolveWaveRefresh(acceptedResponse));
+
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(result.current.model.selectedWaveState).toBe("APPROVED");
+    expect(result.current.model.correlationId).toBe("corr-wave-accepted");
   });
 
   it("keeps accepted wave commands explicit when source refresh cannot prove current posture", async () => {

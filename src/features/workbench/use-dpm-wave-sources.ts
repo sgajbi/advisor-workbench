@@ -10,7 +10,6 @@ import {
   dpmWaveListQueryOptions,
   dpmWaveProofPackQueryOptions,
 } from "@/features/workbench/dpm-wave-query-options";
-import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import type { DpmWaveGatewayResponse } from "@/features/workbench/types";
 
 type UseDpmWaveSourcesInput = {
@@ -31,12 +30,7 @@ export function useDpmWaveListSource({ waveList }: UseDpmWaveSourcesInput) {
   });
   useEffect(() => {
     if (waveList) {
-      const cached = queryClient.getQueryData<DpmWaveGatewayResponse>(listOptions.queryKey);
-      const cachedWaveId = selectedWaveId(cached ?? null);
-      const incomingWaveId = selectedWaveId(waveList);
-      if (!cached || cachedWaveId !== incomingWaveId) {
-        queryClient.setQueryData(listOptions.queryKey, waveList);
-      }
+      queryClient.setQueryData(listOptions.queryKey, waveList);
     }
   }, [listOptions.queryKey, queryClient, waveList]);
 
@@ -70,10 +64,6 @@ export function useDpmSelectedWaveSources(selectedSourceWaveId: string | null) {
     refreshItems: itemsQuery.refetch,
     openProofPack: proofPackQuery.refetch,
   };
-}
-
-function selectedWaveId(response: DpmWaveGatewayResponse | null): string | null {
-  return buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
 }
 
 function readQueryError(error: Error | null): string | null {
