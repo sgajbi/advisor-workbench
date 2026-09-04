@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
+import { dpmWaveQueryKeys } from "../../src/features/workbench/dpm-wave-query-keys";
 import {
   approveDpmWave,
   createDpmCampaignApprovalDecision,
@@ -609,6 +610,47 @@ describe("useDpmWaveCommandCenterActions", () => {
       "corr-wave-created-confirmed",
     );
     expect(result.current.actionMessage).toBe("Create rebalance completed.");
+
+    vi.mocked(approveDpmWave).mockResolvedValue(confirmedDetail);
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_002"));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(result.current.model.selectedWaveId).toBe("dwv_002");
+  });
+
+  it("does not cache exact-read evidence under a different wave identity", async () => {
+    const createdResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_002",
+          state: "CREATED",
+        },
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(waveResponse);
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "the refreshed evidence identified dwv_001 instead of dwv_002",
+      ),
+    );
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_002")),
+    ).toBeUndefined();
+    expect(result.current.pendingAction).toBe(
+      "Create rebalance — awaiting source confirmation",
+    );
   });
 
   it("keeps newly confirmed wave detail ahead of older cached proof posture", async () => {
