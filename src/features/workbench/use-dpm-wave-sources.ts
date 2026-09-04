@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -17,8 +17,8 @@ type UseDpmWaveSourcesInput = {
   waveList: DpmWaveGatewayResponse | null;
 };
 
-/** Owns DPM wave reads under source identities; campaign reads remain a separate tranche. */
-export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
+/** Owns the DPM wave list seed; selected-wave reads are keyed independently below. */
+export function useDpmWaveListSource({ waveList }: UseDpmWaveSourcesInput) {
   const queryClient = useQueryClient();
   const listContext = useMemo(() => buildDpmWaveListContext(), []);
   const listOptions = useMemo(
@@ -29,39 +29,40 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     ...listOptions,
     enabled: waveList !== null,
   });
-  const seededCorrelationRef = useRef(waveList?.correlation_id ?? null);
-  const serverSourceChanged = Boolean(
-    waveList && seededCorrelationRef.current !== waveList.correlation_id,
-  );
-
   useEffect(() => {
     if (waveList) {
-      queryClient.setQueryData(listOptions.queryKey, waveList);
-      seededCorrelationRef.current = waveList.correlation_id;
+      const cached = queryClient.getQueryData<DpmWaveGatewayResponse>(listOptions.queryKey);
+      const cachedWaveId = selectedWaveId(cached ?? null);
+      const incomingWaveId = selectedWaveId(waveList);
+      if (!cached || cachedWaveId !== incomingWaveId) {
+        queryClient.setQueryData(listOptions.queryKey, waveList);
+      }
     }
   }, [listOptions.queryKey, queryClient, waveList]);
 
-  const waveListSource = serverSourceChanged ? waveList : listQuery.data ?? waveList;
-  const selectedWaveId = buildDpmWaveCommandCenterModel({
-    waveList: waveListSource,
-  }).selectedWaveId;
+  return {
+    listQueryKey: listOptions.queryKey,
+    queryWaveList: listQuery.data ?? null,
+    serverWaveList: waveList,
+  };
+}
+
+/** Owns DPM reads under the selected source identity; campaigns remain a later tranche. */
+export function useDpmSelectedWaveSources(selectedSourceWaveId: string | null) {
   const itemsQuery = useQuery({
-    ...dpmWaveItemsQueryOptions(selectedWaveId ?? ""),
-    enabled: Boolean(selectedWaveId),
+    ...dpmWaveItemsQueryOptions(selectedSourceWaveId ?? ""),
+    enabled: Boolean(selectedSourceWaveId),
   });
   const detailQuery = useQuery({
-    ...dpmWaveDetailQueryOptions(selectedWaveId ?? ""),
+    ...dpmWaveDetailQueryOptions(selectedSourceWaveId ?? ""),
     enabled: false,
   });
   const proofPackQuery = useQuery({
-    ...dpmWaveProofPackQueryOptions(selectedWaveId ?? ""),
+    ...dpmWaveProofPackQueryOptions(selectedSourceWaveId ?? ""),
     enabled: false,
   });
 
   return {
-    listQueryKey: listOptions.queryKey,
-    waveListSource,
-    selectedWaveId,
     waveDetail: detailQuery.data ?? null,
     waveItems: itemsQuery.data ?? null,
     proofPack: proofPackQuery.data ?? null,
@@ -69,6 +70,10 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     refreshItems: itemsQuery.refetch,
     openProofPack: proofPackQuery.refetch,
   };
+}
+
+function selectedWaveId(response: DpmWaveGatewayResponse | null): string | null {
+  return buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
 }
 
 function readQueryError(error: Error | null): string | null {
