@@ -58,6 +58,7 @@ export function dpmWaveItemsQueryOptions(waveId: string) {
     queryKey: dpmWaveQueryKeys.items(waveId),
     queryFn: async () => await getDpmWaveItems(waveId),
     retry: 1,
+    retryDelay: 0,
   });
 }
 
