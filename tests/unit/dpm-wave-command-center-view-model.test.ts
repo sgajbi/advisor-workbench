@@ -52,40 +52,42 @@ describe("DPM wave command-center view model", () => {
   });
 
   it("preserves manage wave supportability, item, proof-pack, and handoff truth", () => {
-    const model = buildDpmWaveCommandCenterModel({
-      waveList: waveListResponse,
-      waveDetail: {
-        ...waveListResponse,
-        data: {
-          wave: {
-            wave_id: "dwv_001",
-            state: "HANDOFF_READY",
-            aggregate_metrics: {
-              item_count: 1,
-              ready_item_count: 1,
-              blocked_item_count: 0,
-            },
-            proof_pack_posture: {
-              proof_pack_refs: [
-                {
-                  proof_pack_id: "ppack_1",
-                  wave_item_id: "dwi_1",
-                  proof_pack_state: "READY",
-                  content_hash: "sha256:proof",
-                },
-              ],
-              handoff_refs: [
-                {
-                  handoff_ref_id: "dwh_1",
-                  item_ids: ["dwi_1"],
-                  content_hash: "sha256:handoff",
-                },
-              ],
-              external_execution_claimed: false,
-            },
+    const waveDetail: DpmWaveGatewayResponse = {
+      ...waveListResponse,
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "HANDOFF_READY",
+          aggregate_metrics: {
+            item_count: 1,
+            ready_item_count: 1,
+            blocked_item_count: 0,
+          },
+          proof_pack_posture: {
+            proof_pack_refs: [
+              {
+                proof_pack_id: "ppack_1",
+                wave_item_id: "dwi_1",
+                proof_pack_state: "READY",
+                content_hash: "sha256:proof",
+              },
+            ],
+            handoff_refs: [
+              {
+                handoff_ref_id: "dwh_1",
+                item_ids: ["dwi_1"],
+                content_hash: "sha256:handoff",
+              },
+            ],
+            external_execution_claimed: false,
           },
         },
       },
+    };
+    const model = buildDpmWaveCommandCenterModel({
+      waveList: waveListResponse,
+      waveDetail,
+      waveProofPack: waveDetail,
       waveItems: {
         ...waveListResponse,
         data: {
@@ -141,8 +143,8 @@ describe("DPM wave command-center view model", () => {
   it("preserves source-owned proof-pack supportability without inferring readiness", () => {
     const model = buildDpmWaveCommandCenterModel({
       waveList: waveListResponse,
-      waveDetailSourceWaveId: "dwv_001",
-      waveDetail: {
+      waveProofPackSourceWaveId: "dwv_001",
+      waveProofPack: {
         ...waveListResponse,
         supportability: {
           ...waveListResponse.supportability,
