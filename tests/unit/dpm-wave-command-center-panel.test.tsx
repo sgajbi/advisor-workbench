@@ -23,6 +23,7 @@ import {
   stageDpmWave,
 } from "../../src/features/workbench/dpm-wave-api";
 import { buildDpmAiWorkflowResponse } from "../fixtures/dpm-ai-workflow-fixtures";
+import { dpmWaveQueryKeys } from "../../src/features/workbench/dpm-wave-query-keys";
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,
@@ -814,6 +815,65 @@ describe("DpmWaveCommandCenterPanel", () => {
       .closest("section");
     expect(decisionSupport).not.toBeNull();
     expect(within(decisionSupport!).getAllByText("Not requested")).toHaveLength(2);
+  });
+
+  it("offers exact source confirmation retry after a retained detail failure", async () => {
+    const retainedWaveResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-002",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_002",
+          state: "CREATED",
+          trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+        },
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(retainedWaveResponse);
+    vi.mocked(getDpmWave).mockResolvedValueOnce(retainedWaveResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    });
+    const rendered = renderWithQueryClient(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Rebalance" }));
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(1));
+
+    vi.mocked(getDpmWave).mockRejectedValueOnce(new Error("Gateway detail unavailable"));
+    await rendered.queryClient.invalidateQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+      refetchType: "none",
+    });
+
+    const retry = await screen.findByRole("button", {
+      name: "Retry source confirmation",
+    });
+    expect(screen.getByText("Gateway detail unavailable")).toBeInTheDocument();
+    vi.mocked(getDpmWave).mockResolvedValueOnce(retainedWaveResponse);
+    fireEvent.click(retry);
+
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(3));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Retry source confirmation" }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("does not carry an in-flight workflow posture or error into another wave", async () => {

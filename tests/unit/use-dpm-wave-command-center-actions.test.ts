@@ -886,6 +886,14 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     act(() => secondMount.result.current.requestApproval());
     expect(approveDpmWave).not.toHaveBeenCalled();
+
+    vi.mocked(getDpmWave).mockResolvedValueOnce(createdResponse);
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    act(() => secondMount.result.current.retrySourceConfirmation());
+    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    act(() => secondMount.result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
   });
 
   it("reconfirms retained detail when it becomes stale without a remount", async () => {
