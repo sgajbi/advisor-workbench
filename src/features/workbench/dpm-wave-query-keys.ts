@@ -11,8 +11,8 @@ export const dpmWaveQueryKeys = {
   all: ["workbench", "dpm-waves"] as const,
   list: (context: DpmWaveListContext) =>
     [...dpmWaveQueryKeys.all, "list", context] as const,
-  detail: (waveId: string) =>
-    [...dpmWaveQueryKeys.all, "detail", waveId] as const,
+  wave: (waveId: string) =>
+    [...dpmWaveQueryKeys.all, "wave", waveId] as const,
   items: (waveId: string) =>
     [...dpmWaveQueryKeys.all, "items", waveId] as const,
   proofPack: (waveId: string) =>

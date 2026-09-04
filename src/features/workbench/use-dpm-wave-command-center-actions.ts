@@ -39,7 +39,10 @@ import {
   type DpmWaveCommandCenterPanelModel,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
-import { useDpmWaveSources } from "@/features/workbench/use-dpm-wave-sources";
+import {
+  useDpmSelectedWaveSources,
+  useDpmWaveListSource,
+} from "@/features/workbench/use-dpm-wave-sources";
 import { useDpmWaveCommands } from "@/features/workbench/use-dpm-wave-commands";
 
 type UseDpmWaveCommandCenterActionsInput = {
@@ -167,12 +170,27 @@ export function useDpmWaveCommandCenterActions({
   campaignAssignmentTasks = null,
   campaignMakerCheckerControls = null,
 }: UseDpmWaveCommandCenterActionsInput): UseDpmWaveCommandCenterActionsResult {
-  const waveSources = useDpmWaveSources({ waveList });
+  const waveListSource = useDpmWaveListSource({ waveList });
+  const serverSelectedWaveId = selectedWaveIdForResponse(waveListSource.serverWaveList);
+  const querySelectedWaveId = selectedWaveIdForResponse(waveListSource.queryWaveList);
+  const commandSourceWaveId =
+    serverSelectedWaveId && serverSelectedWaveId !== querySelectedWaveId
+      ? serverSelectedWaveId
+      : querySelectedWaveId ?? serverSelectedWaveId;
   const waveCommands = useDpmWaveCommands({
     portfolioId,
-    selectedWaveId: waveSources.selectedWaveId,
-    listQueryKey: waveSources.listQueryKey,
+    selectedWaveId: commandSourceWaveId,
+    listQueryKey: waveListSource.listQueryKey,
   });
+  const commandSelectedWaveId = selectedWaveIdForResponse(waveCommands.actionResponse);
+  const selectedSourceWaveId = commandSelectedWaveId ?? commandSourceWaveId;
+  const waveSources = useDpmSelectedWaveSources(selectedSourceWaveId);
+  const governedWaveList =
+    commandSelectedWaveId && commandSelectedWaveId === querySelectedWaveId
+      ? waveListSource.queryWaveList
+      : serverSelectedWaveId && serverSelectedWaveId !== querySelectedWaveId
+        ? waveListSource.serverWaveList
+        : waveListSource.queryWaveList ?? waveListSource.serverWaveList;
   const [waveReadFeedback, setWaveReadFeedback] =
     useState<WaveBoundValue<string> | null>(null);
   const [waveReadPending, setWaveReadPending] =
@@ -244,16 +262,16 @@ export function useDpmWaveCommandCenterActions({
     });
 
   const commonModelInput = {
-    waveList: waveSources.waveListSource,
+    waveList: governedWaveList,
     waveDetail: waveSources.proofPack ?? waveSources.waveDetail,
-    waveDetailSourceWaveId: waveSources.selectedWaveId,
+    waveDetailSourceWaveId: selectedSourceWaveId,
     waveItems: waveSources.waveItems,
-    waveItemsSourceWaveId: waveSources.selectedWaveId,
+    waveItemsSourceWaveId: selectedSourceWaveId,
     actionResponse: campaignWaveResponse ?? waveCommands.actionResponse,
     waveAiMemo: waveCommands.waveAiMemo,
-    waveAiMemoSourceWaveId: waveSources.selectedWaveId,
+    waveAiMemoSourceWaveId: selectedSourceWaveId,
     operationsHandoffSummary: waveCommands.operationsHandoffSummary,
-    operationsHandoffSummarySourceWaveId: waveSources.selectedWaveId,
+    operationsHandoffSummarySourceWaveId: selectedSourceWaveId,
     campaignDefinitions: campaignDefinitionsResponse ?? campaignDefinitions,
     campaignDiscovery,
     campaignOperatingQueue,
@@ -857,6 +875,10 @@ function valueForSelectedWave<T>(
   selectedWaveId: string | null,
 ): T | null {
   return boundValue?.waveId === selectedWaveId ? boundValue.value : null;
+}
+
+function selectedWaveIdForResponse(response: DpmWaveGatewayResponse | null): string | null {
+  return buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
 }
 
 function valueForSelectedCampaign<T>(

@@ -29,6 +29,7 @@ import type {
 type DpmWaveCommandVariables = {
   label: string;
   waveId: string | null;
+  sourceWaveId: string | null;
   refresh: "none" | "list" | "wave-and-list";
   execute: () => Promise<DpmWaveGatewayResponse>;
 };
@@ -36,6 +37,7 @@ type DpmWaveCommandVariables = {
 type DpmWaveCommandResult = {
   response: DpmWaveGatewayResponse;
   waveId: string | null;
+  sourceWaveId: string | null;
 };
 
 type WaveAiResult<T> = {
@@ -94,7 +96,10 @@ export function useDpmWaveCommands({
       const response = await variables.execute();
       return {
         response: await refreshWaveSources(variables, response),
-        waveId: variables.waveId,
+        waveId:
+          variables.waveId ??
+          buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId,
+        sourceWaveId: variables.sourceWaveId,
       };
     },
   });
@@ -115,6 +120,15 @@ export function useDpmWaveCommands({
     }),
   });
 
+  const commandResultMatchesContext = Boolean(
+    commandMutation.data &&
+      (commandMutation.data.sourceWaveId === selectedWaveId ||
+        commandMutation.data.waveId === selectedWaveId),
+  );
+  const activeWaveId = commandResultMatchesContext
+    ? commandMutation.data?.waveId ?? selectedWaveId
+    : selectedWaveId;
+
   function commandInFlight(): boolean {
     return queryClient.isMutating({ mutationKey: dpmWaveMutationKeys.all }) > 0;
   }
@@ -129,29 +143,30 @@ export function useDpmWaveCommands({
     label: string,
     execute: (waveId: string) => Promise<DpmWaveGatewayResponse>,
   ): void {
-    if (selectedWaveId) {
+    if (activeWaveId) {
       runCommand({
         label,
-        waveId: selectedWaveId,
+        waveId: activeWaveId,
+        sourceWaveId: activeWaveId,
         refresh: "wave-and-list",
-        execute: async () => await execute(selectedWaveId),
+        execute: async () => await execute(activeWaveId),
       });
     }
   }
 
   const selectedCommandResult =
-    commandMutation.data &&
-    (!commandMutation.data.waveId || commandMutation.data.waveId === selectedWaveId)
+    commandMutation.data && commandResultMatchesContext
       ? commandMutation.data.response
       : null;
   const commandError =
-    !commandMutation.variables?.waveId || commandMutation.variables.waveId === selectedWaveId
+    !commandMutation.variables?.sourceWaveId ||
+    commandMutation.variables.sourceWaveId === selectedWaveId
       ? readError(commandMutation.error)
       : null;
   const selectedPmMemo =
-    pmMemoMutation.data?.waveId === selectedWaveId ? pmMemoMutation.data.response : null;
+    pmMemoMutation.data?.waveId === activeWaveId ? pmMemoMutation.data.response : null;
   const selectedOperationsBrief =
-    operationsBriefMutation.data?.waveId === selectedWaveId
+    operationsBriefMutation.data?.waveId === activeWaveId
       ? operationsBriefMutation.data.response
       : null;
   const latestAiMutation =
@@ -159,14 +174,14 @@ export function useDpmWaveCommands({
       ? { family: "wave-memo" as const, mutation: pmMemoMutation }
       : { family: "operations-handoff" as const, mutation: operationsBriefMutation };
   const selectedAiError =
-    latestAiMutation.mutation.variables === selectedWaveId
+    latestAiMutation.mutation.variables === activeWaveId
       ? readError(latestAiMutation.mutation.error)
       : null;
   const pendingAction = commandMutation.isPending
     ? commandMutation.variables.label
-    : pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId
+    : pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId
       ? "Prepare PM memo"
-      : operationsBriefMutation.isPending && operationsBriefMutation.variables === selectedWaveId
+      : operationsBriefMutation.isPending && operationsBriefMutation.variables === activeWaveId
         ? "Prepare operations brief"
         : null;
 
@@ -182,18 +197,19 @@ export function useDpmWaveCommands({
     pendingAction,
     aiWorkflowOutcome:
       latestAiMutation.family === "wave-memo" && selectedPmMemo
-        ? buildDpmAiWorkflowOutcome("wave-memo", selectedPmMemo, selectedWaveId ?? "")
+        ? buildDpmAiWorkflowOutcome("wave-memo", selectedPmMemo, activeWaveId ?? "")
         : latestAiMutation.family === "operations-handoff" && selectedOperationsBrief
           ? buildDpmAiWorkflowOutcome(
               "operations-handoff",
               selectedOperationsBrief,
-              selectedWaveId ?? "",
+              activeWaveId ?? "",
             )
           : null,
     previewRebalance: () =>
       runCommand({
         label: "Preview",
         waveId: null,
+        sourceWaveId: activeWaveId,
         refresh: "none",
         execute: async () => await previewDpmWave({ portfolioId }),
       }),
@@ -201,6 +217,7 @@ export function useDpmWaveCommands({
       runCommand({
         label: "Create rebalance",
         waveId: null,
+        sourceWaveId: activeWaveId,
         refresh: "list",
         execute: async () => await createDpmWave({ portfolioId }),
       }),
@@ -212,20 +229,20 @@ export function useDpmWaveCommands({
     prepareHandoff: () => runSelectedWaveCommand("Prepare handoff", handoffDpmWave),
     requestWaveMemo: () => {
       const aiPendingForSelectedWave =
-        (pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId) ||
+        (pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId) ||
         (operationsBriefMutation.isPending &&
-          operationsBriefMutation.variables === selectedWaveId);
-      if (selectedWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
-        pmMemoMutation.mutate(selectedWaveId);
+          operationsBriefMutation.variables === activeWaveId);
+      if (activeWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
+        pmMemoMutation.mutate(activeWaveId);
       }
     },
     requestOperationsBrief: () => {
       const aiPendingForSelectedWave =
-        (pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId) ||
+        (pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId) ||
         (operationsBriefMutation.isPending &&
-          operationsBriefMutation.variables === selectedWaveId);
-      if (selectedWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
-        operationsBriefMutation.mutate(selectedWaveId);
+          operationsBriefMutation.variables === activeWaveId);
+      if (activeWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
+        operationsBriefMutation.mutate(activeWaveId);
       }
     },
   };

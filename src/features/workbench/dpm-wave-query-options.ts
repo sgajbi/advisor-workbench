@@ -47,7 +47,7 @@ export function dpmWaveListQueryOptions(
 export function dpmWaveDetailQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
-    queryKey: dpmWaveQueryKeys.detail(waveId),
+    queryKey: dpmWaveQueryKeys.wave(waveId),
     queryFn: async () => await getDpmWave(waveId),
   });
 }
