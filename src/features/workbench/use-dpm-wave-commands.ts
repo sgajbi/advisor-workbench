@@ -21,6 +21,7 @@ import { dpmWaveDetailQueryOptions } from "@/features/workbench/dpm-wave-query-o
 import {
   DPM_WAVE_COMMAND_SCOPE,
   dpmWaveMutationKeys,
+  dpmWaveQueryKeys,
 } from "@/features/workbench/dpm-wave-query-keys";
 import type {
   DpmOperationsHandoffSummaryResponse,
@@ -112,6 +113,10 @@ export function useDpmWaveCommands({
       queryClient.setQueryData(
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
         detail,
+      );
+      await queryClient.invalidateQueries(
+        { queryKey: dpmWaveQueryKeys.items(expectedWaveId), exact: true },
+        { throwOnError: true },
       );
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
