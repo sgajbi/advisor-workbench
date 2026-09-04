@@ -48,7 +48,8 @@ export function dpmWaveDetailQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
     queryKey: dpmWaveQueryKeys.wave(waveId),
-    queryFn: async () => await getDpmWave(waveId),
+    queryFn: async () =>
+      requireDpmWaveIdentity(await getDpmWave(waveId), waveId, "wave detail"),
   });
 }
 
@@ -65,14 +66,11 @@ export function dpmWaveItemsQueryOptions(waveId: string) {
 export async function getIdentityConfirmedDpmWaveItems(
   waveId: string,
 ): Promise<DpmWaveGatewayResponse> {
-  const response = await getDpmWaveItems(waveId);
-  const responseWaveId = response.supportability?.wave_id;
-  if (responseWaveId !== waveId) {
-    throw new Error(
-      `Refreshed proposed changes identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
-    );
-  }
-  return response;
+  return requireDpmWaveIdentity(
+    await getDpmWaveItems(waveId),
+    waveId,
+    "proposed changes",
+  );
 }
 
 export function dpmWaveProofPackQueryOptions(waveId: string) {
@@ -87,11 +85,22 @@ export function dpmWaveProofPackQueryOptions(waveId: string) {
 async function getIdentityConfirmedDpmWaveProofPack(
   waveId: string,
 ): Promise<DpmWaveGatewayResponse> {
-  const response = await getDpmWaveProofPackPosture(waveId);
+  return requireDpmWaveIdentity(
+    await getDpmWaveProofPackPosture(waveId),
+    waveId,
+    "proof pack",
+  );
+}
+
+function requireDpmWaveIdentity(
+  response: DpmWaveGatewayResponse,
+  waveId: string,
+  evidenceLabel: string,
+): DpmWaveGatewayResponse {
   const responseWaveId = response.supportability?.wave_id;
   if (responseWaveId !== waveId) {
     throw new Error(
-      `Refreshed proof pack identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
+      `Refreshed ${evidenceLabel} identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
     );
   }
   return response;
