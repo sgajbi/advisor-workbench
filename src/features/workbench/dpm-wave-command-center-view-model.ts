@@ -209,6 +209,7 @@ export type DpmWaveCommandCenterPanelModel = {
 };
 
 export function buildDpmWaveCommandCenterModel(params: {
+  selectedWaveId?: string | null;
   waveList: DpmWaveGatewayResponse | null;
   waveDetail?: DpmWaveGatewayResponse | null;
   waveDetailSourceWaveId?: string | null;
@@ -252,6 +253,7 @@ export function buildDpmWaveCommandCenterModel(params: {
   const selectionSupportability = selectionPrimary?.supportability;
   const selectedWaveId =
     readString(selectionWaveRecord ?? {}, "wave_id") ||
+    params.selectedWaveId ||
     selectionSupportability?.wave_id ||
     listRows[0]?.waveId ||
     null;

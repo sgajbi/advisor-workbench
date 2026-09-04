@@ -261,6 +261,7 @@ export function useDpmWaveCommandCenterActions({
     });
 
   const commonModelInput = {
+    selectedWaveId: selectedSourceWaveId,
     waveList: governedWaveList,
     waveDetail: waveSources.waveDetail,
     waveDetailSourceWaveId: selectedSourceWaveId,
