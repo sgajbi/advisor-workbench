@@ -66,6 +66,32 @@ describe("DPM wave Query options", () => {
     expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("wave-1");
   });
 
+  it("rejects wave detail that identifies another wave before Query admission", async () => {
+    const options = dpmWaveDetailQueryOptions("wave-1");
+    vi.mocked(getDpmWave).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: "wave-2" },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed wave detail identified wave-2 instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
+  it("requires wave detail to identify its source wave", async () => {
+    const options = dpmWaveDetailQueryOptions("wave-1");
+    vi.mocked(getDpmWave).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: undefined },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed wave detail identified no wave instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
   it("rejects proposed changes that identify another wave before Query admission", async () => {
     const options = dpmWaveItemsQueryOptions("wave-1");
     vi.mocked(getDpmWaveItems).mockResolvedValue({
