@@ -1306,16 +1306,18 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
     act(() => result.current.previewRebalance());
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2));
-    });
+    const detailDuringPreview = {
+      ...approvedResponse,
+      correlation_id: "corr-detail-during-preview",
+    };
     act(() => {
-      queryClient.setQueryData(dpmWaveQueryKeys.wave("dwv_001"), approvedResponse, {
-        updatedAt: Date.now(),
-      });
+      queryClient.setQueryData(
+        dpmWaveQueryKeys.wave("dwv_001"),
+        detailDuringPreview,
+        { updatedAt: Date.now() },
+      );
     });
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2));
       resolvePreview(previewResponse);
     });
 
