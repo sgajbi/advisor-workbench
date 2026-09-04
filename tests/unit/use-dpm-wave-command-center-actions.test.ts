@@ -401,6 +401,7 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -757,7 +758,18 @@ describe("useDpmWaveCommandCenterActions", () => {
       listWaveIdAtConfirmation: "dwv_001",
       waveId: "dwv_002",
     });
+    vi.useFakeTimers();
     firstMount.unmount();
+    await vi.advanceTimersByTimeAsync(300_001);
+    expect(
+      queryClient.getQueryData(
+        dpmWaveQueryKeys.confirmedCreatedWave("PB_SG_GLOBAL_BAL_001"),
+      ),
+    ).toEqual({
+      listWaveIdAtConfirmation: "dwv_001",
+      waveId: "dwv_002",
+    });
+    vi.useRealTimers();
 
     const secondMount = renderActions(campaignDefinitions, queryClient);
     expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_002");

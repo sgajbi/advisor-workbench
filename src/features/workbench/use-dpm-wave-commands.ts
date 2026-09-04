@@ -79,10 +79,14 @@ export function useDpmWaveCommands({
   const confirmedCreatedWaveQuery = useQuery<ConfirmedCreatedWave>({
     queryKey: confirmedCreatedWaveKey,
     queryFn: skipToken,
+    gcTime: Infinity,
     initialData: () =>
       queryClient.getQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey),
   });
-  const confirmedCreatedWave = confirmedCreatedWaveQuery.data ?? null;
+  const confirmedCreatedWave =
+    confirmedCreatedWaveQuery.data ??
+    queryClient.getQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey) ??
+    null;
   const activeConfirmedCreatedWave =
     confirmedCreatedWave &&
     (selectedWaveId === confirmedCreatedWave.listWaveIdAtConfirmation ||
