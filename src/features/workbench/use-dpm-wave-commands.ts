@@ -320,22 +320,29 @@ export function useDpmWaveCommands({
   const activeWaveId = commandResultMatchesContext
     ? commandMutation.data?.waveId ?? contextWaveId
     : contextWaveId;
-  const pendingCommands = useMutationState({
+  const commandRecords = useMutationState({
     filters: {
       exact: true,
       mutationKey: dpmWaveMutationKeys.command(),
-      status: "pending",
     },
-    select: (mutation) =>
-      (mutation.state.variables as DpmWaveCommandVariables | undefined) ?? null,
+    select: (mutation) => ({
+      error: mutation.state.error,
+      status: mutation.state.status,
+      variables:
+        (mutation.state.variables as DpmWaveCommandVariables | undefined) ?? null,
+    }),
   });
-  const activePendingCommand = pendingCommands.slice().reverse().find(
-    (command) =>
-      command?.portfolioId === portfolioId &&
-      (command.waveId
-        ? command.waveId === activeWaveId
-        : command.sourceWaveId === null || command.sourceWaveId === activeWaveId),
+  const activeCommandRecord = commandRecords.slice().reverse().find(
+    ({ variables }) =>
+      variables?.portfolioId === portfolioId &&
+      (variables.waveId
+        ? variables.waveId === activeWaveId
+        : variables.sourceWaveId === null || variables.sourceWaveId === activeWaveId),
   );
+  const activePendingCommand =
+    activeCommandRecord?.status === "pending"
+      ? activeCommandRecord.variables
+      : null;
   const retainedSelectionActive =
     activeConfirmedCreatedWave?.waveId === activeWaveId ||
     (activeCommandContext?.waveId === activeWaveId &&
@@ -403,9 +410,8 @@ export function useDpmWaveCommands({
       commandMutation.variables.refresh === "none") ||
     (!commandResultMatchesContext && activeCommandContext?.responseIsDirect === true);
   const commandError =
-    !commandMutation.variables?.sourceWaveId ||
-    commandMutation.variables.sourceWaveId === contextWaveId
-      ? readError(commandMutation.error)
+    activeCommandRecord?.status === "error"
+      ? readError(activeCommandRecord.error as Error | null)
       : null;
   const selectedPmMemo =
     pmMemoMutation.data?.waveId === activeWaveId ? pmMemoMutation.data.response : null;
