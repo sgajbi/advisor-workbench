@@ -60,11 +60,33 @@ export function useDpmSelectedWaveSources(
     isStale: detailIsStale,
     refetch: refetchDetail,
   } = detailQuery;
+  const {
+    isError: itemsIsError,
+    isFetching: itemsIsFetching,
+    isStale: itemsIsStale,
+    refetch: refetchItems,
+  } = itemsQuery;
   useEffect(() => {
-    if (loadDetail && detailIsStale && !detailIsFetching && !detailIsError) {
+    if (!loadDetail) {
+      return;
+    }
+    if (detailIsStale && !detailIsFetching && !detailIsError) {
       void refetchDetail();
     }
-  }, [detailIsError, detailIsFetching, detailIsStale, loadDetail, refetchDetail]);
+    if (itemsIsStale && !itemsIsFetching && !itemsIsError) {
+      void refetchItems();
+    }
+  }, [
+    detailIsError,
+    detailIsFetching,
+    detailIsStale,
+    itemsIsError,
+    itemsIsFetching,
+    itemsIsStale,
+    loadDetail,
+    refetchDetail,
+    refetchItems,
+  ]);
   const proofPackQuery = useQuery({
     ...dpmWaveProofPackQueryOptions(selectedSourceWaveId ?? ""),
     enabled: false,
@@ -76,14 +98,17 @@ export function useDpmSelectedWaveSources(
       loadDetail &&
       (detailQuery.isStale || detailQuery.isFetching || detailQuery.isError),
     detailConfirmationFailed: loadDetail && detailQuery.isError,
+    itemsConfirmationBlocked:
+      loadDetail && (itemsQuery.isStale || itemsQuery.isFetching || itemsQuery.isError),
+    itemsConfirmationFailed: loadDetail && itemsQuery.isError,
     waveItems: itemsQuery.data ?? null,
     proofPack: proofPackQuery.data ?? null,
     sourceError:
       readQueryError(detailQuery.error) ??
       readQueryError(itemsQuery.error) ??
       readQueryError(proofPackQuery.error),
-    refreshItems: itemsQuery.refetch,
-    reconfirmDetail: detailQuery.refetch,
+    refreshItems: refetchItems,
+    reconfirmDetail: refetchDetail,
     openProofPack: proofPackQuery.refetch,
   };
 }

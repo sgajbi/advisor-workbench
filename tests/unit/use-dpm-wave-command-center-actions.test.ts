@@ -940,6 +940,67 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
   });
 
+  it("keeps retained-wave actions locked until proposed changes recover", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(campaignDefinitions, queryClient);
+
+    act(() => firstMount.result.current.createRebalance());
+    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    firstMount.unmount();
+    queryClient.removeQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+    });
+    queryClient.removeQueries({
+      queryKey: dpmWaveQueryKeys.items("dwv_002"),
+      exact: true,
+    });
+
+    let rejectItems!: (error: Error) => void;
+    vi.mocked(getDpmWaveItems)
+      .mockReturnValueOnce(
+        new Promise((_, reject) => {
+          rejectItems = reject;
+        }),
+      )
+      .mockRejectedValueOnce(new Error("Gateway proposed changes unavailable"));
+    const secondMount = renderActions(campaignDefinitions, queryClient);
+
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(2));
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Awaiting rebalance source confirmation",
+    );
+    act(() => secondMount.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
+
+    act(() => rejectItems(new Error("Gateway proposed changes unavailable")));
+    await waitFor(() =>
+      expect(secondMount.result.current.actionError).toContain(
+        "Gateway proposed changes unavailable",
+      ),
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    vi.mocked(getDpmWaveItems).mockResolvedValueOnce(confirmedItems);
+    act(() => secondMount.result.current.retrySourceConfirmation());
+
+    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    act(() => secondMount.result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
+  });
+
   it("does not cache exact-read evidence under a different wave identity", async () => {
     const createdResponse = buildCreatedWaveResponse();
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
