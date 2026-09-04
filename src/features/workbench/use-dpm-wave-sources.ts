@@ -94,7 +94,6 @@ export function useDpmSelectedWaveSources(
 
   return {
     waveDetail: detailQuery.data ?? null,
-    detailUpdatedAt: detailQuery.dataUpdatedAt,
     detailConfirmationBlocked:
       loadDetail &&
       (detailQuery.isStale || detailQuery.isFetching || detailQuery.isError),
