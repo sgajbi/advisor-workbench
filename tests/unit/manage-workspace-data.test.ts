@@ -15,7 +15,7 @@ import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 describe("manage workspace data selectors", () => {
   it("preloads proof-pack detail through the server Gateway target", () => {
     const source = readFileSync(
-      resolve(__dirname, "../../src/features/workbench/manage-workspace-data.ts"),
+      resolve(__dirname, "../../src/features/workbench/manage-workspace-data-loader.ts"),
       "utf8"
     );
 

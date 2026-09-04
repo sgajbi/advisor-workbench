@@ -2,7 +2,7 @@ import {
   ManageWorkspace,
   ManageWorkspaceUnavailable,
 } from "@/features/workbench/manage-workspace";
-import { loadManageWorkspaceData } from "@/features/workbench/manage-workspace-data";
+import { loadManageWorkspaceData } from "@/features/workbench/manage-workspace-data-loader";
 import { normalizeManageMode } from "@/features/workbench/manage-workspace-navigation";
 import { getPortfolio360 } from "@/features/workbench/workbench-core-api";
 import ReviewContextPageRecovery from "@/shell/review-context-page-recovery";
@@ -74,7 +74,7 @@ export default async function WorkbenchPage({
 
   return (
     <ManageWorkspace
-      data={await loadManageWorkspaceData(portfolio)}
+      data={await loadManageWorkspaceData(portfolio, mode)}
       mode={mode}
       reviewContext={reviewContext}
     />
