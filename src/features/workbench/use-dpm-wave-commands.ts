@@ -164,8 +164,7 @@ export function useDpmWaveCommands({
     if (
       commandContext &&
       selectedWaveId &&
-      selectedWaveId !== commandContext.listWaveIdAtSelection &&
-      selectedWaveId !== commandContext.waveId
+      selectedWaveId !== commandContext.listWaveIdAtSelection
     ) {
       queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
     }
