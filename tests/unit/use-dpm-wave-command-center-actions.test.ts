@@ -1451,6 +1451,10 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
     expect(secondMount.result.current.model.selectedWaveState).toBe("APPROVED");
 
+    queryClient.removeQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_003"),
+      exact: true,
+    });
     secondMount.unmount();
     const thirdMount = renderActions(campaignDefinitions, queryClient);
     await waitFor(() =>
