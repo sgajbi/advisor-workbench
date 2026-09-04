@@ -175,6 +175,8 @@ export function useDpmWaveCommandCenterActions({
   });
   const [waveReadFeedback, setWaveReadFeedback] =
     useState<WaveBoundValue<string> | null>(null);
+  const [waveReadPending, setWaveReadPending] =
+    useState<WaveBoundValue<string> | null>(null);
   const [campaignWaveResponse, setCampaignWaveResponse] =
     useState<DpmWaveGatewayResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
@@ -343,6 +345,7 @@ export function useDpmWaveCommandCenterActions({
       return;
     }
     setWaveReadFeedback(null);
+    setWaveReadPending({ waveId: selectedWaveId, value: "Load proposed changes" });
     void waveSources.refreshItems().then((result) => {
       if (result.data && !result.error) {
         setWaveReadFeedback({
@@ -350,6 +353,7 @@ export function useDpmWaveCommandCenterActions({
           value: "Load proposed changes completed.",
         });
       }
+      setWaveReadPending((current) => (current?.waveId === selectedWaveId ? null : current));
     });
   }
 
@@ -358,6 +362,7 @@ export function useDpmWaveCommandCenterActions({
       return;
     }
     setWaveReadFeedback(null);
+    setWaveReadPending({ waveId: selectedWaveId, value: "Open evidence pack" });
     void waveSources.openProofPack().then((result) => {
       if (result.data && !result.error) {
         setWaveReadFeedback({
@@ -365,6 +370,7 @@ export function useDpmWaveCommandCenterActions({
           value: "Open evidence pack completed.",
         });
       }
+      setWaveReadPending((current) => (current?.waveId === selectedWaveId ? null : current));
     });
   }
 
@@ -779,11 +785,7 @@ export function useDpmWaveCommandCenterActions({
     selectedCampaignKey,
     pendingAction:
       waveCommands.pendingAction ??
-      (waveSources.proofPackFetching
-        ? "Open evidence pack"
-        : waveSources.itemsFetching
-          ? "Load proposed changes"
-          : null),
+      valueForSelectedWave(waveReadPending, selectedWaveId),
     pendingCampaignLifecycleKey,
     pendingCampaignLaunchHistoryKey,
     pendingCampaignPreviewReadinessKey,

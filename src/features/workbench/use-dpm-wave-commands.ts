@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
+import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
   approveDpmWave,
   createDpmWave,
@@ -74,6 +75,9 @@ export function useDpmWaveCommands({
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
       );
+      if (!variables.waveId) {
+        retainCreatedWaveUntilListed(queryClient, listQueryKey, response);
+      }
       return detail;
     } catch (error) {
       const detail = error instanceof Error ? error.message : "source refresh failed";
@@ -96,7 +100,6 @@ export function useDpmWaveCommands({
   });
   const pmMemoMutation = useMutation({
     mutationKey: dpmWaveMutationKeys.pmMemo(),
-    scope: { id: DPM_WAVE_COMMAND_SCOPE },
     mutationFn: async (waveId: string): Promise<WaveAiResult<DpmWaveAiPmMemoResponse>> => ({
       waveId,
       response: await requestDpmWaveAiPmMemo(waveId),
@@ -104,7 +107,6 @@ export function useDpmWaveCommands({
   });
   const operationsBriefMutation = useMutation({
     mutationKey: dpmWaveMutationKeys.operationsBrief(),
-    scope: { id: DPM_WAVE_COMMAND_SCOPE },
     mutationFn: async (
       waveId: string,
     ): Promise<WaveAiResult<DpmOperationsHandoffSummaryResponse>> => ({
@@ -152,12 +154,14 @@ export function useDpmWaveCommands({
     operationsBriefMutation.data?.waveId === selectedWaveId
       ? operationsBriefMutation.data.response
       : null;
+  const latestAiMutation =
+    pmMemoMutation.submittedAt >= operationsBriefMutation.submittedAt
+      ? { family: "wave-memo" as const, mutation: pmMemoMutation }
+      : { family: "operations-handoff" as const, mutation: operationsBriefMutation };
   const selectedAiError =
-    pmMemoMutation.variables === selectedWaveId
-      ? readError(pmMemoMutation.error)
-      : operationsBriefMutation.variables === selectedWaveId
-        ? readError(operationsBriefMutation.error)
-        : null;
+    latestAiMutation.mutation.variables === selectedWaveId
+      ? readError(latestAiMutation.mutation.error)
+      : null;
   const pendingAction = commandMutation.isPending
     ? commandMutation.variables.label
     : pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId
@@ -176,15 +180,16 @@ export function useDpmWaveCommands({
         ? `${commandMutation.variables.label} completed.`
         : null,
     pendingAction,
-    aiWorkflowOutcome: selectedPmMemo
-      ? buildDpmAiWorkflowOutcome("wave-memo", selectedPmMemo, selectedWaveId ?? "")
-      : selectedOperationsBrief
-        ? buildDpmAiWorkflowOutcome(
-            "operations-handoff",
-            selectedOperationsBrief,
-            selectedWaveId ?? "",
-          )
-        : null,
+    aiWorkflowOutcome:
+      latestAiMutation.family === "wave-memo" && selectedPmMemo
+        ? buildDpmAiWorkflowOutcome("wave-memo", selectedPmMemo, selectedWaveId ?? "")
+        : latestAiMutation.family === "operations-handoff" && selectedOperationsBrief
+          ? buildDpmAiWorkflowOutcome(
+              "operations-handoff",
+              selectedOperationsBrief,
+              selectedWaveId ?? "",
+            )
+          : null,
     previewRebalance: () =>
       runCommand({
         label: "Preview",
@@ -206,12 +211,20 @@ export function useDpmWaveCommands({
     stageRebalance: () => runSelectedWaveCommand("Stage rebalance", stageDpmWave),
     prepareHandoff: () => runSelectedWaveCommand("Prepare handoff", handoffDpmWave),
     requestWaveMemo: () => {
-      if (selectedWaveId && !commandInFlight()) {
+      const aiPendingForSelectedWave =
+        (pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId) ||
+        (operationsBriefMutation.isPending &&
+          operationsBriefMutation.variables === selectedWaveId);
+      if (selectedWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
         pmMemoMutation.mutate(selectedWaveId);
       }
     },
     requestOperationsBrief: () => {
-      if (selectedWaveId && !commandInFlight()) {
+      const aiPendingForSelectedWave =
+        (pmMemoMutation.isPending && pmMemoMutation.variables === selectedWaveId) ||
+        (operationsBriefMutation.isPending &&
+          operationsBriefMutation.variables === selectedWaveId);
+      if (selectedWaveId && !commandMutation.isPending && !aiPendingForSelectedWave) {
         operationsBriefMutation.mutate(selectedWaveId);
       }
     },
@@ -220,4 +233,22 @@ export function useDpmWaveCommands({
 
 function readError(error: Error | null): string | null {
   return error?.message ?? null;
+}
+
+function retainCreatedWaveUntilListed(
+  queryClient: ReturnType<typeof useQueryClient>,
+  listQueryKey: readonly unknown[],
+  response: DpmWaveGatewayResponse,
+): void {
+  const createdWaveId = buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
+  const refreshedList = queryClient.getQueryData<DpmWaveGatewayResponse>(listQueryKey);
+  const refreshedModel = buildDpmWaveCommandCenterModel({
+    waveList: refreshedList ?? null,
+  });
+  if (
+    createdWaveId &&
+    !refreshedModel.summaryRows.some((row) => row.waveId === createdWaveId)
+  ) {
+    queryClient.setQueryData(listQueryKey, response);
+  }
 }
