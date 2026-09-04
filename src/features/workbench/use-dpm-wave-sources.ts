@@ -46,12 +46,14 @@ export function useDpmSelectedWaveSources(
   selectedSourceWaveId: string | null,
   loadDetail = false,
 ) {
+  const queryClient = useQueryClient();
+  const detailOptions = dpmWaveDetailQueryOptions(selectedSourceWaveId ?? "");
   const itemsQuery = useQuery({
     ...dpmWaveItemsQueryOptions(selectedSourceWaveId ?? ""),
     enabled: Boolean(selectedSourceWaveId),
   });
   const detailQuery = useQuery({
-    ...dpmWaveDetailQueryOptions(selectedSourceWaveId ?? ""),
+    ...detailOptions,
     enabled: Boolean(selectedSourceWaveId) && loadDetail,
   });
   const {
@@ -94,6 +96,10 @@ export function useDpmSelectedWaveSources(
 
   return {
     waveDetail: detailQuery.data ?? null,
+    detailUpdateCount:
+      detailQuery.dataUpdatedAt === 0
+        ? 0
+        : (queryClient.getQueryState(detailOptions.queryKey)?.dataUpdateCount ?? 0),
     detailConfirmationBlocked:
       loadDetail &&
       (detailQuery.isStale || detailQuery.isFetching || detailQuery.isError),
