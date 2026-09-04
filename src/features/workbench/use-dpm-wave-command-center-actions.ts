@@ -345,6 +345,8 @@ export function useDpmWaveCommandCenterActions({
     model.campaignRows.find((row) => row.key === selectedCampaignKey) ??
     model.campaignRows[0] ??
     null;
+  const retainedWaveAwaitingConfirmation =
+    waveCommands.retainedSelectionActive && waveSources.waveDetail === null;
 
   function selectCampaign(row: DpmCampaignDefinitionRow) {
     selectedCampaignKeyRef.current = row.key;
@@ -406,6 +408,12 @@ export function useDpmWaveCommandCenterActions({
   function runWaveCommand(action: () => void): void {
     setWaveReadFeedback(null);
     action();
+  }
+
+  function runSelectedWaveCommand(action: () => void): void {
+    if (!retainedWaveAwaitingConfirmation) {
+      runWaveCommand(action);
+    }
   }
 
   async function loadCampaignLifecycle(row: DpmCampaignDefinitionRow) {
@@ -813,6 +821,9 @@ export function useDpmWaveCommandCenterActions({
     selectedCampaignKey,
     pendingAction:
       waveCommands.pendingAction ??
+      (retainedWaveAwaitingConfirmation
+        ? "Awaiting rebalance source confirmation"
+        : null) ??
       valueForSelectedWave(waveReadPending, selectedWaveId),
     pendingCampaignLifecycleKey,
     pendingCampaignLaunchHistoryKey,
@@ -860,15 +871,17 @@ export function useDpmWaveCommandCenterActions({
     aiWorkflowOutcome: waveCommands.aiWorkflowOutcome,
     previewRebalance: () => runWaveCommand(waveCommands.previewRebalance),
     createRebalance: () => runWaveCommand(waveCommands.createRebalance),
-    loadProposedChanges,
-    reviewDataReadiness: () => runWaveCommand(waveCommands.reviewDataReadiness),
-    runSimulation: () => runWaveCommand(waveCommands.runSimulation),
-    requestApproval: () => runWaveCommand(waveCommands.requestApproval),
-    stageRebalance: () => runWaveCommand(waveCommands.stageRebalance),
-    prepareHandoff: () => runWaveCommand(waveCommands.prepareHandoff),
-    openEvidencePack,
-    requestWaveMemo: () => runWaveCommand(waveCommands.requestWaveMemo),
-    requestOperationsBrief: () => runWaveCommand(waveCommands.requestOperationsBrief),
+    loadProposedChanges: () => runSelectedWaveCommand(loadProposedChanges),
+    reviewDataReadiness: () =>
+      runSelectedWaveCommand(waveCommands.reviewDataReadiness),
+    runSimulation: () => runSelectedWaveCommand(waveCommands.runSimulation),
+    requestApproval: () => runSelectedWaveCommand(waveCommands.requestApproval),
+    stageRebalance: () => runSelectedWaveCommand(waveCommands.stageRebalance),
+    prepareHandoff: () => runSelectedWaveCommand(waveCommands.prepareHandoff),
+    openEvidencePack: () => runSelectedWaveCommand(openEvidencePack),
+    requestWaveMemo: () => runSelectedWaveCommand(waveCommands.requestWaveMemo),
+    requestOperationsBrief: () =>
+      runSelectedWaveCommand(waveCommands.requestOperationsBrief),
     selectCampaign,
     loadCampaignWorkflowEvidence,
     loadCampaignLifecycle,
