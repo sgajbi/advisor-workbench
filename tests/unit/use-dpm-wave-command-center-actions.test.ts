@@ -1366,6 +1366,42 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
   });
 
+  it("does not apply a retained wave confirmation lock to a preview candidate", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    const candidateResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-preview-candidate",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_003",
+      },
+      data: { wave: { wave_id: "dwv_003", state: "SIMULATION_READY" } },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    vi.mocked(previewDpmWave).mockResolvedValue(candidateResponse);
+    const { result } = renderActions();
+
+    act(() => result.current.createRebalance());
+    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_002"));
+    act(() => result.current.previewRebalance());
+
+    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_003"));
+    expect(result.current.model.correlationId).toBe("corr-preview-candidate");
+    expect(result.current.pendingAction).toBeNull();
+    expect(result.current.sourceConfirmationRetryAvailable).toBe(false);
+    expect(getDpmWave).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
     const createdResponse = buildCreatedWaveResponse();
     const confirmedItems: DpmWaveGatewayResponse = {
