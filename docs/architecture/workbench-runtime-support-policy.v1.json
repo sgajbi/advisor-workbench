@@ -2,7 +2,7 @@
   "contract": "workbench-runtime-support-policy.v1",
   "owner": "lotus-workbench",
   "governedByIssue": 612,
-  "reviewedOn": "2026-08-10",
+  "reviewedOn": "2026-09-04",
   "nextReviewBy": "2026-09-15",
   "developerRuntime": {
     "node": {
@@ -30,7 +30,7 @@
   },
   "applicationStack": {
     "next": {
-      "version": "15.5.22",
+      "version": "15.5.25",
       "supportStatus": "maintenance-lts",
       "evidence": "https://nextjs.org/support-policy"
     },
