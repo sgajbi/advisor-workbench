@@ -36,7 +36,7 @@ export function useDpmWaveListSource({ waveList }: UseDpmWaveSourcesInput) {
 
   return {
     listQueryKey: listOptions.queryKey,
-    queryWaveList: listQuery.data ?? null,
+    queryWaveList: waveList === null ? null : listQuery.data ?? null,
     serverWaveList: waveList,
   };
 }
