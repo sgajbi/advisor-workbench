@@ -92,6 +92,32 @@ describe("DPM wave Query options", () => {
     expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
   });
 
+  it("rejects contradictory payload wave identity before Query admission", async () => {
+    const options = dpmWaveDetailQueryOptions("wave-1");
+    vi.mocked(getDpmWave).mockResolvedValue({
+      ...response,
+      data: { wave: { wave_id: "wave-2" } },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed wave detail payload identified wave-2 instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
+  it("rejects a foreign wave identity nested in proposed changes", async () => {
+    const options = dpmWaveItemsQueryOptions("wave-1");
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...response,
+      data: { items: [{ wave_id: "wave-2" }] },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed proposed changes payload identified wave-2 instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
   it("rejects proposed changes that identify another wave before Query admission", async () => {
     const options = dpmWaveItemsQueryOptions("wave-1");
     vi.mocked(getDpmWaveItems).mockResolvedValue({

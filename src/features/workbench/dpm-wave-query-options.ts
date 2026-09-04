@@ -48,9 +48,18 @@ export function dpmWaveDetailQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
     queryKey: dpmWaveQueryKeys.wave(waveId),
-    queryFn: async () =>
-      requireDpmWaveIdentity(await getDpmWave(waveId), waveId, "wave detail"),
+    queryFn: async () => await getIdentityConfirmedDpmWaveDetail(waveId),
   });
+}
+
+export async function getIdentityConfirmedDpmWaveDetail(
+  waveId: string,
+): Promise<DpmWaveGatewayResponse> {
+  return requireDpmWaveIdentity(
+    await getDpmWave(waveId),
+    waveId,
+    "wave detail",
+  );
 }
 
 export function dpmWaveItemsQueryOptions(waveId: string) {
@@ -103,5 +112,28 @@ function requireDpmWaveIdentity(
       `Refreshed ${evidenceLabel} identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
     );
   }
+  const foreignPayloadWaveId = collectPayloadWaveIds(response.data).find(
+    (payloadWaveId) => payloadWaveId !== waveId,
+  );
+  if (foreignPayloadWaveId !== undefined) {
+    throw new Error(
+      `Refreshed ${evidenceLabel} payload identified ${foreignPayloadWaveId} instead of ${waveId}.`,
+    );
+  }
   return response;
+}
+
+function collectPayloadWaveIds(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(collectPayloadWaveIds);
+  }
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+  return Object.entries(value).flatMap(([key, nestedValue]) => {
+    if (key === "wave_id" && typeof nestedValue === "string") {
+      return [nestedValue];
+    }
+    return collectPayloadWaveIds(nestedValue);
+  });
 }
