@@ -135,6 +135,26 @@ const itemResponse: DpmWaveGatewayResponse = {
   },
 };
 
+function buildCreatedWaveResponse(
+  correlationId = "corr-wave-created",
+): DpmWaveGatewayResponse {
+  return {
+    ...waveResponse,
+    correlation_id: correlationId,
+    supportability: {
+      ...waveResponse.supportability,
+      wave_id: "dwv_002",
+      wave_state: "CREATED",
+    },
+    data: {
+      wave: {
+        wave_id: "dwv_002",
+        state: "CREATED",
+      },
+    },
+  };
+}
+
 const campaignDefinitions: DpmCampaignDefinitionGatewayResponse = {
   correlation_id: "corr-campaign",
   contract_version: "v1",
@@ -616,21 +636,7 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("admits a newly created wave only after an exact source read confirms its identity", async () => {
-    const createdResponse: DpmWaveGatewayResponse = {
-      ...waveResponse,
-      correlation_id: "corr-wave-created",
-      supportability: {
-        ...waveResponse.supportability,
-        wave_id: "dwv_002",
-        wave_state: "CREATED",
-      },
-      data: {
-        wave: {
-          wave_id: "dwv_002",
-          state: "CREATED",
-        },
-      },
-    };
+    const createdResponse = buildCreatedWaveResponse();
     const confirmedDetail: DpmWaveGatewayResponse = {
       ...createdResponse,
       correlation_id: "corr-wave-created-confirmed",
@@ -672,20 +678,7 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("does not cache exact-read evidence under a different wave identity", async () => {
-    const createdResponse: DpmWaveGatewayResponse = {
-      ...waveResponse,
-      supportability: {
-        ...waveResponse.supportability,
-        wave_id: "dwv_002",
-        wave_state: "CREATED",
-      },
-      data: {
-        wave: {
-          wave_id: "dwv_002",
-          state: "CREATED",
-        },
-      },
-    };
+    const createdResponse = buildCreatedWaveResponse();
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
     vi.mocked(getDpmWave).mockResolvedValue(waveResponse);
     const queryClient = createTestQueryClient();
@@ -700,6 +693,29 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     expect(
       queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_002")),
+    ).toBeUndefined();
+    expect(result.current.pendingAction).toBe(
+      "Create rebalance — awaiting source confirmation",
+    );
+  });
+
+  it("does not cache proposed changes under a different wave identity", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "the refreshed proposed changes identified dwv_001 instead of dwv_002",
+      ),
+    );
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.items("dwv_002")),
     ).toBeUndefined();
     expect(result.current.pendingAction).toBe(
       "Create rebalance — awaiting source confirmation",

@@ -776,6 +776,18 @@ describe("DpmWaveCommandCenterPanel", () => {
     vi.mocked(getDpmWave).mockImplementation(async (waveId) =>
       waveId === "dwv_002" ? nextWaveResponse : waveResponse,
     );
+    vi.mocked(getDpmWaveItems).mockImplementation(async (waveId) =>
+      waveId === "dwv_002"
+        ? {
+            ...itemResponse,
+            supportability: {
+              ...itemResponse.supportability,
+              wave_id: "dwv_002",
+              wave_state: "CREATED",
+            },
+          }
+        : itemResponse,
+    );
 
     renderWithQueryClient(
       <DpmWaveCommandCenterPanel
