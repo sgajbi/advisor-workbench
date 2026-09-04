@@ -35,7 +35,6 @@ import type {
 } from "@/features/workbench/types";
 
 type DpmWaveCommandVariables = {
-  contextWaveId: string | null;
   label: string;
   waveId: string | null;
   sourceWaveId: string | null;
@@ -44,7 +43,6 @@ type DpmWaveCommandVariables = {
 };
 
 type DpmWaveCommandResult = {
-  contextWaveId: string | null;
   response: DpmWaveGatewayResponse;
   detailUpdateCountAtAdmission: number;
   waveId: string | null;
@@ -68,6 +66,11 @@ type ConfirmedCreatedWave = {
   waveId: string;
 };
 
+type WaveCommandContext = {
+  listWaveIdAtSelection: string | null;
+  waveId: string;
+};
+
 export function useDpmWaveCommands({
   portfolioId,
   selectedWaveId,
@@ -81,6 +84,7 @@ export function useDpmWaveCommands({
 }) {
   const queryClient = useQueryClient();
   const confirmedCreatedWaveKey = dpmWaveQueryKeys.confirmedCreatedWave(portfolioId);
+  const commandContextKey = dpmWaveQueryKeys.commandContext(portfolioId);
   const confirmationLockKey = dpmWaveQueryKeys.confirmationLock(portfolioId);
   const confirmationLockQuery = useQuery<WaveConfirmationLock>({
     queryKey: confirmationLockKey,
@@ -104,6 +108,17 @@ export function useDpmWaveCommands({
     confirmedCreatedWaveQuery.data ??
     queryClient.getQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey) ??
     null;
+  const commandContextQuery = useQuery<WaveCommandContext>({
+    queryKey: commandContextKey,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<WaveCommandContext>(commandContextKey),
+  });
+  const commandContext =
+    commandContextQuery.data ??
+    queryClient.getQueryData<WaveCommandContext>(commandContextKey) ??
+    null;
   const activeConfirmedCreatedWave =
     allowRetainedSelection &&
     confirmedCreatedWave &&
@@ -111,7 +126,15 @@ export function useDpmWaveCommands({
       selectedWaveId === confirmedCreatedWave.waveId)
       ? confirmedCreatedWave
       : null;
-  const contextWaveId = activeConfirmedCreatedWave?.waveId ?? selectedWaveId;
+  const activeCommandContext =
+    allowRetainedSelection &&
+    commandContext &&
+    (selectedWaveId === commandContext.listWaveIdAtSelection ||
+      selectedWaveId === commandContext.waveId)
+      ? commandContext
+      : null;
+  const contextWaveId =
+    activeCommandContext?.waveId ?? activeConfirmedCreatedWave?.waveId ?? selectedWaveId;
   const activeConfirmationLock =
     confirmationLock?.contextWaveId === contextWaveId
       ? confirmationLock
@@ -134,6 +157,16 @@ export function useDpmWaveCommands({
     queryClient,
     selectedWaveId,
   ]);
+  useEffect(() => {
+    if (
+      commandContext &&
+      selectedWaveId &&
+      selectedWaveId !== commandContext.listWaveIdAtSelection &&
+      selectedWaveId !== commandContext.waveId
+    ) {
+      queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
+    }
+  }, [commandContext, commandContextKey, queryClient, selectedWaveId]);
 
   async function refreshWaveSources(
     variables: DpmWaveCommandVariables,
@@ -210,7 +243,6 @@ export function useDpmWaveCommands({
             : `${variables.label} response`,
         );
       const result = {
-        contextWaveId: variables.contextWaveId,
         response: confirmedResponse,
         detailUpdateCountAtAdmission: waveId
           ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(waveId))
@@ -219,6 +251,14 @@ export function useDpmWaveCommands({
         waveId,
         sourceWaveId: variables.sourceWaveId,
       };
+      if (variables.refresh === "none" && waveId) {
+        queryClient.setQueryData<WaveCommandContext>(commandContextKey, {
+          listWaveIdAtSelection: selectedWaveId,
+          waveId,
+        });
+      } else if (variables.refresh === "list") {
+        queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
+      }
       return result;
     },
   });
@@ -241,20 +281,12 @@ export function useDpmWaveCommands({
 
   const commandResultMatchesContext = Boolean(
     commandMutation.data &&
-      (commandMutation.data.contextWaveId === contextWaveId ||
-        commandMutation.data.sourceWaveId === contextWaveId ||
+      (commandMutation.data.sourceWaveId === contextWaveId ||
         commandMutation.data.waveId === contextWaveId),
   );
-  const pendingSourceWaveId =
-    commandMutation.isPending &&
-    commandMutation.variables.contextWaveId === contextWaveId
-      ? commandMutation.variables.sourceWaveId
-      : null;
-  const activeWaveId =
-    pendingSourceWaveId ??
-    (commandResultMatchesContext
-      ? commandMutation.data?.waveId ?? contextWaveId
-      : contextWaveId);
+  const activeWaveId = commandResultMatchesContext
+    ? commandMutation.data?.waveId ?? contextWaveId
+    : contextWaveId;
   const retainedSelectionActive =
     activeConfirmedCreatedWave?.waveId === activeWaveId;
 
@@ -265,12 +297,10 @@ export function useDpmWaveCommands({
     );
   }
 
-  function runCommand(
-    variables: Omit<DpmWaveCommandVariables, "contextWaveId">,
-  ): void {
+  function runCommand(variables: DpmWaveCommandVariables): void {
     if (!commandInFlight()) {
       queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
-      commandMutation.mutate({ ...variables, contextWaveId });
+      commandMutation.mutate(variables);
     }
   }
 

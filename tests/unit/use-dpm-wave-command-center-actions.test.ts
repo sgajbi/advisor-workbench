@@ -1366,7 +1366,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
   });
 
-  it("does not apply a retained wave confirmation lock to a preview candidate", async () => {
+  it("promotes preview context without inheriting a retained wave lock", async () => {
     const createdResponse = buildCreatedWaveResponse();
     const confirmedItems: DpmWaveGatewayResponse = {
       ...itemResponse,
@@ -1415,7 +1415,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     vi.mocked(previewDpmWave).mockResolvedValue(candidateResponse);
     vi.mocked(approveDpmWave).mockResolvedValue(approvedCandidateResponse);
-    const { result } = renderActions();
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(campaignDefinitions, queryClient);
+    const { result } = firstMount;
 
     act(() => result.current.createRebalance());
     await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_002"));
@@ -1439,6 +1441,29 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     expect(result.current.model.selectedWaveId).toBe("dwv_003");
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
+
+    firstMount.unmount();
+    const secondMount = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() =>
+      expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003"),
+    );
+    expect(secondMount.result.current.model.selectedWaveState).toBe("APPROVED");
+
+    vi.mocked(stageDpmWave).mockResolvedValue(approvedCandidateResponse);
+    vi.mocked(getDpmWave).mockRejectedValueOnce(
+      new Error("Gateway detail refresh unavailable"),
+    );
+    act(() => secondMount.result.current.stageRebalance());
+    await waitFor(() =>
+      expect(secondMount.result.current.actionError).toContain(
+        "Stage rebalance was accepted",
+      ),
+    );
+    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Stage rebalance — awaiting source confirmation",
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
