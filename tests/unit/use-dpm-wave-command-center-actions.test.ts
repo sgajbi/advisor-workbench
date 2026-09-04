@@ -574,6 +574,43 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.correlationId).toBe("corr-wave-accepted");
   });
 
+  it("admits a newly created wave only after an exact source read confirms its identity", async () => {
+    const createdResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-created",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_002",
+          state: "CREATED",
+        },
+      },
+    };
+    const confirmedDetail: DpmWaveGatewayResponse = {
+      ...createdResponse,
+      correlation_id: "corr-wave-created-confirmed",
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockImplementation(async (waveId) =>
+      waveId === "dwv_002" ? confirmedDetail : waveResponse,
+    );
+    const { result } = renderActions();
+
+    act(() => result.current.createRebalance());
+
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledWith("dwv_002"));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(result.current.model.selectedWaveId).toBe("dwv_002");
+    expect(result.current.model.correlationId).toBe(
+      "corr-wave-created-confirmed",
+    );
+    expect(result.current.actionMessage).toBe("Create rebalance completed.");
+  });
+
   it("keeps newly confirmed wave detail ahead of older cached proof posture", async () => {
     const cachedProofResponse: DpmWaveGatewayResponse = {
       ...waveResponse,
@@ -631,6 +668,12 @@ describe("useDpmWaveCommandCenterActions", () => {
       ),
     );
     expect(result.current.actionMessage).toBeNull();
+    expect(result.current.pendingAction).toBe(
+      "Request approval — awaiting source confirmation",
+    );
+
+    act(() => result.current.requestApproval());
+    expect(approveDpmWave).toHaveBeenCalledTimes(1);
   });
 
   it("does not submit a second wave command while source refresh is pending", async () => {
