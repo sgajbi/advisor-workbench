@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -253,7 +253,7 @@ function readError(error: Error | null): string | null {
 }
 
 function retainCreatedWaveUntilListed(
-  queryClient: ReturnType<typeof useQueryClient>,
+  queryClient: QueryClient,
   listQueryKey: readonly unknown[],
   response: DpmWaveGatewayResponse,
 ): void {
