@@ -79,7 +79,20 @@ export function dpmWaveProofPackQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
     queryKey: dpmWaveQueryKeys.proofPack(waveId),
-    queryFn: async () => await getDpmWaveProofPackPosture(waveId),
+    queryFn: async () => await getIdentityConfirmedDpmWaveProofPack(waveId),
     enabled: false,
   });
+}
+
+async function getIdentityConfirmedDpmWaveProofPack(
+  waveId: string,
+): Promise<DpmWaveGatewayResponse> {
+  const response = await getDpmWaveProofPackPosture(waveId);
+  const responseWaveId = response.supportability?.wave_id;
+  if (responseWaveId !== waveId) {
+    throw new Error(
+      `Refreshed proof pack identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
+    );
+  }
+  return response;
 }

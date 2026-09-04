@@ -91,4 +91,30 @@ describe("DPM wave Query options", () => {
     );
     expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
   });
+
+  it("rejects a proof pack that identifies another wave before Query admission", async () => {
+    const options = dpmWaveProofPackQueryOptions("wave-1");
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: "wave-2" },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed proof pack identified wave-2 instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
+  it("requires a proof pack to identify its source wave", async () => {
+    const options = dpmWaveProofPackQueryOptions("wave-1");
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: undefined },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed proof pack identified no wave instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
 });
