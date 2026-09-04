@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
@@ -18,10 +20,12 @@ import {
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
   getDpmCampaignMakerCheckerControls,
+  getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
   launchDpmCampaignDefinition,
+  listDpmWaves,
   listDpmCampaignDefinitions,
   previewDpmWave,
   retireDpmCampaignDefinition,
@@ -52,10 +56,12 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmCampaignDefinitionPreviewReadiness: vi.fn(),
   getDpmCampaignMakerCheckerControls: vi.fn(),
+  getDpmWave: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
   launchDpmCampaignDefinition: vi.fn(),
+  listDpmWaves: vi.fn(),
   listDpmCampaignDefinitions: vi.fn(),
   previewDpmWave: vi.fn(),
   requestDpmOperationsHandoffSummary: vi.fn(),
@@ -316,17 +322,27 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
 function renderActions(
   definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
 ) {
-  return renderHook(() =>
-    useDpmWaveCommandCenterActions({
-      portfolioId: "PB_SG_GLOBAL_BAL_001",
-      waveList: waveResponse,
-      campaignDefinitions: definitions,
-    })
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return renderHook(
+    () =>
+      useDpmWaveCommandCenterActions({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        waveList: waveResponse,
+        campaignDefinitions: definitions,
+      }),
+    {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(QueryClientProvider, { client: queryClient }, children),
+    },
   );
 }
 
 describe("useDpmWaveCommandCenterActions", () => {
   beforeEach(() => {
+    vi.mocked(listDpmWaves).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(lifecycleResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(launchHistoryResponse);
