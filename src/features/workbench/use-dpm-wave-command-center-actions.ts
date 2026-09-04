@@ -841,8 +841,8 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
     actionError: waveCommands.actionError ?? waveSources.sourceError,
     sourceConfirmationRetryAvailable:
-      waveCommands.retainedSelectionActive &&
-      (waveCommands.confirmationRecoveryRequired ||
+      waveCommands.confirmationRecoveryAvailable ||
+      (waveCommands.retainedSelectionActive &&
         (waveSources.detailConfirmationFailed || waveSources.itemsConfirmationFailed)),
     campaignLifecycleError: valueForSelectedCampaign(campaignLifecycleError, selectedCampaignKey),
     campaignLaunchHistoryError: valueForSelectedCampaign(
@@ -893,8 +893,8 @@ export function useDpmWaveCommandCenterActions({
     requestOperationsBrief: () =>
       runSelectedWaveCommand(waveCommands.requestOperationsBrief),
     retrySourceConfirmation: () => {
-      const recoverCommandConfirmation = waveCommands.confirmationRecoveryRequired;
-      if (!waveCommands.retainedSelectionActive) {
+      const recoverCommandConfirmation = waveCommands.confirmationRecoveryAvailable;
+      if (!recoverCommandConfirmation && !waveCommands.retainedSelectionActive) {
         return;
       }
       const detailRecovery =
