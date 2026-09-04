@@ -280,7 +280,10 @@ export function useDpmWaveCommandCenterActions({
     waveProofPackSourceWaveId: selectedSourceWaveId,
     waveItems: waveSources.waveItems,
     waveItemsSourceWaveId: selectedSourceWaveId,
-    actionResponse: waveSources.waveDetail ? null : waveCommands.actionResponse,
+    actionResponse:
+      waveCommands.actionResponseIsDirect || !waveSources.waveDetail
+        ? waveCommands.actionResponse
+        : null,
     waveAiMemo: waveCommands.waveAiMemo,
     waveAiMemoSourceWaveId: selectedSourceWaveId,
     operationsHandoffSummary: waveCommands.operationsHandoffSummary,

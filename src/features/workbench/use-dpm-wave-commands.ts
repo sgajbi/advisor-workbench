@@ -256,6 +256,10 @@ export function useDpmWaveCommands({
   }
 
   async function confirmSourceRecovery(): Promise<void> {
+    const recoveryWaveId = activeConfirmationLock?.recoveryWaveId;
+    if (!recoveryWaveId) {
+      return;
+    }
     try {
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
@@ -264,6 +268,10 @@ export function useDpmWaveCommands({
     } catch {
       return;
     }
+    await queryClient.resetQueries({
+      queryKey: dpmWaveProofPackQueryOptions(recoveryWaveId).queryKey,
+      exact: true,
+    });
     queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
     commandMutation.reset();
   }
@@ -323,6 +331,8 @@ export function useDpmWaveCommands({
       activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
+    actionResponseIsDirect:
+      commandMutation.isSuccess && commandMutation.variables.refresh === "none",
     waveAiMemo: selectedPmMemo,
     operationsHandoffSummary: selectedOperationsBrief,
     actionError:
