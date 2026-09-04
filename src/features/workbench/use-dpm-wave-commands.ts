@@ -244,6 +244,8 @@ export function useDpmWaveCommands({
   const activeWaveId = commandResultMatchesContext
     ? commandMutation.data?.waveId ?? contextWaveId
     : contextWaveId;
+  const retainedSelectionActive =
+    activeConfirmedCreatedWave?.waveId === activeWaveId;
 
   function commandInFlight(): boolean {
     return (
@@ -330,7 +332,7 @@ export function useDpmWaveCommands({
 
   return {
     activeWaveId,
-    retainedSelectionActive: activeConfirmedCreatedWave !== null,
+    retainedSelectionActive,
     confirmationRecoveryAvailable:
       activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
