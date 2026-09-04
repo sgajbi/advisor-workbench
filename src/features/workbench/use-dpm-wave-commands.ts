@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
-import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
   approveDpmWave,
   createDpmWave,
@@ -202,13 +201,12 @@ export function useDpmWaveCommands({
       const confirmedResponse = await refreshWaveSources(variables, response);
       const waveId =
         variables.waveId ??
-        (variables.refresh === "list"
-          ? getConfirmedDpmWaveResponseIdentity(
-              confirmedResponse,
-              "Confirmed created wave",
-            )
-          : buildDpmWaveCommandCenterModel({ waveList: confirmedResponse })
-              .selectedWaveId);
+        getConfirmedDpmWaveResponseIdentity(
+          confirmedResponse,
+          variables.refresh === "list"
+            ? "Confirmed created wave"
+            : `${variables.label} response`,
+        );
       const result = {
         response: confirmedResponse,
         detailUpdateCountAtAdmission: waveId

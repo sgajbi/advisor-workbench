@@ -1116,6 +1116,27 @@ describe("useDpmWaveCommandCenterActions", () => {
     ).toBeUndefined();
   });
 
+  it("rejects a contradictory preview response before selecting its wave", async () => {
+    vi.mocked(previewDpmWave).mockResolvedValue({
+      ...waveResponse,
+      data: { wave: { wave_id: "dwv_002", state: "SIMULATION_READY" } },
+    });
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.previewRebalance());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "Preview response payload identified dwv_002 instead of dwv_001",
+      ),
+    );
+    expect(result.current.model.selectedWaveId).toBe("dwv_001");
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_002")),
+    ).toBeUndefined();
+  });
+
   it("keeps commands locked when exact detail supportability identity is absent", async () => {
     vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWave).mockResolvedValue({
