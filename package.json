@@ -113,14 +113,14 @@
     "ag-grid-react": "34.3.1",
     "echarts": "6.1.0",
     "echarts-for-react": "3.0.6",
-    "next": "15.5.22",
+    "next": "15.5.25",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "7.65.0",
     "zod": "4.1.12"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "15.5.22",
+    "@next/eslint-plugin-next": "15.5.25",
     "@playwright/test": "1.58.2",
     "@testing-library/jest-dom": "6.6.4",
     "@testing-library/react": "16.2.0",
