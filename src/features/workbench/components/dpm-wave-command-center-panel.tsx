@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import {
+  ActionButton,
   ScreenStatePanel,
   SectionBlock,
   SemanticBadge,
@@ -87,6 +88,7 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
     actionError,
+    sourceConfirmationRetryAvailable,
     campaignLifecycleError,
     campaignLaunchHistoryError,
     campaignPreviewReadinessError,
@@ -110,6 +112,7 @@ export default function DpmWaveCommandCenterPanel({
     openEvidencePack,
     requestWaveMemo,
     requestOperationsBrief,
+    retrySourceConfirmation,
     selectCampaign,
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
@@ -185,6 +188,13 @@ export default function DpmWaveCommandCenterPanel({
           surface="portfolio"
           title={errorMessage || actionError ? "Rebalance data needs attention" : stateCopy.title}
           body={errorMessage ?? actionError ?? stateCopy.body}
+          action={
+            sourceConfirmationRetryAvailable ? (
+              <ActionButton onClick={retrySourceConfirmation}>
+                Retry source confirmation
+              </ActionButton>
+            ) : undefined
+          }
         />
       ) : null}
 

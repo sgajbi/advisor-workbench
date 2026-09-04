@@ -75,6 +75,7 @@ export function useDpmSelectedWaveSources(
     detailConfirmationBlocked:
       loadDetail &&
       (detailQuery.isStale || detailQuery.isFetching || detailQuery.isError),
+    detailConfirmationFailed: loadDetail && detailQuery.isError,
     waveItems: itemsQuery.data ?? null,
     proofPack: proofPackQuery.data ?? null,
     sourceError:
@@ -82,6 +83,7 @@ export function useDpmSelectedWaveSources(
       readQueryError(itemsQuery.error) ??
       readQueryError(proofPackQuery.error),
     refreshItems: itemsQuery.refetch,
+    reconfirmDetail: detailQuery.refetch,
     openProofPack: proofPackQuery.refetch,
   };
 }

@@ -100,6 +100,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignLifecycleCommand: boolean;
   pendingCampaignWorkflowCommand: boolean;
   actionError: string | null;
+  sourceConfirmationRetryAvailable: boolean;
   campaignLifecycleError: string | null;
   campaignLaunchHistoryError: string | null;
   campaignPreviewReadinessError: string | null;
@@ -123,6 +124,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   openEvidencePack: () => void;
   requestWaveMemo: () => void;
   requestOperationsBrief: () => void;
+  retrySourceConfirmation: () => void;
   selectCampaign: (row: DpmCampaignDefinitionRow) => void;
   loadCampaignWorkflowEvidence: (row: DpmCampaignDefinitionRow) => Promise<void>;
   loadCampaignLifecycle: (row: DpmCampaignDefinitionRow) => Promise<void>;
@@ -835,6 +837,8 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignLifecycleCommand: pendingCampaignLifecycleCommand === selectedCampaignKey,
     pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
     actionError: waveCommands.actionError ?? waveSources.sourceError,
+    sourceConfirmationRetryAvailable:
+      waveCommands.retainedSelectionActive && waveSources.detailConfirmationFailed,
     campaignLifecycleError: valueForSelectedCampaign(campaignLifecycleError, selectedCampaignKey),
     campaignLaunchHistoryError: valueForSelectedCampaign(
       campaignLaunchHistoryError,
@@ -883,6 +887,11 @@ export function useDpmWaveCommandCenterActions({
     requestWaveMemo: () => runSelectedWaveCommand(waveCommands.requestWaveMemo),
     requestOperationsBrief: () =>
       runSelectedWaveCommand(waveCommands.requestOperationsBrief),
+    retrySourceConfirmation: () => {
+      if (waveCommands.retainedSelectionActive && waveSources.detailConfirmationFailed) {
+        void waveSources.reconfirmDetail();
+      }
+    },
     selectCampaign,
     loadCampaignWorkflowEvidence,
     loadCampaignLifecycle,
