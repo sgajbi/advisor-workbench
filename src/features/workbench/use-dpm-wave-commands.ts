@@ -331,6 +331,7 @@ export function useDpmWaveCommands({
       activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
+    actionSubmittedAt: commandMutation.submittedAt,
     actionResponseIsDirect:
       commandMutation.isSuccess && commandMutation.variables.refresh === "none",
     waveAiMemo: selectedPmMemo,
