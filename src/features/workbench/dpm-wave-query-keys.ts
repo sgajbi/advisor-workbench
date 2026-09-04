@@ -19,6 +19,8 @@ export const dpmWaveQueryKeys = {
     [...dpmWaveQueryKeys.all, "proof-pack", waveId] as const,
   confirmedCreatedWave: (portfolioId: string) =>
     [...dpmWaveQueryKeys.all, "confirmed-created-wave", portfolioId] as const,
+  commandContext: (portfolioId: string) =>
+    [...dpmWaveQueryKeys.all, "command-context", portfolioId] as const,
   confirmationLock: (portfolioId: string) =>
     [...dpmWaveQueryKeys.all, "confirmation-lock", portfolioId] as const,
 };
