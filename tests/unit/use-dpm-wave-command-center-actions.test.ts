@@ -1191,6 +1191,10 @@ describe("useDpmWaveCommandCenterActions", () => {
         wave: {
           wave_id: "dwv_001",
           state: "APPROVED",
+          proof_pack_posture: {
+            proof_pack_refs: [{ proof_pack_id: "ppack_after_command" }],
+            external_execution_claimed: false,
+          },
         },
       },
     };
@@ -1207,7 +1211,65 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
     expect(result.current.model.correlationId).toBe("corr-confirmed-after-command");
-    expect(result.current.model.proofPackStatus).toBe("READY");
+    expect(result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
+    await waitFor(() =>
+      expect(result.current.model.proofPackRows[0]?.label).toBe("ppack_after_command"),
+    );
+  });
+
+  it("lets a newer exact detail revalidation replace command-time posture", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const approvedResponse: DpmWaveGatewayResponse = {
+      ...createdResponse,
+      correlation_id: "corr-approved",
+      supportability: {
+        ...createdResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: { wave: { wave_id: "dwv_002", state: "APPROVED" } },
+    };
+    const handedOffResponse: DpmWaveGatewayResponse = {
+      ...approvedResponse,
+      correlation_id: "corr-handed-off",
+      supportability: {
+        ...approvedResponse.supportability,
+        wave_state: "HANDOFF_READY",
+      },
+      data: { wave: { wave_id: "dwv_002", state: "HANDOFF_READY" } },
+    };
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "APPROVED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(approveDpmWave).mockResolvedValue(approvedResponse);
+    vi.mocked(getDpmWave)
+      .mockResolvedValueOnce(createdResponse)
+      .mockResolvedValueOnce(approvedResponse)
+      .mockResolvedValueOnce(handedOffResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
+
+    await queryClient.invalidateQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+      refetchType: "none",
+    });
+
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveState).toBe("HANDOFF_READY"),
+    );
+    expect(result.current.model.correlationId).toBe("corr-handed-off");
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {

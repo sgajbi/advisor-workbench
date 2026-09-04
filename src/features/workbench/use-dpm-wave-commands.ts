@@ -19,6 +19,7 @@ import {
 import {
   dpmWaveDetailQueryOptions,
   dpmWaveItemsQueryOptions,
+  dpmWaveProofPackQueryOptions,
   getConfirmedDpmWaveResponseIdentity,
   getIdentityConfirmedDpmWaveDetail,
   getIdentityConfirmedDpmWaveItems,
@@ -168,6 +169,10 @@ export function useDpmWaveCommands({
       });
       const items = await getIdentityConfirmedDpmWaveItems(expectedWaveId);
       queryClient.setQueryData(itemsOptions.queryKey, items);
+      await queryClient.resetQueries({
+        queryKey: dpmWaveProofPackQueryOptions(expectedWaveId).queryKey,
+        exact: true,
+      });
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
