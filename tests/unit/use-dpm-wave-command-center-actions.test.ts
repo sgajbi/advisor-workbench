@@ -1726,6 +1726,36 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(secondMount.result.current.model.selectedWaveState).toBe("APPROVED");
   });
 
+  it("reports a rejected wave command after a remount", async () => {
+    let rejectApproval!: (reason: Error) => void;
+    vi.mocked(approveDpmWave).mockReturnValue(
+      new Promise((_, reject) => {
+        rejectApproval = reject;
+      }),
+    );
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(campaignDefinitions, queryClient);
+
+    act(() => firstMount.result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
+    firstMount.unmount();
+
+    const secondMount = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() =>
+      expect(secondMount.result.current.pendingAction).toBe("Request approval"),
+    );
+
+    act(() => rejectApproval(new Error("Gateway rejected approval.")));
+
+    await waitFor(() =>
+      expect(secondMount.result.current.actionError).toBe(
+        "Gateway rejected approval.",
+      ),
+    );
+    expect(secondMount.result.current.pendingAction).toBeNull();
+    expect(secondMount.result.current.actionMessage).toBeNull();
+  });
+
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
     const createdResponse = buildCreatedWaveResponse();
     const confirmedItems: DpmWaveGatewayResponse = {
