@@ -181,17 +181,26 @@ export function useDpmWaveCommandCenterActions({
     portfolioId,
     selectedWaveId: commandSourceWaveId,
     listQueryKey: waveListSource.listQueryKey,
+    allowRetainedSelection: waveListSource.serverWaveList !== null,
   });
   const commandSelectedWaveId = selectedWaveIdForResponse(waveCommands.actionResponse);
   const selectedSourceWaveId =
     commandSelectedWaveId ?? waveCommands.activeWaveId ?? commandSourceWaveId;
-  const waveSources = useDpmSelectedWaveSources(selectedSourceWaveId);
+  const waveSources = useDpmSelectedWaveSources(
+    selectedSourceWaveId,
+    waveCommands.retainedSelectionActive,
+  );
   const governedWaveList =
     commandSelectedWaveId && commandSelectedWaveId === querySelectedWaveId
       ? waveListSource.queryWaveList
       : serverSelectedWaveId && serverSelectedWaveId !== querySelectedWaveId
         ? waveListSource.serverWaveList
         : waveListSource.queryWaveList ?? waveListSource.serverWaveList;
+  const selectedWaveList =
+    waveCommands.retainedSelectionActive &&
+    selectedWaveIdForResponse(governedWaveList) !== selectedSourceWaveId
+      ? null
+      : governedWaveList;
   const [waveReadFeedback, setWaveReadFeedback] =
     useState<WaveBoundValue<string> | null>(null);
   const [waveReadPending, setWaveReadPending] =
@@ -262,7 +271,7 @@ export function useDpmWaveCommandCenterActions({
 
   const commonModelInput = {
     selectedWaveId: selectedSourceWaveId,
-    waveList: governedWaveList,
+    waveList: selectedWaveList,
     waveDetail: waveSources.waveDetail,
     waveDetailSourceWaveId: selectedSourceWaveId,
     waveProofPack: waveSources.proofPack,
