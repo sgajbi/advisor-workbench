@@ -561,6 +561,50 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.correlationId).toBe("corr-wave-accepted");
   });
 
+  it("keeps newly confirmed wave detail ahead of older cached proof posture", async () => {
+    const cachedProofResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-proof-before-command",
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "SIMULATION_READY",
+          proof_pack_posture: {
+            status: "READY",
+          },
+        },
+      },
+    };
+    const confirmedDetail: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-confirmed-after-command",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_001",
+          state: "APPROVED",
+        },
+      },
+    };
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(cachedProofResponse);
+    vi.mocked(approveDpmWave).mockResolvedValue(confirmedDetail);
+    vi.mocked(getDpmWave).mockResolvedValue(confirmedDetail);
+    const { result } = renderActions();
+
+    act(() => result.current.openEvidencePack());
+    await waitFor(() => expect(result.current.model.proofPackStatus).toBe("READY"));
+
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+
+    expect(result.current.model.selectedWaveState).toBe("APPROVED");
+    expect(result.current.model.correlationId).toBe("corr-confirmed-after-command");
+    expect(result.current.model.proofPackStatus).toBe("READY");
+  });
+
   it("keeps accepted wave commands explicit when source refresh cannot prove current posture", async () => {
     vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWave).mockRejectedValueOnce(new Error("Gateway refresh unavailable"));

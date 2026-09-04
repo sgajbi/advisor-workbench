@@ -212,6 +212,8 @@ export function buildDpmWaveCommandCenterModel(params: {
   waveList: DpmWaveGatewayResponse | null;
   waveDetail?: DpmWaveGatewayResponse | null;
   waveDetailSourceWaveId?: string | null;
+  waveProofPack?: DpmWaveGatewayResponse | null;
+  waveProofPackSourceWaveId?: string | null;
   waveItems?: DpmWaveGatewayResponse | null;
   waveItemsSourceWaveId?: string | null;
   actionResponse?: DpmWaveGatewayResponse | null;
@@ -265,6 +267,13 @@ export function buildDpmWaveCommandCenterModel(params: {
   )
     ? params.waveItems
     : null;
+  const waveProofPack = matchesSelectedWave(
+    params.waveProofPackSourceWaveId,
+    selectedWaveId,
+  )
+    ? params.waveProofPack
+    : null;
+  const waveProofPackRecord = readWaveRecord(waveProofPack?.data);
   const primary =
     params.actionResponse ??
     waveDetail ??
@@ -279,8 +288,11 @@ export function buildDpmWaveCommandCenterModel(params: {
     waveRecord?.proof_pack_posture,
     params.actionResponse?.data.proof_pack_posture ??
       waveDetail?.data.proof_pack_posture,
+    waveProofPackRecord?.proof_pack_posture,
+    waveProofPack?.data.proof_pack_posture,
     waveItems?.data.proof_pack_posture,
     params.actionResponse?.data,
+    waveProofPack?.data,
   );
   const supportability = primary?.supportability;
   const supportabilityState = normalizeState(supportability?.state);
@@ -343,8 +355,8 @@ export function buildDpmWaveCommandCenterModel(params: {
     reportInputStatus: params.waveReportInput
       ? normalizeState(params.waveReportInput.supportability.state)
       : "NOT_REQUESTED",
-    proofPackStatus: waveDetail
-      ? normalizeState(waveDetail.supportability.state)
+    proofPackStatus: waveProofPack
+      ? normalizeState(waveProofPack.supportability.state)
       : "NOT_REQUESTED",
     aiMemoStatus: readAiMemoStatus(
       waveAiMemo,

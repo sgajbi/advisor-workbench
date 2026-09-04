@@ -263,8 +263,10 @@ export function useDpmWaveCommandCenterActions({
 
   const commonModelInput = {
     waveList: governedWaveList,
-    waveDetail: waveSources.proofPack ?? waveSources.waveDetail,
+    waveDetail: waveSources.waveDetail,
     waveDetailSourceWaveId: selectedSourceWaveId,
+    waveProofPack: waveSources.proofPack,
+    waveProofPackSourceWaveId: selectedSourceWaveId,
     waveItems: waveSources.waveItems,
     waveItemsSourceWaveId: selectedSourceWaveId,
     actionResponse: campaignWaveResponse ?? waveCommands.actionResponse,
