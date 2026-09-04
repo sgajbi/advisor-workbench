@@ -9,6 +9,7 @@ import {
   approveDpmWave,
   createDpmWave,
   getDpmWave,
+  getDpmWaveItems,
   handoffDpmWave,
   previewDpmWave,
   requestDpmOperationsHandoffSummary,
@@ -116,10 +117,20 @@ export function useDpmWaveCommands({
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
         detail,
       );
-      await queryClient.fetchQuery({
-        ...dpmWaveItemsQueryOptions(expectedWaveId),
-        staleTime: 0,
-      });
+      const items = await getDpmWaveItems(expectedWaveId);
+      const confirmedItemsWaveId = items.supportability?.wave_id;
+      if (
+        confirmedItemsWaveId &&
+        confirmedItemsWaveId !== expectedWaveId
+      ) {
+        throw new Error(
+          `the refreshed proposed changes identified ${confirmedItemsWaveId} instead of ${expectedWaveId}`,
+        );
+      }
+      queryClient.setQueryData(
+        dpmWaveItemsQueryOptions(expectedWaveId).queryKey,
+        items,
+      );
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
