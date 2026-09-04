@@ -54,6 +54,17 @@ export function useDpmSelectedWaveSources(
     ...dpmWaveDetailQueryOptions(selectedSourceWaveId ?? ""),
     enabled: Boolean(selectedSourceWaveId) && loadDetail,
   });
+  useEffect(() => {
+    if (loadDetail && detailQuery.isStale && !detailQuery.isFetching && !detailQuery.isError) {
+      void detailQuery.refetch();
+    }
+  }, [
+    detailQuery.isError,
+    detailQuery.isFetching,
+    detailQuery.isStale,
+    detailQuery.refetch,
+    loadDetail,
+  ]);
   const proofPackQuery = useQuery({
     ...dpmWaveProofPackQueryOptions(selectedSourceWaveId ?? ""),
     enabled: false,
