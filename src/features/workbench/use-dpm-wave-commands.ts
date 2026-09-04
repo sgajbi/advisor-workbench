@@ -47,8 +47,8 @@ type WaveAiResult<T> = {
 };
 
 type WaveConfirmationLock = {
+  commandLabel: string;
   contextWaveId: string | null;
-  label: string;
 };
 
 export function useDpmWaveCommands({
@@ -104,8 +104,8 @@ export function useDpmWaveCommands({
       return detail;
     } catch (error) {
       setConfirmationLock({
+        commandLabel: variables.label,
         contextWaveId: variables.sourceWaveId,
-        label: variables.label,
       });
       const detail =
         error instanceof Error ? error.message : "source refresh failed";
@@ -210,7 +210,7 @@ export function useDpmWaveCommands({
   const pendingAction = commandMutation.isPending
     ? commandMutation.variables.label
     : activeConfirmationLock
-      ? `${activeConfirmationLock.label} — awaiting source confirmation`
+      ? `${activeConfirmationLock.commandLabel} — awaiting source confirmation`
     : pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId
       ? "Prepare PM memo"
       : operationsBriefMutation.isPending && operationsBriefMutation.variables === activeWaveId
