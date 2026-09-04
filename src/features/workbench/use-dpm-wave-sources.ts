@@ -36,7 +36,7 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     }
   }, [listOptions.queryKey, queryClient, waveList]);
 
-  const waveListSource = preferCurrentServerSource(waveList, listQuery.data);
+  const waveListSource = listQuery.data ?? waveList;
   const selectedWaveId = buildDpmWaveCommandCenterModel({
     waveList: waveListSource,
   }).selectedWaveId;
@@ -66,16 +66,6 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     refreshItems: itemsQuery.refetch,
     openProofPack: proofPackQuery.refetch,
   };
-}
-
-function preferCurrentServerSource(
-  serverSource: DpmWaveGatewayResponse | null,
-  querySource: DpmWaveGatewayResponse | undefined,
-): DpmWaveGatewayResponse | null {
-  if (serverSource && serverSource.correlation_id !== querySource?.correlation_id) {
-    return serverSource;
-  }
-  return querySource ?? serverSource;
 }
 
 function readQueryError(error: Error | null): string | null {

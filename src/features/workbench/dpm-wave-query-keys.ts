@@ -21,13 +21,7 @@ export const dpmWaveQueryKeys = {
 
 export const dpmWaveMutationKeys = {
   all: [...dpmWaveQueryKeys.all, "mutation"] as const,
-  preview: () => [...dpmWaveMutationKeys.all, "preview"] as const,
-  create: () => [...dpmWaveMutationKeys.all, "create"] as const,
-  sourceCheck: () => [...dpmWaveMutationKeys.all, "source-check"] as const,
-  simulate: () => [...dpmWaveMutationKeys.all, "simulate"] as const,
-  approve: () => [...dpmWaveMutationKeys.all, "approve"] as const,
-  stage: () => [...dpmWaveMutationKeys.all, "stage"] as const,
-  handoff: () => [...dpmWaveMutationKeys.all, "handoff"] as const,
+  command: () => [...dpmWaveMutationKeys.all, "command"] as const,
   pmMemo: () => [...dpmWaveMutationKeys.all, "pm-memo"] as const,
   operationsBrief: () =>
     [...dpmWaveMutationKeys.all, "operations-brief"] as const,
