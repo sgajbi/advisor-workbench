@@ -52,6 +52,7 @@ describe("manage workspace navigation", () => {
       "proof",
     ]);
     expect(items.filter((item) => item.active).map((item) => item.key)).toEqual(["reviews"]);
+    expect(items.every((item) => item.prefetch === false)).toBe(true);
     expect(items.find((item) => item.key === "reviews")).toMatchObject({
       label: "Reviews",
       detail: "Outcome review",

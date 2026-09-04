@@ -119,6 +119,7 @@ export default function PortfolioScreenRailNavigation({
         <Link
           key={item.key}
           href={item.href}
+          prefetch={item.prefetch}
           aria-label={item.label}
           aria-current={item.active ? "page" : undefined}
           className={className}
