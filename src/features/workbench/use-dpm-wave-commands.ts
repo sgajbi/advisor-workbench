@@ -381,6 +381,25 @@ export function useDpmWaveCommands({
       queryKey: dpmWaveProofPackQueryOptions(recoveryWaveId).queryKey,
       exact: true,
     });
+    const recoveredCommand = queryClient
+      .getMutationCache()
+      .getAll()
+      .slice()
+      .reverse()
+      .find((mutation) => {
+        const variables = mutation.state.variables as
+          | DpmWaveCommandVariables
+          | undefined;
+        return (
+          mutation.state.status === "error" &&
+          variables?.portfolioId === portfolioId &&
+          variables.label === activeConfirmationLock.commandLabel &&
+          (variables.waveId === recoveryWaveId || variables.refresh === "list")
+        );
+      });
+    if (recoveredCommand) {
+      queryClient.getMutationCache().remove(recoveredCommand);
+    }
     queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
     commandMutation.reset();
   }

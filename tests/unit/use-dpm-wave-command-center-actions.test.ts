@@ -1807,6 +1807,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     act(() => secondMount.result.current.retrySourceConfirmation());
     await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
     expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    expect(secondMount.result.current.actionError).toBeNull();
     expect(secondMount.result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
   });
 
