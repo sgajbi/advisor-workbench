@@ -75,7 +75,7 @@ export function useDpmWaveCommands({
   const queryClient = useQueryClient();
   const [confirmationLock, setConfirmationLock] =
     useState<WaveConfirmationLock | null>(null);
-  const confirmedCreatedWaveKey = dpmWaveQueryKeys.confirmedCreatedWave();
+  const confirmedCreatedWaveKey = dpmWaveQueryKeys.confirmedCreatedWave(portfolioId);
   const confirmedCreatedWaveQuery = useQuery<ConfirmedCreatedWave>({
     queryKey: confirmedCreatedWaveKey,
     queryFn: skipToken,

@@ -750,7 +750,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
     expect(firstMount.result.current.model.selectedWaveId).toBe("dwv_002");
     expect(
-      queryClient.getQueryData(dpmWaveQueryKeys.confirmedCreatedWave()),
+      queryClient.getQueryData(
+        dpmWaveQueryKeys.confirmedCreatedWave("PB_SG_GLOBAL_BAL_001"),
+      ),
     ).toEqual({
       listWaveIdAtConfirmation: "dwv_001",
       waveId: "dwv_002",
