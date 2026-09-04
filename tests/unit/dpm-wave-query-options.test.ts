@@ -27,7 +27,7 @@ const response = {
   contract_version: "v1",
   source_service: "lotus-manage",
   upstream_status: 200,
-  supportability: { state: "READY" },
+  supportability: { state: "READY", wave_id: "wave-1" },
   data: {},
 } as DpmWaveGatewayResponse;
 
@@ -64,5 +64,31 @@ describe("DPM wave Query options", () => {
     expect(getDpmWave).toHaveBeenCalledWith("wave-1");
     expect(getDpmWaveItems).toHaveBeenCalledWith("wave-1");
     expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("wave-1");
+  });
+
+  it("rejects proposed changes that identify another wave before Query admission", async () => {
+    const options = dpmWaveItemsQueryOptions("wave-1");
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: "wave-2" },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed proposed changes identified wave-2 instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
+  });
+
+  it("requires proposed changes to identify their source wave", async () => {
+    const options = dpmWaveItemsQueryOptions("wave-1");
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...response,
+      supportability: { ...response.supportability, wave_id: undefined },
+    });
+
+    await expect(queryClient.fetchQuery(options)).rejects.toThrow(
+      "Refreshed proposed changes identified no wave instead of wave-1.",
+    );
+    expect(queryClient.getQueryData(options.queryKey)).toBeUndefined();
   });
 });

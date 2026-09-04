@@ -56,10 +56,23 @@ export function dpmWaveItemsQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
     queryKey: dpmWaveQueryKeys.items(waveId),
-    queryFn: async () => await getDpmWaveItems(waveId),
+    queryFn: async () => await getIdentityConfirmedDpmWaveItems(waveId),
     retry: 1,
     retryDelay: 0,
   });
+}
+
+export async function getIdentityConfirmedDpmWaveItems(
+  waveId: string,
+): Promise<DpmWaveGatewayResponse> {
+  const response = await getDpmWaveItems(waveId);
+  const responseWaveId = response.supportability?.wave_id;
+  if (responseWaveId !== waveId) {
+    throw new Error(
+      `Refreshed proposed changes identified ${responseWaveId ?? "no wave"} instead of ${waveId}.`,
+    );
+  }
+  return response;
 }
 
 export function dpmWaveProofPackQueryOptions(waveId: string) {

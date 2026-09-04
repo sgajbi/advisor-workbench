@@ -598,6 +598,55 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.actionMessage).toBe("Request approval completed.");
   });
 
+  it("prevents a late pre-command items read from replacing confirmed proposed changes", async () => {
+    let resolveInitialItems!: (value: DpmWaveGatewayResponse) => void;
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      correlation_id: "corr-post-command-items",
+      data: {
+        items: [
+          {
+            ...(itemResponse.data.items as Array<Record<string, unknown>>)[0],
+            diagnostics: {
+              proposed_changes: [
+                {
+                  security_id: "MSFT US",
+                  action: "Add",
+                  estimated_value: "5,100.00",
+                  reason: "Rebalance target",
+                  mandate_impact: "Within equity band",
+                  status: "READY",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    vi.mocked(getDpmWaveItems)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveInitialItems = resolve;
+        }),
+      )
+      .mockResolvedValueOnce(confirmedItems);
+    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
+    const { result } = renderActions();
+
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledTimes(1));
+    act(() => result.current.requestApproval());
+
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(result.current.model.itemRows[0]?.security).toBe("MSFT US");
+
+    await act(async () => {
+      resolveInitialItems(itemResponse);
+      await Promise.resolve();
+    });
+    expect(result.current.model.itemRows[0]?.security).toBe("MSFT US");
+  });
+
   it("does not present an accepted mutation response as confirmed wave detail", async () => {
     let resolveWaveRefresh!: (value: DpmWaveGatewayResponse) => void;
     const acceptedResponse: DpmWaveGatewayResponse = {
@@ -711,7 +760,7 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await waitFor(() =>
       expect(result.current.actionError).toContain(
-        "the refreshed proposed changes identified dwv_001 instead of dwv_002",
+        "Refreshed proposed changes identified dwv_001 instead of dwv_002",
       ),
     );
     expect(

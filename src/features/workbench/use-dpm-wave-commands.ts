@@ -9,7 +9,6 @@ import {
   approveDpmWave,
   createDpmWave,
   getDpmWave,
-  getDpmWaveItems,
   handoffDpmWave,
   previewDpmWave,
   requestDpmOperationsHandoffSummary,
@@ -21,6 +20,7 @@ import {
 import {
   dpmWaveDetailQueryOptions,
   dpmWaveItemsQueryOptions,
+  getIdentityConfirmedDpmWaveItems,
 } from "@/features/workbench/dpm-wave-query-options";
 import {
   DPM_WAVE_COMMAND_SCOPE,
@@ -117,20 +117,13 @@ export function useDpmWaveCommands({
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
         detail,
       );
-      const items = await getDpmWaveItems(expectedWaveId);
-      const confirmedItemsWaveId = items.supportability?.wave_id;
-      if (
-        confirmedItemsWaveId &&
-        confirmedItemsWaveId !== expectedWaveId
-      ) {
-        throw new Error(
-          `the refreshed proposed changes identified ${confirmedItemsWaveId} instead of ${expectedWaveId}`,
-        );
-      }
-      queryClient.setQueryData(
-        dpmWaveItemsQueryOptions(expectedWaveId).queryKey,
-        items,
-      );
+      const itemsOptions = dpmWaveItemsQueryOptions(expectedWaveId);
+      await queryClient.cancelQueries({
+        queryKey: itemsOptions.queryKey,
+        exact: true,
+      });
+      const items = await getIdentityConfirmedDpmWaveItems(expectedWaveId);
+      queryClient.setQueryData(itemsOptions.queryKey, items);
       await queryClient.invalidateQueries(
         { queryKey: listQueryKey, exact: true },
         { throwOnError: true },
