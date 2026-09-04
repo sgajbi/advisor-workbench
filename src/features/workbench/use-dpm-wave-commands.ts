@@ -160,16 +160,6 @@ export function useDpmWaveCommands({
     queryClient,
     selectedWaveId,
   ]);
-  useEffect(() => {
-    if (
-      commandContext &&
-      selectedWaveId &&
-      selectedWaveId !== commandContext.listWaveIdAtSelection
-    ) {
-      queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
-    }
-  }, [commandContext, commandContextKey, queryClient, selectedWaveId]);
-
   async function refreshWaveSources(
     variables: DpmWaveCommandVariables,
     response: DpmWaveGatewayResponse,
@@ -276,6 +266,22 @@ export function useDpmWaveCommands({
       return result;
     },
   });
+  useEffect(() => {
+    if (
+      commandContext &&
+      selectedWaveId &&
+      selectedWaveId !== commandContext.listWaveIdAtSelection
+    ) {
+      queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
+      commandMutation.reset();
+    }
+  }, [
+    commandContext,
+    commandContextKey,
+    commandMutation,
+    queryClient,
+    selectedWaveId,
+  ]);
   const pmMemoMutation = useMutation({
     mutationKey: dpmWaveMutationKeys.pmMemo(),
     mutationFn: async (waveId: string): Promise<WaveAiResult<DpmWaveAiPmMemoResponse>> => ({
