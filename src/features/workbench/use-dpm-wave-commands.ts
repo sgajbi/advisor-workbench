@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  skipToken,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import {
@@ -36,6 +42,7 @@ import type {
 
 type DpmWaveCommandVariables = {
   label: string;
+  portfolioId: string;
   waveId: string | null;
   sourceWaveId: string | null;
   refresh: "none" | "list" | "wave-and-list";
@@ -313,6 +320,22 @@ export function useDpmWaveCommands({
   const activeWaveId = commandResultMatchesContext
     ? commandMutation.data?.waveId ?? contextWaveId
     : contextWaveId;
+  const pendingCommands = useMutationState({
+    filters: {
+      exact: true,
+      mutationKey: dpmWaveMutationKeys.command(),
+      status: "pending",
+    },
+    select: (mutation) =>
+      (mutation.state.variables as DpmWaveCommandVariables | undefined) ?? null,
+  });
+  const activePendingCommand = pendingCommands.slice().reverse().find(
+    (command) =>
+      command?.portfolioId === portfolioId &&
+      (command.waveId
+        ? command.waveId === activeWaveId
+        : command.sourceWaveId === null || command.sourceWaveId === activeWaveId),
+  );
   const retainedSelectionActive =
     activeConfirmedCreatedWave?.waveId === activeWaveId ||
     (activeCommandContext?.waveId === activeWaveId &&
@@ -325,10 +348,12 @@ export function useDpmWaveCommands({
     );
   }
 
-  function runCommand(variables: DpmWaveCommandVariables): void {
+  function runCommand(
+    variables: Omit<DpmWaveCommandVariables, "portfolioId">,
+  ): void {
     if (!commandInFlight()) {
       queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
-      commandMutation.mutate(variables);
+      commandMutation.mutate({ ...variables, portfolioId });
     }
   }
 
@@ -396,8 +421,8 @@ export function useDpmWaveCommands({
     latestAiMutation.mutation.variables === activeWaveId
       ? readError(latestAiMutation.mutation.error)
       : null;
-  const pendingAction = commandMutation.isPending
-    ? commandMutation.variables.label
+  const pendingAction = activePendingCommand
+    ? activePendingCommand.label
     : activeConfirmationLock
       ? `${activeConfirmationLock.commandLabel} — awaiting source confirmation`
     : pmMemoMutation.isPending && pmMemoMutation.variables === activeWaveId
@@ -466,7 +491,7 @@ export function useDpmWaveCommands({
           operationsBriefMutation.variables === activeWaveId);
       if (
         activeWaveId &&
-        !commandMutation.isPending &&
+        !activePendingCommand &&
         !activeConfirmationLock &&
         !aiPendingForSelectedWave
       ) {
@@ -480,7 +505,7 @@ export function useDpmWaveCommands({
           operationsBriefMutation.variables === activeWaveId);
       if (
         activeWaveId &&
-        !commandMutation.isPending &&
+        !activePendingCommand &&
         !activeConfirmationLock &&
         !aiPendingForSelectedWave
       ) {
