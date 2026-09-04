@@ -1,0 +1,179 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  MANAGE_MODE_DATA_REQUIREMENTS,
+  MANAGE_SHARED_DATA_REQUIREMENTS,
+  loadManageWorkspaceData,
+} from "../../src/features/workbench/manage-workspace-data-loader";
+import type { ManageMode } from "../../src/features/workbench/manage-workspace-navigation";
+import { buildManageWorkspaceData } from "./manage-workspace-fixtures";
+
+const apiMocks = vi.hoisted(() => ({
+  getDpmCampaignApprovalDecisions: vi.fn(),
+  getDpmCampaignAssignmentActions: vi.fn(),
+  getDpmCampaignAssignmentTasks: vi.fn(),
+  getDpmCampaignMakerCheckerControls: vi.fn(),
+  getDpmCommandCenter: vi.fn(),
+  getDpmCommandCenterExceptions: vi.fn(),
+  getDpmMandateByPortfolio: vi.fn(),
+  getDpmMandateHealth: vi.fn(),
+  getDpmOutcomeReviews: vi.fn(),
+  getDpmPmOperatingQualityFairnessAnalysis: vi.fn(),
+  getDpmPmOperatingQualityReviewAction: vi.fn(),
+  getDpmPmOperatingQualitySummaryInvocation: vi.fn(),
+  getDpmPortfolioMemory: vi.fn(),
+  getDpmProofPack: vi.fn(),
+  listDpmCampaignApprovalInbox: vi.fn(),
+  listDpmCampaignAssignmentPlan: vi.fn(),
+  listDpmCampaignDefinitions: vi.fn(),
+  listDpmCampaignDiscovery: vi.fn(),
+  listDpmCampaignOperatingQueue: vi.fn(),
+  listDpmCampaignWorkflowAutomation: vi.fn(),
+  listDpmCampaignWorkflowBoard: vi.fn(),
+  listDpmPmOperatingQualityFairnessAnalyses: vi.fn(),
+  listDpmPmOperatingQualityPolicies: vi.fn(),
+  listDpmPmOperatingQualityReviewActions: vi.fn(),
+  listDpmPmOperatingQualityScoreRuns: vi.fn(),
+  listDpmPmOperatingQualitySummaryInvocations: vi.fn(),
+  listDpmWaves: vi.fn(),
+  searchDpmPortfolioMemory: vi.fn(),
+}));
+
+vi.mock("../../src/features/workbench/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/features/workbench/api")>()),
+  ...apiMocks,
+}));
+
+const allApiMocks = Object.entries(apiMocks);
+const sharedCalls = [
+  "getDpmCommandCenter",
+  "getDpmCommandCenterExceptions",
+  "getDpmMandateByPortfolio",
+  "getDpmMandateHealth",
+];
+const modeCalls: Record<ManageMode, string[]> = {
+  overview: ["listDpmWaves"],
+  mandate: [],
+  waves: [
+    "listDpmWaves",
+    "listDpmCampaignDefinitions",
+    "listDpmCampaignDiscovery",
+    "listDpmCampaignOperatingQueue",
+    "listDpmCampaignApprovalInbox",
+    "listDpmCampaignWorkflowBoard",
+    "listDpmCampaignAssignmentPlan",
+    "listDpmCampaignWorkflowAutomation",
+    "getDpmCampaignApprovalDecisions",
+    "getDpmCampaignAssignmentActions",
+    "getDpmCampaignAssignmentTasks",
+    "getDpmCampaignMakerCheckerControls",
+    "getDpmOutcomeReviews",
+    "getDpmProofPack",
+  ],
+  construction: [],
+  memory: ["getDpmPortfolioMemory", "searchDpmPortfolioMemory"],
+  copilot: [
+    "listDpmWaves",
+    "getDpmOutcomeReviews",
+    "getDpmProofPack",
+    "listDpmPmOperatingQualityScoreRuns",
+  ],
+  quality: [
+    "listDpmPmOperatingQualityPolicies",
+    "listDpmPmOperatingQualityScoreRuns",
+    "listDpmPmOperatingQualityFairnessAnalyses",
+    "getDpmPmOperatingQualityFairnessAnalysis",
+    "listDpmPmOperatingQualityReviewActions",
+    "getDpmPmOperatingQualityReviewAction",
+    "listDpmPmOperatingQualitySummaryInvocations",
+    "getDpmPmOperatingQualitySummaryInvocation",
+  ],
+  reviews: ["getDpmOutcomeReviews"],
+  proof: ["getDpmOutcomeReviews", "getDpmProofPack"],
+};
+
+describe("Manage workspace mode data loading", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    for (const [, mock] of allApiMocks) {
+      mock.mockResolvedValue(response({ items: [] }));
+    }
+    apiMocks.getDpmMandateByPortfolio.mockResolvedValue(
+      response({ mandate_id: "MANDATE_PB_SG_GLOBAL_BAL_001" }),
+    );
+    apiMocks.getDpmOutcomeReviews.mockResolvedValue(
+      response({ proof_pack_id: "proof-pack-001", items: [] }),
+    );
+    apiMocks.listDpmCampaignDefinitions.mockResolvedValue(
+      response({
+        items: [{ campaign_id: "campaign-001", campaign_version: "v1" }],
+      }),
+    );
+    apiMocks.listDpmPmOperatingQualityFairnessAnalyses.mockResolvedValue(
+      response({ items: [{ fairness_analysis_id: "fairness-001" }] }),
+    );
+    apiMocks.listDpmPmOperatingQualityReviewActions.mockResolvedValue(
+      response({ items: [{ review_action_id: "review-action-001" }] }),
+    );
+    apiMocks.listDpmPmOperatingQualitySummaryInvocations.mockResolvedValue(
+      response({ items: [{ summary_invocation_id: "summary-001" }] }),
+    );
+  });
+
+  it("declares every mode against a small shared source set", () => {
+    expect(MANAGE_SHARED_DATA_REQUIREMENTS).toEqual([
+      "command-center",
+      "active-exceptions",
+      "mandate-health",
+    ]);
+    expect(Object.keys(MANAGE_MODE_DATA_REQUIREMENTS)).toEqual([
+      "overview",
+      "mandate",
+      "waves",
+      "construction",
+      "memory",
+      "copilot",
+      "quality",
+      "reviews",
+      "proof",
+    ]);
+  });
+
+  it.each(Object.keys(modeCalls) as ManageMode[])(
+    "%s loads only its declared Gateway source family",
+    async (mode) => {
+      const portfolio = buildManageWorkspaceData().portfolio;
+
+      await loadManageWorkspaceData(portfolio, mode);
+
+      const expectedCalls = new Set([...sharedCalls, ...modeCalls[mode]]);
+      for (const [name, mock] of allApiMocks) {
+        expect(mock, name).toHaveBeenCalledTimes(expectedCalls.has(name) ? 1 : 0);
+      }
+    },
+  );
+
+  it("keeps one mode's source failure explicit without loading unrelated modes", async () => {
+    apiMocks.listDpmWaves.mockRejectedValueOnce(new Error("Rebalance source timed out"));
+
+    const data = await loadManageWorkspaceData(
+      buildManageWorkspaceData().portfolio,
+      "overview",
+    );
+
+    expect(data.waves).toBeNull();
+    expect(data.wavesError).toBe("Rebalance source timed out");
+    expect(apiMocks.listDpmPmOperatingQualityPolicies).not.toHaveBeenCalled();
+    expect(apiMocks.getDpmPortfolioMemory).not.toHaveBeenCalled();
+  });
+});
+
+function response(data: Record<string, unknown>) {
+  return {
+    correlation_id: "corr-mode-loader",
+    contract_version: "v1",
+    source_service: "lotus-manage",
+    upstream_status: 200,
+    data,
+  };
+}
