@@ -2,13 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  approveDpmWave,
   createDpmCampaignApprovalDecision,
   createDpmCampaignAssignmentAction,
   createDpmCampaignAssignmentTask,
   createDpmCampaignAssignmentTaskTransition,
   createDpmCampaignMakerCheckerControl,
-  createDpmWave,
   getDpmCampaignApprovalDecisions,
   getDpmCampaignAssignmentActions,
   getDpmCampaignAssignmentTasks,
@@ -17,24 +15,12 @@ import {
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
   getDpmCampaignMakerCheckerControls,
-  handoffDpmWave,
   launchDpmCampaignDefinition,
   listDpmCampaignDefinitions,
-  previewDpmWave,
-  requestDpmOperationsHandoffSummary,
-  requestDpmWaveAiPmMemo,
   retireDpmCampaignDefinition,
-  simulateDpmWave,
-  sourceCheckDpmWave,
-  stageDpmWave,
   supersedeDpmCampaignDefinition,
 } from "@/features/workbench/dpm-wave-api";
-import {
-  buildDpmAiWorkflowOutcome,
-  type DpmAiWorkflowOutcome,
-} from "@/features/workbench/dpm-ai-workflow-disclosure";
-import type { DpmAiWorkflowGatewayEnvelope } from "@/features/workbench/dpm-ai-workflow-contract";
-import type { DpmAiWorkflowFamily } from "@/features/workbench/dpm-ai-workflow-profiles";
+import type { DpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import {
   campaignCommandActorId,
   type DpmCampaignLifecycleCommandInput,
@@ -45,8 +31,6 @@ import {
 import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmCampaignWorkflowGatewayResponse,
-  DpmOperationsHandoffSummaryResponse,
-  DpmWaveAiPmMemoResponse,
   DpmWaveGatewayResponse,
 } from "@/features/workbench/types";
 import {
@@ -56,6 +40,7 @@ import {
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import { useDpmWaveSources } from "@/features/workbench/use-dpm-wave-sources";
+import { useDpmWaveCommands } from "@/features/workbench/use-dpm-wave-commands";
 
 type UseDpmWaveCommandCenterActionsInput = {
   portfolioId: string;
@@ -183,11 +168,15 @@ export function useDpmWaveCommandCenterActions({
   campaignMakerCheckerControls = null,
 }: UseDpmWaveCommandCenterActionsInput): UseDpmWaveCommandCenterActionsResult {
   const waveSources = useDpmWaveSources({ waveList });
-  const [actionResponse, setActionResponse] = useState<DpmWaveGatewayResponse | null>(null);
-  const [waveAiMemoResponse, setWaveAiMemoResponse] =
-    useState<WaveBoundValue<DpmWaveAiPmMemoResponse> | null>(null);
-  const [operationsHandoffSummaryResponse, setOperationsHandoffSummaryResponse] =
-    useState<WaveBoundValue<DpmOperationsHandoffSummaryResponse> | null>(null);
+  const waveCommands = useDpmWaveCommands({
+    portfolioId,
+    selectedWaveId: waveSources.selectedWaveId,
+    listQueryKey: waveSources.listQueryKey,
+  });
+  const [waveReadFeedback, setWaveReadFeedback] =
+    useState<WaveBoundValue<string> | null>(null);
+  const [campaignWaveResponse, setCampaignWaveResponse] =
+    useState<DpmWaveGatewayResponse | null>(null);
   const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
     useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
   const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
@@ -208,9 +197,6 @@ export function useDpmWaveCommandCenterActions({
     useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
   const [campaignMakerCheckerControlsResponse, setCampaignMakerCheckerControlsResponse] =
     useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [pendingAiAction, setPendingAiAction] =
-    useState<WaveBoundValue<string> | null>(null);
   const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] =
     useState<string | null>(null);
   const [pendingCampaignLaunchHistoryKey, setPendingCampaignLaunchHistoryKey] =
@@ -227,9 +213,6 @@ export function useDpmWaveCommandCenterActions({
     useState<string | null>(null);
   const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
     useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [aiActionError, setAiActionError] =
-    useState<WaveBoundValue<string> | null>(null);
   const [campaignLifecycleError, setCampaignLifecycleError] =
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] =
@@ -250,10 +233,6 @@ export function useDpmWaveCommandCenterActions({
     useState<CampaignBoundValue<DpmCampaignLifecycleCommandEvidence> | null>(null);
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
     useState<CampaignBoundValue<DpmCampaignWorkflowCommandEvidence> | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [aiWorkflowOutcome, setAiWorkflowOutcome] =
-    useState<WaveBoundValue<DpmAiWorkflowOutcome> | null>(null);
-  const aiRequestSequenceRef = useRef(0);
   const selectedCampaignKeyRef = useRef<string | null>(null);
   const campaignRequestSequenceRef = useRef<Record<string, number>>({});
   const [selectedCampaignState, setSelectedCampaignState] =
@@ -268,11 +247,11 @@ export function useDpmWaveCommandCenterActions({
     waveDetailSourceWaveId: waveSources.selectedWaveId,
     waveItems: waveSources.waveItems,
     waveItemsSourceWaveId: waveSources.selectedWaveId,
-    actionResponse,
-    waveAiMemo: waveAiMemoResponse?.value,
-    waveAiMemoSourceWaveId: waveAiMemoResponse?.waveId,
-    operationsHandoffSummary: operationsHandoffSummaryResponse?.value,
-    operationsHandoffSummarySourceWaveId: operationsHandoffSummaryResponse?.waveId,
+    actionResponse: campaignWaveResponse ?? waveCommands.actionResponse,
+    waveAiMemo: waveCommands.waveAiMemo,
+    waveAiMemoSourceWaveId: waveSources.selectedWaveId,
+    operationsHandoffSummary: waveCommands.operationsHandoffSummary,
+    operationsHandoffSummarySourceWaveId: waveSources.selectedWaveId,
     campaignDefinitions: campaignDefinitionsResponse ?? campaignDefinitions,
     campaignDiscovery,
     campaignOperatingQueue,
@@ -331,8 +310,6 @@ export function useDpmWaveCommandCenterActions({
       (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
   });
   const selectedWaveId = model.selectedWaveId;
-  const selectedAiPendingAction = valueForSelectedWave(pendingAiAction, selectedWaveId);
-  const selectedAiActionError = valueForSelectedWave(aiActionError, selectedWaveId);
   const selectedCampaign =
     model.campaignRows.find((row) => row.key === selectedCampaignKey) ??
     model.campaignRows[0] ??
@@ -361,166 +338,39 @@ export function useDpmWaveCommandCenterActions({
     );
   }
 
-  async function runAction(label: string, action: () => Promise<DpmWaveGatewayResponse>) {
-    if (pendingAction) {
-      return;
-    }
-    setPendingAction(label);
-    setActionError(null);
-    setActionMessage(null);
-    try {
-      const response = await action();
-      setActionResponse(response);
-      setActionMessage(`${label} completed.`);
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : `${label} failed`);
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
-  function previewRebalance() {
-    void runAction("Preview", () => previewDpmWave({ portfolioId }));
-  }
-
-  function createRebalance() {
-    void runAction("Create rebalance", () => createDpmWave({ portfolioId }));
-  }
-
   function loadProposedChanges() {
-    if (!selectedWaveId) {
+    if (!selectedWaveId || waveCommands.pendingAction) {
       return;
     }
-    void runAction("Load proposed changes", async () => {
-      const result = await waveSources.refreshItems();
-      if (result.error) {
-        throw result.error;
+    setWaveReadFeedback(null);
+    void waveSources.refreshItems().then((result) => {
+      if (result.data && !result.error) {
+        setWaveReadFeedback({
+          waveId: selectedWaveId,
+          value: "Load proposed changes completed.",
+        });
       }
-      if (!result.data) {
-        throw new Error("Proposed rebalance changes were not returned by Gateway.");
-      }
-      return result.data;
     });
-  }
-
-  function reviewDataReadiness() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Review data", () => sourceCheckDpmWave(selectedWaveId));
-  }
-
-  function runSimulation() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Simulate", () => simulateDpmWave(selectedWaveId));
-  }
-
-  function requestApproval() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Request approval", () => approveDpmWave(selectedWaveId));
-  }
-
-  function stageRebalance() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Stage rebalance", () => stageDpmWave(selectedWaveId));
-  }
-
-  function prepareHandoff() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAction("Prepare handoff", () => handoffDpmWave(selectedWaveId));
   }
 
   function openEvidencePack() {
-    if (!selectedWaveId) {
+    if (!selectedWaveId || waveCommands.pendingAction) {
       return;
     }
-    void runAction("Open evidence pack", async () => {
-      const result = await waveSources.openProofPack();
-      if (result.error) {
-        throw result.error;
+    setWaveReadFeedback(null);
+    void waveSources.openProofPack().then((result) => {
+      if (result.data && !result.error) {
+        setWaveReadFeedback({
+          waveId: selectedWaveId,
+          value: "Open evidence pack completed.",
+        });
       }
-      if (!result.data) {
-        throw new Error("Rebalance evidence posture was not returned by Gateway.");
-      }
-      return result.data;
     });
   }
 
-  async function runAiWorkflowAction<T extends DpmAiWorkflowGatewayEnvelope>(
-    label: string,
-    family: DpmAiWorkflowFamily,
-    sourceWaveId: string,
-    action: () => Promise<T>,
-    recordResponse: (response: WaveBoundValue<T>) => void,
-  ) {
-    if (pendingAction || pendingAiAction?.waveId === sourceWaveId) {
-      return;
-    }
-    const requestSequence = aiRequestSequenceRef.current + 1;
-    aiRequestSequenceRef.current = requestSequence;
-    setPendingAiAction({ waveId: sourceWaveId, value: label });
-    setAiActionError(null);
-    setActionMessage(null);
-    setAiWorkflowOutcome(null);
-    try {
-      const response = await action();
-      if (requestSequence !== aiRequestSequenceRef.current) {
-        return;
-      }
-      recordResponse({ waveId: sourceWaveId, value: response });
-      setAiWorkflowOutcome({
-        waveId: sourceWaveId,
-        value: buildDpmAiWorkflowOutcome(family, response, sourceWaveId),
-      });
-    } catch (error) {
-      if (requestSequence === aiRequestSequenceRef.current) {
-        setAiActionError({
-          waveId: sourceWaveId,
-          value: error instanceof Error ? error.message : `${label} failed`,
-        });
-      }
-    } finally {
-      setPendingAiAction((current) =>
-        requestSequence === aiRequestSequenceRef.current &&
-        current?.waveId === sourceWaveId
-          ? null
-          : current,
-      );
-    }
-  }
-
-  function requestWaveMemo() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAiWorkflowAction(
-      "Prepare PM memo",
-      "wave-memo",
-      selectedWaveId,
-      () => requestDpmWaveAiPmMemo(selectedWaveId),
-      setWaveAiMemoResponse,
-    );
-  }
-
-  function requestOperationsBrief() {
-    if (!selectedWaveId) {
-      return;
-    }
-    void runAiWorkflowAction(
-      "Prepare operations brief",
-      "operations-handoff",
-      selectedWaveId,
-      () => requestDpmOperationsHandoffSummary(selectedWaveId),
-      setOperationsHandoffSummaryResponse,
-    );
+  function runWaveCommand(action: () => void): void {
+    setWaveReadFeedback(null);
+    action();
   }
 
   async function loadCampaignLifecycle(row: DpmCampaignDefinitionRow) {
@@ -676,7 +526,7 @@ export function useDpmWaveCommandCenterActions({
       });
       if (isCurrentCampaignRequest(request)) {
         setCampaignLaunchResponse({ campaignKey: row.key, value: response });
-        setActionResponse(response);
+        setCampaignWaveResponse(response);
       }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
@@ -927,7 +777,13 @@ export function useDpmWaveCommandCenterActions({
     model,
     selectedCampaign,
     selectedCampaignKey,
-    pendingAction: pendingAction ?? selectedAiPendingAction,
+    pendingAction:
+      waveCommands.pendingAction ??
+      (waveSources.proofPackFetching
+        ? "Open evidence pack"
+        : waveSources.itemsFetching
+          ? "Load proposed changes"
+          : null),
     pendingCampaignLifecycleKey,
     pendingCampaignLaunchHistoryKey,
     pendingCampaignPreviewReadinessKey,
@@ -936,7 +792,7 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignWorkflowEvidenceKey,
     pendingCampaignLifecycleCommand: pendingCampaignLifecycleCommand === selectedCampaignKey,
     pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
-    actionError: actionError ?? selectedAiActionError ?? waveSources.sourceError,
+    actionError: waveCommands.actionError ?? waveSources.sourceError,
     campaignLifecycleError: valueForSelectedCampaign(campaignLifecycleError, selectedCampaignKey),
     campaignLaunchHistoryError: valueForSelectedCampaign(
       campaignLaunchHistoryError,
@@ -969,22 +825,20 @@ export function useDpmWaveCommandCenterActions({
       campaignWorkflowCommandEvidence,
       selectedCampaignKey,
     ),
-    actionMessage,
-    aiWorkflowOutcome:
-      aiWorkflowOutcome?.waveId === model.selectedWaveId
-        ? aiWorkflowOutcome.value
-        : null,
-    previewRebalance,
-    createRebalance,
+    actionMessage:
+      valueForSelectedWave(waveReadFeedback, selectedWaveId) ?? waveCommands.actionMessage,
+    aiWorkflowOutcome: waveCommands.aiWorkflowOutcome,
+    previewRebalance: () => runWaveCommand(waveCommands.previewRebalance),
+    createRebalance: () => runWaveCommand(waveCommands.createRebalance),
     loadProposedChanges,
-    reviewDataReadiness,
-    runSimulation,
-    requestApproval,
-    stageRebalance,
-    prepareHandoff,
+    reviewDataReadiness: () => runWaveCommand(waveCommands.reviewDataReadiness),
+    runSimulation: () => runWaveCommand(waveCommands.runSimulation),
+    requestApproval: () => runWaveCommand(waveCommands.requestApproval),
+    stageRebalance: () => runWaveCommand(waveCommands.stageRebalance),
+    prepareHandoff: () => runWaveCommand(waveCommands.prepareHandoff),
     openEvidencePack,
-    requestWaveMemo,
-    requestOperationsBrief,
+    requestWaveMemo: () => runWaveCommand(waveCommands.requestWaveMemo),
+    requestOperationsBrief: () => runWaveCommand(waveCommands.requestOperationsBrief),
     selectCampaign,
     loadCampaignWorkflowEvidence,
     loadCampaignLifecycle,

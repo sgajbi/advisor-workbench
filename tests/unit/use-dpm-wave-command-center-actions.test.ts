@@ -321,11 +321,9 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
 
 function renderActions(
   definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
+  queryClient = createTestQueryClient(),
 ) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return renderHook(
+  const rendered = renderHook(
     () =>
       useDpmWaveCommandCenterActions({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -337,6 +335,13 @@ function renderActions(
         createElement(QueryClientProvider, { client: queryClient }, children),
     },
   );
+  return { ...rendered, queryClient };
+}
+
+function createTestQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
 }
 
 describe("useDpmWaveCommandCenterActions", () => {
@@ -406,6 +411,18 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
   });
 
+  it("reuses selected-wave evidence on remount within the governed stale window", async () => {
+    const queryClient = createTestQueryClient();
+    const first = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() => expect(first.result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    first.unmount();
+
+    const second = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() => expect(second.result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+
+    expect(getDpmWaveItems).toHaveBeenCalledTimes(1);
+  });
+
   it("routes bounded rebalance actions through Gateway helpers", async () => {
     vi.mocked(previewDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(createDpmWave).mockResolvedValue(waveResponse);
@@ -449,6 +466,72 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
     expect(result.current.model.proofPackStatus).toBe("READY");
     expect(result.current.actionMessage).toBe("Open evidence pack completed.");
+  });
+
+  it("keeps a persisted wave command pending until exact source evidence refreshes", async () => {
+    let resolveWaveRefresh!: (value: DpmWaveGatewayResponse) => void;
+    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveWaveRefresh = resolve;
+      }),
+    );
+    const { result } = renderActions();
+
+    act(() => result.current.requestApproval());
+
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
+    await waitFor(() => expect(result.current.pendingAction).toBe("Request approval"));
+    expect(result.current.actionMessage).toBeNull();
+
+    act(() => resolveWaveRefresh(waveResponse));
+
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(getDpmWave).toHaveBeenCalledWith("dwv_001");
+    expect(listDpmWaves).toHaveBeenCalledWith(
+      {
+        asOfDate: "2026-05-03",
+        triggerType: "EXPLICIT_PORTFOLIO_LIST",
+        limit: 10,
+        offset: 0,
+      },
+      "client",
+    );
+    expect(result.current.actionMessage).toBe("Request approval completed.");
+  });
+
+  it("keeps accepted wave commands explicit when source refresh cannot prove current posture", async () => {
+    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWave).mockRejectedValueOnce(new Error("Gateway refresh unavailable"));
+    const { result } = renderActions();
+
+    act(() => result.current.requestApproval());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "Request approval was accepted, but refreshed rebalance evidence could not be loaded",
+      ),
+    );
+    expect(result.current.actionMessage).toBeNull();
+  });
+
+  it("does not submit a second wave command while source refresh is pending", async () => {
+    let resolveApproval!: (value: DpmWaveGatewayResponse) => void;
+    vi.mocked(approveDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveApproval = resolve;
+      }),
+    );
+    const { result } = renderActions();
+
+    act(() => {
+      result.current.requestApproval();
+      result.current.requestApproval();
+    });
+
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
+    act(() => resolveApproval(waveResponse));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
   });
 
   it("loads campaign evidence, readiness, launch package, and durable launch through Gateway", async () => {
