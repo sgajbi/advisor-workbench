@@ -166,6 +166,22 @@ describe("Manage workspace mode data loading", () => {
     expect(apiMocks.listDpmPmOperatingQualityPolicies).not.toHaveBeenCalled();
     expect(apiMocks.getDpmPortfolioMemory).not.toHaveBeenCalled();
   });
+
+  it("keeps mandate-health transport detail out of the business surface", async () => {
+    apiMocks.getDpmMandateHealth.mockRejectedValueOnce(
+      new Error("connect ECONNREFUSED manage-internal:8100"),
+    );
+
+    const data = await loadManageWorkspaceData(
+      buildManageWorkspaceData().portfolio,
+      "mandate",
+    );
+
+    expect(data.mandateHealth).toBeNull();
+    expect(data.mandateHealthError).toBe(
+      "Mandate health evidence is temporarily unavailable.",
+    );
+  });
 });
 
 function response(data: Record<string, unknown>) {
