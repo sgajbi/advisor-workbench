@@ -17,6 +17,8 @@ export const dpmWaveQueryKeys = {
     [...dpmWaveQueryKeys.all, "items", waveId] as const,
   proofPack: (waveId: string) =>
     [...dpmWaveQueryKeys.all, "proof-pack", waveId] as const,
+  confirmedCreatedWave: () =>
+    [...dpmWaveQueryKeys.all, "confirmed-created-wave"] as const,
 };
 
 export const dpmWaveMutationKeys = {
