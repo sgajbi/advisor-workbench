@@ -45,6 +45,7 @@ type DpmWaveCommandVariables = {
 
 type DpmWaveCommandResult = {
   response: DpmWaveGatewayResponse;
+  admittedAt: number;
   waveId: string | null;
   sourceWaveId: string | null;
 };
@@ -201,6 +202,7 @@ export function useDpmWaveCommands({
       const confirmedResponse = await refreshWaveSources(variables, response);
       const result = {
         response: confirmedResponse,
+        admittedAt: Date.now(),
         waveId:
           variables.waveId ??
           (variables.refresh === "list"
@@ -331,7 +333,7 @@ export function useDpmWaveCommands({
       activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
-    actionSubmittedAt: commandMutation.submittedAt,
+    actionResponseAdmittedAt: commandMutation.data?.admittedAt ?? 0,
     actionResponseIsDirect:
       commandMutation.isSuccess && commandMutation.variables.refresh === "none",
     waveAiMemo: selectedPmMemo,

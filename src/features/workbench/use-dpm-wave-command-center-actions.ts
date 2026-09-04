@@ -283,7 +283,7 @@ export function useDpmWaveCommandCenterActions({
     actionResponse:
       !waveSources.waveDetail ||
       (waveCommands.actionResponseIsDirect &&
-        waveCommands.actionSubmittedAt > waveSources.detailUpdatedAt)
+        waveCommands.actionResponseAdmittedAt > waveSources.detailUpdatedAt)
         ? waveCommands.actionResponse
         : null,
     waveAiMemo: waveCommands.waveAiMemo,

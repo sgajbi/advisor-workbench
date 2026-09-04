@@ -1293,13 +1293,31 @@ describe("useDpmWaveCommandCenterActions", () => {
     };
     vi.mocked(approveDpmWave).mockResolvedValue(approvedResponse);
     vi.mocked(getDpmWave).mockResolvedValue(approvedResponse);
-    vi.mocked(previewDpmWave).mockResolvedValue(previewResponse);
+    let resolvePreview!: (response: DpmWaveGatewayResponse) => void;
+    vi.mocked(previewDpmWave).mockReturnValue(
+      new Promise((resolve) => {
+        resolvePreview = resolve;
+      }),
+    );
     const queryClient = createTestQueryClient();
     const { result } = renderActions(campaignDefinitions, queryClient);
 
     act(() => result.current.requestApproval());
     await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
     act(() => result.current.previewRebalance());
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+    });
+    act(() => {
+      queryClient.setQueryData(dpmWaveQueryKeys.wave("dwv_001"), approvedResponse, {
+        updatedAt: Date.now(),
+      });
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      resolvePreview(previewResponse);
+    });
 
     await waitFor(() =>
       expect(result.current.model.correlationId).toBe("corr-preview-current"),
