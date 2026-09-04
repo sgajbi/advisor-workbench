@@ -67,7 +67,9 @@ type ConfirmedCreatedWave = {
 };
 
 type WaveCommandContext = {
+  detailUpdateCountAtAdmission: number;
   listWaveIdAtSelection: string | null;
+  previewResponse: DpmWaveGatewayResponse;
   waveId: string;
 };
 
@@ -189,6 +191,7 @@ export function useDpmWaveCommands({
           listWaveIdAtConfirmation: selectedWaveId,
           waveId: expectedWaveId,
         });
+        queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
       }
       const detailOptions = dpmWaveDetailQueryOptions(expectedWaveId);
       await queryClient.cancelQueries({
@@ -242,18 +245,21 @@ export function useDpmWaveCommands({
             ? "Confirmed created wave"
             : `${variables.label} response`,
         );
+      const detailUpdateCountAtAdmission = waveId
+        ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(waveId))
+            ?.dataUpdateCount ?? 0)
+        : 0;
       const result = {
         response: confirmedResponse,
-        detailUpdateCountAtAdmission: waveId
-          ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(waveId))
-              ?.dataUpdateCount ?? 0)
-          : 0,
+        detailUpdateCountAtAdmission,
         waveId,
         sourceWaveId: variables.sourceWaveId,
       };
       if (variables.refresh === "none" && waveId) {
         queryClient.setQueryData<WaveCommandContext>(commandContextKey, {
+          detailUpdateCountAtAdmission,
           listWaveIdAtSelection: selectedWaveId,
+          previewResponse: confirmedResponse,
           waveId,
         });
       } else if (variables.refresh === "list") {
@@ -343,7 +349,12 @@ export function useDpmWaveCommands({
   const selectedCommandResult =
     commandMutation.data && commandResultMatchesContext
       ? commandMutation.data.response
-      : null;
+      : activeCommandContext?.previewResponse ?? null;
+  const selectedCommandResultIsDirect =
+    (commandMutation.isSuccess &&
+      commandResultMatchesContext &&
+      commandMutation.variables.refresh === "none") ||
+    (!commandResultMatchesContext && activeCommandContext !== null);
   const commandError =
     !commandMutation.variables?.sourceWaveId ||
     commandMutation.variables.sourceWaveId === contextWaveId
@@ -381,9 +392,10 @@ export function useDpmWaveCommands({
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
     actionResponseDetailUpdateCountAtAdmission:
-      commandMutation.data?.detailUpdateCountAtAdmission ?? 0,
-    actionResponseIsDirect:
-      commandMutation.isSuccess && commandMutation.variables.refresh === "none",
+      commandMutation.data && commandResultMatchesContext
+        ? commandMutation.data.detailUpdateCountAtAdmission
+        : activeCommandContext?.detailUpdateCountAtAdmission ?? 0,
+    actionResponseIsDirect: selectedCommandResultIsDirect,
     waveAiMemo: selectedPmMemo,
     operationsHandoffSummary: selectedOperationsBrief,
     actionError:
