@@ -1385,21 +1385,60 @@ describe("useDpmWaveCommandCenterActions", () => {
       },
       data: { wave: { wave_id: "dwv_003", state: "SIMULATION_READY" } },
     };
+    const approvedCandidateResponse: DpmWaveGatewayResponse = {
+      ...candidateResponse,
+      correlation_id: "corr-preview-candidate-approved",
+      supportability: {
+        ...candidateResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: { wave: { wave_id: "dwv_003", state: "APPROVED" } },
+    };
+    const candidateItems: DpmWaveGatewayResponse = {
+      ...confirmedItems,
+      supportability: {
+        ...confirmedItems.supportability,
+        wave_id: "dwv_003",
+        wave_state: "APPROVED",
+      },
+    };
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
-    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
-    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    vi.mocked(getDpmWave).mockImplementation(async (waveId) =>
+      waveId === "dwv_003" ? approvedCandidateResponse : createdResponse,
+    );
+    vi.mocked(getDpmWaveItems).mockImplementation(async (waveId) =>
+      waveId === "dwv_003"
+        ? candidateItems
+        : waveId === "dwv_002"
+          ? confirmedItems
+          : itemResponse,
+    );
     vi.mocked(previewDpmWave).mockResolvedValue(candidateResponse);
+    vi.mocked(approveDpmWave).mockResolvedValue(approvedCandidateResponse);
     const { result } = renderActions();
 
     act(() => result.current.createRebalance());
     await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_002"));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
     act(() => result.current.previewRebalance());
+    await waitFor(() => expect(previewDpmWave).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
 
     await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_003"));
     expect(result.current.model.correlationId).toBe("corr-preview-candidate");
     expect(result.current.pendingAction).toBeNull();
     expect(result.current.sourceConfirmationRetryAvailable).toBe(false);
     expect(getDpmWave).toHaveBeenCalledTimes(1);
+
+    act(() => result.current.requestApproval());
+    expect(result.current.model.selectedWaveId).toBe("dwv_003");
+    await waitFor(() =>
+      expect(result.current.model.correlationId).toBe(
+        "corr-preview-candidate-approved",
+      ),
+    );
+    expect(result.current.model.selectedWaveId).toBe("dwv_003");
+    expect(result.current.model.selectedWaveState).toBe("APPROVED");
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {

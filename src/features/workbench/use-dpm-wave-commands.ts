@@ -35,6 +35,7 @@ import type {
 } from "@/features/workbench/types";
 
 type DpmWaveCommandVariables = {
+  contextWaveId: string | null;
   label: string;
   waveId: string | null;
   sourceWaveId: string | null;
@@ -43,6 +44,7 @@ type DpmWaveCommandVariables = {
 };
 
 type DpmWaveCommandResult = {
+  contextWaveId: string | null;
   response: DpmWaveGatewayResponse;
   detailUpdateCountAtAdmission: number;
   waveId: string | null;
@@ -208,6 +210,7 @@ export function useDpmWaveCommands({
             : `${variables.label} response`,
         );
       const result = {
+        contextWaveId: variables.contextWaveId,
         response: confirmedResponse,
         detailUpdateCountAtAdmission: waveId
           ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(waveId))
@@ -238,12 +241,20 @@ export function useDpmWaveCommands({
 
   const commandResultMatchesContext = Boolean(
     commandMutation.data &&
-      (commandMutation.data.sourceWaveId === contextWaveId ||
+      (commandMutation.data.contextWaveId === contextWaveId ||
+        commandMutation.data.sourceWaveId === contextWaveId ||
         commandMutation.data.waveId === contextWaveId),
   );
-  const activeWaveId = commandResultMatchesContext
-    ? commandMutation.data?.waveId ?? contextWaveId
-    : contextWaveId;
+  const pendingSourceWaveId =
+    commandMutation.isPending &&
+    commandMutation.variables.contextWaveId === contextWaveId
+      ? commandMutation.variables.sourceWaveId
+      : null;
+  const activeWaveId =
+    pendingSourceWaveId ??
+    (commandResultMatchesContext
+      ? commandMutation.data?.waveId ?? contextWaveId
+      : contextWaveId);
   const retainedSelectionActive =
     activeConfirmedCreatedWave?.waveId === activeWaveId;
 
@@ -254,10 +265,12 @@ export function useDpmWaveCommands({
     );
   }
 
-  function runCommand(variables: DpmWaveCommandVariables): void {
+  function runCommand(
+    variables: Omit<DpmWaveCommandVariables, "contextWaveId">,
+  ): void {
     if (!commandInFlight()) {
       queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
-      commandMutation.mutate(variables);
+      commandMutation.mutate({ ...variables, contextWaveId });
     }
   }
 
