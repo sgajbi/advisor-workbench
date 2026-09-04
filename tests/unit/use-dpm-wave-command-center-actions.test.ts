@@ -1537,18 +1537,24 @@ describe("useDpmWaveCommandCenterActions", () => {
     };
     vi.mocked(previewDpmWave).mockResolvedValue(previewCandidate);
     const queryClient = createTestQueryClient();
-    const firstMount = renderActions(campaignDefinitions, queryClient);
+    const mounted = renderHook(
+      ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
+        useDpmWaveCommandCenterActions({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          waveList: sourceWaveList,
+          campaignDefinitions,
+        }),
+      {
+        initialProps: { sourceWaveList: waveResponse },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
 
-    act(() => firstMount.result.current.previewRebalance());
+    act(() => mounted.result.current.previewRebalance());
     await waitFor(() =>
-      expect(firstMount.result.current.model.selectedWaveId).toBe("dwv_003"),
+      expect(mounted.result.current.model.selectedWaveId).toBe("dwv_003"),
     );
-    firstMount.unmount();
-    const secondMount = renderActions(
-      campaignDefinitions,
-      queryClient,
-      absorbedList,
-    );
+    mounted.rerender({ sourceWaveList: absorbedList });
 
     await waitFor(() =>
       expect(
@@ -1557,9 +1563,12 @@ describe("useDpmWaveCommandCenterActions", () => {
         ),
       ).toBeUndefined(),
     );
-    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
-    expect(secondMount.result.current.pendingAction).toBeNull();
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    expect(mounted.result.current.model.selectedWaveId).toBe("dwv_003");
+    expect(mounted.result.current.model.correlationId).toBe(
+      "corr-list-absorbed-candidate",
+    );
+    expect(mounted.result.current.pendingAction).toBeNull();
+    expect(mounted.result.current.sourceConfirmationRetryAvailable).toBe(false);
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
