@@ -835,6 +835,59 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(approveDpmWave).not.toHaveBeenCalled();
   });
 
+  it("keeps a retained wave locked while stale detail is being reconfirmed", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(campaignDefinitions, queryClient);
+
+    act(() => firstMount.result.current.createRebalance());
+    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    firstMount.unmount();
+    await queryClient.invalidateQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+      refetchType: "none",
+    });
+
+    let rejectRefetch!: (error: Error) => void;
+    vi.mocked(getDpmWave).mockReturnValueOnce(
+      new Promise((_, reject) => {
+        rejectRefetch = reject;
+      }),
+    );
+    const secondMount = renderActions(campaignDefinitions, queryClient);
+
+    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_002");
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Awaiting rebalance source confirmation",
+    );
+    act(() => secondMount.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
+
+    act(() => rejectRefetch(new Error("Gateway detail unavailable")));
+    await waitFor(() =>
+      expect(secondMount.result.current.actionError).toContain(
+        "Gateway detail unavailable",
+      ),
+    );
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Awaiting rebalance source confirmation",
+    );
+    act(() => secondMount.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
+  });
+
   it("does not cache exact-read evidence under a different wave identity", async () => {
     const createdResponse = buildCreatedWaveResponse();
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
