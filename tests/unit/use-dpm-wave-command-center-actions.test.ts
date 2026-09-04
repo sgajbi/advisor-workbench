@@ -888,6 +888,50 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(approveDpmWave).not.toHaveBeenCalled();
   });
 
+  it("reconfirms retained detail when it becomes stale without a remount", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave).mockResolvedValueOnce(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+
+    let resolveRefetch!: (response: DpmWaveGatewayResponse) => void;
+    vi.mocked(getDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRefetch = resolve;
+      }),
+    );
+    await queryClient.invalidateQueries({
+      queryKey: dpmWaveQueryKeys.wave("dwv_002"),
+      exact: true,
+      refetchType: "none",
+    });
+
+    await waitFor(() => expect(getDpmWave).toHaveBeenCalledTimes(2));
+    expect(result.current.pendingAction).toBe(
+      "Awaiting rebalance source confirmation",
+    );
+    act(() => result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
+
+    act(() => resolveRefetch(createdResponse));
+    await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
+  });
+
   it("does not cache exact-read evidence under a different wave identity", async () => {
     const createdResponse = buildCreatedWaveResponse();
     vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
