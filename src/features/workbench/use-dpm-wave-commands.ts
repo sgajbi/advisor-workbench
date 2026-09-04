@@ -69,7 +69,8 @@ type ConfirmedCreatedWave = {
 type WaveCommandContext = {
   detailUpdateCountAtAdmission: number;
   listWaveIdAtSelection: string | null;
-  previewResponse: DpmWaveGatewayResponse;
+  response: DpmWaveGatewayResponse;
+  responseIsDirect: boolean;
   waveId: string;
 };
 
@@ -259,11 +260,19 @@ export function useDpmWaveCommands({
         queryClient.setQueryData<WaveCommandContext>(commandContextKey, {
           detailUpdateCountAtAdmission,
           listWaveIdAtSelection: selectedWaveId,
-          previewResponse: confirmedResponse,
+          response: confirmedResponse,
+          responseIsDirect: true,
           waveId,
         });
       } else if (variables.refresh === "list") {
         queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
+      } else if (activeCommandContext?.waveId === waveId) {
+        queryClient.setQueryData<WaveCommandContext>(commandContextKey, {
+          ...activeCommandContext,
+          detailUpdateCountAtAdmission,
+          response: confirmedResponse,
+          responseIsDirect: false,
+        });
       }
       return result;
     },
@@ -349,12 +358,12 @@ export function useDpmWaveCommands({
   const selectedCommandResult =
     commandMutation.data && commandResultMatchesContext
       ? commandMutation.data.response
-      : activeCommandContext?.previewResponse ?? null;
+      : activeCommandContext?.response ?? null;
   const selectedCommandResultIsDirect =
     (commandMutation.isSuccess &&
       commandResultMatchesContext &&
       commandMutation.variables.refresh === "none") ||
-    (!commandResultMatchesContext && activeCommandContext !== null);
+    (!commandResultMatchesContext && activeCommandContext?.responseIsDirect === true);
   const commandError =
     !commandMutation.variables?.sourceWaveId ||
     commandMutation.variables.sourceWaveId === contextWaveId
