@@ -159,7 +159,9 @@ async function loadMandateHealth({
   return {
     mandate: mandateResult.value,
     mandateHealth: healthResult.value,
-    mandateHealthError: healthResult.error,
+    mandateHealthError: healthResult.error
+      ? "Mandate health evidence is temporarily unavailable."
+      : null,
   };
 }
 
