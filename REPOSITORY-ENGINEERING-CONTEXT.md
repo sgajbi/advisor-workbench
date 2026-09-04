@@ -181,8 +181,13 @@ Current repository posture:
 8. `/workbench/{portfolioId}` is the Manage workspace. It uses the same Workbench left rail as
    Portfolio, Positions, Transactions, Cashflow, Performance, and Risk, and it exposes focused
    Manage sub-surfaces through the `mode` query: overview, mandate, waves, construction, memory,
-   reviews, proof, and quality. The route file remains orchestration-only; Manage workspace composition,
-   mode navigation, and data fan-out live under `src/features/workbench/manage-workspace.tsx`.
+   copilot, reviews, proof, and quality. The route file remains orchestration-only; Manage workspace
+   composition and mode navigation live under `src/features/workbench/`, while
+   `manage-workspace-data-loader.ts` owns one explicit mode-to-source requirement map. Every mode
+   loads the small shared mandate posture set plus only the source groups its rendered workflow
+   consumes. Do not restore all-mode fan-out, hide a cross-mode read to populate a rail, or infer
+   requirements from component imports; add a declared requirement and exact call-set regression
+   whenever a mode gains source-backed evidence.
 9. Manage overview summarizes the Manage operating posture, while `mode=mandate` renders a focused
    Mandate Health surface from the RFC-0038 DPM command-center contracts exposed through Gateway
    `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`.
