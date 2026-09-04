@@ -56,6 +56,7 @@ type WaveAiResult<T> = {
 type WaveConfirmationLock = {
   commandLabel: string;
   contextWaveId: string | null;
+  recoveryWaveId: string | null;
 };
 
 type ConfirmedCreatedWave = {
@@ -137,6 +138,7 @@ export function useDpmWaveCommands({
     if (variables.refresh === "none") {
       return response;
     }
+    let recoveryWaveId = variables.waveId;
     try {
       const expectedWaveId =
         variables.waveId ??
@@ -144,6 +146,13 @@ export function useDpmWaveCommands({
           response,
           "Persisted create response",
         );
+      recoveryWaveId = expectedWaveId;
+      if (variables.refresh === "list") {
+        queryClient.setQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey, {
+          listWaveIdAtConfirmation: selectedWaveId,
+          waveId: expectedWaveId,
+        });
+      }
       const detailOptions = dpmWaveDetailQueryOptions(expectedWaveId);
       await queryClient.cancelQueries({
         queryKey: detailOptions.queryKey,
@@ -166,7 +175,8 @@ export function useDpmWaveCommands({
     } catch (error) {
       queryClient.setQueryData<WaveConfirmationLock>(confirmationLockKey, {
         commandLabel: variables.label,
-        contextWaveId: variables.sourceWaveId,
+        contextWaveId: recoveryWaveId ?? variables.sourceWaveId,
+        recoveryWaveId,
       });
       const detail =
         error instanceof Error ? error.message : "source refresh failed";
@@ -195,12 +205,6 @@ export function useDpmWaveCommands({
                 .selectedWaveId),
         sourceWaveId: variables.sourceWaveId,
       };
-      if (variables.refresh === "list" && result.waveId) {
-        queryClient.setQueryData<ConfirmedCreatedWave>(confirmedCreatedWaveKey, {
-          listWaveIdAtConfirmation: selectedWaveId,
-          waveId: result.waveId,
-        });
-      }
       return result;
     },
   });
@@ -300,7 +304,8 @@ export function useDpmWaveCommands({
   return {
     activeWaveId,
     retainedSelectionActive: activeConfirmedCreatedWave !== null,
-    confirmationRecoveryRequired: activeConfirmationLock !== null,
+    confirmationRecoveryAvailable:
+      activeConfirmationLock?.recoveryWaveId === contextWaveId,
     confirmSourceRecovery,
     actionResponse: selectedCommandResult,
     waveAiMemo: selectedPmMemo,
