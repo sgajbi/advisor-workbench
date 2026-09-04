@@ -273,7 +273,13 @@ export function useDpmWaveCommands({
       selectedWaveId !== commandContext.listWaveIdAtSelection
     ) {
       queryClient.removeQueries({ queryKey: commandContextKey, exact: true });
-      commandMutation.reset();
+      if (
+        commandMutation.isSuccess &&
+        commandMutation.variables.refresh === "none" &&
+        commandMutation.data?.waveId === commandContext.waveId
+      ) {
+        commandMutation.reset();
+      }
     }
   }, [
     commandContext,
