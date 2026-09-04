@@ -8,7 +8,6 @@ import { buildDpmWaveCommandCenterModel } from "@/features/workbench/dpm-wave-co
 import {
   approveDpmWave,
   createDpmWave,
-  getDpmWave,
   handoffDpmWave,
   previewDpmWave,
   requestDpmOperationsHandoffSummary,
@@ -20,6 +19,7 @@ import {
 import {
   dpmWaveDetailQueryOptions,
   dpmWaveItemsQueryOptions,
+  getIdentityConfirmedDpmWaveDetail,
   getIdentityConfirmedDpmWaveItems,
 } from "@/features/workbench/dpm-wave-query-options";
 import {
@@ -103,16 +103,7 @@ export function useDpmWaveCommands({
           "the persisted response did not identify a rebalance wave",
         );
       }
-      const detail = await getDpmWave(expectedWaveId);
-      const confirmedWaveId = buildDpmWaveCommandCenterModel({
-        waveList: null,
-        waveDetail: detail,
-      }).selectedWaveId;
-      if (confirmedWaveId !== expectedWaveId) {
-        throw new Error(
-          `the refreshed evidence identified ${confirmedWaveId ?? "no wave"} instead of ${expectedWaveId}`,
-        );
-      }
+      const detail = await getIdentityConfirmedDpmWaveDetail(expectedWaveId);
       queryClient.setQueryData(
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
         detail,

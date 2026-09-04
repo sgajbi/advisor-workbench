@@ -737,7 +737,7 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await waitFor(() =>
       expect(result.current.actionError).toContain(
-        "the refreshed evidence identified dwv_001 instead of dwv_002",
+        "Refreshed wave detail identified dwv_001 instead of dwv_002",
       ),
     );
     expect(
@@ -745,6 +745,33 @@ describe("useDpmWaveCommandCenterActions", () => {
     ).toBeUndefined();
     expect(result.current.pendingAction).toBe(
       "Create rebalance — awaiting source confirmation",
+    );
+  });
+
+  it("keeps commands locked when exact detail supportability identity is absent", async () => {
+    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWave).mockResolvedValue({
+      ...waveResponse,
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: undefined,
+      },
+    });
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.requestApproval());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "Refreshed wave detail identified no wave instead of dwv_001",
+      ),
+    );
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_001")),
+    ).toBeUndefined();
+    expect(result.current.pendingAction).toBe(
+      "Request approval — awaiting source confirmation",
     );
   });
 
