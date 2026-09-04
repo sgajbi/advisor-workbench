@@ -508,13 +508,46 @@ describe("useDpmWaveCommandCenterActions", () => {
 
   it("keeps a persisted wave command pending until exact source evidence refreshes", async () => {
     let resolveWaveRefresh!: (value: DpmWaveGatewayResponse) => void;
+    let resolveItemsRefresh!: (value: DpmWaveGatewayResponse) => void;
+    const refreshedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      correlation_id: "corr-wave-items-refreshed",
+      data: {
+        items: [
+          {
+            ...(itemResponse.data.items as Array<Record<string, unknown>>)[0],
+            diagnostics: {
+              proposed_changes: [
+                {
+                  security_id: "MSFT US",
+                  action: "Add",
+                  estimated_value: "5,100.00",
+                  reason: "Rebalance target",
+                  mandate_impact: "Within equity band",
+                  status: "READY",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
     vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWave).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveWaveRefresh = resolve;
       }),
     );
+    vi.mocked(getDpmWaveItems)
+      .mockResolvedValueOnce(itemResponse)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveItemsRefresh = resolve;
+        }),
+      );
     const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
 
     act(() => result.current.requestApproval());
 
@@ -524,7 +557,14 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     act(() => resolveWaveRefresh(waveResponse));
 
+    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledTimes(2));
+    expect(result.current.pendingAction).toBe("Request approval");
+    expect(result.current.model.itemRows[0]?.security).toBe("AAPL US");
+
+    act(() => resolveItemsRefresh(refreshedItems));
+
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
+    expect(result.current.model.itemRows[0]?.security).toBe("MSFT US");
     expect(getDpmWave).toHaveBeenCalledWith("dwv_001");
     expect(listDpmWaves).toHaveBeenCalledWith(
       {
