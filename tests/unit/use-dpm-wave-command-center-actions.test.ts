@@ -748,6 +748,30 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
   });
 
+  it("rejects a contradictory create response before selecting its wave", async () => {
+    vi.mocked(createDpmWave).mockResolvedValue({
+      ...buildCreatedWaveResponse(),
+      data: { wave: { wave_id: "dwv_001", state: "CREATED" } },
+    });
+    const queryClient = createTestQueryClient();
+    const { result } = renderActions(campaignDefinitions, queryClient);
+
+    act(() => result.current.createRebalance());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain(
+        "Persisted create response payload identified dwv_001 instead of dwv_002",
+      ),
+    );
+    expect(getDpmWave).not.toHaveBeenCalled();
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_001")),
+    ).toBeUndefined();
+    expect(
+      queryClient.getQueryData(dpmWaveQueryKeys.wave("dwv_002")),
+    ).toBeUndefined();
+  });
+
   it("keeps commands locked when exact detail supportability identity is absent", async () => {
     vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWave).mockResolvedValue({

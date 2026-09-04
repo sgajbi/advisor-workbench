@@ -19,6 +19,7 @@ import {
 import {
   dpmWaveDetailQueryOptions,
   dpmWaveItemsQueryOptions,
+  getConfirmedDpmWaveResponseIdentity,
   getIdentityConfirmedDpmWaveDetail,
   getIdentityConfirmedDpmWaveItems,
 } from "@/features/workbench/dpm-wave-query-options";
@@ -97,12 +98,10 @@ export function useDpmWaveCommands({
     try {
       const expectedWaveId =
         variables.waveId ??
-        buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
-      if (!expectedWaveId) {
-        throw new Error(
-          "the persisted response did not identify a rebalance wave",
+        getConfirmedDpmWaveResponseIdentity(
+          response,
+          "Persisted create response",
         );
-      }
       const detail = await getIdentityConfirmedDpmWaveDetail(expectedWaveId);
       queryClient.setQueryData(
         dpmWaveDetailQueryOptions(expectedWaveId).queryKey,
@@ -138,11 +137,18 @@ export function useDpmWaveCommands({
     scope: { id: DPM_WAVE_COMMAND_SCOPE },
     mutationFn: async (variables: DpmWaveCommandVariables): Promise<DpmWaveCommandResult> => {
       const response = await variables.execute();
+      const confirmedResponse = await refreshWaveSources(variables, response);
       return {
-        response: await refreshWaveSources(variables, response),
+        response: confirmedResponse,
         waveId:
           variables.waveId ??
-          buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId,
+          (variables.refresh === "list"
+            ? getConfirmedDpmWaveResponseIdentity(
+                confirmedResponse,
+                "Confirmed created wave",
+              )
+            : buildDpmWaveCommandCenterModel({ waveList: confirmedResponse })
+                .selectedWaveId),
         sourceWaveId: variables.sourceWaveId,
       };
     },
