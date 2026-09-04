@@ -62,6 +62,18 @@ export async function getIdentityConfirmedDpmWaveDetail(
   );
 }
 
+export function getConfirmedDpmWaveResponseIdentity(
+  response: DpmWaveGatewayResponse,
+  evidenceLabel: string,
+): string {
+  const waveId = response.supportability?.wave_id;
+  if (!waveId) {
+    throw new Error(`${evidenceLabel} identified no rebalance wave.`);
+  }
+  requireDpmWaveIdentity(response, waveId, evidenceLabel);
+  return waveId;
+}
+
 export function dpmWaveItemsQueryOptions(waveId: string) {
   return queryOptions({
     ...workbenchStrictQueryDefaults,
