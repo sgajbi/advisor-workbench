@@ -183,7 +183,8 @@ export function useDpmWaveCommandCenterActions({
     listQueryKey: waveListSource.listQueryKey,
   });
   const commandSelectedWaveId = selectedWaveIdForResponse(waveCommands.actionResponse);
-  const selectedSourceWaveId = commandSelectedWaveId ?? commandSourceWaveId;
+  const selectedSourceWaveId =
+    commandSelectedWaveId ?? waveCommands.activeWaveId ?? commandSourceWaveId;
   const waveSources = useDpmSelectedWaveSources(selectedSourceWaveId);
   const governedWaveList =
     commandSelectedWaveId && commandSelectedWaveId === querySelectedWaveId
