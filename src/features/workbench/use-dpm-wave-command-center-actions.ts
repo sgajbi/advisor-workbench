@@ -346,7 +346,8 @@ export function useDpmWaveCommandCenterActions({
     model.campaignRows[0] ??
     null;
   const retainedWaveAwaitingConfirmation =
-    waveCommands.retainedSelectionActive && waveSources.waveDetail === null;
+    waveCommands.retainedSelectionActive &&
+    (waveSources.waveDetail === null || waveSources.detailConfirmationBlocked);
 
   function selectCampaign(row: DpmCampaignDefinitionRow) {
     selectedCampaignKeyRef.current = row.key;
