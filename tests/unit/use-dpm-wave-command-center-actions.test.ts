@@ -1272,6 +1272,40 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.correlationId).toBe("corr-handed-off");
   });
 
+  it("presents a newer direct preview over cached confirmed detail", async () => {
+    const approvedResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-approved",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_state: "APPROVED",
+      },
+      data: { wave: { wave_id: "dwv_001", state: "APPROVED" } },
+    };
+    const previewResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-preview-current",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_state: "SIMULATION_READY",
+      },
+      data: { wave: { wave_id: "dwv_001", state: "SIMULATION_READY" } },
+    };
+    vi.mocked(approveDpmWave).mockResolvedValue(approvedResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(approvedResponse);
+    vi.mocked(previewDpmWave).mockResolvedValue(previewResponse);
+    const { result } = renderActions();
+
+    act(() => result.current.requestApproval());
+    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
+    act(() => result.current.previewRebalance());
+
+    await waitFor(() =>
+      expect(result.current.model.correlationId).toBe("corr-preview-current"),
+    );
+    expect(result.current.model.selectedWaveState).toBe("SIMULATION_READY");
+  });
+
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
     const createdResponse = buildCreatedWaveResponse();
     const confirmedItems: DpmWaveGatewayResponse = {
@@ -1288,11 +1322,14 @@ describe("useDpmWaveCommandCenterActions", () => {
       .mockResolvedValueOnce(createdResponse)
       .mockRejectedValueOnce(new Error("Gateway refresh unavailable"));
     vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(createdResponse);
     const queryClient = createTestQueryClient();
     const firstMount = renderActions(campaignDefinitions, queryClient);
 
     act(() => firstMount.result.current.createRebalance());
     await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    act(() => firstMount.result.current.openEvidencePack());
+    await waitFor(() => expect(firstMount.result.current.model.proofPackStatus).toBe("READY"));
     act(() => firstMount.result.current.requestApproval());
 
     await waitFor(() =>
@@ -1320,6 +1357,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     act(() => secondMount.result.current.retrySourceConfirmation());
     await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
     expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    expect(secondMount.result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
   });
 
   it("does not submit a second wave command while source refresh is pending", async () => {
