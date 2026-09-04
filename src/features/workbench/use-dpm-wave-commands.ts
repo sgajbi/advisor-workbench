@@ -43,7 +43,7 @@ type DpmWaveCommandVariables = {
 };
 
 type DpmWaveCommandResult = {
-  response: DpmWaveGatewayResponse;
+  response: DpmWaveGatewayResponse | null;
   detailUpdateCountAtAdmission: number;
   waveId: string | null;
   sourceWaveId: string | null;
@@ -69,7 +69,7 @@ type ConfirmedCreatedWave = {
 type WaveCommandContext = {
   detailUpdateCountAtAdmission: number;
   listWaveIdAtSelection: string | null;
-  response: DpmWaveGatewayResponse;
+  response: DpmWaveGatewayResponse | null;
   responseIsDirect: boolean;
   waveId: string;
 };
@@ -270,7 +270,7 @@ export function useDpmWaveCommands({
         queryClient.setQueryData<WaveCommandContext>(commandContextKey, {
           ...activeCommandContext,
           detailUpdateCountAtAdmission,
-          response: confirmedResponse,
+          response: null,
           responseIsDirect: false,
         });
       }
@@ -303,7 +303,9 @@ export function useDpmWaveCommands({
     ? commandMutation.data?.waveId ?? contextWaveId
     : contextWaveId;
   const retainedSelectionActive =
-    activeConfirmedCreatedWave?.waveId === activeWaveId;
+    activeConfirmedCreatedWave?.waveId === activeWaveId ||
+    (activeCommandContext?.waveId === activeWaveId &&
+      activeCommandContext.responseIsDirect === false);
 
   function commandInFlight(): boolean {
     return (

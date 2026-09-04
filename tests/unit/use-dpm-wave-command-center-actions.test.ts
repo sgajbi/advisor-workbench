@@ -1461,6 +1461,8 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(thirdMount.result.current.model.selectedWaveId).toBe("dwv_003"),
     );
     expect(thirdMount.result.current.model.selectedWaveState).toBe("APPROVED");
+    expect(getDpmWave).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(thirdMount.result.current.pendingAction).toBeNull());
 
     vi.mocked(stageDpmWave).mockResolvedValue(approvedCandidateResponse);
     vi.mocked(getDpmWave).mockRejectedValueOnce(
