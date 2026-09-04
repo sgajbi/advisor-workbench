@@ -1432,38 +1432,82 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.sourceConfirmationRetryAvailable).toBe(false);
     expect(getDpmWave).toHaveBeenCalledTimes(1);
 
-    act(() => result.current.requestApproval());
-    expect(result.current.model.selectedWaveId).toBe("dwv_003");
-    await waitFor(() =>
-      expect(result.current.model.correlationId).toBe(
-        "corr-preview-candidate-approved",
-      ),
-    );
-    expect(result.current.model.selectedWaveId).toBe("dwv_003");
-    expect(result.current.model.selectedWaveState).toBe("APPROVED");
-
     firstMount.unmount();
     const secondMount = renderActions(campaignDefinitions, queryClient);
     await waitFor(() =>
       expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003"),
     );
+    expect(secondMount.result.current.model.selectedWaveState).toBe(
+      "SIMULATION_READY",
+    );
+
+    act(() => secondMount.result.current.requestApproval());
+    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
+    await waitFor(() =>
+      expect(secondMount.result.current.model.correlationId).toBe(
+        "corr-preview-candidate-approved",
+      ),
+    );
+    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
     expect(secondMount.result.current.model.selectedWaveState).toBe("APPROVED");
+
+    secondMount.unmount();
+    const thirdMount = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() =>
+      expect(thirdMount.result.current.model.selectedWaveId).toBe("dwv_003"),
+    );
+    expect(thirdMount.result.current.model.selectedWaveState).toBe("APPROVED");
 
     vi.mocked(stageDpmWave).mockResolvedValue(approvedCandidateResponse);
     vi.mocked(getDpmWave).mockRejectedValueOnce(
       new Error("Gateway detail refresh unavailable"),
     );
-    act(() => secondMount.result.current.stageRebalance());
+    act(() => thirdMount.result.current.stageRebalance());
     await waitFor(() =>
-      expect(secondMount.result.current.actionError).toContain(
+      expect(thirdMount.result.current.actionError).toContain(
         "Stage rebalance was accepted",
       ),
     );
-    expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_003");
-    expect(secondMount.result.current.pendingAction).toBe(
+    expect(thirdMount.result.current.model.selectedWaveId).toBe("dwv_003");
+    expect(thirdMount.result.current.pendingAction).toBe(
       "Stage rebalance — awaiting source confirmation",
     );
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    expect(thirdMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+  });
+
+  it("prefers accepted create recovery over retained preview context", async () => {
+    const previewCandidate: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      supportability: { ...waveResponse.supportability, wave_id: "dwv_003" },
+      data: { wave: { wave_id: "dwv_003", state: "SIMULATION_READY" } },
+    };
+    const createdWave: DpmWaveGatewayResponse = {
+      ...buildCreatedWaveResponse("corr-created-d"),
+      supportability: {
+        ...buildCreatedWaveResponse().supportability,
+        wave_id: "dwv_004",
+      },
+      data: { wave: { wave_id: "dwv_004", state: "CREATED" } },
+    };
+    vi.mocked(previewDpmWave).mockResolvedValue(previewCandidate);
+    vi.mocked(createDpmWave).mockResolvedValue(createdWave);
+    vi.mocked(getDpmWave).mockRejectedValueOnce(
+      new Error("Gateway detail refresh unavailable"),
+    );
+    const { result } = renderActions();
+
+    act(() => result.current.previewRebalance());
+    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_003"));
+    act(() => result.current.createRebalance());
+
+    await waitFor(() =>
+      expect(result.current.actionError).toContain("Create rebalance was accepted"),
+    );
+    expect(result.current.model.selectedWaveId).toBe("dwv_004");
+    expect(result.current.pendingAction).toBe(
+      "Create rebalance — awaiting source confirmation",
+    );
+    expect(result.current.sourceConfirmationRetryAvailable).toBe(true);
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
