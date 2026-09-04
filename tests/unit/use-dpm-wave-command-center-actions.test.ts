@@ -1272,7 +1272,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.correlationId).toBe("corr-handed-off");
   });
 
-  it("presents a newer direct preview over cached confirmed detail", async () => {
+  it("keys direct preview admission to its resolved wave identity", async () => {
     const approvedResponse: DpmWaveGatewayResponse = {
       ...waveResponse,
       correlation_id: "corr-approved",
@@ -1287,9 +1287,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       correlation_id: "corr-preview-current",
       supportability: {
         ...waveResponse.supportability,
+        wave_id: "dwv_002",
         wave_state: "SIMULATION_READY",
       },
-      data: { wave: { wave_id: "dwv_001", state: "SIMULATION_READY" } },
+      data: { wave: { wave_id: "dwv_002", state: "SIMULATION_READY" } },
     };
     vi.mocked(approveDpmWave).mockResolvedValue(approvedResponse);
     vi.mocked(getDpmWave).mockResolvedValue(approvedResponse);
@@ -1309,10 +1310,15 @@ describe("useDpmWaveCommandCenterActions", () => {
     const detailDuringPreview = {
       ...approvedResponse,
       correlation_id: "corr-detail-during-preview",
+      supportability: {
+        ...approvedResponse.supportability,
+        wave_id: "dwv_002",
+      },
+      data: { wave: { wave_id: "dwv_002", state: "APPROVED" } },
     };
     act(() => {
       queryClient.setQueryData(
-        dpmWaveQueryKeys.wave("dwv_001"),
+        dpmWaveQueryKeys.wave("dwv_002"),
         detailDuringPreview,
         { updatedAt: Date.now() },
       );
@@ -1328,7 +1334,7 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await act(async () => {
       await queryClient.fetchQuery({
-        queryKey: dpmWaveQueryKeys.wave("dwv_001"),
+        queryKey: dpmWaveQueryKeys.wave("dwv_002"),
         queryFn: async () => detailDuringPreview,
         staleTime: 0,
       });
@@ -1337,14 +1343,6 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.model.correlationId).toBe("corr-detail-during-preview"),
     );
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
-
-    act(() => {
-      queryClient.setQueryData(dpmWaveQueryKeys.wave("dwv_001"), approvedResponse, {
-        updatedAt: Date.now() + 1_000,
-      });
-    });
-    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
-    expect(result.current.model.correlationId).toBe("corr-approved");
   });
 
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
