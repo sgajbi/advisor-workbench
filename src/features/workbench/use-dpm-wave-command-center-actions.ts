@@ -842,7 +842,8 @@ export function useDpmWaveCommandCenterActions({
     actionError: waveCommands.actionError ?? waveSources.sourceError,
     sourceConfirmationRetryAvailable:
       waveCommands.retainedSelectionActive &&
-      (waveSources.detailConfirmationFailed || waveSources.itemsConfirmationFailed),
+      (waveCommands.confirmationRecoveryRequired ||
+        (waveSources.detailConfirmationFailed || waveSources.itemsConfirmationFailed)),
     campaignLifecycleError: valueForSelectedCampaign(campaignLifecycleError, selectedCampaignKey),
     campaignLaunchHistoryError: valueForSelectedCampaign(
       campaignLaunchHistoryError,
@@ -892,15 +893,26 @@ export function useDpmWaveCommandCenterActions({
     requestOperationsBrief: () =>
       runSelectedWaveCommand(waveCommands.requestOperationsBrief),
     retrySourceConfirmation: () => {
+      const recoverCommandConfirmation = waveCommands.confirmationRecoveryRequired;
       if (!waveCommands.retainedSelectionActive) {
         return;
       }
-      if (waveSources.detailConfirmationFailed) {
-        void waveSources.reconfirmDetail();
-      }
-      if (waveSources.itemsConfirmationFailed) {
-        void waveSources.refreshItems();
-      }
+      const detailRecovery =
+        recoverCommandConfirmation || waveSources.detailConfirmationFailed
+          ? waveSources.reconfirmDetail()
+          : null;
+      const itemsRecovery =
+        recoverCommandConfirmation || waveSources.itemsConfirmationFailed
+          ? waveSources.refreshItems()
+          : null;
+      void Promise.all([detailRecovery, itemsRecovery]).then((results) => {
+        if (
+          recoverCommandConfirmation &&
+          results.every((result) => result === null || result.error === null)
+        ) {
+          waveCommands.confirmSourceRecovery();
+        }
+      });
     },
     selectCampaign,
     loadCampaignWorkflowEvidence,

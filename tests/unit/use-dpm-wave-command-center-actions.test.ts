@@ -1210,25 +1210,54 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.proofPackStatus).toBe("READY");
   });
 
-  it("keeps accepted wave commands explicit when source refresh cannot prove current posture", async () => {
-    vi.mocked(approveDpmWave).mockResolvedValue(waveResponse);
-    vi.mocked(getDpmWave).mockRejectedValueOnce(new Error("Gateway refresh unavailable"));
-    const { result } = renderActions();
+  it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
+    const createdResponse = buildCreatedWaveResponse();
+    const confirmedItems: DpmWaveGatewayResponse = {
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(approveDpmWave).mockResolvedValue(createdResponse);
+    vi.mocked(getDpmWave)
+      .mockResolvedValueOnce(createdResponse)
+      .mockRejectedValueOnce(new Error("Gateway refresh unavailable"));
+    vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
+    const queryClient = createTestQueryClient();
+    const firstMount = renderActions(campaignDefinitions, queryClient);
 
-    act(() => result.current.requestApproval());
+    act(() => firstMount.result.current.createRebalance());
+    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    act(() => firstMount.result.current.requestApproval());
 
     await waitFor(() =>
-      expect(result.current.actionError).toContain(
+      expect(firstMount.result.current.actionError).toContain(
         "Request approval was accepted, but refreshed rebalance evidence could not be loaded",
       ),
     );
-    expect(result.current.actionMessage).toBeNull();
-    expect(result.current.pendingAction).toBe(
+    expect(firstMount.result.current.actionMessage).toBeNull();
+    expect(firstMount.result.current.pendingAction).toBe(
       "Request approval — awaiting source confirmation",
     );
+    firstMount.unmount();
 
-    act(() => result.current.requestApproval());
+    const secondMount = renderActions(campaignDefinitions, queryClient);
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Request approval — awaiting source confirmation",
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+
+    act(() => secondMount.result.current.requestApproval());
     expect(approveDpmWave).toHaveBeenCalledTimes(1);
+
+    vi.mocked(getDpmWave).mockResolvedValueOnce(createdResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValueOnce(confirmedItems);
+    act(() => secondMount.result.current.retrySourceConfirmation());
+    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
   });
 
   it("does not submit a second wave command while source refresh is pending", async () => {

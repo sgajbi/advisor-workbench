@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { buildDpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
@@ -75,9 +75,19 @@ export function useDpmWaveCommands({
   allowRetainedSelection: boolean;
 }) {
   const queryClient = useQueryClient();
-  const [confirmationLock, setConfirmationLock] =
-    useState<WaveConfirmationLock | null>(null);
   const confirmedCreatedWaveKey = dpmWaveQueryKeys.confirmedCreatedWave(portfolioId);
+  const confirmationLockKey = dpmWaveQueryKeys.confirmationLock(portfolioId);
+  const confirmationLockQuery = useQuery<WaveConfirmationLock>({
+    queryKey: confirmationLockKey,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<WaveConfirmationLock>(confirmationLockKey),
+  });
+  const confirmationLock =
+    confirmationLockQuery.data ??
+    queryClient.getQueryData<WaveConfirmationLock>(confirmationLockKey) ??
+    null;
   const confirmedCreatedWaveQuery = useQuery<ConfirmedCreatedWave>({
     queryKey: confirmedCreatedWaveKey,
     queryFn: skipToken,
@@ -154,7 +164,7 @@ export function useDpmWaveCommands({
       );
       return detail;
     } catch (error) {
-      setConfirmationLock({
+      queryClient.setQueryData<WaveConfirmationLock>(confirmationLockKey, {
         commandLabel: variables.label,
         contextWaveId: variables.sourceWaveId,
       });
@@ -229,9 +239,14 @@ export function useDpmWaveCommands({
 
   function runCommand(variables: DpmWaveCommandVariables): void {
     if (!commandInFlight()) {
-      setConfirmationLock(null);
+      queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
       commandMutation.mutate(variables);
     }
+  }
+
+  function confirmSourceRecovery(): void {
+    queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
+    commandMutation.reset();
   }
 
   function runSelectedWaveCommand(
@@ -285,6 +300,8 @@ export function useDpmWaveCommands({
   return {
     activeWaveId,
     retainedSelectionActive: activeConfirmedCreatedWave !== null,
+    confirmationRecoveryRequired: activeConfirmationLock !== null,
+    confirmSourceRecovery,
     actionResponse: selectedCommandResult,
     waveAiMemo: selectedPmMemo,
     operationsHandoffSummary: selectedOperationsBrief,
