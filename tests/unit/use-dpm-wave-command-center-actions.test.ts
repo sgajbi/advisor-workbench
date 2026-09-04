@@ -1571,6 +1571,81 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(mounted.result.current.sourceConfirmationRetryAvailable).toBe(false);
   });
 
+  it("preserves an in-flight command when the source list absorbs its wave", async () => {
+    const previewCandidate: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      supportability: { ...waveResponse.supportability, wave_id: "dwv_003" },
+      data: { wave: { wave_id: "dwv_003", state: "SIMULATION_READY" } },
+    };
+    const approvedCandidate: DpmWaveGatewayResponse = {
+      ...previewCandidate,
+      correlation_id: "corr-approved-absorbed-candidate",
+      supportability: {
+        ...previewCandidate.supportability,
+        wave_state: "APPROVED",
+      },
+      data: { wave: { wave_id: "dwv_003", state: "APPROVED" } },
+    };
+    const absorbedList: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      supportability: { ...waveResponse.supportability, wave_id: "dwv_003" },
+      data: {
+        items: [
+          {
+            ...(waveResponse.data.items as Array<Record<string, unknown>>)[0],
+            wave_id: "dwv_003",
+          },
+        ],
+      },
+    };
+    let resolveApproval!: (response: DpmWaveGatewayResponse) => void;
+    vi.mocked(previewDpmWave).mockResolvedValue(previewCandidate);
+    vi.mocked(approveDpmWave).mockReturnValue(
+      new Promise((resolve) => {
+        resolveApproval = resolve;
+      }),
+    );
+    vi.mocked(getDpmWave).mockResolvedValue(approvedCandidate);
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_003",
+        wave_state: "APPROVED",
+      },
+    });
+    const queryClient = createTestQueryClient();
+    const mounted = renderHook(
+      ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
+        useDpmWaveCommandCenterActions({
+          portfolioId: "PB_SG_GLOBAL_BAL_001",
+          waveList: sourceWaveList,
+          campaignDefinitions,
+        }),
+      {
+        initialProps: { sourceWaveList: waveResponse },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+
+    act(() => mounted.result.current.previewRebalance());
+    await waitFor(() =>
+      expect(mounted.result.current.model.selectedWaveId).toBe("dwv_003"),
+    );
+    act(() => mounted.result.current.requestApproval());
+    await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_003"));
+    mounted.rerender({ sourceWaveList: absorbedList });
+    expect(mounted.result.current.pendingAction).toBe("Request approval");
+
+    act(() => resolveApproval(approvedCandidate));
+    await waitFor(() =>
+      expect(mounted.result.current.model.correlationId).toBe(
+        "corr-approved-absorbed-candidate",
+      ),
+    );
+    expect(mounted.result.current.model.selectedWaveState).toBe("APPROVED");
+  });
+
   it("keeps an accepted retained-wave command locked across remount until recovery", async () => {
     const createdResponse = buildCreatedWaveResponse();
     const confirmedItems: DpmWaveGatewayResponse = {
