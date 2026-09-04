@@ -200,21 +200,22 @@ export function useDpmWaveCommands({
     mutationFn: async (variables: DpmWaveCommandVariables): Promise<DpmWaveCommandResult> => {
       const response = await variables.execute();
       const confirmedResponse = await refreshWaveSources(variables, response);
+      const waveId =
+        variables.waveId ??
+        (variables.refresh === "list"
+          ? getConfirmedDpmWaveResponseIdentity(
+              confirmedResponse,
+              "Confirmed created wave",
+            )
+          : buildDpmWaveCommandCenterModel({ waveList: confirmedResponse })
+              .selectedWaveId);
       const result = {
         response: confirmedResponse,
-        detailUpdateCountAtAdmission: variables.sourceWaveId
-          ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(variables.sourceWaveId))
+        detailUpdateCountAtAdmission: waveId
+          ? (queryClient.getQueryState(dpmWaveQueryKeys.wave(waveId))
               ?.dataUpdateCount ?? 0)
           : 0,
-        waveId:
-          variables.waveId ??
-          (variables.refresh === "list"
-            ? getConfirmedDpmWaveResponseIdentity(
-                confirmedResponse,
-                "Confirmed created wave",
-              )
-            : buildDpmWaveCommandCenterModel({ waveList: confirmedResponse })
-                .selectedWaveId),
+        waveId,
         sourceWaveId: variables.sourceWaveId,
       };
       return result;
