@@ -876,6 +876,59 @@ describe("DpmWaveCommandCenterPanel", () => {
     );
   });
 
+  it("keeps accepted-create recovery visible until list reconciliation succeeds", async () => {
+    const retainedWaveResponse: DpmWaveGatewayResponse = {
+      ...waveResponse,
+      correlation_id: "corr-wave-002",
+      supportability: {
+        ...waveResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+      data: {
+        wave: {
+          wave_id: "dwv_002",
+          state: "CREATED",
+          trigger_type: "EXPLICIT_PORTFOLIO_LIST",
+        },
+      },
+    };
+    vi.mocked(createDpmWave).mockResolvedValue(retainedWaveResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(retainedWaveResponse);
+    vi.mocked(getDpmWaveItems).mockResolvedValue({
+      ...itemResponse,
+      supportability: {
+        ...itemResponse.supportability,
+        wave_id: "dwv_002",
+        wave_state: "CREATED",
+      },
+    });
+    vi.mocked(listDpmWaves)
+      .mockRejectedValueOnce(new Error("Rebalance list unavailable"))
+      .mockResolvedValueOnce(retainedWaveResponse);
+    renderWithQueryClient(
+      <DpmWaveCommandCenterPanel
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        waveList={waveResponse}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Create Rebalance" }));
+
+    expect(
+      await screen.findByText(/Create rebalance was accepted.*Rebalance list unavailable/i),
+    ).toBeInTheDocument();
+    const retry = screen.getByRole("button", { name: "Retry source confirmation" });
+    fireEvent.click(retry);
+
+    await waitFor(() => expect(listDpmWaves).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Retry source confirmation" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
   it("does not carry an in-flight workflow posture or error into another wave", async () => {
     let rejectMemo!: (reason?: unknown) => void;
     const memoRequest = new Promise<

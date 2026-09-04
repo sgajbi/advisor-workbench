@@ -56,6 +56,7 @@ type WaveAiResult<T> = {
 type WaveConfirmationLock = {
   commandLabel: string;
   contextWaveId: string | null;
+  errorMessage: string;
   recoveryWaveId: string | null;
 };
 
@@ -173,16 +174,17 @@ export function useDpmWaveCommands({
       );
       return detail;
     } catch (error) {
+      const detail =
+        error instanceof Error ? error.message : "source refresh failed";
+      const errorMessage =
+        `${variables.label} was accepted, but refreshed rebalance evidence could not be loaded (${detail}). Reload before taking the next action.`;
       queryClient.setQueryData<WaveConfirmationLock>(confirmationLockKey, {
         commandLabel: variables.label,
         contextWaveId: recoveryWaveId ?? variables.sourceWaveId,
+        errorMessage,
         recoveryWaveId,
       });
-      const detail =
-        error instanceof Error ? error.message : "source refresh failed";
-      throw new Error(
-        `${variables.label} was accepted, but refreshed rebalance evidence could not be loaded (${detail}). Reload before taking the next action.`,
-      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -248,7 +250,15 @@ export function useDpmWaveCommands({
     }
   }
 
-  function confirmSourceRecovery(): void {
+  async function confirmSourceRecovery(): Promise<void> {
+    try {
+      await queryClient.invalidateQueries(
+        { queryKey: listQueryKey, exact: true },
+        { throwOnError: true },
+      );
+    } catch {
+      return;
+    }
     queryClient.removeQueries({ queryKey: confirmationLockKey, exact: true });
     commandMutation.reset();
   }
@@ -310,7 +320,8 @@ export function useDpmWaveCommands({
     actionResponse: selectedCommandResult,
     waveAiMemo: selectedPmMemo,
     operationsHandoffSummary: selectedOperationsBrief,
-    actionError: commandError ?? selectedAiError,
+    actionError:
+      activeConfirmationLock?.errorMessage ?? commandError ?? selectedAiError,
     actionMessage:
       commandMutation.isSuccess && selectedCommandResult
         ? `${commandMutation.variables.label} completed.`

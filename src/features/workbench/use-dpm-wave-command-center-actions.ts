@@ -910,7 +910,7 @@ export function useDpmWaveCommandCenterActions({
           recoverCommandConfirmation &&
           results.every((result) => result === null || result.error === null)
         ) {
-          waveCommands.confirmSourceRecovery();
+          void waveCommands.confirmSourceRecovery();
         }
       });
     },
