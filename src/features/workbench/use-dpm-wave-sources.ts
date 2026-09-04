@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -29,14 +29,19 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     ...listOptions,
     enabled: waveList !== null,
   });
+  const seededCorrelationRef = useRef(waveList?.correlation_id ?? null);
+  const serverSourceChanged = Boolean(
+    waveList && seededCorrelationRef.current !== waveList.correlation_id,
+  );
 
   useEffect(() => {
     if (waveList) {
       queryClient.setQueryData(listOptions.queryKey, waveList);
+      seededCorrelationRef.current = waveList.correlation_id;
     }
   }, [listOptions.queryKey, queryClient, waveList]);
 
-  const waveListSource = listQuery.data ?? waveList;
+  const waveListSource = serverSourceChanged ? waveList : listQuery.data ?? waveList;
   const selectedWaveId = buildDpmWaveCommandCenterModel({
     waveList: waveListSource,
   }).selectedWaveId;
@@ -60,8 +65,6 @@ export function useDpmWaveSources({ waveList }: UseDpmWaveSourcesInput) {
     waveDetail: detailQuery.data ?? null,
     waveItems: itemsQuery.data ?? null,
     proofPack: proofPackQuery.data ?? null,
-    itemsFetching: itemsQuery.isFetching,
-    proofPackFetching: proofPackQuery.isFetching,
     sourceError: readQueryError(itemsQuery.error) ?? readQueryError(proofPackQuery.error),
     refreshItems: itemsQuery.refetch,
     openProofPack: proofPackQuery.refetch,

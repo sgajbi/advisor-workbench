@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/dpm-wave-command-center-panel";
@@ -9,10 +9,12 @@ import {
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
+  getDpmWave,
   getDpmWaveItems,
   getDpmWaveProofPackPosture,
   handoffDpmWave,
   launchDpmCampaignDefinition,
+  listDpmWaves,
   previewDpmWave,
   requestDpmOperationsHandoffSummary,
   requestDpmWaveAiPmMemo,
@@ -25,6 +27,7 @@ import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
+import { renderWithQueryClient } from "../helpers/query-client-test-harness";
 
 vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   approveDpmWave: vi.fn(),
@@ -33,10 +36,12 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
   getDpmCampaignDefinitionPreviewReadiness: vi.fn(),
+  getDpmWave: vi.fn(),
   getDpmWaveItems: vi.fn(),
   getDpmWaveProofPackPosture: vi.fn(),
   handoffDpmWave: vi.fn(),
   launchDpmCampaignDefinition: vi.fn(),
+  listDpmWaves: vi.fn(),
   previewDpmWave: vi.fn(),
   requestDpmOperationsHandoffSummary: vi.fn(),
   requestDpmWaveAiPmMemo: vi.fn(),
@@ -296,6 +301,8 @@ const campaignLaunchResponse: DpmWaveGatewayResponse = {
 
 describe("DpmWaveCommandCenterPanel", () => {
   beforeEach(() => {
+    vi.mocked(listDpmWaves).mockResolvedValue(waveResponse);
+    vi.mocked(getDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(campaignLifecycleResponse);
     vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(campaignLaunchHistoryResponse);
@@ -309,7 +316,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("renders the business-facing rebalance workspace with implementation-backed proposed changes", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         mandateType="DPM_GLOBAL_BALANCED"
@@ -369,7 +376,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("loads read-only campaign lifecycle evidence through the Gateway helper", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -404,7 +411,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("loads append-only campaign launch history through the Gateway helper", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -462,7 +469,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       },
     });
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -482,7 +489,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("enables campaign launch only after Manage launch readiness is ready", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -546,7 +553,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       },
     });
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -576,7 +583,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     vi.mocked(handoffDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(waveResponse);
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -616,7 +623,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("renders source context for the selected wave rather than the first list row", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={{
@@ -674,7 +681,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       },
     });
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -708,7 +715,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       handoff_summary_request: { requested_outputs: ["operations_summary"] },
     });
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -767,7 +774,7 @@ describe("DpmWaveCommandCenterPanel", () => {
     });
     vi.mocked(createDpmWave).mockResolvedValue(nextWaveResponse);
 
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -824,7 +831,7 @@ describe("DpmWaveCommandCenterPanel", () => {
       },
     };
 
-    const { rerender } = render(
+    const { rerender } = renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={waveResponse}
@@ -858,7 +865,7 @@ describe("DpmWaveCommandCenterPanel", () => {
   });
 
   it("does not enable approval when mandate attention items block the workflow", async () => {
-    render(
+    renderWithQueryClient(
       <DpmWaveCommandCenterPanel
         portfolioId="PB_SG_GLOBAL_BAL_001"
         waveList={{

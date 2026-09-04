@@ -1,6 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
@@ -39,6 +37,10 @@ import type {
   DpmCampaignWorkflowGatewayResponse,
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
+import {
+  createQueryClientWrapper,
+  createTestQueryClient,
+} from "../helpers/query-client-test-harness";
 
 vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   approveDpmWave: vi.fn(),
@@ -331,17 +333,10 @@ function renderActions(
         campaignDefinitions: definitions,
       }),
     {
-      wrapper: ({ children }: { children: ReactNode }) =>
-        createElement(QueryClientProvider, { client: queryClient }, children),
+      wrapper: createQueryClientWrapper(queryClient),
     },
   );
   return { ...rendered, queryClient };
-}
-
-function createTestQueryClient(): QueryClient {
-  return new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
 }
 
 describe("useDpmWaveCommandCenterActions", () => {
