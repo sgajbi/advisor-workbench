@@ -23,7 +23,7 @@ runtime, a minimal immutable production container, and a Gateway-first product b
 1. Node `22.23.1` and its bundled npm `10.9.8` are the exact CI and container build toolchain.
 2. Developers may use the governed Node 22/npm 10 compatibility range; protected CI proves the
    exact release used to produce deployable evidence.
-3. Next.js `15.5.22` remains temporarily accepted while it is in Maintenance LTS. Its support
+3. Next.js `15.5.25` remains temporarily accepted while it is in Maintenance LTS. Its support
    posture must be reviewed by 2026-09-15; a major upgrade requires its own compatibility evidence.
 4. React `19.1.0` and TypeScript `5.9.3` remain exact-version application foundations.
 5. The production image uses the digest-pinned official Debian Bookworm slim Node image, Next
