@@ -770,15 +770,30 @@ describe("useDpmWaveCommandCenterActions", () => {
       waveId: "dwv_002",
     });
     vi.useRealTimers();
+    let resolveRemountDetail!: (value: DpmWaveGatewayResponse) => void;
+    vi.mocked(getDpmWave).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRemountDetail = resolve;
+      }),
+    );
 
     const secondMount = renderActions(campaignDefinitions, queryClient);
     expect(secondMount.result.current.model.selectedWaveId).toBe("dwv_002");
+    expect(secondMount.result.current.pendingAction).toBe(
+      "Awaiting rebalance source confirmation",
+    );
     expect(secondMount.result.current.model.selectedWaveState).not.toBe(
       "SIMULATION_READY",
     );
+
+    act(() => secondMount.result.current.requestApproval());
+    expect(approveDpmWave).not.toHaveBeenCalled();
+
+    act(() => resolveRemountDetail(createdResponse));
     await waitFor(() =>
       expect(secondMount.result.current.model.selectedWaveState).toBe("CREATED"),
     );
+    expect(secondMount.result.current.pendingAction).toBeNull();
 
     vi.mocked(approveDpmWave).mockResolvedValue(createdResponse);
     act(() => secondMount.result.current.requestApproval());
