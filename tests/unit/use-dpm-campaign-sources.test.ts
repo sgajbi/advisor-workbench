@@ -869,6 +869,82 @@ describe("useDpmCampaignSources", () => {
     );
   });
 
+  it("does not resurrect another terminal campaign while confirming lifecycle evidence", async () => {
+    const queryClient = createTestQueryClient();
+    const priorDefinitions = definitionListResponse("SUPERSEDED", "2");
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitions(),
+      priorDefinitions,
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowA),
+      {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      },
+    );
+    const rowBReceipt = {
+      campaignId: rowB.campaignId,
+      campaignVersion: rowB.campaignVersion,
+      status: "SUPERSEDED",
+      replacementCampaignVersion: "3",
+    } as const;
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue({
+      ...definitionResponse("campaign-b"),
+      data: {
+        campaign_id: rowB.campaignId,
+        campaign_version: rowB.campaignVersion,
+        status: "SUPERSEDED",
+        superseded_by_campaign_version: "3",
+      },
+    });
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue({
+      ...definitionResponse("campaign-b"),
+      data: {
+        items: [
+          {
+            campaign_id: rowA.campaignId,
+            campaign_version: rowA.campaignVersion,
+            status: "ACTIVE",
+          },
+          {
+            campaign_id: rowB.campaignId,
+            campaign_version: rowB.campaignVersion,
+            status: "SUPERSEDED",
+            superseded_by_campaign_version: "3",
+          },
+        ],
+      },
+    });
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowB,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await act(async () => {
+      await result.current
+        .refreshLifecycle(rowB, rowBReceipt)
+        .catch(() => undefined);
+    });
+
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(priorDefinitions);
+    expect(result.current.lifecycle).toBeNull();
+    await waitFor(() =>
+      expect(result.current.lifecycleError).toContain(
+        "Lifecycle action was recorded",
+      ),
+    );
+  });
+
   it("deduplicates concurrent lifecycle confirmation reads", async () => {
     const pendingLifecycle = deferred<DpmCampaignDefinitionGatewayResponse>();
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValue(
