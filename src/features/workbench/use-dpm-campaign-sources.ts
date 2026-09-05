@@ -418,6 +418,11 @@ export function useDpmCampaignSources({
     ]);
     try {
       const confirmation = await queryClient.fetchQuery(confirmationOptions);
+      const retainedLifecycleReceipts = queryClient
+        .getQueriesData<DpmCampaignLifecycleConfirmationReceipt>({
+          queryKey: dpmCampaignQueryKeys.lifecycleConfirmationReceipts(),
+        })
+        .flatMap(([, receipt]) => (receipt ? [receipt] : []));
       if (
         confirmationReceipt &&
         (!confirmsCampaignLifecycleEvidence(
@@ -430,6 +435,18 @@ export function useDpmCampaignSources({
           ))
       ) {
         throw new Error("Confirmed campaign definition is not yet available.");
+      }
+      if (
+        !retainedLifecycleReceipts.every((receipt) =>
+          acceptsActiveCampaignDefinitions(
+            confirmation.definitions,
+            receipt,
+          ),
+        )
+      ) {
+        throw new Error(
+          "Campaign definitions conflict with a confirmed lifecycle action.",
+        );
       }
       if (
         queryClient.getQueryData<ServerRead>(
