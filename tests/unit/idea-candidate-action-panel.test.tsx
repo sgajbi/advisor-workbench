@@ -304,6 +304,61 @@ describe("IdeaCandidateActionPanel", () => {
     expect(screen.queryByTestId("idea-review-retry")).not.toBeInTheDocument();
   });
 
+  it("retains an exact retry after an indeterminate request timeout", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction
+      .mockRejectedValueOnce(new WorkbenchApiError("advisor idea review", 408))
+      .mockResolvedValueOnce({
+        persistence: { decision: "replayed" },
+        durableStorageBacked: true,
+        supportedFeaturePromoted: false,
+      });
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    expect(await screen.findByTestId("idea-review-retry")).toHaveTextContent(
+      "Review outcome not confirmed",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Retry exact review" }));
+    await screen.findByTestId("idea-action-review-status");
+
+    const first = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[0][0];
+    const retry = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[1][0];
+    expect(retry.idempotencyKey).toBe(first.idempotencyKey);
+    expect(retry.request).toEqual(first.request);
+  });
+
+  it("binds exact retry success to saved terms when the form has an unsaved edit", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValueOnce({
+        persistence: { decision: "replayed" },
+        durableStorageBacked: true,
+        supportedFeaturePromoted: false,
+      });
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    await screen.findByTestId("idea-review-retry");
+    fireEvent.change(screen.getByLabelText("Review action"), {
+      target: { value: "reject" },
+    });
+    fireEvent.change(screen.getByLabelText("Review basis"), {
+      target: { value: "review_required" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Retry exact review" }));
+
+    const status = await screen.findByTestId("idea-action-review-status");
+    expect(status).toHaveTextContent("Review saved");
+    expect(status).toHaveTextContent("Approve for conversion review");
+    expect(status).toHaveTextContent("Cash balance requires review");
+    expect(status).toHaveTextContent("The form contains unsaved changes");
+    expect(screen.getByLabelText("Review action")).toHaveValue("reject");
+    expect(screen.getByLabelText("Review basis")).toHaveValue(
+      "review_required",
+    );
+  });
+
   it("records an edited review as a new visible intent with a fresh identity", async () => {
     ideaApi.recordAdvisorIdeaReviewAction.mockRejectedValueOnce(
       new Error("response lost"),

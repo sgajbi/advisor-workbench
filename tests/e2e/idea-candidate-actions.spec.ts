@@ -124,11 +124,16 @@ test("records a source-owned Idea review without creating a proposal", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Record review" }).click();
 
-  await expect(
-    page.getByText(
-      "Review saved. Opportunity detail and worklist are current.",
-    ),
-  ).toBeVisible();
+  const reviewStatus = page.getByTestId("idea-action-review-status");
+  await expect(reviewStatus).toHaveAttribute(
+    "data-action-state",
+    "recorded-and-refreshed",
+  );
+  await expect(reviewStatus).toContainText(
+    "Review saved. Opportunity detail and worklist are current.",
+  );
+  await expect(reviewStatus).toContainText("Approve for conversion review");
+  await expect(reviewStatus).toContainText("Cash balance requires review");
   expect(recordedRequest?.headers["idempotency-key"]).toMatch(
     /^ui-idea-review-/,
   );
@@ -271,12 +276,35 @@ test("separates exact Idea retry from an edited advisor intent", async ({
   await expect(conversionRecovery).toContainText(
     "Cash balance requires review",
   );
+  await page.getByLabel("Target workflow").selectOption("manage_review");
+  await page.getByLabel("Conversion basis").selectOption("review_required");
   await page
     .getByRole("button", { name: "Retry exact conversion intent" })
     .click();
-  await expect(
-    page.getByTestId("idea-action-conversion-status"),
-  ).toHaveAttribute("data-action-state", "recorded-and-refreshed");
+  const conversionStatus = page.getByTestId("idea-action-conversion-status");
+  await expect(conversionStatus).toHaveAttribute(
+    "data-action-state",
+    "recorded-and-refreshed",
+  );
+  await expect(conversionStatus).toContainText("Advise proposal review");
+  await expect(conversionStatus).toContainText("Cash balance requires review");
+  await expect(conversionStatus).toContainText(
+    "The form contains unsaved changes.",
+  );
+  await expect(page.getByLabel("Target workflow")).toHaveValue("manage_review");
+  await expect(page.getByLabel("Conversion basis")).toHaveValue(
+    "review_required",
+  );
+
+  if (actionRetryEvidenceDirectory) {
+    await page.screenshot({
+      path: path.join(
+        actionRetryEvidenceDirectory,
+        "idea-action-exact-retry-receipt.png",
+      ),
+      fullPage: true,
+    });
+  }
 
   expect(conversionRequests).toHaveLength(2);
   expect(conversionRequests[1].headers["idempotency-key"]).toBe(

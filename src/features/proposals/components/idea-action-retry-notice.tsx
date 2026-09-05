@@ -6,6 +6,25 @@ import type { IdeaActionRetryDetail } from "../idea-action-intent";
 
 import styles from "./idea-action-retry-notice.module.css";
 
+export function IdeaActionTerms({
+  details,
+  labelledBy,
+}: {
+  details: readonly IdeaActionRetryDetail[];
+  labelledBy: string;
+}) {
+  return (
+    <dl className={styles.intent} aria-labelledby={labelledBy}>
+      {details.map((detail) => (
+        <div key={detail.label}>
+          <dt>{detail.label}</dt>
+          <dd>{detail.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export default function IdeaActionRetryNotice({
   actionLabel,
   details,
@@ -42,14 +61,7 @@ export default function IdeaActionRetryNotice({
             action.
           </p>
         </div>
-        <dl className={styles.intent} aria-labelledby={titleId}>
-          {details.map((detail) => (
-            <div key={detail.label}>
-              <dt>{detail.label}</dt>
-              <dd>{detail.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <IdeaActionTerms details={details} labelledBy={titleId} />
         <ActionButton
           priority="secondary"
           type="button"

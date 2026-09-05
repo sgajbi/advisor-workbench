@@ -17,5 +17,7 @@ source-owned queue and detail refresh complete.
 
 - `idea-action-exact-retry.png` — diagnostic fixture-contract proof of the retained review terms and
   explicit exact-retry choice after an ambiguous Gateway response.
+- `idea-action-exact-retry-receipt.png` — source-confirmed exact conversion retry receipt showing
+  the persisted terms separately from the adviser’s unsaved form changes.
 
 This is browser contract evidence, not canonical live-service or production identity evidence.
