@@ -2175,9 +2175,12 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
-    vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
-      new Error("Campaign definitions refresh failed"),
-    );
+    vi.mocked(listDpmCampaignDefinitions)
+      .mockRejectedValueOnce(new Error("Campaign definitions refresh failed"))
+      .mockResolvedValueOnce({
+        ...campaignDefinitions,
+        data: { ...campaignDefinitions.data, items: [] },
+      });
     const { result } = renderActions();
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());

@@ -646,6 +646,57 @@ describe("useDpmCampaignSources", () => {
     );
   });
 
+  it("reuses the retained lifecycle receipt when confirmation is retried", async () => {
+    const queryClient = createTestQueryClient();
+    const confirmedDefinitions = definitionListResponse("SUPERSEDED", "2");
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitions(),
+      confirmedDefinitions,
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+      {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      },
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.confirmationLock(rowA, "lifecycle"),
+      { message: "Awaiting source confirmation." },
+    );
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
+      definitionResponse("campaign-a", "ACTIVE"),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
+      definitionListResponse("ACTIVE"),
+    );
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await act(async () => {
+      await result.current.loadLifecycle(rowA).catch(() => undefined);
+    });
+
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(confirmedDefinitions);
+    expect(result.current.lifecycle).toBeNull();
+    await waitFor(() =>
+      expect(result.current.lifecycleError).toContain(
+        "Lifecycle action was recorded",
+      ),
+    );
+  });
+
   it("deduplicates concurrent lifecycle confirmation reads", async () => {
     const pendingLifecycle = deferred<DpmCampaignDefinitionGatewayResponse>();
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValue(
@@ -809,6 +860,24 @@ describe("useDpmCampaignSources", () => {
     expect(
       queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
     ).toEqual(confirmedDefinitions);
+
+    const activeListAfterTerminalRemoval = {
+      ...confirmedDefinitions,
+      correlation_id: "corr-active-list-after-terminal-removal",
+      data: { items: [] },
+    };
+    rerender({
+      definitions: activeListAfterTerminalRemoval,
+      readId: "definitions-after-terminal-removal",
+    });
+    expect(result.current.definitions).toEqual(
+      activeListAfterTerminalRemoval,
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+      ).toEqual(activeListAfterTerminalRemoval),
+    );
   });
 
   it("clears a prior launch package when newer readiness blocks launch", async () => {

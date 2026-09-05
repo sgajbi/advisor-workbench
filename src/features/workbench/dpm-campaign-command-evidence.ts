@@ -165,6 +165,24 @@ export function containsCampaignLifecycleEvidence(
   });
 }
 
+export function confirmsCampaignLifecycleEvidence(
+  response: DpmCampaignDefinitionGatewayResponse,
+  receipt: DpmCampaignLifecycleConfirmationReceipt,
+): boolean {
+  if (containsCampaignLifecycleEvidence(response, receipt)) return true;
+  if (!isTerminalLifecycleStatus(receipt.status)) return false;
+  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  return !items.some(
+    (item) =>
+      item !== null &&
+      typeof item === "object" &&
+      readString((item as Record<string, unknown>).campaign_id) ===
+        receipt.campaignId &&
+      readString((item as Record<string, unknown>).campaign_version) ===
+        receipt.campaignVersion,
+  );
+}
+
 export function containsCampaignWorkflowEvidence(
   evidence: {
     approvalDecisions: DpmCampaignWorkflowGatewayResponse;
@@ -244,6 +262,10 @@ function receipt(
   transition = false,
 ): DpmCampaignWorkflowConfirmationReceipt {
   return { evidenceRef, source, transition };
+}
+
+function isTerminalLifecycleStatus(status: string): boolean {
+  return status === "RETIRED" || status === "SUPERSEDED";
 }
 
 function campaignWorkflowCommandLabel(
