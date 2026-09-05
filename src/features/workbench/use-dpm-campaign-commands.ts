@@ -19,10 +19,12 @@ import {
 } from "@/features/workbench/dpm-campaign-command-executor";
 import {
   buildCampaignLifecycleCommandEvidence,
+  buildCampaignWorkflowConfirmationReceipt,
   buildCampaignWorkflowCommandEvidence,
   isCampaignLifecycleCommandBlocked,
   validateCampaignLifecycleCommand,
   type DpmCampaignLifecycleConfirmationReceipt,
+  type DpmCampaignWorkflowConfirmationReceipt,
   type DpmCampaignLifecycleCommandEvidence,
   type DpmCampaignWorkflowCommandEvidence,
 } from "@/features/workbench/dpm-campaign-command-evidence";
@@ -46,7 +48,7 @@ type CampaignSources = Readonly<{
   ) => Promise<unknown>;
   refreshWorkflow: (
     row: DpmCampaignDefinitionRow,
-    requiredEvidenceRef?: string,
+    requiredReceipt?: DpmCampaignWorkflowConfirmationReceipt,
   ) => Promise<unknown>;
 }>;
 
@@ -140,7 +142,10 @@ export function useDpmCampaignCommands({
         ),
       };
       try {
-        await sources.refreshWorkflow(campaign, result.value.evidenceRef);
+        await sources.refreshWorkflow(
+          campaign,
+          buildCampaignWorkflowConfirmationReceipt(command),
+        );
       } catch {
         // The accepted command evidence remains visible while source state owns confirmation failure.
       }

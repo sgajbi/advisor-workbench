@@ -360,7 +360,11 @@ describe("useDpmCampaignSources", () => {
     );
 
     await act(async () =>
-      result.current.refreshWorkflow(rowA, "task-confirmed"),
+      result.current.refreshWorkflow(rowA, {
+        evidenceRef: "task-confirmed",
+        source: "assignmentTasks",
+        transition: false,
+      }),
     );
     await waitFor(() =>
       expect(result.current.workflow?.assignmentTasks).toEqual(confirmed[2]),
@@ -383,6 +387,91 @@ describe("useDpmCampaignSources", () => {
         assignmentTasks: DpmCampaignWorkflowGatewayResponse;
       }>(dpmCampaignQueryKeys.workflow(rowA))?.assignmentTasks,
     ).toEqual(confirmed[2]);
+
+    const afterCommandPage = {
+      ...beforeCommand[2],
+      correlation_id: "corr-task-after-command-page",
+      data: {
+        items: [{ task_ref: "newer-task-outside-confirmation-page" }],
+        total_count: 12,
+      },
+    };
+    rerender({
+      readId: "navigation-after-receipt-paged-out",
+      evidence: [
+        beforeCommand[0],
+        beforeCommand[1],
+        afterCommandPage,
+        beforeCommand[3],
+      ],
+    });
+    expect(result.current.workflow?.assignmentTasks).toEqual(afterCommandPage);
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{
+          assignmentTasks: DpmCampaignWorkflowGatewayResponse;
+        }>(dpmCampaignQueryKeys.workflow(rowA))?.assignmentTasks,
+      ).toEqual(afterCommandPage),
+    );
+  });
+
+  it("does not confirm a task transition from the pre-existing task reference", async () => {
+    const beforeTransition = [
+      "approval-before",
+      "action-before",
+      "task-before",
+      "control-before",
+    ].map(workflowResponse);
+    const taskWithoutTransition = {
+      ...workflowResponse("task-review-001"),
+      data: {
+        items: [{ task_ref: "task-review-001" }],
+        total_count: 1,
+      },
+    };
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(
+      beforeTransition[0],
+    );
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(
+      beforeTransition[1],
+    );
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(
+      taskWithoutTransition,
+    );
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(
+      beforeTransition[3],
+    );
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            readId: "before-transition",
+            approvalDecisions: beforeTransition[0],
+            assignmentActions: beforeTransition[1],
+            assignmentTasks: taskWithoutTransition,
+            makerCheckerControls: beforeTransition[3],
+          },
+        }),
+      { wrapper: createQueryClientWrapper() },
+    );
+
+    await act(async () => {
+      await result.current
+        .refreshWorkflow(rowA, {
+          evidenceRef: "task-review-001:acknowledged",
+          source: "assignmentTasks",
+          transition: true,
+        })
+        .catch(() => undefined);
+    });
+
+    await waitFor(() =>
+      expect(result.current.workflowError).toContain(
+        "Governance action was recorded",
+      ),
+    );
   });
 
   it("suppresses retained workflow when current source evidence is incomplete", async () => {

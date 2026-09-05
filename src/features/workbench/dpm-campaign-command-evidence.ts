@@ -2,6 +2,7 @@ import {
   campaignCommandActorId,
   type DpmCampaignLifecycleCommandInput,
   type DpmCampaignLifecycleCommandType,
+  type DpmCampaignWorkflowCommandInput,
   type DpmCampaignWorkflowCommandType,
 } from "@/features/workbench/dpm-campaign-command-contracts";
 import type {
@@ -39,6 +40,17 @@ export type DpmCampaignLifecycleConfirmationReceipt = Readonly<{
   campaignVersion: string;
   status: string;
   replacementCampaignVersion: string;
+}>;
+
+export type DpmCampaignWorkflowConfirmationReceipt = Readonly<{
+  evidenceRef: string;
+  source:
+    | "approvalDecisions"
+    | "assignmentActions"
+    | "assignmentTasks"
+    | "makerCheckerControls";
+  transition: boolean;
+  confirmedTotalCount?: number;
 }>;
 
 export function validateCampaignLifecycleCommand(
@@ -160,26 +172,78 @@ export function containsCampaignWorkflowEvidence(
     assignmentTasks: DpmCampaignWorkflowGatewayResponse;
     makerCheckerControls: DpmCampaignWorkflowGatewayResponse;
   },
-  evidenceRef: string,
+  receipt: DpmCampaignWorkflowConfirmationReceipt,
 ): boolean {
-  return Object.values(evidence).some((response) => {
-    const items = Array.isArray(response.data.items) ? response.data.items : [];
-    return items.some(
-      (item) =>
-        item !== null &&
-        typeof item === "object" &&
-        [
-          "evidence_ref",
-          "decision_ref",
-          "action_ref",
-          "task_ref",
-          "control_ref",
-        ].some((field) =>
-          Object.prototype.hasOwnProperty.call(item, field) &&
-          readString((item as Record<string, unknown>)[field]) === evidenceRef,
-        ),
+  const response = evidence[receipt.source];
+  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  return items.some((item) => {
+    if (item === null || typeof item !== "object") return false;
+    const record = item as Record<string, unknown>;
+    if (receipt.transition) {
+      const transitions = [
+        record.transitions,
+        record.transition_history,
+        record.task_transitions,
+      ].find(Array.isArray);
+      return (transitions ?? []).some(
+        (transition) =>
+          transition !== null &&
+          typeof transition === "object" &&
+          readString(
+            (transition as Record<string, unknown>).transition_ref,
+          ) === receipt.evidenceRef,
+      );
+    }
+    return [
+      "evidence_ref",
+      "decision_ref",
+      "action_ref",
+      "task_ref",
+      "control_ref",
+    ].some(
+      (field) => readString(record[field]) === receipt.evidenceRef,
     );
   });
+}
+
+export function buildCampaignWorkflowConfirmationReceipt(
+  command: DpmCampaignWorkflowCommandInput,
+): DpmCampaignWorkflowConfirmationReceipt {
+  switch (command.commandType) {
+    case "approval_decision":
+      return receipt("approvalDecisions", command.body.decision_ref);
+    case "assignment_action":
+      return receipt("assignmentActions", command.body.action_ref);
+    case "assignment_task":
+      return receipt("assignmentTasks", command.body.task_ref);
+    case "task_transition":
+      return receipt("assignmentTasks", command.body.transition_ref, true);
+    case "maker_checker_control":
+      return receipt("makerCheckerControls", command.body.control_ref);
+  }
+}
+
+export function campaignWorkflowEvidenceTotalCount(
+  evidence: {
+    approvalDecisions: DpmCampaignWorkflowGatewayResponse;
+    assignmentActions: DpmCampaignWorkflowGatewayResponse;
+    assignmentTasks: DpmCampaignWorkflowGatewayResponse;
+    makerCheckerControls: DpmCampaignWorkflowGatewayResponse;
+  },
+  receipt: DpmCampaignWorkflowConfirmationReceipt,
+): number {
+  const response = evidence[receipt.source];
+  const reported = Number(response.data.total_count);
+  if (Number.isFinite(reported) && reported >= 0) return reported;
+  return Array.isArray(response.data.items) ? response.data.items.length : 0;
+}
+
+function receipt(
+  source: DpmCampaignWorkflowConfirmationReceipt["source"],
+  evidenceRef: string,
+  transition = false,
+): DpmCampaignWorkflowConfirmationReceipt {
+  return { evidenceRef, source, transition };
 }
 
 function campaignWorkflowCommandLabel(
