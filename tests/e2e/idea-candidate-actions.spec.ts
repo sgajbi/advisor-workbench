@@ -13,6 +13,9 @@ const candidateEvidenceIdentity = {
 const explanationEvidenceDirectory = process.env.ISSUE_996_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_996_EVIDENCE_DIR)
   : null;
+const actionRetryEvidenceDirectory = process.env.ISSUE_1002_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_1002_EVIDENCE_DIR)
+  : null;
 const notUsefulFeedbackReasons = [
   "not_relevant",
   "already_known",
@@ -141,6 +144,145 @@ test("records a source-owned Idea review without creating a proposal", async ({
     page.getByRole("link", { name: /Open Proposal Builder/ }),
   ).toBeVisible();
   await expect(page.getByText(/proposal created/i)).toHaveCount(0);
+});
+
+test("separates exact Idea retry from an edited advisor intent", async ({
+  page,
+}, testInfo) => {
+  await mockIdeaCandidateActions(page);
+  const reviewRequests: Array<{
+    headers: Record<string, string>;
+    body: Record<string, unknown>;
+  }> = [];
+  const conversionRequests: Array<{
+    headers: Record<string, string>;
+    body: Record<string, unknown>;
+  }> = [];
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/review-actions`,
+    async (route) => {
+      reviewRequests.push({
+        headers: route.request().headers(),
+        body: route.request().postDataJSON() as Record<string, unknown>,
+      });
+      if (reviewRequests.length === 1) {
+        await route.fulfill({
+          status: 504,
+          json: {
+            title: "Source response not received",
+            status: 504,
+          },
+        });
+        return;
+      }
+      await route.fulfill({
+        json: {
+          data: {
+            persistence: { decision: "accepted" },
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/conversion-intents`,
+    async (route) => {
+      conversionRequests.push({
+        headers: route.request().headers(),
+        body: route.request().postDataJSON() as Record<string, unknown>,
+      });
+      if (conversionRequests.length === 1) {
+        await route.fulfill({
+          status: 504,
+          json: {
+            title: "Source response not received",
+            status: 504,
+          },
+        });
+        return;
+      }
+      await route.fulfill({
+        json: {
+          data: {
+            persistence: { decision: "replayed" },
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}&candidateId=${candidateId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  await page.getByRole("button", { name: "Record review" }).click();
+  const reviewRecovery = page.getByTestId("idea-review-retry");
+  await expect(reviewRecovery).toHaveAttribute(
+    "data-action-state",
+    "outcome-not-confirmed",
+  );
+  await expect(reviewRecovery).toContainText("Approve for conversion review");
+  await expect(reviewRecovery).toContainText("Cash balance requires review");
+  await expect(
+    page.getByRole("button", { name: "Change review to record new" }),
+  ).toBeDisabled();
+
+  const screenshot = await page.screenshot({ fullPage: true });
+  await testInfo.attach("idea-action-exact-retry", {
+    body: screenshot,
+    contentType: "image/png",
+  });
+  if (actionRetryEvidenceDirectory) {
+    await mkdir(actionRetryEvidenceDirectory, { recursive: true });
+    await page.screenshot({
+      path: path.join(
+        actionRetryEvidenceDirectory,
+        "idea-action-exact-retry.png",
+      ),
+      fullPage: true,
+    });
+  }
+
+  await page.getByLabel("Review action").selectOption("reject");
+  await page.getByLabel("Review basis").selectOption("review_required");
+  await page.getByRole("button", { name: "Record updated review" }).click();
+  await expect(page.getByTestId("idea-action-review-status")).toHaveAttribute(
+    "data-action-state",
+    "recorded-and-refreshed",
+  );
+
+  expect(reviewRequests).toHaveLength(2);
+  expect(reviewRequests[1].headers["idempotency-key"]).not.toBe(
+    reviewRequests[0].headers["idempotency-key"],
+  );
+  expect(reviewRequests[1].body).toMatchObject({
+    action: "reject",
+    reasonCodes: ["review_rejected", "review_required"],
+  });
+
+  await page.getByRole("button", { name: "Record intent" }).click();
+  const conversionRecovery = page.getByTestId("idea-conversion-retry");
+  await expect(conversionRecovery).toContainText("Advise proposal review");
+  await expect(conversionRecovery).toContainText(
+    "Cash balance requires review",
+  );
+  await page
+    .getByRole("button", { name: "Retry exact conversion intent" })
+    .click();
+  await expect(
+    page.getByTestId("idea-action-conversion-status"),
+  ).toHaveAttribute("data-action-state", "recorded-and-refreshed");
+
+  expect(conversionRequests).toHaveLength(2);
+  expect(conversionRequests[1].headers["idempotency-key"]).toBe(
+    conversionRequests[0].headers["idempotency-key"],
+  );
+  expect(conversionRequests[1].body).toEqual(conversionRequests[0].body);
 });
 
 test("records every adviser-selected governed feedback reason through Gateway", async ({
@@ -291,8 +433,7 @@ test("renders a governed idea rationale with distinct evidence limits", async ({
 }, testInfo) => {
   await mockIdeaCandidateActions(page);
   let recordedRequest:
-    | { body: Record<string, string>; idempotencyKey?: string }
-    | undefined;
+    { body: Record<string, string>; idempotencyKey?: string } | undefined;
   await page.route(
     `**/api/bff/api/v1/ideas/candidates/${candidateId}/ai-explanations`,
     async (route) => {
@@ -360,7 +501,9 @@ test("renders a governed idea rationale with distinct evidence limits", async ({
   const explanation = page.getByTestId("idea-candidate-explanation");
   await expect(explanation).toHaveAttribute("data-explanation-state", "served");
   await expect(explanation.getByText("Grounded rationale")).toBeVisible();
-  await expect(explanation.getByText("Benchmark Evidence Missing")).toBeVisible();
+  await expect(
+    explanation.getByText("Benchmark Evidence Missing"),
+  ).toBeVisible();
   await expect(explanation.getByText("High Cash Ratio")).toBeVisible();
   await expect(explanation.getByText("run-browser-001")).toBeAttached();
   await expect(
@@ -380,7 +523,10 @@ test("renders a governed idea rationale with distinct evidence limits", async ({
   if (explanationEvidenceDirectory) {
     await mkdir(explanationEvidenceDirectory, { recursive: true });
     await page.screenshot({
-      path: path.join(explanationEvidenceDirectory, "idea-governed-rationale.png"),
+      path: path.join(
+        explanationEvidenceDirectory,
+        "idea-governed-rationale.png",
+      ),
       fullPage: true,
     });
   }
@@ -438,15 +584,23 @@ test("keeps advisor actions available with deterministic evidence when AI is una
     "data-explanation-state",
     "unavailable",
   );
-  await expect(explanation.getByText("Deterministic evidence summary")).toBeVisible();
+  await expect(
+    explanation.getByText("Deterministic evidence summary"),
+  ).toBeVisible();
   await expect(
     explanation.getByText(
       "Cash remains above the source policy threshold for advisor review.",
     ),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Record review" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Record feedback" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Record intent" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Record review" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Record feedback" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Record intent" }),
+  ).toBeEnabled();
   const screenshot = await page.screenshot({ fullPage: true });
   await testInfo.attach("idea-deterministic-fallback", {
     body: screenshot,
