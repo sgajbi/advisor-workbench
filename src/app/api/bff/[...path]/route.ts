@@ -13,6 +13,7 @@ import {
   matchesIdeaPresentationReceiptTenantAuthority,
 } from "@/features/workbench/caller-context";
 import { buildGatewayBffRequestHeaders } from "@/features/workbench/bff-request-headers";
+import { readGatewayBffResponse } from "@/features/workbench/bff-response";
 
 const BFF_PATH_PREFIX = "/api/bff/";
 
@@ -33,7 +34,9 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     upstreamPath,
   });
   if (advisorBookAuthority.status === "rejected") {
-    const rejection = advisorBookAuthorityRejection(advisorBookAuthority.reason);
+    const rejection = advisorBookAuthorityRejection(
+      advisorBookAuthority.reason,
+    );
     return NextResponse.json(
       { code: rejection.code, status: "rejected" },
       { status: rejection.status, headers: { "cache-control": "no-store" } },
@@ -60,38 +63,49 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   if (ideaAuthority.status === "applied") {
     requestBody = ideaAuthority.bodyText;
   }
-  const advisorCockpitAuthority = applyAdvisorCockpitCallerContextHeaders(headers, {
-    method: request.method,
-    upstreamPath,
-    searchParams: request.nextUrl.searchParams,
-    bodyText: requestBody,
-  });
+  const advisorCockpitAuthority = applyAdvisorCockpitCallerContextHeaders(
+    headers,
+    {
+      method: request.method,
+      upstreamPath,
+      searchParams: request.nextUrl.searchParams,
+      bodyText: requestBody,
+    },
+  );
   if (advisorCockpitAuthority.status === "rejected") {
-    const rejection = advisorCockpitAuthorityRejection(advisorCockpitAuthority.reason);
+    const rejection = advisorCockpitAuthorityRejection(
+      advisorCockpitAuthority.reason,
+    );
     return NextResponse.json(
       { code: rejection.code, status: "rejected" },
       { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
-  const advisoryCopilotAuthority = await applyAdvisoryCopilotCallerContextHeaders(headers, {
-    method: request.method,
-    upstreamPath,
-    bodyText: requestBody,
-    gatewayBaseUrl,
-  });
+  const advisoryCopilotAuthority =
+    await applyAdvisoryCopilotCallerContextHeaders(headers, {
+      method: request.method,
+      upstreamPath,
+      bodyText: requestBody,
+      gatewayBaseUrl,
+    });
   if (advisoryCopilotAuthority.status === "rejected") {
-    const rejection = advisoryCopilotAuthorityRejection(advisoryCopilotAuthority.reason);
+    const rejection = advisoryCopilotAuthorityRejection(
+      advisoryCopilotAuthority.reason,
+    );
     return NextResponse.json(
       { code: rejection.code, status: "rejected" },
       { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
-  const reportingAuthority = applyReportOrderingRouteCallerContextHeaders(headers, {
-    method: request.method,
-    upstreamPath,
-    searchParams: request.nextUrl.searchParams,
-    bodyText: requestBody,
-  });
+  const reportingAuthority = applyReportOrderingRouteCallerContextHeaders(
+    headers,
+    {
+      method: request.method,
+      upstreamPath,
+      searchParams: request.nextUrl.searchParams,
+      bodyText: requestBody,
+    },
+  );
   if (reportingAuthority.status === "rejected") {
     const rejection = reportingAuthorityRejection(reportingAuthority.reason);
     return NextResponse.json(
@@ -110,7 +124,8 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       : request.nextUrl.search;
   const url = `${gatewayBaseUrl}/${encodedUpstreamPath}${upstreamSearch}`;
   let response: Response;
-  let responseBody: ArrayBuffer;
+  let responseBody: ArrayBuffer | null;
+  let responseHeaders: Headers;
   try {
     response = await fetch(url, {
       method: request.method,
@@ -119,7 +134,8 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       cache: "no-store",
       signal: createGatewayRequestSignal(),
     });
-    responseBody = await response.arrayBuffer();
+    ({ body: responseBody, headers: responseHeaders } =
+      await readGatewayBffResponse(response, request.method));
   } catch (error) {
     const timedOut = isGatewayRequestTimeout(error);
     return NextResponse.json(
@@ -134,17 +150,15 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
     );
   }
 
-  const responseHeaders = new Headers(response.headers);
-  responseHeaders.delete("transfer-encoding");
-
   if (
     response.ok &&
     ideaAuthority.status === "applied" &&
     ideaAuthority.presentationReceiptTenantId &&
-    !matchesIdeaPresentationReceiptTenantAuthority(
-      new TextDecoder().decode(responseBody),
-      ideaAuthority.presentationReceiptTenantId,
-    )
+    (responseBody === null ||
+      !matchesIdeaPresentationReceiptTenantAuthority(
+        new TextDecoder().decode(responseBody),
+        ideaAuthority.presentationReceiptTenantId,
+      ))
   ) {
     return NextResponse.json(
       {
@@ -189,7 +203,10 @@ function advisorCockpitAuthorityRejection(
 ): { code: string; status: number } {
   switch (reason) {
     case "authenticated_principal_required":
-      return { code: "advisor_cockpit_authenticated_principal_required", status: 401 };
+      return {
+        code: "advisor_cockpit_authenticated_principal_required",
+        status: 401,
+      };
     case "advisor_cockpit_scope_not_entitled":
       return { code: "advisor_cockpit_scope_not_entitled", status: 403 };
     case "invalid_advisor_cockpit_request":
@@ -199,7 +216,10 @@ function advisorCockpitAuthorityRejection(
     case "development_authority_not_allowed":
     case "invalid_authority_mode":
     case "invalid_advisor_cockpit_configuration":
-      return { code: "advisor_cockpit_authority_configuration_rejected", status: 500 };
+      return {
+        code: "advisor_cockpit_authority_configuration_rejected",
+        status: 500,
+      };
   }
 }
 
@@ -211,11 +231,17 @@ function advisorBookAuthorityRejection(
 ): { code: string; status: number } {
   switch (reason) {
     case "authenticated_principal_required":
-      return { code: "advisor_book_authenticated_principal_required", status: 401 };
+      return {
+        code: "advisor_book_authenticated_principal_required",
+        status: 401,
+      };
     case "development_authority_not_allowed":
     case "invalid_authority_mode":
     case "invalid_advisor_book_configuration":
-      return { code: "advisor_book_authority_configuration_rejected", status: 500 };
+      return {
+        code: "advisor_book_authority_configuration_rejected",
+        status: 500,
+      };
   }
 }
 
@@ -227,7 +253,10 @@ function advisoryCopilotAuthorityRejection(
 ): { code: string; status: number } {
   switch (reason) {
     case "authenticated_principal_required":
-      return { code: "advisory_copilot_authenticated_principal_required", status: 401 };
+      return {
+        code: "advisory_copilot_authenticated_principal_required",
+        status: 401,
+      };
     case "invalid_advisory_copilot_request":
       return { code: "advisory_copilot_invalid_request", status: 422 };
     case "advisory_copilot_scope_not_entitled":
@@ -237,7 +266,10 @@ function advisoryCopilotAuthorityRejection(
     case "development_authority_not_allowed":
     case "invalid_authority_mode":
     case "invalid_advisory_copilot_configuration":
-      return { code: "advisory_copilot_authority_configuration_rejected", status: 500 };
+      return {
+        code: "advisory_copilot_authority_configuration_rejected",
+        status: 500,
+      };
   }
 }
 
@@ -249,7 +281,10 @@ function reportingAuthorityRejection(
 ): { code: string; status: number } {
   switch (reason) {
     case "authenticated_principal_required":
-      return { code: "reporting_authenticated_principal_required", status: 401 };
+      return {
+        code: "reporting_authenticated_principal_required",
+        status: 401,
+      };
     case "reporting_scope_not_entitled":
       return { code: "reporting_scope_not_entitled", status: 403 };
     case "invalid_reporting_request":
@@ -257,41 +292,44 @@ function reportingAuthorityRejection(
     case "development_authority_not_allowed":
     case "invalid_authority_mode":
     case "invalid_reporting_configuration":
-      return { code: "reporting_authority_configuration_rejected", status: 500 };
+      return {
+        code: "reporting_authority_configuration_rejected",
+        status: 500,
+      };
   }
 }
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return proxy(request, await params);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return proxy(request, await params);
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return proxy(request, await params);
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return proxy(request, await params);
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
+  { params }: { params: Promise<{ path: string[] }> },
 ) {
   return proxy(request, await params);
 }
