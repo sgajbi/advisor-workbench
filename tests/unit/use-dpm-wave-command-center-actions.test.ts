@@ -2464,7 +2464,7 @@ describe("useDpmWaveCommandCenterActions", () => {
         contentHash: "sha256:task-transition",
       });
       expect(result.current.campaignWorkflowCommandError).toBeNull();
-      expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
+      expect(result.current.campaignWorkflowEvidenceResolved).toBe(false);
       expect(result.current.campaignWorkflowEvidenceError).toBe(
         "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
       );
