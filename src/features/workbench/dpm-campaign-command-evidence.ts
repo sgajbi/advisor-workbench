@@ -9,6 +9,10 @@ import type {
   DpmCampaignDefinitionGatewayResponse,
   DpmCampaignWorkflowGatewayResponse,
 } from "@/features/workbench/types";
+import {
+  readDpmCampaignDefinitionRecords,
+  readDpmCampaignWorkflowRecords,
+} from "@/features/workbench/dpm-campaign-source-records";
 
 export type DpmCampaignWorkflowCommandEvidence = {
   commandLabel: string;
@@ -150,7 +154,7 @@ export function containsCampaignLifecycleEvidence(
   response: DpmCampaignDefinitionGatewayResponse,
   receipt: DpmCampaignLifecycleConfirmationReceipt,
 ): boolean {
-  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  const items = readDpmCampaignDefinitionRecords(response.data);
   return items.some((item) => {
     if (item === null || typeof item !== "object") return false;
     const record = item as Record<string, unknown>;
@@ -171,7 +175,7 @@ export function confirmsCampaignLifecycleEvidence(
 ): boolean {
   if (containsCampaignLifecycleEvidence(response, receipt)) return true;
   if (!isTerminalLifecycleStatus(receipt.status)) return false;
-  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  const items = readDpmCampaignDefinitionRecords(response.data);
   return !items.some(
     (item) =>
       item !== null &&
@@ -193,7 +197,7 @@ export function containsCampaignWorkflowEvidence(
   receipt: DpmCampaignWorkflowConfirmationReceipt,
 ): boolean {
   const response = evidence[receipt.source];
-  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  const items = readDpmCampaignWorkflowRecords(response.data);
   return items.some((item) => {
     if (item === null || typeof item !== "object") return false;
     const record = item as Record<string, unknown>;
@@ -253,7 +257,7 @@ export function campaignWorkflowEvidenceTotalCount(
   const response = evidence[receipt.source];
   const reported = Number(response.data.total_count);
   if (Number.isFinite(reported) && reported >= 0) return reported;
-  return Array.isArray(response.data.items) ? response.data.items.length : 0;
+  return readDpmCampaignWorkflowRecords(response.data).length;
 }
 
 function receipt(
