@@ -1,23 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  createDpmCampaignApprovalDecision,
-  createDpmCampaignAssignmentAction,
-  createDpmCampaignAssignmentTask,
-  createDpmCampaignAssignmentTaskTransition,
-  createDpmCampaignMakerCheckerControl,
-  launchDpmCampaignDefinition,
-  retireDpmCampaignDefinition,
-  supersedeDpmCampaignDefinition,
-} from "@/features/workbench/dpm-wave-api";
+import { useState } from "react";
 import type { DpmAiWorkflowOutcome } from "@/features/workbench/dpm-ai-workflow-disclosure";
 import {
-  campaignCommandActorId,
   type DpmCampaignLifecycleCommandInput,
-  type DpmCampaignLifecycleCommandType,
   type DpmCampaignWorkflowCommandInput,
-  type DpmCampaignWorkflowCommandType,
 } from "@/features/workbench/dpm-campaign-command-contracts";
 import type {
   DpmCampaignDefinitionGatewayResponse,
@@ -30,6 +17,11 @@ import {
   type DpmWaveCommandCenterPanelModel,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import { useDpmCampaignSources } from "@/features/workbench/use-dpm-campaign-sources";
+import {
+  useDpmCampaignCommands,
+  type DpmCampaignLifecycleCommandEvidence,
+  type DpmCampaignWorkflowCommandEvidence,
+} from "@/features/workbench/use-dpm-campaign-commands";
 import {
   useDpmSelectedWaveSources,
   useDpmWaveListSource,
@@ -52,30 +44,10 @@ type UseDpmWaveCommandCenterActionsInput = {
   campaignMakerCheckerControls?: DpmCampaignWorkflowGatewayResponse | null;
 };
 
-export type DpmCampaignWorkflowCommandEvidence = {
-  commandLabel: string;
-  evidenceRef: string;
-  correlationId: string;
-  sourceService: string;
-  upstreamStatus: string;
-  contentHash: string;
-  reasonCodes: string;
-  operatingBoundaries: string;
-};
-
-export type DpmCampaignLifecycleCommandEvidence = {
-  commandLabel: string;
-  status: string;
-  actor: string;
-  reason: string;
-  replacementCampaignVersion: string;
-  correlationId: string;
-  sourceService: string;
-  upstreamStatus: string;
-  contentHash: string;
-  reasonCodes: string;
-  operatingBoundaries: string;
-};
+export type {
+  DpmCampaignLifecycleCommandEvidence,
+  DpmCampaignWorkflowCommandEvidence,
+} from "@/features/workbench/use-dpm-campaign-commands";
 
 type UseDpmWaveCommandCenterActionsResult = {
   model: DpmWaveCommandCenterPanelModel;
@@ -117,19 +89,23 @@ type UseDpmWaveCommandCenterActionsResult = {
   requestOperationsBrief: () => void;
   retrySourceConfirmation: () => void;
   selectCampaign: (row: DpmCampaignDefinitionRow) => void;
-  loadCampaignWorkflowEvidence: (row: DpmCampaignDefinitionRow) => Promise<void>;
+  loadCampaignWorkflowEvidence: (
+    row: DpmCampaignDefinitionRow,
+  ) => Promise<void>;
   loadCampaignLifecycle: (row: DpmCampaignDefinitionRow) => Promise<void>;
   loadCampaignLaunchHistory: (
     row: DpmCampaignDefinitionRow,
-    offset?: number
+    offset?: number,
   ) => Promise<void>;
-  checkCampaignLaunchReadiness: (row: DpmCampaignDefinitionRow) => Promise<void>;
+  checkCampaignLaunchReadiness: (
+    row: DpmCampaignDefinitionRow,
+  ) => Promise<void>;
   launchCampaign: (row: DpmCampaignDefinitionRow) => Promise<void>;
   recordCampaignLifecycleCommand: (
-    command: DpmCampaignLifecycleCommandInput
+    command: DpmCampaignLifecycleCommandInput,
   ) => Promise<void>;
   recordCampaignWorkflowCommand: (
-    command: DpmCampaignWorkflowCommandInput
+    command: DpmCampaignWorkflowCommandInput,
   ) => Promise<void>;
 };
 
@@ -140,11 +116,6 @@ type SelectedCampaignState = {
 
 type WaveBoundValue<T> = {
   waveId: string;
-  value: T;
-};
-
-type CampaignBoundValue<T> = {
-  campaignKey: string;
   value: T;
 };
 
@@ -164,19 +135,25 @@ export function useDpmWaveCommandCenterActions({
   campaignMakerCheckerControls = null,
 }: UseDpmWaveCommandCenterActionsInput): UseDpmWaveCommandCenterActionsResult {
   const waveListSource = useDpmWaveListSource({ waveList });
-  const serverSelectedWaveId = selectedWaveIdForResponse(waveListSource.serverWaveList);
-  const querySelectedWaveId = selectedWaveIdForResponse(waveListSource.queryWaveList);
+  const serverSelectedWaveId = selectedWaveIdForResponse(
+    waveListSource.serverWaveList,
+  );
+  const querySelectedWaveId = selectedWaveIdForResponse(
+    waveListSource.queryWaveList,
+  );
   const commandSourceWaveId =
     serverSelectedWaveId && serverSelectedWaveId !== querySelectedWaveId
       ? serverSelectedWaveId
-      : querySelectedWaveId ?? serverSelectedWaveId;
+      : (querySelectedWaveId ?? serverSelectedWaveId);
   const waveCommands = useDpmWaveCommands({
     portfolioId,
     selectedWaveId: commandSourceWaveId,
     listQueryKey: waveListSource.listQueryKey,
     allowRetainedSelection: waveListSource.serverWaveList !== null,
   });
-  const commandSelectedWaveId = selectedWaveIdForResponse(waveCommands.actionResponse);
+  const commandSelectedWaveId = selectedWaveIdForResponse(
+    waveCommands.actionResponse,
+  );
   const selectedSourceWaveId =
     commandSelectedWaveId ?? waveCommands.activeWaveId ?? commandSourceWaveId;
   const waveSources = useDpmSelectedWaveSources(
@@ -188,7 +165,7 @@ export function useDpmWaveCommandCenterActions({
       ? waveListSource.queryWaveList
       : serverSelectedWaveId && serverSelectedWaveId !== querySelectedWaveId
         ? waveListSource.serverWaveList
-        : waveListSource.queryWaveList ?? waveListSource.serverWaveList;
+        : (waveListSource.queryWaveList ?? waveListSource.serverWaveList);
   const selectedWaveList =
     waveCommands.retainedSelectionActive &&
     selectedWaveIdForResponse(governedWaveList) !== selectedSourceWaveId
@@ -198,26 +175,6 @@ export function useDpmWaveCommandCenterActions({
     useState<WaveBoundValue<string> | null>(null);
   const [waveReadPending, setWaveReadPending] =
     useState<WaveBoundValue<string> | null>(null);
-  const [campaignLaunchResponse, setCampaignLaunchResponse] =
-    useState<CampaignBoundValue<DpmWaveGatewayResponse> | null>(null);
-  const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] =
-    useState<string | null>(null);
-  const [pendingCampaignLifecycleCommand, setPendingCampaignLifecycleCommand] =
-    useState<string | null>(null);
-  const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
-    useState<string | null>(null);
-  const [campaignLaunchError, setCampaignLaunchError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignLifecycleCommandError, setCampaignLifecycleCommandError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignWorkflowCommandError, setCampaignWorkflowCommandError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignLifecycleCommandEvidence, setCampaignLifecycleCommandEvidence] =
-    useState<CampaignBoundValue<DpmCampaignLifecycleCommandEvidence> | null>(null);
-  const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
-    useState<CampaignBoundValue<DpmCampaignWorkflowCommandEvidence> | null>(null);
-  const selectedCampaignKeyRef = useRef<string | null>(null);
-  const campaignRequestSequenceRef = useRef<Record<string, number>>({});
   const [selectedCampaignState, setSelectedCampaignState] =
     useState<SelectedCampaignState>({
       campaignRowKey: "",
@@ -253,21 +210,22 @@ export function useDpmWaveCommandCenterActions({
     campaignWorkflowAutomation,
   };
   const campaignListModel = buildDpmWaveCommandCenterModel(commonModelInput);
-  const campaignRowKey = campaignListModel.campaignRows.map((row) => row.key).join("|");
+  const campaignRowKey = campaignListModel.campaignRows
+    .map((row) => row.key)
+    .join("|");
   const selectedCampaignKey =
     selectedCampaignState.campaignRowKey === campaignRowKey &&
     campaignListModel.campaignRows.some(
       (row) => row.key === selectedCampaignState.selectedCampaignKey,
     )
       ? selectedCampaignState.selectedCampaignKey
-      : campaignListModel.campaignRows[0]?.key ?? null;
-  useEffect(() => {
-    selectedCampaignKeyRef.current = selectedCampaignKey;
-  }, [selectedCampaignKey]);
+      : (campaignListModel.campaignRows[0]?.key ?? null);
   const initialCampaignKey = campaignListModel.campaignRows[0]?.key ?? null;
   const useInitialCampaignEvidence = selectedCampaignKey === initialCampaignKey;
   const selectedCampaign =
-    campaignListModel.campaignRows.find((row) => row.key === selectedCampaignKey) ??
+    campaignListModel.campaignRows.find(
+      (row) => row.key === selectedCampaignKey,
+    ) ??
     campaignListModel.campaignRows[0] ??
     null;
   const campaignSources = useDpmCampaignSources({
@@ -281,6 +239,32 @@ export function useDpmWaveCommandCenterActions({
       makerCheckerControls: campaignMakerCheckerControls,
     },
   });
+  const campaignSourceModel = buildDpmWaveCommandCenterModel({
+    ...commonModelInput,
+    campaignDefinitions: campaignSources.definitions,
+    campaignLifecycleEvents: campaignSources.lifecycle,
+    campaignLaunchHistory: campaignSources.launchHistory,
+    campaignPreviewReadiness: campaignSources.previewReadiness,
+    campaignLaunchPackage: campaignSources.launchPackage,
+    campaignLaunchResponse: null,
+    campaignApprovalDecisions:
+      campaignSources.workflow?.approvalDecisions ??
+      (useInitialCampaignEvidence ? campaignApprovalDecisions : null),
+    campaignAssignmentActions:
+      campaignSources.workflow?.assignmentActions ??
+      (useInitialCampaignEvidence ? campaignAssignmentActions : null),
+    campaignAssignmentTasks:
+      campaignSources.workflow?.assignmentTasks ??
+      (useInitialCampaignEvidence ? campaignAssignmentTasks : null),
+    campaignMakerCheckerControls:
+      campaignSources.workflow?.makerCheckerControls ??
+      (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
+  });
+  const campaignCommands = useDpmCampaignCommands({
+    selectedCampaign,
+    canLaunch: campaignSourceModel.campaignLaunchPosture.canLaunch,
+    sources: campaignSources,
+  });
   const model = buildDpmWaveCommandCenterModel({
     ...commonModelInput,
     campaignDefinitions: campaignSources.definitions,
@@ -288,17 +272,18 @@ export function useDpmWaveCommandCenterActions({
     campaignLaunchHistory: campaignSources.launchHistory,
     campaignPreviewReadiness: campaignSources.previewReadiness,
     campaignLaunchPackage: campaignSources.launchPackage,
-    campaignLaunchResponse: valueForSelectedCampaign(
-      campaignLaunchResponse,
-      selectedCampaignKey,
-    ),
-    campaignApprovalDecisions: campaignSources.workflow?.approvalDecisions ??
+    campaignLaunchResponse: campaignCommands.launchResponse,
+    campaignApprovalDecisions:
+      campaignSources.workflow?.approvalDecisions ??
       (useInitialCampaignEvidence ? campaignApprovalDecisions : null),
-    campaignAssignmentActions: campaignSources.workflow?.assignmentActions ??
+    campaignAssignmentActions:
+      campaignSources.workflow?.assignmentActions ??
       (useInitialCampaignEvidence ? campaignAssignmentActions : null),
-    campaignAssignmentTasks: campaignSources.workflow?.assignmentTasks ??
+    campaignAssignmentTasks:
+      campaignSources.workflow?.assignmentTasks ??
       (useInitialCampaignEvidence ? campaignAssignmentTasks : null),
-    campaignMakerCheckerControls: campaignSources.workflow?.makerCheckerControls ??
+    campaignMakerCheckerControls:
+      campaignSources.workflow?.makerCheckerControls ??
       (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
   });
   const selectedWaveId = model.selectedWaveId;
@@ -310,26 +295,7 @@ export function useDpmWaveCommandCenterActions({
       waveSources.itemsConfirmationBlocked);
 
   function selectCampaign(row: DpmCampaignDefinitionRow) {
-    selectedCampaignKeyRef.current = row.key;
     setSelectedCampaignState({ campaignRowKey, selectedCampaignKey: row.key });
-  }
-
-  function beginCampaignRequest(surface: string, row: DpmCampaignDefinitionRow) {
-    selectCampaign(row);
-    const sequence = (campaignRequestSequenceRef.current[surface] ?? 0) + 1;
-    campaignRequestSequenceRef.current[surface] = sequence;
-    return { campaignKey: row.key, sequence, surface };
-  }
-
-  function isCurrentCampaignRequest(request: {
-    campaignKey: string;
-    sequence: number;
-    surface: string;
-  }) {
-    return (
-      selectedCampaignKeyRef.current === request.campaignKey &&
-      campaignRequestSequenceRef.current[request.surface] === request.sequence
-    );
   }
 
   function loadProposedChanges() {
@@ -337,7 +303,10 @@ export function useDpmWaveCommandCenterActions({
       return;
     }
     setWaveReadFeedback(null);
-    setWaveReadPending({ waveId: selectedWaveId, value: "Load proposed changes" });
+    setWaveReadPending({
+      waveId: selectedWaveId,
+      value: "Load proposed changes",
+    });
     void waveSources.refreshItems().then((result) => {
       if (result.data && !result.error) {
         setWaveReadFeedback({
@@ -345,7 +314,9 @@ export function useDpmWaveCommandCenterActions({
           value: "Load proposed changes completed.",
         });
       }
-      setWaveReadPending((current) => (current?.waveId === selectedWaveId ? null : current));
+      setWaveReadPending((current) =>
+        current?.waveId === selectedWaveId ? null : current,
+      );
     });
   }
 
@@ -362,7 +333,9 @@ export function useDpmWaveCommandCenterActions({
           value: "Open evidence pack completed.",
         });
       }
-      setWaveReadPending((current) => (current?.waveId === selectedWaveId ? null : current));
+      setWaveReadPending((current) =>
+        current?.waveId === selectedWaveId ? null : current,
+      );
     });
   }
 
@@ -386,7 +359,10 @@ export function useDpmWaveCommandCenterActions({
     }
   }
 
-  async function loadCampaignLaunchHistory(row: DpmCampaignDefinitionRow, offset = 0) {
+  async function loadCampaignLaunchHistory(
+    row: DpmCampaignDefinitionRow,
+    offset = 0,
+  ) {
     selectCampaign(row);
     try {
       await campaignSources.loadLaunchHistory(row, offset);
@@ -396,7 +372,10 @@ export function useDpmWaveCommandCenterActions({
   }
 
   async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
-    if (campaignSources.previewReadinessPending || campaignSources.launchPackagePending) {
+    if (
+      campaignSources.previewReadinessPending ||
+      campaignSources.launchPackagePending
+    ) {
       return;
     }
     selectCampaign(row);
@@ -404,34 +383,6 @@ export function useDpmWaveCommandCenterActions({
       await campaignSources.loadLaunchReadiness(row);
     } catch {
       // Query state owns selected-campaign failure evidence.
-    }
-  }
-
-  async function launchCampaign(row: DpmCampaignDefinitionRow) {
-    if (pendingCampaignLaunchKey || !model.campaignLaunchPosture.canLaunch) {
-      return;
-    }
-    const request = beginCampaignRequest("launch", row);
-    setPendingCampaignLaunchKey(row.key);
-    setCampaignLaunchError(null);
-    try {
-      const response = await launchDpmCampaignDefinition({
-        campaignId: row.campaignId,
-        campaignVersion: row.campaignVersion,
-        requestedAsOfDate: row.asOfDate === "N/A" ? undefined : row.asOfDate,
-      });
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLaunchResponse({ campaignKey: row.key, value: response });
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLaunchError({
-          campaignKey: row.key,
-          value: error instanceof Error ? error.message : "Campaign launch failed.",
-        });
-      }
-    } finally {
-      setPendingCampaignLaunchKey((current) => (current === row.key ? null : current));
     }
   }
 
@@ -447,156 +398,6 @@ export function useDpmWaveCommandCenterActions({
     }
   }
 
-  async function recordCampaignLifecycleCommand(command: DpmCampaignLifecycleCommandInput) {
-    if (pendingCampaignLifecycleCommand) {
-      return;
-    }
-    if (!selectedCampaign) {
-      return;
-    }
-    const campaign = selectedCampaign;
-    const actorId = campaignCommandActorId(command).trim();
-    const reason =
-      command.commandType === "retire"
-        ? command.body.retirement_reason.trim()
-        : command.body.supersession_reason.trim();
-    if (!actorId || !reason || !command.body.correlation_id.trim()) {
-      setCampaignLifecycleCommandError({
-        campaignKey: campaign.key,
-        value: "Campaign lifecycle command requires actor, rationale, and correlation evidence.",
-      });
-      return;
-    }
-    if (
-      command.commandType === "supersede" &&
-      !command.body.superseded_by_campaign_version.trim()
-    ) {
-      setCampaignLifecycleCommandError({
-        campaignKey: campaign.key,
-        value: "Supersede requires an existing replacement campaign version.",
-      });
-      return;
-    }
-    const request = beginCampaignRequest("lifecycle-command", campaign);
-    setPendingCampaignLifecycleCommand(campaign.key);
-    setCampaignLifecycleCommandError(null);
-    setCampaignLifecycleCommandEvidence(null);
-    try {
-      const response =
-        command.commandType === "retire"
-          ? await retireDpmCampaignDefinition({
-              campaignId: campaign.campaignId,
-              campaignVersion: campaign.campaignVersion,
-              body: command.body,
-              actorId,
-            })
-          : await supersedeDpmCampaignDefinition({
-              campaignId: campaign.campaignId,
-              campaignVersion: campaign.campaignVersion,
-              body: command.body,
-              actorId,
-            });
-      if (!isCurrentCampaignRequest(request)) {
-        return;
-      }
-      if (isLifecycleCommandBlocked(response)) {
-        setCampaignLifecycleCommandError({
-          campaignKey: campaign.key,
-          value: "Manage did not accept the campaign lifecycle command.",
-        });
-        return;
-      }
-      setCampaignLifecycleCommandEvidence({
-        campaignKey: campaign.key,
-        value: buildCampaignLifecycleCommandEvidence(command.commandType, response),
-      });
-      try {
-        await campaignSources.refreshLifecycle(campaign);
-      } catch {
-        // Source state distinguishes accepted-but-unconfirmed from command rejection.
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLifecycleCommandError({
-          campaignKey: campaign.key,
-          value: error instanceof Error ? error.message : "Campaign lifecycle command failed.",
-        });
-      }
-    } finally {
-      setPendingCampaignLifecycleCommand((current) =>
-        current === campaign.key ? null : current,
-      );
-    }
-  }
-
-  async function recordCampaignWorkflowCommand(command: DpmCampaignWorkflowCommandInput) {
-    if (pendingCampaignWorkflowCommand) {
-      return;
-    }
-    if (!selectedCampaign) {
-      return;
-    }
-    const campaign = selectedCampaign;
-    if (command.commandType === "task_transition" && !command.taskRef) {
-      setCampaignWorkflowCommandError({
-        campaignKey: campaign.key,
-        value: "Task progress requires an existing Manage task reference.",
-      });
-      return;
-    }
-    const request = beginCampaignRequest("workflow-command", campaign);
-    setPendingCampaignWorkflowCommand(campaign.key);
-    setCampaignWorkflowCommandError(null);
-    setCampaignWorkflowCommandEvidence(null);
-    try {
-      const commandContext = {
-        campaignId: campaign.campaignId,
-        campaignVersion: campaign.campaignVersion,
-        actorId: campaignCommandActorId(command),
-      };
-      const response =
-        command.commandType === "approval_decision"
-          ? await createDpmCampaignApprovalDecision({ ...commandContext, body: command.body })
-          : command.commandType === "assignment_action"
-            ? await createDpmCampaignAssignmentAction({ ...commandContext, body: command.body })
-            : command.commandType === "assignment_task"
-              ? await createDpmCampaignAssignmentTask({ ...commandContext, body: command.body })
-              : command.commandType === "task_transition"
-                ? await createDpmCampaignAssignmentTaskTransition({
-                    ...commandContext,
-                    taskRef: command.taskRef,
-                    body: command.body,
-                  })
-                : await createDpmCampaignMakerCheckerControl({
-                    ...commandContext,
-                    body: command.body,
-                  });
-      if (!isCurrentCampaignRequest(request)) {
-        return;
-      }
-      setCampaignWorkflowCommandEvidence({
-        campaignKey: campaign.key,
-        value: buildCampaignWorkflowCommandEvidence(command.commandType, response),
-      });
-      try {
-        await campaignSources.refreshWorkflow(campaign);
-      } catch {
-        // Source state distinguishes accepted-but-unconfirmed from command rejection.
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignWorkflowCommandError({
-          campaignKey: campaign.key,
-          value: error instanceof Error ? error.message : "Campaign workflow command failed.",
-        });
-      }
-    } finally {
-      setPendingCampaignWorkflowCommand((current) =>
-        current === campaign.key ? null : current,
-      );
-    }
-  }
-
   return {
     model,
     selectedCampaign,
@@ -607,7 +408,9 @@ export function useDpmWaveCommandCenterActions({
         ? "Awaiting rebalance source confirmation"
         : null) ??
       valueForSelectedWave(waveReadPending, selectedWaveId),
-    pendingCampaignLifecycleKey: campaignSources.lifecyclePending ? selectedCampaignKey : null,
+    pendingCampaignLifecycleKey: campaignSources.lifecyclePending
+      ? selectedCampaignKey
+      : null,
     pendingCampaignLaunchHistoryKey: campaignSources.launchHistoryPending
       ? selectedCampaignKey
       : null,
@@ -617,43 +420,32 @@ export function useDpmWaveCommandCenterActions({
     pendingCampaignLaunchPackageKey: campaignSources.launchPackagePending
       ? selectedCampaignKey
       : null,
-    pendingCampaignLaunchKey,
+    pendingCampaignLaunchKey: campaignCommands.pendingLaunchKey,
     pendingCampaignWorkflowEvidenceKey: campaignSources.workflowPending
       ? selectedCampaignKey
       : null,
-    pendingCampaignLifecycleCommand: pendingCampaignLifecycleCommand === selectedCampaignKey,
-    pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
+    pendingCampaignLifecycleCommand: campaignCommands.pendingLifecycle,
+    pendingCampaignWorkflowCommand: campaignCommands.pendingWorkflow,
     actionError: waveCommands.actionError ?? waveSources.sourceError,
     sourceConfirmationRetryAvailable:
       waveCommands.confirmationRecoveryAvailable ||
       (waveCommands.retainedSelectionActive &&
-        (waveSources.detailConfirmationFailed || waveSources.itemsConfirmationFailed)),
+        (waveSources.detailConfirmationFailed ||
+          waveSources.itemsConfirmationFailed)),
     campaignLifecycleError: campaignSources.lifecycleError,
     campaignLaunchHistoryError: campaignSources.launchHistoryError,
     campaignPreviewReadinessError: campaignSources.previewReadinessError,
     campaignLaunchError:
-      campaignSources.launchPackageError ??
-      valueForSelectedCampaign(campaignLaunchError, selectedCampaignKey),
-    campaignLifecycleCommandError: valueForSelectedCampaign(
-      campaignLifecycleCommandError,
-      selectedCampaignKey,
-    ),
-    campaignWorkflowCommandError: valueForSelectedCampaign(
-      campaignWorkflowCommandError,
-      selectedCampaignKey,
-    ),
+      campaignSources.launchPackageError ?? campaignCommands.launchError,
+    campaignLifecycleCommandError: campaignCommands.lifecycleError,
+    campaignWorkflowCommandError: campaignCommands.workflowError,
     campaignWorkflowEvidenceError: campaignSources.workflowError,
     campaignWorkflowEvidenceResolved: campaignSources.workflowResolved,
-    campaignLifecycleCommandEvidence: valueForSelectedCampaign(
-      campaignLifecycleCommandEvidence,
-      selectedCampaignKey,
-    ),
-    campaignWorkflowCommandEvidence: valueForSelectedCampaign(
-      campaignWorkflowCommandEvidence,
-      selectedCampaignKey,
-    ),
+    campaignLifecycleCommandEvidence: campaignCommands.lifecycleEvidence,
+    campaignWorkflowCommandEvidence: campaignCommands.workflowEvidence,
     actionMessage:
-      valueForSelectedWave(waveReadFeedback, selectedWaveId) ?? waveCommands.actionMessage,
+      valueForSelectedWave(waveReadFeedback, selectedWaveId) ??
+      waveCommands.actionMessage,
     aiWorkflowOutcome: waveCommands.aiWorkflowOutcome,
     previewRebalance: () => runWaveCommand(waveCommands.previewRebalance),
     createRebalance: () => runWaveCommand(waveCommands.createRebalance),
@@ -669,8 +461,12 @@ export function useDpmWaveCommandCenterActions({
     requestOperationsBrief: () =>
       runSelectedWaveCommand(waveCommands.requestOperationsBrief),
     retrySourceConfirmation: () => {
-      const recoverCommandConfirmation = waveCommands.confirmationRecoveryAvailable;
-      if (!recoverCommandConfirmation && !waveCommands.retainedSelectionActive) {
+      const recoverCommandConfirmation =
+        waveCommands.confirmationRecoveryAvailable;
+      if (
+        !recoverCommandConfirmation &&
+        !waveCommands.retainedSelectionActive
+      ) {
         return;
       }
       const detailRecovery =
@@ -695,9 +491,9 @@ export function useDpmWaveCommandCenterActions({
     loadCampaignLifecycle,
     loadCampaignLaunchHistory,
     checkCampaignLaunchReadiness,
-    launchCampaign,
-    recordCampaignLifecycleCommand,
-    recordCampaignWorkflowCommand,
+    launchCampaign: campaignCommands.launch,
+    recordCampaignLifecycleCommand: campaignCommands.recordLifecycle,
+    recordCampaignWorkflowCommand: campaignCommands.recordWorkflow,
   };
 }
 
@@ -708,108 +504,8 @@ function valueForSelectedWave<T>(
   return boundValue?.waveId === selectedWaveId ? boundValue.value : null;
 }
 
-function selectedWaveIdForResponse(response: DpmWaveGatewayResponse | null): string | null {
+function selectedWaveIdForResponse(
+  response: DpmWaveGatewayResponse | null,
+): string | null {
   return buildDpmWaveCommandCenterModel({ waveList: response }).selectedWaveId;
-}
-
-function valueForSelectedCampaign<T>(
-  boundValue: CampaignBoundValue<T> | null,
-  selectedCampaignKey: string | null,
-): T | null {
-  return boundValue?.campaignKey === selectedCampaignKey ? boundValue.value : null;
-}
-
-function buildCampaignLifecycleCommandEvidence(
-  commandType: DpmCampaignLifecycleCommandType,
-  response: DpmCampaignDefinitionGatewayResponse
-): DpmCampaignLifecycleCommandEvidence {
-  const data = response.data;
-  return {
-    commandLabel: commandType === "retire" ? "Retire campaign" : "Supersede campaign",
-    status: readString(data.status) || readString(data.supportability_state) || "N/A",
-    actor:
-      readString(data.retired_by) ||
-      readString(data.superseded_by) ||
-      readString(data.actor_id) ||
-      readString(data.actor) ||
-      "N/A",
-    reason:
-      readString(data.retirement_reason) ||
-      readString(data.supersession_reason) ||
-      formatList(data.reason_codes),
-    replacementCampaignVersion:
-      readString(data.superseded_by_campaign_version) ||
-      readString(data.replacement_campaign_version) ||
-      "N/A",
-    correlationId: readString(data.correlation_id) || response.correlation_id,
-    sourceService: response.source_service,
-    upstreamStatus: String(response.upstream_status),
-    contentHash: readString(data.content_hash) || "N/A",
-    reasonCodes: formatList(data.reason_codes),
-    operatingBoundaries: formatList(data.operating_boundaries),
-  };
-}
-
-function isLifecycleCommandBlocked(response: DpmCampaignDefinitionGatewayResponse): boolean {
-  const state = readString(response.data.supportability_state).toUpperCase();
-  return state === "BLOCKED" || state === "UNSUPPORTED" || state === "NOT_SUPPORTED";
-}
-
-function buildCampaignWorkflowCommandEvidence(
-  commandType: DpmCampaignWorkflowCommandType,
-  response: DpmCampaignWorkflowGatewayResponse
-): DpmCampaignWorkflowCommandEvidence {
-  const data = response.data;
-  return {
-    commandLabel: campaignWorkflowCommandLabel(commandType),
-    evidenceRef:
-      readString(data.evidence_ref) ||
-      readString(data.decision_ref) ||
-      readString(data.action_ref) ||
-      readString(data.task_ref) ||
-      readString(data.control_ref) ||
-      "N/A",
-    correlationId: response.correlation_id,
-    sourceService: response.source_service,
-    upstreamStatus: String(response.upstream_status),
-    contentHash: readString(data.content_hash) || response.supportability?.content_hash || "N/A",
-    reasonCodes: formatList(data.reason_codes),
-    operatingBoundaries: formatList(data.operating_boundaries),
-  };
-}
-
-function campaignWorkflowCommandLabel(commandType: DpmCampaignWorkflowCommandType): string {
-  switch (commandType) {
-    case "approval_decision":
-      return "Approval decision";
-    case "assignment_action":
-      return "Assignment action";
-    case "assignment_task":
-      return "Assignment task";
-    case "task_transition":
-      return "Task transition";
-    case "maker_checker_control":
-      return "Maker-checker control";
-  }
-}
-
-function readString(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  return "";
-}
-
-function formatList(value: unknown): string {
-  if (typeof value === "string" && value.length > 0) {
-    return value;
-  }
-  if (!Array.isArray(value)) {
-    return "N/A";
-  }
-  const values = value.filter((item): item is string => typeof item === "string" && item.length > 0);
-  return values.length > 0 ? values.join(", ") : "N/A";
 }

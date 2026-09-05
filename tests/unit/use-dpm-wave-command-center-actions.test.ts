@@ -174,10 +174,20 @@ const campaignDefinitions: DpmCampaignDefinitionGatewayResponse = {
         candidates: [
           {
             portfolio_id: "PB_SG_GLOBAL_BAL_001",
-            source_refs: [{ source_type: "PortfolioManagerBookMembership", source_id: "book-1" }],
+            source_refs: [
+              {
+                source_type: "PortfolioManagerBookMembership",
+                source_id: "book-1",
+              },
+            ],
           },
         ],
-        source_refs: [{ source_type: "BulkReviewCampaignDefinition", source_id: "campaign-plan" }],
+        source_refs: [
+          {
+            source_type: "BulkReviewCampaignDefinition",
+            source_id: "campaign-plan",
+          },
+        ],
       },
     ],
     limit: 10,
@@ -312,7 +322,8 @@ const campaignLifecycleCommandResponse: DpmCampaignDefinitionGatewayResponse = {
     campaign_version: "2026.05",
     status: "SUPERSEDED",
     superseded_by: "pm_sg_1",
-    supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+    supersession_reason:
+      "Candidate evidence was refreshed for the new review cycle.",
     superseded_by_campaign_version: "2026.06",
     correlation_id: "corr-campaign-lifecycle-command",
     content_hash: "sha256:campaign-superseded",
@@ -368,12 +379,24 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(listDpmWaves).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWave).mockResolvedValue(waveResponse);
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
-    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(lifecycleResponse);
-    vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(launchHistoryResponse);
-    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(previewReadinessResponse);
-    vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(launchPackageResponse);
-    vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(campaignLaunchResponse);
-    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(campaignDefinitions);
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
+      lifecycleResponse,
+    );
+    vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(
+      launchHistoryResponse,
+    );
+    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(
+      previewReadinessResponse,
+    );
+    vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(
+      launchPackageResponse,
+    );
+    vi.mocked(launchDpmCampaignDefinition).mockResolvedValue(
+      campaignLaunchResponse,
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
+      campaignDefinitions,
+    );
     vi.mocked(retireDpmCampaignDefinition).mockResolvedValue({
       ...campaignLifecycleCommandResponse,
       data: {
@@ -384,21 +407,35 @@ describe("useDpmWaveCommandCenterActions", () => {
         content_hash: "sha256:campaign-retired",
       },
     });
-    vi.mocked(supersedeDpmCampaignDefinition).mockResolvedValue(campaignLifecycleCommandResponse);
-    vi.mocked(createDpmCampaignApprovalDecision).mockResolvedValue(campaignWorkflowCommandResponse);
-    vi.mocked(createDpmCampaignAssignmentAction).mockResolvedValue(campaignWorkflowCommandResponse);
-    vi.mocked(createDpmCampaignAssignmentTask).mockResolvedValue(campaignWorkflowCommandResponse);
+    vi.mocked(supersedeDpmCampaignDefinition).mockResolvedValue(
+      campaignLifecycleCommandResponse,
+    );
+    vi.mocked(createDpmCampaignApprovalDecision).mockResolvedValue(
+      campaignWorkflowCommandResponse,
+    );
+    vi.mocked(createDpmCampaignAssignmentAction).mockResolvedValue(
+      campaignWorkflowCommandResponse,
+    );
+    vi.mocked(createDpmCampaignAssignmentTask).mockResolvedValue(
+      campaignWorkflowCommandResponse,
+    );
     vi.mocked(createDpmCampaignAssignmentTaskTransition).mockResolvedValue(
-      campaignWorkflowCommandResponse
+      campaignWorkflowCommandResponse,
     );
     vi.mocked(createDpmCampaignMakerCheckerControl).mockResolvedValue(
-      campaignWorkflowCommandResponse
+      campaignWorkflowCommandResponse,
     );
-    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(campaignWorkflowEvidenceResponse);
-    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(campaignWorkflowEvidenceResponse);
-    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(campaignWorkflowEvidenceResponse);
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(
+      campaignWorkflowEvidenceResponse,
+    );
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(
+      campaignWorkflowEvidenceResponse,
+    );
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(
+      campaignWorkflowEvidenceResponse,
+    );
     vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(
-      campaignWorkflowEvidenceResponse
+      campaignWorkflowEvidenceResponse,
     );
   });
 
@@ -413,9 +450,15 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
 
     expect(result.current.model.selectedWaveId).toBe("dwv_001");
-    expect(result.current.selectedCampaign?.campaignId).toBe("campaign-holdings-202605");
-    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"));
-    await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    expect(result.current.selectedCampaign?.campaignId).toBe(
+      "campaign-holdings-202605",
+    );
+    await waitFor(() =>
+      expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"),
+    );
+    await waitFor(() =>
+      expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"),
+    );
   });
 
   it("retries the selected wave proposed-change auto-load after a transient Gateway failure", async () => {
@@ -428,17 +471,23 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledTimes(2));
     expect(getDpmWaveItems).toHaveBeenNthCalledWith(1, "dwv_001");
     expect(getDpmWaveItems).toHaveBeenNthCalledWith(2, "dwv_001");
-    await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    await waitFor(() =>
+      expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"),
+    );
   });
 
   it("reuses selected-wave evidence on remount within the governed stale window", async () => {
     const queryClient = createTestQueryClient();
     const first = renderActions(campaignDefinitions, queryClient);
-    await waitFor(() => expect(first.result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    await waitFor(() =>
+      expect(first.result.current.model.itemRows[0]?.security).toBe("AAPL US"),
+    );
     first.unmount();
 
     const second = renderActions(campaignDefinitions, queryClient);
-    await waitFor(() => expect(second.result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    await waitFor(() =>
+      expect(second.result.current.model.itemRows[0]?.security).toBe("AAPL US"),
+    );
 
     expect(getDpmWaveItems).toHaveBeenCalledTimes(1);
   });
@@ -446,7 +495,9 @@ describe("useDpmWaveCommandCenterActions", () => {
   it("admits a newer server list when the selected wave identity is unchanged", async () => {
     const queryClient = createTestQueryClient();
     const first = renderActions(campaignDefinitions, queryClient);
-    expect(first.result.current.model.selectedWaveState).toBe("SIMULATION_READY");
+    expect(first.result.current.model.selectedWaveState).toBe(
+      "SIMULATION_READY",
+    );
     first.unmount();
 
     const updatedWaveList: DpmWaveGatewayResponse = {
@@ -465,16 +516,24 @@ describe("useDpmWaveCommandCenterActions", () => {
         ],
       },
     };
-    const second = renderActions(campaignDefinitions, queryClient, updatedWaveList);
+    const second = renderActions(
+      campaignDefinitions,
+      queryClient,
+      updatedWaveList,
+    );
 
-    await waitFor(() => expect(second.result.current.model.selectedWaveState).toBe("APPROVED"));
+    await waitFor(() =>
+      expect(second.result.current.model.selectedWaveState).toBe("APPROVED"),
+    );
     expect(second.result.current.model.correlationId).toBe("corr-wave-updated");
   });
 
   it("does not expose cached wave evidence when the server list is unavailable", async () => {
     const queryClient = createTestQueryClient();
     const first = renderActions(campaignDefinitions, queryClient);
-    await waitFor(() => expect(first.result.current.model.selectedWaveId).toBe("dwv_001"));
+    await waitFor(() =>
+      expect(first.result.current.model.selectedWaveId).toBe("dwv_001"),
+    );
     first.unmount();
 
     const second = renderActions(campaignDefinitions, queryClient, null);
@@ -497,22 +556,32 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await act(async () => result.current.previewRebalance());
     await waitFor(() =>
-      expect(previewDpmWave).toHaveBeenCalledWith({ portfolioId: "PB_SG_GLOBAL_BAL_001" })
+      expect(previewDpmWave).toHaveBeenCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      }),
     );
 
     await act(async () => result.current.createRebalance());
     await waitFor(() =>
-      expect(createDpmWave).toHaveBeenCalledWith({ portfolioId: "PB_SG_GLOBAL_BAL_001" })
+      expect(createDpmWave).toHaveBeenCalledWith({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      }),
     );
 
     await act(async () => result.current.loadProposedChanges());
-    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"));
+    await waitFor(() =>
+      expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_001"),
+    );
 
     await act(async () => result.current.reviewDataReadiness());
-    await waitFor(() => expect(sourceCheckDpmWave).toHaveBeenCalledWith("dwv_001"));
+    await waitFor(() =>
+      expect(sourceCheckDpmWave).toHaveBeenCalledWith("dwv_001"),
+    );
 
     await act(async () => result.current.runSimulation());
-    await waitFor(() => expect(simulateDpmWave).toHaveBeenCalledWith("dwv_001"));
+    await waitFor(() =>
+      expect(simulateDpmWave).toHaveBeenCalledWith("dwv_001"),
+    );
 
     await act(async () => result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
@@ -524,7 +593,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(handoffDpmWave).toHaveBeenCalledWith("dwv_001"));
 
     await act(async () => result.current.openEvidencePack());
-    await waitFor(() => expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"));
+    await waitFor(() =>
+      expect(getDpmWaveProofPackPosture).toHaveBeenCalledWith("dwv_001"),
+    );
     expect(result.current.model.proofPackStatus).toBe("READY");
     expect(result.current.actionMessage).toBe("Open evidence pack completed.");
   });
@@ -570,12 +641,16 @@ describe("useDpmWaveCommandCenterActions", () => {
       );
     const { result } = renderActions();
 
-    await waitFor(() => expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"));
+    await waitFor(() =>
+      expect(result.current.model.itemRows[0]?.security).toBe("AAPL US"),
+    );
 
     act(() => result.current.requestApproval());
 
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
-    await waitFor(() => expect(result.current.pendingAction).toBe("Request approval"));
+    await waitFor(() =>
+      expect(result.current.pendingAction).toBe("Request approval"),
+    );
     expect(result.current.actionMessage).toBeNull();
 
     act(() => resolveWaveRefresh(waveResponse));
@@ -745,7 +820,9 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     act(() => result.current.requestApproval());
 
-    await waitFor(() => expect(result.current.pendingAction).toBe("Request approval"));
+    await waitFor(() =>
+      expect(result.current.pendingAction).toBe("Request approval"),
+    );
     expect(result.current.model.selectedWaveState).toBe("SIMULATION_READY");
     expect(result.current.model.correlationId).toBe("corr-wave");
 
@@ -783,7 +860,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     act(() => result.current.createRebalance());
 
     await waitFor(() => expect(getDpmWave).toHaveBeenCalledWith("dwv_002"));
-    await waitFor(() => expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_002"));
+    await waitFor(() =>
+      expect(getDpmWaveItems).toHaveBeenCalledWith("dwv_002"),
+    );
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
     expect(result.current.model.selectedWaveId).toBe("dwv_002");
     expect(result.current.model.correlationId).toBe(
@@ -819,7 +898,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     const firstMount = renderActions(campaignDefinitions, queryClient);
 
     act(() => firstMount.result.current.createRebalance());
-    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(firstMount.result.current.pendingAction).toBeNull(),
+    );
     expect(firstMount.result.current.model.selectedWaveId).toBe("dwv_002");
     expect(
       queryClient.getQueryData(
@@ -862,7 +943,9 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     act(() => resolveRemountDetail(createdResponse));
     await waitFor(() =>
-      expect(secondMount.result.current.model.selectedWaveState).toBe("CREATED"),
+      expect(secondMount.result.current.model.selectedWaveState).toBe(
+        "CREATED",
+      ),
     );
     expect(secondMount.result.current.pendingAction).toBeNull();
 
@@ -885,14 +968,12 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(getDpmWave).mockResolvedValue(createdResponse);
     vi.mocked(getDpmWaveItems).mockResolvedValue(confirmedItems);
     const queryClient = createTestQueryClient();
-    const firstMount = renderActions(
-      campaignDefinitions,
-      queryClient,
-      null,
-    );
+    const firstMount = renderActions(campaignDefinitions, queryClient, null);
 
     act(() => firstMount.result.current.createRebalance());
-    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(firstMount.result.current.pendingAction).toBeNull(),
+    );
     firstMount.unmount();
 
     const unavailableMount = renderActions(
@@ -923,7 +1004,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     const firstMount = renderActions(campaignDefinitions, queryClient);
 
     act(() => firstMount.result.current.createRebalance());
-    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(firstMount.result.current.pendingAction).toBeNull(),
+    );
     firstMount.unmount();
     await queryClient.invalidateQueries({
       queryKey: dpmWaveQueryKeys.wave("dwv_002"),
@@ -959,10 +1042,16 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(approveDpmWave).not.toHaveBeenCalled();
 
     vi.mocked(getDpmWave).mockResolvedValueOnce(createdResponse);
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      true,
+    );
     act(() => secondMount.result.current.retrySourceConfirmation());
-    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    await waitFor(() =>
+      expect(secondMount.result.current.pendingAction).toBeNull(),
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      false,
+    );
     act(() => secondMount.result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
   });
@@ -1028,7 +1117,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     const firstMount = renderActions(campaignDefinitions, queryClient);
 
     act(() => firstMount.result.current.createRebalance());
-    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(firstMount.result.current.pendingAction).toBeNull(),
+    );
     firstMount.unmount();
     queryClient.removeQueries({
       queryKey: dpmWaveQueryKeys.wave("dwv_002"),
@@ -1062,12 +1153,18 @@ describe("useDpmWaveCommandCenterActions", () => {
         "Gateway proposed changes unavailable",
       ),
     );
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      true,
+    );
     vi.mocked(getDpmWaveItems).mockResolvedValueOnce(confirmedItems);
     act(() => secondMount.result.current.retrySourceConfirmation());
 
-    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    await waitFor(() =>
+      expect(secondMount.result.current.pendingAction).toBeNull(),
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      false,
+    );
     act(() => secondMount.result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledTimes(1));
   });
@@ -1221,22 +1318,30 @@ describe("useDpmWaveCommandCenterActions", () => {
         },
       },
     };
-    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(cachedProofResponse);
+    vi.mocked(getDpmWaveProofPackPosture).mockResolvedValue(
+      cachedProofResponse,
+    );
     vi.mocked(approveDpmWave).mockResolvedValue(confirmedDetail);
     vi.mocked(getDpmWave).mockResolvedValue(confirmedDetail);
     const { result } = renderActions();
 
     act(() => result.current.openEvidencePack());
-    await waitFor(() => expect(result.current.model.proofPackStatus).toBe("READY"));
+    await waitFor(() =>
+      expect(result.current.model.proofPackStatus).toBe("READY"),
+    );
 
     act(() => result.current.requestApproval());
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
 
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
-    expect(result.current.model.correlationId).toBe("corr-confirmed-after-command");
+    expect(result.current.model.correlationId).toBe(
+      "corr-confirmed-after-command",
+    );
     expect(result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
     await waitFor(() =>
-      expect(result.current.model.proofPackRows[0]?.label).toBe("ppack_after_command"),
+      expect(result.current.model.proofPackRows[0]?.label).toBe(
+        "ppack_after_command",
+      ),
     );
   });
 
@@ -1281,7 +1386,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     act(() => result.current.createRebalance());
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
     act(() => result.current.requestApproval());
-    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveState).toBe("APPROVED"),
+    );
 
     await queryClient.invalidateQueries({
       queryKey: dpmWaveQueryKeys.wave("dwv_002"),
@@ -1327,7 +1434,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     const { result } = renderActions(campaignDefinitions, queryClient);
 
     act(() => result.current.requestApproval());
-    await waitFor(() => expect(result.current.model.selectedWaveState).toBe("APPROVED"));
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveState).toBe("APPROVED"),
+    );
     act(() => result.current.previewRebalance());
 
     const detailDuringPreview = {
@@ -1363,7 +1472,9 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
     await waitFor(() =>
-      expect(result.current.model.correlationId).toBe("corr-detail-during-preview"),
+      expect(result.current.model.correlationId).toBe(
+        "corr-detail-during-preview",
+      ),
     );
     expect(result.current.model.selectedWaveState).toBe("APPROVED");
   });
@@ -1422,13 +1533,17 @@ describe("useDpmWaveCommandCenterActions", () => {
     const { result } = firstMount;
 
     act(() => result.current.createRebalance());
-    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_002"));
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveId).toBe("dwv_002"),
+    );
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
     act(() => result.current.previewRebalance());
     await waitFor(() => expect(previewDpmWave).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(result.current.pendingAction).toBeNull());
 
-    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_003"));
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveId).toBe("dwv_003"),
+    );
     expect(result.current.model.correlationId).toBe("corr-preview-candidate");
     expect(result.current.pendingAction).toBeNull();
     expect(result.current.sourceConfirmationRetryAvailable).toBe(false);
@@ -1464,7 +1579,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     expect(thirdMount.result.current.model.selectedWaveState).toBe("APPROVED");
     expect(getDpmWave).toHaveBeenCalledTimes(3);
-    await waitFor(() => expect(thirdMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(thirdMount.result.current.pendingAction).toBeNull(),
+    );
 
     vi.mocked(stageDpmWave).mockResolvedValue(approvedCandidateResponse);
     vi.mocked(getDpmWave).mockRejectedValueOnce(
@@ -1480,7 +1597,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(thirdMount.result.current.pendingAction).toBe(
       "Stage rebalance — awaiting source confirmation",
     );
-    expect(thirdMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    expect(thirdMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      true,
+    );
   });
 
   it("prefers accepted create recovery over retained preview context", async () => {
@@ -1505,11 +1624,15 @@ describe("useDpmWaveCommandCenterActions", () => {
     const { result } = renderActions();
 
     act(() => result.current.previewRebalance());
-    await waitFor(() => expect(result.current.model.selectedWaveId).toBe("dwv_003"));
+    await waitFor(() =>
+      expect(result.current.model.selectedWaveId).toBe("dwv_003"),
+    );
     act(() => result.current.createRebalance());
 
     await waitFor(() =>
-      expect(result.current.actionError).toContain("Create rebalance was accepted"),
+      expect(result.current.actionError).toContain(
+        "Create rebalance was accepted",
+      ),
     );
     expect(result.current.model.selectedWaveId).toBe("dwv_004");
     expect(result.current.pendingAction).toBe(
@@ -1702,12 +1825,17 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_003"));
     firstMount.unmount();
 
-    const secondMount = renderActions(campaignDefinitions, queryClient, absorbedList);
+    const secondMount = renderActions(
+      campaignDefinitions,
+      queryClient,
+      absorbedList,
+    );
     await waitFor(() =>
       expect(secondMount.result.current.pendingAction).toBe("Request approval"),
     );
     const itemReadCount = vi.mocked(getDpmWaveItems).mock.calls.length;
-    const proofReadCount = vi.mocked(getDpmWaveProofPackPosture).mock.calls.length;
+    const proofReadCount = vi.mocked(getDpmWaveProofPackPosture).mock.calls
+      .length;
 
     act(() => {
       secondMount.result.current.requestWaveMemo();
@@ -1722,7 +1850,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(getDpmWaveProofPackPosture).toHaveBeenCalledTimes(proofReadCount);
 
     act(() => resolveApproval(approvedCandidate));
-    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(secondMount.result.current.pendingAction).toBeNull(),
+    );
     expect(secondMount.result.current.model.selectedWaveState).toBe("APPROVED");
   });
 
@@ -1777,9 +1907,13 @@ describe("useDpmWaveCommandCenterActions", () => {
     const firstMount = renderActions(campaignDefinitions, queryClient);
 
     act(() => firstMount.result.current.createRebalance());
-    await waitFor(() => expect(firstMount.result.current.pendingAction).toBeNull());
+    await waitFor(() =>
+      expect(firstMount.result.current.pendingAction).toBeNull(),
+    );
     act(() => firstMount.result.current.openEvidencePack());
-    await waitFor(() => expect(firstMount.result.current.model.proofPackStatus).toBe("READY"));
+    await waitFor(() =>
+      expect(firstMount.result.current.model.proofPackStatus).toBe("READY"),
+    );
     act(() => firstMount.result.current.requestApproval());
 
     await waitFor(() =>
@@ -1797,7 +1931,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(secondMount.result.current.pendingAction).toBe(
       "Request approval — awaiting source confirmation",
     );
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(true);
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      true,
+    );
 
     act(() => secondMount.result.current.requestApproval());
     expect(approveDpmWave).toHaveBeenCalledTimes(1);
@@ -1805,10 +1941,16 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(getDpmWave).mockResolvedValueOnce(createdResponse);
     vi.mocked(getDpmWaveItems).mockResolvedValueOnce(confirmedItems);
     act(() => secondMount.result.current.retrySourceConfirmation());
-    await waitFor(() => expect(secondMount.result.current.pendingAction).toBeNull());
-    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(false);
+    await waitFor(() =>
+      expect(secondMount.result.current.pendingAction).toBeNull(),
+    );
+    expect(secondMount.result.current.sourceConfirmationRetryAvailable).toBe(
+      false,
+    );
     expect(secondMount.result.current.actionError).toBeNull();
-    expect(secondMount.result.current.model.proofPackStatus).toBe("NOT_REQUESTED");
+    expect(secondMount.result.current.model.proofPackStatus).toBe(
+      "NOT_REQUESTED",
+    );
   });
 
   it("does not submit a second wave command while source refresh is pending", async () => {
@@ -1844,7 +1986,9 @@ describe("useDpmWaveCommandCenterActions", () => {
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
     });
-    expect(result.current.model.campaignLifecycleRows[0]?.eventType).toBe("Launched");
+    expect(result.current.model.campaignLifecycleRows[0]?.eventType).toBe(
+      "Launched",
+    );
 
     await act(async () => {
       await result.current.loadCampaignLaunchHistory(campaign, 10);
@@ -1879,8 +2023,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       campaignVersion: "2026.05",
       requestedAsOfDate: "2026-05-10",
     });
-    expect(result.current.model.campaignLaunchPosture.launchedWaveId).toBe(
-      "dwv_campaign_launch_001"
+    await waitFor(() =>
+      expect(result.current.model.campaignLaunchPosture.launchedWaveId).toBe(
+        "dwv_campaign_launch_001",
+      ),
     );
     expect(result.current.model.selectedWaveId).toBe("dwv_001");
     act(() => result.current.requestApproval());
@@ -1901,10 +2047,14 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
     await act(async () => {
-      await result.current.checkCampaignLaunchReadiness(result.current.selectedCampaign!);
+      await result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
     });
 
-    expect(result.current.model.campaignPreviewReadinessPosture.state).toBe("BLOCKED");
+    expect(result.current.model.campaignPreviewReadinessPosture.state).toBe(
+      "BLOCKED",
+    );
     expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
     expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
     await act(async () => {
@@ -1923,7 +2073,8 @@ describe("useDpmWaveCommandCenterActions", () => {
         body: {
           superseded_by_campaign_version: "2026.06",
           superseded_by: "pm_sg_1",
-          supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+          supersession_reason:
+            "Candidate evidence was refreshed for the new review cycle.",
           correlation_id: "corr-campaign-lifecycle-command",
         },
       });
@@ -1936,7 +2087,8 @@ describe("useDpmWaveCommandCenterActions", () => {
       body: {
         superseded_by_campaign_version: "2026.06",
         superseded_by: "pm_sg_1",
-        supersession_reason: "Candidate evidence was refreshed for the new review cycle.",
+        supersession_reason:
+          "Candidate evidence was refreshed for the new review cycle.",
         correlation_id: "corr-campaign-lifecycle-command",
       },
     });
@@ -1948,12 +2100,14 @@ describe("useDpmWaveCommandCenterActions", () => {
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
     });
-    expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
-      commandLabel: "Supersede campaign",
-      status: "SUPERSEDED",
-      replacementCampaignVersion: "2026.06",
-      contentHash: "sha256:campaign-superseded",
-    });
+    await waitFor(() =>
+      expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
+        commandLabel: "Supersede campaign",
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2026.06",
+        contentHash: "sha256:campaign-superseded",
+      }),
+    );
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
@@ -2005,7 +2159,9 @@ describe("useDpmWaveCommandCenterActions", () => {
         count: 2,
       },
     };
-    let resolveCampaignA!: (value: DpmCampaignDefinitionGatewayResponse) => void;
+    let resolveCampaignA!: (
+      value: DpmCampaignDefinitionGatewayResponse,
+    ) => void;
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveCampaignA = resolve;
@@ -2013,14 +2169,18 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
     const { result } = renderActions(twoCampaigns);
 
-    await waitFor(() => expect(result.current.model.campaignRows).toHaveLength(2));
+    await waitFor(() =>
+      expect(result.current.model.campaignRows).toHaveLength(2),
+    );
     const campaignA = result.current.model.campaignRows[0]!;
     const campaignB = result.current.model.campaignRows[1]!;
     let campaignALoad!: Promise<void>;
     act(() => {
       campaignALoad = result.current.loadCampaignLifecycle(campaignA);
     });
-    await waitFor(() => expect(result.current.pendingCampaignLifecycleKey).toBe(campaignA.key));
+    await waitFor(() =>
+      expect(result.current.pendingCampaignLifecycleKey).toBe(campaignA.key),
+    );
     act(() => result.current.selectCampaign(campaignB));
     expect(result.current.selectedCampaignKey).toBe(campaignB.key);
 
@@ -2051,7 +2211,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     });
 
     expect(result.current.campaignLifecycleCommandError).toBe(
-      "Supersede requires an existing replacement campaign version."
+      "Supersede requires an existing replacement campaign version.",
     );
     expect(supersedeDpmCampaignDefinition).not.toHaveBeenCalled();
     expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();
@@ -2082,8 +2242,10 @@ describe("useDpmWaveCommandCenterActions", () => {
     });
 
     expect(retireDpmCampaignDefinition).toHaveBeenCalled();
-    expect(result.current.campaignLifecycleCommandError).toBe(
-      "Manage did not accept the campaign lifecycle command."
+    await waitFor(() =>
+      expect(result.current.campaignLifecycleCommandError).toBe(
+        "Manage did not accept the campaign lifecycle command.",
+      ),
     );
     expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();
   });
@@ -2153,9 +2315,9 @@ describe("useDpmWaveCommandCenterActions", () => {
       sourceService: "lotus-manage",
       contentHash: "sha256:task-transition",
     });
-    expect(result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef).toBe(
-      "task-review-001"
-    );
+    expect(
+      result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef,
+    ).toBe("task-review-001");
     expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
   });
 
@@ -2195,7 +2357,7 @@ describe("useDpmWaveCommandCenterActions", () => {
 
   it("keeps campaign workflow command failures bounded and does not refresh local evidence", async () => {
     vi.mocked(createDpmCampaignAssignmentTask).mockRejectedValueOnce(
-      new Error("Failed to fetch create DPM campaign assignment task (502)")
+      new Error("Failed to fetch create DPM campaign assignment task (502)"),
     );
     const { result } = renderActions();
 
@@ -2216,8 +2378,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
 
-    expect(result.current.campaignWorkflowCommandError).toBe(
-      "Failed to fetch create DPM campaign assignment task (502)"
+    await waitFor(() =>
+      expect(result.current.campaignWorkflowCommandError).toBe(
+        "Failed to fetch create DPM campaign assignment task (502)",
+      ),
     );
     expect(getDpmCampaignAssignmentTasks).not.toHaveBeenCalled();
   });

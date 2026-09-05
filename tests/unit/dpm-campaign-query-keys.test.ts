@@ -31,13 +31,15 @@ describe("DPM campaign query identity", () => {
   });
 
   it("includes paging and business-date inputs that change returned evidence", () => {
-    expect(dpmCampaignQueryKeys.launchHistory(campaign, 10, 10).at(-1)).toEqual({
-      limit: 10,
-      offset: 10,
-    });
-    expect(dpmCampaignQueryKeys.previewReadiness(campaign, "2026-05-10").at(-1)).toBe(
-      "2026-05-10",
+    expect(dpmCampaignQueryKeys.launchHistory(campaign, 10, 10).at(-1)).toEqual(
+      {
+        limit: 10,
+        offset: 10,
+      },
     );
+    expect(
+      dpmCampaignQueryKeys.previewReadiness(campaign, "2026-05-10").at(-1),
+    ).toBe("2026-05-10");
   });
 
   it("keeps persisted command families beneath one campaign mutation authority", () => {

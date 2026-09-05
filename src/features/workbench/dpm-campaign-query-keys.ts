@@ -9,12 +9,28 @@ export const dpmCampaignQueryKeys = {
   all: ["workbench", "dpm-campaigns"] as const,
   definitions: () => [...dpmCampaignQueryKeys.all, "definitions"] as const,
   campaign: ({ campaignId, campaignVersion }: DpmCampaignIdentity) =>
-    [...dpmCampaignQueryKeys.all, "campaign", campaignId, campaignVersion] as const,
+    [
+      ...dpmCampaignQueryKeys.all,
+      "campaign",
+      campaignId,
+      campaignVersion,
+    ] as const,
   lifecycle: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "lifecycle"] as const,
-  launchHistory: (identity: DpmCampaignIdentity, offset: number, limit: number) =>
-    [...dpmCampaignQueryKeys.campaign(identity), "launch-history", { limit, offset }] as const,
-  previewReadiness: (identity: DpmCampaignIdentity, requestedAsOfDate?: string) =>
+  launchHistory: (
+    identity: DpmCampaignIdentity,
+    offset: number,
+    limit: number,
+  ) =>
+    [
+      ...dpmCampaignQueryKeys.campaign(identity),
+      "launch-history",
+      { limit, offset },
+    ] as const,
+  previewReadiness: (
+    identity: DpmCampaignIdentity,
+    requestedAsOfDate?: string,
+  ) =>
     [
       ...dpmCampaignQueryKeys.campaign(identity),
       "preview-readiness",
@@ -30,6 +46,8 @@ export const dpmCampaignQueryKeys = {
     [...dpmCampaignQueryKeys.campaign(identity), "workflow"] as const,
   confirmationLock: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "confirmation-lock"] as const,
+  launchResult: (identity: DpmCampaignIdentity) =>
+    [...dpmCampaignQueryKeys.campaign(identity), "launch-result"] as const,
 };
 
 export const dpmCampaignMutationKeys = {
