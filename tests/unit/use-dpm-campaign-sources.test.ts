@@ -164,6 +164,7 @@ describe("useDpmCampaignSources", () => {
           selectedCampaign: rowA,
           initialCampaignKey: rowA.key,
           initialWorkflowEvidence: {
+            readId: "workflow-read-new",
             approvalDecisions: current[0],
             assignmentActions: current[1],
             assignmentTasks: current[2],
@@ -211,6 +212,7 @@ describe("useDpmCampaignSources", () => {
           selectedCampaign: rowA,
           initialCampaignKey: rowA.key,
           initialWorkflowEvidence: {
+            readId: "workflow-read-incomplete",
             approvalDecisions: current[0],
             assignmentActions: null,
             assignmentTasks: current[2],
@@ -228,6 +230,48 @@ describe("useDpmCampaignSources", () => {
       expect(result.current.workflow?.assignmentActions).toEqual(current[1]),
     );
     expect(result.current.workflowResolved).toBe(true);
+  });
+
+  it("requires recovery again when a new server read repeats unavailable workflow evidence", async () => {
+    const current = ["approval-new", "action-new", "task-new", "control-new"].map(
+      workflowResponse,
+    );
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(current[0]);
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(current[1]);
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(current[2]);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(current[3]);
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ readId }) =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            ...emptyWorkflowEvidence(),
+            readId,
+          },
+        }),
+      {
+        initialProps: { readId: "workflow-read-1" },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+
+    expect(result.current.workflow).toBeNull();
+    expect(result.current.workflowResolved).toBe(false);
+
+    await act(async () => result.current.loadWorkflow(rowA));
+    await waitFor(() => expect(result.current.workflowResolved).toBe(true));
+
+    rerender({ readId: "workflow-read-2" });
+
+    expect(result.current.workflow).toBeNull();
+    expect(result.current.workflowResolved).toBe(false);
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(dpmCampaignQueryKeys.workflow(rowA)),
+      ).toBeUndefined(),
+    );
   });
 
   it("keeps workflow confirmation locked when lifecycle recovery succeeds", async () => {
@@ -545,6 +589,7 @@ function workflowResponse(id: string): DpmCampaignWorkflowGatewayResponse {
 
 function emptyWorkflowEvidence() {
   return {
+    readId: "workflow-read-default",
     approvalDecisions: null,
     assignmentActions: null,
     assignmentTasks: null,

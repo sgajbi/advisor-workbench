@@ -182,6 +182,20 @@ describe("Manage workspace mode data loading", () => {
       "Mandate health evidence is temporarily unavailable.",
     );
   });
+
+  it("identifies each server workflow read so client recovery cannot survive a later read", async () => {
+    const portfolio = buildManageWorkspaceData().portfolio;
+
+    const first = await loadManageWorkspaceData(portfolio, "waves");
+    const second = await loadManageWorkspaceData(portfolio, "waves");
+
+    expect(first.campaignWorkflowReadId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(second.campaignWorkflowReadId).not.toBe(
+      first.campaignWorkflowReadId,
+    );
+  });
 });
 
 function response(data: Record<string, unknown>) {
