@@ -654,7 +654,7 @@ describe("useDpmCampaignSources", () => {
       confirmedDefinitions,
     );
     queryClient.setQueryData(
-      dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowA),
       {
         campaignId: rowA.campaignId,
         campaignVersion: rowA.campaignVersion,
@@ -672,6 +672,76 @@ describe("useDpmCampaignSources", () => {
     vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
       definitionListResponse("ACTIVE"),
     );
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await act(async () => {
+      await result.current.loadLifecycle(rowA).catch(() => undefined);
+    });
+
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(confirmedDefinitions);
+    expect(result.current.lifecycle).toBeNull();
+    await waitFor(() =>
+      expect(result.current.lifecycleError).toContain(
+        "Lifecycle action was recorded",
+      ),
+    );
+  });
+
+  it("does not use another campaign receipt to clear a retained lifecycle lock", async () => {
+    const queryClient = createTestQueryClient();
+    const confirmedDefinitions = definitionListResponse("SUPERSEDED", "2");
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitions(),
+      confirmedDefinitions,
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowA),
+      {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      },
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowB),
+      {
+        campaignId: rowB.campaignId,
+        campaignVersion: rowB.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "3",
+      },
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.confirmationLock(rowA, "lifecycle"),
+      { message: "Awaiting source confirmation." },
+    );
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
+      definitionResponse("campaign-a", "ACTIVE"),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue({
+      ...definitionResponse("campaign-b"),
+      data: {
+        items: [
+          {
+            campaign_id: "campaign-b",
+            campaign_version: "2",
+            status: "SUPERSEDED",
+            superseded_by_campaign_version: "3",
+          },
+        ],
+      },
+    });
     const { result } = renderHook(
       () =>
         useDpmCampaignSources({

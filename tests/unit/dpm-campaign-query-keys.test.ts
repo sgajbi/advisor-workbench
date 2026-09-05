@@ -17,8 +17,14 @@ describe("DPM campaign query identity", () => {
       "dpm-campaigns",
       "definitions-server-read",
     ]);
-    expect(dpmCampaignQueryKeys.definitionsConfirmationReceipt().at(-1)).toBe(
-      "definitions-confirmation-receipt",
+    expect(dpmCampaignQueryKeys.lifecycleConfirmationReceipt(campaign)).toEqual(
+      [
+        "workbench",
+        "dpm-campaigns",
+        "lifecycle-confirmation-receipts",
+        "campaign-1",
+        "2026.05",
+      ],
     );
     expect(dpmCampaignQueryKeys.lifecycle(campaign)).toEqual([
       "workbench",
@@ -91,5 +97,16 @@ describe("DPM campaign query identity", () => {
     expect(
       dpmCampaignQueryKeys.confirmationLock(campaign, "lifecycle"),
     ).not.toEqual(dpmCampaignQueryKeys.confirmationLock(campaign, "workflow"));
+  });
+
+  it("keeps lifecycle confirmation receipts independent across campaigns", () => {
+    expect(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(campaign),
+    ).not.toEqual(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt({
+        campaignId: "campaign-2",
+        campaignVersion: "2026.05",
+      }),
+    );
   });
 });

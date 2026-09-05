@@ -12,8 +12,14 @@ export const dpmCampaignQueryKeys = {
   definitions: () => [...dpmCampaignQueryKeys.all, "definitions"] as const,
   definitionsServerRead: () =>
     [...dpmCampaignQueryKeys.all, "definitions-server-read"] as const,
-  definitionsConfirmationReceipt: () =>
-    [...dpmCampaignQueryKeys.all, "definitions-confirmation-receipt"] as const,
+  lifecycleConfirmationReceipts: () =>
+    [...dpmCampaignQueryKeys.all, "lifecycle-confirmation-receipts"] as const,
+  lifecycleConfirmationReceipt: (identity: DpmCampaignIdentity) =>
+    [
+      ...dpmCampaignQueryKeys.lifecycleConfirmationReceipts(),
+      identity.campaignId,
+      identity.campaignVersion,
+    ] as const,
   campaign: ({ campaignId, campaignVersion }: DpmCampaignIdentity) =>
     [
       ...dpmCampaignQueryKeys.all,
