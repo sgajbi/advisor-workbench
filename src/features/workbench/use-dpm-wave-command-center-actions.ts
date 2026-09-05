@@ -448,7 +448,9 @@ export function useDpmWaveCommandCenterActions({
     campaignLifecycleCommandError: campaignCommands.lifecycleError,
     campaignWorkflowCommandError: campaignCommands.workflowError,
     campaignWorkflowEvidenceError: campaignSources.workflowError,
-    campaignWorkflowEvidenceResolved: campaignSources.workflowResolved,
+    campaignWorkflowEvidenceResolved:
+      campaignSources.workflowResolved ||
+      campaignCommands.workflowEvidence !== null,
     campaignLifecycleCommandEvidence: campaignCommands.lifecycleEvidence,
     campaignWorkflowCommandEvidence: campaignCommands.workflowEvidence,
     actionMessage:
