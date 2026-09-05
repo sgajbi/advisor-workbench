@@ -17,7 +17,7 @@ import {
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import {
   campaignWorkflowEvidenceTotalCount,
-  containsCampaignLifecycleEvidence,
+  confirmsCampaignLifecycleEvidence,
   containsCampaignWorkflowEvidence,
   type DpmCampaignLifecycleConfirmationReceipt,
   type DpmCampaignWorkflowConfirmationReceipt,
@@ -391,10 +391,15 @@ export function useDpmCampaignSources({
     );
     const confirmationOptions =
       dpmCampaignLifecycleConfirmationQueryOptions(target);
-    if (requiredReceipt) {
+    const confirmationReceipt = requiredReceipt
+      ? requiredReceipt
+      : queryClient.getQueryData<DpmCampaignLifecycleConfirmationReceipt>(
+          dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+        );
+    if (confirmationReceipt) {
       queryClient.setQueryData<DpmCampaignLifecycleConfirmationReceipt>(
         dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
-        requiredReceipt,
+        confirmationReceipt,
       );
     }
     await Promise.all([
@@ -407,10 +412,10 @@ export function useDpmCampaignSources({
     try {
       const confirmation = await queryClient.fetchQuery(confirmationOptions);
       if (
-        requiredReceipt &&
-        !containsCampaignLifecycleEvidence(
+        confirmationReceipt &&
+        !confirmsCampaignLifecycleEvidence(
           confirmation.definitions,
-          requiredReceipt,
+          confirmationReceipt,
         )
       ) {
         throw new Error("Confirmed campaign definition is not yet available.");
