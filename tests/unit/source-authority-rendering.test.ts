@@ -227,14 +227,20 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
   payload.lotusAiRuntimeExecutionConfirmed = state === "EXPLANATION_SERVED";
   payload.lotusAiRunId = state === "EXPLANATION_SERVED" ? "run-source-authority-proof" : null;
   explanation.candidateId = identity;
-  explanation.requestId = `idea-explanation-${identity}-source-authority-proof`;
+  explanation.requestId =
+    `idea-explanation-${identity}-00000000-0000-4000-8000-000000000000`;
   explanation.fallbackUsed = state === "EXPLANATION_UNAVAILABLE";
   const parsedPayload = parseAdvisorIdeaAIExplanationResponse(payload, {
     candidateId: identity,
     requestId: String(explanation.requestId),
   });
   requestIdeaExplanationMock.mockResolvedValue(parsedPayload);
-  vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "source-authority-proof") });
+  vi.stubGlobal("crypto", {
+    getRandomValues: vi.fn((bytes: Uint8Array) => {
+      bytes.fill(0);
+      return bytes;
+    }),
+  });
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
   });
