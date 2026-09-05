@@ -51,7 +51,7 @@ describe("BFF proxy route", () => {
     "LOTUS_ENVIRONMENT",
   ] as const;
   const originalCallerContextEnv = Object.fromEntries(
-    callerContextEnvKeys.map((key) => [key, process.env[key]])
+    callerContextEnvKeys.map((key) => [key, process.env[key]]),
   );
 
   beforeEach(() => {
@@ -118,16 +118,20 @@ describe("BFF proxy route", () => {
           "content-type": "application/json",
           "transfer-encoding": "chunked",
         },
-      })
+      }),
     );
 
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/lookups/portfolios?limit=1", {
-      method: "GET",
-      headers: {
-        host: "localhost:3000",
-        authorization: "Bearer token",
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/lookups/portfolios?limit=1",
+      {
+        method: "GET",
+        headers: {
+          host: "localhost:3000",
+          authorization: "Bearer token",
+          "accept-encoding": "gzip",
+        },
       },
-    });
+    );
 
     const response = await GET(request, {
       params: Promise.resolve({ path: ["api", "v1", "lookups", "portfolios"] }),
@@ -145,24 +149,221 @@ describe("BFF proxy route", () => {
         method: "GET",
         body: undefined,
         cache: "no-store",
-      })
+      }),
     );
     const upstreamHeaders = upstreamInit?.headers as Headers;
     expect(upstreamHeaders.get("host")).toBeNull();
     expect(upstreamHeaders.get("authorization")).toBeNull();
+    expect(upstreamHeaders.get("accept-encoding")).toBe("identity");
     expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
     expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
     expect(upstreamHeaders.get("X-Role")).toBe("advisor");
-    expect(upstreamHeaders.get("X-Correlation-Id")).toMatch(/^corr-workbench-[0-9a-f]{16}$/);
+    expect(upstreamHeaders.get("X-Correlation-Id")).toMatch(
+      /^corr-workbench-[0-9a-f]{16}$/,
+    );
     expect(upstreamHeaders.get("traceparent")).toMatch(
-      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/,
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("transfer-encoding")).toBeNull();
     expect(await response.text()).toBe('{"ok":true}');
+  });
+
+  it("describes decoded JSON bytes instead of forwarding stale compression metadata", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const decodedBody = new TextEncoder().encode('{"status":"ready"}');
+    fetchMock.mockResolvedValue(
+      new Response(decodedBody, {
+        status: 200,
+        headers: {
+          "cache-control": "private, no-store",
+          "content-encoding": "gzip",
+          "content-length": "47",
+          "content-type": "application/json",
+          "x-content-type-options": "nosniff",
+        },
+      }),
+    );
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/platform/readiness",
+      ),
+      {
+        params: Promise.resolve({
+          path: ["api", "v1", "platform", "readiness"],
+        }),
+      },
+    );
+
+    expect(response.headers.get("content-encoding")).toBeNull();
+    expect(response.headers.get("content-length")).toBe(
+      String(decodedBody.byteLength),
+    );
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual(
+      Array.from(decodedBody),
+    );
+  });
+
+  it("preserves exact identity-encoded binary download bytes and representation headers", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const documentBytes = Uint8Array.from([0x25, 0x50, 0x44, 0x46, 0x2d]);
+    fetchMock.mockResolvedValue(
+      new Response(documentBytes, {
+        status: 200,
+        headers: {
+          "cache-control": "private, no-store",
+          "content-disposition": 'attachment; filename="review.pdf"',
+          "content-encoding": "identity",
+          "content-length": "999",
+          "content-type": "application/pdf",
+        },
+      }),
+    );
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/documents/doc-1/download",
+      ),
+      {
+        params: Promise.resolve({
+          path: ["api", "v1", "documents", "doc-1", "download"],
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-encoding")).toBeNull();
+    expect(response.headers.get("content-length")).toBe(
+      String(documentBytes.byteLength),
+    );
+    expect(response.headers.get("content-disposition")).toBe(
+      'attachment; filename="review.pdf"',
+    );
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(documentBytes);
+  });
+
+  it.each([204, 205, 304])(
+    "keeps upstream %s responses bodyless",
+    async (status) => {
+      const fetchMock = vi.mocked(fetch);
+      const upstreamResponse = new Response(null, {
+        status,
+        headers: {
+          "cache-control": "private, no-store",
+          etag: '"source-revision-7"',
+          ...(status === 304 ? { "content-length": "321" } : {}),
+        },
+      });
+      const bodyRead = vi.spyOn(upstreamResponse, "arrayBuffer");
+      fetchMock.mockResolvedValue(upstreamResponse);
+
+      const response = await GET(
+        new NextRequest(
+          "http://localhost:3000/api/bff/api/v1/platform/readiness",
+        ),
+        {
+          params: Promise.resolve({
+            path: ["api", "v1", "platform", "readiness"],
+          }),
+        },
+      );
+
+      expect(response.status).toBe(status);
+      expect(response.body).toBeNull();
+      expect(await response.text()).toBe("");
+      expect(bodyRead).not.toHaveBeenCalled();
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("etag")).toBe('"source-revision-7"');
+      expect(response.headers.get("content-length")).toBe(
+        status === 304 ? "321" : null,
+      );
+    },
+  );
+
+  it("keeps HEAD responses bodyless while preserving representation metadata", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const upstreamResponse = new Response(null, {
+      status: 200,
+      headers: {
+        "content-length": "321",
+        "content-type": "application/pdf",
+        etag: '"document-revision-4"',
+      },
+    });
+    const bodyRead = vi.spyOn(upstreamResponse, "arrayBuffer");
+    fetchMock.mockResolvedValue(upstreamResponse);
+
+    const response = await GET(
+      new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/documents/doc-1/download",
+        { method: "HEAD" },
+      ),
+      {
+        params: Promise.resolve({
+          path: ["api", "v1", "documents", "doc-1", "download"],
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toBeNull();
+    expect(bodyRead).not.toHaveBeenCalled();
+    expect(response.headers.get("content-length")).toBe("321");
+    expect(response.headers.get("content-type")).toBe("application/pdf");
+    expect(response.headers.get("etag")).toBe('"document-revision-4"');
+  });
+
+  it("preserves supported byte-range semantics while removing hop-by-hop fields", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const rangeBytes = Uint8Array.from([0x44, 0x46, 0x2d]);
+    const upstreamResponse = new Response(rangeBytes, {
+      status: 206,
+      headers: {
+        "accept-ranges": "bytes",
+        "cache-control": "private, no-store",
+        connection: "keep-alive, x-gateway-hop",
+        "content-length": "8",
+        "content-range": "bytes 2-4/10",
+        "content-type": "application/pdf",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked",
+        "x-gateway-hop": "remove-me",
+        "x-content-type-options": "nosniff",
+      },
+    });
+    fetchMock.mockResolvedValue(upstreamResponse);
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/documents/doc-1/download",
+      {
+        headers: { range: "bytes=2-4" },
+      },
+    );
+    expect(request.headers.get("range")).toBe("bytes=2-4");
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "documents", "doc-1", "download"],
+      }),
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(206);
+    expect(response.headers.get("accept-ranges")).toBe("bytes");
+    expect(response.headers.get("content-range")).toBe("bytes 2-4/10");
+    expect(response.headers.get("content-length")).toBe("3");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("connection")).toBeNull();
+    expect(response.headers.get("keep-alive")).toBeNull();
+    expect(response.headers.get("transfer-encoding")).toBeNull();
+    expect(response.headers.get("x-gateway-hop")).toBeNull();
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(rangeBytes);
   });
 
   it("preserves encoded source identities when forwarding through the BFF", async () => {
@@ -218,13 +419,15 @@ describe("BFF proxy route", () => {
         "Idempotency-Key": "governed-request-1",
         "If-Match": '"version-2"',
         "X-Correlation-Id": "corr-workbench-bff-boundary-1",
-        traceparent:
-          "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
+        traceparent: "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
       });
       for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
         browserHeaders.set(headerName, "browser-supplied-authority");
       }
-      const body = method === "POST" ? JSON.stringify({ portfolio_id: "PF_1001" }) : undefined;
+      const body =
+        method === "POST"
+          ? JSON.stringify({ portfolio_id: "PF_1001" })
+          : undefined;
       const request = new NextRequest(
         `http://localhost:3000/api/bff/${upstreamPath}`,
         { method, headers: browserHeaders, body },
@@ -247,7 +450,9 @@ describe("BFF proxy route", () => {
         "corr-workbench-bff-boundary-1",
       );
       expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
-      expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
+      expect(upstreamHeaders.get("X-Caller-Application")).toBe(
+        "lotus-workbench",
+      );
       expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
       expect(upstreamHeaders.get("X-Region")).toBe("APAC");
       expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
@@ -266,25 +471,35 @@ describe("BFF proxy route", () => {
         ) {
           continue;
         }
-        expect(upstreamHeaders.get(headerName), `${_family}: ${headerName}`).toBeNull();
+        expect(
+          upstreamHeaders.get(headerName),
+          `${_family}: ${headerName}`,
+        ).toBeNull();
       }
     },
   );
 
   it("forwards mutating request bodies to the upstream", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"accepted":true}', { status: 202 }));
+    fetchMock.mockResolvedValue(
+      new Response('{"accepted":true}', { status: 202 }),
+    );
 
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/intake/portfolio-bundle", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/intake/portfolio-bundle",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
       },
-      body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
-    });
+    );
 
     const response = await POST(request, {
-      params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "intake", "portfolio-bundle"],
+      }),
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -297,14 +512,16 @@ describe("BFF proxy route", () => {
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ body: { portfolio_id: "PORT_1001" } }),
-      })
+      }),
     );
     expect(response.status).toBe(202);
   });
 
   it("returns a truthful non-cacheable timeout without retrying the mutation", async () => {
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockRejectedValue(new DOMException("Gateway timed out", "TimeoutError"));
+    fetchMock.mockRejectedValue(
+      new DOMException("Gateway timed out", "TimeoutError"),
+    );
     const request = new NextRequest(
       "http://localhost:3000/api/bff/api/v1/intake/portfolio-bundle",
       {
@@ -315,7 +532,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await POST(request, {
-      params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "intake", "portfolio-bundle"],
+      }),
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -344,7 +563,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await POST(request, {
-      params: Promise.resolve({ path: ["api", "v1", "intake", "portfolio-bundle"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "intake", "portfolio-bundle"],
+      }),
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -425,9 +646,7 @@ describe("BFF proxy route", () => {
 
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
     expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
-    expect(upstreamHeaders.get("X-Caller-Application")).toBe(
-      "lotus-workbench",
-    );
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-workbench");
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("SG");
@@ -547,9 +766,7 @@ describe("BFF proxy route", () => {
       expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
         expectedCapability,
       );
-      expect(upstreamHeaders.get("Idempotency-Key")).toBe(
-        idempotencyKey,
-      );
+      expect(upstreamHeaders.get("Idempotency-Key")).toBe(idempotencyKey);
     },
   );
 
@@ -607,40 +824,43 @@ describe("BFF proxy route", () => {
         requestedAtUtc: "2026-09-05T11:30:00",
       },
     },
-  ])("rejects Idea explanation authority for $name", async ({ idempotencyKey, body }) => {
-    const fetchMock = vi.mocked(fetch);
-    const request = new NextRequest(
-      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/ai-explanations",
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "Idempotency-Key": idempotencyKey,
+  ])(
+    "rejects Idea explanation authority for $name",
+    async ({ idempotencyKey, body }) => {
+      const fetchMock = vi.mocked(fetch);
+      const request = new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/ai-explanations",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Idempotency-Key": idempotencyKey,
+          },
+          body: JSON.stringify(body),
         },
-        body: JSON.stringify(body),
-      },
-    );
+      );
 
-    const response = await POST(request, {
-      params: Promise.resolve({
-        path: [
-          "api",
-          "v1",
-          "ideas",
-          "candidates",
-          "idea_high_cash_001",
-          "ai-explanations",
-        ],
-      }),
-    });
+      const response = await POST(request, {
+        params: Promise.resolve({
+          path: [
+            "api",
+            "v1",
+            "ideas",
+            "candidates",
+            "idea_high_cash_001",
+            "ai-explanations",
+          ],
+        }),
+      });
 
-    expect(response.status).toBe(422);
-    await expect(response.json()).resolves.toEqual({
-      code: "idea_request_invalid",
-      status: "rejected",
-    });
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toEqual({
+        code: "idea_request_invalid",
+        status: "rejected",
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("preserves a once-decoded candidate identity when validating an explanation request", async () => {
     const fetchMock = vi.mocked(fetch);
@@ -978,7 +1198,7 @@ describe("BFF proxy route", () => {
           "x-document-checksum-algorithm": "sha256",
           "x-document-checksum": "abc123",
         },
-      })
+      }),
     );
 
     const request = new NextRequest(
@@ -990,18 +1210,22 @@ describe("BFF proxy route", () => {
           "X-Tenant-Id": "tenant-sg",
           "X-Region": "APAC",
         },
-      }
+      },
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "documents", "doc_1", "download"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "documents", "doc_1", "download"],
+      }),
     });
 
     const [upstreamUrl] = fetchMock.mock.calls[0];
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
     const body = new Uint8Array(await response.arrayBuffer());
 
-    expect(String(upstreamUrl)).toBe("http://gateway.dev.lotus/api/v1/documents/doc_1/download");
+    expect(String(upstreamUrl)).toBe(
+      "http://gateway.dev.lotus/api/v1/documents/doc_1/download",
+    );
     expect(upstreamHeaders.get("X-Actor-Id")).toBe("workbench-system");
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-sg");
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
@@ -1038,7 +1262,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-book", "portfolios"],
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -1048,7 +1274,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
     expect(upstreamHeaders.get("X-Role")).toBe("ADVISOR");
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisor.book.read",
+    );
     expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBeNull();
@@ -1072,7 +1300,9 @@ describe("BFF proxy route", () => {
       { method: "GET" },
     );
     await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-book", "portfolios"],
+      }),
     });
 
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
@@ -1092,7 +1322,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-book", "portfolios"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1112,7 +1344,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-book", "portfolios"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-book", "portfolios"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1149,7 +1383,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "actions"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "actions"],
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -1169,7 +1405,9 @@ describe("BFF proxy route", () => {
       "advisory.advisor_cockpit.read",
     );
     expect(upstreamHeaders.get("X-Principal-Status")).toBe("ACTIVE");
-    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe("advisor_sg_001");
+    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe(
+      "advisor_sg_001",
+    );
     expect(upstreamHeaders.get("X-Authorized-Portfolio-Id")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
@@ -1186,7 +1424,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "report-ordering", "options"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1259,7 +1499,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
       "advisory.advisor_cockpit.acknowledge",
     );
-    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe("advisor_sg_001");
+    expect(upstreamHeaders.get("X-Authorized-Advisor-Id")).toBe(
+      "advisor_sg_001",
+    );
   });
 
   it("rejects browser-selected Advisor Cockpit authority in query and body", async () => {
@@ -1269,14 +1511,19 @@ describe("BFF proxy route", () => {
       { method: "GET" },
     );
     const queryResponse = await GET(queryRequest, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "actions"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "actions"],
+      }),
     });
     const bodyRequest = new NextRequest(
       "http://localhost:3000/api/bff/api/v1/advisor-cockpit/actions/action_1/acknowledgements?portfolio_id=PB_SG_GLOBAL_BAL_001",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action_item_version: 1, acknowledged_by: "another-advisor" }),
+        body: JSON.stringify({
+          action_item_version: 1,
+          acknowledged_by: "another-advisor",
+        }),
       },
     );
     const bodyResponse = await POST(bodyRequest, {
@@ -1309,7 +1556,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "advisor-cockpit", "snapshot"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "advisor-cockpit", "snapshot"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1333,7 +1582,13 @@ describe("BFF proxy route", () => {
 
     const response = await POST(request, {
       params: Promise.resolve({
-        path: ["api", "v1", "advisor-cockpit", "house-view-cohorts", "evaluate"],
+        path: [
+          "api",
+          "v1",
+          "advisor-cockpit",
+          "house-view-cohorts",
+          "evaluate",
+        ],
       }),
     });
 
@@ -1389,7 +1644,8 @@ describe("BFF proxy route", () => {
       body: {
         action: "APPROVE_FOR_INTERNAL_USE",
         reason: {
-          decision: "Reviewed against source evidence for internal advisor use.",
+          decision:
+            "Reviewed against source evidence for internal advisor use.",
         },
       },
     });
@@ -1478,7 +1734,8 @@ describe("BFF proxy route", () => {
   });
 
   it("rejects Advisory Copilot review when Gateway run scope is outside server entitlement", async () => {
-    process.env.WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS = "PB_SG_GLOBAL_BAL_001";
+    process.env.WORKBENCH_ADVISORY_COPILOT_PORTFOLIO_IDS =
+      "PB_SG_GLOBAL_BAL_001";
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValueOnce(
       new Response(
@@ -1653,7 +1910,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "report-ordering", "options"],
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -1665,7 +1924,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Role")).toBe("portfolio_manager");
     expect(upstreamHeaders.get("X-Caller-Subject")).toBeNull();
     expect(upstreamHeaders.get("X-Caller-Roles")).toBeNull();
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisor.book.read",
+    );
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
@@ -1719,24 +1980,27 @@ describe("BFF proxy route", () => {
       query:
         "portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review&reportType=client_statement",
     },
-  ])("rejects ambiguous reporting scope before Gateway fetch: $query", async ({ route, query }) => {
-    const fetchMock = vi.mocked(fetch);
-    const request = new NextRequest(
-      `http://localhost:3000/api/bff/api/v1/${route}?${query}`,
-      { method: "GET" },
-    );
+  ])(
+    "rejects ambiguous reporting scope before Gateway fetch: $query",
+    async ({ route, query }) => {
+      const fetchMock = vi.mocked(fetch);
+      const request = new NextRequest(
+        `http://localhost:3000/api/bff/api/v1/${route}?${query}`,
+        { method: "GET" },
+      );
 
-    const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", ...route.split("/")] }),
-    });
+      const response = await GET(request, {
+        params: Promise.resolve({ path: ["api", "v1", ...route.split("/")] }),
+      });
 
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(response.status).toBe(422);
-    await expect(response.json()).resolves.toEqual({
-      code: "reporting_invalid_request",
-      status: "rejected",
-    });
-  });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toEqual({
+        code: "reporting_invalid_request",
+        status: "rejected",
+      });
+    },
+  );
 
   it("forwards the exact normalized reporting scope admitted by the BFF", async () => {
     const fetchMock = vi.mocked(fetch);
@@ -1764,7 +2028,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "report-ordering", "options"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "report-ordering", "options"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1792,7 +2058,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await POST(request, {
-      params: Promise.resolve({ path: ["api", "v1", "reports", "portfolio-reviews"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "reports", "portfolio-reviews"],
+      }),
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -1806,7 +2074,9 @@ describe("BFF proxy route", () => {
     process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
     process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"status":"accepted"}', { status: 202 }));
+    fetchMock.mockResolvedValue(
+      new Response('{"status":"accepted"}', { status: 202 }),
+    );
     const body = JSON.stringify({
       portfolio_scope: { portfolio_ids: ["PB_SG_GLOBAL_BAL_001"] },
       as_of_date: "2026-04-22",
@@ -1826,7 +2096,9 @@ describe("BFF proxy route", () => {
     );
 
     const response = await POST(request, {
-      params: Promise.resolve({ path: ["api", "v1", "reports", "portfolio-reviews"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "reports", "portfolio-reviews"],
+      }),
     });
 
     expect(response.status).toBe(202);
@@ -1838,7 +2110,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
     expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisor.book.read",
+    );
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001",
     );
@@ -1848,22 +2122,27 @@ describe("BFF proxy route", () => {
     process.env.WORKBENCH_REPORTING_CALLER_PORTFOLIO_IDS =
       "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002";
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"status":"materialized"}', { status: 202 }));
+    fetchMock.mockResolvedValue(
+      new Response('{"status":"materialized"}', { status: 202 }),
+    );
     const body = JSON.stringify({
       selector_mode: "explicit_portfolio_list",
       portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
       as_of_date: "2026-04-22",
       requested_output_formats: ["pdf"],
     });
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "X-Caller-Capabilities": "reporting.admin",
-        "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-batches",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "X-Caller-Capabilities": "reporting.admin",
+          "X-Caller-Portfolio-Ids": "UNENTITLED_PORTFOLIO",
+        },
+        body,
       },
-      body,
-    });
+    );
 
     const response = await POST(request, {
       params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
@@ -1878,7 +2157,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Region")).toBe("APAC");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Singapore");
     expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisor.book.read",
+    );
     expect(upstreamHeaders.get("X-Caller-Portfolio-Ids")).toBe(
       "PB_SG_GLOBAL_BAL_001,PB_SG_INCOME_002",
     );
@@ -1886,15 +2167,18 @@ describe("BFF proxy route", () => {
 
   it("rejects an out-of-book report batch before Gateway submission", async () => {
     const fetchMock = vi.mocked(fetch);
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        selector_mode: "explicit_portfolio_list",
-        portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "UNENTITLED_PORTFOLIO"],
-        as_of_date: "2026-04-22",
-      }),
-    });
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-batches",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          selector_mode: "explicit_portfolio_list",
+          portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "UNENTITLED_PORTFOLIO"],
+          as_of_date: "2026-04-22",
+        }),
+      },
+    );
 
     const response = await POST(request, {
       params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
@@ -1915,11 +2199,14 @@ describe("BFF proxy route", () => {
       if (selectorMode) {
         requestBody.selector_mode = selectorMode;
       }
-      const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
+      const request = new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/report-batches",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(requestBody),
+        },
+      );
 
       const response = await POST(request, {
         params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
@@ -1932,15 +2219,18 @@ describe("BFF proxy route", () => {
 
   it("rejects a one-portfolio batch before Gateway submission", async () => {
     const fetchMock = vi.mocked(fetch);
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/report-batches", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        selector_mode: "explicit_portfolio_list",
-        portfolio_ids: ["PB_SG_GLOBAL_BAL_001"],
-        as_of_date: "2026-04-22",
-      }),
-    });
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-batches",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          selector_mode: "explicit_portfolio_list",
+          portfolio_ids: ["PB_SG_GLOBAL_BAL_001"],
+          as_of_date: "2026-04-22",
+        }),
+      },
+    );
 
     const response = await POST(request, {
       params: Promise.resolve({ path: ["api", "v1", "report-batches"] }),
@@ -1957,14 +2247,21 @@ describe("BFF proxy route", () => {
     process.env.WORKBENCH_ADVISOR_BOOK_BOOKING_CENTER_CODE = "Zurich";
     process.env.WORKBENCH_ADVISOR_BOOK_ROLE = "RELATIONSHIP_MANAGER";
     const fetchMock = vi.mocked(fetch);
-    fetchMock.mockResolvedValue(new Response('{"status":"running"}', { status: 200 }));
+    fetchMock.mockResolvedValue(
+      new Response('{"status":"running"}', { status: 200 }),
+    );
     const request = new NextRequest(
       "http://localhost:3000/api/bff/api/v1/report-batches/rbch_1",
-      { method: "GET", headers: { "X-Role": "reporting_admin", Cookie: "spoofed=true" } },
+      {
+        method: "GET",
+        headers: { "X-Role": "reporting_admin", Cookie: "spoofed=true" },
+      },
     );
 
     const response = await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "report-batches", "rbch_1"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "report-batches", "rbch_1"],
+      }),
     });
 
     expect(response.status).toBe(200);
@@ -1974,7 +2271,9 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("Zurich");
     expect(upstreamHeaders.get("X-Role")).toBe("client_advisor");
-    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe("advisor.book.read");
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "advisor.book.read",
+    );
     expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
@@ -2012,7 +2311,7 @@ describe("BFF proxy route", () => {
       "http://localhost:3000/api/bff/api/v1/workbench/PF_1001/performance/summary",
       {
         method: "GET",
-      }
+      },
     );
 
     await GET(request, {
@@ -2023,7 +2322,9 @@ describe("BFF proxy route", () => {
 
     const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
     expect(upstreamHeaders.get("X-Actor-Id")).toBe("automation-advisor");
-    expect(upstreamHeaders.get("X-Caller-Application")).toBe("lotus-demo-workbench");
+    expect(upstreamHeaders.get("X-Caller-Application")).toBe(
+      "lotus-demo-workbench",
+    );
     expect(upstreamHeaders.get("X-Tenant-Id")).toBe("tenant-demo");
     expect(upstreamHeaders.get("X-Region")).toBe("EMEA");
     expect(upstreamHeaders.get("X-Booking-Center-Code")).toBe("CH");
@@ -2034,24 +2335,31 @@ describe("BFF proxy route", () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
 
-    const request = new NextRequest("http://localhost:3000/api/bff/api/v1/workbench/PF_1001/risk/summary", {
-      method: "GET",
-      headers: {
-        "X-Correlation-Id": "corr-workbench-route-1",
-        traceparent: "malformed",
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/workbench/PF_1001/risk/summary",
+      {
+        method: "GET",
+        headers: {
+          "X-Correlation-Id": "corr-workbench-route-1",
+          traceparent: "malformed",
+        },
       },
-    });
+    );
 
     await GET(request, {
-      params: Promise.resolve({ path: ["api", "v1", "workbench", "PF_1001", "risk", "summary"] }),
+      params: Promise.resolve({
+        path: ["api", "v1", "workbench", "PF_1001", "risk", "summary"],
+      }),
     });
 
     const upstreamInit = fetchMock.mock.calls[0][1];
     const upstreamHeaders = upstreamInit?.headers as Headers;
-    expect(upstreamHeaders.get("X-Correlation-Id")).toBe("corr-workbench-route-1");
+    expect(upstreamHeaders.get("X-Correlation-Id")).toBe(
+      "corr-workbench-route-1",
+    );
     expect(upstreamHeaders.get("traceparent")).not.toBe("malformed");
     expect(upstreamHeaders.get("traceparent")).toMatch(
-      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/
+      /^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/,
     );
   });
 });

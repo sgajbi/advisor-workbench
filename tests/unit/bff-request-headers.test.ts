@@ -13,6 +13,7 @@ describe("Gateway BFF request-header boundary", () => {
   it("forwards only the governed browser header allowlist", () => {
     const browserHeaders = new Headers({
       Accept: "application/json, application/pdf",
+      "Accept-Encoding": "gzip, br",
       "Accept-Language": "en-SG,en;q=0.9",
       "Content-Type": "application/json",
       "Idempotency-Key": "proposal-submit-1",
@@ -38,6 +39,7 @@ describe("Gateway BFF request-header boundary", () => {
         browserHeaders.get(headerName),
       );
     }
+    expect(gatewayHeaders.get("Accept-Encoding")).toBe("identity");
     expect(gatewayHeaders.get("Origin")).toBeNull();
     expect(gatewayHeaders.get("Referer")).toBeNull();
     expect(gatewayHeaders.get("User-Agent")).toBeNull();
