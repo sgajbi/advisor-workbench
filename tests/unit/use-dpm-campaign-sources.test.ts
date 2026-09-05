@@ -49,6 +49,7 @@ describe("useDpmCampaignSources", () => {
       ({ selectedCampaign }) =>
         useDpmCampaignSources({
           selectedCampaign,
+          initialDefinitions: null,
           initialCampaignKey: null,
           initialWorkflowEvidence: emptyWorkflowEvidence(),
         }),
@@ -80,6 +81,7 @@ describe("useDpmCampaignSources", () => {
       () =>
         useDpmCampaignSources({
           selectedCampaign: rowA,
+          initialDefinitions: null,
           initialCampaignKey: null,
           initialWorkflowEvidence: emptyWorkflowEvidence(),
         }),

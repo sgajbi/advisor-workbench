@@ -7,16 +7,7 @@ import {
   createDpmCampaignAssignmentTask,
   createDpmCampaignAssignmentTaskTransition,
   createDpmCampaignMakerCheckerControl,
-  getDpmCampaignApprovalDecisions,
-  getDpmCampaignAssignmentActions,
-  getDpmCampaignAssignmentTasks,
-  getDpmCampaignDefinitionLaunchHistory,
-  getDpmCampaignDefinitionLaunchPackage,
-  getDpmCampaignDefinitionLifecycleEvents,
-  getDpmCampaignDefinitionPreviewReadiness,
-  getDpmCampaignMakerCheckerControls,
   launchDpmCampaignDefinition,
-  listDpmCampaignDefinitions,
   retireDpmCampaignDefinition,
   supersedeDpmCampaignDefinition,
 } from "@/features/workbench/dpm-wave-api";
@@ -38,7 +29,7 @@ import {
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelModel,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
+import { useDpmCampaignSources } from "@/features/workbench/use-dpm-campaign-sources";
 import {
   useDpmSelectedWaveSources,
   useDpmWaveListSource,
@@ -207,58 +198,20 @@ export function useDpmWaveCommandCenterActions({
     useState<WaveBoundValue<string> | null>(null);
   const [waveReadPending, setWaveReadPending] =
     useState<WaveBoundValue<string> | null>(null);
-  const [campaignLifecycleResponse, setCampaignLifecycleResponse] =
-    useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
-  const [campaignLaunchHistoryResponse, setCampaignLaunchHistoryResponse] =
-    useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
-  const [campaignPreviewReadinessResponse, setCampaignPreviewReadinessResponse] =
-    useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
-  const [campaignLaunchPackageResponse, setCampaignLaunchPackageResponse] =
-    useState<CampaignBoundValue<DpmCampaignDefinitionGatewayResponse> | null>(null);
   const [campaignLaunchResponse, setCampaignLaunchResponse] =
     useState<CampaignBoundValue<DpmWaveGatewayResponse> | null>(null);
-  const [campaignDefinitionsResponse, setCampaignDefinitionsResponse] =
-    useState<DpmCampaignDefinitionGatewayResponse | null>(null);
-  const [campaignApprovalDecisionsResponse, setCampaignApprovalDecisionsResponse] =
-    useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
-  const [campaignAssignmentActionsResponse, setCampaignAssignmentActionsResponse] =
-    useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
-  const [campaignAssignmentTasksResponse, setCampaignAssignmentTasksResponse] =
-    useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
-  const [campaignMakerCheckerControlsResponse, setCampaignMakerCheckerControlsResponse] =
-    useState<CampaignBoundValue<DpmCampaignWorkflowGatewayResponse> | null>(null);
-  const [pendingCampaignLifecycleKey, setPendingCampaignLifecycleKey] =
-    useState<string | null>(null);
-  const [pendingCampaignLaunchHistoryKey, setPendingCampaignLaunchHistoryKey] =
-    useState<string | null>(null);
-  const [pendingCampaignPreviewReadinessKey, setPendingCampaignPreviewReadinessKey] =
-    useState<string | null>(null);
-  const [pendingCampaignLaunchPackageKey, setPendingCampaignLaunchPackageKey] =
-    useState<string | null>(null);
   const [pendingCampaignLaunchKey, setPendingCampaignLaunchKey] =
-    useState<string | null>(null);
-  const [pendingCampaignWorkflowEvidenceKey, setPendingCampaignWorkflowEvidenceKey] =
     useState<string | null>(null);
   const [pendingCampaignLifecycleCommand, setPendingCampaignLifecycleCommand] =
     useState<string | null>(null);
   const [pendingCampaignWorkflowCommand, setPendingCampaignWorkflowCommand] =
     useState<string | null>(null);
-  const [campaignLifecycleError, setCampaignLifecycleError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignLaunchHistoryError, setCampaignLaunchHistoryError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignPreviewReadinessError, setCampaignPreviewReadinessError] =
-    useState<CampaignBoundValue<string> | null>(null);
   const [campaignLaunchError, setCampaignLaunchError] =
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignLifecycleCommandError, setCampaignLifecycleCommandError] =
     useState<CampaignBoundValue<string> | null>(null);
   const [campaignWorkflowCommandError, setCampaignWorkflowCommandError] =
     useState<CampaignBoundValue<string> | null>(null);
-  const [campaignWorkflowEvidenceError, setCampaignWorkflowEvidenceError] =
-    useState<CampaignBoundValue<string> | null>(null);
-  const [campaignWorkflowEvidenceResolvedKey, setCampaignWorkflowEvidenceResolvedKey] =
-    useState<string | null>(null);
   const [campaignLifecycleCommandEvidence, setCampaignLifecycleCommandEvidence] =
     useState<CampaignBoundValue<DpmCampaignLifecycleCommandEvidence> | null>(null);
   const [campaignWorkflowCommandEvidence, setCampaignWorkflowCommandEvidence] =
@@ -291,7 +244,7 @@ export function useDpmWaveCommandCenterActions({
     waveAiMemoSourceWaveId: selectedSourceWaveId,
     operationsHandoffSummary: waveCommands.operationsHandoffSummary,
     operationsHandoffSummarySourceWaveId: selectedSourceWaveId,
-    campaignDefinitions: campaignDefinitionsResponse ?? campaignDefinitions,
+    campaignDefinitions,
     campaignDiscovery,
     campaignOperatingQueue,
     campaignApprovalInbox,
@@ -313,46 +266,42 @@ export function useDpmWaveCommandCenterActions({
   }, [selectedCampaignKey]);
   const initialCampaignKey = campaignListModel.campaignRows[0]?.key ?? null;
   const useInitialCampaignEvidence = selectedCampaignKey === initialCampaignKey;
+  const selectedCampaign =
+    campaignListModel.campaignRows.find((row) => row.key === selectedCampaignKey) ??
+    campaignListModel.campaignRows[0] ??
+    null;
+  const campaignSources = useDpmCampaignSources({
+    selectedCampaign,
+    initialDefinitions: campaignDefinitions,
+    initialCampaignKey,
+    initialWorkflowEvidence: {
+      approvalDecisions: campaignApprovalDecisions,
+      assignmentActions: campaignAssignmentActions,
+      assignmentTasks: campaignAssignmentTasks,
+      makerCheckerControls: campaignMakerCheckerControls,
+    },
+  });
   const model = buildDpmWaveCommandCenterModel({
     ...commonModelInput,
-    campaignLifecycleEvents: valueForSelectedCampaign(
-      campaignLifecycleResponse,
-      selectedCampaignKey,
-    ),
-    campaignLaunchHistory: valueForSelectedCampaign(
-      campaignLaunchHistoryResponse,
-      selectedCampaignKey,
-    ),
-    campaignPreviewReadiness: valueForSelectedCampaign(
-      campaignPreviewReadinessResponse,
-      selectedCampaignKey,
-    ),
-    campaignLaunchPackage: valueForSelectedCampaign(
-      campaignLaunchPackageResponse,
-      selectedCampaignKey,
-    ),
+    campaignDefinitions: campaignSources.definitions,
+    campaignLifecycleEvents: campaignSources.lifecycle,
+    campaignLaunchHistory: campaignSources.launchHistory,
+    campaignPreviewReadiness: campaignSources.previewReadiness,
+    campaignLaunchPackage: campaignSources.launchPackage,
     campaignLaunchResponse: valueForSelectedCampaign(
       campaignLaunchResponse,
       selectedCampaignKey,
     ),
-    campaignApprovalDecisions:
-      valueForSelectedCampaign(campaignApprovalDecisionsResponse, selectedCampaignKey) ??
+    campaignApprovalDecisions: campaignSources.workflow?.approvalDecisions ??
       (useInitialCampaignEvidence ? campaignApprovalDecisions : null),
-    campaignAssignmentActions:
-      valueForSelectedCampaign(campaignAssignmentActionsResponse, selectedCampaignKey) ??
+    campaignAssignmentActions: campaignSources.workflow?.assignmentActions ??
       (useInitialCampaignEvidence ? campaignAssignmentActions : null),
-    campaignAssignmentTasks:
-      valueForSelectedCampaign(campaignAssignmentTasksResponse, selectedCampaignKey) ??
+    campaignAssignmentTasks: campaignSources.workflow?.assignmentTasks ??
       (useInitialCampaignEvidence ? campaignAssignmentTasks : null),
-    campaignMakerCheckerControls:
-      valueForSelectedCampaign(campaignMakerCheckerControlsResponse, selectedCampaignKey) ??
+    campaignMakerCheckerControls: campaignSources.workflow?.makerCheckerControls ??
       (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
   });
   const selectedWaveId = model.selectedWaveId;
-  const selectedCampaign =
-    model.campaignRows.find((row) => row.key === selectedCampaignKey) ??
-    model.campaignRows[0] ??
-    null;
   const retainedWaveAwaitingConfirmation =
     waveCommands.retainedSelectionActive &&
     (waveSources.waveDetail === null ||
@@ -429,140 +378,32 @@ export function useDpmWaveCommandCenterActions({
   }
 
   async function loadCampaignLifecycle(row: DpmCampaignDefinitionRow) {
-    if (pendingCampaignLifecycleKey) {
-      return;
-    }
-    const request = beginCampaignRequest("lifecycle", row);
-    setPendingCampaignLifecycleKey(row.key);
-    setCampaignLifecycleError(null);
-    setCampaignLifecycleResponse(null);
+    selectCampaign(row);
     try {
-      const response = await getDpmCampaignDefinitionLifecycleEvents({
-        campaignId: row.campaignId,
-        campaignVersion: row.campaignVersion,
-      });
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLifecycleResponse({ campaignKey: row.key, value: response });
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLifecycleError({
-          campaignKey: row.key,
-          value:
-            error instanceof Error
-              ? error.message
-              : "Campaign lifecycle evidence could not be loaded.",
-        });
-      }
-    } finally {
-      setPendingCampaignLifecycleKey((current) => (current === row.key ? null : current));
+      await campaignSources.loadLifecycle(row);
+    } catch {
+      // Query state owns selected-campaign failure evidence.
     }
   }
 
   async function loadCampaignLaunchHistory(row: DpmCampaignDefinitionRow, offset = 0) {
-    if (pendingCampaignLaunchHistoryKey) {
-      return;
-    }
-    const request = beginCampaignRequest("launch-history", row);
-    setPendingCampaignLaunchHistoryKey(row.key);
-    setCampaignLaunchHistoryError(null);
-    setCampaignLaunchHistoryResponse(null);
+    selectCampaign(row);
     try {
-      const response = await getDpmCampaignDefinitionLaunchHistory({
-        campaignId: row.campaignId,
-        campaignVersion: row.campaignVersion,
-        limit: CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE,
-        offset,
-      });
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLaunchHistoryResponse({ campaignKey: row.key, value: response });
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignLaunchHistoryError({
-          campaignKey: row.key,
-          value:
-            error instanceof Error
-              ? error.message
-              : "Campaign launch history could not be loaded.",
-        });
-      }
-    } finally {
-      setPendingCampaignLaunchHistoryKey((current) => (current === row.key ? null : current));
+      await campaignSources.loadLaunchHistory(row, offset);
+    } catch {
+      // Query state owns selected-campaign failure evidence.
     }
   }
 
   async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
-    if (
-      pendingCampaignPreviewReadinessKey ||
-      pendingCampaignLaunchPackageKey ||
-      pendingCampaignLaunchKey
-    ) {
+    if (campaignSources.previewReadinessPending || campaignSources.launchPackagePending) {
       return;
     }
-    const request = beginCampaignRequest("launch-readiness", row);
-    setPendingCampaignPreviewReadinessKey(row.key);
-    setPendingCampaignLaunchPackageKey(row.key);
-    setCampaignPreviewReadinessError(null);
-    setCampaignLaunchError(null);
-    setCampaignPreviewReadinessResponse(null);
-    setCampaignLaunchPackageResponse(null);
-    setCampaignLaunchResponse(null);
+    selectCampaign(row);
     try {
-      const requestedAsOfDate = row.asOfDate === "N/A" ? undefined : row.asOfDate;
-      const previewReadiness = await getDpmCampaignDefinitionPreviewReadiness({
-        campaignId: row.campaignId,
-        campaignVersion: row.campaignVersion,
-        requestedAsOfDate,
-      });
-      if (!isCurrentCampaignRequest(request)) {
-        return;
-      }
-      setCampaignPreviewReadinessResponse({ campaignKey: row.key, value: previewReadiness });
-      const readinessState =
-        typeof previewReadiness.data.supportability_state === "string"
-          ? previewReadiness.data.supportability_state.toUpperCase()
-          : "";
-      if (readinessState !== "READY") {
-        return;
-      }
-      try {
-        const launchPackage = await getDpmCampaignDefinitionLaunchPackage({
-          campaignId: row.campaignId,
-          campaignVersion: row.campaignVersion,
-          requestedAsOfDate,
-        });
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignLaunchPackageResponse({ campaignKey: row.key, value: launchPackage });
-        }
-      } catch (error) {
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignLaunchError({
-            campaignKey: row.key,
-            value:
-              error instanceof Error
-                ? error.message
-                : "Campaign launch readiness could not be loaded.",
-          });
-        }
-      }
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignPreviewReadinessError({
-          campaignKey: row.key,
-          value:
-            error instanceof Error
-              ? error.message
-              : "Campaign preview readiness could not be loaded.",
-        });
-      }
-    } finally {
-      setPendingCampaignPreviewReadinessKey((current) =>
-        current === row.key ? null : current,
-      );
-      setPendingCampaignLaunchPackageKey((current) =>
-        current === row.key ? null : current,
-      );
+      await campaignSources.loadLaunchReadiness(row);
+    } catch {
+      // Query state owns selected-campaign failure evidence.
     }
   }
 
@@ -594,59 +435,15 @@ export function useDpmWaveCommandCenterActions({
     }
   }
 
-  async function refreshCampaignWorkflowEvidence(
-    row: DpmCampaignDefinitionRow,
-    request: { campaignKey: string; sequence: number; surface: string },
-  ) {
-    const params = {
-      campaignId: row.campaignId,
-      campaignVersion: row.campaignVersion,
-    };
-    const [
-      approvalDecisions,
-      assignmentActions,
-      assignmentTasks,
-      makerCheckerControls,
-    ] = await Promise.all([
-      getDpmCampaignApprovalDecisions(params, "client"),
-      getDpmCampaignAssignmentActions(params, "client"),
-      getDpmCampaignAssignmentTasks(params, "client"),
-      getDpmCampaignMakerCheckerControls(params, "client"),
-    ]);
-    if (!isCurrentCampaignRequest(request)) {
-      return;
-    }
-    setCampaignApprovalDecisionsResponse({ campaignKey: row.key, value: approvalDecisions });
-    setCampaignAssignmentActionsResponse({ campaignKey: row.key, value: assignmentActions });
-    setCampaignAssignmentTasksResponse({ campaignKey: row.key, value: assignmentTasks });
-    setCampaignMakerCheckerControlsResponse({ campaignKey: row.key, value: makerCheckerControls });
-    setCampaignWorkflowEvidenceResolvedKey(row.key);
-  }
-
   async function loadCampaignWorkflowEvidence(row: DpmCampaignDefinitionRow) {
-    if (pendingCampaignWorkflowEvidenceKey) {
+    if (campaignSources.workflowPending) {
       return;
     }
-    const request = beginCampaignRequest("workflow-evidence", row);
-    setPendingCampaignWorkflowEvidenceKey(row.key);
-    setCampaignWorkflowEvidenceError(null);
+    selectCampaign(row);
     try {
-      await refreshCampaignWorkflowEvidence(row, request);
-    } catch (error) {
-      if (isCurrentCampaignRequest(request)) {
-        setCampaignWorkflowEvidenceResolvedKey(row.key);
-        setCampaignWorkflowEvidenceError({
-          campaignKey: row.key,
-          value:
-            error instanceof Error
-              ? error.message
-              : "Campaign governance evidence could not be loaded.",
-        });
-      }
-    } finally {
-      setPendingCampaignWorkflowEvidenceKey((current) =>
-        current === row.key ? null : current,
-      );
+      await campaignSources.loadWorkflow(row);
+    } catch {
+      // Query state owns selected-campaign failure evidence.
     }
   }
 
@@ -714,26 +511,9 @@ export function useDpmWaveCommandCenterActions({
         value: buildCampaignLifecycleCommandEvidence(command.commandType, response),
       });
       try {
-        const [definitions, lifecycle] = await Promise.all([
-          listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
-          getDpmCampaignDefinitionLifecycleEvents({
-            campaignId: campaign.campaignId,
-            campaignVersion: campaign.campaignVersion,
-          }),
-        ]);
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignDefinitionsResponse(definitions);
-          setCampaignLifecycleResponse({ campaignKey: campaign.key, value: lifecycle });
-          setCampaignLifecycleError(null);
-        }
+        await campaignSources.refreshLifecycle(campaign);
       } catch {
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignLifecycleError({
-            campaignKey: campaign.key,
-            value:
-              "Lifecycle action was recorded, but refreshed campaign evidence could not be loaded. Reload source evidence to confirm the campaign's new lifecycle posture.",
-          });
-        }
+        // Source state distinguishes accepted-but-unconfirmed from command rejection.
       }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
@@ -799,19 +579,9 @@ export function useDpmWaveCommandCenterActions({
         value: buildCampaignWorkflowCommandEvidence(command.commandType, response),
       });
       try {
-        await refreshCampaignWorkflowEvidence(campaign, request);
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignWorkflowEvidenceError(null);
-        }
+        await campaignSources.refreshWorkflow(campaign);
       } catch {
-        if (isCurrentCampaignRequest(request)) {
-          setCampaignWorkflowEvidenceResolvedKey(campaign.key);
-          setCampaignWorkflowEvidenceError({
-            campaignKey: campaign.key,
-            value:
-              "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
-          });
-        }
+        // Source state distinguishes accepted-but-unconfirmed from command rejection.
       }
     } catch (error) {
       if (isCurrentCampaignRequest(request)) {
@@ -837,12 +607,20 @@ export function useDpmWaveCommandCenterActions({
         ? "Awaiting rebalance source confirmation"
         : null) ??
       valueForSelectedWave(waveReadPending, selectedWaveId),
-    pendingCampaignLifecycleKey,
-    pendingCampaignLaunchHistoryKey,
-    pendingCampaignPreviewReadinessKey,
-    pendingCampaignLaunchPackageKey,
+    pendingCampaignLifecycleKey: campaignSources.lifecyclePending ? selectedCampaignKey : null,
+    pendingCampaignLaunchHistoryKey: campaignSources.launchHistoryPending
+      ? selectedCampaignKey
+      : null,
+    pendingCampaignPreviewReadinessKey: campaignSources.previewReadinessPending
+      ? selectedCampaignKey
+      : null,
+    pendingCampaignLaunchPackageKey: campaignSources.launchPackagePending
+      ? selectedCampaignKey
+      : null,
     pendingCampaignLaunchKey,
-    pendingCampaignWorkflowEvidenceKey,
+    pendingCampaignWorkflowEvidenceKey: campaignSources.workflowPending
+      ? selectedCampaignKey
+      : null,
     pendingCampaignLifecycleCommand: pendingCampaignLifecycleCommand === selectedCampaignKey,
     pendingCampaignWorkflowCommand: pendingCampaignWorkflowCommand === selectedCampaignKey,
     actionError: waveCommands.actionError ?? waveSources.sourceError,
@@ -850,16 +628,12 @@ export function useDpmWaveCommandCenterActions({
       waveCommands.confirmationRecoveryAvailable ||
       (waveCommands.retainedSelectionActive &&
         (waveSources.detailConfirmationFailed || waveSources.itemsConfirmationFailed)),
-    campaignLifecycleError: valueForSelectedCampaign(campaignLifecycleError, selectedCampaignKey),
-    campaignLaunchHistoryError: valueForSelectedCampaign(
-      campaignLaunchHistoryError,
-      selectedCampaignKey,
-    ),
-    campaignPreviewReadinessError: valueForSelectedCampaign(
-      campaignPreviewReadinessError,
-      selectedCampaignKey,
-    ),
-    campaignLaunchError: valueForSelectedCampaign(campaignLaunchError, selectedCampaignKey),
+    campaignLifecycleError: campaignSources.lifecycleError,
+    campaignLaunchHistoryError: campaignSources.launchHistoryError,
+    campaignPreviewReadinessError: campaignSources.previewReadinessError,
+    campaignLaunchError:
+      campaignSources.launchPackageError ??
+      valueForSelectedCampaign(campaignLaunchError, selectedCampaignKey),
     campaignLifecycleCommandError: valueForSelectedCampaign(
       campaignLifecycleCommandError,
       selectedCampaignKey,
@@ -868,12 +642,8 @@ export function useDpmWaveCommandCenterActions({
       campaignWorkflowCommandError,
       selectedCampaignKey,
     ),
-    campaignWorkflowEvidenceError: valueForSelectedCampaign(
-      campaignWorkflowEvidenceError,
-      selectedCampaignKey,
-    ),
-    campaignWorkflowEvidenceResolved:
-      Boolean(selectedCampaignKey) && campaignWorkflowEvidenceResolvedKey === selectedCampaignKey,
+    campaignWorkflowEvidenceError: campaignSources.workflowError,
+    campaignWorkflowEvidenceResolved: campaignSources.workflowResolved,
     campaignLifecycleCommandEvidence: valueForSelectedCampaign(
       campaignLifecycleCommandEvidence,
       selectedCampaignKey,

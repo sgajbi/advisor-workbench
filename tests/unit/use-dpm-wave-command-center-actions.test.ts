@@ -1980,7 +1980,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     });
     expect(result.current.campaignLifecycleCommandError).toBeNull();
     expect(result.current.campaignLifecycleError).toBe(
-      "Lifecycle action was recorded, but refreshed campaign evidence could not be loaded. Reload source evidence to confirm the campaign's new lifecycle posture.",
+      "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
     );
   });
 

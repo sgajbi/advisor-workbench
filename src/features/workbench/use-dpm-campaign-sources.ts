@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   dpmCampaignLaunchHistoryQueryOptions,
   dpmCampaignLaunchPackageQueryOptions,
+  dpmCampaignDefinitionsQueryOptions,
   dpmCampaignLifecycleQueryOptions,
   dpmCampaignPreviewReadinessQueryOptions,
   dpmCampaignWorkflowQueryOptions,
@@ -34,6 +35,7 @@ type InitialWorkflowEvidence = Readonly<{
 
 type UseDpmCampaignSourcesInput = Readonly<{
   selectedCampaign: DpmCampaignDefinitionRow | null;
+  initialDefinitions: DpmCampaignDefinitionGatewayResponse | null;
   initialCampaignKey: string | null;
   initialWorkflowEvidence: InitialWorkflowEvidence;
 }>;
@@ -47,6 +49,7 @@ const NO_CAMPAIGN = {
 
 export function useDpmCampaignSources({
   selectedCampaign,
+  initialDefinitions,
   initialCampaignKey,
   initialWorkflowEvidence,
 }: UseDpmCampaignSourcesInput) {
@@ -57,6 +60,10 @@ export function useDpmCampaignSources({
     campaignKey: initialCampaignKey ?? "",
     offset: 0,
   });
+  const [lifecycleConfirmationError, setLifecycleConfirmationError] =
+    useState<Readonly<{ campaignKey: string; message: string }> | null>(null);
+  const [workflowConfirmationError, setWorkflowConfirmationError] =
+    useState<Readonly<{ campaignKey: string; message: string }> | null>(null);
   const historyOffset =
     selection && historySelection.campaignKey === selection.key
       ? historySelection.offset
@@ -65,6 +72,11 @@ export function useDpmCampaignSources({
     selection?.key === initialCampaignKey
       ? completeInitialWorkflowEvidence(initialWorkflowEvidence)
       : undefined;
+  const definitionsQuery = useQuery({
+    ...dpmCampaignDefinitionsQueryOptions(),
+    enabled: false,
+    initialData: initialDefinitions ?? undefined,
+  });
 
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
@@ -99,6 +111,7 @@ export function useDpmCampaignSources({
   });
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
+    setLifecycleConfirmationError(null);
     return await queryClient.fetchQuery(dpmCampaignLifecycleQueryOptions(toRequiredSelection(row)));
   }
 
@@ -132,6 +145,7 @@ export function useDpmCampaignSources({
   }
 
   async function loadWorkflow(row: DpmCampaignDefinitionRow) {
+    setWorkflowConfirmationError(null);
     return await queryClient.fetchQuery(dpmCampaignWorkflowQueryOptions(toRequiredSelection(row)));
   }
 
@@ -142,7 +156,24 @@ export function useDpmCampaignSources({
       exact: true,
       refetchType: "none",
     });
-    return await queryClient.fetchQuery(options);
+    try {
+      const [response] = await Promise.all([
+        queryClient.fetchQuery(options),
+        queryClient.fetchQuery({
+          ...dpmCampaignDefinitionsQueryOptions(),
+          staleTime: 0,
+        }),
+      ]);
+      setLifecycleConfirmationError(null);
+      return response;
+    } catch (error) {
+      setLifecycleConfirmationError({
+        campaignKey: row.key,
+        message:
+          "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
+      });
+      throw error;
+    }
   }
 
   async function refreshWorkflow(row: DpmCampaignDefinitionRow) {
@@ -152,12 +183,26 @@ export function useDpmCampaignSources({
       exact: true,
       refetchType: "none",
     });
-    return await queryClient.fetchQuery(options);
+    try {
+      const response = await queryClient.fetchQuery(options);
+      setWorkflowConfirmationError(null);
+      return response;
+    } catch (error) {
+      setWorkflowConfirmationError({
+        campaignKey: row.key,
+        message:
+          "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
+      });
+      throw error;
+    }
   }
 
   return {
+    definitions: definitionsQuery.data ?? null,
     lifecycle: lifecycleQuery.data ?? null,
-    lifecycleError: errorMessage(lifecycleQuery.error),
+    lifecycleError:
+      confirmationMessage(lifecycleConfirmationError, selection?.key) ??
+      errorMessage(lifecycleQuery.error),
     lifecyclePending: lifecycleQuery.isFetching,
     launchHistory: historyQuery.data ?? null,
     launchHistoryError: errorMessage(historyQuery.error),
@@ -169,7 +214,9 @@ export function useDpmCampaignSources({
     launchPackageError: errorMessage(packageQuery.error),
     launchPackagePending: packageQuery.isFetching,
     workflow: workflowQuery.data ?? null,
-    workflowError: errorMessage(workflowQuery.error),
+    workflowError:
+      confirmationMessage(workflowConfirmationError, selection?.key) ??
+      errorMessage(workflowQuery.error),
     workflowPending: workflowQuery.isFetching,
     workflowResolved: workflowQuery.isFetched || workflowQuery.data !== undefined,
     loadLifecycle,
@@ -212,4 +259,11 @@ function completeInitialWorkflowEvidence(
 
 function errorMessage(error: unknown): string | null {
   return error instanceof Error ? error.message : error ? String(error) : null;
+}
+
+function confirmationMessage(
+  error: Readonly<{ campaignKey: string; message: string }> | null,
+  selectedCampaignKey?: string,
+): string | null {
+  return error && error.campaignKey === selectedCampaignKey ? error.message : null;
 }
