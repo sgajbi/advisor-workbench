@@ -12,6 +12,7 @@ import {
   dpmCampaignWorkflowQueryOptions,
   type DpmCampaignWorkflowEvidence,
 } from "@/features/workbench/dpm-campaign-query-options";
+import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import type {
   DpmCampaignDefinitionGatewayResponse,
@@ -41,6 +42,10 @@ type UseDpmCampaignSourcesInput = Readonly<{
 }>;
 
 type OffsetSelection = Readonly<{ campaignKey: string; offset: number }>;
+type ConfirmationLock = Readonly<{
+  kind: "lifecycle" | "workflow";
+  message: string;
+}>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -60,10 +65,6 @@ export function useDpmCampaignSources({
     campaignKey: initialCampaignKey ?? "",
     offset: 0,
   });
-  const [lifecycleConfirmationError, setLifecycleConfirmationError] =
-    useState<Readonly<{ campaignKey: string; message: string }> | null>(null);
-  const [workflowConfirmationError, setWorkflowConfirmationError] =
-    useState<Readonly<{ campaignKey: string; message: string }> | null>(null);
   const historyOffset =
     selection && historySelection.campaignKey === selection.key
       ? historySelection.offset
@@ -109,9 +110,22 @@ export function useDpmCampaignSources({
     enabled: false,
     initialData: initialWorkflow,
   });
+  const confirmationKey = dpmCampaignQueryKeys.confirmationLock(queryIdentity);
+  const confirmationQuery = useQuery<ConfirmationLock>({
+    queryKey: confirmationKey,
+    queryFn: async () => {
+      throw new Error(
+        "Campaign confirmation state is written by persisted commands.",
+      );
+    },
+    enabled: false,
+  });
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
-    setLifecycleConfirmationError(null);
+    queryClient.removeQueries({
+      queryKey: dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+      exact: true,
+    });
     return await queryClient.fetchQuery(
       dpmCampaignLifecycleQueryOptions(toRequiredSelection(row)),
     );
@@ -147,7 +161,10 @@ export function useDpmCampaignSources({
   }
 
   async function loadWorkflow(row: DpmCampaignDefinitionRow) {
-    setWorkflowConfirmationError(null);
+    queryClient.removeQueries({
+      queryKey: dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+      exact: true,
+    });
     return await queryClient.fetchQuery(
       dpmCampaignWorkflowQueryOptions(toRequiredSelection(row)),
     );
@@ -168,14 +185,17 @@ export function useDpmCampaignSources({
           staleTime: 0,
         }),
       ]);
-      setLifecycleConfirmationError(null);
+      queryClient.removeQueries({ queryKey: confirmationKey, exact: true });
       return response;
     } catch (error) {
-      setLifecycleConfirmationError({
-        campaignKey: row.key,
-        message:
-          "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
-      });
+      queryClient.setQueryData<ConfirmationLock>(
+        dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+        {
+          kind: "lifecycle",
+          message:
+            "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
+        },
+      );
       throw error;
     }
   }
@@ -189,14 +209,17 @@ export function useDpmCampaignSources({
     });
     try {
       const response = await queryClient.fetchQuery(options);
-      setWorkflowConfirmationError(null);
+      queryClient.removeQueries({ queryKey: confirmationKey, exact: true });
       return response;
     } catch (error) {
-      setWorkflowConfirmationError({
-        campaignKey: row.key,
-        message:
-          "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
-      });
+      queryClient.setQueryData<ConfirmationLock>(
+        dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+        {
+          kind: "workflow",
+          message:
+            "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
+        },
+      );
       throw error;
     }
   }
@@ -205,8 +228,9 @@ export function useDpmCampaignSources({
     definitions: definitionsQuery.data ?? null,
     lifecycle: lifecycleQuery.data ?? null,
     lifecycleError:
-      confirmationMessage(lifecycleConfirmationError, selection?.key) ??
-      errorMessage(lifecycleQuery.error),
+      (confirmationQuery.data?.kind === "lifecycle"
+        ? confirmationQuery.data.message
+        : null) ?? errorMessage(lifecycleQuery.error),
     lifecyclePending: lifecycleQuery.isFetching,
     launchHistory: historyQuery.data ?? null,
     launchHistoryError: errorMessage(historyQuery.error),
@@ -219,8 +243,9 @@ export function useDpmCampaignSources({
     launchPackagePending: packageQuery.isFetching,
     workflow: workflowQuery.data ?? null,
     workflowError:
-      confirmationMessage(workflowConfirmationError, selection?.key) ??
-      errorMessage(workflowQuery.error),
+      (confirmationQuery.data?.kind === "workflow"
+        ? confirmationQuery.data.message
+        : null) ?? errorMessage(workflowQuery.error),
     workflowPending: workflowQuery.isFetching,
     workflowResolved:
       workflowQuery.isFetched || workflowQuery.data !== undefined,
@@ -266,13 +291,4 @@ function completeInitialWorkflowEvidence(
 
 function errorMessage(error: unknown): string | null {
   return error instanceof Error ? error.message : error ? String(error) : null;
-}
-
-function confirmationMessage(
-  error: Readonly<{ campaignKey: string; message: string }> | null,
-  selectedCampaignKey?: string,
-): string | null {
-  return error && error.campaignKey === selectedCampaignKey
-    ? error.message
-    : null;
 }
