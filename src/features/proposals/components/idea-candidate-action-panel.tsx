@@ -5,18 +5,29 @@ import { Alert } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 
 import { ActionButton, Text, WorkbenchChoiceGroup } from "@/design-system";
-import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 
 import {
   recordAdvisorIdeaConversionIntent,
   recordAdvisorIdeaFeedback,
   recordAdvisorIdeaReviewAction,
 } from "../api";
+import { buildIdeaBusinessReasonOptions } from "../idea-action-reasons";
 import {
-  buildIdeaActionReasonCodes,
-  buildIdeaBusinessReasonOptions,
-  type IdeaBusinessReasonOption,
-} from "../idea-action-reasons";
+  buildConversionIntent,
+  buildReviewIntent,
+  formatActionKind,
+  hasInlineRetry,
+  ideaActionFailureCopy,
+  isAmbiguousIdeaActionFailure,
+  sameConversionIntent,
+  sameReviewIntent,
+  withoutRetry,
+  withoutRetryKind,
+  type IdeaActionKind,
+  type IdeaActionSubmission,
+  type RetryableIdeaActionSubmission,
+  type RetryableSubmissionState,
+} from "../idea-action-intent";
 import {
   IDEA_FEEDBACK_TAXONOMY_VERSION,
   NOT_USEFUL_REASON_OPTIONS,
@@ -25,46 +36,18 @@ import {
 } from "../idea-feedback";
 import type { AdvisorIdeaEvidenceIdentity } from "../idea-ai-explanation-contract";
 import type {
-  AdvisorIdeaConversionIntentRequest,
   AdvisorIdeaFeedbackOutcome,
   AdvisorIdeaFeedbackReason,
-  AdvisorIdeaFeedbackRequest,
   AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
   AdvisorIdeaReviewActionRequest,
 } from "../types";
 import styles from "./advisory-opportunities-workspace.module.css";
 import IdeaCandidateExplanation from "./idea-candidate-explanation";
-
-type IdeaActionKind = "review" | "feedback" | "conversion";
-
-type IdeaActionSubmission =
-  | {
-      kind: "review";
-      request: AdvisorIdeaReviewActionRequest;
-      idempotencyKey: string;
-    }
-  | {
-      kind: "feedback";
-      request: AdvisorIdeaFeedbackRequest;
-      idempotencyKey: string;
-    }
-  | {
-      kind: "conversion";
-      request: AdvisorIdeaConversionIntentRequest;
-      idempotencyKey: string;
-    };
-
-const REVIEW_ACTIONS: Array<{ value: AdvisorIdeaReviewAction; label: string }> =
-  [
-    { value: "approve_for_conversion", label: "Approve for conversion review" },
-    { value: "reject", label: "Reject candidate" },
-    { value: "no_action", label: "Record no action" },
-    { value: "suppress", label: "Suppress candidate" },
-    { value: "snooze", label: "Snooze candidate" },
-    { value: "escalate_to_pm", label: "Escalate to portfolio management" },
-    { value: "escalate_to_compliance", label: "Escalate to compliance" },
-  ];
+import {
+  IdeaConversionIntentForm,
+  IdeaReviewActionForm,
+} from "./idea-candidate-decision-forms";
 
 const FEEDBACK_OUTCOME_OPTIONS = [
   { key: "useful", label: "Useful" },
@@ -84,9 +67,11 @@ export default function IdeaCandidateActionPanel({
   portfolioId: string;
   onRecorded: () => Promise<boolean>;
 }) {
-  const retryableSubmissions = useRef<
-    Partial<Record<IdeaActionKind, IdeaActionSubmission>>
-  >({});
+  const feedbackRetryableSubmission = useRef<
+    Extract<IdeaActionSubmission, { kind: "feedback" }> | undefined
+  >(undefined);
+  const [retryableSubmissions, setRetryableSubmissions] =
+    useState<RetryableSubmissionState>({});
   const feedbackReasonRef = useRef<HTMLSelectElement>(null);
   const [reviewAction, setReviewAction] = useState<AdvisorIdeaReviewAction>(
     "approve_for_conversion",
@@ -119,6 +104,33 @@ export default function IdeaCandidateActionPanel({
     useState<IdeaActionKind>();
   const [sourceRefreshFailed, setSourceRefreshFailed] = useState(false);
 
+  const currentReviewIntent = buildReviewIntent({
+    reviewAction,
+    reviewReason,
+    snoozedUntil,
+    suppressionReason,
+  });
+  const currentConversionIntent = buildConversionIntent({
+    conversionReason,
+    conversionTarget,
+  });
+  const retryableReview =
+    retryableSubmissions.review?.kind === "review"
+      ? retryableSubmissions.review
+      : undefined;
+  const retryableConversion =
+    retryableSubmissions.conversion?.kind === "conversion"
+      ? retryableSubmissions.conversion
+      : undefined;
+  const reviewIntentChanged = Boolean(
+    retryableReview &&
+    !sameReviewIntent(retryableReview.request, currentReviewIntent),
+  );
+  const conversionIntentChanged = Boolean(
+    retryableConversion &&
+    !sameConversionIntent(retryableConversion.request, currentConversionIntent),
+  );
+
   const actionMutation = useMutation({
     mutationFn: async (submission: IdeaActionSubmission) => {
       if (submission.kind === "review") {
@@ -144,8 +156,26 @@ export default function IdeaCandidateActionPanel({
         request: submission.request,
       });
     },
+    onError: (error, submission) => {
+      if (submission.kind === "feedback") {
+        feedbackRetryableSubmission.current = submission;
+        return;
+      }
+      if (!isAmbiguousIdeaActionFailure(error)) {
+        setRetryableSubmissions((current) => withoutRetry(current, submission));
+        return;
+      }
+      setRetryableSubmissions((current) => ({
+        ...current,
+        [submission.kind]: submission,
+      }));
+    },
     onSuccess: async (_result, submission) => {
-      delete retryableSubmissions.current[submission.kind];
+      if (submission.kind === "feedback") {
+        feedbackRetryableSubmission.current = undefined;
+      } else {
+        setRetryableSubmissions((current) => withoutRetry(current, submission));
+      }
       const sourceRefreshSucceeded = await onRecorded();
       setLatestRecordedKind(submission.kind);
       setSourceRefreshFailed(!sourceRefreshSucceeded);
@@ -155,13 +185,23 @@ export default function IdeaCandidateActionPanel({
   function recordSubmission(submission: IdeaActionSubmission) {
     setLatestRecordedKind(undefined);
     setSourceRefreshFailed(false);
-    const retryableSubmission = retryableSubmissions.current[submission.kind];
-    if (retryableSubmission) {
-      actionMutation.mutate(retryableSubmission);
+    if (submission.kind === "feedback" && feedbackRetryableSubmission.current) {
+      actionMutation.mutate(feedbackRetryableSubmission.current);
       return;
     }
+    if (submission.kind === "feedback") {
+      feedbackRetryableSubmission.current = submission;
+    } else {
+      setRetryableSubmissions((current) =>
+        withoutRetryKind(current, submission.kind),
+      );
+    }
+    actionMutation.mutate(submission);
+  }
 
-    retryableSubmissions.current[submission.kind] = submission;
+  function retryExactSubmission(submission: RetryableIdeaActionSubmission) {
+    setLatestRecordedKind(undefined);
+    setSourceRefreshFailed(false);
     actionMutation.mutate(submission);
   }
 
@@ -175,6 +215,12 @@ export default function IdeaCandidateActionPanel({
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (retryableReview && !reviewIntentChanged) {
+      setValidationMessage(
+        "Retry the exact unconfirmed review, or change its terms before recording a new review.",
+      );
+      return;
+    }
     if (reviewAction === "snooze" && !snoozedUntil) {
       setValidationMessage(
         "Provide a snooze-until time before recording a snooze.",
@@ -187,17 +233,8 @@ export default function IdeaCandidateActionPanel({
       idempotencyKey: newIdempotencyKey("review"),
       request: {
         reviewId: `ui-idea-review-${candidateId}-${Date.now()}`,
-        action: reviewAction,
-        reasonCodes: buildIdeaActionReasonCodes({
-          basis: reviewReason,
-          kind: "review",
-          reviewAction,
-        }),
+        ...currentReviewIntent,
         decidedAtUtc: new Date().toISOString(),
-        ...(reviewAction === "suppress" ? { suppressionReason } : {}),
-        ...(reviewAction === "snooze"
-          ? { snoozedUntilUtc: new Date(snoozedUntil).toISOString() }
-          : {}),
       },
     });
   }
@@ -242,7 +279,7 @@ export default function IdeaCandidateActionPanel({
   }
 
   function clearFeedbackRetry() {
-    delete retryableSubmissions.current.feedback;
+    feedbackRetryableSubmission.current = undefined;
     setFeedbackValidationMessage(undefined);
     if (actionMutation.variables?.kind === "feedback") {
       actionMutation.reset();
@@ -251,18 +288,19 @@ export default function IdeaCandidateActionPanel({
 
   function submitConversion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (retryableConversion && !conversionIntentChanged) {
+      setValidationMessage(
+        "Retry the exact unconfirmed conversion intent, or change its terms before recording a new intent.",
+      );
+      return;
+    }
     setValidationMessage(undefined);
     recordSubmission({
       kind: "conversion",
       idempotencyKey: newIdempotencyKey("conversion"),
       request: {
         conversionIntentId: `ui-idea-conversion-${candidateId}-${Date.now()}`,
-        target:
-          conversionTarget as AdvisorIdeaConversionIntentRequest["target"],
-        reasonCodes: buildIdeaActionReasonCodes({
-          basis: conversionReason,
-          kind: "conversion",
-        }),
+        ...currentConversionIntent,
         requestedAtUtc: new Date().toISOString(),
       },
     });
@@ -287,75 +325,23 @@ export default function IdeaCandidateActionPanel({
         portfolioId={portfolioId}
       />
       <div className={styles.actionForms}>
-        <form className={styles.actionForm} onSubmit={submitReview}>
-          <h4>Record review</h4>
-          <label>
-            Review action
-            <select
-              value={reviewAction}
-              onChange={(event) =>
-                setReviewAction(event.target.value as AdvisorIdeaReviewAction)
-              }
-            >
-              {REVIEW_ACTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <IdeaBusinessReasonSelect
-            id="idea-review-business-reason"
-            label="Review basis"
-            options={businessReasonOptions}
-            value={reviewReason}
-            disabled={actionMutation.isPending}
-            onChange={setReviewReason}
-          />
-          {reviewAction === "suppress" ? (
-            <label>
-              Suppression reason
-              <select
-                value={suppressionReason}
-                onChange={(event) =>
-                  setSuppressionReason(
-                    event.target.value as NonNullable<
-                      AdvisorIdeaReviewActionRequest["suppressionReason"]
-                    >,
-                  )
-                }
-              >
-                <option value="manual_suppression">Manual suppression</option>
-                <option value="duplicate">Duplicate</option>
-                <option value="recently_rejected">Recently rejected</option>
-                <option value="below_materiality">Below materiality</option>
-                <option value="unsupported_evidence">
-                  Unsupported evidence
-                </option>
-              </select>
-            </label>
-          ) : null}
-          {reviewAction === "snooze" ? (
-            <label>
-              Snooze until
-              <input
-                type="datetime-local"
-                value={snoozedUntil}
-                onChange={(event) => setSnoozedUntil(event.target.value)}
-              />
-            </label>
-          ) : null}
-          <ActionButton
-            priority="secondary"
-            type="submit"
-            disabled={actionMutation.isPending}
-          >
-            {actionMutation.isPending &&
-            actionMutation.variables?.kind === "review"
-              ? "Recording..."
-              : "Record review"}
-          </ActionButton>
-        </form>
+        <IdeaReviewActionForm
+          businessReasonOptions={businessReasonOptions}
+          intentChanged={reviewIntentChanged}
+          isPending={actionMutation.isPending}
+          onActionChange={setReviewAction}
+          onReasonChange={setReviewReason}
+          onRetry={retryExactSubmission}
+          onSnoozedUntilChange={setSnoozedUntil}
+          onSubmit={submitReview}
+          onSuppressionReasonChange={setSuppressionReason}
+          pendingKind={actionMutation.variables?.kind}
+          retryableSubmission={retryableReview}
+          reviewAction={reviewAction}
+          reviewReason={reviewReason}
+          snoozedUntil={snoozedUntil}
+          suppressionReason={suppressionReason}
+        />
 
         <form
           className={styles.actionForm}
@@ -446,38 +432,19 @@ export default function IdeaCandidateActionPanel({
           </ActionButton>
         </form>
 
-        <form className={styles.actionForm} onSubmit={submitConversion}>
-          <h4>Record conversion intent</h4>
-          <label>
-            Target workflow
-            <select
-              value={conversionTarget}
-              onChange={(event) => setConversionTarget(event.target.value)}
-            >
-              <option value="advise_proposal">Advise proposal review</option>
-              <option value="manage_review">Manage review</option>
-              <option value="report_evidence">Report evidence review</option>
-            </select>
-          </label>
-          <IdeaBusinessReasonSelect
-            id="idea-conversion-business-reason"
-            label="Conversion basis"
-            options={businessReasonOptions}
-            value={conversionReason}
-            disabled={actionMutation.isPending}
-            onChange={setConversionReason}
-          />
-          <ActionButton
-            priority="primary"
-            type="submit"
-            disabled={actionMutation.isPending}
-          >
-            {actionMutation.isPending &&
-            actionMutation.variables?.kind === "conversion"
-              ? "Recording..."
-              : "Record intent"}
-          </ActionButton>
-        </form>
+        <IdeaConversionIntentForm
+          businessReasonOptions={businessReasonOptions}
+          conversionReason={conversionReason}
+          conversionTarget={conversionTarget}
+          intentChanged={conversionIntentChanged}
+          isPending={actionMutation.isPending}
+          onReasonChange={setConversionReason}
+          onRetry={retryExactSubmission}
+          onSubmit={submitConversion}
+          onTargetChange={setConversionTarget}
+          pendingKind={actionMutation.variables?.kind}
+          retryableSubmission={retryableConversion}
+        />
       </div>
       <Text variant="secondary">
         Feedback helps improve the relevance and timing of future opportunities.
@@ -487,9 +454,16 @@ export default function IdeaCandidateActionPanel({
       {validationMessage ? (
         <Alert severity="warning">{validationMessage}</Alert>
       ) : null}
-      {actionMutation.error ? (
+      {actionMutation.error &&
+      !hasInlineRetry(
+        actionMutation.variables,
+        retryableReview,
+        retryableConversion,
+      ) ? (
         <Alert
           severity="warning"
+          role="status"
+          aria-atomic="true"
           data-testid="idea-action-error"
           data-action-state="not-recorded"
         >
@@ -524,74 +498,4 @@ export default function IdeaCandidateActionPanel({
       ) : null}
     </section>
   );
-}
-
-function ideaActionFailureCopy(
-  error: unknown,
-  actionKind: IdeaActionKind | undefined,
-): string {
-  if (actionKind !== "feedback") {
-    return "We could not confirm that the adviser action was saved. The displayed opportunity remains unchanged.";
-  }
-
-  const status = getWorkbenchApiErrorStatus(error);
-  if (status === 401 || status === 403) {
-    return "Feedback is not available for your current access. No feedback was saved.";
-  }
-  if (status === 409) {
-    return "The opportunity changed or conflicts with existing feedback. Refresh it before recording new feedback; no feedback was shown as saved.";
-  }
-  if (status === 502 || status === 503 || status === 504) {
-    return "The feedback service is unavailable. Your exact selection is retained for retry, and no feedback was shown as saved.";
-  }
-  return "Workbench could not verify the saved feedback against source evidence. Your exact selection is retained for retry, and the opportunity remains unchanged.";
-}
-
-function IdeaBusinessReasonSelect({
-  disabled,
-  id,
-  label,
-  onChange,
-  options,
-  value,
-}: {
-  disabled: boolean;
-  id: string;
-  label: string;
-  onChange: (value: AdvisorIdeaReasonCode) => void;
-  options: IdeaBusinessReasonOption[];
-  value: AdvisorIdeaReasonCode;
-}) {
-  const descriptionId = `${id}-description`;
-  return (
-    <div className={styles.actionField}>
-      <label htmlFor={id}>{label}</label>
-      <select
-        id={id}
-        value={value}
-        disabled={disabled}
-        aria-describedby={descriptionId}
-        onChange={(event) =>
-          onChange(event.target.value as AdvisorIdeaReasonCode)
-        }
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <span id={descriptionId} className={styles.fieldHint}>
-        Candidate reason, or Adviser review required when no reason is
-        available.
-      </span>
-    </div>
-  );
-}
-
-function formatActionKind(kind: IdeaActionKind): string {
-  if (kind === "conversion") {
-    return "Conversion intent";
-  }
-  return `${kind.slice(0, 1).toUpperCase()}${kind.slice(1)}`;
 }

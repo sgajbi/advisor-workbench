@@ -49,7 +49,17 @@ function renderPanel(
 
 describe("IdeaCandidateActionPanel", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    ideaApi.recordAdvisorIdeaReviewAction.mockResolvedValue({
+      persistence: { decision: "accepted" },
+      durableStorageBacked: true,
+      supportedFeaturePromoted: false,
+    });
+    ideaApi.recordAdvisorIdeaConversionIntent.mockResolvedValue({
+      persistence: { decision: "accepted" },
+      durableStorageBacked: true,
+      supportedFeaturePromoted: false,
+    });
     ideaApi.recordAdvisorIdeaFeedback.mockImplementation(
       async ({ candidateId, request }) => ({
         feedbackEvent: {
@@ -201,23 +211,26 @@ describe("IdeaCandidateActionPanel", () => {
       status: 503,
       message: "The feedback service is unavailable",
     },
-  ])("keeps a $status feedback failure explicit", async ({ status, message }) => {
-    const onRecorded = vi.fn(async () => true);
-    ideaApi.recordAdvisorIdeaFeedback.mockRejectedValueOnce(
-      new WorkbenchApiError("advisor idea feedback", status),
-    );
-    renderPanel(onRecorded);
+  ])(
+    "keeps a $status feedback failure explicit",
+    async ({ status, message }) => {
+      const onRecorded = vi.fn(async () => true);
+      ideaApi.recordAdvisorIdeaFeedback.mockRejectedValueOnce(
+        new WorkbenchApiError("advisor idea feedback", status),
+      );
+      renderPanel(onRecorded);
 
-    fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
+      fireEvent.click(screen.getByRole("button", { name: "Record feedback" }));
 
-    expect(await screen.findByTestId("idea-action-error")).toHaveTextContent(
-      message,
-    );
-    expect(
-      screen.queryByTestId("idea-action-feedback-status"),
-    ).not.toBeInTheDocument();
-    expect(onRecorded).not.toHaveBeenCalled();
-  });
+      expect(await screen.findByTestId("idea-action-error")).toHaveTextContent(
+        message,
+      );
+      expect(
+        screen.queryByTestId("idea-action-feedback-status"),
+      ).not.toBeInTheDocument();
+      expect(onRecorded).not.toHaveBeenCalled();
+    },
+  );
 
   it("abandons a failed retry only after the adviser changes the feedback", async () => {
     const onRecorded = vi.fn(async () => true);
@@ -246,12 +259,227 @@ describe("IdeaCandidateActionPanel", () => {
     expect(changedInput.request).not.toEqual(failedInput.request);
   });
 
+  it("shows and replays the exact unconfirmed review payload and identity", async () => {
+    const onRecorded = vi.fn(async () => true);
+    ideaApi.recordAdvisorIdeaReviewAction
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockResolvedValueOnce({
+        persistence: { decision: "replayed" },
+        durableStorageBacked: true,
+        supportedFeaturePromoted: false,
+      });
+    renderPanel(onRecorded);
+
+    fireEvent.change(screen.getByLabelText("Review action"), {
+      target: { value: "snooze" },
+    });
+    fireEvent.change(screen.getByLabelText("Snooze until"), {
+      target: { value: "2026-09-08T10:30" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    const recovery = await screen.findByTestId("idea-review-retry");
+    expect(recovery).toHaveTextContent("Review outcome not confirmed");
+    expect(recovery).toHaveTextContent("Snooze candidate");
+    expect(recovery).toHaveTextContent("Cash balance requires review");
+    expect(
+      screen.getByRole("button", { name: "Change review to record new" }),
+    ).toBeDisabled();
+    fireEvent.submit(
+      screen.getByRole("heading", { name: "Record review" }).closest("form")!,
+    );
+    expect(ideaApi.recordAdvisorIdeaReviewAction).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByText(/Retry the exact unconfirmed review/),
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry exact review" }));
+    await screen.findByTestId("idea-action-review-status");
+
+    const first = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[0][0];
+    const retry = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[1][0];
+    expect(retry.idempotencyKey).toBe(first.idempotencyKey);
+    expect(retry.request).toEqual(first.request);
+    expect(onRecorded).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("idea-review-retry")).not.toBeInTheDocument();
+  });
+
+  it("records an edited review as a new visible intent with a fresh identity", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction.mockRejectedValueOnce(
+      new Error("response lost"),
+    );
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    await screen.findByTestId("idea-review-retry");
+    const failed = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[0][0];
+
+    fireEvent.change(screen.getByLabelText("Review action"), {
+      target: { value: "reject" },
+    });
+    fireEvent.change(screen.getByLabelText("Review basis"), {
+      target: { value: "review_required" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record updated review" }),
+    );
+    await screen.findByTestId("idea-action-review-status");
+
+    const updated = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[1][0];
+    expect(updated.idempotencyKey).not.toBe(failed.idempotencyKey);
+    expect(updated.request).toMatchObject({
+      action: "reject",
+      reasonCodes: ["review_rejected", "review_required"],
+    });
+    expect(updated.request).not.toEqual(failed.request);
+  });
+
+  it("treats an edited snooze time as a new review intent", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction.mockRejectedValueOnce(
+      new Error("response lost"),
+    );
+    renderPanel(async () => true);
+
+    fireEvent.change(screen.getByLabelText("Review action"), {
+      target: { value: "snooze" },
+    });
+    fireEvent.change(screen.getByLabelText("Snooze until"), {
+      target: { value: "2026-09-08T10:30" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    await screen.findByTestId("idea-review-retry");
+    const failed = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[0][0];
+
+    fireEvent.change(screen.getByLabelText("Snooze until"), {
+      target: { value: "2026-09-09T14:15" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record updated review" }),
+    );
+    await screen.findByTestId("idea-action-review-status");
+
+    const updated = ideaApi.recordAdvisorIdeaReviewAction.mock.calls[1][0];
+    expect(updated.idempotencyKey).not.toBe(failed.idempotencyKey);
+    expect(updated.request.snoozedUntilUtc).toBe(
+      new Date("2026-09-09T14:15").toISOString(),
+    );
+  });
+
+  it("separates exact conversion retry from an edited target and basis", async () => {
+    ideaApi.recordAdvisorIdeaConversionIntent.mockRejectedValueOnce(
+      new Error("response lost"),
+    );
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record intent" }));
+    const recovery = await screen.findByTestId("idea-conversion-retry");
+    expect(recovery).toHaveTextContent("Advise proposal review");
+    const failed = ideaApi.recordAdvisorIdeaConversionIntent.mock.calls[0][0];
+
+    fireEvent.change(screen.getByLabelText("Target workflow"), {
+      target: { value: "manage_review" },
+    });
+    fireEvent.change(screen.getByLabelText("Conversion basis"), {
+      target: { value: "review_required" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record updated intent" }),
+    );
+    await screen.findByTestId("idea-action-conversion-status");
+
+    const updated = ideaApi.recordAdvisorIdeaConversionIntent.mock.calls[1][0];
+    expect(updated.idempotencyKey).not.toBe(failed.idempotencyKey);
+    expect(updated.request).toMatchObject({
+      target: "manage_review",
+      reasonCodes: ["review_approved_for_conversion", "review_required"],
+    });
+  });
+
+  it("freezes material action fields while a review completion is delayed", async () => {
+    let completeReview: ((value: unknown) => void) | undefined;
+    ideaApi.recordAdvisorIdeaReviewAction.mockImplementationOnce(
+      async () =>
+        await new Promise((resolve) => {
+          completeReview = resolve;
+        }),
+    );
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Review action")).toBeDisabled(),
+    );
+    expect(screen.getByLabelText("Review basis")).toBeDisabled();
+    expect(screen.getByLabelText("Target workflow")).toBeDisabled();
+    expect(screen.getByLabelText("Conversion basis")).toBeDisabled();
+
+    completeReview?.({
+      persistence: { decision: "accepted" },
+      durableStorageBacked: true,
+      supportedFeaturePromoted: false,
+    });
+    await screen.findByTestId("idea-action-review-status");
+  });
+
+  it("does not carry an unconfirmed attempt across a candidate panel remount", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction.mockRejectedValueOnce(
+      new Error("response lost"),
+    );
+    const rendered = renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    await screen.findByTestId("idea-review-retry");
+    rendered.unmount();
+    renderPanel(async () => true);
+
+    expect(screen.queryByTestId("idea-review-retry")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Record review" })).toBeEnabled();
+    expect(ideaApi.recordAdvisorIdeaReviewAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not offer mutation retry after persistence succeeds but refresh fails", async () => {
+    renderPanel(async () => false);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    const status = await screen.findByTestId("idea-action-review-status");
+
+    expect(status).toHaveAttribute(
+      "data-action-state",
+      "recorded-refresh-failed",
+    );
+    expect(screen.queryByTestId("idea-review-retry")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry exact review" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("stops retrying when Idea returns a deterministic owner conflict", async () => {
+    ideaApi.recordAdvisorIdeaReviewAction
+      .mockRejectedValueOnce(new Error("response lost"))
+      .mockRejectedValueOnce(new WorkbenchApiError("advisor idea review", 409));
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+    await screen.findByTestId("idea-review-retry");
+    fireEvent.click(screen.getByRole("button", { name: "Retry exact review" }));
+
+    expect(await screen.findByTestId("idea-action-error")).toHaveTextContent(
+      "source rejected this review",
+    );
+    expect(screen.queryByTestId("idea-review-retry")).not.toBeInTheDocument();
+  });
+
   it("keeps advisor actions available when explanation evidence is unavailable", () => {
     renderPanel(async () => true, null);
 
-    expect(screen.getByRole("button", { name: "Explanation unavailable" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Explanation unavailable" }),
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Record review" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Record feedback" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record feedback" }),
+    ).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record intent" })).toBeEnabled();
   });
 
@@ -265,7 +493,9 @@ describe("IdeaCandidateActionPanel", () => {
     await screen.findByTestId("idea-explanation-error");
 
     expect(screen.getByRole("button", { name: "Record review" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Record feedback" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Record feedback" }),
+    ).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record intent" })).toBeEnabled();
   });
 });
