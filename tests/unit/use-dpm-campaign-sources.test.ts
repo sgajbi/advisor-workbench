@@ -8,6 +8,7 @@ import {
   getDpmCampaignApprovalDecisions,
   getDpmCampaignAssignmentActions,
   getDpmCampaignAssignmentTasks,
+  getDpmCampaignDefinition,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
@@ -28,6 +29,7 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   getDpmCampaignApprovalDecisions: vi.fn(),
   getDpmCampaignAssignmentActions: vi.fn(),
   getDpmCampaignAssignmentTasks: vi.fn(),
+  getDpmCampaignDefinition: vi.fn(),
   getDpmCampaignDefinitionLaunchHistory: vi.fn(),
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
@@ -40,7 +42,19 @@ const rowA = campaignRow("campaign-a", "1");
 const rowB = campaignRow("campaign-b", "2");
 
 describe("useDpmCampaignSources", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getDpmCampaignDefinition).mockImplementation(
+      ({ campaignId, campaignVersion }) =>
+        Promise.resolve({
+          ...definitionResponse(campaignId),
+          data: {
+            campaign_id: campaignId,
+            campaign_version: campaignVersion,
+          },
+        }),
+    );
+  });
 
   it("keeps a late prior-campaign response outside the selected campaign", async () => {
     const pendingA = deferred<DpmCampaignDefinitionGatewayResponse>();
@@ -971,7 +985,11 @@ describe("useDpmCampaignSources", () => {
     });
     await waitFor(() => expect(result.current.lifecyclePending).toBe(true));
     expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledTimes(1);
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
+    expect(getDpmCampaignDefinition).toHaveBeenCalledWith(
+      { campaignId: "campaign-a", campaignVersion: "1" },
+      "client",
+    );
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(1);
 
     pendingLifecycle.resolve(definitionResponse("campaign-a", "CONFIRMED"));
     await act(async () => Promise.all([first, second]));
@@ -1074,9 +1092,10 @@ describe("useDpmCampaignSources", () => {
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
       definitionResponse("campaign-a", "SUPERSEDED"),
     );
-    vi.mocked(listDpmCampaignDefinitions)
-      .mockResolvedValueOnce(confirmedDefinitions)
-      .mockResolvedValueOnce(activeDefinitions);
+    vi.mocked(getDpmCampaignDefinition).mockResolvedValue(
+      definitionResponse("campaign-a", "SUPERSEDED", "1", "2"),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(activeDefinitions);
     const queryClient = createTestQueryClient();
     const { result, rerender } = renderHook(
       ({ definitions, readId }) => ({
@@ -1354,13 +1373,22 @@ function campaignRow(
 function definitionResponse(
   campaignId: string,
   status?: string,
+  campaignVersion?: string,
+  replacementCampaignVersion?: string,
 ): DpmCampaignDefinitionGatewayResponse {
   return {
     correlation_id: `corr-${campaignId}`,
     contract_version: "v1",
     source_service: "lotus-manage",
     upstream_status: 200,
-    data: { campaign_id: campaignId, status },
+    data: {
+      campaign_id: campaignId,
+      ...(campaignVersion ? { campaign_version: campaignVersion } : {}),
+      status,
+      ...(replacementCampaignVersion
+        ? { superseded_by_campaign_version: replacementCampaignVersion }
+        : {}),
+    },
   };
 }
 

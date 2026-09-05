@@ -8,6 +8,7 @@ import {
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
+  getDpmCampaignDefinition,
   getDpmCampaignMakerCheckerControls,
   listDpmCampaignDefinitions,
 } from "@/features/workbench/dpm-wave-api";
@@ -68,10 +69,7 @@ export function dpmCampaignLifecycleConfirmationQueryOptions(
     queryFn: async (): Promise<DpmCampaignLifecycleConfirmation> => {
       const [lifecycle, definition, definitions] = await Promise.all([
         fetchDpmCampaignLifecycle(identity),
-        listDpmCampaignDefinitions(
-          { campaignId: identity.campaignId, limit: 10, offset: 0 },
-          "client",
-        ),
+        getDpmCampaignDefinition(apiIdentity(identity), "client"),
         fetchDpmCampaignDefinitions(),
       ]);
       return { lifecycle, definition, definitions };

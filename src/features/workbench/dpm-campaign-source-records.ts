@@ -11,7 +11,16 @@ const WORKFLOW_COLLECTION_KEYS = [
 export function readDpmCampaignDefinitionRecords(
   data: Record<string, unknown> | null | undefined,
 ): Record<string, unknown>[] {
-  return readFirstRecordCollection(data, ["items", "campaign_definitions"]);
+  const records = readFirstRecordCollection(data, [
+    "items",
+    "campaign_definitions",
+  ]);
+  if (records.length > 0) return records;
+  return data &&
+    typeof data.campaign_id === "string" &&
+    typeof data.campaign_version === "string"
+    ? [data]
+    : [];
 }
 
 export function readDpmCampaignWorkflowRecords(
