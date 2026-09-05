@@ -209,6 +209,43 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     ).toThrow(/without a workflow run identifier/);
   });
 
+  it.each([
+    ["unavailable posture", { posture: "fallback_used" }],
+    ["verifier not run", { verifierOutcome: "not_run" }],
+    [
+      "unavailable execution provenance",
+      { executionProvenancePosture: "not_applicable_fallback" },
+    ],
+    ["missing lineage", { aiLineageRecorded: false }],
+  ])("rejects served output with %s", (_name, explanationOverride) => {
+    const value = response();
+    value.explanation = { ...value.explanation, ...explanationOverride };
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
+        requestId: "request-001",
+      }),
+    ).toThrow(/without complete source-owned explanation proof/);
+  });
+
+  it("accepts source-attested execution provenance", () => {
+    const value = response();
+    value.explanation = {
+      ...value.explanation,
+      executionProvenancePosture: "lotus_ai_attestation_verified",
+    };
+
+    expect(
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
+        requestId: "request-001",
+      }).explanation.executionProvenancePosture,
+    ).toBe("lotus_ai_attestation_verified");
+  });
+
   it("rejects unavailable text that the source does not attest as fallback evidence", () => {
     const value = response({
       status: "EXPLANATION_UNAVAILABLE",

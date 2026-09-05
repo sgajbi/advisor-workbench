@@ -82,6 +82,11 @@ const responseSchema = z
 
 export const ADVISOR_RATIONALE_DRAFT_PURPOSE = "advisor_rationale_draft" as const;
 
+const SERVED_EXPLANATION_PROVENANCE = new Set([
+  "lotus_ai_attestation_verified",
+  "unattested_local_test_fixture",
+]);
+
 export type AdvisorIdeaAIExplanationRequest = {
   requestId: string;
   purpose: typeof ADVISOR_RATIONALE_DRAFT_PURPOSE;
@@ -187,6 +192,19 @@ export function parseAdvisorIdeaAIExplanationResponse(
   ) {
     throw new Error(
       "Idea explanation response was served without a workflow run identifier.",
+    );
+  }
+  if (
+    response.status === "EXPLANATION_SERVED" &&
+    (response.explanation.posture !== "ready_for_advisor_review" ||
+      response.explanation.verifierOutcome !== "passed" ||
+      !SERVED_EXPLANATION_PROVENANCE.has(
+        response.explanation.executionProvenancePosture,
+      ) ||
+      !response.explanation.aiLineageRecorded)
+  ) {
+    throw new Error(
+      "Idea explanation response was served without complete source-owned explanation proof.",
     );
   }
   if (

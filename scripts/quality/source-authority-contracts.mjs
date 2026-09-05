@@ -157,6 +157,10 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
           "evidenceContentHash",
           "sourceRevisionVectorDigest",
           "isSameAdvisorIdeaEvidence",
+          "ready_for_advisor_review",
+          "verifierOutcome !== \"passed\"",
+          "SERVED_EXPLANATION_PROVENANCE",
+          "aiLineageRecorded",
         ]),
       }),
       Object.freeze({
