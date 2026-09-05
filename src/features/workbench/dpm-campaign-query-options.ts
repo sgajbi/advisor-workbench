@@ -9,6 +9,7 @@ import {
   getDpmCampaignDefinitionLifecycleEvents,
   getDpmCampaignDefinitionPreviewReadiness,
   getDpmCampaignMakerCheckerControls,
+  listDpmCampaignDefinitions,
 } from "@/features/workbench/dpm-wave-api";
 import {
   dpmCampaignQueryKeys,
@@ -23,10 +24,17 @@ export type DpmCampaignWorkflowEvidence = Readonly<{
   makerCheckerControls: DpmCampaignWorkflowGatewayResponse;
 }>;
 
+export function dpmCampaignDefinitionsQueryOptions() {
+  return queryOptions({
+    queryKey: dpmCampaignQueryKeys.definitions(),
+    queryFn: () => listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
+  });
+}
+
 export function dpmCampaignLifecycleQueryOptions(identity: DpmCampaignIdentity) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.lifecycle(identity),
-    queryFn: () => getDpmCampaignDefinitionLifecycleEvents(identity),
+    queryFn: () => getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity)),
   });
 }
 
@@ -37,7 +45,8 @@ export function dpmCampaignLaunchHistoryQueryOptions(
 ) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.launchHistory(identity, offset, limit),
-    queryFn: () => getDpmCampaignDefinitionLaunchHistory({ ...identity, limit, offset }),
+    queryFn: () =>
+      getDpmCampaignDefinitionLaunchHistory({ ...apiIdentity(identity), limit, offset }),
   });
 }
 
@@ -48,7 +57,10 @@ export function dpmCampaignPreviewReadinessQueryOptions(
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.previewReadiness(identity, requestedAsOfDate),
     queryFn: () =>
-      getDpmCampaignDefinitionPreviewReadiness({ ...identity, requestedAsOfDate }),
+      getDpmCampaignDefinitionPreviewReadiness({
+        ...apiIdentity(identity),
+        requestedAsOfDate,
+      }),
   });
 }
 
@@ -58,7 +70,11 @@ export function dpmCampaignLaunchPackageQueryOptions(
 ) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.launchPackage(identity, requestedAsOfDate),
-    queryFn: () => getDpmCampaignDefinitionLaunchPackage({ ...identity, requestedAsOfDate }),
+    queryFn: () =>
+      getDpmCampaignDefinitionLaunchPackage({
+        ...apiIdentity(identity),
+        requestedAsOfDate,
+      }),
   });
 }
 
@@ -66,7 +82,7 @@ export function dpmCampaignWorkflowQueryOptions(identity: DpmCampaignIdentity) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.workflow(identity),
     queryFn: async (): Promise<DpmCampaignWorkflowEvidence> => {
-      const params = { ...identity };
+      const params = apiIdentity(identity);
       const [approvalDecisions, assignmentActions, assignmentTasks, makerCheckerControls] =
         await Promise.all([
           getDpmCampaignApprovalDecisions(params, "client"),
@@ -82,4 +98,8 @@ export function dpmCampaignWorkflowQueryOptions(identity: DpmCampaignIdentity) {
       };
     },
   });
+}
+
+function apiIdentity({ campaignId, campaignVersion }: DpmCampaignIdentity) {
+  return { campaignId, campaignVersion };
 }
