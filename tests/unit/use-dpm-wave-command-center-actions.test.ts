@@ -16,6 +16,7 @@ import {
   getDpmCampaignApprovalDecisions,
   getDpmCampaignAssignmentActions,
   getDpmCampaignAssignmentTasks,
+  getDpmCampaignDefinition,
   getDpmCampaignDefinitionLaunchHistory,
   getDpmCampaignDefinitionLaunchPackage,
   getDpmCampaignDefinitionLifecycleEvents,
@@ -58,6 +59,7 @@ vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   getDpmCampaignApprovalDecisions: vi.fn(),
   getDpmCampaignAssignmentActions: vi.fn(),
   getDpmCampaignAssignmentTasks: vi.fn(),
+  getDpmCampaignDefinition: vi.fn(),
   getDpmCampaignDefinitionLaunchHistory: vi.fn(),
   getDpmCampaignDefinitionLaunchPackage: vi.fn(),
   getDpmCampaignDefinitionLifecycleEvents: vi.fn(),
@@ -400,6 +402,9 @@ describe("useDpmWaveCommandCenterActions", () => {
     vi.mocked(getDpmWaveItems).mockResolvedValue(itemResponse);
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
       lifecycleResponse,
+    );
+    vi.mocked(getDpmCampaignDefinition).mockResolvedValue(
+      campaignLifecycleCommandResponse,
     );
     vi.mocked(getDpmCampaignDefinitionLaunchHistory).mockResolvedValue(
       launchHistoryResponse,
@@ -2141,23 +2146,7 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("records campaign lifecycle commands and refreshes definitions plus lifecycle evidence", async () => {
-    vi.mocked(listDpmCampaignDefinitions)
-      .mockResolvedValueOnce({
-        ...campaignDefinitions,
-        data: {
-          ...campaignDefinitions.data,
-          items: [
-            {
-              ...(campaignDefinitions.data.items as Array<
-                Record<string, unknown>
-              >)[0],
-              status: "SUPERSEDED",
-              superseded_by_campaign_version: "2026.06",
-            },
-          ],
-        },
-      })
-      .mockResolvedValueOnce({
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValueOnce({
         ...campaignDefinitions,
         correlation_id: "corr-active-campaigns-after-supersede",
         data: {
@@ -2203,11 +2192,10 @@ describe("useDpmWaveCommandCenterActions", () => {
         correlation_id: "corr-campaign-lifecycle-command",
       },
     });
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledWith(
+    expect(getDpmCampaignDefinition).toHaveBeenCalledWith(
       {
         campaignId: "campaign-holdings-202605",
-        limit: 10,
-        offset: 0,
+        campaignVersion: "2026.05",
       },
       "client",
     );
@@ -2255,23 +2243,16 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
+    vi.mocked(getDpmCampaignDefinition).mockResolvedValue({
+      ...campaignLifecycleCommandResponse,
+      data: {
+        ...campaignLifecycleCommandResponse.data,
+        status: "RETIRED",
+        superseded_by_campaign_version: undefined,
+      },
+    });
     vi.mocked(listDpmCampaignDefinitions)
       .mockRejectedValueOnce(new Error("Campaign definitions refresh failed"))
-      .mockResolvedValueOnce(campaignDefinitions)
-      .mockResolvedValueOnce({
-        ...campaignDefinitions,
-        data: {
-          ...campaignDefinitions.data,
-          items: [
-            {
-              ...(campaignDefinitions.data.items as Array<
-                Record<string, unknown>
-              >)[0],
-              status: "RETIRED",
-            },
-          ],
-        },
-      })
       .mockResolvedValueOnce({
         ...campaignDefinitions,
         correlation_id: "corr-active-after-retire",
@@ -2327,7 +2308,8 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() =>
       expect(result.current.campaignLifecycleError).toBeNull(),
     );
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(4);
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
+    expect(getDpmCampaignDefinition).toHaveBeenCalledTimes(2);
   });
 
   it("revokes launch authorization as soon as a lifecycle command is accepted", async () => {

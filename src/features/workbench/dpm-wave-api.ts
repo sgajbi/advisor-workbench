@@ -163,6 +163,21 @@ export async function listDpmCampaignDefinitions(params?: {
   );
 }
 
+export async function getDpmCampaignDefinition(
+  params: { campaignId: string; campaignVersion: string },
+  target: WorkbenchRequestTarget = "server",
+): Promise<DpmCampaignDefinitionGatewayResponse> {
+  return await observeWorkbenchResource(
+    "dpm.waves.campaign-definitions.get",
+    async () =>
+      await fetchWorkbenchResource<DpmCampaignDefinitionGatewayResponse>(
+        target,
+        `/dpm/command-center/waves/campaign-definitions/${encodeURIComponent(params.campaignId)}/versions/${encodeURIComponent(params.campaignVersion)}`,
+        "DPM campaign definition",
+      ),
+  );
+}
+
 export async function listDpmCampaignDiscovery(params?: {
   campaignId?: string;
   campaignStatus?: "ACTIVE" | "RETIRED" | "SUPERSEDED";

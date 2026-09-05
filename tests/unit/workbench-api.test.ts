@@ -51,6 +51,7 @@ import {
   getDpmWaveProofPackPosture,
   getDpmWaveReportInput,
   getDpmWaveSupportability,
+  getDpmCampaignDefinition,
   handoffDpmWave,
   listDpmCampaignDiscovery,
   listDpmCampaignDefinitions,
@@ -1980,6 +1981,46 @@ describe("workbench api", () => {
     expect(metricEventsJson).toContain("wave-campaign-definitions");
     expect(metricEventsJson).not.toContain("campaign-holdings-202605");
     expect(metricEventsJson).not.toContain("corr-campaign");
+  });
+
+  it("loads one exact DPM campaign version through the Gateway BFF", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            correlation_id: "corr-campaign-version",
+            contract_version: "v1",
+            source_service: "lotus-manage",
+            upstream_status: 200,
+            data: {
+              campaign_id: "campaign-holdings/202605",
+              campaign_version: "2026.05 final",
+              status: "SUPERSEDED",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    await getDpmCampaignDefinition(
+      {
+        campaignId: "campaign-holdings/202605",
+        campaignVersion: "2026.05 final",
+      },
+      "client",
+    );
+
+    const requestedUrl = (
+      global.fetch as unknown as ReturnType<typeof vi.fn>
+    ).mock.calls[0][0].toString();
+    expect(requestedUrl).toContain(
+      "/api/bff/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings%2F202605/versions/2026.05%20final",
+    );
+    expect(JSON.stringify(getAnalyticsUiMetricEvents())).not.toContain(
+      "campaign-holdings/202605",
+    );
   });
 
   it("loads DPM campaign discovery through the Gateway BFF without leaking campaign identifiers into metrics", async () => {
