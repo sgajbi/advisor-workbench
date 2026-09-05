@@ -1,11 +1,25 @@
 import { z } from "zod";
 
+function isValidBusinessDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return false;
+  }
+  const [, year, month, day] = match.map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
+}
+
 const sourceRefSchema = z
   .object({
     productId: z.string().min(1),
     sourceSystem: z.string().min(1),
     productVersion: z.string().min(1),
-    asOfDate: z.string().min(1),
+    asOfDate: z.string().refine(isValidBusinessDate, "Invalid source business date"),
     freshness: z.string().min(1),
     dataQualityStatus: z.string().min(1),
   })
@@ -101,6 +115,14 @@ export function parseAdvisorIdeaAIExplanationResponse(
   ) {
     throw new Error(
       "Idea explanation response was served without an accepted source evaluation.",
+    );
+  }
+  if (
+    response.status === "EXPLANATION_SERVED" &&
+    response.disposition !== "executed"
+  ) {
+    throw new Error(
+      "Idea explanation response paired served status with a failure disposition.",
     );
   }
   if (
