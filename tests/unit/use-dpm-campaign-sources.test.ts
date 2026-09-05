@@ -187,6 +187,56 @@ describe("useDpmCampaignSources", () => {
     ).toEqual(current[0]);
   });
 
+  it("preserves client-confirmed workflow evidence when the initial campaign is reselected", async () => {
+    const initial = ["approval-old", "action-old", "task-old", "control-old"].map(
+      workflowResponse,
+    );
+    const confirmed = ["approval-new", "action-new", "task-new", "control-new"].map(
+      workflowResponse,
+    );
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(confirmed[0]);
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(confirmed[1]);
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(confirmed[2]);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(confirmed[3]);
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ selectedCampaign }) =>
+        useDpmCampaignSources({
+          selectedCampaign,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            readId: "workflow-read-1",
+            approvalDecisions: initial[0],
+            assignmentActions: initial[1],
+            assignmentTasks: initial[2],
+            makerCheckerControls: initial[3],
+          },
+        }),
+      {
+        initialProps: { selectedCampaign: rowA },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.workflowServerRead(rowA),
+        )?.readId,
+      ).toBe("workflow-read-1"),
+    );
+
+    await act(async () => result.current.refreshWorkflow(rowA));
+    await waitFor(() =>
+      expect(result.current.workflow?.approvalDecisions).toEqual(confirmed[0]),
+    );
+
+    rerender({ selectedCampaign: rowB });
+    rerender({ selectedCampaign: rowA });
+
+    expect(result.current.workflow?.approvalDecisions).toEqual(confirmed[0]);
+    expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledTimes(1);
+  });
+
   it("suppresses retained workflow when current source evidence is incomplete", async () => {
     const queryClient = createTestQueryClient();
     const prior = ["approval-old", "action-old", "task-old", "control-old"].map(

@@ -50,6 +50,7 @@ type WorkflowRecovery = Readonly<{
   campaignKey: string;
   readId: string;
 }>;
+type WorkflowServerRead = Readonly<{ readId: string }>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -186,8 +187,24 @@ export function useDpmCampaignSources({
     enabled: false,
     initialData: initialWorkflow,
   });
+  const workflowServerReadKey = dpmCampaignQueryKeys.workflowServerRead(
+    queryIdentity,
+  );
+  const workflowServerReadQuery = useQuery<WorkflowServerRead>({
+    queryKey: workflowServerReadKey,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<WorkflowServerRead>(workflowServerReadKey),
+  });
+  const workflowServerReadAlreadyAdmitted =
+    workflowServerReadQuery.data?.readId === initialWorkflowReadId;
   useEffect(() => {
-    if (!selection || !initialWorkflowIsAuthoritative) {
+    if (
+      !selection ||
+      !initialWorkflowIsAuthoritative ||
+      workflowServerReadAlreadyAdmitted
+    ) {
       return;
     }
     const workflowKey = dpmCampaignQueryKeys.workflow(selection);
@@ -196,12 +213,18 @@ export function useDpmCampaignSources({
     } else if (!workflowRecoveredForCurrentInput) {
       queryClient.removeQueries({ queryKey: workflowKey, exact: true });
     }
+    queryClient.setQueryData<WorkflowServerRead>(workflowServerReadKey, {
+      readId: initialWorkflowReadId,
+    });
   }, [
     initialWorkflow,
     initialWorkflowIsAuthoritative,
     queryClient,
     selection,
     workflowRecoveredForCurrentInput,
+    workflowServerReadAlreadyAdmitted,
+    workflowServerReadKey,
+    initialWorkflowReadId,
   ]);
   const lifecycleConfirmationKey = dpmCampaignQueryKeys.confirmationLock(
     queryIdentity,
