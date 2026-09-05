@@ -41,12 +41,18 @@ export default function IdeaCandidateExplanation({
     undefined,
   );
   const mutation = useMutation({
-    mutationFn: async (submission: ExplanationSubmission) =>
-      await requestAdvisorIdeaAIExplanation({
+    mutationFn: async (requestedSubmission?: ExplanationSubmission) => {
+      const submission =
+        requestedSubmission ??
+        retryableSubmission.current ??
+        createSubmission(candidateId);
+      retryableSubmission.current = submission;
+      return await requestAdvisorIdeaAIExplanation({
         candidateId,
         portfolioId,
         ...submission,
-      }),
+      });
+    },
     onSuccess: (response) => {
       retryableSubmission.current = undefined;
       if (response.status === "EXPLANATION_SERVED") {
@@ -61,10 +67,8 @@ export default function IdeaCandidateExplanation({
   });
 
   function requestExplanation() {
-    const submission = retryableSubmission.current ?? createSubmission(candidateId);
-    retryableSubmission.current = submission;
     recordIdeaExplanationOpened();
-    mutation.mutate(submission);
+    mutation.mutate(retryableSubmission.current);
   }
 
   const model = mutation.data
@@ -123,7 +127,13 @@ export default function IdeaCandidateExplanation({
       ) : null}
 
       {model ? (
-        <div className={styles.result} data-testid="idea-explanation-result">
+        <div
+          className={styles.result}
+          data-testid="idea-explanation-result"
+          data-idea-explanation-source="lotus-idea"
+          data-candidate-id={mutation.data?.explanation.candidateId}
+          data-explanation-status={mutation.data?.status}
+        >
           <div className={styles.resultHeader}>
             <SemanticBadge tone={model.state === "served" ? "success" : "warn"}>
               {model.state === "served"
@@ -267,6 +277,12 @@ function createSecureId(prefix: string): string {
 }
 
 function explanationFailureCopy(error: unknown): string {
+  if (
+    error instanceof Error &&
+    error.message === "Secure request identity is unavailable in this browser."
+  ) {
+    return "A protected request reference could not be created. Reload Workbench before trying again.";
+  }
   const status = getWorkbenchApiErrorStatus(error);
   if (status === 401 || status === 403) {
     return "Idea explanations are not available for your current access.";

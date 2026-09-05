@@ -178,4 +178,17 @@ describe("IdeaCandidateExplanation", () => {
     ).toEqual(dependencies.requestAdvisorIdeaAIExplanation.mock.calls[0][0]);
     expect(dependencies.unavailable).toHaveBeenCalledWith("request_failed");
   });
+
+  it("shows an explicit failure when secure request identity is unavailable", async () => {
+    vi.stubGlobal("crypto", {});
+    renderExplanation();
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+
+    expect(await screen.findByTestId("idea-explanation-error")).toHaveTextContent(
+      "A protected request reference could not be created",
+    );
+    expect(dependencies.requestAdvisorIdeaAIExplanation).not.toHaveBeenCalled();
+    expect(dependencies.unavailable).toHaveBeenCalledWith("request_failed");
+  });
 });
