@@ -46,6 +46,18 @@ a syntax-aware CI backstop that blocks equivalent raw browser-header access, a m
 an empty scan in every checked-in BFF route; the closed allowlist is the runtime control. This rule
 does not certify production identity; Workbench #436 remains the authenticated-principal owner.
 
+### BFF query-scope admission rule
+
+For a route family that narrows caller authority from query scope, the BFF must admit and execute
+one identical query representation. Read every required scalar with `URLSearchParams.getAll()`,
+reject missing or repeated values before contacting Gateway, normalize the accepted value once,
+and construct the upstream request from that admitted representation. Never rely on first-value or
+last-value precedence, including when repeated values are identical. Preserve unrelated
+Gateway-owned filters unless the route contract explicitly narrows them; Gateway remains the final
+object-authorization authority. Reporting options and report-job history are the reference
+consumer, with real `NextRequest`/`NextResponse` route tests proving zero upstream calls on
+ambiguous scope.
+
 ### Browser transport and error-authority rule
 
 Feature clients must use the governed Workbench JSON transport for same-origin BFF reads and

@@ -18,7 +18,7 @@ are non-certifying development fixtures and fail closed outside permitted develo
 | Control area | Implemented boundary | Primary evidence | Remaining boundary |
 | --- | --- | --- | --- |
 | Browser request trust | BFF rebuilds Gateway headers from a closed allowlist and discards browser-supplied authority | `quality:bff-header-boundary`, behavioral BFF tests | Not an IdP or session implementation |
-| Route authority | Server-owned development context is narrowed per route and portfolio scope | Route-family tests and canonical local validation | Production claims await authenticated principal resolution |
+| Route authority | Server-owned development context is narrowed per route; query-scoped routes execute the exact single-valued scope admitted by the BFF | Route-family tests and canonical local validation | Production claims await authenticated principal resolution |
 | Capability truth | Disabled, unsupported, partial, and unavailable states remain explicit | `quality:screen-docs`, product-copy gate, browser scenarios | Implemented route does not imply production promotion |
 | Dependency and image risk | Direct dependency admission, `npm audit`, pinned production image, vulnerability and SBOM gates | Feature, PR, and main releasability lanes | Not a production penetration test or deployment certification |
 | Release governance | Signed commits, protected CI, exact-head review authority, exact-main validation | GitHub PR checks and Main Releasability | Green CI cannot override a blocking review finding |
@@ -68,6 +68,19 @@ Intake, lookups, and platform route families.
 This is a request-boundary control, not production authentication. It neither creates an IdP
 session nor certifies identity, token claims, logout, or revocation. Workbench #436 and platform
 #563 remain the owners of that separate production-principal contract.
+
+### Query-scoped route admission
+
+When route authority depends on a query parameter, the Workbench BFF rejects missing or repeated
+required scalar values before contacting Gateway. It then forwards the normalized scope it admitted
+rather than the original ambiguous query representation. This applies even when repeated values are
+identical; Workbench does not choose a first-value or last-value interpretation on the caller's
+behalf. Reporting options and report-job history preserve other Gateway-owned filters, while
+Gateway remains responsible for final tenant, region, portfolio, and object authorization.
+
+Focused route tests cover reordered and contradictory portfolio scope, identical duplicates, exact
+normalized forwarding, and zero Gateway calls on rejection. This is request-integrity evidence, not
+production identity certification.
 
 ## Advisor Cockpit authority boundary
 

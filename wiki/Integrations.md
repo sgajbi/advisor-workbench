@@ -59,8 +59,11 @@ must travel through Gateway-shaped contracts.
    source-backed Advisor Book contract. Workbench does not call `lotus-report` or `lotus-core`
    directly.
 8. The BFF removes browser-supplied reporting authority headers and derives development role and
-   portfolio entitlement from server configuration. Other environments fail closed until an
-   authenticated-principal resolver is available.
+   portfolio entitlement from server configuration. Reporting query scope is single-valued:
+   missing or repeated `scopeType`, `scopeId`, `portfolioId`, or `reportType` values are rejected
+   before Gateway is called, and the upstream request is built from the exact normalized scope the
+   BFF admitted. Other environments fail closed until an authenticated-principal resolver is
+   available.
 9. Structured report data and governed PDF readiness are independent source states. Report-data
    completion does not mean archive, advisor approval, client delivery, or communication.
 10. Workbench can submit an explicit portfolio bundle and read its source-owned status only when
