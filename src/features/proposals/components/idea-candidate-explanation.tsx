@@ -2,7 +2,7 @@
 
 import { Alert } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   ActionButton,
@@ -15,6 +15,9 @@ import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 import { requestAdvisorIdeaAIExplanation } from "../api";
 import {
   ADVISOR_RATIONALE_DRAFT_PURPOSE,
+  isSameAdvisorIdeaEvidence,
+  readAdvisorIdeaEvidenceIdentity,
+  type AdvisorIdeaEvidenceIdentity,
   type AdvisorIdeaAIExplanationRequest,
 } from "../idea-ai-explanation-contract";
 import { createIdeaPresentationIdempotencyKey } from "../idea-presentation-receipt";
@@ -31,26 +34,37 @@ import {
 import styles from "./idea-candidate-explanation.module.css";
 
 type ExplanationSubmission = {
+  evidenceIdentity: AdvisorIdeaEvidenceIdentity;
   request: AdvisorIdeaAIExplanationRequest;
   idempotencyKey: string;
 };
 
+type ExplanationMutationVariables = {
+  evidenceIdentity: AdvisorIdeaEvidenceIdentity;
+  submission?: ExplanationSubmission;
+};
+
 export default function IdeaCandidateExplanation({
   candidateId,
+  evidenceIdentity,
   portfolioId,
 }: {
   candidateId: string;
+  evidenceIdentity?: AdvisorIdeaEvidenceIdentity;
   portfolioId: string;
 }) {
   const retryableSubmission = useRef<ExplanationSubmission | undefined>(
     undefined,
   );
+  const currentEvidenceIdentity = useRef(evidenceIdentity);
+  useEffect(() => {
+    currentEvidenceIdentity.current = evidenceIdentity;
+  }, [evidenceIdentity]);
   const mutation = useMutation({
-    mutationFn: async (requestedSubmission?: ExplanationSubmission) => {
+    mutationFn: async (variables: ExplanationMutationVariables) => {
       const submission =
-        requestedSubmission ??
-        retryableSubmission.current ??
-        createSubmission(candidateId);
+        variables.submission ??
+        createSubmission(candidateId, variables.evidenceIdentity);
       retryableSubmission.current = submission;
       return await requestAdvisorIdeaAIExplanation({
         candidateId,
@@ -58,9 +72,16 @@ export default function IdeaCandidateExplanation({
         ...submission,
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
       retryableSubmission.current = undefined;
-      if (response.status === "EXPLANATION_SERVED") {
+      if (
+        !isSameAdvisorIdeaEvidence(
+          variables.evidenceIdentity,
+          currentEvidenceIdentity.current,
+        )
+      ) {
+        recordIdeaExplanationUnavailable("candidate_evidence_changed");
+      } else if (response.status === "EXPLANATION_SERVED") {
         recordIdeaExplanationServed(response.disposition);
       } else {
         recordIdeaExplanationUnavailable(response.disposition);
@@ -75,13 +96,40 @@ export default function IdeaCandidateExplanation({
   });
 
   function requestExplanation() {
+    if (!evidenceIdentity) {
+      return;
+    }
     recordIdeaExplanationOpened();
-    mutation.mutate(retryableSubmission.current);
+    const retryable = retryableSubmission.current;
+    mutation.mutate(
+      {
+        evidenceIdentity,
+        ...(retryable &&
+        isSameAdvisorIdeaEvidence(retryable.evidenceIdentity, evidenceIdentity)
+          ? { submission: retryable }
+          : {}),
+      },
+    );
   }
 
-  const model = mutation.data
+  const responseEvidenceIdentity = mutation.data
+    ? readAdvisorIdeaEvidenceIdentity(
+        mutation.data.explanation.redactedEvidence,
+      )
+    : undefined;
+  const responseIsCurrent = Boolean(
+    mutation.data &&
+      mutation.variables &&
+      isSameAdvisorIdeaEvidence(
+        evidenceIdentity,
+        mutation.variables.evidenceIdentity,
+      ) &&
+      isSameAdvisorIdeaEvidence(evidenceIdentity, responseEvidenceIdentity),
+  );
+  const model = mutation.data && responseIsCurrent
     ? buildAdvisorIdeaExplanationViewModel(mutation.data)
     : undefined;
+  const isSuperseded = Boolean(mutation.data && !responseIsCurrent);
 
   return (
     <section
@@ -93,7 +141,9 @@ export default function IdeaCandidateExplanation({
           ? "loading"
           : mutation.isError
             ? "unavailable"
-            : model?.state ?? "not-requested"
+            : isSuperseded
+              ? "superseded"
+              : model?.state ?? "not-requested"
       }
     >
       <div className={styles.header}>
@@ -114,12 +164,14 @@ export default function IdeaCandidateExplanation({
         <ActionButton
           priority="secondary"
           type="button"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || !evidenceIdentity}
           onClick={requestExplanation}
         >
           {mutation.isPending
             ? "Preparing explanation..."
-            : mutation.isError
+            : !evidenceIdentity
+              ? "Explanation unavailable"
+              : mutation.isError
               ? "Retry explanation"
               : model
                 ? "Refresh explanation"
@@ -127,10 +179,25 @@ export default function IdeaCandidateExplanation({
         </ActionButton>
       </div>
 
+      {!evidenceIdentity ? (
+        <Alert severity="info" data-testid="idea-explanation-evidence-unavailable">
+          A current rationale cannot be requested because the opportunity record
+          does not include its evidence identity. Opportunity facts and advisor
+          actions remain available.
+        </Alert>
+      ) : null}
+
       {mutation.error ? (
         <Alert severity="warning" data-testid="idea-explanation-error">
           {explanationFailureCopy(mutation.error)} Candidate facts and advisor
           actions remain available.
+        </Alert>
+      ) : null}
+
+      {isSuperseded ? (
+        <Alert severity="info" data-testid="idea-explanation-superseded">
+          The earlier rationale is no longer current because the opportunity
+          evidence changed. Request an updated explanation before relying on it.
         </Alert>
       ) : null}
 
@@ -302,9 +369,13 @@ function EvidenceList({
   );
 }
 
-function createSubmission(candidateId: string): ExplanationSubmission {
+function createSubmission(
+  candidateId: string,
+  evidenceIdentity: AdvisorIdeaEvidenceIdentity,
+): ExplanationSubmission {
   const requestId = createSecureId(`idea-explanation-${candidateId}`);
   return {
+    evidenceIdentity,
     request: {
       requestId,
       purpose: ADVISOR_RATIONALE_DRAFT_PURPOSE,
@@ -328,6 +399,13 @@ function explanationFailureCopy(error: unknown): string {
     error.message === "Secure request identity is unavailable in this browser."
   ) {
     return "A protected request reference could not be created. Reload Workbench before trying again.";
+  }
+  if (
+    error instanceof Error &&
+    error.message ===
+      "Idea explanation response did not match the requested candidate evidence."
+  ) {
+    return "The returned rationale does not match the current opportunity evidence. Refresh the opportunity before trying again.";
   }
   const status = getWorkbenchApiErrorStatus(error);
   if (status === 401 || status === 403) {

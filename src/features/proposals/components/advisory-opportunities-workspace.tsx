@@ -17,6 +17,7 @@ import {
   getAdvisorIdeaReviewQueue,
 } from "../api";
 import { buildAdvisoryOpportunitiesModel } from "../advisory-opportunities-view-model";
+import { readAdvisorIdeaEvidenceIdentity } from "../idea-ai-explanation-contract";
 import type {
   AdvisorIdeaCandidateDetailData,
   AdvisorIdeaQueueItem,
@@ -254,7 +255,7 @@ function IdeaCandidateDetailPanel({
   const evidence = detail?.evidence;
   const audit = detail?.auditSummary;
   const sourceRefs = evidence?.sourceRefs ?? [];
-  const evidenceHash = firstEvidenceHash(evidence, sourceRefs);
+  const evidenceIdentity = readAdvisorIdeaEvidenceIdentity(evidence);
   return (
     <div
       className={styles.detailPanel}
@@ -318,7 +319,8 @@ function IdeaCandidateDetailPanel({
             </span>
             <span>
               Evidence hash:{" "}
-              {evidenceHash ?? "Not provided by Idea detail contract"}
+              {evidence?.evidenceContentHash ??
+                "Not provided by Idea detail contract"}
             </span>
             <span>Audit events: {audit?.eventCount ?? 0}</span>
             <span>
@@ -335,6 +337,7 @@ function IdeaCandidateDetailPanel({
               key={candidate.candidateId}
               candidateId={candidate.candidateId}
               candidateReasonCodes={candidateReasonCodes}
+              evidenceIdentity={evidenceIdentity}
               portfolioId={portfolioId}
               onRecorded={onActionRecorded}
             />
@@ -366,36 +369,6 @@ function formatSourceRef(sourceRef: Record<string, unknown>): string {
       "ref",
       "id",
     ]) ?? "Unidentified source ref"
-  );
-}
-
-function firstEvidenceHash(
-  evidence: AdvisorIdeaCandidateDetailData["evidence"] | undefined,
-  sourceRefs: Array<Record<string, unknown>>,
-): string | undefined {
-  return (
-    firstString(evidence, [
-      "evidenceHash",
-      "evidence_hash",
-      "contentHash",
-      "content_hash",
-      "sourceHash",
-      "source_hash",
-      "hash",
-    ]) ??
-    sourceRefs
-      .map((sourceRef) =>
-        firstString(sourceRef, [
-          "evidenceHash",
-          "evidence_hash",
-          "contentHash",
-          "content_hash",
-          "sourceHash",
-          "source_hash",
-          "hash",
-        ]),
-      )
-      .find(Boolean)
   );
 }
 

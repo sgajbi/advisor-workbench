@@ -75,6 +75,7 @@ import {
 } from "./idea-presentation-receipt";
 import {
   parseAdvisorIdeaAIExplanationResponse,
+  type AdvisorIdeaEvidenceIdentity,
   type AdvisorIdeaAIExplanationRequest,
   type AdvisorIdeaAIExplanationResponse,
 } from "./idea-ai-explanation-contract";
@@ -142,6 +143,7 @@ export type AdvisorIdeaPresentationReceiptInput = {
 
 export type AdvisorIdeaAIExplanationInput = {
   candidateId: string;
+  evidenceIdentity: AdvisorIdeaEvidenceIdentity;
   portfolioId: string;
   idempotencyKey: string;
   request: AdvisorIdeaAIExplanationRequest;
@@ -397,6 +399,7 @@ export async function requestAdvisorIdeaAIExplanation(
         unwrapGatewayData<unknown>(payload),
         {
           candidateId: input.candidateId,
+          evidenceIdentity: input.evidenceIdentity,
           requestId: input.request.requestId,
         },
       );
