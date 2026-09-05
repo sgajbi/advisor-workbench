@@ -2155,7 +2155,11 @@ describe("useDpmWaveCommandCenterActions", () => {
       },
     });
     expect(listDpmCampaignDefinitions).toHaveBeenCalledWith(
-      { limit: 10, offset: 0 },
+      {
+        campaignId: "campaign-holdings-202605",
+        limit: 10,
+        offset: 0,
+      },
       "client",
     );
     expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
@@ -2179,7 +2183,17 @@ describe("useDpmWaveCommandCenterActions", () => {
       .mockRejectedValueOnce(new Error("Campaign definitions refresh failed"))
       .mockResolvedValueOnce({
         ...campaignDefinitions,
-        data: { ...campaignDefinitions.data, items: [] },
+        data: {
+          ...campaignDefinitions.data,
+          items: [
+            {
+              ...(campaignDefinitions.data.items as Array<
+                Record<string, unknown>
+              >)[0],
+              status: "RETIRED",
+            },
+          ],
+        },
       });
     const { result } = renderActions();
 
@@ -2215,6 +2229,38 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.campaignLifecycleError).toBeNull(),
     );
     expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
+  });
+
+  it("revokes launch authorization as soon as a lifecycle command is accepted", async () => {
+    vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
+      new Error("Campaign definitions refresh failed"),
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
+    });
+    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(true);
+
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-retire",
+        },
+      });
+    });
+
+    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
+    await act(async () => {
+      await result.current.launchCampaign(result.current.selectedCampaign!);
+    });
+    expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
 
   it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {
