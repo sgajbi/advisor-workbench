@@ -2129,14 +2129,16 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
 
-    expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
-      commandLabel: "Retire campaign",
-      contentHash: "sha256:campaign-retired",
+    await waitFor(() => {
+      expect(result.current.campaignLifecycleCommandEvidence).toMatchObject({
+        commandLabel: "Retire campaign",
+        contentHash: "sha256:campaign-retired",
+      });
+      expect(result.current.campaignLifecycleCommandError).toBeNull();
+      expect(result.current.campaignLifecycleError).toBe(
+        "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
+      );
     });
-    expect(result.current.campaignLifecycleCommandError).toBeNull();
-    expect(result.current.campaignLifecycleError).toBe(
-      "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
-    );
   });
 
   it("never renders a late campaign A response under campaign B", async () => {
@@ -2347,15 +2349,17 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
 
-    expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
-      evidenceRef: "task-review-001",
-      contentHash: "sha256:task-transition",
+    await waitFor(() => {
+      expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
+        evidenceRef: "task-review-001",
+        contentHash: "sha256:task-transition",
+      });
+      expect(result.current.campaignWorkflowCommandError).toBeNull();
+      expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
+      expect(result.current.campaignWorkflowEvidenceError).toBe(
+        "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
+      );
     });
-    expect(result.current.campaignWorkflowCommandError).toBeNull();
-    expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
-    expect(result.current.campaignWorkflowEvidenceError).toBe(
-      "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
-    );
   });
 
   it("keeps campaign workflow command failures bounded and does not refresh local evidence", async () => {
