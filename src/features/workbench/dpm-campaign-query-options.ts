@@ -27,14 +27,18 @@ export type DpmCampaignWorkflowEvidence = Readonly<{
 export function dpmCampaignDefinitionsQueryOptions() {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.definitions(),
-    queryFn: () => listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
+    queryFn: () =>
+      listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
   });
 }
 
-export function dpmCampaignLifecycleQueryOptions(identity: DpmCampaignIdentity) {
+export function dpmCampaignLifecycleQueryOptions(
+  identity: DpmCampaignIdentity,
+) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.lifecycle(identity),
-    queryFn: () => getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity)),
+    queryFn: () =>
+      getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity)),
   });
 }
 
@@ -46,7 +50,11 @@ export function dpmCampaignLaunchHistoryQueryOptions(
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.launchHistory(identity, offset, limit),
     queryFn: () =>
-      getDpmCampaignDefinitionLaunchHistory({ ...apiIdentity(identity), limit, offset }),
+      getDpmCampaignDefinitionLaunchHistory({
+        ...apiIdentity(identity),
+        limit,
+        offset,
+      }),
   });
 }
 
@@ -55,7 +63,10 @@ export function dpmCampaignPreviewReadinessQueryOptions(
   requestedAsOfDate?: string,
 ) {
   return queryOptions({
-    queryKey: dpmCampaignQueryKeys.previewReadiness(identity, requestedAsOfDate),
+    queryKey: dpmCampaignQueryKeys.previewReadiness(
+      identity,
+      requestedAsOfDate,
+    ),
     queryFn: () =>
       getDpmCampaignDefinitionPreviewReadiness({
         ...apiIdentity(identity),
@@ -83,13 +94,17 @@ export function dpmCampaignWorkflowQueryOptions(identity: DpmCampaignIdentity) {
     queryKey: dpmCampaignQueryKeys.workflow(identity),
     queryFn: async (): Promise<DpmCampaignWorkflowEvidence> => {
       const params = apiIdentity(identity);
-      const [approvalDecisions, assignmentActions, assignmentTasks, makerCheckerControls] =
-        await Promise.all([
-          getDpmCampaignApprovalDecisions(params, "client"),
-          getDpmCampaignAssignmentActions(params, "client"),
-          getDpmCampaignAssignmentTasks(params, "client"),
-          getDpmCampaignMakerCheckerControls(params, "client"),
-        ]);
+      const [
+        approvalDecisions,
+        assignmentActions,
+        assignmentTasks,
+        makerCheckerControls,
+      ] = await Promise.all([
+        getDpmCampaignApprovalDecisions(params, "client"),
+        getDpmCampaignAssignmentActions(params, "client"),
+        getDpmCampaignAssignmentTasks(params, "client"),
+        getDpmCampaignMakerCheckerControls(params, "client"),
+      ]);
       return {
         approvalDecisions,
         assignmentActions,

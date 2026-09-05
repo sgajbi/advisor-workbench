@@ -38,13 +38,16 @@ describe("useDpmCampaignSources", () => {
 
   it("keeps a late prior-campaign response outside the selected campaign", async () => {
     const pendingA = deferred<DpmCampaignDefinitionGatewayResponse>();
-    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockImplementation(({ campaignId }) =>
-      campaignId === "campaign-a"
-        ? pendingA.promise
-        : Promise.resolve(definitionResponse("campaign-b")),
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockImplementation(
+      ({ campaignId }) =>
+        campaignId === "campaign-a"
+          ? pendingA.promise
+          : Promise.resolve(definitionResponse("campaign-b")),
     );
     const queryClient = createTestQueryClient();
-    queryClient.setDefaultOptions({ queries: { retry: false, staleTime: 30_000 } });
+    queryClient.setDefaultOptions({
+      queries: { retry: false, staleTime: 30_000 },
+    });
     const { result, rerender } = renderHook(
       ({ selectedCampaign }) =>
         useDpmCampaignSources({
@@ -65,18 +68,24 @@ describe("useDpmCampaignSources", () => {
     });
     rerender({ selectedCampaign: rowB });
     await act(async () => result.current.loadLifecycle(rowB));
-    await waitFor(() => expect(result.current.lifecycle?.data.campaign_id).toBe("campaign-b"));
+    await waitFor(() =>
+      expect(result.current.lifecycle?.data.campaign_id).toBe("campaign-b"),
+    );
     await act(async () => pendingA.resolve(definitionResponse("campaign-a")));
     await requestA;
     expect(result.current.lifecycle?.data.campaign_id).toBe("campaign-b");
   });
 
   it("loads four governance sources into one exact campaign evidence record", async () => {
-    const responses = ["approval", "action", "task", "control"].map(workflowResponse);
+    const responses = ["approval", "action", "task", "control"].map(
+      workflowResponse,
+    );
     vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(responses[0]);
     vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(responses[1]);
     vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(responses[2]);
-    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(responses[3]);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(
+      responses[3],
+    );
     const { result } = renderHook(
       () =>
         useDpmCampaignSources({
@@ -89,12 +98,17 @@ describe("useDpmCampaignSources", () => {
     );
 
     await act(async () => result.current.loadWorkflow(rowA));
-    await waitFor(() => expect(result.current.workflow?.approvalDecisions).toBe(responses[0]));
+    await waitFor(() =>
+      expect(result.current.workflow?.approvalDecisions).toBe(responses[0]),
+    );
     expect(result.current.workflow?.makerCheckerControls).toBe(responses[3]);
   });
 });
 
-function campaignRow(campaignId: string, campaignVersion: string): DpmCampaignDefinitionRow {
+function campaignRow(
+  campaignId: string,
+  campaignVersion: string,
+): DpmCampaignDefinitionRow {
   return {
     key: `${campaignId}:${campaignVersion}`,
     campaignId,
@@ -103,7 +117,9 @@ function campaignRow(campaignId: string, campaignVersion: string): DpmCampaignDe
   } as DpmCampaignDefinitionRow;
 }
 
-function definitionResponse(campaignId: string): DpmCampaignDefinitionGatewayResponse {
+function definitionResponse(
+  campaignId: string,
+): DpmCampaignDefinitionGatewayResponse {
   return {
     correlation_id: `corr-${campaignId}`,
     contract_version: "v1",

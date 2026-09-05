@@ -112,7 +112,9 @@ export function useDpmCampaignSources({
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
     setLifecycleConfirmationError(null);
-    return await queryClient.fetchQuery(dpmCampaignLifecycleQueryOptions(toRequiredSelection(row)));
+    return await queryClient.fetchQuery(
+      dpmCampaignLifecycleQueryOptions(toRequiredSelection(row)),
+    );
   }
 
   async function loadLaunchHistory(row: DpmCampaignDefinitionRow, offset = 0) {
@@ -146,7 +148,9 @@ export function useDpmCampaignSources({
 
   async function loadWorkflow(row: DpmCampaignDefinitionRow) {
     setWorkflowConfirmationError(null);
-    return await queryClient.fetchQuery(dpmCampaignWorkflowQueryOptions(toRequiredSelection(row)));
+    return await queryClient.fetchQuery(
+      dpmCampaignWorkflowQueryOptions(toRequiredSelection(row)),
+    );
   }
 
   async function refreshLifecycle(row: DpmCampaignDefinitionRow) {
@@ -218,7 +222,8 @@ export function useDpmCampaignSources({
       confirmationMessage(workflowConfirmationError, selection?.key) ??
       errorMessage(workflowQuery.error),
     workflowPending: workflowQuery.isFetching,
-    workflowResolved: workflowQuery.isFetched || workflowQuery.data !== undefined,
+    workflowResolved:
+      workflowQuery.isFetched || workflowQuery.data !== undefined,
     loadLifecycle,
     loadLaunchHistory,
     loadLaunchReadiness,
@@ -228,7 +233,9 @@ export function useDpmCampaignSources({
   };
 }
 
-function toSelection(row: DpmCampaignDefinitionRow | null): CampaignSelection | null {
+function toSelection(
+  row: DpmCampaignDefinitionRow | null,
+): CampaignSelection | null {
   return row ? toRequiredSelection(row) : null;
 }
 
@@ -265,5 +272,7 @@ function confirmationMessage(
   error: Readonly<{ campaignKey: string; message: string }> | null,
   selectedCampaignKey?: string,
 ): string | null {
-  return error && error.campaignKey === selectedCampaignKey ? error.message : null;
+  return error && error.campaignKey === selectedCampaignKey
+    ? error.message
+    : null;
 }
