@@ -347,6 +347,12 @@ const campaignWorkflowEvidenceResponse: DpmCampaignWorkflowGatewayResponse = {
         status: "SUPPORTABLE",
         content_hash: "sha256:task-transition",
         reason_codes: ["campaign_assignment_task_transition_recorded"],
+        transitions: [
+          {
+            transition_ref: "task-review-001:acknowledged",
+            transition_type: "ACKNOWLEDGED",
+          },
+        ],
       },
     ],
     count: 1,

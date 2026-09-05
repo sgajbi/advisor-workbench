@@ -16,9 +16,11 @@ import {
 } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import {
+  campaignWorkflowEvidenceTotalCount,
   containsCampaignLifecycleEvidence,
   containsCampaignWorkflowEvidence,
   type DpmCampaignLifecycleConfirmationReceipt,
+  type DpmCampaignWorkflowConfirmationReceipt,
 } from "@/features/workbench/dpm-campaign-command-evidence";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import type { DpmCampaignWorkflowGatewayResponse } from "@/features/workbench/types";
@@ -54,7 +56,6 @@ type WorkflowRecovery = Readonly<{
   readId: string;
 }>;
 type ServerRead = Readonly<{ readId: string }>;
-type WorkflowConfirmationReceipt = Readonly<{ evidenceRef: string }>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -181,22 +182,29 @@ export function useDpmCampaignSources({
     () => dpmCampaignQueryKeys.workflowConfirmationReceipt(queryIdentity),
     [queryIdentity],
   );
-  const workflowConfirmationReceiptQuery = useQuery<WorkflowConfirmationReceipt>({
+  const workflowConfirmationReceiptQuery =
+    useQuery<DpmCampaignWorkflowConfirmationReceipt>({
     queryKey: workflowConfirmationReceiptKey,
     queryFn: skipToken,
     gcTime: Infinity,
     initialData: () =>
-      queryClient.getQueryData<WorkflowConfirmationReceipt>(
+      queryClient.getQueryData<DpmCampaignWorkflowConfirmationReceipt>(
         workflowConfirmationReceiptKey,
       ),
   });
   const initialWorkflowContainsConfirmedReceipt =
     !workflowConfirmationReceiptQuery.data ||
     (initialWorkflow !== undefined &&
-      containsCampaignWorkflowEvidence(
-        initialWorkflow,
-        workflowConfirmationReceiptQuery.data.evidenceRef,
-      ));
+      (containsCampaignWorkflowEvidence(
+          initialWorkflow,
+          workflowConfirmationReceiptQuery.data,
+        ) ||
+        (workflowConfirmationReceiptQuery.data.confirmedTotalCount !==
+          undefined &&
+          campaignWorkflowEvidenceTotalCount(
+            initialWorkflow,
+            workflowConfirmationReceiptQuery.data,
+          ) > workflowConfirmationReceiptQuery.data.confirmedTotalCount)));
   const workflowServerReadKey = useMemo(
     () => dpmCampaignQueryKeys.workflowServerRead(queryIdentity),
     [queryIdentity],
@@ -440,21 +448,21 @@ export function useDpmCampaignSources({
 
   async function refreshWorkflow(
     row: DpmCampaignDefinitionRow,
-    requiredEvidenceRef?: string,
+    requiredReceipt?: DpmCampaignWorkflowConfirmationReceipt,
   ) {
     const target = toRequiredSelection(row);
     const options = dpmCampaignWorkflowQueryOptions(target);
     const confirmationOptions =
       dpmCampaignWorkflowConfirmationQueryOptions(target);
-    const requiredReceipt = requiredEvidenceRef
-      ? { evidenceRef: requiredEvidenceRef }
-      : queryClient.getQueryData<WorkflowConfirmationReceipt>(
+    const confirmationReceipt = requiredReceipt
+      ? requiredReceipt
+      : queryClient.getQueryData<DpmCampaignWorkflowConfirmationReceipt>(
           dpmCampaignQueryKeys.workflowConfirmationReceipt(target),
         );
-    if (requiredReceipt) {
-      queryClient.setQueryData<WorkflowConfirmationReceipt>(
+    if (confirmationReceipt) {
+      queryClient.setQueryData<DpmCampaignWorkflowConfirmationReceipt>(
         dpmCampaignQueryKeys.workflowConfirmationReceipt(target),
-        requiredReceipt,
+        confirmationReceipt,
       );
     }
     await queryClient.cancelQueries({
@@ -464,13 +472,25 @@ export function useDpmCampaignSources({
     try {
       const response = await queryClient.fetchQuery(confirmationOptions);
       if (
-        requiredReceipt &&
+        confirmationReceipt &&
         !containsCampaignWorkflowEvidence(
           response,
-          requiredReceipt.evidenceRef,
+          confirmationReceipt,
         )
       ) {
         throw new Error("Confirmed workflow evidence is not yet available.");
+      }
+      if (confirmationReceipt) {
+        queryClient.setQueryData<DpmCampaignWorkflowConfirmationReceipt>(
+          dpmCampaignQueryKeys.workflowConfirmationReceipt(target),
+          {
+            ...confirmationReceipt,
+            confirmedTotalCount: campaignWorkflowEvidenceTotalCount(
+              response,
+              confirmationReceipt,
+            ),
+          },
+        );
       }
       queryClient.setQueryData(options.queryKey, response);
       markWorkflowRecovered(row);
