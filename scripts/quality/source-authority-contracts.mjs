@@ -159,7 +159,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
           "isSameAdvisorIdeaEvidence",
           "ready_for_advisor_review",
           "verifierOutcome !== \"passed\"",
-          "SERVED_EXPLANATION_PROVENANCE",
+          "isServedExplanationProvenance",
           "aiLineageRecorded",
         ]),
       }),
