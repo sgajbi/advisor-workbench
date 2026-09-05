@@ -1,4 +1,5 @@
 import { buildAdvisorBookSourceRenderRows } from "../live/validation/advisor-book-proof.mjs";
+import { buildIdeaExplanationSourceRenderRows } from "../live/validation/idea-explanation-proof.mjs";
 import { buildRiskMandateSourceRenderRows } from "../live/validation/risk-mandate-proof.mjs";
 
 const advisorBookGatewaySample = {
@@ -16,6 +17,27 @@ const riskMandateGatewaySample = {
   },
   concentration: {
     constraints: [{ key: "issuer_max_weight", state: "breach" }],
+  },
+};
+
+const ideaExplanationGatewaySample = {
+  status: "EXPLANATION_UNAVAILABLE",
+  disposition: "runtime_unavailable",
+  lotusAiRunId: null,
+  lotusAiRuntimeExecutionConfirmed: false,
+  evaluationVerdict: "not_evaluated",
+  explanation: {
+    requestId: "source-authority-proof",
+    candidateId: "idea-source-authority-unavailable",
+    posture: "fallback_only",
+    verifierOutcome: "not_run",
+    explanationText: "Cash remains above the source policy threshold.",
+    fallbackUsed: true,
+    fallbackReason: "ai_unavailable",
+    grantsDownstreamAuthority: false,
+    supportedFeaturePromoted: false,
+    executionProvenancePosture: "runtime_unavailable",
+    aiLineageRecorded: false,
   },
 };
 
@@ -77,6 +99,66 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     buildExpectedRows: buildAdvisorBookSourceRenderRows,
     mutateSourceState(payload, state) {
       payload.items[0].status = state;
+    },
+  }),
+  Object.freeze({
+    id: "idea-candidate-explanation",
+    screen: "Opportunities and Ideas",
+    sourceOwnership: Object.freeze({
+      identity: "explanation.candidateId",
+      state: "status",
+    }),
+    presentationOnly: Object.freeze([
+      "business labels",
+      "formatted source dates",
+    ]),
+    allowedStates: Object.freeze([
+      "EXPLANATION_SERVED",
+      "EXPLANATION_UNAVAILABLE",
+    ]),
+    renderedEvidence: Object.freeze({
+      rowSelector: "[data-idea-explanation-source]",
+      sourceAttribute: "data-idea-explanation-source",
+      identityAttribute: "data-candidate-id",
+      stateAttribute: "data-explanation-status",
+    }),
+    implementationEvidence: Object.freeze([
+      Object.freeze({
+        path: "scripts/live/validation/idea-explanation-proof.mjs",
+        tokens: Object.freeze([
+          "buildIdeaExplanationSourceRenderRows",
+          "response?.explanation?.candidateId",
+          "response?.status",
+        ]),
+      }),
+      Object.freeze({
+        path: "src/features/proposals/components/idea-candidate-explanation.tsx",
+        tokens: Object.freeze([
+          'data-idea-explanation-source="lotus-idea"',
+          "data-candidate-id={mutation.data?.explanation.candidateId}",
+          "data-explanation-status={mutation.data?.status}",
+        ]),
+      }),
+      Object.freeze({
+        path: "tests/e2e/idea-candidate-actions.spec.ts",
+        tokens: Object.freeze([
+          'data-explanation-state", "served"',
+          'data-explanation-state",',
+          '"unavailable"',
+        ]),
+      }),
+    ]),
+    sampleGatewayResponse: Object.freeze(ideaExplanationGatewaySample),
+    target: Object.freeze({
+      source: "lotus-idea",
+      identity: "idea-source-authority-unavailable",
+      sourceState: "EXPLANATION_UNAVAILABLE",
+      mutatedSourceState: "EXPLANATION_SERVED",
+      reassuringRenderedState: "EXPLANATION_SERVED",
+    }),
+    buildExpectedRows: buildIdeaExplanationSourceRenderRows,
+    mutateSourceState(payload, state) {
+      payload.status = state;
     },
   }),
   Object.freeze({

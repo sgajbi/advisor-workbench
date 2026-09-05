@@ -5,5 +5,6 @@
  */
 export const SOURCE_AUTHORITY_RENDER_PROOF_IDS = Object.freeze([
   "advisor-book-portfolios",
+  "idea-candidate-explanation",
   "risk-mandate-comparison",
 ]);

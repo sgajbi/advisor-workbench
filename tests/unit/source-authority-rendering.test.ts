@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { beforeEach, vi } from "vitest";
 
 import type { AdvisorBookResponse } from "@/features/advisor-book/contracts";
 import AdvisorBookWorkspace from "@/features/advisor-book/components/advisor-book-workspace";
+import IdeaCandidateExplanation from "@/features/proposals/components/idea-candidate-explanation";
 import { buildRiskMandateComparisonViewModel } from "@/apps/performance/risk-mandate-comparison-view-model";
 import RiskMandateComparison from "@/apps/performance/components/risk/risk-mandate-comparison";
 
@@ -19,6 +21,7 @@ import {
 } from "../fixtures/risk-mandate-comparison-fixtures";
 
 const getAdvisorBookMock = vi.fn();
+const requestIdeaExplanationMock = vi.fn();
 
 vi.mock("@/features/advisor-book/api", async () => {
   const actual = await vi.importActual<typeof import("@/features/advisor-book/api")>(
@@ -34,6 +37,11 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/book",
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams("asOfDate=2026-02-24"),
+}));
+
+vi.mock("@/features/proposals/api", () => ({
+  requestAdvisorIdeaAIExplanation: (...args: unknown[]) =>
+    requestIdeaExplanationMock(...args),
 }));
 
 vi.mock("next/link", () => ({
@@ -68,6 +76,17 @@ const RISK_RENDER_CASES = [
   {
     identity: "issuer_group_max_weight",
     state: "measure_unavailable",
+  },
+] as const;
+
+const IDEA_EXPLANATION_RENDER_CASES = [
+  {
+    identity: "idea-source-authority-unavailable",
+    state: "EXPLANATION_UNAVAILABLE",
+  },
+  {
+    identity: "idea-source-authority-served",
+    state: "EXPLANATION_SERVED",
   },
 ] as const;
 
@@ -186,11 +205,56 @@ async function renderRiskCase({ identity, state }: RenderProofCase) {
   return payload;
 }
 
+async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
+  if (
+    state !== "EXPLANATION_SERVED" &&
+    state !== "EXPLANATION_UNAVAILABLE"
+  ) {
+    throw new Error(`Unsupported Idea explanation proof state ${state}.`);
+  }
+  const contract = sourceContract("idea-candidate-explanation");
+  const payload = structuredClone(contract.sampleGatewayResponse) as Record<
+    string,
+    unknown
+  >;
+  const explanation = payload.explanation as Record<string, unknown>;
+  payload.status = state;
+  payload.disposition =
+    state === "EXPLANATION_SERVED" ? "executed" : "runtime_unavailable";
+  payload.evaluationVerdict =
+    state === "EXPLANATION_SERVED" ? "accepted" : "not_evaluated";
+  explanation.candidateId = identity;
+  explanation.fallbackUsed = state === "EXPLANATION_UNAVAILABLE";
+  requestIdeaExplanationMock.mockResolvedValue(payload);
+  vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "source-authority-proof") });
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
+  });
+  render(
+    createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      createElement(IdeaCandidateExplanation, {
+        candidateId: identity,
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+      }),
+    ),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+  await screen.findByTestId("idea-explanation-result");
+  return payload;
+}
+
 const EXECUTABLE_RENDER_PROOFS = [
   {
     contractId: "advisor-book-portfolios",
     cases: ADVISOR_BOOK_RENDER_CASES,
     renderCase: renderAdvisorBookCase,
+  },
+  {
+    contractId: "idea-candidate-explanation",
+    cases: IDEA_EXPLANATION_RENDER_CASES,
+    renderCase: renderIdeaExplanationCase,
   },
   {
     contractId: "risk-mandate-comparison",
@@ -202,6 +266,7 @@ const EXECUTABLE_RENDER_PROOFS = [
 describe("source-authority production mapping", () => {
   beforeEach(() => {
     getAdvisorBookMock.mockReset();
+    requestIdeaExplanationMock.mockReset();
   });
 
   it("registers identity-and-state render cases for every enrolled contract", () => {
