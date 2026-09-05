@@ -3,6 +3,8 @@ export type DpmCampaignIdentity = Readonly<{
   campaignVersion: string;
 }>;
 
+export type DpmCampaignConfirmationKind = "lifecycle" | "workflow";
+
 export const DPM_CAMPAIGN_COMMAND_SCOPE = "workbench-dpm-campaign-command";
 
 export const dpmCampaignQueryKeys = {
@@ -44,8 +46,15 @@ export const dpmCampaignQueryKeys = {
     ] as const,
   workflow: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "workflow"] as const,
-  confirmationLock: (identity: DpmCampaignIdentity) =>
-    [...dpmCampaignQueryKeys.campaign(identity), "confirmation-lock"] as const,
+  confirmationLock: (
+    identity: DpmCampaignIdentity,
+    kind: DpmCampaignConfirmationKind,
+  ) =>
+    [
+      ...dpmCampaignQueryKeys.campaign(identity),
+      "confirmation-lock",
+      kind,
+    ] as const,
   launchResult: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "launch-result"] as const,
 };

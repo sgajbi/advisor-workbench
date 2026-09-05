@@ -128,6 +128,109 @@ describe("useDpmCampaignSources", () => {
     ).toEqual(current);
   });
 
+  it("suppresses retained definitions when the current server read is unavailable", () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitions(),
+      definitionResponse("campaign-prior"),
+    );
+
+    const { result } = renderHook(
+      () => useDpmCampaignDefinitionsSource(null),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    expect(result.current).toBeNull();
+  });
+
+  it("publishes newer server workflow evidence over retained query data", async () => {
+    const queryClient = createTestQueryClient();
+    const prior = ["approval-old", "action-old", "task-old", "control-old"].map(
+      workflowResponse,
+    );
+    const current = ["approval-new", "action-new", "task-new", "control-new"].map(
+      workflowResponse,
+    );
+    queryClient.setQueryData(dpmCampaignQueryKeys.workflow(rowA), {
+      approvalDecisions: prior[0],
+      assignmentActions: prior[1],
+      assignmentTasks: prior[2],
+      makerCheckerControls: prior[3],
+    });
+
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            approvalDecisions: current[0],
+            assignmentActions: current[1],
+            assignmentTasks: current[2],
+            makerCheckerControls: current[3],
+          },
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await waitFor(() =>
+      expect(result.current.workflow?.approvalDecisions).toEqual(current[0]),
+    );
+    expect(
+      result.current.workflow?.approvalDecisions.data.items,
+    ).toEqual([{ evidence_ref: "approval-new" }]);
+    expect(
+      queryClient.getQueryData<{
+        approvalDecisions: DpmCampaignWorkflowGatewayResponse;
+      }>(dpmCampaignQueryKeys.workflow(rowA))?.approvalDecisions,
+    ).toEqual(current[0]);
+  });
+
+  it("keeps workflow confirmation locked when lifecycle recovery succeeds", async () => {
+    vi.mocked(getDpmCampaignApprovalDecisions).mockRejectedValue(
+      new Error("Workflow evidence unavailable"),
+    );
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(
+      workflowResponse("action"),
+    );
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(
+      workflowResponse("task"),
+    );
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(
+      workflowResponse("control"),
+    );
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
+      definitionResponse("campaign-a"),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
+      definitionResponse("campaign-a"),
+    );
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper() },
+    );
+
+    await act(async () => {
+      await result.current.refreshWorkflow(rowA).catch(() => undefined);
+    });
+    await waitFor(() =>
+      expect(result.current.workflowError).toContain(
+        "Governance action was recorded",
+      ),
+    );
+    await act(async () => result.current.refreshLifecycle(rowA));
+
+    expect(result.current.lifecycleError).toBeNull();
+    expect(result.current.workflowError).toContain(
+      "Governance action was recorded",
+    );
+  });
+
   it("clears a prior launch package when newer readiness blocks launch", async () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness)
       .mockResolvedValueOnce(readinessResponse("READY"))

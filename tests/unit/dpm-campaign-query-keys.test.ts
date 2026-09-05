@@ -56,4 +56,10 @@ describe("DPM campaign query identity", () => {
       "workflow",
     ]);
   });
+
+  it("keeps lifecycle and workflow confirmation locks independent", () => {
+    expect(
+      dpmCampaignQueryKeys.confirmationLock(campaign, "lifecycle"),
+    ).not.toEqual(dpmCampaignQueryKeys.confirmationLock(campaign, "workflow"));
+  });
 });

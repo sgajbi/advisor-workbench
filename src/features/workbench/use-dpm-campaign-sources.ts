@@ -42,7 +42,6 @@ type UseDpmCampaignSourcesInput = Readonly<{
 
 type OffsetSelection = Readonly<{ campaignKey: string; offset: number }>;
 type ConfirmationLock = Readonly<{
-  kind: "lifecycle" | "workflow";
   message: string;
 }>;
 
@@ -66,7 +65,7 @@ export function useDpmCampaignDefinitionsSource(
       queryClient.setQueryData(options.queryKey, initialDefinitions);
     }
   }, [initialDefinitions, options.queryKey, queryClient]);
-  return definitionsQuery.data ?? null;
+  return initialDefinitions === null ? null : definitionsQuery.data ?? null;
 }
 
 export function useDpmCampaignSources({
@@ -75,7 +74,30 @@ export function useDpmCampaignSources({
   initialWorkflowEvidence,
 }: UseDpmCampaignSourcesInput) {
   const queryClient = useQueryClient();
-  const selection = toSelection(selectedCampaign);
+  const selectedCampaignKey = selectedCampaign?.key;
+  const selectedCampaignId = selectedCampaign?.campaignId;
+  const selectedCampaignVersion = selectedCampaign?.campaignVersion;
+  const selectedCampaignAsOfDate = selectedCampaign?.asOfDate;
+  const selection = useMemo(
+    () =>
+      selectedCampaignKey && selectedCampaignId && selectedCampaignVersion
+        ? {
+            key: selectedCampaignKey,
+            campaignId: selectedCampaignId,
+            campaignVersion: selectedCampaignVersion,
+            requestedAsOfDate:
+              selectedCampaignAsOfDate === "N/A"
+                ? undefined
+                : selectedCampaignAsOfDate,
+          }
+        : null,
+    [
+      selectedCampaignAsOfDate,
+      selectedCampaignId,
+      selectedCampaignKey,
+      selectedCampaignVersion,
+    ],
+  );
   const queryIdentity = selection ?? NO_CAMPAIGN;
   const [historySelection, setHistorySelection] = useState<OffsetSelection>({
     campaignKey: initialCampaignKey ?? "",
@@ -85,10 +107,31 @@ export function useDpmCampaignSources({
     selection && historySelection.campaignKey === selection.key
       ? historySelection.offset
       : 0;
-  const initialWorkflow =
-    selection?.key === initialCampaignKey
-      ? completeInitialWorkflowEvidence(initialWorkflowEvidence)
-      : undefined;
+  const {
+    approvalDecisions,
+    assignmentActions,
+    assignmentTasks,
+    makerCheckerControls,
+  } = initialWorkflowEvidence;
+  const initialWorkflow = useMemo(
+    () =>
+      selection?.key === initialCampaignKey
+        ? completeInitialWorkflowEvidence({
+            approvalDecisions,
+            assignmentActions,
+            assignmentTasks,
+            makerCheckerControls,
+          })
+        : undefined,
+    [
+      approvalDecisions,
+      assignmentActions,
+      assignmentTasks,
+      initialCampaignKey,
+      makerCheckerControls,
+      selection?.key,
+    ],
+  );
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
     enabled: false,
@@ -120,21 +163,43 @@ export function useDpmCampaignSources({
     enabled: false,
     initialData: initialWorkflow,
   });
-  const confirmationKey = dpmCampaignQueryKeys.confirmationLock(queryIdentity);
-  const confirmationQuery = useQuery<ConfirmationLock>({
-    queryKey: confirmationKey,
+  useEffect(() => {
+    if (selection && initialWorkflow) {
+      queryClient.setQueryData(
+        dpmCampaignQueryKeys.workflow(selection),
+        initialWorkflow,
+      );
+    }
+  }, [initialWorkflow, queryClient, selection]);
+  const lifecycleConfirmationKey = dpmCampaignQueryKeys.confirmationLock(
+    queryIdentity,
+    "lifecycle",
+  );
+  const lifecycleConfirmationQuery = useQuery<ConfirmationLock>({
+    queryKey: lifecycleConfirmationKey,
     queryFn: skipToken,
     gcTime: Infinity,
     initialData: () =>
-      queryClient.getQueryData<ConfirmationLock>(confirmationKey),
+      queryClient.getQueryData<ConfirmationLock>(lifecycleConfirmationKey),
+  });
+  const workflowConfirmationKey = dpmCampaignQueryKeys.confirmationLock(
+    queryIdentity,
+    "workflow",
+  );
+  const workflowConfirmationQuery = useQuery<ConfirmationLock>({
+    queryKey: workflowConfirmationKey,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<ConfirmationLock>(workflowConfirmationKey),
   });
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
     const target = toRequiredSelection(row);
     const retainedLock = queryClient.getQueryData<ConfirmationLock>(
-      dpmCampaignQueryKeys.confirmationLock(target),
+      dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
     );
-    if (retainedLock?.kind === "lifecycle") {
+    if (retainedLock) {
       return await refreshLifecycle(row);
     }
     return await queryClient.fetchQuery(
@@ -197,9 +262,9 @@ export function useDpmCampaignSources({
   async function loadWorkflow(row: DpmCampaignDefinitionRow) {
     const target = toRequiredSelection(row);
     const retainedLock = queryClient.getQueryData<ConfirmationLock>(
-      dpmCampaignQueryKeys.confirmationLock(target),
+      dpmCampaignQueryKeys.confirmationLock(target, "workflow"),
     );
-    if (retainedLock?.kind === "workflow") {
+    if (retainedLock) {
       return await refreshWorkflow(row);
     }
     return await queryClient.fetchQuery(
@@ -227,15 +292,14 @@ export function useDpmCampaignSources({
         }),
       ]);
       queryClient.removeQueries({
-        queryKey: dpmCampaignQueryKeys.confirmationLock(target),
+        queryKey: dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
         exact: true,
       });
       return response;
     } catch (error) {
       queryClient.setQueryData<ConfirmationLock>(
-        dpmCampaignQueryKeys.confirmationLock(target),
+        dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
         {
-          kind: "lifecycle",
           message:
             "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
         },
@@ -257,15 +321,14 @@ export function useDpmCampaignSources({
         staleTime: 0,
       });
       queryClient.removeQueries({
-        queryKey: dpmCampaignQueryKeys.confirmationLock(target),
+        queryKey: dpmCampaignQueryKeys.confirmationLock(target, "workflow"),
         exact: true,
       });
       return response;
     } catch (error) {
       queryClient.setQueryData<ConfirmationLock>(
-        dpmCampaignQueryKeys.confirmationLock(target),
+        dpmCampaignQueryKeys.confirmationLock(target, "workflow"),
         {
-          kind: "workflow",
           message:
             "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
         },
@@ -277,9 +340,8 @@ export function useDpmCampaignSources({
   return {
     lifecycle: lifecycleQuery.data ?? null,
     lifecycleError:
-      (confirmationQuery.data?.kind === "lifecycle"
-        ? confirmationQuery.data.message
-        : null) ?? errorMessage(lifecycleQuery.error),
+      lifecycleConfirmationQuery.data?.message ??
+      errorMessage(lifecycleQuery.error),
     lifecyclePending: lifecycleQuery.isFetching,
     launchHistory: historyQuery.data ?? null,
     launchHistoryError: errorMessage(historyQuery.error),
@@ -292,9 +354,8 @@ export function useDpmCampaignSources({
     launchPackagePending: packageQuery.isFetching,
     workflow: workflowQuery.data ?? null,
     workflowError:
-      (confirmationQuery.data?.kind === "workflow"
-        ? confirmationQuery.data.message
-        : null) ?? errorMessage(workflowQuery.error),
+      workflowConfirmationQuery.data?.message ??
+      errorMessage(workflowQuery.error),
     workflowPending: workflowQuery.isFetching,
     workflowResolved:
       workflowQuery.isFetched || workflowQuery.data !== undefined,
@@ -305,12 +366,6 @@ export function useDpmCampaignSources({
     refreshLifecycle,
     refreshWorkflow,
   };
-}
-
-function toSelection(
-  row: DpmCampaignDefinitionRow | null,
-): CampaignSelection | null {
-  return row ? toRequiredSelection(row) : null;
 }
 
 function toRequiredSelection(row: DpmCampaignDefinitionRow): CampaignSelection {
