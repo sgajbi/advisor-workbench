@@ -2038,7 +2038,9 @@ describe("useDpmWaveCommandCenterActions", () => {
         "dwv_campaign_launch_001",
       ),
     );
-    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
+    await waitFor(() =>
+      expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false),
+    );
     expect(result.current.model.selectedWaveId).toBe("dwv_001");
     act(() => result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));
@@ -2256,7 +2258,9 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
 
-    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
+    await waitFor(() =>
+      expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false),
+    );
     await act(async () => {
       await result.current.launchCampaign(result.current.selectedCampaign!);
     });
