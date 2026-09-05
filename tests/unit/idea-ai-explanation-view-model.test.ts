@@ -83,6 +83,10 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     ]);
     expect(model.disclosure.clientUse).toBe("internal-only");
     expect(model.disclosure.humanReview.state).toBe("review-required");
+    expect(model.disclosure.freshness).toEqual({
+      state: "current",
+      asOf: "2026-06-21",
+    });
     expect(model.disclosure.limitations).toContain(
       "Execution provenance is Unattested Local Test Fixture; it is not verified production provenance.",
     );
@@ -112,5 +116,26 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     });
     expect(model.disclosure.preparation).toBe("deterministic");
     expect(model.disclosure.clientUse).toBe("blocked");
+  });
+
+  it("fails freshness closed when any published source reference is stale", () => {
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      explanation: {
+        ...servedResponse.explanation,
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          sourceRefs: servedResponse.explanation.redactedEvidence!.sourceRefs.map(
+            (source) => ({ ...source, freshness: "stale" }),
+          ),
+        },
+      },
+    });
+
+    expect(model.disclosure.freshness).toEqual({
+      state: "stale",
+      asOf: "2026-06-21",
+    });
+    expect(model.disclosure.availability).toBe("stale");
   });
 });

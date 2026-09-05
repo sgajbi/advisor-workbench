@@ -104,6 +104,14 @@ export function parseAdvisorIdeaAIExplanationResponse(
     );
   }
   if (
+    response.status === "EXPLANATION_SERVED" &&
+    !response.lotusAiRuntimeExecutionConfirmed
+  ) {
+    throw new Error(
+      "Idea explanation response was served without confirmed runtime execution.",
+    );
+  }
+  if (
     response.status === "EXPLANATION_UNAVAILABLE" &&
     !response.explanation.fallbackUsed
   ) {
