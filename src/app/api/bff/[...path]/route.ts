@@ -14,11 +14,16 @@ import {
 } from "@/features/workbench/caller-context";
 import { buildGatewayBffRequestHeaders } from "@/features/workbench/bff-request-headers";
 
+const BFF_PATH_PREFIX = "/api/bff/";
+
 async function proxy(request: NextRequest, params: { path: string[] }) {
   const upstreamPath = params.path.join("/");
+  const encodedUpstreamPath = request.nextUrl.pathname.slice(
+    BFF_PATH_PREFIX.length,
+  );
   const search = request.nextUrl.search;
   const gatewayBaseUrl = resolveGatewayBaseUrl();
-  const url = `${gatewayBaseUrl}/${upstreamPath}${search}`;
+  const url = `${gatewayBaseUrl}/${encodedUpstreamPath}${search}`;
 
   const headers = buildGatewayBffRequestHeaders(request.headers);
   let requestBody =
