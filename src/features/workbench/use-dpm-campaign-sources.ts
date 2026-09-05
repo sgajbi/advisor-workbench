@@ -1,7 +1,7 @@
 "use client";
 
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   dpmCampaignLaunchHistoryQueryOptions,
@@ -54,11 +54,18 @@ const NO_CAMPAIGN = {
 export function useDpmCampaignDefinitionsSource(
   initialDefinitions: DpmCampaignDefinitionGatewayResponse | null,
 ) {
+  const queryClient = useQueryClient();
+  const options = useMemo(() => dpmCampaignDefinitionsQueryOptions(), []);
   const definitionsQuery = useQuery({
-    ...dpmCampaignDefinitionsQueryOptions(),
+    ...options,
     enabled: false,
     initialData: initialDefinitions ?? undefined,
   });
+  useEffect(() => {
+    if (initialDefinitions) {
+      queryClient.setQueryData(options.queryKey, initialDefinitions);
+    }
+  }, [initialDefinitions, options.queryKey, queryClient]);
   return definitionsQuery.data ?? null;
 }
 
@@ -123,12 +130,15 @@ export function useDpmCampaignSources({
   });
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
-    queryClient.removeQueries({
-      queryKey: dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
-      exact: true,
-    });
+    const target = toRequiredSelection(row);
+    const retainedLock = queryClient.getQueryData<ConfirmationLock>(
+      dpmCampaignQueryKeys.confirmationLock(target),
+    );
+    if (retainedLock?.kind === "lifecycle") {
+      return await refreshLifecycle(row);
+    }
     return await queryClient.fetchQuery(
-      dpmCampaignLifecycleQueryOptions(toRequiredSelection(row)),
+      dpmCampaignLifecycleQueryOptions(target),
     );
   }
 
@@ -185,12 +195,15 @@ export function useDpmCampaignSources({
   }
 
   async function loadWorkflow(row: DpmCampaignDefinitionRow) {
-    queryClient.removeQueries({
-      queryKey: dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
-      exact: true,
-    });
+    const target = toRequiredSelection(row);
+    const retainedLock = queryClient.getQueryData<ConfirmationLock>(
+      dpmCampaignQueryKeys.confirmationLock(target),
+    );
+    if (retainedLock?.kind === "workflow") {
+      return await refreshWorkflow(row);
+    }
     return await queryClient.fetchQuery(
-      dpmCampaignWorkflowQueryOptions(toRequiredSelection(row)),
+      dpmCampaignWorkflowQueryOptions(target),
     );
   }
 
