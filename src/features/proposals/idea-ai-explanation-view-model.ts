@@ -141,7 +141,14 @@ export function buildAdvisorIdeaExplanationViewModel(
 
 function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
   return {
-    id: `${source.productId}-${source.sourceSystem}-${source.productVersion}-${source.asOfDate}`,
+    id: [
+      source.productId,
+      source.sourceSystem,
+      source.productVersion,
+      source.asOfDate,
+      source.freshness,
+      source.dataQualityStatus,
+    ].join("-"),
     identity: `${source.productId} · ${source.sourceSystem}`,
     asOf: formatBusinessDateValue(source.asOfDate, {
       nullDisplay: "Date not reported",

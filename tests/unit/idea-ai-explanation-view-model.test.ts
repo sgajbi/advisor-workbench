@@ -119,15 +119,22 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
   });
 
   it("fails freshness closed when any published source reference is stale", () => {
+    const currentSource =
+      servedResponse.explanation.redactedEvidence!.sourceRefs[0];
     const model = buildAdvisorIdeaExplanationViewModel({
       ...servedResponse,
       explanation: {
         ...servedResponse.explanation,
         redactedEvidence: {
           ...servedResponse.explanation.redactedEvidence!,
-          sourceRefs: servedResponse.explanation.redactedEvidence!.sourceRefs.map(
-            (source) => ({ ...source, freshness: "stale" }),
-          ),
+          sourceRefs: [
+            currentSource,
+            {
+              ...currentSource,
+              freshness: "stale",
+              dataQualityStatus: "partial",
+            },
+          ],
         },
       },
     });
@@ -137,5 +144,9 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
       asOf: "2026-06-21",
     });
     expect(model.disclosure.availability).toBe("stale");
+    expect(model.supportingSources).toEqual([
+      expect.objectContaining({ freshness: "Current", quality: "Complete" }),
+      expect.objectContaining({ freshness: "Stale", quality: "Partial" }),
+    ]);
   });
 });
