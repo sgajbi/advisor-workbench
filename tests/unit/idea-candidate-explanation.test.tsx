@@ -114,7 +114,9 @@ describe("IdeaCandidateExplanation", () => {
     expect(screen.getByText("Benchmark Evidence Missing")).toBeInTheDocument();
     expect(screen.getByText("High Cash Ratio")).toBeInTheDocument();
     expect(screen.getByText("Supporting evidence")).toBeInTheDocument();
-    expect(screen.getByText(/idea-eligibility-v1 · lotus-idea/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/idea-eligibility-v1 · lotus-idea · Version v1/),
+    ).toBeInTheDocument();
     expect(screen.getByText("run-001")).toBeInTheDocument();
     expect(screen.getByText("unattested_local_test_fixture")).toBeInTheDocument();
     expect(
@@ -163,6 +165,8 @@ describe("IdeaCandidateExplanation", () => {
     expect(
       screen.getByText("Cash remains above the source policy threshold."),
     ).toBeInTheDocument();
+    expect(screen.getByText("Benchmark Evidence Missing")).toBeInTheDocument();
+    expect(screen.getByText("High Cash Ratio")).toBeInTheDocument();
     expect(dependencies.unavailable).toHaveBeenCalledWith(
       "runtime_unavailable",
     );

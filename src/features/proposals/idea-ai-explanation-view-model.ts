@@ -149,7 +149,7 @@ function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
       source.freshness,
       source.dataQualityStatus,
     ].join("-"),
-    identity: `${source.productId} · ${source.sourceSystem}`,
+    identity: `${source.productId} · ${source.sourceSystem} · Version ${source.productVersion}`,
     asOf: formatBusinessDateValue(source.asOfDate, {
       nullDisplay: "Date not reported",
     }),

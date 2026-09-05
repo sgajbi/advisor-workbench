@@ -195,10 +195,18 @@ export default function IdeaCandidateExplanation({
               />
             </div>
           ) : (
-            <Alert severity="info" data-testid="idea-explanation-fallback">
-              <strong>Deterministic evidence summary</strong>
-              <div>{model.deterministicFallback}</div>
-            </Alert>
+            <div className={styles.evidenceGrid}>
+              <Alert severity="info" data-testid="idea-explanation-fallback">
+                <strong>Deterministic evidence summary</strong>
+                <div>{model.deterministicFallback}</div>
+              </Alert>
+              <ExplanationEvidenceLimits
+                candidateId={candidateId}
+                detailAvailable={model.evidenceDetailAvailable}
+                gaps={model.evidenceGaps}
+                signals={model.evidenceSignals}
+              />
+            </div>
           )}
         </div>
       ) : null}

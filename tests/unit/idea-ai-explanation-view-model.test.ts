@@ -67,7 +67,8 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
         text: "Cash weight is above the policy threshold.",
         sources: [
           expect.objectContaining({
-            identity: "lotus-core:PortfolioStateSnapshot:v1 · lotus-core",
+            identity:
+              "lotus-core:PortfolioStateSnapshot:v1 · lotus-core · Version v1",
             asOf: "21 Jun 2026",
           }),
         ],
@@ -77,7 +78,7 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     expect(model.evidenceGaps).toEqual(["Benchmark Evidence Missing"]);
     expect(model.supportingSources).toEqual([
       expect.objectContaining({
-        identity: "idea-eligibility-v1 · lotus-idea",
+        identity: "idea-eligibility-v1 · lotus-idea · Version v1",
         asOf: "21 Jun 2026",
       }),
     ]);
