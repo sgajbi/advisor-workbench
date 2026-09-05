@@ -15,9 +15,9 @@ function replaceContract(
 }
 
 describe("source-authority CI fitness function", () => {
-  it("enrolls Risk and Advisor Book through executable source-to-render contracts", () => {
+  it("enrolls every declared critical surface through executable source-to-render contracts", () => {
     expect(validateSourceAuthorityContracts()).toEqual([]);
-    expect(enforceSourceAuthorityContracts()).toBe(2);
+    expect(enforceSourceAuthorityContracts()).toBe(3);
   });
 
   it("fails closed for empty or single-surface enrollment", () => {
