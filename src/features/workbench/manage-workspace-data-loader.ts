@@ -29,6 +29,7 @@ import {
   searchDpmPortfolioMemory,
 } from "@/features/workbench/api";
 import type { ManageMode } from "@/features/workbench/manage-workspace-navigation";
+import { readDpmCampaignDefinitionRecords } from "@/features/workbench/dpm-campaign-source-records";
 import {
   proofPackPreloadErrorMessage,
   readDpmFairnessAnalysisId,
@@ -419,11 +420,7 @@ function readFirstDpmCampaignDefinition(
   if (!data) {
     return null;
   }
-  const records = Array.isArray(data.items)
-    ? data.items
-    : Array.isArray(data.campaign_definitions)
-      ? data.campaign_definitions
-      : [];
+  const records = readDpmCampaignDefinitionRecords(data);
   for (const record of records) {
     if (!record || typeof record !== "object" || Array.isArray(record)) {
       continue;

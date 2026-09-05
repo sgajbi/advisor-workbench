@@ -15,6 +15,10 @@ import {
   getDpmAiWorkflowProfile,
   type DpmAiWorkflowProfile,
 } from "./dpm-ai-workflow-profiles";
+import {
+  readDpmCampaignDefinitionRecords,
+  readDpmCampaignWorkflowRecords,
+} from "./dpm-campaign-source-records";
 
 const WAVE_MEMO_PROFILE = getDpmAiWorkflowProfile("wave-memo");
 const OPERATIONS_HANDOFF_PROFILE = getDpmAiWorkflowProfile(
@@ -725,7 +729,7 @@ function buildCampaignDefinitionRows(
       record,
     ])
   );
-  return extractRecordArray(data?.items ?? data?.campaign_definitions).map((record, index) => {
+  return readDpmCampaignDefinitionRecords(data).map((record, index) => {
     const discovery = discoveryByKey.get(buildCampaignKey(record, index)) ?? {};
     const governance = readRecord(record.governance);
     const candidates = extractRecordArray(record.candidates);
@@ -1297,15 +1301,7 @@ function extractRecordArray(value: unknown): Record<string, unknown>[] {
 }
 
 function extractWorkflowRecords(data: Record<string, unknown> | undefined): Record<string, unknown>[] {
-  return extractRecordArray(
-    data?.items ??
-      data?.approval_decisions ??
-      data?.assignment_actions ??
-      data?.assignment_tasks ??
-      data?.maker_checker_controls ??
-      data?.tasks ??
-      data?.controls
-  );
+  return readDpmCampaignWorkflowRecords(data);
 }
 
 function countNestedRecords(data: Record<string, unknown>, key: string): number {
