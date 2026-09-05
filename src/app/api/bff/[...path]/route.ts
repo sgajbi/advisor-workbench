@@ -21,9 +21,7 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
   const encodedUpstreamPath = request.nextUrl.pathname.slice(
     BFF_PATH_PREFIX.length,
   );
-  const search = request.nextUrl.search;
   const gatewayBaseUrl = resolveGatewayBaseUrl();
-  const url = `${gatewayBaseUrl}/${encodedUpstreamPath}${search}`;
 
   const headers = buildGatewayBffRequestHeaders(request.headers);
   let requestBody =
@@ -104,6 +102,13 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
       { status: rejection.status, headers: { "cache-control": "no-store" } },
     );
   }
+  const upstreamSearch =
+    reportingAuthority.status === "applied"
+      ? reportingAuthority.admittedSearch
+        ? `?${reportingAuthority.admittedSearch}`
+        : ""
+      : request.nextUrl.search;
+  const url = `${gatewayBaseUrl}/${encodedUpstreamPath}${upstreamSearch}`;
   let response: Response;
   let responseBody: ArrayBuffer;
   try {
