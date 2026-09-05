@@ -56,6 +56,7 @@ export function buildAdvisorIdeaExplanationViewModel(
   const served = response.status === "EXPLANATION_SERVED";
   const evidenceGaps = uniqueBusinessLabels(evidence?.unsupportedReasons ?? []);
   const evidenceSignals = uniqueBusinessLabels(evidence?.reasonCodes ?? []);
+  const freshness = deriveEvidenceFreshness(allSourceRefs);
   const limitations = [
     "Internal advisor review aid only. It does not approve suitability, client communication, a proposal, or an order.",
     ...(claims.length === 0 && served
@@ -92,7 +93,11 @@ export function buildAdvisorIdeaExplanationViewModel(
     disclosure: createAiAssistanceDisclosure({
       scopeLabel: "Idea rationale draft",
       preparation: served ? "ai-assisted" : "deterministic",
-      availability: served ? "live" : "partial",
+      availability: served
+        ? freshness.state === "stale"
+          ? "stale"
+          : "live"
+        : "partial",
       evidence: {
         state:
           sourceIdentities.size === 0
@@ -107,7 +112,7 @@ export function buildAdvisorIdeaExplanationViewModel(
         sourceRecorded: false,
       },
       clientUse: served ? "internal-only" : "blocked",
-      freshness: { state: "not-reported" },
+      freshness,
       limitations,
       diagnostics: [
         ...(response.lotusAiRunId
@@ -148,6 +153,20 @@ function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
 
 function uniqueEvidenceSources(sources: EvidenceSource[]): EvidenceSource[] {
   return [...new Map(sources.map((source) => [source.id, source])).values()];
+}
+
+function deriveEvidenceFreshness(sources: ExplanationSourceRef[]): {
+  state: "current" | "stale" | "not-reported";
+  asOf?: string;
+} {
+  if (sources.length === 0) {
+    return { state: "not-reported" };
+  }
+  const asOf = [...sources.map((source) => source.asOfDate)].sort()[0];
+  if (sources.some((source) => source.freshness.toLowerCase() !== "current")) {
+    return { state: "stale", asOf };
+  }
+  return { state: "current", asOf };
 }
 
 function uniqueBusinessLabels(values: readonly string[]): string[] {

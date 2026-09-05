@@ -92,6 +92,15 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     ).toThrow(/without an accepted source evaluation/);
   });
 
+  it("rejects a served explanation without confirmed runtime execution", () => {
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(
+        response({ lotusAiRuntimeExecutionConfirmed: false }),
+        { candidateId: "idea-001", requestId: "request-001" },
+      ),
+    ).toThrow(/without confirmed runtime execution/);
+  });
+
   it("rejects unavailable text that the source does not attest as fallback evidence", () => {
     const value = response({
       status: "EXPLANATION_UNAVAILABLE",
