@@ -150,4 +150,46 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
       expect.objectContaining({ freshness: "Stale", quality: "Partial" }),
     ]);
   });
+
+  it("fails evidence support closed when current source quality is partial", () => {
+    const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      explanation: {
+        ...servedResponse.explanation,
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          unsupportedReasons: [],
+          sourceRefs: [{ ...source, dataQualityStatus: "partial" }],
+        },
+      },
+    });
+
+    expect(model.disclosure.freshness.state).toBe("current");
+    expect(model.disclosure.evidence.state).toBe("limited");
+    expect(model.disclosure.availability).toBe("partial");
+  });
+
+  it("preserves distinct source references whose values contain delimiters", () => {
+    const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      explanation: {
+        ...servedResponse.explanation,
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          sourceRefs: [
+            { ...source, productId: "a-b", sourceSystem: "c" },
+            { ...source, productId: "a", sourceSystem: "b-c" },
+          ],
+        },
+      },
+    });
+
+    expect(model.supportingSources).toHaveLength(2);
+    expect(model.supportingSources.map((item) => item.identity)).toEqual([
+      "a-b · c · Version v1",
+      "a · b-c · Version v1",
+    ]);
+  });
 });

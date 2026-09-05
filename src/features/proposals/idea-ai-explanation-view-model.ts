@@ -48,15 +48,13 @@ export function buildAdvisorIdeaExplanationViewModel(
     ...claims.flatMap((claim) => claim.sourceRefs),
   ];
   const sourceIdentities = new Set(
-    allSourceRefs.map(
-      (source) =>
-        `${source.productId}\u0000${source.sourceSystem}\u0000${source.productVersion}\u0000${source.asOfDate}`,
-    ),
+    allSourceRefs.map(sourceIdentityKey),
   );
   const served = response.status === "EXPLANATION_SERVED";
   const evidenceGaps = uniqueBusinessLabels(evidence?.unsupportedReasons ?? []);
   const evidenceSignals = uniqueBusinessLabels(evidence?.reasonCodes ?? []);
   const freshness = deriveEvidenceFreshness(allSourceRefs);
+  const evidenceState = deriveEvidenceState(allSourceRefs, evidenceGaps);
   const limitations = [
     "Internal advisor review aid only. It does not approve suitability, client communication, a proposal, or an order.",
     ...(claims.length === 0 && served
@@ -96,15 +94,12 @@ export function buildAdvisorIdeaExplanationViewModel(
       availability: served
         ? freshness.state === "stale"
           ? "stale"
+          : evidenceState === "limited"
+            ? "partial"
           : "live"
         : "partial",
       evidence: {
-        state:
-          sourceIdentities.size === 0
-            ? "missing"
-            : evidenceGaps.length > 0
-              ? "limited"
-              : "supported",
+        state: evidenceState,
         sourceCount: sourceIdentities.size,
       },
       humanReview: {
@@ -141,14 +136,14 @@ export function buildAdvisorIdeaExplanationViewModel(
 
 function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
   return {
-    id: [
+    id: JSON.stringify([
       source.productId,
       source.sourceSystem,
       source.productVersion,
       source.asOfDate,
       source.freshness,
       source.dataQualityStatus,
-    ].join("-"),
+    ]),
     identity: `${source.productId} · ${source.sourceSystem} · Version ${source.productVersion}`,
     asOf: formatBusinessDateValue(source.asOfDate, {
       nullDisplay: "Date not reported",
@@ -156,6 +151,28 @@ function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
     freshness: formatCode(source.freshness),
     quality: formatCode(source.dataQualityStatus),
   };
+}
+
+function sourceIdentityKey(source: ExplanationSourceRef): string {
+  return JSON.stringify([
+    source.productId,
+    source.sourceSystem,
+    source.productVersion,
+    source.asOfDate,
+  ]);
+}
+
+function deriveEvidenceState(
+  sources: ExplanationSourceRef[],
+  evidenceGaps: string[],
+): "missing" | "limited" | "supported" {
+  if (sources.length === 0) {
+    return "missing";
+  }
+  return evidenceGaps.length > 0 ||
+    sources.some((source) => source.dataQualityStatus.toLowerCase() !== "complete")
+    ? "limited"
+    : "supported";
 }
 
 function uniqueEvidenceSources(sources: EvidenceSource[]): EvidenceSource[] {
