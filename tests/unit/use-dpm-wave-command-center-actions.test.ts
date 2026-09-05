@@ -2064,7 +2064,58 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
 
+  it("revokes a cached launch package when a newer readiness check blocks launch", async () => {
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
+    });
+    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(true);
+    expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledTimes(1);
+
+    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValueOnce({
+      ...previewReadinessResponse,
+      data: {
+        ...previewReadinessResponse.data,
+        supportability_state: "BLOCKED",
+        reason_codes: ["campaign_definition_actor_not_entitled"],
+        blocked_actions: ["preview_wave", "create_wave"],
+      },
+    });
+    await act(async () => {
+      await result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
+    });
+
+    expect(result.current.model.campaignPreviewReadinessPosture.state).toBe(
+      "BLOCKED",
+    );
+    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
+    expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await result.current.launchCampaign(result.current.selectedCampaign!);
+    });
+    expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
+  });
+
   it("records campaign lifecycle commands and refreshes definitions plus lifecycle evidence", async () => {
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValueOnce({
+      ...campaignDefinitions,
+      data: {
+        ...campaignDefinitions.data,
+        items: [
+          {
+            ...(campaignDefinitions.data.items as Array<Record<string, unknown>>)[0],
+            status: "SUPERSEDED",
+            superseded_by_campaign_version: "2026.06",
+          },
+        ],
+      },
+    });
     const { result } = renderActions();
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
@@ -2109,6 +2160,8 @@ describe("useDpmWaveCommandCenterActions", () => {
         contentHash: "sha256:campaign-superseded",
       }),
     );
+    expect(result.current.selectedCampaign?.status).toBe("SUPERSEDED");
+    expect(result.current.model.campaignRows[0]?.status).toBe("SUPERSEDED");
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
@@ -2137,6 +2190,50 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.campaignLifecycleCommandError).toBeNull();
       expect(result.current.campaignLifecycleError).toBe(
         "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
+      );
+    });
+  });
+
+  it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {
+    vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
+      new Error("Campaign definitions refresh failed"),
+    );
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({
+      queries: { retry: false, gcTime: 1 },
+      mutations: { retry: false, gcTime: 1 },
+    });
+    const first = renderActions(campaignDefinitions, queryClient);
+
+    await waitFor(() =>
+      expect(first.result.current.selectedCampaign).not.toBeNull(),
+    );
+    await act(async () => {
+      await first.result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-retire",
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(first.result.current.campaignLifecycleError).toContain(
+        "updated campaign record could not be loaded",
+      ),
+    );
+    first.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const second = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() => {
+      expect(second.result.current.campaignLifecycleCommandEvidence).toMatchObject({
+        commandLabel: "Retire campaign",
+        contentHash: "sha256:campaign-retired",
+      });
+      expect(second.result.current.campaignLifecycleError).toContain(
+        "updated campaign record could not be loaded",
       );
     });
   });
@@ -2358,6 +2455,55 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
       expect(result.current.campaignWorkflowEvidenceError).toBe(
         "Governance action was recorded, but refreshed source evidence could not be loaded. Reload source evidence before recording another governance action.",
+      );
+    });
+  });
+
+  it("retains accepted governance evidence and its confirmation lock beyond default cache collection", async () => {
+    vi.mocked(getDpmCampaignApprovalDecisions).mockRejectedValueOnce(
+      new Error("Campaign approvals refresh failed"),
+    );
+    const queryClient = createTestQueryClient();
+    queryClient.setDefaultOptions({
+      queries: { retry: false, gcTime: 1 },
+      mutations: { retry: false, gcTime: 1 },
+    });
+    const first = renderActions(campaignDefinitions, queryClient);
+
+    await waitFor(() =>
+      expect(first.result.current.selectedCampaign).not.toBeNull(),
+    );
+    await act(async () => {
+      await first.result.current.recordCampaignWorkflowCommand({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-review-001",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Portfolio manager review is required.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-campaign-task",
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(first.result.current.campaignWorkflowEvidenceError).toContain(
+        "refreshed source evidence could not be loaded",
+      ),
+    );
+    first.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const second = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() => {
+      expect(second.result.current.campaignWorkflowCommandEvidence).toMatchObject({
+        evidenceRef: "task-review-001",
+        contentHash: "sha256:task-transition",
+      });
+      expect(second.result.current.campaignWorkflowEvidenceError).toContain(
+        "refreshed source evidence could not be loaded",
       );
     });
   });
