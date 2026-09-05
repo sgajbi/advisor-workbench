@@ -7,6 +7,8 @@ import {
   dpmCampaignLaunchHistoryQueryOptions,
   dpmCampaignLaunchPackageQueryOptions,
   dpmCampaignDefinitionsQueryOptions,
+  fetchDpmCampaignDefinitions,
+  fetchDpmCampaignLifecycle,
   dpmCampaignLifecycleQueryOptions,
   dpmCampaignPreviewReadinessQueryOptions,
   dpmCampaignWorkflowQueryOptions,
@@ -315,13 +317,12 @@ export function useDpmCampaignSources({
       }),
     ]);
     try {
-      const [response] = await Promise.all([
-        queryClient.fetchQuery({ ...options, staleTime: 0 }),
-        queryClient.fetchQuery({
-          ...definitionsOptions,
-          staleTime: 0,
-        }),
+      const [response, definitions] = await Promise.all([
+        fetchDpmCampaignLifecycle(target),
+        fetchDpmCampaignDefinitions(),
       ]);
+      queryClient.setQueryData(options.queryKey, response);
+      queryClient.setQueryData(definitionsOptions.queryKey, definitions);
       queryClient.removeQueries({
         queryKey: dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
         exact: true,

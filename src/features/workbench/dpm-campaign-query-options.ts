@@ -27,9 +27,12 @@ export type DpmCampaignWorkflowEvidence = Readonly<{
 export function dpmCampaignDefinitionsQueryOptions() {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.definitions(),
-    queryFn: () =>
-      listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client"),
+    queryFn: fetchDpmCampaignDefinitions,
   });
+}
+
+export function fetchDpmCampaignDefinitions() {
+  return listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client");
 }
 
 export function dpmCampaignLifecycleQueryOptions(
@@ -37,9 +40,12 @@ export function dpmCampaignLifecycleQueryOptions(
 ) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.lifecycle(identity),
-    queryFn: () =>
-      getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity)),
+    queryFn: () => fetchDpmCampaignLifecycle(identity),
   });
+}
+
+export function fetchDpmCampaignLifecycle(identity: DpmCampaignIdentity) {
+  return getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity));
 }
 
 export function dpmCampaignLaunchHistoryQueryOptions(
