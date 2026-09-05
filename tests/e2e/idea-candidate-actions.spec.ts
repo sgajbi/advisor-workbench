@@ -5,6 +5,11 @@ import { expect, test } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const candidateId = "idea_high_cash_001";
+const candidateEvidenceIdentity = {
+  evidencePacketId: "evidence_high_cash_001",
+  evidenceContentHash: "sha256:evidence-high-cash-001",
+  sourceRevisionVectorDigest: "sha256:revision-high-cash-001",
+};
 const explanationEvidenceDirectory = process.env.ISSUE_996_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_996_EVIDENCE_DIR)
   : null;
@@ -63,6 +68,7 @@ async function mockIdeaCandidateActions(page: import("@playwright/test").Page) {
               reviewPosture: "advisor_review_required",
             },
             evidence: {
+              ...candidateEvidenceIdentity,
               supportability: "ready",
               sourceRefs: [{ productId: "idea-source-001" }],
             },
@@ -333,6 +339,7 @@ test("renders a governed idea rationale with distinct evidence limits", async ({
               ],
             },
             redactedEvidence: {
+              ...candidateEvidenceIdentity,
               reasonCodes: ["high_cash_ratio"],
               unsupportedReasons: ["benchmark_evidence_missing"],
               scorePolicyVersion: "idle-liquidity-v2",
@@ -407,6 +414,13 @@ test("keeps advisor actions available with deterministic evidence when AI is una
             supportedFeaturePromoted: false,
             executionProvenancePosture: "runtime_unavailable",
             aiLineageRecorded: false,
+            redactedEvidence: {
+              ...candidateEvidenceIdentity,
+              reasonCodes: ["high_cash_ratio"],
+              unsupportedReasons: ["runtime_unavailable"],
+              scorePolicyVersion: "idle-liquidity-v2",
+              sourceRefs: [],
+            },
           },
         },
       });
