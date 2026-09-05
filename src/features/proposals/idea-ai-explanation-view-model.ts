@@ -90,7 +90,7 @@ export function buildAdvisorIdeaExplanationViewModel(
     evidenceGaps,
     evidenceSignals,
     supportingSources: uniqueEvidenceSources(
-      (evidence?.sourceRefs ?? []).map(toEvidenceSource),
+      (served ? evidence?.sourceRefs ?? [] : allSourceRefs).map(toEvidenceSource),
     ),
     evidenceDetailAvailable: Boolean(evidence),
     disclosure: createAiAssistanceDisclosure({

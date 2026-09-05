@@ -101,6 +101,15 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     ).toThrow(/without confirmed runtime execution/);
   });
 
+  it("rejects a served explanation without a workflow run identifier", () => {
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(
+        response({ lotusAiRunId: null }),
+        { candidateId: "idea-001", requestId: "request-001" },
+      ),
+    ).toThrow(/without a workflow run identifier/);
+  });
+
   it("rejects unavailable text that the source does not attest as fallback evidence", () => {
     const value = response({
       status: "EXPLANATION_UNAVAILABLE",
