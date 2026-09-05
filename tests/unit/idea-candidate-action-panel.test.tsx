@@ -11,6 +11,7 @@ const ideaApi = vi.hoisted(() => ({
   recordAdvisorIdeaConversionIntent: vi.fn(),
   recordAdvisorIdeaFeedback: vi.fn(),
   recordAdvisorIdeaReviewAction: vi.fn(),
+  requestAdvisorIdeaAIExplanation: vi.fn(),
 }));
 
 vi.mock("../../src/features/proposals/api", () => ideaApi);
@@ -233,5 +234,19 @@ describe("IdeaCandidateActionPanel", () => {
       reason: "wrong_timing",
     });
     expect(changedInput.request).not.toEqual(failedInput.request);
+  });
+
+  it("keeps all advisor actions available when the optional explanation fails", async () => {
+    ideaApi.requestAdvisorIdeaAIExplanation.mockRejectedValueOnce(
+      new WorkbenchApiError("explanation", 502),
+    );
+    renderPanel(async () => true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+    await screen.findByTestId("idea-explanation-error");
+
+    expect(screen.getByRole("button", { name: "Record review" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record feedback" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record intent" })).toBeEnabled();
   });
 });
