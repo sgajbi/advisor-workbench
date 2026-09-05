@@ -69,6 +69,26 @@ describe("source-authority CI fitness function", () => {
     );
   });
 
+  it("changes the Idea proof identity when only the source revision changes", () => {
+    const contract = SOURCE_AUTHORITY_CONTRACTS.find(
+      (candidate) => candidate.id === "idea-candidate-explanation",
+    );
+    expect(contract).toBeDefined();
+    const payload = structuredClone(contract!.sampleGatewayResponse) as {
+      explanation: {
+        redactedEvidence: { sourceRevisionVectorDigest: string };
+      };
+    };
+    const original = contract!.buildExpectedRows(payload)[0];
+    payload.explanation.redactedEvidence.sourceRevisionVectorDigest =
+      "sha256:changed-source-revision";
+    const changed = contract!.buildExpectedRows(payload)[0];
+
+    expect(changed.state).toBe(original.state);
+    expect(changed.identity).not.toBe(original.identity);
+    expect(changed.identity).toContain("sha256:changed-source-revision");
+  });
+
   it("rejects stale production wiring evidence with an actionable path", () => {
     const contracts = replaceContract("advisor-book-portfolios", (contract) => ({
       ...contract,

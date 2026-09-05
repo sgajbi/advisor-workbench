@@ -129,6 +129,18 @@ export function isSameAdvisorIdeaEvidence(
   );
 }
 
+export function serializeAdvisorIdeaEvidenceIdentity(
+  candidateId: string,
+  evidence: AdvisorIdeaEvidenceIdentity,
+): string {
+  return JSON.stringify([
+    candidateId,
+    evidence.evidencePacketId,
+    evidence.evidenceContentHash,
+    evidence.sourceRevisionVectorDigest,
+  ]);
+}
+
 export function parseAdvisorIdeaAIExplanationResponse(
   value: unknown,
   expected: {

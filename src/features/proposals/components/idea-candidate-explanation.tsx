@@ -17,6 +17,7 @@ import {
   ADVISOR_RATIONALE_DRAFT_PURPOSE,
   isSameAdvisorIdeaEvidence,
   readAdvisorIdeaEvidenceIdentity,
+  serializeAdvisorIdeaEvidenceIdentity,
   type AdvisorIdeaEvidenceIdentity,
   type AdvisorIdeaAIExplanationRequest,
 } from "../idea-ai-explanation-contract";
@@ -130,6 +131,13 @@ export default function IdeaCandidateExplanation({
     ? buildAdvisorIdeaExplanationViewModel(mutation.data)
     : undefined;
   const isSuperseded = Boolean(mutation.data && !responseIsCurrent);
+  const renderedEvidenceIdentity =
+    model && mutation.data && responseEvidenceIdentity
+      ? serializeAdvisorIdeaEvidenceIdentity(
+          mutation.data.explanation.candidateId,
+          responseEvidenceIdentity,
+        )
+      : undefined;
 
   return (
     <section
@@ -206,7 +214,7 @@ export default function IdeaCandidateExplanation({
           className={styles.result}
           data-testid="idea-explanation-result"
           data-idea-explanation-source="lotus-idea"
-          data-candidate-id={mutation.data?.explanation.candidateId}
+          data-idea-explanation-identity={renderedEvidenceIdentity}
           data-explanation-status={mutation.data?.status}
         >
           <div className={styles.resultHeader}>

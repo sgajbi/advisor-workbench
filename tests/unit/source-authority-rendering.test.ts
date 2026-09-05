@@ -94,6 +94,7 @@ const IDEA_EXPLANATION_RENDER_CASES = [
 type RenderProofCase = Readonly<{
   identity: string;
   state: string;
+  sourceRevisionVectorDigest?: string;
 }>;
 
 type ExecutableRenderProof = Readonly<{
@@ -206,7 +207,11 @@ async function renderRiskCase({ identity, state }: RenderProofCase) {
   return payload;
 }
 
-async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
+async function renderIdeaExplanationCase({
+  identity,
+  state,
+  sourceRevisionVectorDigest = "sha256:revision-source-authority-proof",
+}: RenderProofCase) {
   if (
     state !== "EXPLANATION_SERVED" &&
     state !== "EXPLANATION_UNAVAILABLE"
@@ -242,7 +247,11 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
   const evidenceIdentity = {
     evidencePacketId: "evidence-source-authority-proof",
     evidenceContentHash: "sha256:evidence-source-authority-proof",
-    sourceRevisionVectorDigest: "sha256:revision-source-authority-proof",
+    sourceRevisionVectorDigest,
+  };
+  explanation.redactedEvidence = {
+    ...(explanation.redactedEvidence as Record<string, unknown>),
+    ...evidenceIdentity,
   };
   const parsedPayload = parseAdvisorIdeaAIExplanationResponse(payload, {
     candidateId: identity,
@@ -330,4 +339,28 @@ describe("source-authority production mapping", () => {
       },
     );
   }
+
+  it("rejects stale Idea rendering when only the source revision changes", async () => {
+    const contract = sourceContract("idea-candidate-explanation");
+    const sourcePayload = (await renderIdeaExplanationCase({
+      identity: "idea-source-authority-same-candidate",
+      state: "EXPLANATION_SERVED",
+      sourceRevisionVectorDigest: "sha256:revision-original",
+    })) as Record<string, unknown>;
+    const changedPayload = structuredClone(sourcePayload) as {
+      explanation: {
+        redactedEvidence: { sourceRevisionVectorDigest: string };
+      };
+    };
+    changedPayload.explanation.redactedEvidence.sourceRevisionVectorDigest =
+      "sha256:revision-changed";
+
+    expect(() =>
+      assertExactSourceRenderProof({
+        screen: contract.screen,
+        expectedRows: contract.buildExpectedRows(changedPayload),
+        renderedRows: extractDeclaredRenderedRows(contract),
+      }),
+    ).toThrow(/revision-changed.*no rendered evidence was found/);
+  });
 });

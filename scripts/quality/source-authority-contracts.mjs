@@ -50,6 +50,10 @@ const ideaExplanationGatewaySample = {
   },
 };
 
+const ideaExplanationProofIdentity = buildIdeaExplanationSourceRenderRows(
+  ideaExplanationGatewaySample,
+)[0].identity;
+
 /**
  * Enrollment metadata is deliberately limited to source ownership and browser evidence. It is not
  * a second business model: Gateway payloads and their domain adapters remain authoritative.
@@ -115,7 +119,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     screen: "Opportunities and Ideas",
     sourceOwnership: Object.freeze({
       identity:
-        "explanation.candidateId + explanation.redactedEvidence.(evidencePacketId,evidenceContentHash,sourceRevisionVectorDigest)",
+        "JSON tuple of explanation.candidateId + explanation.redactedEvidence.(evidencePacketId,evidenceContentHash,sourceRevisionVectorDigest)",
       state: "status",
     }),
     presentationOnly: Object.freeze([
@@ -129,7 +133,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     renderedEvidence: Object.freeze({
       rowSelector: "[data-idea-explanation-source]",
       sourceAttribute: "data-idea-explanation-source",
-      identityAttribute: "data-candidate-id",
+      identityAttribute: "data-idea-explanation-identity",
       stateAttribute: "data-explanation-status",
     }),
     implementationEvidence: Object.freeze([
@@ -138,6 +142,10 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
         tokens: Object.freeze([
           "buildIdeaExplanationSourceRenderRows",
           "response?.explanation?.candidateId",
+          "evidence?.evidencePacketId",
+          "evidence?.evidenceContentHash",
+          "evidence?.sourceRevisionVectorDigest",
+          "JSON.stringify",
           "response?.status",
         ]),
       }),
@@ -145,9 +153,10 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
         path: "src/features/proposals/components/idea-candidate-explanation.tsx",
         tokens: Object.freeze([
           'data-idea-explanation-source="lotus-idea"',
-          "data-candidate-id={mutation.data?.explanation.candidateId}",
+          "data-idea-explanation-identity={renderedEvidenceIdentity}",
           "data-explanation-status={mutation.data?.status}",
           "isSameAdvisorIdeaEvidence",
+          "serializeAdvisorIdeaEvidenceIdentity",
         ]),
       }),
       Object.freeze({
@@ -175,7 +184,7 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     sampleGatewayResponse: Object.freeze(ideaExplanationGatewaySample),
     target: Object.freeze({
       source: "lotus-idea",
-      identity: "idea-source-authority-unavailable",
+      identity: ideaExplanationProofIdentity,
       sourceState: "EXPLANATION_UNAVAILABLE",
       mutatedSourceState: "EXPLANATION_SERVED",
       reassuringRenderedState: "EXPLANATION_SERVED",
