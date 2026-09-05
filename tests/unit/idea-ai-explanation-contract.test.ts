@@ -91,4 +91,19 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
       ),
     ).toThrow(/without an accepted source evaluation/);
   });
+
+  it("rejects unavailable text that the source does not attest as fallback evidence", () => {
+    const value = response({
+      status: "EXPLANATION_UNAVAILABLE",
+      disposition: "runtime_unavailable",
+      evaluationVerdict: "not_evaluated",
+    });
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        requestId: "request-001",
+      }),
+    ).toThrow(/did not confirm deterministic fallback evidence/);
+  });
 });

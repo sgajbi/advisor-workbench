@@ -103,5 +103,13 @@ export function parseAdvisorIdeaAIExplanationResponse(
       "Idea explanation response was served without an accepted source evaluation.",
     );
   }
+  if (
+    response.status === "EXPLANATION_UNAVAILABLE" &&
+    !response.explanation.fallbackUsed
+  ) {
+    throw new Error(
+      "Unavailable Idea explanation response did not confirm deterministic fallback evidence.",
+    );
+  }
   return response;
 }
