@@ -1,7 +1,13 @@
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 const portfolioId = "PB_SG_GLOBAL_BAL_001";
 const candidateId = "idea_high_cash_001";
+const explanationEvidenceDirectory = process.env.ISSUE_996_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_996_EVIDENCE_DIR)
+  : null;
 const notUsefulFeedbackReasons = [
   "not_relevant",
   "already_known",
@@ -272,4 +278,174 @@ test("records every adviser-selected governed feedback reason through Gateway", 
   expect(conversionBox!.y).toBeGreaterThanOrEqual(
     feedbackBox!.y + feedbackBox!.height,
   );
+});
+
+test("renders a governed idea rationale with distinct evidence limits", async ({
+  page,
+}, testInfo) => {
+  await mockIdeaCandidateActions(page);
+  let recordedRequest:
+    | { body: Record<string, string>; idempotencyKey?: string }
+    | undefined;
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/ai-explanations`,
+    async (route) => {
+      const body = route.request().postDataJSON() as Record<string, string>;
+      recordedRequest = {
+        body,
+        idempotencyKey: route.request().headers()["idempotency-key"],
+      };
+      await route.fulfill({
+        json: {
+          status: "EXPLANATION_SERVED",
+          disposition: "executed",
+          lotusAiRunId: "run-browser-001",
+          lotusAiRuntimeExecutionConfirmed: true,
+          evaluationVerdict: "accepted",
+          explanation: {
+            requestId: body.requestId,
+            candidateId,
+            posture: "ready_for_advisor_review",
+            verifierOutcome: "passed",
+            explanationText: "Cash weight is above the policy threshold.",
+            fallbackUsed: false,
+            fallbackReason: null,
+            grantsDownstreamAuthority: false,
+            supportedFeaturePromoted: false,
+            executionProvenancePosture: "unattested_local_test_fixture",
+            aiLineageRecorded: true,
+            verifiedOutput: {
+              groundedClaims: [
+                {
+                  claimId: "claim-browser-001",
+                  claimText: "Cash weight is above the policy threshold.",
+                  sourceRefs: [
+                    {
+                      productId: "portfolio-state-v1",
+                      sourceSystem: "portfolio-record",
+                      productVersion: "v1",
+                      asOfDate: "2026-06-21",
+                      freshness: "current",
+                      dataQualityStatus: "complete",
+                    },
+                  ],
+                },
+              ],
+            },
+            redactedEvidence: {
+              reasonCodes: ["high_cash_ratio"],
+              unsupportedReasons: ["benchmark_evidence_missing"],
+              scorePolicyVersion: "idle-liquidity-v2",
+              sourceRefs: [],
+            },
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}&candidateId=${candidateId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+  await page.getByRole("button", { name: "Explain this idea" }).click();
+
+  const explanation = page.getByTestId("idea-candidate-explanation");
+  await expect(explanation).toHaveAttribute("data-explanation-state", "served");
+  await expect(explanation.getByText("Grounded rationale")).toBeVisible();
+  await expect(explanation.getByText("Benchmark Evidence Missing")).toBeVisible();
+  await expect(explanation.getByText("High Cash Ratio")).toBeVisible();
+  await expect(explanation.getByText("run-browser-001")).toBeAttached();
+  await expect(
+    explanation.getByText(/not verified production provenance/i),
+  ).toBeAttached();
+  expect(recordedRequest?.body).toMatchObject({
+    requestId: expect.stringMatching(/^idea-explanation-/),
+    purpose: "advisor_rationale_draft",
+    requestedAtUtc: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+  });
+  expect(recordedRequest?.idempotencyKey).toBe(recordedRequest?.body.requestId);
+  const screenshot = await page.screenshot({ fullPage: true });
+  await testInfo.attach("idea-governed-rationale", {
+    body: screenshot,
+    contentType: "image/png",
+  });
+  if (explanationEvidenceDirectory) {
+    await mkdir(explanationEvidenceDirectory, { recursive: true });
+    await page.screenshot({
+      path: path.join(explanationEvidenceDirectory, "idea-governed-rationale.png"),
+      fullPage: true,
+    });
+  }
+});
+
+test("keeps advisor actions available with deterministic evidence when AI is unavailable", async ({
+  page,
+}, testInfo) => {
+  await mockIdeaCandidateActions(page);
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/ai-explanations`,
+    async (route) => {
+      const body = route.request().postDataJSON() as Record<string, string>;
+      await route.fulfill({
+        json: {
+          status: "EXPLANATION_UNAVAILABLE",
+          disposition: "runtime_unavailable",
+          lotusAiRunId: null,
+          lotusAiRuntimeExecutionConfirmed: false,
+          evaluationVerdict: "not_evaluated",
+          explanation: {
+            requestId: body.requestId,
+            candidateId,
+            posture: "fallback_only",
+            verifierOutcome: "not_run",
+            explanationText:
+              "Cash remains above the source policy threshold for advisor review.",
+            fallbackUsed: true,
+            fallbackReason: "ai_unavailable",
+            grantsDownstreamAuthority: false,
+            supportedFeaturePromoted: false,
+            executionProvenancePosture: "runtime_unavailable",
+            aiLineageRecorded: false,
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}&candidateId=${candidateId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+  await page.getByRole("button", { name: "Explain this idea" }).click();
+
+  const explanation = page.getByTestId("idea-candidate-explanation");
+  await expect(explanation).toHaveAttribute(
+    "data-explanation-state",
+    "unavailable",
+  );
+  await expect(explanation.getByText("Deterministic evidence summary")).toBeVisible();
+  await expect(
+    explanation.getByText(
+      "Cash remains above the source policy threshold for advisor review.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Record review" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Record feedback" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Record intent" })).toBeEnabled();
+  const screenshot = await page.screenshot({ fullPage: true });
+  await testInfo.attach("idea-deterministic-fallback", {
+    body: screenshot,
+    contentType: "image/png",
+  });
+  if (explanationEvidenceDirectory) {
+    await mkdir(explanationEvidenceDirectory, { recursive: true });
+    await page.screenshot({
+      path: path.join(
+        explanationEvidenceDirectory,
+        "idea-deterministic-fallback.png",
+      ),
+      fullPage: true,
+    });
+  }
 });
