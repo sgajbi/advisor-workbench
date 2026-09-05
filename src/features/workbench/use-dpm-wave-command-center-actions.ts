@@ -388,7 +388,8 @@ export function useDpmWaveCommandCenterActions({
     if (
       campaignSources.previewReadinessPending ||
       campaignSources.launchPackagePending ||
-      campaignSources.lifecycleConfirmationRequired
+      campaignSources.lifecycleConfirmationRequired ||
+      row.status.toUpperCase() !== "ACTIVE"
     ) {
       return;
     }

@@ -2076,6 +2076,21 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
 
+  it("does not request launch readiness for a terminal campaign", async () => {
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    await act(async () => {
+      await result.current.checkCampaignLaunchReadiness({
+        ...result.current.selectedCampaign!,
+        status: "RETIRED",
+      });
+    });
+
+    expect(getDpmCampaignDefinitionPreviewReadiness).not.toHaveBeenCalled();
+    expect(getDpmCampaignDefinitionLaunchPackage).not.toHaveBeenCalled();
+  });
+
   it("revokes a cached launch package when a newer readiness check blocks launch", async () => {
     const { result } = renderActions();
 
