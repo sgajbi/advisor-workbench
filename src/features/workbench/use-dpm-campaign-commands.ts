@@ -224,7 +224,26 @@ export function useDpmCampaignCommands({
   }
 
   async function recordWorkflow(command: DpmCampaignWorkflowCommandInput) {
-    if (!selectedCampaign || commandInFlight()) return;
+    const lifecycleReceipt = selectedCampaign
+      ? queryClient.getQueryData<DpmCampaignLifecycleConfirmationReceipt>(
+          dpmCampaignQueryKeys.lifecycleConfirmationReceipt(selectedCampaign),
+        )
+      : undefined;
+    if (
+      !selectedCampaign ||
+      selectedCampaign.status.toUpperCase() !== "ACTIVE" ||
+      (lifecycleReceipt !== undefined &&
+        lifecycleReceipt.status.toUpperCase() !== "ACTIVE") ||
+      queryClient.getQueryData(
+        dpmCampaignQueryKeys.confirmationLock(
+          selectedCampaign,
+          "lifecycle",
+        ),
+      ) ||
+      commandInFlight()
+    ) {
+      return;
+    }
     await workflowMutation
       .mutateAsync({ campaign: selectedCampaign, command })
       .catch(() => undefined);

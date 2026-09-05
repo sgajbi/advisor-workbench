@@ -2176,6 +2176,8 @@ describe("useDpmWaveCommandCenterActions", () => {
     const { result } = renderActions();
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    const recordWorkflowBeforeLifecycle =
+      result.current.recordCampaignWorkflowCommand;
     await act(async () => {
       await result.current.recordCampaignLifecycleCommand({
         commandType: "supersede",
@@ -2234,6 +2236,22 @@ describe("useDpmWaveCommandCenterActions", () => {
         expect.objectContaining({ campaignId: "campaign-income-202605" }),
       ]),
     );
+    await act(async () => {
+      await recordWorkflowBeforeLifecycle({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-after-supersede",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Review the superseded campaign.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-task-after-supersede",
+        },
+      });
+    });
+    expect(createDpmCampaignAssignmentTask).not.toHaveBeenCalled();
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
@@ -2283,6 +2301,23 @@ describe("useDpmWaveCommandCenterActions", () => {
         "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
       );
     });
+
+    await act(async () => {
+      await result.current.recordCampaignWorkflowCommand({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-awaiting-lifecycle-confirmation",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Review the campaign after lifecycle confirmation.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-task-awaiting-lifecycle-confirmation",
+        },
+      });
+    });
+    expect(createDpmCampaignAssignmentTask).not.toHaveBeenCalled();
 
     await act(async () => {
       await result.current.loadCampaignLifecycle(
