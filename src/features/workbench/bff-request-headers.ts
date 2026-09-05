@@ -28,7 +28,9 @@ export const FORWARDABLE_BROWSER_GATEWAY_REQUEST_HEADERS = [
   "traceparent",
 ] as const;
 
-export function buildGatewayBffRequestHeaders(browserHeaders: Headers): Headers {
+export function buildGatewayBffRequestHeaders(
+  browserHeaders: Headers,
+): Headers {
   const gatewayHeaders = new Headers();
 
   for (const headerName of FORWARDABLE_BROWSER_GATEWAY_REQUEST_HEADERS) {
@@ -42,6 +44,11 @@ export function buildGatewayBffRequestHeaders(browserHeaders: Headers): Headers 
   // authority header into the browser-controlled request surface.
   stripBrowserSuppliedAuthorityHeaders(gatewayHeaders);
   applyDefaultCallerContextHeaders(gatewayHeaders);
+
+  // Node Fetch decodes supported content codings before exposing response
+  // bytes. Request identity so range offsets and representation metadata stay
+  // aligned across the Gateway/BFF boundary.
+  gatewayHeaders.set("Accept-Encoding", "identity");
 
   return prepareAnalyticsUiProxyHeaders(gatewayHeaders);
 }
