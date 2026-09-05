@@ -394,11 +394,11 @@ export function useDpmCampaignSources({
     const confirmationReceipt = requiredReceipt
       ? requiredReceipt
       : queryClient.getQueryData<DpmCampaignLifecycleConfirmationReceipt>(
-          dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+          dpmCampaignQueryKeys.lifecycleConfirmationReceipt(target),
         );
     if (confirmationReceipt) {
       queryClient.setQueryData<DpmCampaignLifecycleConfirmationReceipt>(
-        dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+        dpmCampaignQueryKeys.lifecycleConfirmationReceipt(target),
         confirmationReceipt,
       );
     }

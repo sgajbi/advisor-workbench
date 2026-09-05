@@ -1,6 +1,11 @@
 "use client";
 
-import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  skipToken,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 
 import { dpmCampaignDefinitionsQueryOptions } from "@/features/workbench/dpm-campaign-query-options";
@@ -36,26 +41,33 @@ export function useDpmCampaignDefinitionsSource(
   });
   const serverReadAlreadyAdmitted =
     serverReadQuery.data?.readId === initialReadId;
-  const confirmationReceiptKey = useMemo(
-    () => dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
-    [],
-  );
-  const confirmationReceiptQuery =
-    useQuery<DpmCampaignLifecycleConfirmationReceipt>({
-      queryKey: confirmationReceiptKey,
+  const confirmationReceiptKeys = queryClient
+    .getQueriesData<DpmCampaignLifecycleConfirmationReceipt>({
+      queryKey: dpmCampaignQueryKeys.lifecycleConfirmationReceipts(),
+    })
+    .map(([queryKey]) => queryKey);
+  const confirmationReceiptQueries = useQueries({
+    queries: confirmationReceiptKeys.map((queryKey) => ({
+      queryKey,
       queryFn: skipToken,
       gcTime: Infinity,
       initialData: () =>
         queryClient.getQueryData<DpmCampaignLifecycleConfirmationReceipt>(
-          confirmationReceiptKey,
+          queryKey,
         ),
-    });
+    })),
+  });
+  const confirmationReceipts = confirmationReceiptQueries.flatMap((query) => {
+    const receipt = query.data as
+      | DpmCampaignLifecycleConfirmationReceipt
+      | undefined;
+    return receipt ? [receipt] : [];
+  });
   const initialDefinitionsContainConfirmedReceipt =
-    !confirmationReceiptQuery.data ||
+    confirmationReceipts.length === 0 ||
     (initialDefinitions !== null &&
-      confirmsCampaignLifecycleEvidence(
-        initialDefinitions,
-        confirmationReceiptQuery.data,
+      confirmationReceipts.every((receipt) =>
+        confirmsCampaignLifecycleEvidence(initialDefinitions, receipt),
       ));
 
   useEffect(() => {
