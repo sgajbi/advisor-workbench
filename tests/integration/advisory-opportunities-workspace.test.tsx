@@ -423,17 +423,16 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       reviewControls.getByRole("button", { name: "Record review" }),
     );
 
-    const error = await screen.findByTestId("idea-action-error");
-    expect(error).toHaveAttribute("data-action-state", "not-recorded");
-    expect(error).toHaveTextContent(
-      "We could not confirm that the adviser action was saved.",
+    const recovery = await screen.findByTestId("idea-review-retry");
+    expect(recovery).toHaveAttribute(
+      "data-action-state",
+      "outcome-not-confirmed",
     );
+    expect(recovery).toHaveTextContent("Approve for conversion review");
+    expect(recovery).toHaveTextContent("Cash balance requires review");
     const firstSubmission = recordAdvisorIdeaReviewActionMock.mock.calls[0][0];
-    fireEvent.change(reviewControls.getByLabelText("Review action"), {
-      target: { value: "reject" },
-    });
     fireEvent.click(
-      reviewControls.getByRole("button", { name: "Record review" }),
+      within(recovery).getByRole("button", { name: "Retry exact review" }),
     );
 
     await waitFor(() => {
