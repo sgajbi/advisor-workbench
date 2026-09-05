@@ -696,7 +696,20 @@ function Invoke-CanonicalIdeaSeed {
     -Body ($payload | ConvertTo-Json -Depth 12)
 
   $decision = $response.persistence.decision
-  if ($decision -notin @("accepted", "replayed", "duplicate_candidate")) {
+  # lotus-idea's autonomous signal-ingestion worker may have already persisted the
+  # candidate from the seeded Core data; the manual seed then reconciles against the
+  # existing business aggregate and evidence_refreshed / material_version_created are
+  # persisted outcomes of that reconciliation, not failures (owner vocabulary:
+  # lotus-idea src/app/domain/persistence_models.py CandidatePersistenceDecision).
+  $persistedDecisions = @(
+    "accepted",
+    "replayed",
+    "duplicate_candidate",
+    "evidence_refreshed",
+    "material_version_created",
+    "recurrent_condition_reopened"
+  )
+  if ($decision -notin $persistedDecisions) {
     throw "Canonical Lotus Idea seed did not persist an advisor queue candidate. Decision: $decision"
   }
   $candidateId = [string]$response.persistence.candidateId
