@@ -1,3 +1,4 @@
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 
 import {
@@ -197,7 +198,9 @@ export function reviewRetryDetails(
   if (request.snoozedUntilUtc) {
     details.push({
       label: "Snooze until",
-      value: formatActionDateTime(request.snoozedUntilUtc),
+      value: formatTimestampValue(request.snoozedUntilUtc, {
+        nullDisplay: request.snoozedUntilUtc,
+      }),
     });
   }
   return details;
@@ -286,15 +289,4 @@ function businessReasonLabel(
 function formatCodeLabel(value: string): string {
   const label = value.replaceAll("_", " ");
   return `${label.slice(0, 1).toUpperCase()}${label.slice(1)}`;
-}
-
-function formatActionDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
 }
