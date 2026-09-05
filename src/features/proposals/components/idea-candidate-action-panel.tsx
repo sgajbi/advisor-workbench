@@ -15,10 +15,12 @@ import { buildIdeaBusinessReasonOptions } from "../idea-action-reasons";
 import {
   buildConversionIntent,
   buildReviewIntent,
+  conversionRetryDetails,
   formatActionKind,
   hasInlineRetry,
   ideaActionFailureCopy,
   isAmbiguousIdeaActionFailure,
+  reviewRetryDetails,
   sameConversionIntent,
   sameReviewIntent,
   withoutRetry,
@@ -48,6 +50,7 @@ import {
   IdeaConversionIntentForm,
   IdeaReviewActionForm,
 } from "./idea-candidate-decision-forms";
+import { IdeaActionTerms } from "./idea-action-retry-notice";
 
 const FEEDBACK_OUTCOME_OPTIONS = [
   { key: "useful", label: "Useful" },
@@ -100,8 +103,8 @@ export default function IdeaCandidateActionPanel({
   const [validationMessage, setValidationMessage] = useState<string>();
   const [feedbackValidationMessage, setFeedbackValidationMessage] =
     useState<string>();
-  const [latestRecordedKind, setLatestRecordedKind] =
-    useState<IdeaActionKind>();
+  const [latestRecordedSubmission, setLatestRecordedSubmission] =
+    useState<IdeaActionSubmission>();
   const [sourceRefreshFailed, setSourceRefreshFailed] = useState(false);
 
   const currentReviewIntent = buildReviewIntent({
@@ -130,6 +133,28 @@ export default function IdeaCandidateActionPanel({
     retryableConversion &&
     !sameConversionIntent(retryableConversion.request, currentConversionIntent),
   );
+  const recordedDraftDiffers = Boolean(
+    latestRecordedSubmission?.kind === "review"
+      ? !sameReviewIntent(latestRecordedSubmission.request, currentReviewIntent)
+      : latestRecordedSubmission?.kind === "conversion"
+        ? !sameConversionIntent(
+            latestRecordedSubmission.request,
+            currentConversionIntent,
+          )
+        : false,
+  );
+  const latestRecordedDetails =
+    latestRecordedSubmission?.kind === "review"
+      ? reviewRetryDetails(
+          latestRecordedSubmission.request,
+          businessReasonOptions,
+        )
+      : latestRecordedSubmission?.kind === "conversion"
+        ? conversionRetryDetails(
+            latestRecordedSubmission.request,
+            businessReasonOptions,
+          )
+        : [];
 
   const actionMutation = useMutation({
     mutationFn: async (submission: IdeaActionSubmission) => {
@@ -177,13 +202,13 @@ export default function IdeaCandidateActionPanel({
         setRetryableSubmissions((current) => withoutRetry(current, submission));
       }
       const sourceRefreshSucceeded = await onRecorded();
-      setLatestRecordedKind(submission.kind);
+      setLatestRecordedSubmission(submission);
       setSourceRefreshFailed(!sourceRefreshSucceeded);
     },
   });
 
   function recordSubmission(submission: IdeaActionSubmission) {
-    setLatestRecordedKind(undefined);
+    setLatestRecordedSubmission(undefined);
     setSourceRefreshFailed(false);
     if (submission.kind === "feedback" && feedbackRetryableSubmission.current) {
       actionMutation.mutate(feedbackRetryableSubmission.current);
@@ -200,7 +225,7 @@ export default function IdeaCandidateActionPanel({
   }
 
   function retryExactSubmission(submission: RetryableIdeaActionSubmission) {
-    setLatestRecordedKind(undefined);
+    setLatestRecordedSubmission(undefined);
     setSourceRefreshFailed(false);
     actionMutation.mutate(submission);
   }
@@ -473,27 +498,49 @@ export default function IdeaCandidateActionPanel({
           )}
         </Alert>
       ) : null}
-      {latestRecordedKind && sourceRefreshFailed ? (
+      {latestRecordedSubmission && sourceRefreshFailed ? (
         <Alert
           severity="warning"
           aria-live="polite"
-          data-testid={`idea-action-${latestRecordedKind}-status`}
+          data-testid={`idea-action-${latestRecordedSubmission.kind}-status`}
           data-action-state="recorded-refresh-failed"
         >
-          {formatActionKind(latestRecordedKind)} was saved, but the latest
-          opportunity detail and worklist could not be loaded. Review the
-          refreshed record before taking another action.
+          <strong id="idea-action-recorded-refresh-failed-title">
+            {formatActionKind(latestRecordedSubmission.kind)} was saved, but the
+            latest opportunity detail and worklist could not be loaded.
+          </strong>{" "}
+          Review the refreshed record before taking another action.
+          {latestRecordedDetails.length > 0 ? (
+            <IdeaActionTerms
+              details={latestRecordedDetails}
+              labelledBy="idea-action-recorded-refresh-failed-title"
+            />
+          ) : null}
+          {recordedDraftDiffers ? (
+            <p>The form contains unsaved changes.</p>
+          ) : null}
         </Alert>
       ) : null}
-      {latestRecordedKind && !sourceRefreshFailed ? (
+      {latestRecordedSubmission && !sourceRefreshFailed ? (
         <Alert
           severity="success"
           aria-live="polite"
-          data-testid={`idea-action-${latestRecordedKind}-status`}
+          data-testid={`idea-action-${latestRecordedSubmission.kind}-status`}
           data-action-state="recorded-and-refreshed"
         >
-          {formatActionKind(latestRecordedKind)} saved. Opportunity detail and
-          worklist are current.
+          <strong id="idea-action-recorded-title">
+            {formatActionKind(latestRecordedSubmission.kind)} saved.
+          </strong>{" "}
+          Opportunity detail and worklist are current.
+          {latestRecordedDetails.length > 0 ? (
+            <IdeaActionTerms
+              details={latestRecordedDetails}
+              labelledBy="idea-action-recorded-title"
+            />
+          ) : null}
+          {recordedDraftDiffers ? (
+            <p>The form contains unsaved changes.</p>
+          ) : null}
         </Alert>
       ) : null}
     </section>

@@ -97,16 +97,23 @@ describe("Idea action intent", () => {
     expect(withoutRetryKind(state, "conversion")).toBe(state);
   });
 
-  it("retains only ambiguous failures for exact replay", () => {
+  it("retains indeterminate transport outcomes for exact replay", () => {
     expect(isAmbiguousIdeaActionFailure(new Error("connection lost"))).toBe(
       true,
     );
     expect(
       isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", 503)),
     ).toBe(true);
-    expect(
-      isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", 409)),
-    ).toBe(false);
+    for (const status of [408, 429]) {
+      expect(
+        isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", status)),
+      ).toBe(true);
+    }
+    for (const status of [400, 401, 403, 409, 422]) {
+      expect(
+        isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", status)),
+      ).toBe(false);
+    }
   });
 
   it.each([

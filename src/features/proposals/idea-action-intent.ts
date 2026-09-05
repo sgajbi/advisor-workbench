@@ -158,7 +158,7 @@ export function withoutRetryKind(
 
 export function isAmbiguousIdeaActionFailure(error: unknown): boolean {
   const status = getWorkbenchApiErrorStatus(error);
-  return status == null || status >= 500;
+  return status == null || status === 408 || status === 429 || status >= 500;
 }
 
 export function hasInlineRetry(
