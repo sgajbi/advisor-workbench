@@ -112,9 +112,11 @@ export function buildCampaignLifecycleCommandEvidence(
       readString(data.supersession_reason) ||
       formatList(data.reason_codes),
     replacementCampaignVersion:
-      readString(data.superseded_by_campaign_version) ||
-      readString(data.replacement_campaign_version) ||
-      "N/A",
+      commandType === "supersede"
+        ? readString(data.superseded_by_campaign_version) ||
+          readString(data.replacement_campaign_version) ||
+          "N/A"
+        : "N/A",
     correlationId: readString(data.correlation_id) || response.correlation_id,
     sourceService: response.source_service,
     upstreamStatus: String(response.upstream_status),
@@ -173,18 +175,7 @@ export function confirmsCampaignLifecycleEvidence(
   response: DpmCampaignDefinitionGatewayResponse,
   receipt: DpmCampaignLifecycleConfirmationReceipt,
 ): boolean {
-  if (containsCampaignLifecycleEvidence(response, receipt)) return true;
-  if (!isTerminalLifecycleStatus(receipt.status)) return false;
-  const items = readDpmCampaignDefinitionRecords(response.data);
-  return !items.some(
-    (item) =>
-      item !== null &&
-      typeof item === "object" &&
-      readString((item as Record<string, unknown>).campaign_id) ===
-        receipt.campaignId &&
-      readString((item as Record<string, unknown>).campaign_version) ===
-        receipt.campaignVersion,
-  );
+  return containsCampaignLifecycleEvidence(response, receipt);
 }
 
 export function containsCampaignWorkflowEvidence(
@@ -257,6 +248,8 @@ export function campaignWorkflowEvidenceTotalCount(
   const response = evidence[receipt.source];
   const reported = Number(response.data.total_count);
   if (Number.isFinite(reported) && reported >= 0) return reported;
+  const supported = Number(response.supportability?.total_count);
+  if (Number.isFinite(supported) && supported >= 0) return supported;
   return readDpmCampaignWorkflowRecords(response.data).length;
 }
 
@@ -266,10 +259,6 @@ function receipt(
   transition = false,
 ): DpmCampaignWorkflowConfirmationReceipt {
   return { evidenceRef, source, transition };
-}
-
-function isTerminalLifecycleStatus(status: string): boolean {
-  return status === "RETIRED" || status === "SUPERSEDED";
 }
 
 function campaignWorkflowCommandLabel(

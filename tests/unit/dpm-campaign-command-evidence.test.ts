@@ -90,6 +90,24 @@ describe("DPM campaign command evidence", () => {
       ),
     ).toBe(true);
   });
+
+  it("retains the source total from the supportability envelope after a receipt pages out", () => {
+    const response: DpmCampaignWorkflowGatewayResponse = {
+      ...workflowResponse({ items: [{ decision_ref: "later-page-record" }] }),
+      supportability: { total_count: 12 },
+    };
+
+    expect(
+      campaignWorkflowEvidenceTotalCount(
+        workflowEvidence(response, "approvalDecisions"),
+        {
+          evidenceRef: "accepted-reference",
+          source: "approvalDecisions",
+          transition: false,
+        },
+      ),
+    ).toBe(12);
+  });
 });
 
 function workflowResponse(
