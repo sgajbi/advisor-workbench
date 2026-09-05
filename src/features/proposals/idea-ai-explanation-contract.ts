@@ -112,6 +112,14 @@ export function parseAdvisorIdeaAIExplanationResponse(
     );
   }
   if (
+    response.status === "EXPLANATION_SERVED" &&
+    !response.lotusAiRunId
+  ) {
+    throw new Error(
+      "Idea explanation response was served without a workflow run identifier.",
+    );
+  }
+  if (
     response.status === "EXPLANATION_UNAVAILABLE" &&
     !response.explanation.fallbackUsed
   ) {

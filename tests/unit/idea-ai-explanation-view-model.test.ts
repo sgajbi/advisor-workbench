@@ -249,6 +249,35 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     expect(model.disclosure.availability).toBe("stale");
   });
 
+  it("preserves claim provenance carried by an unavailable fallback", () => {
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      status: "EXPLANATION_UNAVAILABLE",
+      disposition: "output_not_accepted",
+      lotusAiRuntimeExecutionConfirmed: true,
+      evaluationVerdict: "rejected",
+      explanation: {
+        ...servedResponse.explanation,
+        fallbackUsed: true,
+        fallbackReason: "output_not_accepted",
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          sourceRefs: [],
+        },
+      },
+    });
+
+    expect(model.state).toBe("unavailable");
+    expect(model.supportingSources).toEqual([
+      expect.objectContaining({
+        identity:
+          "lotus-core:PortfolioStateSnapshot:v1 · lotus-core · Version v1",
+        freshness: "Current",
+        quality: "Complete",
+      }),
+    ]);
+  });
+
   it("preserves distinct source references whose values contain delimiters", () => {
     const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
     const model = buildAdvisorIdeaExplanationViewModel({
