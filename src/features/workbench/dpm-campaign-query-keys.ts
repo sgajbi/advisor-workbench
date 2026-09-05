@@ -10,6 +10,8 @@ export const DPM_CAMPAIGN_COMMAND_SCOPE = "workbench-dpm-campaign-command";
 export const dpmCampaignQueryKeys = {
   all: ["workbench", "dpm-campaigns"] as const,
   definitions: () => [...dpmCampaignQueryKeys.all, "definitions"] as const,
+  definitionsServerRead: () =>
+    [...dpmCampaignQueryKeys.all, "definitions-server-read"] as const,
   campaign: ({ campaignId, campaignVersion }: DpmCampaignIdentity) =>
     [
       ...dpmCampaignQueryKeys.all,

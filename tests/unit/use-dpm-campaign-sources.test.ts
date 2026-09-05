@@ -1,10 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  useDpmCampaignDefinitionsSource,
-  useDpmCampaignSources,
-} from "../../src/features/workbench/use-dpm-campaign-sources";
+import { useDpmCampaignSources } from "../../src/features/workbench/use-dpm-campaign-sources";
+import { useDpmCampaignDefinitionsSource } from "../../src/features/workbench/use-dpm-campaign-definitions-source";
 import { dpmCampaignQueryKeys } from "../../src/features/workbench/dpm-campaign-query-keys";
 import {
   getDpmCampaignApprovalDecisions,
@@ -117,7 +115,7 @@ describe("useDpmCampaignSources", () => {
     queryClient.setQueryData(dpmCampaignQueryKeys.definitions(), prior);
 
     const { result } = renderHook(
-      () => useDpmCampaignDefinitionsSource(current),
+      () => useDpmCampaignDefinitionsSource(current, "source-read-current"),
       { wrapper: createQueryClientWrapper(queryClient) },
     );
 
@@ -136,7 +134,7 @@ describe("useDpmCampaignSources", () => {
     );
 
     const { result } = renderHook(
-      () => useDpmCampaignDefinitionsSource(null),
+      () => useDpmCampaignDefinitionsSource(null, "source-read-unavailable"),
       { wrapper: createQueryClientWrapper(queryClient) },
     );
 
@@ -524,6 +522,72 @@ describe("useDpmCampaignSources", () => {
     expect(result.current.lifecycle?.data.status).toBe("CONFIRMED");
   });
 
+  it("keeps an older lifecycle confirmation behind a newer server definitions read", async () => {
+    const pendingLifecycle = deferred<DpmCampaignDefinitionGatewayResponse>();
+    const earlierDefinitions = definitionResponse("campaign-earlier", "PENDING");
+    const newerDefinitions = definitionResponse("campaign-newer", "CONFIRMED");
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValue(
+      pendingLifecycle.promise,
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(earlierDefinitions);
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ definitions, readId }) => ({
+        definitions: useDpmCampaignDefinitionsSource(definitions, readId),
+        sources: useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      }),
+      {
+        initialProps: {
+          definitions: earlierDefinitions,
+          readId: "source-read-earlier",
+        },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.definitionsServerRead(),
+        )?.readId,
+      ).toBe("source-read-earlier"),
+    );
+
+    let earlierConfirmation!: Promise<unknown>;
+    act(() => {
+      earlierConfirmation = result.current.sources
+        .refreshLifecycle(rowA)
+        .catch(() => undefined);
+    });
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledTimes(1),
+    );
+
+    rerender({
+      definitions: newerDefinitions,
+      readId: "source-read-newer",
+    });
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<DpmCampaignDefinitionGatewayResponse>(
+          dpmCampaignQueryKeys.definitions(),
+        ),
+      ).toEqual(newerDefinitions),
+    );
+
+    pendingLifecycle.resolve(definitionResponse("campaign-a", "OBSOLETE"));
+    await earlierConfirmation;
+
+    expect(result.current.definitions).toEqual(newerDefinitions);
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(newerDefinitions);
+    expect(result.current.sources.lifecycle).toBeNull();
+  });
+
   it("clears a prior launch package when newer readiness blocks launch", async () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness)
       .mockResolvedValueOnce(readinessResponse("READY"))
@@ -585,6 +649,48 @@ describe("useDpmCampaignSources", () => {
         "Launch package unavailable",
       );
     });
+  });
+
+  it("does not restore cached launch authorization after a workspace remount", async () => {
+    vi.mocked(getDpmCampaignDefinitionPreviewReadiness).mockResolvedValue(
+      readinessResponse("READY"),
+    );
+    vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockResolvedValue(
+      definitionResponse("campaign-a"),
+    );
+    const queryClient = createTestQueryClient();
+    const first = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await act(async () => first.result.current.loadLaunchReadiness(rowA));
+    await waitFor(() => expect(first.result.current.launchPackage).not.toBeNull());
+    first.unmount();
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(
+          dpmCampaignQueryKeys.launchPackage(rowA, rowA.asOfDate),
+        ),
+      ).toBeUndefined(),
+    );
+
+    const second = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+    expect(second.result.current.previewReadiness).toBeNull();
+    expect(second.result.current.launchPackage).toBeNull();
   });
 
   it("supersedes an in-flight lifecycle read before post-command confirmation", async () => {
