@@ -1,0 +1,140 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  buildConversionIntent,
+  buildReviewIntent,
+  ideaActionFailureCopy,
+  isAmbiguousIdeaActionFailure,
+  reviewRetryDetails,
+  sameConversionIntent,
+  sameReviewIntent,
+  withoutRetry,
+  withoutRetryKind,
+  type RetryableSubmissionState,
+} from "../../src/features/proposals/idea-action-intent";
+import { WorkbenchApiError } from "../../src/features/workbench/api-client";
+
+const businessReasons = [
+  { value: "high_cash_ratio" as const, label: "Cash balance requires review" },
+  { value: "review_required" as const, label: "Advisor review is required" },
+];
+
+describe("Idea action intent", () => {
+  it("compares review terms independently of request and decision identity", () => {
+    const intent = buildReviewIntent({
+      reviewAction: "snooze",
+      reviewReason: "high_cash_ratio",
+      snoozedUntil: "2026-09-08T10:30",
+      suppressionReason: "manual_suppression",
+    });
+
+    expect(
+      sameReviewIntent(
+        {
+          reviewId: "review-001",
+          decidedAtUtc: "2026-09-06T01:00:00Z",
+          ...intent,
+        },
+        intent,
+      ),
+    ).toBe(true);
+    expect(
+      sameReviewIntent(
+        {
+          reviewId: "review-001",
+          decidedAtUtc: "2026-09-06T01:00:00Z",
+          ...intent,
+          snoozedUntilUtc: "2026-09-09T02:30:00.000Z",
+        },
+        intent,
+      ),
+    ).toBe(false);
+  });
+
+  it("detects changed conversion target or business basis", () => {
+    const intent = buildConversionIntent({
+      conversionReason: "high_cash_ratio",
+      conversionTarget: "advise_proposal",
+    });
+    const request = {
+      conversionIntentId: "conversion-001",
+      requestedAtUtc: "2026-09-06T01:00:00Z",
+      ...intent,
+    };
+
+    expect(sameConversionIntent(request, intent)).toBe(true);
+    expect(
+      sameConversionIntent(request, {
+        ...intent,
+        target: "manage_review",
+      }),
+    ).toBe(false);
+    expect(
+      sameConversionIntent(request, {
+        ...intent,
+        reasonCodes: ["review_approved_for_conversion", "review_required"],
+      }),
+    ).toBe(false);
+  });
+
+  it("clears only the exact retained retry identity", () => {
+    const retained = {
+      kind: "review" as const,
+      idempotencyKey: "idem-review-001",
+      request: {
+        reviewId: "review-001",
+        action: "reject" as const,
+        reasonCodes: ["review_rejected" as const, "high_cash_ratio" as const],
+        decidedAtUtc: "2026-09-06T01:00:00Z",
+      },
+    };
+    const state: RetryableSubmissionState = { review: retained };
+
+    expect(withoutRetry(state, retained)).toEqual({});
+    expect(
+      withoutRetry(state, { ...retained, idempotencyKey: "idem-review-002" }),
+    ).toBe(state);
+    expect(withoutRetryKind(state, "conversion")).toBe(state);
+  });
+
+  it("retains only ambiguous failures for exact replay", () => {
+    expect(isAmbiguousIdeaActionFailure(new Error("connection lost"))).toBe(
+      true,
+    );
+    expect(
+      isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", 503)),
+    ).toBe(true);
+    expect(
+      isAmbiguousIdeaActionFailure(new WorkbenchApiError("source", 409)),
+    ).toBe(false);
+  });
+
+  it.each([
+    [403, "not available for your current access"],
+    [409, "opportunity or an earlier request changed"],
+    [422, "could not accept this review"],
+  ])("keeps review failure %s actionable", (status, expected) => {
+    expect(
+      ideaActionFailureCopy(new WorkbenchApiError("review", status), "review"),
+    ).toContain(expected);
+  });
+
+  it("renders exact suppression terms in the retained review summary", () => {
+    const details = reviewRetryDetails(
+      {
+        reviewId: "review-001",
+        action: "suppress",
+        reasonCodes: ["review_suppressed", "high_cash_ratio"],
+        suppressionReason: "unsupported_evidence",
+        decidedAtUtc: "2026-09-06T01:00:00Z",
+      },
+      businessReasons,
+    );
+
+    expect(details).toEqual([
+      { label: "Review action", value: "Suppress candidate" },
+      { label: "Review basis", value: "Cash balance requires review" },
+      { label: "Suppression reason", value: "Unsupported evidence" },
+    ]);
+  });
+});
