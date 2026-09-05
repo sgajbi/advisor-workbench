@@ -33,6 +33,7 @@ import type {
   AdvisorIdeaReviewActionRequest,
 } from "../types";
 import styles from "./advisory-opportunities-workspace.module.css";
+import IdeaCandidateExplanation from "./idea-candidate-explanation";
 
 type IdeaActionKind = "review" | "feedback" | "conversion";
 
@@ -277,6 +278,10 @@ export default function IdeaCandidateActionPanel({
           proposal, contact a client, or place an order.
         </Text>
       </div>
+      <IdeaCandidateExplanation
+        candidateId={candidateId}
+        portfolioId={portfolioId}
+      />
       <div className={styles.actionForms}>
         <form className={styles.actionForm} onSubmit={submitReview}>
           <h4>Record review</h4>

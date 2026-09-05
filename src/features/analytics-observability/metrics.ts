@@ -166,6 +166,12 @@ export const WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES = [
   },
   {
     route: "workbench.recommendations",
+    panel: "idea-candidate-explanation",
+    operation:
+      "idea.candidate.ai-explanation.advisor_rationale_draft",
+  },
+  {
+    route: "workbench.recommendations",
     panel: "idea-candidate-detail",
     operation: "idea.candidate.ai-explanation",
   },
@@ -1300,6 +1306,14 @@ function normalizeAttentionReason(reason: string): string {
     "source_warning",
     "source_partial_failure",
     "source_state",
+    "executed",
+    "runtime_unavailable",
+    "attested_execution_required",
+    "output_not_accepted",
+    "invalid_runtime_response",
+    "candidate_evidence_changed",
+    "owner_idempotency_conflict",
+    "request_failed",
   ].includes(normalized)
     ? normalized
     : "other";
@@ -1338,6 +1352,14 @@ function assertMetricLabelVocabulary(
       "source_warning",
       "source_partial_failure",
       "source_state",
+      "executed",
+      "runtime_unavailable",
+      "attested_execution_required",
+      "output_not_accepted",
+      "invalid_runtime_response",
+      "candidate_evidence_changed",
+      "owner_idempotency_conflict",
+      "request_failed",
       "other",
     ],
     freshness_bucket: ["fresh", "stale", "unknown"],
