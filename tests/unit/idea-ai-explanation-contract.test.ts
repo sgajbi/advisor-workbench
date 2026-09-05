@@ -106,4 +106,19 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
       }),
     ).toThrow(/did not confirm deterministic fallback evidence/);
   });
+
+  it("rejects served text that the source identifies as fallback evidence", () => {
+    const value = response();
+    value.explanation = {
+      ...value.explanation,
+      fallbackUsed: true,
+    };
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        requestId: "request-001",
+      }),
+    ).toThrow(/was marked as fallback evidence/);
+  });
 });

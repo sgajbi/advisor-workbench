@@ -46,14 +46,14 @@
 .resultHeader {
   color: var(--text-muted);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   justify-content: space-between;
 }
 
 .summary {
   color: var(--text);
   font-size: 0.88rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.5;
   margin: 0;
 }

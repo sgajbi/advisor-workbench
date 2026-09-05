@@ -22,7 +22,10 @@ import {
   recordIdeaExplanationServed,
   recordIdeaExplanationUnavailable,
 } from "../idea-ai-explanation-telemetry";
-import { buildAdvisorIdeaExplanationViewModel } from "../idea-ai-explanation-view-model";
+import {
+  buildAdvisorIdeaExplanationViewModel,
+  type AdvisorIdeaExplanationViewModel,
+} from "../idea-ai-explanation-view-model";
 import styles from "./idea-candidate-explanation.module.css";
 
 type ExplanationSubmission = {
@@ -61,7 +64,10 @@ export default function IdeaCandidateExplanation({
         recordIdeaExplanationUnavailable(response.disposition);
       }
     },
-    onError: () => {
+    onError: (error) => {
+      if (getWorkbenchApiErrorStatus(error) === 409) {
+        retryableSubmission.current = undefined;
+      }
       recordIdeaExplanationUnavailable("request_failed");
     },
   });
@@ -144,6 +150,10 @@ export default function IdeaCandidateExplanation({
           </div>
           <p className={styles.summary}>{model.displayText}</p>
           <AiAssistanceDisclosure disclosure={model.disclosure} />
+          <EvidenceSources
+            candidateId={candidateId}
+            sources={model.supportingSources}
+          />
 
           {model.state === "served" ? (
             <div className={styles.evidenceGrid}>
@@ -192,6 +202,31 @@ export default function IdeaCandidateExplanation({
           )}
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function EvidenceSources({
+  candidateId,
+  sources,
+}: {
+  candidateId: string;
+  sources: AdvisorIdeaExplanationViewModel["supportingSources"];
+}) {
+  if (sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <section aria-labelledby={`idea-supporting-evidence-${candidateId}`}>
+      <h5 id={`idea-supporting-evidence-${candidateId}`}>Supporting evidence</h5>
+      <ul className={styles.sources}>
+        {sources.map((source) => (
+          <li key={source.id}>
+            {source.identity} · {source.asOf} · {source.freshness} · {source.quality}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

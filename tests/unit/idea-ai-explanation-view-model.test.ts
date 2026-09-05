@@ -43,7 +43,16 @@ const servedResponse: AdvisorIdeaAIExplanationResponse = {
       reasonCodes: ["high_cash_ratio", "review_required"],
       unsupportedReasons: ["benchmark_evidence_missing"],
       scorePolicyVersion: "idle-liquidity-v2",
-      sourceRefs: [],
+      sourceRefs: [
+        {
+          productId: "idea-eligibility-v1",
+          sourceSystem: "lotus-idea",
+          productVersion: "v1",
+          asOfDate: "2026-06-21",
+          freshness: "current",
+          dataQualityStatus: "complete",
+        },
+      ],
     },
   },
 };
@@ -66,6 +75,12 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     ]);
     expect(model.evidenceSignals).toEqual(["High Cash Ratio", "Review Required"]);
     expect(model.evidenceGaps).toEqual(["Benchmark Evidence Missing"]);
+    expect(model.supportingSources).toEqual([
+      expect.objectContaining({
+        identity: "idea-eligibility-v1 · lotus-idea",
+        asOf: "21 Jun 2026",
+      }),
+    ]);
     expect(model.disclosure.clientUse).toBe("internal-only");
     expect(model.disclosure.humanReview.state).toBe("review-required");
     expect(model.disclosure.limitations).toContain(
