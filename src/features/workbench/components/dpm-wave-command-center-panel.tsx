@@ -89,6 +89,7 @@ export default function DpmWaveCommandCenterPanel({
     pendingCampaignWorkflowEvidenceKey,
     pendingCampaignLifecycleCommand,
     pendingCampaignWorkflowCommand,
+    pendingCampaignCommand,
     actionError,
     sourceConfirmationRetryAvailable,
     campaignLifecycleError,
@@ -276,6 +277,7 @@ export default function DpmWaveCommandCenterPanel({
         pendingWorkflowEvidenceKey={pendingCampaignWorkflowEvidenceKey}
         pendingLifecycleCommand={pendingCampaignLifecycleCommand}
         pendingWorkflowCommand={pendingCampaignWorkflowCommand}
+        commandPending={pendingCampaignCommand}
         lifecycleCommandError={campaignLifecycleCommandError}
         lifecycleCommandEvidence={campaignLifecycleCommandEvidence}
         workflowCommandError={campaignWorkflowCommandError}

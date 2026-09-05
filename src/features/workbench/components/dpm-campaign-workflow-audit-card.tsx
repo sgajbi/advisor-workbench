@@ -32,6 +32,7 @@ type Props = {
   error?: string | null;
   selectedCampaign: DpmCampaignDefinitionRow | null;
   pendingCommand?: boolean;
+  commandQueueBusy?: boolean;
   commandError?: string | null;
   commandEvidence?: DpmCampaignWorkflowCommandEvidence | null;
   commandRequiresReload?: boolean;
@@ -53,6 +54,7 @@ export default function DpmCampaignWorkflowAuditCard({
   error,
   selectedCampaign,
   pendingCommand = false,
+  commandQueueBusy = false,
   commandError = null,
   commandEvidence = null,
   commandRequiresReload = false,
@@ -88,6 +90,7 @@ export default function DpmCampaignWorkflowAuditCard({
   const submitDisabled =
     commandUnavailable ||
     pendingCommand ||
+    commandQueueBusy ||
     commandRequiresReload ||
     !form.actorId.trim() ||
     !form.reference.trim() ||
@@ -148,7 +151,7 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.commandType}
                 onChange={(event) => updateForm("commandType", event.target.value as DpmCampaignWorkflowCommandType)}
-                disabled={pendingCommand || commandRequiresReload}
+                disabled={pendingCommand || commandQueueBusy || commandRequiresReload}
               >
                 {COMMAND_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -166,7 +169,7 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.reference}
                 onChange={(event) => updateForm("reference", event.target.value)}
-                disabled={pendingCommand || commandRequiresReload}
+                disabled={pendingCommand || commandQueueBusy || commandRequiresReload}
               />
             </label>
             <label className="workbench-field-label" htmlFor="dpm-campaign-workflow-rationale">
@@ -176,13 +179,13 @@ export default function DpmCampaignWorkflowAuditCard({
                 className="workbench-input"
                 value={form.rationale}
                 onChange={(event) => updateForm("rationale", event.target.value)}
-                disabled={pendingCommand || commandRequiresReload}
+                disabled={pendingCommand || commandQueueBusy || commandRequiresReload}
               />
             </label>
             <CommandSpecificFields
               form={form}
               updateForm={updateForm}
-              disabled={pendingCommand || commandRequiresReload}
+              disabled={pendingCommand || commandQueueBusy || commandRequiresReload}
             />
           </div>
 
@@ -190,6 +193,8 @@ export default function DpmCampaignWorkflowAuditCard({
             <ActionButton priority="primary" onClick={submitCommand} disabled={submitDisabled}>
               {pendingCommand
                 ? "Recording source evidence"
+                : commandQueueBusy
+                  ? "Another campaign action is in progress"
                 : commandRequiresReload
                   ? "Reload evidence before another action"
                   : "Record governance action"}

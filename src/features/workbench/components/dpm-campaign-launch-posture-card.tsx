@@ -25,6 +25,7 @@ type Props = {
   launchError?: string | null;
   selectedLaunchPending: boolean;
   pendingLaunchKey?: string | null;
+  commandQueueBusy?: boolean;
   onLaunchCampaign: (row: DpmCampaignDefinitionRow) => void;
 };
 
@@ -36,6 +37,7 @@ export default function DpmCampaignLaunchPostureCard({
   launchError,
   selectedLaunchPending,
   pendingLaunchKey,
+  commandQueueBusy = false,
   onLaunchCampaign,
 }: Props) {
   const [confirmed, setConfirmed] = useState(false);
@@ -139,7 +141,7 @@ export default function DpmCampaignLaunchPostureCard({
                 type="checkbox"
                 checked={confirmed}
                 onChange={(event) => setConfirmed(event.target.checked)}
-                disabled={Boolean(pendingLaunchKey)}
+                disabled={Boolean(pendingLaunchKey) || commandQueueBusy}
               />
               <span>
                 I reviewed the source readiness and understand that this launches one governed
@@ -155,10 +157,15 @@ export default function DpmCampaignLaunchPostureCard({
             !selectedCampaign ||
             !launchPosture.canLaunch ||
             !confirmed ||
-            Boolean(pendingLaunchKey)
+            Boolean(pendingLaunchKey) ||
+            commandQueueBusy
           }
         >
-          {selectedLaunchPending ? "Launching rebalance wave" : "Launch rebalance wave"}
+          {selectedLaunchPending
+            ? "Launching rebalance wave"
+            : commandQueueBusy
+              ? "Another campaign action is in progress"
+              : "Launch rebalance wave"}
         </ActionButton>
       </div>
     </div>

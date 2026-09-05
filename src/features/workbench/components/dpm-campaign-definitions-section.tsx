@@ -78,6 +78,7 @@ type Props = {
   pendingWorkflowEvidenceKey?: string | null;
   pendingLifecycleCommand?: boolean;
   pendingWorkflowCommand?: boolean;
+  commandPending?: boolean;
   lifecycleCommandEvidence?: DpmCampaignLifecycleCommandEvidence | null;
   workflowCommandError?: string | null;
   workflowCommandEvidence?: DpmCampaignWorkflowCommandEvidence | null;
@@ -293,6 +294,7 @@ function CampaignDecisionPane({
   pendingWorkflowEvidenceKey,
   pendingLifecycleCommand,
   pendingWorkflowCommand,
+  commandPending = false,
   lifecycleCommandEvidence,
   workflowCommandError,
   workflowCommandEvidence,
@@ -367,6 +369,7 @@ function CampaignDecisionPane({
           error={workflowError}
           selectedCampaign={selectedCampaign}
           pendingCommand={pendingWorkflowCommand}
+          commandQueueBusy={commandPending && !pendingWorkflowCommand}
           commandError={workflowCommandError}
           commandEvidence={workflowCommandEvidence}
           commandRequiresReload={Boolean(
@@ -384,6 +387,7 @@ function CampaignDecisionPane({
           selectedCampaign={selectedCampaign}
           availableCampaigns={rows}
           pendingCommand={pendingLifecycleCommand}
+          commandQueueBusy={commandPending && !pendingLifecycleCommand}
           commandError={lifecycleCommandError}
           commandEvidence={lifecycleCommandEvidence}
           evidenceError={lifecycleError}
@@ -403,6 +407,7 @@ function CampaignDecisionPane({
             launchError={launchError}
             selectedLaunchPending={selectedCampaign.key === pendingLaunchKey}
             pendingLaunchKey={pendingLaunchKey}
+            commandQueueBusy={commandPending}
             onLaunchCampaign={onLaunchCampaign}
           />
           <details className={styles.disclosure}>
