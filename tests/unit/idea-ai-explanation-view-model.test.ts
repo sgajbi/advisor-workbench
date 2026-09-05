@@ -170,6 +170,33 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     expect(model.disclosure.availability).toBe("partial");
   });
 
+  it("downgrades a served explanation when source evidence is missing", () => {
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      explanation: {
+        ...servedResponse.explanation,
+        verifiedOutput: {
+          groundedClaims: [
+            {
+              claimId: "claim-001",
+              claimText: "Cash weight is above the policy threshold.",
+              sourceRefs: [],
+            },
+          ],
+        },
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          unsupportedReasons: [],
+          sourceRefs: [],
+        },
+      },
+    });
+
+    expect(model.disclosure.evidence.state).toBe("missing");
+    expect(model.disclosure.freshness.state).toBe("not-reported");
+    expect(model.disclosure.availability).toBe("partial");
+  });
+
   it("preserves distinct source references whose values contain delimiters", () => {
     const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
     const model = buildAdvisorIdeaExplanationViewModel({

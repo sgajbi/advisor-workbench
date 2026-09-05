@@ -94,7 +94,7 @@ export function buildAdvisorIdeaExplanationViewModel(
       availability: served
         ? freshness.state === "stale"
           ? "stale"
-          : evidenceState === "limited"
+          : evidenceState !== "supported"
             ? "partial"
           : "live"
         : "partial",
