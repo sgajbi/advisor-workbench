@@ -22,6 +22,7 @@ import {
   buildCampaignWorkflowCommandEvidence,
   isCampaignLifecycleCommandBlocked,
   validateCampaignLifecycleCommand,
+  type DpmCampaignLifecycleConfirmationReceipt,
   type DpmCampaignLifecycleCommandEvidence,
   type DpmCampaignWorkflowCommandEvidence,
 } from "@/features/workbench/dpm-campaign-command-evidence";
@@ -39,7 +40,10 @@ export type {
 } from "@/features/workbench/dpm-campaign-command-evidence";
 
 type CampaignSources = Readonly<{
-  refreshLifecycle: (row: DpmCampaignDefinitionRow) => Promise<unknown>;
+  refreshLifecycle: (
+    row: DpmCampaignDefinitionRow,
+    requiredReceipt?: DpmCampaignLifecycleConfirmationReceipt,
+  ) => Promise<unknown>;
   refreshWorkflow: (
     row: DpmCampaignDefinitionRow,
     requiredEvidenceRef?: string,
@@ -102,7 +106,12 @@ export function useDpmCampaignCommands({
         ),
       };
       try {
-        await sources.refreshLifecycle(campaign);
+        await sources.refreshLifecycle(campaign, {
+          campaignId: campaign.campaignId,
+          campaignVersion: campaign.campaignVersion,
+          status: result.value.status,
+          replacementCampaignVersion: result.value.replacementCampaignVersion,
+        });
       } catch {
         // The accepted command evidence remains visible while source state owns confirmation failure.
       }

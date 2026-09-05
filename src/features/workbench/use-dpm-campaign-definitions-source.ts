@@ -5,6 +5,10 @@ import { useEffect, useMemo } from "react";
 
 import { dpmCampaignDefinitionsQueryOptions } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
+import {
+  containsCampaignLifecycleEvidence,
+  type DpmCampaignLifecycleConfirmationReceipt,
+} from "@/features/workbench/dpm-campaign-command-evidence";
 import type { DpmCampaignDefinitionGatewayResponse } from "@/features/workbench/types";
 
 type ServerRead = Readonly<{ readId: string }>;
@@ -32,6 +36,27 @@ export function useDpmCampaignDefinitionsSource(
   });
   const serverReadAlreadyAdmitted =
     serverReadQuery.data?.readId === initialReadId;
+  const confirmationReceiptKey = useMemo(
+    () => dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+    [],
+  );
+  const confirmationReceiptQuery =
+    useQuery<DpmCampaignLifecycleConfirmationReceipt>({
+      queryKey: confirmationReceiptKey,
+      queryFn: skipToken,
+      gcTime: Infinity,
+      initialData: () =>
+        queryClient.getQueryData<DpmCampaignLifecycleConfirmationReceipt>(
+          confirmationReceiptKey,
+        ),
+    });
+  const initialDefinitionsContainConfirmedReceipt =
+    !confirmationReceiptQuery.data ||
+    (initialDefinitions !== null &&
+      containsCampaignLifecycleEvidence(
+        initialDefinitions,
+        confirmationReceiptQuery.data,
+      ));
 
   useEffect(() => {
     if (serverReadAlreadyAdmitted) return;
@@ -46,9 +71,9 @@ export function useDpmCampaignDefinitionsSource(
         ) {
           return;
         }
-        if (initialDefinitions) {
+        if (initialDefinitions && initialDefinitionsContainConfirmedReceipt) {
           queryClient.setQueryData(options.queryKey, initialDefinitions);
-        } else {
+        } else if (!initialDefinitions) {
           queryClient.removeQueries({ queryKey: options.queryKey, exact: true });
         }
         queryClient.setQueryData<ServerRead>(serverReadKey, {
@@ -60,6 +85,7 @@ export function useDpmCampaignDefinitionsSource(
     };
   }, [
     initialDefinitions,
+    initialDefinitionsContainConfirmedReceipt,
     initialReadId,
     options.queryKey,
     queryClient,
@@ -68,7 +94,8 @@ export function useDpmCampaignDefinitionsSource(
   ]);
 
   if (initialDefinitions === null) return null;
-  return serverReadAlreadyAdmitted
-    ? (definitionsQuery.data ?? null)
-    : initialDefinitions;
+  return !serverReadAlreadyAdmitted &&
+    initialDefinitionsContainConfirmedReceipt
+    ? initialDefinitions
+    : (definitionsQuery.data ?? null);
 }
