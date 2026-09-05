@@ -6,6 +6,7 @@ import { beforeEach, vi } from "vitest";
 import type { AdvisorBookResponse } from "@/features/advisor-book/contracts";
 import AdvisorBookWorkspace from "@/features/advisor-book/components/advisor-book-workspace";
 import IdeaCandidateExplanation from "@/features/proposals/components/idea-candidate-explanation";
+import { parseAdvisorIdeaAIExplanationResponse } from "@/features/proposals/idea-ai-explanation-contract";
 import { buildRiskMandateComparisonViewModel } from "@/apps/performance/risk-mandate-comparison-view-model";
 import RiskMandateComparison from "@/apps/performance/components/risk/risk-mandate-comparison";
 
@@ -223,9 +224,16 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
     state === "EXPLANATION_SERVED" ? "executed" : "runtime_unavailable";
   payload.evaluationVerdict =
     state === "EXPLANATION_SERVED" ? "accepted" : "not_evaluated";
+  payload.lotusAiRuntimeExecutionConfirmed = state === "EXPLANATION_SERVED";
+  payload.lotusAiRunId = state === "EXPLANATION_SERVED" ? "run-source-authority-proof" : null;
   explanation.candidateId = identity;
+  explanation.requestId = `idea-explanation-${identity}-source-authority-proof`;
   explanation.fallbackUsed = state === "EXPLANATION_UNAVAILABLE";
-  requestIdeaExplanationMock.mockResolvedValue(payload);
+  const parsedPayload = parseAdvisorIdeaAIExplanationResponse(payload, {
+    candidateId: identity,
+    requestId: String(explanation.requestId),
+  });
+  requestIdeaExplanationMock.mockResolvedValue(parsedPayload);
   vi.stubGlobal("crypto", { randomUUID: vi.fn(() => "source-authority-proof") });
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
@@ -242,7 +250,7 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
   );
   fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
   await screen.findByTestId("idea-explanation-result");
-  return payload;
+  return parsedPayload;
 }
 
 const EXECUTABLE_RENDER_PROOFS = [
