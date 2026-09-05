@@ -23,6 +23,8 @@ export default function IdeaActionRetryNotice({
   testId: string;
   title: string;
 }) {
+  const titleId = `${testId}-title`;
+
   return (
     <Alert
       severity="warning"
@@ -33,14 +35,14 @@ export default function IdeaActionRetryNotice({
     >
       <div className={styles.notice}>
         <div>
-          <strong>{title}</strong>
+          <strong id={titleId}>{title}</strong>
           <p>
             Retry this exact attempt to reconcile its source outcome. To record
             different terms, edit the form; Workbench will present them as a new
             action.
           </p>
         </div>
-        <dl className={styles.intent} aria-label={`Unconfirmed ${actionLabel}`}>
+        <dl className={styles.intent} aria-labelledby={titleId}>
           {details.map((detail) => (
             <div key={detail.label}>
               <dt>{detail.label}</dt>
