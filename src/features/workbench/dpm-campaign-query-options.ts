@@ -29,6 +29,7 @@ export type DpmCampaignWorkflowEvidence = Readonly<{
 
 export type DpmCampaignLifecycleConfirmation = Readonly<{
   lifecycle: DpmCampaignDefinitionGatewayResponse;
+  definition: DpmCampaignDefinitionGatewayResponse;
   definitions: DpmCampaignDefinitionGatewayResponse;
 }>;
 
@@ -40,7 +41,10 @@ export function dpmCampaignDefinitionsQueryOptions() {
 }
 
 export function fetchDpmCampaignDefinitions() {
-  return listDpmCampaignDefinitions({ limit: 10, offset: 0 }, "client");
+  return listDpmCampaignDefinitions(
+    { campaignStatus: "ACTIVE", limit: 10, offset: 0 },
+    "client",
+  );
 }
 
 export function dpmCampaignLifecycleQueryOptions(
@@ -62,14 +66,15 @@ export function dpmCampaignLifecycleConfirmationQueryOptions(
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.lifecycleConfirmation(identity),
     queryFn: async (): Promise<DpmCampaignLifecycleConfirmation> => {
-      const [lifecycle, definitions] = await Promise.all([
+      const [lifecycle, definition, definitions] = await Promise.all([
         fetchDpmCampaignLifecycle(identity),
         listDpmCampaignDefinitions(
           { campaignId: identity.campaignId, limit: 10, offset: 0 },
           "client",
         ),
+        fetchDpmCampaignDefinitions(),
       ]);
-      return { lifecycle, definitions };
+      return { lifecycle, definition, definitions };
     },
     staleTime: 0,
   });

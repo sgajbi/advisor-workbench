@@ -2115,19 +2115,38 @@ describe("useDpmWaveCommandCenterActions", () => {
   });
 
   it("records campaign lifecycle commands and refreshes definitions plus lifecycle evidence", async () => {
-    vi.mocked(listDpmCampaignDefinitions).mockResolvedValueOnce({
-      ...campaignDefinitions,
-      data: {
-        ...campaignDefinitions.data,
-        items: [
-          {
-            ...(campaignDefinitions.data.items as Array<Record<string, unknown>>)[0],
-            status: "SUPERSEDED",
-            superseded_by_campaign_version: "2026.06",
-          },
-        ],
-      },
-    });
+    vi.mocked(listDpmCampaignDefinitions)
+      .mockResolvedValueOnce({
+        ...campaignDefinitions,
+        data: {
+          ...campaignDefinitions.data,
+          items: [
+            {
+              ...(campaignDefinitions.data.items as Array<
+                Record<string, unknown>
+              >)[0],
+              status: "SUPERSEDED",
+              superseded_by_campaign_version: "2026.06",
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        ...campaignDefinitions,
+        correlation_id: "corr-active-campaigns-after-supersede",
+        data: {
+          ...campaignDefinitions.data,
+          items: [
+            {
+              campaign_id: "campaign-income-202605",
+              campaign_version: "2026.05",
+              display_name: "Income review",
+              status: "ACTIVE",
+              as_of_date: "2026-05-10",
+            },
+          ],
+        },
+      });
     const { result } = renderActions();
 
     await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
@@ -2164,6 +2183,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       },
       "client",
     );
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledWith(
+      { campaignStatus: "ACTIVE", limit: 10, offset: 0 },
+      "client",
+    );
     expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledWith({
       campaignId: "campaign-holdings-202605",
       campaignVersion: "2026.05",
@@ -2176,13 +2199,21 @@ describe("useDpmWaveCommandCenterActions", () => {
         contentHash: "sha256:campaign-superseded",
       }),
     );
-    expect(result.current.selectedCampaign?.status).toBe("SUPERSEDED");
-    expect(result.current.model.campaignRows[0]?.status).toBe("SUPERSEDED");
+    expect(result.current.selectedCampaign).toMatchObject({
+      campaignId: "campaign-holdings-202605",
+      status: "SUPERSEDED",
+    });
+    expect(result.current.model.campaignRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ campaignId: "campaign-income-202605" }),
+      ]),
+    );
   });
 
   it("preserves accepted lifecycle evidence when the follow-up refresh fails", async () => {
     vi.mocked(listDpmCampaignDefinitions)
       .mockRejectedValueOnce(new Error("Campaign definitions refresh failed"))
+      .mockResolvedValueOnce(campaignDefinitions)
       .mockResolvedValueOnce({
         ...campaignDefinitions,
         data: {
@@ -2196,6 +2227,11 @@ describe("useDpmWaveCommandCenterActions", () => {
             },
           ],
         },
+      })
+      .mockResolvedValueOnce({
+        ...campaignDefinitions,
+        correlation_id: "corr-active-after-retire",
+        data: { ...campaignDefinitions.data, items: [] },
       });
     const { result } = renderActions();
 
@@ -2230,7 +2266,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     await waitFor(() =>
       expect(result.current.campaignLifecycleError).toBeNull(),
     );
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(4);
   });
 
   it("revokes launch authorization as soon as a lifecycle command is accepted", async () => {

@@ -11,7 +11,7 @@ import { useEffect, useMemo } from "react";
 import { dpmCampaignDefinitionsQueryOptions } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import {
-  confirmsCampaignLifecycleEvidence,
+  acceptsActiveCampaignDefinitions,
   type DpmCampaignLifecycleConfirmationReceipt,
 } from "@/features/workbench/dpm-campaign-command-evidence";
 import type { DpmCampaignDefinitionGatewayResponse } from "@/features/workbench/types";
@@ -67,7 +67,7 @@ export function useDpmCampaignDefinitionsSource(
     confirmationReceipts.length === 0 ||
     (initialDefinitions !== null &&
       confirmationReceipts.every((receipt) =>
-        confirmsCampaignLifecycleEvidence(initialDefinitions, receipt),
+        acceptsActiveCampaignDefinitions(initialDefinitions, receipt),
       ));
 
   useEffect(() => {
