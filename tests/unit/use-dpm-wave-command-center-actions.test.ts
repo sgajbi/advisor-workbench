@@ -365,7 +365,7 @@ function renderActions(
     () =>
       useDpmWaveCommandCenterActions({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
-        campaignWorkflowReadId: "workflow-read-default",
+        campaignSourceReadId: "source-read-default",
         waveList: sourceWaveList,
         campaignDefinitions: definitions,
       }),
@@ -1668,7 +1668,7 @@ describe("useDpmWaveCommandCenterActions", () => {
       ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
         useDpmWaveCommandCenterActions({
           portfolioId: "PB_SG_GLOBAL_BAL_001",
-          campaignWorkflowReadId: "workflow-read-default",
+          campaignSourceReadId: "source-read-default",
           waveList: sourceWaveList,
           campaignDefinitions,
         }),
@@ -1747,7 +1747,7 @@ describe("useDpmWaveCommandCenterActions", () => {
       ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
         useDpmWaveCommandCenterActions({
           portfolioId: "PB_SG_GLOBAL_BAL_001",
-          campaignWorkflowReadId: "workflow-read-default",
+          campaignSourceReadId: "source-read-default",
           waveList: sourceWaveList,
           campaignDefinitions,
         }),
@@ -2032,6 +2032,7 @@ describe("useDpmWaveCommandCenterActions", () => {
         "dwv_campaign_launch_001",
       ),
     );
+    expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false);
     expect(result.current.model.selectedWaveId).toBe("dwv_001");
     act(() => result.current.requestApproval());
     await waitFor(() => expect(approveDpmWave).toHaveBeenCalledWith("dwv_001"));

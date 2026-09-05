@@ -15,10 +15,7 @@ import {
 } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
-import type {
-  DpmCampaignDefinitionGatewayResponse,
-  DpmCampaignWorkflowGatewayResponse,
-} from "@/features/workbench/types";
+import type { DpmCampaignWorkflowGatewayResponse } from "@/features/workbench/types";
 import type { DpmCampaignDefinitionRow } from "@/features/workbench/dpm-wave-command-center-view-model";
 
 type CampaignSelection = Readonly<{
@@ -50,30 +47,12 @@ type WorkflowRecovery = Readonly<{
   campaignKey: string;
   readId: string;
 }>;
-type WorkflowServerRead = Readonly<{ readId: string }>;
+type ServerRead = Readonly<{ readId: string }>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
   campaignVersion: "__no_version__",
 } as const;
-
-export function useDpmCampaignDefinitionsSource(
-  initialDefinitions: DpmCampaignDefinitionGatewayResponse | null,
-) {
-  const queryClient = useQueryClient();
-  const options = useMemo(() => dpmCampaignDefinitionsQueryOptions(), []);
-  const definitionsQuery = useQuery({
-    ...options,
-    enabled: false,
-    initialData: initialDefinitions ?? undefined,
-  });
-  useEffect(() => {
-    if (initialDefinitions) {
-      queryClient.setQueryData(options.queryKey, initialDefinitions);
-    }
-  }, [initialDefinitions, options.queryKey, queryClient]);
-  return initialDefinitions === null ? null : definitionsQuery.data ?? null;
-}
 
 export function useDpmCampaignSources({
   selectedCampaign,
@@ -191,12 +170,12 @@ export function useDpmCampaignSources({
     () => dpmCampaignQueryKeys.workflowServerRead(queryIdentity),
     [queryIdentity],
   );
-  const workflowServerReadQuery = useQuery<WorkflowServerRead>({
+  const workflowServerReadQuery = useQuery<ServerRead>({
     queryKey: workflowServerReadKey,
     queryFn: skipToken,
     gcTime: Infinity,
     initialData: () =>
-      queryClient.getQueryData<WorkflowServerRead>(workflowServerReadKey),
+      queryClient.getQueryData<ServerRead>(workflowServerReadKey),
   });
   const workflowServerReadAlreadyAdmitted =
     workflowServerReadQuery.data?.readId === initialWorkflowReadId;
@@ -217,7 +196,7 @@ export function useDpmCampaignSources({
       .then(() => {
         if (
           !active ||
-          queryClient.getQueryData<WorkflowServerRead>(workflowServerReadKey)
+          queryClient.getQueryData<ServerRead>(workflowServerReadKey)
             ?.readId === initialWorkflowReadId
         ) {
           return;
@@ -227,7 +206,7 @@ export function useDpmCampaignSources({
         } else if (!workflowRecoveredForCurrentInput) {
           queryClient.removeQueries({ queryKey: workflowKey, exact: true });
         }
-        queryClient.setQueryData<WorkflowServerRead>(workflowServerReadKey, {
+        queryClient.setQueryData<ServerRead>(workflowServerReadKey, {
           readId: initialWorkflowReadId,
         });
       });
@@ -354,6 +333,9 @@ export function useDpmCampaignSources({
     const target = toRequiredSelection(row);
     const options = dpmCampaignLifecycleQueryOptions(target);
     const definitionsOptions = dpmCampaignDefinitionsQueryOptions();
+    const admittedServerRead = queryClient.getQueryData<ServerRead>(
+      dpmCampaignQueryKeys.definitionsServerRead(),
+    );
     const confirmationOptions =
       dpmCampaignLifecycleConfirmationQueryOptions(target);
     await Promise.all([
@@ -365,6 +347,15 @@ export function useDpmCampaignSources({
     ]);
     try {
       const confirmation = await queryClient.fetchQuery(confirmationOptions);
+      if (
+        queryClient.getQueryData<ServerRead>(
+          dpmCampaignQueryKeys.definitionsServerRead(),
+        )?.readId !== admittedServerRead?.readId
+      ) {
+        throw new Error(
+          "A newer campaign source read superseded this confirmation.",
+        );
+      }
       queryClient.setQueryData(options.queryKey, confirmation.lifecycle);
       queryClient.setQueryData(
         definitionsOptions.queryKey,

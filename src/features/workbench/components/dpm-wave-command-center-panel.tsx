@@ -39,7 +39,7 @@ type Props = {
   campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
   campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
-  campaignWorkflowReadId: string;
+  campaignSourceReadId: string;
   campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
@@ -63,7 +63,7 @@ export default function DpmWaveCommandCenterPanel({
   campaignWorkflowBoard = null,
   campaignAssignmentPlan = null,
   campaignWorkflowAutomation = null,
-  campaignWorkflowReadId,
+  campaignSourceReadId,
   campaignApprovalDecisions = null,
   campaignAssignmentActions = null,
   campaignAssignmentTasks = null,
@@ -133,7 +133,7 @@ export default function DpmWaveCommandCenterPanel({
     campaignWorkflowBoard,
     campaignAssignmentPlan,
     campaignWorkflowAutomation,
-    campaignWorkflowReadId,
+    campaignSourceReadId,
     campaignApprovalDecisions,
     campaignAssignmentActions,
     campaignAssignmentTasks,

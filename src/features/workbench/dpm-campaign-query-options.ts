@@ -102,6 +102,7 @@ export function dpmCampaignPreviewReadinessQueryOptions(
         ...apiIdentity(identity),
         requestedAsOfDate,
       }),
+    gcTime: 0,
   });
 }
 
@@ -116,6 +117,7 @@ export function dpmCampaignLaunchPackageQueryOptions(
         ...apiIdentity(identity),
         requestedAsOfDate,
       }),
+    gcTime: 0,
   });
 }
 

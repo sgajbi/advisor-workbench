@@ -189,11 +189,11 @@ describe("Manage workspace mode data loading", () => {
     const first = await loadManageWorkspaceData(portfolio, "waves");
     const second = await loadManageWorkspaceData(portfolio, "waves");
 
-    expect(first.campaignWorkflowReadId).toMatch(
+    expect(first.campaignSourceReadId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     );
-    expect(second.campaignWorkflowReadId).not.toBe(
-      first.campaignWorkflowReadId,
+    expect(second.campaignSourceReadId).not.toBe(
+      first.campaignSourceReadId,
     );
   });
 });

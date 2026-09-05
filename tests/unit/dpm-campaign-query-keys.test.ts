@@ -12,6 +12,11 @@ const campaign = {
 
 describe("DPM campaign query identity", () => {
   it("binds every source read to the exact campaign id and version", () => {
+    expect(dpmCampaignQueryKeys.definitionsServerRead()).toEqual([
+      "workbench",
+      "dpm-campaigns",
+      "definitions-server-read",
+    ]);
     expect(dpmCampaignQueryKeys.lifecycle(campaign)).toEqual([
       "workbench",
       "dpm-campaigns",

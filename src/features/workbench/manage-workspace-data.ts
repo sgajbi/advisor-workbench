@@ -88,7 +88,7 @@ export type ManageWorkspaceData = {
   campaignAssignmentPlanError: string | null;
   campaignWorkflowAutomation: Awaited<ReturnType<typeof listDpmCampaignWorkflowAutomation>> | null;
   campaignWorkflowAutomationError: string | null;
-  campaignWorkflowReadId: string;
+  campaignSourceReadId: string;
   campaignApprovalDecisions: Awaited<ReturnType<typeof getDpmCampaignApprovalDecisions>> | null;
   campaignApprovalDecisionsError: string | null;
   campaignAssignmentActions: Awaited<ReturnType<typeof getDpmCampaignAssignmentActions>> | null;

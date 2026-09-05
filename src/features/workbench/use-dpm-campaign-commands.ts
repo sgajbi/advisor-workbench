@@ -141,6 +141,22 @@ export function useDpmCampaignCommands({
     gcTime: Infinity,
     mutationFn: async (campaign: DpmCampaignDefinitionRow) => {
       const value = await executeDpmCampaignLaunch(campaign);
+      const requestedAsOfDate =
+        campaign.asOfDate === "N/A" ? undefined : campaign.asOfDate;
+      queryClient.removeQueries({
+        queryKey: dpmCampaignQueryKeys.previewReadiness(
+          campaign,
+          requestedAsOfDate,
+        ),
+        exact: true,
+      });
+      queryClient.removeQueries({
+        queryKey: dpmCampaignQueryKeys.launchPackage(
+          campaign,
+          requestedAsOfDate,
+        ),
+        exact: true,
+      });
       queryClient.setQueryData(
         dpmCampaignQueryKeys.launchResult(campaign),
         value,

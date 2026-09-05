@@ -34,13 +34,13 @@ import { renderWithQueryClient } from "../helpers/query-client-test-harness";
 function DpmWaveCommandCenterPanel(
   props: Omit<
     ComponentProps<typeof ProductionDpmWaveCommandCenterPanel>,
-    "campaignWorkflowReadId"
+    "campaignSourceReadId"
   >,
 ) {
   return (
     <ProductionDpmWaveCommandCenterPanel
       {...props}
-      campaignWorkflowReadId="workflow-read-default"
+      campaignSourceReadId="source-read-default"
     />
   );
 }

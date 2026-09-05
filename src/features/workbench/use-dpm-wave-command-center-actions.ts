@@ -17,9 +17,9 @@ import {
   type DpmWaveCommandCenterPanelModel,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
 import {
-  useDpmCampaignDefinitionsSource,
   useDpmCampaignSources,
 } from "@/features/workbench/use-dpm-campaign-sources";
+import { useDpmCampaignDefinitionsSource } from "@/features/workbench/use-dpm-campaign-definitions-source";
 import {
   useDpmCampaignCommands,
   type DpmCampaignLifecycleCommandEvidence,
@@ -41,7 +41,7 @@ type UseDpmWaveCommandCenterActionsInput = {
   campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
   campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
-  campaignWorkflowReadId: string;
+  campaignSourceReadId: string;
   campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
@@ -133,7 +133,7 @@ export function useDpmWaveCommandCenterActions({
   campaignWorkflowBoard = null,
   campaignAssignmentPlan = null,
   campaignWorkflowAutomation = null,
-  campaignWorkflowReadId,
+  campaignSourceReadId,
   campaignApprovalDecisions = null,
   campaignAssignmentActions = null,
   campaignAssignmentTasks = null,
@@ -187,6 +187,7 @@ export function useDpmWaveCommandCenterActions({
     });
   const governedCampaignDefinitions = useDpmCampaignDefinitionsSource(
     campaignDefinitions,
+    campaignSourceReadId,
   );
   const initialCampaignKey = buildDpmWaveCommandCenterModel({
     waveList: null,
@@ -243,7 +244,7 @@ export function useDpmWaveCommandCenterActions({
     selectedCampaign,
     initialCampaignKey,
     initialWorkflowEvidence: {
-      readId: campaignWorkflowReadId,
+      readId: campaignSourceReadId,
       approvalDecisions: campaignApprovalDecisions,
       assignmentActions: campaignAssignmentActions,
       assignmentTasks: campaignAssignmentTasks,
