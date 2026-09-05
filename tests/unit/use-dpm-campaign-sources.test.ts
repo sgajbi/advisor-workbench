@@ -237,6 +237,86 @@ describe("useDpmCampaignSources", () => {
     expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledTimes(1);
   });
 
+  it("fences an in-flight client workflow read before admitting a newer server read", async () => {
+    const initial = ["approval-old", "action-old", "task-old", "control-old"].map(
+      workflowResponse,
+    );
+    const server = ["approval-server", "action-server", "task-server", "control-server"].map(
+      workflowResponse,
+    );
+    const obsoleteReads = ["approval", "action", "task", "control"].map(() =>
+      deferred<DpmCampaignWorkflowGatewayResponse>(),
+    );
+    vi.mocked(getDpmCampaignApprovalDecisions).mockReturnValue(
+      obsoleteReads[0].promise,
+    );
+    vi.mocked(getDpmCampaignAssignmentActions).mockReturnValue(
+      obsoleteReads[1].promise,
+    );
+    vi.mocked(getDpmCampaignAssignmentTasks).mockReturnValue(
+      obsoleteReads[2].promise,
+    );
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockReturnValue(
+      obsoleteReads[3].promise,
+    );
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ readId, evidence }) =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            readId,
+            approvalDecisions: evidence[0],
+            assignmentActions: evidence[1],
+            assignmentTasks: evidence[2],
+            makerCheckerControls: evidence[3],
+          },
+        }),
+      {
+        initialProps: { readId: "workflow-read-1", evidence: initial },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.workflowServerRead(rowA),
+        )?.readId,
+      ).toBe("workflow-read-1"),
+    );
+
+    let obsoleteRefresh!: Promise<unknown>;
+    act(() => {
+      obsoleteRefresh = result.current.refreshWorkflow(rowA).catch(() => undefined);
+    });
+    await waitFor(() =>
+      expect(getDpmCampaignApprovalDecisions).toHaveBeenCalledTimes(1),
+    );
+
+    rerender({ readId: "workflow-read-2", evidence: server });
+    expect(result.current.workflow?.approvalDecisions).toEqual(server[0]);
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{
+          approvalDecisions: DpmCampaignWorkflowGatewayResponse;
+        }>(dpmCampaignQueryKeys.workflow(rowA))?.approvalDecisions,
+      ).toEqual(server[0]),
+    );
+
+    obsoleteReads.forEach((pending, index) =>
+      pending.resolve(workflowResponse(`obsolete-${index}`)),
+    );
+    await obsoleteRefresh;
+
+    expect(result.current.workflow?.approvalDecisions).toEqual(server[0]);
+    expect(
+      queryClient.getQueryData<{
+        approvalDecisions: DpmCampaignWorkflowGatewayResponse;
+      }>(dpmCampaignQueryKeys.workflow(rowA))?.approvalDecisions,
+    ).toEqual(server[0]);
+  });
+
   it("suppresses retained workflow when current source evidence is incomplete", async () => {
     const queryClient = createTestQueryClient();
     const prior = ["approval-old", "action-old", "task-old", "control-old"].map(
@@ -274,6 +354,7 @@ describe("useDpmCampaignSources", () => {
 
     expect(result.current.workflow).toBeNull();
     expect(result.current.workflowResolved).toBe(false);
+    await waitFor(() => expect(result.current.workflowPending).toBe(false));
 
     await act(async () => result.current.loadWorkflow(rowA));
     await waitFor(() =>
@@ -309,6 +390,7 @@ describe("useDpmCampaignSources", () => {
 
     expect(result.current.workflow).toBeNull();
     expect(result.current.workflowResolved).toBe(false);
+    await waitFor(() => expect(result.current.workflowPending).toBe(false));
 
     await act(async () => result.current.loadWorkflow(rowA));
     await waitFor(() => expect(result.current.workflowResolved).toBe(true));

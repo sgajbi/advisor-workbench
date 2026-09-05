@@ -187,8 +187,9 @@ export function useDpmCampaignSources({
     enabled: false,
     initialData: initialWorkflow,
   });
-  const workflowServerReadKey = dpmCampaignQueryKeys.workflowServerRead(
-    queryIdentity,
+  const workflowServerReadKey = useMemo(
+    () => dpmCampaignQueryKeys.workflowServerRead(queryIdentity),
+    [queryIdentity],
   );
   const workflowServerReadQuery = useQuery<WorkflowServerRead>({
     queryKey: workflowServerReadKey,
@@ -199,6 +200,8 @@ export function useDpmCampaignSources({
   });
   const workflowServerReadAlreadyAdmitted =
     workflowServerReadQuery.data?.readId === initialWorkflowReadId;
+  const workflowServerReadAdmissionPending =
+    initialWorkflowIsAuthoritative && !workflowServerReadAlreadyAdmitted;
   useEffect(() => {
     if (
       !selection ||
@@ -208,14 +211,29 @@ export function useDpmCampaignSources({
       return;
     }
     const workflowKey = dpmCampaignQueryKeys.workflow(selection);
-    if (initialWorkflow) {
-      queryClient.setQueryData(workflowKey, initialWorkflow);
-    } else if (!workflowRecoveredForCurrentInput) {
-      queryClient.removeQueries({ queryKey: workflowKey, exact: true });
-    }
-    queryClient.setQueryData<WorkflowServerRead>(workflowServerReadKey, {
-      readId: initialWorkflowReadId,
-    });
+    let active = true;
+    void queryClient
+      .cancelQueries({ queryKey: workflowKey, exact: true })
+      .then(() => {
+        if (
+          !active ||
+          queryClient.getQueryData<WorkflowServerRead>(workflowServerReadKey)
+            ?.readId === initialWorkflowReadId
+        ) {
+          return;
+        }
+        if (initialWorkflow) {
+          queryClient.setQueryData(workflowKey, initialWorkflow);
+        } else if (!workflowRecoveredForCurrentInput) {
+          queryClient.removeQueries({ queryKey: workflowKey, exact: true });
+        }
+        queryClient.setQueryData<WorkflowServerRead>(workflowServerReadKey, {
+          readId: initialWorkflowReadId,
+        });
+      });
+    return () => {
+      active = false;
+    };
   }, [
     initialWorkflow,
     initialWorkflowIsAuthoritative,
@@ -415,14 +433,24 @@ export function useDpmCampaignSources({
     launchPackage: packageQuery.data ?? null,
     launchPackageError: errorMessage(packageQuery.error),
     launchPackagePending: packageQuery.isFetching,
-    workflow: workflowRequiresRecovery ? null : (workflowQuery.data ?? null),
+    workflow: workflowRequiresRecovery
+      ? null
+      : initialWorkflowIsAuthoritative &&
+          initialWorkflow &&
+          !workflowServerReadAlreadyAdmitted
+        ? initialWorkflow
+        : (workflowQuery.data ?? null),
     workflowError:
       workflowConfirmationQuery.data?.message ??
       errorMessage(workflowQuery.error),
-    workflowPending: workflowQuery.isFetching,
+    workflowPending:
+      workflowQuery.isFetching || workflowServerReadAdmissionPending,
     workflowResolved:
+      !workflowServerReadAdmissionPending &&
       !workflowRequiresRecovery &&
-      (workflowQuery.isFetched || workflowQuery.data !== undefined),
+      (Boolean(initialWorkflow) ||
+        workflowQuery.isFetched ||
+        workflowQuery.data !== undefined),
     loadLifecycle,
     loadLaunchHistory,
     loadLaunchReadiness,
