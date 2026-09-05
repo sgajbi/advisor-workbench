@@ -7765,3 +7765,43 @@ terms match the dispatched payload/key. The workflow recovery contract changes, 
 context and the Opportunities and Ideas screen guide change and the wiki must be published. Existing
 frontend delivery guidance already defines superseded requests and source-owned recovery authority;
 no central skill change is warranted for this bounded product correction.
+
+## 2026-09-06 — BFF response bytes and HTTP metadata integrity (#1003)
+
+### Decision question
+
+How should the Workbench BFF preserve downloads, range responses, cache controls, and bodyless
+responses when Node Fetch exposes decoded bytes rather than the upstream transfer representation?
+
+### Evidence consulted
+
+1. [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html) defines response content, `HEAD`,
+   `204`, `205`, `304`, `Content-Length`, and connection-specific field semantics.
+2. The [WHATWG Fetch Standard](https://fetch.spec.whatwg.org/) defines content-coding decoding before
+   response bodies are exposed to consumers.
+3. [Next.js Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers) use the Web
+   Request and Response APIs at this server boundary.
+
+### Adopted decisions
+
+1. Keep one bounded-buffer response owner and request identity encoding from Gateway.
+2. For body-bearing responses, remove stale content coding and publish the exact emitted byte count.
+3. Keep `HEAD`, `204`, `205`, and `304` bodyless; retain lawful representation metadata for `HEAD`
+   and `304`, while removing prohibited content metadata for `204` and `205`.
+4. Remove standard and `Connection`-nominated hop-by-hop fields while retaining end-to-end cache,
+   security, range, download, and source metadata.
+
+### Rejected decisions
+
+Streaming without measured need; forwarding compression metadata after decoding; constructing a
+nominal body for bodyless statuses; or deleting validators, range metadata, and security headers
+that remain end-to-end evidence.
+
+### Validation and publication decision
+
+Real `NextRequest`/`NextResponse` route tests cover decoded JSON, identity binary, `HEAD`, `204`,
+`205`, `304`, and `206` byte ranges, including dynamic hop-by-hop removal and exact byte/length
+agreement. This changes the documented BFF contract, so repository context and the API wiki change;
+no screen guide or screenshot is warranted because no visible workflow or layout changes. Existing
+frontend delivery guidance already requires one governed transport boundary, so no platform skill
+change is justified.
