@@ -642,6 +642,48 @@ describe("BFF proxy route", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("preserves a once-decoded candidate identity when validating an explanation request", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+    const requestId =
+      "idea-explanation-idea%2F2026-11111111-1111-4111-8111-111111111111";
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea%252F2026/ai-explanations",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": requestId,
+        },
+        body: JSON.stringify({
+          requestId,
+          purpose: "advisor_rationale_draft",
+          requestedAtUtc: "2026-09-05T11:30:00Z",
+        }),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea%2F2026",
+          "ai-explanations",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const upstreamHeaders = fetchMock.mock.calls[0][1]?.headers as Headers;
+    expect(upstreamHeaders.get("X-Caller-Capabilities")).toBe(
+      "idea.ai-explanation.generate",
+    );
+  });
+
   it("injects the single entitled tenant into an exact Idea presentation receipt", async () => {
     process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-private-bank-sg";
     const fetchMock = vi.mocked(fetch);
