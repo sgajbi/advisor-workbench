@@ -100,6 +100,9 @@ const getAdvisorIdeaCandidateDetailMock = vi.fn(async (_filters?: unknown) => ({
     reviewPosture: "advisor_review_required",
   },
   evidence: {
+    evidencePacketId: "evidence_high_cash_001",
+    evidenceContentHash: "sha256:evidence-high-cash-001",
+    sourceRevisionVectorDigest: "sha256:revision-high-cash-001",
     supportability: "ready",
     sourceRefs: [{ productId: "lotus-core:PortfolioStateSnapshot:v1" }],
   },

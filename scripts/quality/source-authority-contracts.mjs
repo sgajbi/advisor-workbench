@@ -148,7 +148,15 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
           "data-candidate-id={mutation.data?.explanation.candidateId}",
           "data-explanation-status={mutation.data?.status}",
           "isSameAdvisorIdeaEvidence",
+        ]),
+      }),
+      Object.freeze({
+        path: "src/features/proposals/idea-ai-explanation-contract.ts",
+        tokens: Object.freeze([
+          "evidencePacketId",
+          "evidenceContentHash",
           "sourceRevisionVectorDigest",
+          "isSameAdvisorIdeaEvidence",
         ]),
       }),
       Object.freeze({
