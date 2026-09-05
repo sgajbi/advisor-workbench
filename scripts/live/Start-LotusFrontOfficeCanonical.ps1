@@ -701,14 +701,21 @@ function Invoke-CanonicalIdeaSeed {
   # existing business aggregate and evidence_refreshed / material_version_created are
   # persisted outcomes of that reconciliation, not failures (owner vocabulary:
   # lotus-idea src/app/domain/persistence_models.py CandidatePersistenceDecision).
+  # recurrent_condition_reopened is deliberately NOT accepted: it means a candidate a
+  # PREVIOUS run drove to a terminal status was reopened, so certifying it as
+  # current-run evidence would launder stale identity through the run-id stamp.
   $persistedDecisions = @(
     "accepted",
     "replayed",
     "duplicate_candidate",
     "evidence_refreshed",
-    "material_version_created",
-    "recurrent_condition_reopened"
+    "material_version_created"
   )
+  if ($decision -eq "recurrent_condition_reopened") {
+    throw ("Canonical Lotus Idea seed reopened a terminal candidate from an earlier " +
+      "run; the persisted Idea volume holds prior-run lifecycle state. Re-run with " +
+      "clean Idea volumes so the canonical evidence is provably current-run.")
+  }
   if ($decision -notin $persistedDecisions) {
     throw "Canonical Lotus Idea seed did not persist an advisor queue candidate. Decision: $decision"
   }
