@@ -2320,8 +2320,10 @@ describe("useDpmWaveCommandCenterActions", () => {
       });
     });
 
-    expect(result.current.campaignLifecycleCommandError).toBe(
-      "Supersede requires an existing replacement campaign version.",
+    await waitFor(() =>
+      expect(result.current.campaignLifecycleCommandError).toBe(
+        "Supersede requires an existing replacement campaign version.",
+      ),
     );
     expect(supersedeDpmCampaignDefinition).not.toHaveBeenCalled();
     expect(listDpmCampaignDefinitions).not.toHaveBeenCalled();

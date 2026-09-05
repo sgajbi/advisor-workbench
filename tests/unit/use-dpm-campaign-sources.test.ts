@@ -122,7 +122,7 @@ describe("useDpmCampaignSources", () => {
     );
 
     await waitFor(() => expect(result.current).toEqual(current));
-    expect(result.current.correlation_id).toBe("corr-campaign-current");
+    expect(result.current?.correlation_id).toBe("corr-campaign-current");
     expect(
       queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
     ).toEqual(current);
