@@ -72,11 +72,16 @@ through the Workbench BFF. The BFF strips browser authority and derives
 idempotency key, the fixed `advisor_rationale_draft` purpose, and request time. Parse the Gateway
 result before rendering: candidate and request identity must match, a served result requires an
 accepted evaluation, and downstream authority or unsupported-feature promotion must remain false.
+Bind a rationale to the current candidate detail using Idea's exact `evidencePacketId`,
+`evidenceContentHash`, and `sourceRevisionVectorDigest`. Missing or unequal binding cannot claim a
+current rationale. When displayed evidence changes, retain review, feedback, and conversion state,
+but remove the prior rationale from the current decision path and fence late completions.
 Render grounded claims separately from evidence gaps and source signals, preserve exact provenance
 as diagnostic evidence, and label an unavailable response's source-provided fallback as
 deterministic. Explanation loading, absence, or failure must never change candidate facts or disable
 review, feedback, or conversion-intent actions. Retain the exact request and idempotency key only
-for retry after transport or contract failure; a completed response ends that retry intent.
+for retry after transport or contract failure while the evidence binding is unchanged; a completed
+response, an owner `409`, or changed displayed evidence ends that retry intent.
 
 ### Risk Review source-authority rule
 

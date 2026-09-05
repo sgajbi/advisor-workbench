@@ -6,7 +6,7 @@ is not canonical live-service or production-provenance evidence.
 
 | Evidence | What it proves |
 | --- | --- |
-| [Governed rationale](idea-governed-rationale.png) | Grounded rationale, exact source reference, evidence gaps, source signals, evaluation status, and unattested provenance are distinct; advisor actions remain present. |
+| [Governed rationale](idea-governed-rationale.png) | A rationale bound to the displayed evidence packet, content hash, and source revision is current; grounded rationale, exact source reference, evidence gaps, source signals, evaluation status, and unattested provenance are distinct; advisor actions remain present. |
 | [Deterministic fallback](idea-deterministic-fallback.png) | AI unavailability is explicit, source fallback is labelled deterministic, and review, feedback, and conversion-intent actions remain usable. |
 
 Command:
@@ -18,3 +18,7 @@ npx playwright test tests/e2e/idea-candidate-actions.spec.ts --project=chromium 
 ```
 
 Run `npm run build` successfully before setting `PLAYWRIGHT_REUSE_VALIDATED_BUILD`.
+
+Unit regressions additionally prove same-candidate revision supersession and fence delayed
+prior-revision responses. Screenshots intentionally show the current matching-evidence and
+source-unavailable business states; they do not portray a prior rationale as current.

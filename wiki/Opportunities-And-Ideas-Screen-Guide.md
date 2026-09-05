@@ -78,7 +78,10 @@ The current journey metadata that suggests direct proposal promotion is an overc
 Lotus Idea owns explanation generation, evaluation, deterministic fallback, evidence gaps,
 provenance, and lineage. Gateway forwards the typed result, while the Workbench BFF derives the
 `idea.ai-explanation.generate` capability. Workbench accepts only a response matching the requested
-candidate and request identifiers, rejects any response that grants downstream authority or
+candidate, request, evidence packet, evidence content, and source revision-vector identifiers.
+When refreshed detail carries changed evidence, the earlier rationale is removed from the current
+decision path and a delayed prior-revision response cannot restore it. Workbench rejects any
+response that grants downstream authority or
 promotes unsupported capability, and requires an accepted evaluation before showing a served
 rationale. An unavailable response may include a source-prepared deterministic evidence summary;
 it is labelled as deterministic rather than AI output. Explanation failure never disables review,
@@ -94,7 +97,9 @@ feedback, or conversion-intent controls.
 | Queue or detail failure | Retry the failed source read |
 | Explanation not requested | Candidate facts and actions remain available; request it only when useful for the decision |
 | Explanation available | Review grounded claims, evidence limits, provenance, and the evaluation verdict before acting |
+| Explanation superseded | Request a rationale for the refreshed opportunity evidence; the earlier rationale is not presented as current |
 | AI explanation unavailable | Use the labelled deterministic evidence summary when supplied; candidate facts and actions remain available |
+| Evidence identity unavailable | Continue reviewing opportunity facts and actions; no current rationale is requested or claimed |
 | Explanation request failure | Retry the unchanged request or continue the candidate review without it |
 | Viewing evidence unavailable | Continue reviewing; no viewing confirmation is claimed |
 | Viewing evidence persistence failure | Continue reviewing or retry the unchanged observation |
@@ -108,7 +113,7 @@ Workbench does not call Idea directly, invent fallback ideas, calculate ranking,
 grant suitability or approval authority, contact a client, or create an order. The worklist keeps
 the complete returned source window available without treating off-screen render-buffer rows as
 viewed candidates. It does not compose prompts, edit or persist explanation content, infer missing
-claims, upgrade provenance, or use an explanation as action authority.
+claims, invent evidence revisions, upgrade provenance, or use an explanation as action authority.
 
 ## Adjacent Handoffs
 
