@@ -17,6 +17,9 @@ describe("DPM campaign query identity", () => {
       "dpm-campaigns",
       "definitions-server-read",
     ]);
+    expect(dpmCampaignQueryKeys.definitionsConfirmationReceipt().at(-1)).toBe(
+      "definitions-confirmation-receipt",
+    );
     expect(dpmCampaignQueryKeys.lifecycle(campaign)).toEqual([
       "workbench",
       "dpm-campaigns",

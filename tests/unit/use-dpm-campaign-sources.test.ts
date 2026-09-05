@@ -658,6 +658,70 @@ describe("useDpmCampaignSources", () => {
     expect(result.current.sources.lifecycle).toBeNull();
   });
 
+  it("keeps confirmed lifecycle posture ahead of a late pre-command definitions snapshot", async () => {
+    const beforeCommand = definitionListResponse("ACTIVE");
+    const confirmedDefinitions = definitionListResponse("SUPERSEDED", "2");
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
+      definitionResponse("campaign-a", "SUPERSEDED"),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
+      confirmedDefinitions,
+    );
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ definitions, readId }) => ({
+        definitions: useDpmCampaignDefinitionsSource(definitions, readId),
+        sources: useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      }),
+      {
+        initialProps: {
+          definitions: beforeCommand,
+          readId: "definitions-before-command",
+        },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.definitionsServerRead(),
+        )?.readId,
+      ).toBe("definitions-before-command"),
+    );
+
+    await act(async () =>
+      result.current.sources.refreshLifecycle(rowA, {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      }),
+    );
+    await waitFor(() =>
+      expect(result.current.definitions).toEqual(confirmedDefinitions),
+    );
+
+    rerender({
+      definitions: beforeCommand,
+      readId: "definitions-finishes-after-command",
+    });
+    expect(result.current.definitions).toEqual(confirmedDefinitions);
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.definitionsServerRead(),
+        )?.readId,
+      ).toBe("definitions-finishes-after-command"),
+    );
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(confirmedDefinitions);
+  });
+
   it("clears a prior launch package when newer readiness blocks launch", async () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness)
       .mockResolvedValueOnce(readinessResponse("READY"))
@@ -869,6 +933,29 @@ function definitionResponse(
     source_service: "lotus-manage",
     upstream_status: 200,
     data: { campaign_id: campaignId, status },
+  };
+}
+
+function definitionListResponse(
+  status: string,
+  replacementCampaignVersion?: string,
+): DpmCampaignDefinitionGatewayResponse {
+  return {
+    ...definitionResponse("campaign-a", status),
+    data: {
+      items: [
+        {
+          campaign_id: "campaign-a",
+          campaign_version: "1",
+          status,
+          ...(replacementCampaignVersion
+            ? {
+                superseded_by_campaign_version: replacementCampaignVersion,
+              }
+            : {}),
+        },
+      ],
+    },
   };
 }
 

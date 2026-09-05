@@ -15,7 +15,11 @@ import {
   type DpmCampaignWorkflowEvidence,
 } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
-import { containsCampaignWorkflowEvidence } from "@/features/workbench/dpm-campaign-command-evidence";
+import {
+  containsCampaignLifecycleEvidence,
+  containsCampaignWorkflowEvidence,
+  type DpmCampaignLifecycleConfirmationReceipt,
+} from "@/features/workbench/dpm-campaign-command-evidence";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import type { DpmCampaignWorkflowGatewayResponse } from "@/features/workbench/types";
 import type { DpmCampaignDefinitionRow } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -367,7 +371,10 @@ export function useDpmCampaignSources({
     return response;
   }
 
-  async function refreshLifecycle(row: DpmCampaignDefinitionRow) {
+  async function refreshLifecycle(
+    row: DpmCampaignDefinitionRow,
+    requiredReceipt?: DpmCampaignLifecycleConfirmationReceipt,
+  ) {
     const target = toRequiredSelection(row);
     const options = dpmCampaignLifecycleQueryOptions(target);
     const definitionsOptions = dpmCampaignDefinitionsQueryOptions();
@@ -376,6 +383,12 @@ export function useDpmCampaignSources({
     );
     const confirmationOptions =
       dpmCampaignLifecycleConfirmationQueryOptions(target);
+    if (requiredReceipt) {
+      queryClient.setQueryData<DpmCampaignLifecycleConfirmationReceipt>(
+        dpmCampaignQueryKeys.definitionsConfirmationReceipt(),
+        requiredReceipt,
+      );
+    }
     await Promise.all([
       queryClient.cancelQueries({ queryKey: options.queryKey, exact: true }),
       queryClient.cancelQueries({
@@ -385,6 +398,15 @@ export function useDpmCampaignSources({
     ]);
     try {
       const confirmation = await queryClient.fetchQuery(confirmationOptions);
+      if (
+        requiredReceipt &&
+        !containsCampaignLifecycleEvidence(
+          confirmation.definitions,
+          requiredReceipt,
+        )
+      ) {
+        throw new Error("Confirmed campaign definition is not yet available.");
+      }
       if (
         queryClient.getQueryData<ServerRead>(
           dpmCampaignQueryKeys.definitionsServerRead(),

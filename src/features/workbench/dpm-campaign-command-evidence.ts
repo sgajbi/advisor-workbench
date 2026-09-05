@@ -34,6 +34,13 @@ export type DpmCampaignLifecycleCommandEvidence = {
   operatingBoundaries: string;
 };
 
+export type DpmCampaignLifecycleConfirmationReceipt = Readonly<{
+  campaignId: string;
+  campaignVersion: string;
+  status: string;
+  replacementCampaignVersion: string;
+}>;
+
 export function validateCampaignLifecycleCommand(
   command: DpmCampaignLifecycleCommandInput,
 ) {
@@ -125,6 +132,25 @@ export function buildCampaignWorkflowCommandEvidence(
     reasonCodes: formatList(data.reason_codes),
     operatingBoundaries: formatList(data.operating_boundaries),
   };
+}
+
+export function containsCampaignLifecycleEvidence(
+  response: DpmCampaignDefinitionGatewayResponse,
+  receipt: DpmCampaignLifecycleConfirmationReceipt,
+): boolean {
+  const items = Array.isArray(response.data.items) ? response.data.items : [];
+  return items.some((item) => {
+    if (item === null || typeof item !== "object") return false;
+    const record = item as Record<string, unknown>;
+    return (
+      readString(record.campaign_id) === receipt.campaignId &&
+      readString(record.campaign_version) === receipt.campaignVersion &&
+      readString(record.status) === receipt.status &&
+      (receipt.replacementCampaignVersion === "N/A" ||
+        readString(record.superseded_by_campaign_version) ===
+          receipt.replacementCampaignVersion)
+    );
+  });
 }
 
 export function containsCampaignWorkflowEvidence(
