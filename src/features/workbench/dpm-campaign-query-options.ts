@@ -15,13 +15,21 @@ import {
   dpmCampaignQueryKeys,
   type DpmCampaignIdentity,
 } from "@/features/workbench/dpm-campaign-query-keys";
-import type { DpmCampaignWorkflowGatewayResponse } from "@/features/workbench/types";
+import type {
+  DpmCampaignDefinitionGatewayResponse,
+  DpmCampaignWorkflowGatewayResponse,
+} from "@/features/workbench/types";
 
 export type DpmCampaignWorkflowEvidence = Readonly<{
   approvalDecisions: DpmCampaignWorkflowGatewayResponse;
   assignmentActions: DpmCampaignWorkflowGatewayResponse;
   assignmentTasks: DpmCampaignWorkflowGatewayResponse;
   makerCheckerControls: DpmCampaignWorkflowGatewayResponse;
+}>;
+
+export type DpmCampaignLifecycleConfirmation = Readonly<{
+  lifecycle: DpmCampaignDefinitionGatewayResponse;
+  definitions: DpmCampaignDefinitionGatewayResponse;
 }>;
 
 export function dpmCampaignDefinitionsQueryOptions() {
@@ -46,6 +54,22 @@ export function dpmCampaignLifecycleQueryOptions(
 
 export function fetchDpmCampaignLifecycle(identity: DpmCampaignIdentity) {
   return getDpmCampaignDefinitionLifecycleEvents(apiIdentity(identity));
+}
+
+export function dpmCampaignLifecycleConfirmationQueryOptions(
+  identity: DpmCampaignIdentity,
+) {
+  return queryOptions({
+    queryKey: dpmCampaignQueryKeys.lifecycleConfirmation(identity),
+    queryFn: async (): Promise<DpmCampaignLifecycleConfirmation> => {
+      const [lifecycle, definitions] = await Promise.all([
+        fetchDpmCampaignLifecycle(identity),
+        fetchDpmCampaignDefinitions(),
+      ]);
+      return { lifecycle, definitions };
+    },
+    staleTime: 0,
+  });
 }
 
 export function dpmCampaignLaunchHistoryQueryOptions(

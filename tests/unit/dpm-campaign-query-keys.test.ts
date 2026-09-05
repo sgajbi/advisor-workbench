@@ -20,6 +20,14 @@ describe("DPM campaign query identity", () => {
       "2026.05",
       "lifecycle",
     ]);
+    expect(dpmCampaignQueryKeys.lifecycleConfirmation(campaign)).toEqual([
+      "workbench",
+      "dpm-campaigns",
+      "campaign",
+      "campaign-1",
+      "2026.05",
+      "lifecycle-confirmation",
+    ]);
     expect(dpmCampaignQueryKeys.workflow(campaign)).toEqual([
       "workbench",
       "dpm-campaigns",
