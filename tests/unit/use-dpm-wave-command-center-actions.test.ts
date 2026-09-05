@@ -367,6 +367,12 @@ function renderActions(
   definitions: DpmCampaignDefinitionGatewayResponse = campaignDefinitions,
   queryClient = createTestQueryClient(),
   sourceWaveList: DpmWaveGatewayResponse | null = waveResponse,
+  workflowEvidence: Partial<{
+    approvalDecisions: DpmCampaignWorkflowGatewayResponse | null;
+    assignmentActions: DpmCampaignWorkflowGatewayResponse | null;
+    assignmentTasks: DpmCampaignWorkflowGatewayResponse | null;
+    makerCheckerControls: DpmCampaignWorkflowGatewayResponse | null;
+  }> = {},
 ) {
   const rendered = renderHook(
     () =>
@@ -375,6 +381,10 @@ function renderActions(
         campaignSourceReadId: "source-read-default",
         waveList: sourceWaveList,
         campaignDefinitions: definitions,
+        campaignApprovalDecisions: workflowEvidence.approvalDecisions,
+        campaignAssignmentActions: workflowEvidence.assignmentActions,
+        campaignAssignmentTasks: workflowEvidence.assignmentTasks,
+        campaignMakerCheckerControls: workflowEvidence.makerCheckerControls,
       }),
     {
       wrapper: createQueryClientWrapper(queryClient),
@@ -2766,6 +2776,47 @@ describe("useDpmWaveCommandCenterActions", () => {
         "refreshed source evidence could not be loaded",
       );
     });
+  });
+
+  it("keeps receipt-rejected workflow props out of the command-center model", async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.workflowConfirmationReceipt({
+        campaignId: "campaign-holdings-202605",
+        campaignVersion: "2026.05",
+      }),
+      {
+        evidenceRef: "accepted-reference",
+        source: "assignmentTasks",
+        transition: false,
+        confirmedTotalCount: 1,
+      },
+    );
+    const staleEvidence: DpmCampaignWorkflowGatewayResponse = {
+      ...campaignWorkflowEvidenceResponse,
+      data: {
+        items: [{ evidence_ref: "pre-command-reference" }],
+        count: 1,
+        total_count: 1,
+        limit: 10,
+        offset: 0,
+      },
+    };
+
+    const { result } = renderActions(
+      campaignDefinitions,
+      queryClient,
+      waveResponse,
+      {
+        approvalDecisions: staleEvidence,
+        assignmentActions: staleEvidence,
+        assignmentTasks: staleEvidence,
+        makerCheckerControls: staleEvidence,
+      },
+    );
+
+    expect(result.current.model.campaignWorkflowEvidenceRows).toEqual([]);
+    expect(result.current.campaignWorkflowEvidenceResolved).toBe(false);
   });
 
   it("keeps campaign workflow command failures bounded and does not refresh local evidence", async () => {
