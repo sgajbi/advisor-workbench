@@ -44,6 +44,8 @@ type OffsetSelection = Readonly<{ campaignKey: string; offset: number }>;
 type ConfirmationLock = Readonly<{
   message: string;
 }>;
+type WorkflowRecovery = InitialWorkflowEvidence &
+  Readonly<{ campaignKey: string }>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -103,6 +105,8 @@ export function useDpmCampaignSources({
     campaignKey: initialCampaignKey ?? "",
     offset: 0,
   });
+  const [workflowRecovery, setWorkflowRecovery] =
+    useState<WorkflowRecovery | null>(null);
   const historyOffset =
     selection && historySelection.campaignKey === selection.key
       ? historySelection.offset
@@ -132,6 +136,19 @@ export function useDpmCampaignSources({
       selection?.key,
     ],
   );
+  const initialWorkflowIsAuthoritative =
+    selection?.key === initialCampaignKey;
+  const workflowRecoveredForCurrentInput =
+    workflowRecovery !== null &&
+    workflowRecovery.campaignKey === selection?.key &&
+    workflowRecovery.approvalDecisions === approvalDecisions &&
+    workflowRecovery.assignmentActions === assignmentActions &&
+    workflowRecovery.assignmentTasks === assignmentTasks &&
+    workflowRecovery.makerCheckerControls === makerCheckerControls;
+  const workflowRequiresRecovery =
+    initialWorkflowIsAuthoritative &&
+    !initialWorkflow &&
+    !workflowRecoveredForCurrentInput;
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
     enabled: false,
@@ -164,13 +181,22 @@ export function useDpmCampaignSources({
     initialData: initialWorkflow,
   });
   useEffect(() => {
-    if (selection && initialWorkflow) {
-      queryClient.setQueryData(
-        dpmCampaignQueryKeys.workflow(selection),
-        initialWorkflow,
-      );
+    if (!selection || !initialWorkflowIsAuthoritative) {
+      return;
     }
-  }, [initialWorkflow, queryClient, selection]);
+    const workflowKey = dpmCampaignQueryKeys.workflow(selection);
+    if (initialWorkflow) {
+      queryClient.setQueryData(workflowKey, initialWorkflow);
+    } else if (!workflowRecoveredForCurrentInput) {
+      queryClient.removeQueries({ queryKey: workflowKey, exact: true });
+    }
+  }, [
+    initialWorkflow,
+    initialWorkflowIsAuthoritative,
+    queryClient,
+    selection,
+    workflowRecoveredForCurrentInput,
+  ]);
   const lifecycleConfirmationKey = dpmCampaignQueryKeys.confirmationLock(
     queryIdentity,
     "lifecycle",
@@ -267,9 +293,14 @@ export function useDpmCampaignSources({
     if (retainedLock) {
       return await refreshWorkflow(row);
     }
-    return await queryClient.fetchQuery(
-      dpmCampaignWorkflowQueryOptions(target),
-    );
+    const options = dpmCampaignWorkflowQueryOptions(target);
+    const response = await queryClient.fetchQuery({
+      ...options,
+      staleTime:
+        row.key === initialCampaignKey && !initialWorkflow ? 0 : options.staleTime,
+    });
+    markWorkflowRecovered(row);
+    return response;
   }
 
   async function refreshLifecycle(row: DpmCampaignDefinitionRow) {
@@ -320,6 +351,7 @@ export function useDpmCampaignSources({
         ...options,
         staleTime: 0,
       });
+      markWorkflowRecovered(row);
       queryClient.removeQueries({
         queryKey: dpmCampaignQueryKeys.confirmationLock(target, "workflow"),
         exact: true,
@@ -352,13 +384,14 @@ export function useDpmCampaignSources({
     launchPackage: packageQuery.data ?? null,
     launchPackageError: errorMessage(packageQuery.error),
     launchPackagePending: packageQuery.isFetching,
-    workflow: workflowQuery.data ?? null,
+    workflow: workflowRequiresRecovery ? null : (workflowQuery.data ?? null),
     workflowError:
       workflowConfirmationQuery.data?.message ??
       errorMessage(workflowQuery.error),
     workflowPending: workflowQuery.isFetching,
     workflowResolved:
-      workflowQuery.isFetched || workflowQuery.data !== undefined,
+      !workflowRequiresRecovery &&
+      (workflowQuery.isFetched || workflowQuery.data !== undefined),
     loadLifecycle,
     loadLaunchHistory,
     loadLaunchReadiness,
@@ -366,6 +399,19 @@ export function useDpmCampaignSources({
     refreshLifecycle,
     refreshWorkflow,
   };
+
+  function markWorkflowRecovered(row: DpmCampaignDefinitionRow) {
+    if (row.key !== initialCampaignKey || initialWorkflow) {
+      return;
+    }
+    setWorkflowRecovery({
+      campaignKey: row.key,
+      approvalDecisions,
+      assignmentActions,
+      assignmentTasks,
+      makerCheckerControls,
+    });
+  }
 }
 
 function toRequiredSelection(row: DpmCampaignDefinitionRow): CampaignSelection {

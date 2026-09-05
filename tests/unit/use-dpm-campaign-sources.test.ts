@@ -186,6 +186,50 @@ describe("useDpmCampaignSources", () => {
     ).toEqual(current[0]);
   });
 
+  it("suppresses retained workflow when current source evidence is incomplete", async () => {
+    const queryClient = createTestQueryClient();
+    const prior = ["approval-old", "action-old", "task-old", "control-old"].map(
+      workflowResponse,
+    );
+    const current = ["approval-new", "action-new", "task-new", "control-new"].map(
+      workflowResponse,
+    );
+    queryClient.setQueryData(dpmCampaignQueryKeys.workflow(rowA), {
+      approvalDecisions: prior[0],
+      assignmentActions: prior[1],
+      assignmentTasks: prior[2],
+      makerCheckerControls: prior[3],
+    });
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(current[0]);
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(current[1]);
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(current[2]);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(current[3]);
+
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            approvalDecisions: current[0],
+            assignmentActions: null,
+            assignmentTasks: current[2],
+            makerCheckerControls: current[3],
+          },
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    expect(result.current.workflow).toBeNull();
+    expect(result.current.workflowResolved).toBe(false);
+
+    await act(async () => result.current.loadWorkflow(rowA));
+    await waitFor(() =>
+      expect(result.current.workflow?.assignmentActions).toEqual(current[1]),
+    );
+    expect(result.current.workflowResolved).toBe(true);
+  });
+
   it("keeps workflow confirmation locked when lifecycle recovery succeeds", async () => {
     vi.mocked(getDpmCampaignApprovalDecisions).mockRejectedValue(
       new Error("Workflow evidence unavailable"),
