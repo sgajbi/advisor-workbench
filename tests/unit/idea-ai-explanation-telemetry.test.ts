@@ -6,6 +6,7 @@ import {
 } from "../../src/features/analytics-observability/metrics";
 import {
   recordIdeaExplanationOpened,
+  recordIdeaExplanationFailed,
   recordIdeaExplanationServed,
   recordIdeaExplanationUnavailable,
 } from "../../src/features/proposals/idea-ai-explanation-telemetry";
@@ -50,5 +51,14 @@ describe("Idea explanation journey telemetry", () => {
     recordIdeaExplanationUnavailable("future_source_reason");
 
     expect(getAnalyticsUiMetricEvents()[0]?.labels.reason).toBe("other");
+  });
+
+  it("distinguishes request failure from a returned partial fallback", () => {
+    recordIdeaExplanationFailed();
+
+    expect(getAnalyticsUiMetricEvents()[0]?.labels).toMatchObject({
+      state: "error",
+      reason: "request_failed",
+    });
   });
 });

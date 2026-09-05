@@ -11,6 +11,7 @@ const dependencies = vi.hoisted(() => ({
   opened: vi.fn(),
   served: vi.fn(),
   unavailable: vi.fn(),
+  failed: vi.fn(),
 }));
 
 vi.mock("../../src/features/proposals/api", () => ({
@@ -20,6 +21,7 @@ vi.mock("../../src/features/proposals/api", () => ({
 
 vi.mock("../../src/features/proposals/idea-ai-explanation-telemetry", () => ({
   recordIdeaExplanationOpened: dependencies.opened,
+  recordIdeaExplanationFailed: dependencies.failed,
   recordIdeaExplanationServed: dependencies.served,
   recordIdeaExplanationUnavailable: dependencies.unavailable,
 }));
@@ -199,7 +201,7 @@ describe("IdeaCandidateExplanation", () => {
     expect(
       dependencies.requestAdvisorIdeaAIExplanation.mock.calls[1][0],
     ).toEqual(dependencies.requestAdvisorIdeaAIExplanation.mock.calls[0][0]);
-    expect(dependencies.unavailable).toHaveBeenCalledWith("request_failed");
+    expect(dependencies.failed).toHaveBeenCalledTimes(1);
   });
 
   it("creates a fresh request identity after candidate evidence conflicts", async () => {
@@ -241,6 +243,6 @@ describe("IdeaCandidateExplanation", () => {
       "A protected request reference could not be created",
     );
     expect(dependencies.requestAdvisorIdeaAIExplanation).not.toHaveBeenCalled();
-    expect(dependencies.unavailable).toHaveBeenCalledWith("request_failed");
+    expect(dependencies.failed).toHaveBeenCalledTimes(1);
   });
 });
