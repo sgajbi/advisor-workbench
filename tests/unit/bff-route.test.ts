@@ -1673,6 +1673,89 @@ describe("BFF proxy route", () => {
     expect(upstreamHeaders.get("Cookie")).toBeNull();
   });
 
+  it.each([
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001",
+    },
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeType=client&scopeId=PB_SG_GLOBAL_BAL_001",
+    },
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&scopeId=UNENTITLED_PORTFOLIO",
+    },
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeId=UNENTITLED_PORTFOLIO&scopeId=PB_SG_GLOBAL_BAL_001",
+    },
+    {
+      route: "report-jobs",
+      query:
+        "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
+    },
+    {
+      route: "report-jobs",
+      query:
+        "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=UNENTITLED_PORTFOLIO&reportType=portfolio_review",
+    },
+    {
+      route: "report-jobs",
+      query:
+        "portfolioId=UNENTITLED_PORTFOLIO&portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
+    },
+    {
+      route: "report-jobs",
+      query:
+        "portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review&reportType=portfolio_review",
+    },
+    {
+      route: "report-jobs",
+      query:
+        "portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review&reportType=client_statement",
+    },
+  ])("rejects ambiguous reporting scope before Gateway fetch: $query", async ({ route, query }) => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      `http://localhost:3000/api/bff/api/v1/${route}?${query}`,
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", ...route.split("/")] }),
+    });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      code: "reporting_invalid_request",
+      status: "rejected",
+    });
+  });
+
+  it("forwards the exact normalized reporting scope admitted by the BFF", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"data":[]}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-jobs?limit=10&portfolioId=%20PB_SG_GLOBAL_BAL_001%20&reportType=%20portfolio_review%20",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ path: ["api", "v1", "report-jobs"] }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      "http://gateway.dev.lotus/api/v1/report-jobs?limit=10&portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
+    );
+  });
+
   it("rejects a report-ordering portfolio outside the server-configured entitlement", async () => {
     const fetchMock = vi.mocked(fetch);
     const request = new NextRequest(

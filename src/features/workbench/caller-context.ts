@@ -149,7 +149,11 @@ type IdeaAuthorityResolution =
 
 export type ReportingAuthorityResolution =
   | { status: "not_applicable" }
-  | { status: "applied"; mode: "development_configured" }
+  | {
+      status: "applied";
+      mode: "development_configured";
+      admittedSearch: string;
+    }
   | {
       status: "rejected";
       reason:
@@ -450,8 +454,8 @@ export function applyReportOrderingRouteCallerContextHeaders(
   }
 
   const requestPosture = validateReportingWorkspaceRequest(request, new Set(portfolioIds));
-  if (requestPosture !== "ready") {
-    return { status: "rejected", reason: requestPosture };
+  if (requestPosture.status === "rejected") {
+    return requestPosture;
   }
 
   const context = resolveReportingDevelopmentContext();
@@ -467,7 +471,11 @@ export function applyReportOrderingRouteCallerContextHeaders(
   headers.set("X-Caller-Portfolio-Ids", portfolioIds.join(","));
   headers.set("X-Caller-Capabilities", ADVISOR_BOOK_READ_CAPABILITY);
 
-  return { status: "applied", mode: authorityMode };
+  return {
+    status: "applied",
+    mode: authorityMode,
+    admittedSearch: requestPosture.admittedSearch,
+  };
 }
 
 function resolveIdeaAuthorityMode():
@@ -503,32 +511,53 @@ function validateReportingWorkspaceRequest(
     bodyText?: string;
   },
   entitledPortfolioIds: ReadonlySet<string>,
-): "ready" | "invalid_reporting_request" | "reporting_scope_not_entitled" {
+):
+  | { status: "ready"; admittedSearch: string }
+  | {
+      status: "rejected";
+      reason: "invalid_reporting_request" | "reporting_scope_not_entitled";
+    } {
   if (request.upstreamPath === "api/v1/report-ordering/options") {
-    const scopeType = request.searchParams.get("scopeType");
-    const scopeId = request.searchParams.get("scopeId")?.trim();
+    const scopeType = readSingleQueryValue(request.searchParams, "scopeType");
+    const scopeId = readSingleQueryValue(request.searchParams, "scopeId");
     if (scopeType !== "portfolio" || !scopeId) {
-      return "invalid_reporting_request";
+      return { status: "rejected", reason: "invalid_reporting_request" };
     }
-    return entitledPortfolioIds.has(scopeId) ? "ready" : "reporting_scope_not_entitled";
+    if (!entitledPortfolioIds.has(scopeId)) {
+      return { status: "rejected", reason: "reporting_scope_not_entitled" };
+    }
+    return {
+      status: "ready",
+      admittedSearch: replaceQueryValues(request.searchParams, {
+        scopeType,
+        scopeId,
+      }),
+    };
   }
 
   if (request.upstreamPath === "api/v1/report-jobs") {
-    const portfolioId = request.searchParams.get("portfolioId")?.trim();
-    const reportType = request.searchParams.get("reportType")?.trim();
+    const portfolioId = readSingleQueryValue(request.searchParams, "portfolioId");
+    const reportType = readSingleQueryValue(request.searchParams, "reportType");
     if (!portfolioId || reportType !== "portfolio_review") {
-      return "invalid_reporting_request";
+      return { status: "rejected", reason: "invalid_reporting_request" };
     }
-    return entitledPortfolioIds.has(portfolioId)
-      ? "ready"
-      : "reporting_scope_not_entitled";
+    if (!entitledPortfolioIds.has(portfolioId)) {
+      return { status: "rejected", reason: "reporting_scope_not_entitled" };
+    }
+    return {
+      status: "ready",
+      admittedSearch: replaceQueryValues(request.searchParams, {
+        portfolioId,
+        reportType,
+      }),
+    };
   }
 
   if (
     request.method === "GET" &&
     /^api\/v1\/report-batches\/[^/]+$/.test(request.upstreamPath)
   ) {
-    return "ready";
+    return { status: "ready", admittedSearch: request.searchParams.toString() };
   }
 
   const submittedPortfolioIds =
@@ -537,11 +566,31 @@ function validateReportingWorkspaceRequest(
       : readSubmittedPortfolioIds(request.bodyText);
   const exactlyOnePortfolio = request.upstreamPath !== "api/v1/report-batches";
   if (!submittedPortfolioIds || (exactlyOnePortfolio && submittedPortfolioIds.length !== 1)) {
-    return "invalid_reporting_request";
+    return { status: "rejected", reason: "invalid_reporting_request" };
   }
   return submittedPortfolioIds.every((portfolioId) => entitledPortfolioIds.has(portfolioId))
-    ? "ready"
-    : "reporting_scope_not_entitled";
+    ? { status: "ready", admittedSearch: request.searchParams.toString() }
+    : { status: "rejected", reason: "reporting_scope_not_entitled" };
+}
+
+function readSingleQueryValue(searchParams: URLSearchParams, key: string): string | null {
+  const values = searchParams.getAll(key);
+  if (values.length !== 1) {
+    return null;
+  }
+  return values[0]?.trim() || null;
+}
+
+function replaceQueryValues(
+  searchParams: URLSearchParams,
+  admittedValues: Readonly<Record<string, string>>,
+): string {
+  const admittedSearchParams = new URLSearchParams(searchParams);
+  for (const [key, value] of Object.entries(admittedValues)) {
+    admittedSearchParams.delete(key);
+    admittedSearchParams.append(key, value);
+  }
+  return admittedSearchParams.toString();
 }
 
 function readBatchPortfolioIds(bodyText: string | undefined): string[] | null {
