@@ -123,10 +123,7 @@ export function IdeaReviewActionForm({
       {retryableReview ? (
         <IdeaActionRetryNotice
           actionLabel="review"
-          details={reviewRetryDetails(
-            retryableReview.request,
-            businessReasonOptions,
-          )}
+          details={reviewRetryDetails(retryableReview.request)}
           disabled={isPending}
           pending={isPending && pendingKind === "review"}
           onRetry={() => onRetry(retryableReview)}
@@ -203,10 +200,7 @@ export function IdeaConversionIntentForm({
       {retryableConversion ? (
         <IdeaActionRetryNotice
           actionLabel="conversion intent"
-          details={conversionRetryDetails(
-            retryableConversion.request,
-            businessReasonOptions,
-          )}
+          details={conversionRetryDetails(retryableConversion.request)}
           disabled={isPending}
           pending={isPending && pendingKind === "conversion"}
           onRetry={() => onRetry(retryableConversion)}

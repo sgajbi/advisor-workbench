@@ -45,8 +45,7 @@ export const ADVISOR_IDEA_REASON_CODES = [
   "ai_action_content_blocked",
 ] as const;
 
-export type AdvisorIdeaReasonCode =
-  (typeof ADVISOR_IDEA_REASON_CODES)[number];
+export type AdvisorIdeaReasonCode = (typeof ADVISOR_IDEA_REASON_CODES)[number];
 
 export type AdvisorIdeaReviewAction =
   | "approve_for_conversion"
@@ -134,6 +133,18 @@ export function buildIdeaBusinessReasonOptions(
   return options.length > 0
     ? options
     : [{ value: "review_required", label: "Advisor review is required" }];
+}
+
+export function ideaBusinessReasonLabel(
+  reasonCodes: readonly AdvisorIdeaReasonCode[],
+): string {
+  for (const reasonCode of reasonCodes) {
+    const label = ADVISOR_DECISION_BASIS_LABELS[reasonCode];
+    if (label) {
+      return label;
+    }
+  }
+  return "Adviser review required";
 }
 
 export function buildIdeaActionReasonCodes({
