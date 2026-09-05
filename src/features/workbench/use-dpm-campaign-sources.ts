@@ -7,8 +7,7 @@ import {
   dpmCampaignLaunchHistoryQueryOptions,
   dpmCampaignLaunchPackageQueryOptions,
   dpmCampaignDefinitionsQueryOptions,
-  fetchDpmCampaignDefinitions,
-  fetchDpmCampaignLifecycle,
+  dpmCampaignLifecycleConfirmationQueryOptions,
   dpmCampaignLifecycleQueryOptions,
   dpmCampaignPreviewReadinessQueryOptions,
   dpmCampaignWorkflowQueryOptions,
@@ -153,6 +152,10 @@ export function useDpmCampaignSources({
     !workflowRecoveredForCurrentInput;
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
+    enabled: false,
+  });
+  const lifecycleConfirmationReadQuery = useQuery({
+    ...dpmCampaignLifecycleConfirmationQueryOptions(queryIdentity),
     enabled: false,
   });
   const historyQuery = useQuery({
@@ -309,6 +312,8 @@ export function useDpmCampaignSources({
     const target = toRequiredSelection(row);
     const options = dpmCampaignLifecycleQueryOptions(target);
     const definitionsOptions = dpmCampaignDefinitionsQueryOptions();
+    const confirmationOptions =
+      dpmCampaignLifecycleConfirmationQueryOptions(target);
     await Promise.all([
       queryClient.cancelQueries({ queryKey: options.queryKey, exact: true }),
       queryClient.cancelQueries({
@@ -317,17 +322,17 @@ export function useDpmCampaignSources({
       }),
     ]);
     try {
-      const [response, definitions] = await Promise.all([
-        fetchDpmCampaignLifecycle(target),
-        fetchDpmCampaignDefinitions(),
-      ]);
-      queryClient.setQueryData(options.queryKey, response);
-      queryClient.setQueryData(definitionsOptions.queryKey, definitions);
+      const confirmation = await queryClient.fetchQuery(confirmationOptions);
+      queryClient.setQueryData(options.queryKey, confirmation.lifecycle);
+      queryClient.setQueryData(
+        definitionsOptions.queryKey,
+        confirmation.definitions,
+      );
       queryClient.removeQueries({
         queryKey: dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
         exact: true,
       });
-      return response;
+      return confirmation.lifecycle;
     } catch (error) {
       queryClient.setQueryData<ConfirmationLock>(
         dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),
@@ -375,7 +380,8 @@ export function useDpmCampaignSources({
     lifecycleError:
       lifecycleConfirmationQuery.data?.message ??
       errorMessage(lifecycleQuery.error),
-    lifecyclePending: lifecycleQuery.isFetching,
+    lifecyclePending:
+      lifecycleQuery.isFetching || lifecycleConfirmationReadQuery.isFetching,
     launchHistory: historyQuery.data ?? null,
     launchHistoryError: errorMessage(historyQuery.error),
     launchHistoryPending: historyQuery.isFetching,

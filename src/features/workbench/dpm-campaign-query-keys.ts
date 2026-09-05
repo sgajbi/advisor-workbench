@@ -19,6 +19,11 @@ export const dpmCampaignQueryKeys = {
     ] as const,
   lifecycle: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "lifecycle"] as const,
+  lifecycleConfirmation: (identity: DpmCampaignIdentity) =>
+    [
+      ...dpmCampaignQueryKeys.campaign(identity),
+      "lifecycle-confirmation",
+    ] as const,
   launchHistory: (
     identity: DpmCampaignIdentity,
     offset: number,

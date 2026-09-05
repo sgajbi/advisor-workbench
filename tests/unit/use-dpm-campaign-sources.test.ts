@@ -313,6 +313,41 @@ describe("useDpmCampaignSources", () => {
     );
   });
 
+  it("deduplicates concurrent lifecycle confirmation reads", async () => {
+    const pendingLifecycle = deferred<DpmCampaignDefinitionGatewayResponse>();
+    vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockReturnValue(
+      pendingLifecycle.promise,
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
+      definitionResponse("campaign-refreshed"),
+    );
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: null,
+          initialWorkflowEvidence: emptyWorkflowEvidence(),
+        }),
+      { wrapper: createQueryClientWrapper() },
+    );
+
+    let first!: Promise<unknown>;
+    let second!: Promise<unknown>;
+    act(() => {
+      first = result.current.refreshLifecycle(rowA);
+      second = result.current.refreshLifecycle(rowA);
+    });
+    await waitFor(() => expect(result.current.lifecyclePending).toBe(true));
+    expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledTimes(1);
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(1);
+
+    pendingLifecycle.resolve(definitionResponse("campaign-a", "CONFIRMED"));
+    await act(async () => Promise.all([first, second]));
+
+    await waitFor(() => expect(result.current.lifecyclePending).toBe(false));
+    expect(result.current.lifecycle?.data.status).toBe("CONFIRMED");
+  });
+
   it("clears a prior launch package when newer readiness blocks launch", async () => {
     vi.mocked(getDpmCampaignDefinitionPreviewReadiness)
       .mockResolvedValueOnce(readinessResponse("READY"))
