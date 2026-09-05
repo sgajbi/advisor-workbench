@@ -2192,6 +2192,16 @@ describe("useDpmWaveCommandCenterActions", () => {
         "Lifecycle action was recorded, but the updated campaign record could not be loaded. Reload the campaign before taking another action.",
       );
     });
+
+    await act(async () => {
+      await result.current.loadCampaignLifecycle(
+        result.current.selectedCampaign!,
+      );
+    });
+    await waitFor(() =>
+      expect(result.current.campaignLifecycleError).toBeNull(),
+    );
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
   });
 
   it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {

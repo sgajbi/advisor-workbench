@@ -1,7 +1,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useDpmCampaignSources } from "../../src/features/workbench/use-dpm-campaign-sources";
+import {
+  useDpmCampaignDefinitionsSource,
+  useDpmCampaignSources,
+} from "../../src/features/workbench/use-dpm-campaign-sources";
+import { dpmCampaignQueryKeys } from "../../src/features/workbench/dpm-campaign-query-keys";
 import {
   getDpmCampaignApprovalDecisions,
   getDpmCampaignAssignmentActions,
@@ -104,6 +108,24 @@ describe("useDpmCampaignSources", () => {
       expect(result.current.workflow?.approvalDecisions).toBe(responses[0]),
     );
     expect(result.current.workflow?.makerCheckerControls).toBe(responses[3]);
+  });
+
+  it("publishes a newer server definitions response over retained query data", async () => {
+    const queryClient = createTestQueryClient();
+    const prior = definitionResponse("campaign-prior");
+    const current = definitionResponse("campaign-current");
+    queryClient.setQueryData(dpmCampaignQueryKeys.definitions(), prior);
+
+    const { result } = renderHook(
+      () => useDpmCampaignDefinitionsSource(current),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(result.current).toEqual(current));
+    expect(result.current.correlation_id).toBe("corr-campaign-current");
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(current);
   });
 
   it("clears a prior launch package when newer readiness blocks launch", async () => {
