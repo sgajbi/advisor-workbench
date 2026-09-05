@@ -277,7 +277,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Evidence hash: Not provided by Idea detail contract",
+        "Evidence hash: sha256:evidence-high-cash-001",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Close detail" })).toHaveAttribute(
