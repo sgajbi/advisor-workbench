@@ -234,7 +234,6 @@ export function useDpmWaveCommandCenterActions({
     )
       ? selectedCampaignState.selectedCampaignKey
       : (campaignListModel.campaignRows[0]?.key ?? null);
-  const useInitialCampaignEvidence = selectedCampaignKey === initialCampaignKey;
   const selectedCampaign =
     campaignListModel.campaignRows.find(
       (row) => row.key === selectedCampaignKey,
@@ -261,17 +260,13 @@ export function useDpmWaveCommandCenterActions({
     campaignLaunchPackage: campaignSources.launchPackage,
     campaignLaunchResponse: null,
     campaignApprovalDecisions:
-      campaignSources.workflow?.approvalDecisions ??
-      (useInitialCampaignEvidence ? campaignApprovalDecisions : null),
+      campaignSources.workflow?.approvalDecisions ?? null,
     campaignAssignmentActions:
-      campaignSources.workflow?.assignmentActions ??
-      (useInitialCampaignEvidence ? campaignAssignmentActions : null),
+      campaignSources.workflow?.assignmentActions ?? null,
     campaignAssignmentTasks:
-      campaignSources.workflow?.assignmentTasks ??
-      (useInitialCampaignEvidence ? campaignAssignmentTasks : null),
+      campaignSources.workflow?.assignmentTasks ?? null,
     campaignMakerCheckerControls:
-      campaignSources.workflow?.makerCheckerControls ??
-      (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
+      campaignSources.workflow?.makerCheckerControls ?? null,
   });
   const campaignCommands = useDpmCampaignCommands({
     selectedCampaign,
@@ -287,17 +282,13 @@ export function useDpmWaveCommandCenterActions({
     campaignLaunchPackage: campaignSources.launchPackage,
     campaignLaunchResponse: campaignCommands.launchResponse,
     campaignApprovalDecisions:
-      campaignSources.workflow?.approvalDecisions ??
-      (useInitialCampaignEvidence ? campaignApprovalDecisions : null),
+      campaignSources.workflow?.approvalDecisions ?? null,
     campaignAssignmentActions:
-      campaignSources.workflow?.assignmentActions ??
-      (useInitialCampaignEvidence ? campaignAssignmentActions : null),
+      campaignSources.workflow?.assignmentActions ?? null,
     campaignAssignmentTasks:
-      campaignSources.workflow?.assignmentTasks ??
-      (useInitialCampaignEvidence ? campaignAssignmentTasks : null),
+      campaignSources.workflow?.assignmentTasks ?? null,
     campaignMakerCheckerControls:
-      campaignSources.workflow?.makerCheckerControls ??
-      (useInitialCampaignEvidence ? campaignMakerCheckerControls : null),
+      campaignSources.workflow?.makerCheckerControls ?? null,
   });
   const selectedWaveId = model.selectedWaveId;
   const retainedWaveAwaitingConfirmation =

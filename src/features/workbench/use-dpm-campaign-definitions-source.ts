@@ -72,7 +72,6 @@ export function useDpmCampaignDefinitionsSource(
         ? initialDefinitions
         : undefined,
   });
-
   useEffect(() => {
     if (serverReadAlreadyAdmitted) return;
     let active = true;
@@ -88,7 +87,7 @@ export function useDpmCampaignDefinitionsSource(
         }
         if (initialDefinitions && initialDefinitionsContainConfirmedReceipt) {
           queryClient.setQueryData(options.queryKey, initialDefinitions);
-        } else if (!initialDefinitions) {
+        } else {
           queryClient.removeQueries({ queryKey: options.queryKey, exact: true });
         }
         queryClient.setQueryData<ServerRead>(serverReadKey, {
@@ -108,7 +107,12 @@ export function useDpmCampaignDefinitionsSource(
     serverReadKey,
   ]);
 
-  if (initialDefinitions === null) return null;
+  if (initialDefinitions === null) {
+    return null;
+  }
+  if (!serverReadAlreadyAdmitted && !initialDefinitionsContainConfirmedReceipt) {
+    return null;
+  }
   return !serverReadAlreadyAdmitted &&
     initialDefinitionsContainConfirmedReceipt
     ? initialDefinitions

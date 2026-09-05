@@ -171,6 +171,39 @@ describe("useDpmCampaignSources", () => {
     );
   });
 
+  it("suppresses retained definitions when current evidence fails a retained receipt", async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowA),
+      {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      },
+    );
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.definitions(),
+      definitionListResponse("ACTIVE"),
+    );
+
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignDefinitionsSource(
+          definitionListResponse("ACTIVE"),
+          "stale-active-read",
+        ),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    expect(result.current).toBeNull();
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+      ).toBeUndefined(),
+    );
+  });
+
   it("publishes newer server workflow evidence over retained query data", async () => {
     const queryClient = createTestQueryClient();
     const prior = ["approval-old", "action-old", "task-old", "control-old"].map(
@@ -1010,7 +1043,7 @@ describe("useDpmCampaignSources", () => {
       definitions: beforeCommand,
       readId: "definitions-finishes-after-command",
     });
-    expect(result.current.definitions).toEqual(reconciledDefinitions);
+    expect(result.current.definitions).toBeNull();
     await waitFor(() =>
       expect(
         queryClient.getQueryData<{ readId: string }>(
@@ -1020,7 +1053,7 @@ describe("useDpmCampaignSources", () => {
     );
     expect(
       queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
-    ).toEqual(reconciledDefinitions);
+    ).toBeUndefined();
 
     const activeListAfterTerminalRemoval = {
       ...confirmedDefinitions,
