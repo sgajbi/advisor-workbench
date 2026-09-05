@@ -314,6 +314,16 @@ describe("analytics UI observability metrics", () => {
       ["workbench.reporting", "portfolio-review-batch", "reporting.portfolio-review.batch.status"],
       [
         "workbench.recommendations",
+        "idea-candidate-explanation",
+        "idea.candidate.ai-explanation.advisor_rationale_draft",
+      ],
+      [
+        "workbench.recommendations",
+        "idea-candidate-detail",
+        "idea.candidate.ai-explanation",
+      ],
+      [
+        "workbench.recommendations",
         "idea-candidate-detail",
         "idea.candidate.review-action",
       ],
