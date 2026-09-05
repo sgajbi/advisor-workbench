@@ -10,10 +10,12 @@ import {
   dpmCampaignLifecycleConfirmationQueryOptions,
   dpmCampaignLifecycleQueryOptions,
   dpmCampaignPreviewReadinessQueryOptions,
+  dpmCampaignWorkflowConfirmationQueryOptions,
   dpmCampaignWorkflowQueryOptions,
   type DpmCampaignWorkflowEvidence,
 } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
+import { containsCampaignWorkflowEvidence } from "@/features/workbench/dpm-campaign-command-evidence";
 import { CAMPAIGN_LAUNCH_HISTORY_PAGE_SIZE } from "@/features/workbench/dpm-campaign-launch-history-constants";
 import type { DpmCampaignWorkflowGatewayResponse } from "@/features/workbench/types";
 import type { DpmCampaignDefinitionRow } from "@/features/workbench/dpm-wave-command-center-view-model";
@@ -48,6 +50,7 @@ type WorkflowRecovery = Readonly<{
   readId: string;
 }>;
 type ServerRead = Readonly<{ readId: string }>;
+type WorkflowConfirmationReceipt = Readonly<{ evidenceRef: string }>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -166,6 +169,30 @@ export function useDpmCampaignSources({
     enabled: false,
     initialData: initialWorkflow,
   });
+  const workflowConfirmationReadQuery = useQuery({
+    ...dpmCampaignWorkflowConfirmationQueryOptions(queryIdentity),
+    enabled: false,
+  });
+  const workflowConfirmationReceiptKey = useMemo(
+    () => dpmCampaignQueryKeys.workflowConfirmationReceipt(queryIdentity),
+    [queryIdentity],
+  );
+  const workflowConfirmationReceiptQuery = useQuery<WorkflowConfirmationReceipt>({
+    queryKey: workflowConfirmationReceiptKey,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<WorkflowConfirmationReceipt>(
+        workflowConfirmationReceiptKey,
+      ),
+  });
+  const initialWorkflowContainsConfirmedReceipt =
+    !workflowConfirmationReceiptQuery.data ||
+    (initialWorkflow !== undefined &&
+      containsCampaignWorkflowEvidence(
+        initialWorkflow,
+        workflowConfirmationReceiptQuery.data.evidenceRef,
+      ));
   const workflowServerReadKey = useMemo(
     () => dpmCampaignQueryKeys.workflowServerRead(queryIdentity),
     [queryIdentity],
@@ -190,9 +217,16 @@ export function useDpmCampaignSources({
       return;
     }
     const workflowKey = dpmCampaignQueryKeys.workflow(selection);
+    const workflowConfirmationReadKey =
+      dpmCampaignQueryKeys.workflowConfirmationRead(selection);
     let active = true;
-    void queryClient
-      .cancelQueries({ queryKey: workflowKey, exact: true })
+    void Promise.all([
+      queryClient.cancelQueries({ queryKey: workflowKey, exact: true }),
+      queryClient.cancelQueries({
+        queryKey: workflowConfirmationReadKey,
+        exact: true,
+      }),
+    ])
       .then(() => {
         if (
           !active ||
@@ -201,9 +235,12 @@ export function useDpmCampaignSources({
         ) {
           return;
         }
-        if (initialWorkflow) {
+        if (initialWorkflow && initialWorkflowContainsConfirmedReceipt) {
           queryClient.setQueryData(workflowKey, initialWorkflow);
-        } else if (!workflowRecoveredForCurrentInput) {
+        } else if (
+          !initialWorkflow &&
+          !workflowRecoveredForCurrentInput
+        ) {
           queryClient.removeQueries({ queryKey: workflowKey, exact: true });
         }
         queryClient.setQueryData<ServerRead>(workflowServerReadKey, {
@@ -216,6 +253,7 @@ export function useDpmCampaignSources({
   }, [
     initialWorkflow,
     initialWorkflowIsAuthoritative,
+    initialWorkflowContainsConfirmedReceipt,
     queryClient,
     selection,
     workflowRecoveredForCurrentInput,
@@ -378,18 +416,41 @@ export function useDpmCampaignSources({
     }
   }
 
-  async function refreshWorkflow(row: DpmCampaignDefinitionRow) {
+  async function refreshWorkflow(
+    row: DpmCampaignDefinitionRow,
+    requiredEvidenceRef?: string,
+  ) {
     const target = toRequiredSelection(row);
     const options = dpmCampaignWorkflowQueryOptions(target);
+    const confirmationOptions =
+      dpmCampaignWorkflowConfirmationQueryOptions(target);
+    const requiredReceipt = requiredEvidenceRef
+      ? { evidenceRef: requiredEvidenceRef }
+      : queryClient.getQueryData<WorkflowConfirmationReceipt>(
+          dpmCampaignQueryKeys.workflowConfirmationReceipt(target),
+        );
+    if (requiredReceipt) {
+      queryClient.setQueryData<WorkflowConfirmationReceipt>(
+        dpmCampaignQueryKeys.workflowConfirmationReceipt(target),
+        requiredReceipt,
+      );
+    }
     await queryClient.cancelQueries({
       queryKey: options.queryKey,
       exact: true,
     });
     try {
-      const response = await queryClient.fetchQuery({
-        ...options,
-        staleTime: 0,
-      });
+      const response = await queryClient.fetchQuery(confirmationOptions);
+      if (
+        requiredReceipt &&
+        !containsCampaignWorkflowEvidence(
+          response,
+          requiredReceipt.evidenceRef,
+        )
+      ) {
+        throw new Error("Confirmed workflow evidence is not yet available.");
+      }
+      queryClient.setQueryData(options.queryKey, response);
       markWorkflowRecovered(row);
       queryClient.removeQueries({
         queryKey: dpmCampaignQueryKeys.confirmationLock(target, "workflow"),
@@ -428,6 +489,7 @@ export function useDpmCampaignSources({
       ? null
       : initialWorkflowIsAuthoritative &&
           initialWorkflow &&
+          initialWorkflowContainsConfirmedReceipt &&
           !workflowServerReadAlreadyAdmitted
         ? initialWorkflow
         : (workflowQuery.data ?? null),
@@ -435,7 +497,9 @@ export function useDpmCampaignSources({
       workflowConfirmationQuery.data?.message ??
       errorMessage(workflowQuery.error),
     workflowPending:
-      workflowQuery.isFetching || workflowServerReadAdmissionPending,
+      workflowQuery.isFetching ||
+      workflowConfirmationReadQuery.isFetching ||
+      workflowServerReadAdmissionPending,
     workflowResolved:
       !workflowServerReadAdmissionPending &&
       !workflowRequiresRecovery &&

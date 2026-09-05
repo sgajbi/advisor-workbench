@@ -315,6 +315,76 @@ describe("useDpmCampaignSources", () => {
     ).toEqual(server[0]);
   });
 
+  it("keeps confirmed workflow evidence ahead of a late pre-command navigation snapshot", async () => {
+    const beforeCommand = ["approval-before", "action-before", "task-before", "control-before"].map(
+      workflowResponse,
+    );
+    const confirmed = [
+      "approval-confirmed",
+      "action-confirmed",
+      "task-confirmed",
+      "control-confirmed",
+    ].map(workflowResponse);
+    vi.mocked(getDpmCampaignApprovalDecisions).mockResolvedValue(confirmed[0]);
+    vi.mocked(getDpmCampaignAssignmentActions).mockResolvedValue(confirmed[1]);
+    vi.mocked(getDpmCampaignAssignmentTasks).mockResolvedValue(confirmed[2]);
+    vi.mocked(getDpmCampaignMakerCheckerControls).mockResolvedValue(confirmed[3]);
+    const queryClient = createTestQueryClient();
+    const { result, rerender } = renderHook(
+      ({ readId, evidence }) =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            readId,
+            approvalDecisions: evidence[0],
+            assignmentActions: evidence[1],
+            assignmentTasks: evidence[2],
+            makerCheckerControls: evidence[3],
+          },
+        }),
+      {
+        initialProps: {
+          readId: "navigation-before-command",
+          evidence: beforeCommand,
+        },
+        wrapper: createQueryClientWrapper(queryClient),
+      },
+    );
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.workflowServerRead(rowA),
+        )?.readId,
+      ).toBe("navigation-before-command"),
+    );
+
+    await act(async () =>
+      result.current.refreshWorkflow(rowA, "task-confirmed"),
+    );
+    await waitFor(() =>
+      expect(result.current.workflow?.assignmentTasks).toEqual(confirmed[2]),
+    );
+
+    rerender({
+      readId: "navigation-finishes-after-command",
+      evidence: beforeCommand,
+    });
+    expect(result.current.workflow?.assignmentTasks).toEqual(confirmed[2]);
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData<{ readId: string }>(
+          dpmCampaignQueryKeys.workflowServerRead(rowA),
+        )?.readId,
+      ).toBe("navigation-finishes-after-command"),
+    );
+    expect(
+      queryClient.getQueryData<{
+        assignmentTasks: DpmCampaignWorkflowGatewayResponse;
+      }>(dpmCampaignQueryKeys.workflow(rowA))?.assignmentTasks,
+    ).toEqual(confirmed[2]);
+  });
+
   it("suppresses retained workflow when current source evidence is incomplete", async () => {
     const queryClient = createTestQueryClient();
     const prior = ["approval-old", "action-old", "task-old", "control-old"].map(

@@ -127,6 +127,35 @@ export function buildCampaignWorkflowCommandEvidence(
   };
 }
 
+export function containsCampaignWorkflowEvidence(
+  evidence: {
+    approvalDecisions: DpmCampaignWorkflowGatewayResponse;
+    assignmentActions: DpmCampaignWorkflowGatewayResponse;
+    assignmentTasks: DpmCampaignWorkflowGatewayResponse;
+    makerCheckerControls: DpmCampaignWorkflowGatewayResponse;
+  },
+  evidenceRef: string,
+): boolean {
+  return Object.values(evidence).some((response) => {
+    const items = Array.isArray(response.data.items) ? response.data.items : [];
+    return items.some(
+      (item) =>
+        item !== null &&
+        typeof item === "object" &&
+        [
+          "evidence_ref",
+          "decision_ref",
+          "action_ref",
+          "task_ref",
+          "control_ref",
+        ].some((field) =>
+          Object.prototype.hasOwnProperty.call(item, field) &&
+          readString((item as Record<string, unknown>)[field]) === evidenceRef,
+        ),
+    );
+  });
+}
+
 function campaignWorkflowCommandLabel(
   commandType: DpmCampaignWorkflowCommandType,
 ) {
