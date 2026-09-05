@@ -54,7 +54,12 @@ export function buildAdvisorIdeaExplanationViewModel(
   const evidenceGaps = uniqueBusinessLabels(evidence?.unsupportedReasons ?? []);
   const evidenceSignals = uniqueBusinessLabels(evidence?.reasonCodes ?? []);
   const freshness = deriveEvidenceFreshness(allSourceRefs);
-  const evidenceState = deriveEvidenceState(allSourceRefs, evidenceGaps);
+  const evidenceState = deriveEvidenceState(
+    allSourceRefs,
+    evidenceGaps,
+    served &&
+      (claims.length === 0 || claims.some((claim) => claim.sourceRefs.length === 0)),
+  );
   const limitations = [
     "Internal advisor review aid only. It does not approve suitability, client communication, a proposal, or an order.",
     ...(claims.length === 0 && served
@@ -91,13 +96,12 @@ export function buildAdvisorIdeaExplanationViewModel(
     disclosure: createAiAssistanceDisclosure({
       scopeLabel: "Idea rationale draft",
       preparation: served ? "ai-assisted" : "deterministic",
-      availability: served
-        ? freshness.state === "stale"
+      availability:
+        freshness.state === "stale"
           ? "stale"
-          : evidenceState !== "supported"
-            ? "partial"
-          : "live"
-        : "partial",
+          : served && evidenceState === "supported"
+            ? "live"
+            : "partial",
       evidence: {
         state: evidenceState,
         sourceCount: sourceIdentities.size,
@@ -165,11 +169,13 @@ function sourceIdentityKey(source: ExplanationSourceRef): string {
 function deriveEvidenceState(
   sources: ExplanationSourceRef[],
   evidenceGaps: string[],
+  claimEvidenceIncomplete: boolean,
 ): "missing" | "limited" | "supported" {
   if (sources.length === 0) {
     return "missing";
   }
-  return evidenceGaps.length > 0 ||
+  return claimEvidenceIncomplete ||
+    evidenceGaps.length > 0 ||
     sources.some((source) => source.dataQualityStatus.toLowerCase() !== "complete")
     ? "limited"
     : "supported";

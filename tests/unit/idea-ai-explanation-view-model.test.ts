@@ -197,6 +197,58 @@ describe("buildAdvisorIdeaExplanationViewModel", () => {
     expect(model.disclosure.availability).toBe("partial");
   });
 
+  it("does not let response-level evidence mask an unreferenced claim", () => {
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      explanation: {
+        ...servedResponse.explanation,
+        verifiedOutput: {
+          groundedClaims: [
+            {
+              claimId: "claim-001",
+              claimText: "Cash weight is above the policy threshold.",
+              sourceRefs: [],
+            },
+          ],
+        },
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          unsupportedReasons: [],
+        },
+      },
+    });
+
+    expect(model.supportingSources).toHaveLength(1);
+    expect(model.disclosure.evidence.state).toBe("limited");
+    expect(model.disclosure.availability).toBe("partial");
+  });
+
+  it("keeps stale source evidence explicit for deterministic fallbacks", () => {
+    const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
+    const model = buildAdvisorIdeaExplanationViewModel({
+      ...servedResponse,
+      status: "EXPLANATION_UNAVAILABLE",
+      disposition: "runtime_unavailable",
+      lotusAiRunId: null,
+      lotusAiRuntimeExecutionConfirmed: false,
+      evaluationVerdict: "not_evaluated",
+      explanation: {
+        ...servedResponse.explanation,
+        fallbackUsed: true,
+        fallbackReason: "ai_unavailable",
+        verifiedOutput: null,
+        redactedEvidence: {
+          ...servedResponse.explanation.redactedEvidence!,
+          sourceRefs: [{ ...source, freshness: "stale" }],
+        },
+      },
+    });
+
+    expect(model.disclosure.preparation).toBe("deterministic");
+    expect(model.disclosure.freshness.state).toBe("stale");
+    expect(model.disclosure.availability).toBe("stale");
+  });
+
   it("preserves distinct source references whose values contain delimiters", () => {
     const source = servedResponse.explanation.redactedEvidence!.sourceRefs[0];
     const model = buildAdvisorIdeaExplanationViewModel({
