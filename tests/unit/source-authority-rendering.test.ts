@@ -230,8 +230,14 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
   explanation.requestId =
     `idea-explanation-${identity}-00000000-0000-4000-8000-000000000000`;
   explanation.fallbackUsed = state === "EXPLANATION_UNAVAILABLE";
+  const evidenceIdentity = {
+    evidencePacketId: "evidence-source-authority-proof",
+    evidenceContentHash: "sha256:evidence-source-authority-proof",
+    sourceRevisionVectorDigest: "sha256:revision-source-authority-proof",
+  };
   const parsedPayload = parseAdvisorIdeaAIExplanationResponse(payload, {
     candidateId: identity,
+    evidenceIdentity,
     requestId: String(explanation.requestId),
   });
   requestIdeaExplanationMock.mockResolvedValue(parsedPayload);
@@ -250,6 +256,7 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
       { client: queryClient },
       createElement(IdeaCandidateExplanation, {
         candidateId: identity,
+        evidenceIdentity,
         portfolioId: "PB_SG_GLOBAL_BAL_001",
       }),
     ),

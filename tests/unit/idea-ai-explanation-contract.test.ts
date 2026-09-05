@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { parseAdvisorIdeaAIExplanationResponse } from "../../src/features/proposals/idea-ai-explanation-contract";
 
+const EVIDENCE_IDENTITY = {
+  evidencePacketId: "evidence-001",
+  evidenceContentHash: "sha256:evidence-001",
+  sourceRevisionVectorDigest: "sha256:revision-001",
+};
+
 function response(overrides: Record<string, unknown> = {}) {
   return {
     status: "EXPLANATION_SERVED",
@@ -40,6 +46,7 @@ function response(overrides: Record<string, unknown> = {}) {
         ],
       },
       redactedEvidence: {
+        ...EVIDENCE_IDENTITY,
         reasonCodes: ["high_cash_ratio"],
         unsupportedReasons: [],
         scorePolicyVersion: "idle-liquidity-v2",
@@ -54,6 +61,7 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
   it("preserves the typed source rationale and evidence fields", () => {
     const result = parseAdvisorIdeaAIExplanationResponse(response(), {
       candidateId: "idea-001",
+      evidenceIdentity: EVIDENCE_IDENTITY,
       requestId: "request-001",
     });
 
@@ -64,6 +72,43 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(result.explanation.redactedEvidence?.scorePolicyVersion).toBe(
       "idle-liquidity-v2",
     );
+  });
+
+  it.each([
+    ["evidence packet", { evidencePacketId: "evidence-other" }],
+    ["evidence content", { evidenceContentHash: "sha256:evidence-other" }],
+    ["source revision", { sourceRevisionVectorDigest: "sha256:revision-other" }],
+  ])("rejects mismatched %s identity", (_name, evidenceOverride) => {
+    const value = response();
+    value.explanation.redactedEvidence = {
+      ...value.explanation.redactedEvidence,
+      ...evidenceOverride,
+    };
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
+        requestId: "request-001",
+      }),
+    ).toThrow(/did not match the requested candidate evidence/);
+  });
+
+  it("rejects an explanation without source revision identity", () => {
+    const value = response();
+    const redactedEvidence = value.explanation.redactedEvidence as Record<
+      string,
+      unknown
+    >;
+    delete redactedEvidence.sourceRevisionVectorDigest;
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
+        requestId: "request-001",
+      }),
+    ).toThrow();
   });
 
   it.each([
@@ -78,6 +123,7 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(value, {
         candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
         requestId: "request-001",
       }),
     ).toThrow();
@@ -87,7 +133,11 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(
         response({ evaluationVerdict: "rejected" }),
-        { candidateId: "idea-001", requestId: "request-001" },
+        {
+          candidateId: "idea-001",
+          evidenceIdentity: EVIDENCE_IDENTITY,
+          requestId: "request-001",
+        },
       ),
     ).toThrow(/without an accepted source evaluation/);
   });
@@ -96,7 +146,11 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(
         response({ disposition: "output_not_accepted" }),
-        { candidateId: "idea-001", requestId: "request-001" },
+        {
+          candidateId: "idea-001",
+          evidenceIdentity: EVIDENCE_IDENTITY,
+          requestId: "request-001",
+        },
       ),
     ).toThrow(/served status with a failure disposition/);
   });
@@ -123,6 +177,7 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(value, {
         candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
         requestId: "request-001",
       }),
     ).toThrow(/Invalid source business date/);
@@ -132,7 +187,11 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(
         response({ lotusAiRuntimeExecutionConfirmed: false }),
-        { candidateId: "idea-001", requestId: "request-001" },
+        {
+          candidateId: "idea-001",
+          evidenceIdentity: EVIDENCE_IDENTITY,
+          requestId: "request-001",
+        },
       ),
     ).toThrow(/without confirmed runtime execution/);
   });
@@ -141,7 +200,11 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(
         response({ lotusAiRunId: null }),
-        { candidateId: "idea-001", requestId: "request-001" },
+        {
+          candidateId: "idea-001",
+          evidenceIdentity: EVIDENCE_IDENTITY,
+          requestId: "request-001",
+        },
       ),
     ).toThrow(/without a workflow run identifier/);
   });
@@ -156,6 +219,7 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(value, {
         candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
         requestId: "request-001",
       }),
     ).toThrow(/did not confirm deterministic fallback evidence/);
@@ -171,6 +235,7 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(value, {
         candidateId: "idea-001",
+        evidenceIdentity: EVIDENCE_IDENTITY,
         requestId: "request-001",
       }),
     ).toThrow(/was marked as fallback evidence/);

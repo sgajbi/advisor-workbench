@@ -732,6 +732,11 @@ describe("proposal api", () => {
   });
 
   it("requests an identity-matched governed Idea explanation through the Gateway BFF", async () => {
+    const evidenceIdentity = {
+      evidencePacketId: "evidence_high_cash_001",
+      evidenceContentHash: "sha256:evidence-high-cash-001",
+      sourceRevisionVectorDigest: "sha256:revision-high-cash-001",
+    };
     const request = {
       requestId: "request-001",
       purpose: "advisor_rationale_draft" as const,
@@ -759,6 +764,13 @@ describe("proposal api", () => {
               supportedFeaturePromoted: false,
               executionProvenancePosture: "unattested_local_test_fixture",
               aiLineageRecorded: true,
+              redactedEvidence: {
+                ...evidenceIdentity,
+                reasonCodes: [],
+                unsupportedReasons: [],
+                scorePolicyVersion: null,
+                sourceRefs: [],
+              },
             },
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
@@ -768,6 +780,7 @@ describe("proposal api", () => {
 
     const result = await requestAdvisorIdeaAIExplanation({
       candidateId: "idea_high_cash_001",
+      evidenceIdentity,
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       idempotencyKey: "idea-explanation-request-001",
       request,

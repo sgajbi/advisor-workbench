@@ -14,6 +14,12 @@ const dependencies = vi.hoisted(() => ({
   failed: vi.fn(),
 }));
 
+const EVIDENCE_IDENTITY = {
+  evidencePacketId: "evidence-001",
+  evidenceContentHash: "sha256:evidence-001",
+  sourceRevisionVectorDigest: "sha256:revision-001",
+};
+
 vi.mock("../../src/features/proposals/api", () => ({
   requestAdvisorIdeaAIExplanation:
     dependencies.requestAdvisorIdeaAIExplanation,
@@ -35,17 +41,18 @@ function wrapper({ children }: { children: ReactNode }) {
   );
 }
 
-function renderExplanation() {
+function renderExplanation(evidenceIdentity = EVIDENCE_IDENTITY) {
   return render(
     <IdeaCandidateExplanation
       candidateId="idea-001"
+      evidenceIdentity={evidenceIdentity}
       portfolioId="PB_SG_GLOBAL_BAL_001"
     />,
     { wrapper },
   );
 }
 
-function servedResponse() {
+function servedResponse(evidenceIdentity = EVIDENCE_IDENTITY) {
   return {
     status: "EXPLANATION_SERVED" as const,
     disposition: "executed",
@@ -74,6 +81,7 @@ function servedResponse() {
         ],
       },
       redactedEvidence: {
+        ...evidenceIdentity,
         reasonCodes: ["high_cash_ratio"],
         unsupportedReasons: ["benchmark_evidence_missing"],
         scorePolicyVersion: "idle-liquidity-v2",
@@ -135,6 +143,7 @@ describe("IdeaCandidateExplanation", () => {
     expect(dependencies.unavailable).not.toHaveBeenCalled();
     expect(dependencies.requestAdvisorIdeaAIExplanation).toHaveBeenCalledWith({
       candidateId: "idea-001",
+      evidenceIdentity: EVIDENCE_IDENTITY,
       portfolioId: "PB_SG_GLOBAL_BAL_001",
       idempotencyKey:
         "idea-explanation-idea-001-00000000-0000-4000-8000-000000000001",
@@ -231,6 +240,116 @@ describe("IdeaCandidateExplanation", () => {
     );
     expect(second.request.requestId).not.toBe(first.request.requestId);
     expect(second.idempotencyKey).toBe(second.request.requestId);
+  });
+
+  it("supersedes a rationale when the same candidate moves to new evidence", async () => {
+    dependencies.requestAdvisorIdeaAIExplanation.mockResolvedValueOnce(
+      servedResponse(),
+    );
+    const view = renderExplanation();
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+    await screen.findByText("Rationale available");
+
+    view.rerender(
+      <IdeaCandidateExplanation
+        candidateId="idea-001"
+        evidenceIdentity={{
+          ...EVIDENCE_IDENTITY,
+          sourceRevisionVectorDigest: "sha256:revision-002",
+        }}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+      />,
+    );
+
+    expect(screen.getByTestId("idea-explanation-superseded")).toHaveTextContent(
+      "earlier rationale is no longer current",
+    );
+    expect(screen.queryByText("Rationale available")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Cash weight is above the policy threshold."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("fences a delayed prior-revision response from becoming current", async () => {
+    let completeRequest: ((response: ReturnType<typeof servedResponse>) => void) | undefined;
+    dependencies.requestAdvisorIdeaAIExplanation.mockImplementationOnce(
+      async () =>
+        await new Promise<ReturnType<typeof servedResponse>>((resolve) => {
+          completeRequest = resolve;
+        }),
+    );
+    const view = renderExplanation();
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+    await waitFor(() => expect(completeRequest).toBeTypeOf("function"));
+    view.rerender(
+      <IdeaCandidateExplanation
+        candidateId="idea-001"
+        evidenceIdentity={{
+          ...EVIDENCE_IDENTITY,
+          evidenceContentHash: "sha256:evidence-002",
+          sourceRevisionVectorDigest: "sha256:revision-002",
+        }}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+      />,
+    );
+    completeRequest?.(servedResponse());
+
+    expect(
+      await screen.findByTestId("idea-explanation-superseded"),
+    ).toBeInTheDocument();
+    expect(dependencies.served).not.toHaveBeenCalled();
+    expect(dependencies.unavailable).toHaveBeenCalledWith(
+      "candidate_evidence_changed",
+    );
+  });
+
+  it("abandons a transient retry identity when displayed evidence changes", async () => {
+    const nextEvidenceIdentity = {
+      ...EVIDENCE_IDENTITY,
+      evidencePacketId: "evidence-002",
+      evidenceContentHash: "sha256:evidence-002",
+      sourceRevisionVectorDigest: "sha256:revision-002",
+    };
+    dependencies.requestAdvisorIdeaAIExplanation
+      .mockRejectedValueOnce(new WorkbenchApiError("explanation", 502))
+      .mockResolvedValueOnce(servedResponse(nextEvidenceIdentity));
+    const view = renderExplanation();
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+    await screen.findByTestId("idea-explanation-error");
+    view.rerender(
+      <IdeaCandidateExplanation
+        candidateId="idea-001"
+        evidenceIdentity={nextEvidenceIdentity}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Retry explanation" }));
+    await screen.findByText("Rationale available");
+
+    const [first, second] = dependencies.requestAdvisorIdeaAIExplanation.mock.calls.map(
+      ([submission]) => submission,
+    );
+    expect(second.request.requestId).not.toBe(first.request.requestId);
+    expect(second.evidenceIdentity).toEqual(nextEvidenceIdentity);
+  });
+
+  it("cannot request or claim current rationale without source evidence identity", () => {
+    render(
+      <IdeaCandidateExplanation
+        candidateId="idea-001"
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+      />,
+      { wrapper },
+    );
+
+    expect(screen.getByRole("button", { name: "Explanation unavailable" })).toBeDisabled();
+    expect(screen.getByTestId("idea-explanation-evidence-unavailable")).toHaveTextContent(
+      "opportunity record does not include its evidence identity",
+    );
+    expect(dependencies.requestAdvisorIdeaAIExplanation).not.toHaveBeenCalled();
   });
 
   it("shows an explicit failure when secure request identity is unavailable", async () => {

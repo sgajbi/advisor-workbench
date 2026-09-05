@@ -14,6 +14,12 @@ const ideaApi = vi.hoisted(() => ({
   requestAdvisorIdeaAIExplanation: vi.fn(),
 }));
 
+const EVIDENCE_IDENTITY = {
+  evidencePacketId: "evidence_high_cash_001",
+  evidenceContentHash: "sha256:evidence-high-cash-001",
+  sourceRevisionVectorDigest: "sha256:revision-high-cash-001",
+};
+
 vi.mock("../../src/features/proposals/api", () => ideaApi);
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -25,11 +31,15 @@ function wrapper({ children }: { children: ReactNode }) {
   );
 }
 
-function renderPanel(onRecorded: () => Promise<boolean>) {
+function renderPanel(
+  onRecorded: () => Promise<boolean>,
+  evidenceIdentity: typeof EVIDENCE_IDENTITY | null = EVIDENCE_IDENTITY,
+) {
   return render(
     <IdeaCandidateActionPanel
       candidateId="idea_high_cash_001"
       candidateReasonCodes={["high_cash_ratio", "review_required"]}
+      evidenceIdentity={evidenceIdentity ?? undefined}
       portfolioId="PB_SG_GLOBAL_BAL_001"
       onRecorded={onRecorded}
     />,
@@ -234,6 +244,15 @@ describe("IdeaCandidateActionPanel", () => {
       reason: "wrong_timing",
     });
     expect(changedInput.request).not.toEqual(failedInput.request);
+  });
+
+  it("keeps advisor actions available when explanation evidence is unavailable", () => {
+    renderPanel(async () => true, null);
+
+    expect(screen.getByRole("button", { name: "Explanation unavailable" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Record review" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record feedback" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Record intent" })).toBeEnabled();
   });
 
   it("keeps all advisor actions available when the optional explanation fails", async () => {

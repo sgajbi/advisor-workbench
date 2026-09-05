@@ -38,6 +38,15 @@ const ideaExplanationGatewaySample = {
     supportedFeaturePromoted: false,
     executionProvenancePosture: "runtime_unavailable",
     aiLineageRecorded: false,
+    redactedEvidence: {
+      evidencePacketId: "evidence-source-authority-proof",
+      evidenceContentHash: "sha256:evidence-source-authority-proof",
+      sourceRevisionVectorDigest: "sha256:revision-source-authority-proof",
+      reasonCodes: ["high_cash_ratio"],
+      unsupportedReasons: [],
+      scorePolicyVersion: "idle-liquidity-v2",
+      sourceRefs: [],
+    },
   },
 };
 
@@ -105,7 +114,8 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
     id: "idea-candidate-explanation",
     screen: "Opportunities and Ideas",
     sourceOwnership: Object.freeze({
-      identity: "explanation.candidateId",
+      identity:
+        "explanation.candidateId + explanation.redactedEvidence.(evidencePacketId,evidenceContentHash,sourceRevisionVectorDigest)",
       state: "status",
     }),
     presentationOnly: Object.freeze([
@@ -137,6 +147,8 @@ export const SOURCE_AUTHORITY_CONTRACTS = Object.freeze([
           'data-idea-explanation-source="lotus-idea"',
           "data-candidate-id={mutation.data?.explanation.candidateId}",
           "data-explanation-status={mutation.data?.status}",
+          "isSameAdvisorIdeaEvidence",
+          "sourceRevisionVectorDigest",
         ]),
       }),
       Object.freeze({
