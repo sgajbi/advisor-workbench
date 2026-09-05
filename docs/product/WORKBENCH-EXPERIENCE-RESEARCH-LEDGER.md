@@ -7669,3 +7669,47 @@ action, selected-decision-before-result order, responsive composition, and zero 
 Copilot business workflow and reading order changed, so its screen guide changes and repo-local wiki
 publication is required after merge. Existing repository context already directs decision queues to
 `WorkbenchWorklist`; no context change is needed.
+
+## 2026-09-05 — Governed Idea rationale for advisor review (#996)
+
+### Decision question
+
+How can an adviser understand why an opportunity surfaced without turning generated text into
+advice, duplicating Idea policy, or making the candidate workflow depend on AI availability?
+
+### Evidence consulted
+
+1. Exact Gateway main contract `8eb5311c` requires a caller-owned request identity, fixed generation
+   purpose, idempotency, explicit served/unavailable status, evaluation verdict, evidence gaps, and
+   execution provenance while prohibiting downstream authority.
+2. [NIST AI RMF](https://airc.nist.gov/airmf-resources/airmf/3-sec-characteristics/) distinguishes
+   role-appropriate explanation from an assurance claim and requires knowledge limits to remain
+   visible.
+3. [FCA AI approach](https://www.fca.org.uk/news/blogs/ai-financial-services-approach) emphasizes
+   accountable, explainable use of AI within existing financial-services controls.
+
+### Adopted decisions
+
+1. Place one optional **Explain this idea** action beside the existing candidate decision controls;
+   explanation loading or failure never changes those controls.
+2. Render source-grounded claims, exact source references, evidence gaps, and source signals as
+   separate information groups. Keep run, verdict, provenance, lineage, and client-use limits in
+   the shared `AiAssistanceDisclosure`.
+3. Fail closed on mismatched candidate/request identity, non-accepted served output, downstream
+   authority, or unsupported-feature promotion. Preserve the exact request and idempotency key only
+   for a failed retry.
+4. Present an unavailable response's source-authored fallback as deterministic evidence, never as
+   AI output. Record bounded opened, served, and unavailable telemetry with the fixed purpose and
+   source disposition.
+
+### Rejected decisions
+
+Prompts, editing, local persistence, direct Idea/AI transport, browser-composed rationale, inferred
+confidence, generated next actions, and any reassuring fallback not published by the source.
+
+### Validation and publication decision
+
+Contract, BFF authority, view-model, component, telemetry, retry, failure, and browser tests prove
+the implemented boundary. The Opportunities and Ideas workflow gains a visible capability and its
+source/recovery rules change, so the screen guide and repository context change in the same PR and
+the wiki must be published after merge.

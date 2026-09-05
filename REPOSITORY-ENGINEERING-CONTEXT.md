@@ -64,6 +64,20 @@ under #791. New owners and count growth fail; removing a historical call also fa
 baseline is lowered in the same change. This is a migration control, not evidence that the six
 baselined owners already use the preferred transport.
 
+### Idea explanation source-authority rule
+
+Candidate explanations use only `POST /api/v1/ideas/candidates/{candidate_id}/ai-explanations`
+through the Workbench BFF. The BFF strips browser authority and derives
+`idea.ai-explanation.generate`; the browser supplies only a fresh request identifier, its matching
+idempotency key, the fixed `advisor_rationale_draft` purpose, and request time. Parse the Gateway
+result before rendering: candidate and request identity must match, a served result requires an
+accepted evaluation, and downstream authority or unsupported-feature promotion must remain false.
+Render grounded claims separately from evidence gaps and source signals, preserve exact provenance
+as diagnostic evidence, and label an unavailable response's source-provided fallback as
+deterministic. Explanation loading, absence, or failure must never change candidate facts or disable
+review, feedback, or conversion-intent actions. Retain the exact request and idempotency key only
+for retry after transport or contract failure; a completed response ends that retry intent.
+
 ### Risk Review source-authority rule
 
 Risk Review presents exact Gateway/Lotus Risk measures, factual lifecycle and recovery state,

@@ -34,6 +34,9 @@ completed or an explicit refresh-failed posture is shown.
 
 - Reads the Idea queue and candidate detail through Gateway.
 - Presents rank, score, reasons, source signals, lineage, and support posture.
+- Requests an optional AI-assisted rationale draft for a selected candidate and presents grounded
+  claims, their source references, evidence gaps, source signals, evaluation verdict, run reference,
+  and execution-provenance status without changing the candidate or its actions.
 - Keeps the complete returned source window available in a compact, filterable worklist while
   rendering only the rows needed for the active viewport.
 - Records review, governed adviser feedback, and conversion intent with idempotency.
@@ -52,6 +55,7 @@ completed or an explicit refresh-failed posture is shown.
 | Record review | Stores the source-owned candidate review |
 | Record feedback | Stores useful/not-useful feedback and one governed reason; it does not approve, suppress, convert, or change policy |
 | Record conversion intent | Stores intent only; it does not create a proposal |
+| Explain this idea | Requests an internal rationale draft; it does not approve an action, change candidate facts, or create a client communication |
 
 ## Information And Source Authority
 
@@ -71,6 +75,15 @@ arrives; an earlier receipt completing cannot turn that warning into a ready sta
 The current journey metadata that suggests direct proposal promotion is an overclaim tracked in
 #798; Advise, Performance, and Risk are not sources for this screen's current queue/detail contract.
 
+Lotus Idea owns explanation generation, evaluation, deterministic fallback, evidence gaps,
+provenance, and lineage. Gateway forwards the typed result, while the Workbench BFF derives the
+`idea.ai-explanation.generate` capability. Workbench accepts only a response matching the requested
+candidate and request identifiers, rejects any response that grants downstream authority or
+promotes unsupported capability, and requires an accepted evaluation before showing a served
+rationale. An unavailable response may include a source-prepared deterministic evidence summary;
+it is labelled as deterministic rather than AI output. Explanation failure never disables review,
+feedback, or conversion-intent controls.
+
 ## Screen States And Recovery
 
 | State | Recovery |
@@ -79,6 +92,10 @@ The current journey metadata that suggests direct proposal promotion is an overc
 | Empty | No candidate is fabricated |
 | Unsupported portfolio | Return to the canonical supported portfolio |
 | Queue or detail failure | Retry the failed source read |
+| Explanation not requested | Candidate facts and actions remain available; request it only when useful for the decision |
+| Explanation available | Review grounded claims, evidence limits, provenance, and the evaluation verdict before acting |
+| AI explanation unavailable | Use the labelled deterministic evidence summary when supplied; candidate facts and actions remain available |
+| Explanation request failure | Retry the unchanged request or continue the candidate review without it |
 | Viewing evidence unavailable | Continue reviewing; no viewing confirmation is claimed |
 | Viewing evidence persistence failure | Continue reviewing or retry the unchanged observation |
 | Mutation or evidence failure | Review the explicit error; no success is shown and the displayed opportunity remains unchanged |
@@ -90,7 +107,8 @@ The current journey metadata that suggests direct proposal promotion is an overc
 Workbench does not call Idea directly, invent fallback ideas, calculate ranking, create a proposal,
 grant suitability or approval authority, contact a client, or create an order. The worklist keeps
 the complete returned source window available without treating off-screen render-buffer rows as
-viewed candidates.
+viewed candidates. It does not compose prompts, edit or persist explanation content, infer missing
+claims, upgrade provenance, or use an explanation as action authority.
 
 ## Adjacent Handoffs
 
