@@ -798,7 +798,7 @@ describe("useDpmCampaignSources", () => {
     expect(result.current.sources.lifecycle).toBeNull();
   });
 
-  it("keeps confirmed lifecycle posture ahead of a late pre-command definitions snapshot", async () => {
+  it("keeps confirmed lifecycle posture until an exact later definition is supplied", async () => {
     const beforeCommand = definitionListResponse("ACTIVE");
     const confirmedDefinitions = definitionListResponse("SUPERSEDED", "2");
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
@@ -870,14 +870,10 @@ describe("useDpmCampaignSources", () => {
       definitions: activeListAfterTerminalRemoval,
       readId: "definitions-after-terminal-removal",
     });
-    expect(result.current.definitions).toEqual(
-      activeListAfterTerminalRemoval,
-    );
-    await waitFor(() =>
-      expect(
-        queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
-      ).toEqual(activeListAfterTerminalRemoval),
-    );
+    expect(result.current.definitions).toEqual(confirmedDefinitions);
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+    ).toEqual(confirmedDefinitions);
   });
 
   it("clears a prior launch package when newer readiness blocks launch", async () => {

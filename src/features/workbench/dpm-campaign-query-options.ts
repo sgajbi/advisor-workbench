@@ -64,7 +64,10 @@ export function dpmCampaignLifecycleConfirmationQueryOptions(
     queryFn: async (): Promise<DpmCampaignLifecycleConfirmation> => {
       const [lifecycle, definitions] = await Promise.all([
         fetchDpmCampaignLifecycle(identity),
-        fetchDpmCampaignDefinitions(),
+        listDpmCampaignDefinitions(
+          { campaignId: identity.campaignId, limit: 10, offset: 0 },
+          "client",
+        ),
       ]);
       return { lifecycle, definitions };
     },
