@@ -24,11 +24,6 @@ export function useDpmCampaignDefinitionsSource(
 ) {
   const queryClient = useQueryClient();
   const options = useMemo(() => dpmCampaignDefinitionsQueryOptions(), []);
-  const definitionsQuery = useQuery({
-    ...options,
-    enabled: false,
-    initialData: initialDefinitions ?? undefined,
-  });
   const serverReadKey = useMemo(
     () => dpmCampaignQueryKeys.definitionsServerRead(),
     [],
@@ -69,6 +64,14 @@ export function useDpmCampaignDefinitionsSource(
       confirmationReceipts.every((receipt) =>
         acceptsActiveCampaignDefinitions(initialDefinitions, receipt),
       ));
+  const definitionsQuery = useQuery({
+    ...options,
+    enabled: false,
+    initialData:
+      initialDefinitions && initialDefinitionsContainConfirmedReceipt
+        ? initialDefinitions
+        : undefined,
+  });
 
   useEffect(() => {
     if (serverReadAlreadyAdmitted) return;
