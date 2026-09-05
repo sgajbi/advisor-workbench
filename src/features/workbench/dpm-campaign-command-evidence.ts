@@ -178,6 +178,49 @@ export function confirmsCampaignLifecycleEvidence(
   return containsCampaignLifecycleEvidence(response, receipt);
 }
 
+export function acceptsActiveCampaignDefinitions(
+  response: DpmCampaignDefinitionGatewayResponse,
+  receipt: DpmCampaignLifecycleConfirmationReceipt,
+): boolean {
+  if (containsCampaignLifecycleEvidence(response, receipt)) return true;
+  if (receipt.status !== "RETIRED" && receipt.status !== "SUPERSEDED") {
+    return false;
+  }
+  return !readDpmCampaignDefinitionRecords(response.data).some(
+    (record) =>
+      readString(record.campaign_id) === receipt.campaignId &&
+      readString(record.campaign_version) === receipt.campaignVersion,
+  );
+}
+
+export function reconcileConfirmedCampaignDefinition(
+  activeResponse: DpmCampaignDefinitionGatewayResponse,
+  confirmationResponse: DpmCampaignDefinitionGatewayResponse,
+  receipt: DpmCampaignLifecycleConfirmationReceipt,
+): DpmCampaignDefinitionGatewayResponse {
+  const confirmed = readDpmCampaignDefinitionRecords(
+    confirmationResponse.data,
+  ).find((record) => matchesCampaignIdentity(record, receipt));
+  if (!confirmed) return activeResponse;
+  const active = readDpmCampaignDefinitionRecords(activeResponse.data).filter(
+    (record) => !matchesCampaignIdentity(record, receipt),
+  );
+  return {
+    ...activeResponse,
+    data: { ...activeResponse.data, items: [confirmed, ...active] },
+  };
+}
+
+function matchesCampaignIdentity(
+  record: Record<string, unknown>,
+  receipt: DpmCampaignLifecycleConfirmationReceipt,
+) {
+  return (
+    readString(record.campaign_id) === receipt.campaignId &&
+    readString(record.campaign_version) === receipt.campaignVersion
+  );
+}
+
 export function containsCampaignWorkflowEvidence(
   evidence: {
     approvalDecisions: DpmCampaignWorkflowGatewayResponse;

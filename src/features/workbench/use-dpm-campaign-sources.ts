@@ -16,9 +16,11 @@ import {
 } from "@/features/workbench/dpm-campaign-query-options";
 import { dpmCampaignQueryKeys } from "@/features/workbench/dpm-campaign-query-keys";
 import {
+  acceptsActiveCampaignDefinitions,
   campaignWorkflowEvidenceTotalCount,
   confirmsCampaignLifecycleEvidence,
   containsCampaignWorkflowEvidence,
+  reconcileConfirmedCampaignDefinition,
   type DpmCampaignLifecycleConfirmationReceipt,
   type DpmCampaignWorkflowConfirmationReceipt,
 } from "@/features/workbench/dpm-campaign-command-evidence";
@@ -413,10 +415,14 @@ export function useDpmCampaignSources({
       const confirmation = await queryClient.fetchQuery(confirmationOptions);
       if (
         confirmationReceipt &&
-        !confirmsCampaignLifecycleEvidence(
-          confirmation.definitions,
+        (!confirmsCampaignLifecycleEvidence(
+          confirmation.definition,
           confirmationReceipt,
-        )
+        ) ||
+          !acceptsActiveCampaignDefinitions(
+            confirmation.definitions,
+            confirmationReceipt,
+          ))
       ) {
         throw new Error("Confirmed campaign definition is not yet available.");
       }
@@ -432,7 +438,13 @@ export function useDpmCampaignSources({
       queryClient.setQueryData(options.queryKey, confirmation.lifecycle);
       queryClient.setQueryData(
         definitionsOptions.queryKey,
-        confirmation.definitions,
+        confirmationReceipt
+          ? reconcileConfirmedCampaignDefinition(
+              confirmation.definitions,
+              confirmation.definition,
+              confirmationReceipt,
+            )
+          : confirmation.definitions,
       );
       queryClient.removeQueries({
         queryKey: dpmCampaignQueryKeys.confirmationLock(target, "lifecycle"),

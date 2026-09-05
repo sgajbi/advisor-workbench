@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  acceptsActiveCampaignDefinitions,
   campaignWorkflowEvidenceTotalCount,
   confirmsCampaignLifecycleEvidence,
   containsCampaignWorkflowEvidence,
@@ -37,6 +38,29 @@ describe("DPM campaign command evidence", () => {
         replacementCampaignVersion: "2",
       }),
     ).toBe(true);
+  });
+
+  it("accepts terminal omission only for the explicitly active collection", () => {
+    const activeResponse: DpmCampaignDefinitionGatewayResponse = {
+      correlation_id: "corr-active",
+      contract_version: "v1",
+      source_service: "lotus-manage",
+      upstream_status: 200,
+      data: { items: [] },
+    };
+    const receipt = {
+      campaignId: "campaign-a",
+      campaignVersion: "1",
+      status: "RETIRED",
+      replacementCampaignVersion: "N/A",
+    };
+
+    expect(acceptsActiveCampaignDefinitions(activeResponse, receipt)).toBe(
+      true,
+    );
+    expect(confirmsCampaignLifecycleEvidence(activeResponse, receipt)).toBe(
+      false,
+    );
   });
 
   it.each([

@@ -793,7 +793,7 @@ describe("useDpmCampaignSources", () => {
     });
     await waitFor(() => expect(result.current.lifecyclePending).toBe(true));
     expect(getDpmCampaignDefinitionLifecycleEvents).toHaveBeenCalledTimes(1);
-    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(1);
+    expect(listDpmCampaignDefinitions).toHaveBeenCalledTimes(2);
 
     pendingLifecycle.resolve(definitionResponse("campaign-a", "CONFIRMED"));
     await act(async () => Promise.all([first, second]));
@@ -868,15 +868,37 @@ describe("useDpmCampaignSources", () => {
     expect(result.current.sources.lifecycle).toBeNull();
   });
 
-  it("keeps confirmed lifecycle posture until an exact later definition is supplied", async () => {
+  it("publishes the full active collection after exact lifecycle confirmation", async () => {
     const beforeCommand = definitionListResponse("ACTIVE");
     const confirmedDefinitions = definitionListResponse("SUPERSEDED", "2");
+    const activeDefinitions = {
+      ...definitionListResponse("ACTIVE"),
+      correlation_id: "corr-active-after-command",
+      data: {
+        items: [
+          {
+            campaign_id: "campaign-b",
+            campaign_version: "2",
+            status: "ACTIVE",
+          },
+        ],
+      },
+    };
+    const reconciledDefinitions = {
+      ...activeDefinitions,
+      data: {
+        items: [
+          ...(confirmedDefinitions.data.items as Array<Record<string, unknown>>),
+          ...(activeDefinitions.data.items as Array<Record<string, unknown>>),
+        ],
+      },
+    };
     vi.mocked(getDpmCampaignDefinitionLifecycleEvents).mockResolvedValue(
       definitionResponse("campaign-a", "SUPERSEDED"),
     );
-    vi.mocked(listDpmCampaignDefinitions).mockResolvedValue(
-      confirmedDefinitions,
-    );
+    vi.mocked(listDpmCampaignDefinitions)
+      .mockResolvedValueOnce(confirmedDefinitions)
+      .mockResolvedValueOnce(activeDefinitions);
     const queryClient = createTestQueryClient();
     const { result, rerender } = renderHook(
       ({ definitions, readId }) => ({
@@ -912,14 +934,14 @@ describe("useDpmCampaignSources", () => {
       }),
     );
     await waitFor(() =>
-      expect(result.current.definitions).toEqual(confirmedDefinitions),
+      expect(result.current.definitions).toEqual(reconciledDefinitions),
     );
 
     rerender({
       definitions: beforeCommand,
       readId: "definitions-finishes-after-command",
     });
-    expect(result.current.definitions).toEqual(confirmedDefinitions);
+    expect(result.current.definitions).toEqual(reconciledDefinitions);
     await waitFor(() =>
       expect(
         queryClient.getQueryData<{ readId: string }>(
@@ -929,21 +951,25 @@ describe("useDpmCampaignSources", () => {
     );
     expect(
       queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
-    ).toEqual(confirmedDefinitions);
+    ).toEqual(reconciledDefinitions);
 
     const activeListAfterTerminalRemoval = {
       ...confirmedDefinitions,
       correlation_id: "corr-active-list-after-terminal-removal",
-      data: { items: [] },
+      data: activeDefinitions.data,
     };
     rerender({
       definitions: activeListAfterTerminalRemoval,
       readId: "definitions-after-terminal-removal",
     });
-    expect(result.current.definitions).toEqual(confirmedDefinitions);
+    await waitFor(() =>
+      expect(result.current.definitions).toEqual(
+        activeListAfterTerminalRemoval,
+      ),
+    );
     expect(
       queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
-    ).toEqual(confirmedDefinitions);
+    ).toEqual(activeListAfterTerminalRemoval);
   });
 
   it("clears a prior launch package when newer readiness blocks launch", async () => {
