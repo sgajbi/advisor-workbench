@@ -1,4 +1,5 @@
 import { resolveConfiguredAuthorityMode } from "./authority-mode";
+import { prepareIdeaExplanationBody } from "./idea-explanation-request-authority";
 
 const DEFAULT_CALLER_CONTEXT_HEADERS = {
   "X-Actor-Id": "workbench-system",
@@ -276,6 +277,16 @@ export function applyIdeaRouteCallerContextHeaders(
       : { status: "rejected", reason: authorityMode };
   }
 
+  const tenantIds = configuredIdeaCallerTenantIds();
+  const preparedBody = prepareIdeaRouteBody(
+    request,
+    tenantIds,
+    headers.get("Idempotency-Key"),
+  );
+  if (preparedBody.status === "rejected") {
+    return preparedBody;
+  }
+
   const defaultContext = resolveDefaultCallerContext();
   headers.set("X-Actor-Id", defaultContext.actorId);
   headers.set("X-Caller-Application", defaultContext.callerApplication);
@@ -290,7 +301,6 @@ export function applyIdeaRouteCallerContextHeaders(
       DEFAULT_IDEA_CALLER_CONTEXT.roles,
   );
   headers.set("X-Caller-Capabilities", capability);
-  const tenantIds = configuredIdeaCallerTenantIds();
   headers.set("X-Caller-Tenant-Ids", tenantIds.join(","));
   headers.set(
     "X-Caller-Book-Ids",
@@ -308,11 +318,6 @@ export function applyIdeaRouteCallerContextHeaders(
       DEFAULT_IDEA_CALLER_CONTEXT.clientIds,
   );
 
-  const preparedBody = prepareIdeaPresentationReceiptBody(request, tenantIds);
-  if (preparedBody.status === "rejected") {
-    return preparedBody;
-  }
-
   return {
     status: "applied",
     mode: authorityMode,
@@ -328,9 +333,10 @@ function configuredIdeaCallerTenantIds(): string[] {
   return [...new Set(configured.split(",").map((tenantId) => tenantId.trim()).filter(Boolean))];
 }
 
-function prepareIdeaPresentationReceiptBody(
+function prepareIdeaRouteBody(
   request: { method: string; upstreamPath: string; bodyText?: string },
   tenantIds: string[],
+  idempotencyKey: string | null,
 ):
   | {
       status: "ready";
@@ -338,6 +344,16 @@ function prepareIdeaPresentationReceiptBody(
       presentationReceiptTenantId?: string;
     }
   | { status: "rejected"; reason: "invalid_idea_configuration" | "invalid_idea_request" } {
+  const explanationMatch = request.upstreamPath.match(
+    /^api\/v1\/ideas\/candidates\/([^/]+)\/ai-explanations$/,
+  );
+  if (request.method === "POST" && explanationMatch) {
+    return prepareIdeaExplanationBody(
+      request.bodyText,
+      explanationMatch[1],
+      idempotencyKey,
+    );
+  }
   const isPresentationReceipt =
     request.method === "POST" &&
     /^api\/v1\/ideas\/candidates\/[^/]+\/presentation-receipts$/.test(
