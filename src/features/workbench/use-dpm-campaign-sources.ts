@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
@@ -36,7 +36,6 @@ type InitialWorkflowEvidence = Readonly<{
 
 type UseDpmCampaignSourcesInput = Readonly<{
   selectedCampaign: DpmCampaignDefinitionRow | null;
-  initialDefinitions: DpmCampaignDefinitionGatewayResponse | null;
   initialCampaignKey: string | null;
   initialWorkflowEvidence: InitialWorkflowEvidence;
 }>;
@@ -52,9 +51,19 @@ const NO_CAMPAIGN = {
   campaignVersion: "__no_version__",
 } as const;
 
+export function useDpmCampaignDefinitionsSource(
+  initialDefinitions: DpmCampaignDefinitionGatewayResponse | null,
+) {
+  const definitionsQuery = useQuery({
+    ...dpmCampaignDefinitionsQueryOptions(),
+    enabled: false,
+    initialData: initialDefinitions ?? undefined,
+  });
+  return definitionsQuery.data ?? null;
+}
+
 export function useDpmCampaignSources({
   selectedCampaign,
-  initialDefinitions,
   initialCampaignKey,
   initialWorkflowEvidence,
 }: UseDpmCampaignSourcesInput) {
@@ -73,12 +82,6 @@ export function useDpmCampaignSources({
     selection?.key === initialCampaignKey
       ? completeInitialWorkflowEvidence(initialWorkflowEvidence)
       : undefined;
-  const definitionsQuery = useQuery({
-    ...dpmCampaignDefinitionsQueryOptions(),
-    enabled: false,
-    initialData: initialDefinitions ?? undefined,
-  });
-
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
     enabled: false,
@@ -113,12 +116,10 @@ export function useDpmCampaignSources({
   const confirmationKey = dpmCampaignQueryKeys.confirmationLock(queryIdentity);
   const confirmationQuery = useQuery<ConfirmationLock>({
     queryKey: confirmationKey,
-    queryFn: async () => {
-      throw new Error(
-        "Campaign confirmation state is written by persisted commands.",
-      );
-    },
-    enabled: false,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<ConfirmationLock>(confirmationKey),
   });
 
   async function loadLifecycle(row: DpmCampaignDefinitionRow) {
@@ -144,8 +145,30 @@ export function useDpmCampaignSources({
 
   async function loadLaunchReadiness(row: DpmCampaignDefinitionRow) {
     const target = toRequiredSelection(row);
+    const previewOptions = dpmCampaignPreviewReadinessQueryOptions(
+      target,
+      target.requestedAsOfDate,
+    );
+    const packageOptions = dpmCampaignLaunchPackageQueryOptions(
+      target,
+      target.requestedAsOfDate,
+    );
+    await Promise.all([
+      queryClient.cancelQueries({
+        queryKey: previewOptions.queryKey,
+        exact: true,
+      }),
+      queryClient.cancelQueries({
+        queryKey: packageOptions.queryKey,
+        exact: true,
+      }),
+    ]);
+    queryClient.removeQueries({
+      queryKey: packageOptions.queryKey,
+      exact: true,
+    });
     const preview = await queryClient.fetchQuery(
-      dpmCampaignPreviewReadinessQueryOptions(target, target.requestedAsOfDate),
+      { ...previewOptions, staleTime: 0 },
     );
     const state =
       typeof preview.data.supportability_state === "string"
@@ -154,9 +177,10 @@ export function useDpmCampaignSources({
     if (state !== "READY") {
       return { preview, launchPackage: null };
     }
-    const launchPackage = await queryClient.fetchQuery(
-      dpmCampaignLaunchPackageQueryOptions(target, target.requestedAsOfDate),
-    );
+    const launchPackage = await queryClient.fetchQuery({
+      ...packageOptions,
+      staleTime: 0,
+    });
     return { preview, launchPackage };
   }
 
@@ -171,25 +195,32 @@ export function useDpmCampaignSources({
   }
 
   async function refreshLifecycle(row: DpmCampaignDefinitionRow) {
-    const options = dpmCampaignLifecycleQueryOptions(toRequiredSelection(row));
-    await queryClient.invalidateQueries({
-      queryKey: options.queryKey,
-      exact: true,
-      refetchType: "none",
-    });
+    const target = toRequiredSelection(row);
+    const options = dpmCampaignLifecycleQueryOptions(target);
+    const definitionsOptions = dpmCampaignDefinitionsQueryOptions();
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: options.queryKey, exact: true }),
+      queryClient.cancelQueries({
+        queryKey: definitionsOptions.queryKey,
+        exact: true,
+      }),
+    ]);
     try {
       const [response] = await Promise.all([
-        queryClient.fetchQuery(options),
+        queryClient.fetchQuery({ ...options, staleTime: 0 }),
         queryClient.fetchQuery({
-          ...dpmCampaignDefinitionsQueryOptions(),
+          ...definitionsOptions,
           staleTime: 0,
         }),
       ]);
-      queryClient.removeQueries({ queryKey: confirmationKey, exact: true });
+      queryClient.removeQueries({
+        queryKey: dpmCampaignQueryKeys.confirmationLock(target),
+        exact: true,
+      });
       return response;
     } catch (error) {
       queryClient.setQueryData<ConfirmationLock>(
-        dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+        dpmCampaignQueryKeys.confirmationLock(target),
         {
           kind: "lifecycle",
           message:
@@ -201,19 +232,25 @@ export function useDpmCampaignSources({
   }
 
   async function refreshWorkflow(row: DpmCampaignDefinitionRow) {
-    const options = dpmCampaignWorkflowQueryOptions(toRequiredSelection(row));
-    await queryClient.invalidateQueries({
+    const target = toRequiredSelection(row);
+    const options = dpmCampaignWorkflowQueryOptions(target);
+    await queryClient.cancelQueries({
       queryKey: options.queryKey,
       exact: true,
-      refetchType: "none",
     });
     try {
-      const response = await queryClient.fetchQuery(options);
-      queryClient.removeQueries({ queryKey: confirmationKey, exact: true });
+      const response = await queryClient.fetchQuery({
+        ...options,
+        staleTime: 0,
+      });
+      queryClient.removeQueries({
+        queryKey: dpmCampaignQueryKeys.confirmationLock(target),
+        exact: true,
+      });
       return response;
     } catch (error) {
       queryClient.setQueryData<ConfirmationLock>(
-        dpmCampaignQueryKeys.confirmationLock(toRequiredSelection(row)),
+        dpmCampaignQueryKeys.confirmationLock(target),
         {
           kind: "workflow",
           message:
@@ -225,7 +262,6 @@ export function useDpmCampaignSources({
   }
 
   return {
-    definitions: definitionsQuery.data ?? null,
     lifecycle: lifecycleQuery.data ?? null,
     lifecycleError:
       (confirmationQuery.data?.kind === "lifecycle"
