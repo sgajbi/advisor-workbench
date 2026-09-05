@@ -533,6 +533,7 @@ export function useDpmCampaignSources({
     lifecycleError:
       lifecycleConfirmationQuery.data?.message ??
       errorMessage(lifecycleQuery.error),
+    lifecycleConfirmationRequired: Boolean(lifecycleConfirmationQuery.data),
     lifecyclePending:
       lifecycleQuery.isFetching || lifecycleConfirmationReadQuery.isFetching,
     launchHistory: historyQuery.data ?? null,

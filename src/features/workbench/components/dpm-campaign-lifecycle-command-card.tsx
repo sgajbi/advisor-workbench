@@ -21,6 +21,7 @@ type Props = {
   selectedCampaign: DpmCampaignDefinitionRow | null;
   availableCampaigns?: DpmCampaignDefinitionRow[];
   pendingCommand?: boolean;
+  commandQueueBusy?: boolean;
   commandError?: string | null;
   commandEvidence?: DpmCampaignLifecycleCommandEvidence | null;
   evidenceError?: string | null;
@@ -33,6 +34,7 @@ export default function DpmCampaignLifecycleCommandCard({
   selectedCampaign,
   availableCampaigns = [],
   pendingCommand = false,
+  commandQueueBusy = false,
   commandError = null,
   commandEvidence = null,
   evidenceError = null,
@@ -56,6 +58,7 @@ export default function DpmCampaignLifecycleCommandCard({
   const submitDisabled =
     !selectedCampaign ||
     pendingCommand ||
+    commandQueueBusy ||
     Boolean(commandEvidence) ||
     !actorId.trim() ||
     !reason.trim() ||
@@ -114,7 +117,7 @@ export default function DpmCampaignLifecycleCommandCard({
                 setCommandType(event.target.value as DpmCampaignLifecycleCommandType);
                 setConfirmed(false);
               }}
-              disabled={pendingCommand || Boolean(commandEvidence)}
+              disabled={pendingCommand || commandQueueBusy || Boolean(commandEvidence)}
             >
               <option value="retire">Retire future use</option>
               <option value="supersede">Replace with active version</option>
@@ -133,7 +136,7 @@ export default function DpmCampaignLifecycleCommandCard({
                 value={replacementCampaignVersion}
                 onChange={(event) => setReplacementCampaignVersion(event.target.value)}
                 disabled={
-                  pendingCommand || Boolean(commandEvidence) || replacementVersions.length === 0
+                  pendingCommand || commandQueueBusy || Boolean(commandEvidence) || replacementVersions.length === 0
                 }
               >
                 <option value="">Select an active version</option>
@@ -151,7 +154,7 @@ export default function DpmCampaignLifecycleCommandCard({
               className="workbench-input"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              disabled={pendingCommand || Boolean(commandEvidence)}
+              disabled={pendingCommand || commandQueueBusy || Boolean(commandEvidence)}
             />
           </label>
           <label className="workbench-confirmation" htmlFor="dpm-campaign-lifecycle-confirmation">
@@ -160,7 +163,7 @@ export default function DpmCampaignLifecycleCommandCard({
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
-              disabled={pendingCommand || Boolean(commandEvidence)}
+              disabled={pendingCommand || commandQueueBusy || Boolean(commandEvidence)}
             />
             <span>
               I understand this prevents future launches from the selected version and records an append-only source event.
@@ -172,6 +175,8 @@ export default function DpmCampaignLifecycleCommandCard({
         <ActionButton priority="secondary" onClick={submitCommand} disabled={submitDisabled}>
           {pendingCommand
             ? "Recording lifecycle event"
+            : commandQueueBusy
+              ? "Another campaign action is in progress"
             : commandEvidence
               ? "Lifecycle action recorded"
               : commandType === "retire"

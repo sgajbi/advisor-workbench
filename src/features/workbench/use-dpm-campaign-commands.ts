@@ -2,6 +2,7 @@
 
 import {
   skipToken,
+  useIsMutating,
   useMutation,
   useMutationState,
   useQuery,
@@ -72,6 +73,8 @@ export function useDpmCampaignCommands({
   sources: CampaignSources;
 }) {
   const queryClient = useQueryClient();
+  const commandPending =
+    useIsMutating({ mutationKey: dpmCampaignMutationKeys.all }) > 0;
   const launchResultKey = dpmCampaignQueryKeys.launchResult(
     selectedCampaign ?? {
       campaignId: "__no_campaign__",
@@ -235,6 +238,7 @@ export function useDpmCampaignCommands({
   return {
     pendingLifecycle: lifecycleRecord?.status === "pending",
     pendingWorkflow: workflowRecord?.status === "pending",
+    commandPending,
     pendingLaunchKey:
       launchRecord?.status === "pending"
         ? (selectedCampaign?.key ?? null)

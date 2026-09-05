@@ -139,6 +139,34 @@ describe("DpmCampaignDefinitionsSection", () => {
     expect(callbacks.onLaunchCampaign).toHaveBeenCalledWith(campaign);
   });
 
+  it("surfaces the shared campaign command lock across every action mode", async () => {
+    const callbacks = renderWorkspace({ commandPending: true });
+    await waitFor(() =>
+      expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Governance action" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Another campaign action is in progress",
+      }),
+    ).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Lifecycle control" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Another campaign action is in progress",
+      }),
+    ).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Launch decision" }));
+    expect(
+      screen.getByRole("button", {
+        name: "Another campaign action is in progress",
+      }),
+    ).toBeDisabled();
+  });
+
   it("preserves keyboard selection and requests the source identity change", async () => {
     const callbacks = renderWorkspace();
     await waitFor(() => expect(callbacks.onLoadLifecycle).toHaveBeenCalledWith(campaign));

@@ -66,6 +66,7 @@ type UseDpmWaveCommandCenterActionsResult = {
   pendingCampaignWorkflowEvidenceKey: string | null;
   pendingCampaignLifecycleCommand: boolean;
   pendingCampaignWorkflowCommand: boolean;
+  pendingCampaignCommand: boolean;
   actionError: string | null;
   sourceConfirmationRetryAvailable: boolean;
   campaignLifecycleError: string | null;
@@ -386,7 +387,8 @@ export function useDpmWaveCommandCenterActions({
   async function checkCampaignLaunchReadiness(row: DpmCampaignDefinitionRow) {
     if (
       campaignSources.previewReadinessPending ||
-      campaignSources.launchPackagePending
+      campaignSources.launchPackagePending ||
+      campaignSources.lifecycleConfirmationRequired
     ) {
       return;
     }
@@ -438,6 +440,7 @@ export function useDpmWaveCommandCenterActions({
       : null,
     pendingCampaignLifecycleCommand: campaignCommands.pendingLifecycle,
     pendingCampaignWorkflowCommand: campaignCommands.pendingWorkflow,
+    pendingCampaignCommand: campaignCommands.commandPending,
     actionError: waveCommands.actionError ?? waveSources.sourceError,
     sourceConfirmationRetryAvailable:
       waveCommands.confirmationRecoveryAvailable ||

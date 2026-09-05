@@ -2298,6 +2298,13 @@ describe("useDpmWaveCommandCenterActions", () => {
       expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false),
     );
     await act(async () => {
+      await result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
+    });
+    expect(getDpmCampaignDefinitionPreviewReadiness).toHaveBeenCalledTimes(1);
+    expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledTimes(1);
+    await act(async () => {
       await result.current.launchCampaign(result.current.selectedCampaign!);
     });
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
@@ -2346,6 +2353,73 @@ describe("useDpmWaveCommandCenterActions", () => {
       await result.current.launchCampaign(result.current.selectedCampaign!);
     });
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
+  });
+
+  it("publishes the shared command lock after selecting another campaign", async () => {
+    const secondCampaign = {
+      ...(campaignDefinitions.data.items as Array<Record<string, unknown>>)[0],
+      campaign_id: "campaign-income-202606",
+      campaign_version: "2026.06",
+      display_name: "Income mandate review",
+      as_of_date: "2026-06-10",
+    };
+    const definitions = {
+      ...campaignDefinitions,
+      data: {
+        ...campaignDefinitions.data,
+        items: [
+          ...(campaignDefinitions.data.items as Array<Record<string, unknown>>),
+          secondCampaign,
+        ],
+        count: 2,
+      },
+    };
+    let resolveRetirement!: (
+      value: DpmCampaignDefinitionGatewayResponse,
+    ) => void;
+    vi.mocked(retireDpmCampaignDefinition).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRetirement = resolve;
+      }),
+    );
+    const { result } = renderActions(definitions);
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    act(() => {
+      void result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-retire",
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(result.current.pendingCampaignCommand).toBe(true),
+    );
+
+    act(() => result.current.selectCampaign(result.current.model.campaignRows[1]));
+    await waitFor(() =>
+      expect(result.current.selectedCampaign?.campaignId).toBe(
+        "campaign-income-202606",
+      ),
+    );
+    expect(result.current.pendingCampaignCommand).toBe(true);
+    expect(result.current.pendingCampaignLifecycleCommand).toBe(false);
+
+    await act(async () => {
+      resolveRetirement({
+        ...campaignLifecycleCommandResponse,
+        data: {
+          ...campaignLifecycleCommandResponse.data,
+          status: "RETIRED",
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(result.current.pendingCampaignCommand).toBe(false),
+    );
   });
 
   it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {
