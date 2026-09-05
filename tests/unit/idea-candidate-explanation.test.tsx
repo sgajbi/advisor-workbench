@@ -93,8 +93,13 @@ function servedResponse() {
 describe("IdeaCandidateExplanation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    let requestSequence = 0;
     vi.stubGlobal("crypto", {
-      randomUUID: vi.fn(() => "request-runtime"),
+      getRandomValues: vi.fn((bytes: Uint8Array) => {
+        bytes.fill(0);
+        bytes[15] = ++requestSequence;
+        return bytes;
+      }),
     });
   });
 
@@ -104,6 +109,7 @@ describe("IdeaCandidateExplanation", () => {
     );
     renderExplanation();
 
+    expect(crypto.randomUUID).toBeUndefined();
     fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
 
     expect(await screen.findByText("Rationale available")).toBeInTheDocument();
@@ -128,9 +134,11 @@ describe("IdeaCandidateExplanation", () => {
     expect(dependencies.requestAdvisorIdeaAIExplanation).toHaveBeenCalledWith({
       candidateId: "idea-001",
       portfolioId: "PB_SG_GLOBAL_BAL_001",
-      idempotencyKey: "idea-explanation-idea-001-request-runtime",
+      idempotencyKey:
+        "idea-explanation-idea-001-00000000-0000-4000-8000-000000000001",
       request: {
-        requestId: "idea-explanation-idea-001-request-runtime",
+        requestId:
+          "idea-explanation-idea-001-00000000-0000-4000-8000-000000000001",
         purpose: "advisor_rationale_draft",
         requestedAtUtc: expect.any(String),
       },
@@ -195,9 +203,6 @@ describe("IdeaCandidateExplanation", () => {
   });
 
   it("creates a fresh request identity after candidate evidence conflicts", async () => {
-    vi.mocked(crypto.randomUUID)
-      .mockReturnValueOnce("conflicted-request")
-      .mockReturnValueOnce("fresh-request");
     dependencies.requestAdvisorIdeaAIExplanation
       .mockRejectedValueOnce(new WorkbenchApiError("explanation", 409))
       .mockImplementationOnce(async ({ request }) => ({
@@ -219,8 +224,10 @@ describe("IdeaCandidateExplanation", () => {
     const [first, second] = dependencies.requestAdvisorIdeaAIExplanation.mock.calls.map(
       ([submission]) => submission,
     );
-    expect(first.request.requestId).toContain("conflicted-request");
-    expect(second.request.requestId).toContain("fresh-request");
+    expect(first.request.requestId).toMatch(
+      /^idea-explanation-idea-001-[0-9a-f-]{36}$/,
+    );
+    expect(second.request.requestId).not.toBe(first.request.requestId);
     expect(second.idempotencyKey).toBe(second.request.requestId);
   });
 

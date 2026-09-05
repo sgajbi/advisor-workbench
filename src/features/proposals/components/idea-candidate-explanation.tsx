@@ -17,6 +17,7 @@ import {
   ADVISOR_RATIONALE_DRAFT_PURPOSE,
   type AdvisorIdeaAIExplanationRequest,
 } from "../idea-ai-explanation-contract";
+import { createIdeaPresentationIdempotencyKey } from "../idea-presentation-receipt";
 import {
   recordIdeaExplanationOpened,
   recordIdeaExplanationServed,
@@ -313,10 +314,11 @@ function createSubmission(candidateId: string): ExplanationSubmission {
 }
 
 function createSecureId(prefix: string): string {
-  if (typeof crypto === "undefined" || typeof crypto.randomUUID !== "function") {
+  try {
+    return `${prefix}-${createIdeaPresentationIdempotencyKey()}`;
+  } catch {
     throw new Error("Secure request identity is unavailable in this browser.");
   }
-  return `${prefix}-${crypto.randomUUID()}`;
 }
 
 function explanationFailureCopy(error: unknown): string {
