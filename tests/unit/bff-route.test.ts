@@ -256,8 +256,9 @@ describe("BFF proxy route", () => {
         status,
         headers: {
           "cache-control": "private, no-store",
+          "content-encoding": "gzip",
+          "content-length": status === 304 ? "321" : "999",
           etag: '"source-revision-7"',
-          ...(status === 304 ? { "content-length": "321" } : {}),
         },
       });
       const bodyRead = vi.spyOn(upstreamResponse, "arrayBuffer");
@@ -280,6 +281,9 @@ describe("BFF proxy route", () => {
       expect(bodyRead).not.toHaveBeenCalled();
       expect(response.headers.get("cache-control")).toBe("private, no-store");
       expect(response.headers.get("etag")).toBe('"source-revision-7"');
+      expect(response.headers.get("content-encoding")).toBe(
+        status === 304 ? "gzip" : null,
+      );
       expect(response.headers.get("content-length")).toBe(
         status === 304 ? "321" : null,
       );
