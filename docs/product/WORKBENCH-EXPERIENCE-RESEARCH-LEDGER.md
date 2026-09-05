@@ -7701,6 +7701,9 @@ advice, duplicating Idea policy, or making the candidate workflow depend on AI a
 4. Present an unavailable response's source-authored fallback as deterministic evidence, never as
    AI output. Record bounded opened, served, and unavailable telemetry with the fixed purpose and
    source disposition.
+5. Bind current presentation to Idea's exact evidence packet, evidence content hash, and source
+   revision-vector digest from refreshed candidate detail. Changed evidence supersedes the earlier
+   rationale and fences late responses; unchanged transient retries retain exact request identity.
 
 ### Rejected decisions
 
@@ -7710,6 +7713,7 @@ confidence, generated next actions, and any reassuring fallback not published by
 ### Validation and publication decision
 
 Contract, BFF authority, view-model, component, telemetry, retry, failure, and browser tests prove
-the implemented boundary. The Opportunities and Ideas workflow gains a visible capability and its
+the implemented boundary, including same-candidate evidence revision, late-response, missing
+identity, and exact retry behavior. The Opportunities and Ideas workflow gains a visible capability and its
 source/recovery rules change, so the screen guide and repository context change in the same PR and
 the wiki must be published after merge.
