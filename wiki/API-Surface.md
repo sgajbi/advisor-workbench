@@ -72,6 +72,12 @@ promote dormant labels into product ownership just because historical route file
 
 ## Current contract notes
 
+- The shared `/api/bff/*` bridge requests identity encoding and reconstructs each response from the
+  bytes Workbench actually returns. Body-bearing responses publish their emitted byte length and
+  do not retain stale compression metadata; `HEAD`, `204`, `205`, and `304` remain bodyless.
+  End-to-end cache, security, download, range, and source headers are retained, while hop-by-hop
+  transport fields are removed. This is transport integrity, not a second business API or source
+  authority.
 - Portfolio Allocation loads the selected portfolio book through Gateway and requests
   `/api/v1/portfolio/portfolios/{portfolio_id}/allocations` separately for direct or preferred
   look-through coverage. Browser requests use `/api/bff/api/v1/...`; Workbench retains confirmed

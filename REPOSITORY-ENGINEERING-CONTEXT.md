@@ -58,6 +58,17 @@ object-authorization authority. Reporting options and report-job history are the
 consumer, with real `NextRequest`/`NextResponse` route tests proving zero upstream calls on
 ambiguous scope.
 
+### BFF response-byte authority rule
+
+The shared BFF must describe the bytes it returns, not stale upstream transfer metadata. Request
+identity encoding from Gateway; after bounded buffering, remove `Content-Encoding`, set
+`Content-Length` to the emitted byte count, and remove both standard hop-by-hop fields and fields
+named by `Connection`. Keep `HEAD`, `204`, `205`, and `304` bodyless without reading their bodies;
+retain representation metadata for `HEAD` and `304`, but remove content metadata prohibited on
+`204` and `205`. Preserve end-to-end cache, security, download, range, and source headers. Any
+future streaming model requires measured need and an explicit timeout, cancellation, range, and
+backpressure design; it must not coexist with a second response-normalisation path.
+
 ### Browser transport and error-authority rule
 
 Feature clients must use the governed Workbench JSON transport for same-origin BFF reads and
