@@ -7,59 +7,35 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import {
-  createDpmCampaignApprovalDecision,
-  createDpmCampaignAssignmentAction,
-  createDpmCampaignAssignmentTask,
-  createDpmCampaignAssignmentTaskTransition,
-  createDpmCampaignMakerCheckerControl,
-  launchDpmCampaignDefinition,
-  retireDpmCampaignDefinition,
-  supersedeDpmCampaignDefinition,
-} from "@/features/workbench/dpm-wave-api";
-import {
-  campaignCommandActorId,
-  type DpmCampaignLifecycleCommandInput,
-  type DpmCampaignLifecycleCommandType,
-  type DpmCampaignWorkflowCommandInput,
-  type DpmCampaignWorkflowCommandType,
+import type {
+  DpmCampaignLifecycleCommandInput,
+  DpmCampaignWorkflowCommandInput,
 } from "@/features/workbench/dpm-campaign-command-contracts";
+import {
+  executeDpmCampaignLaunch,
+  executeDpmCampaignLifecycleCommand,
+  executeDpmCampaignWorkflowCommand,
+} from "@/features/workbench/dpm-campaign-command-executor";
+import {
+  buildCampaignLifecycleCommandEvidence,
+  buildCampaignWorkflowCommandEvidence,
+  isCampaignLifecycleCommandBlocked,
+  validateCampaignLifecycleCommand,
+  type DpmCampaignLifecycleCommandEvidence,
+  type DpmCampaignWorkflowCommandEvidence,
+} from "@/features/workbench/dpm-campaign-command-evidence";
 import {
   DPM_CAMPAIGN_COMMAND_SCOPE,
   dpmCampaignMutationKeys,
   dpmCampaignQueryKeys,
 } from "@/features/workbench/dpm-campaign-query-keys";
 import type { DpmCampaignDefinitionRow } from "@/features/workbench/dpm-wave-command-center-view-model";
-import type {
-  DpmCampaignDefinitionGatewayResponse,
-  DpmCampaignWorkflowGatewayResponse,
-  DpmWaveGatewayResponse,
-} from "@/features/workbench/types";
+import type { DpmWaveGatewayResponse } from "@/features/workbench/types";
 
-export type DpmCampaignWorkflowCommandEvidence = {
-  commandLabel: string;
-  evidenceRef: string;
-  correlationId: string;
-  sourceService: string;
-  upstreamStatus: string;
-  contentHash: string;
-  reasonCodes: string;
-  operatingBoundaries: string;
-};
-
-export type DpmCampaignLifecycleCommandEvidence = {
-  commandLabel: string;
-  status: string;
-  actor: string;
-  reason: string;
-  replacementCampaignVersion: string;
-  correlationId: string;
-  sourceService: string;
-  upstreamStatus: string;
-  contentHash: string;
-  reasonCodes: string;
-  operatingBoundaries: string;
-};
+export type {
+  DpmCampaignLifecycleCommandEvidence,
+  DpmCampaignWorkflowCommandEvidence,
+} from "@/features/workbench/dpm-campaign-command-evidence";
 
 type CampaignSources = Readonly<{
   refreshLifecycle: (row: DpmCampaignDefinitionRow) => Promise<unknown>;
@@ -105,23 +81,12 @@ export function useDpmCampaignCommands({
     mutationKey: dpmCampaignMutationKeys.lifecycle(),
     scope: { id: DPM_CAMPAIGN_COMMAND_SCOPE },
     mutationFn: async ({ campaign, command }: LifecycleVariables) => {
-      validateLifecycleCommand(command);
-      const actorId = campaignCommandActorId(command).trim();
-      const response =
-        command.commandType === "retire"
-          ? await retireDpmCampaignDefinition({
-              campaignId: campaign.campaignId,
-              campaignVersion: campaign.campaignVersion,
-              body: command.body,
-              actorId,
-            })
-          : await supersedeDpmCampaignDefinition({
-              campaignId: campaign.campaignId,
-              campaignVersion: campaign.campaignVersion,
-              body: command.body,
-              actorId,
-            });
-      if (isLifecycleCommandBlocked(response)) {
+      validateCampaignLifecycleCommand(command);
+      const response = await executeDpmCampaignLifecycleCommand(
+        campaign,
+        command,
+      );
+      if (isCampaignLifecycleCommandBlocked(response)) {
         throw new Error(
           "Manage did not accept the campaign lifecycle command.",
         );
@@ -150,12 +115,10 @@ export function useDpmCampaignCommands({
           "Task progress requires an existing Manage task reference.",
         );
       }
-      const context = {
-        campaignId: campaign.campaignId,
-        campaignVersion: campaign.campaignVersion,
-        actorId: campaignCommandActorId(command),
-      };
-      const response = await runWorkflowCommand(context, command);
+      const response = await executeDpmCampaignWorkflowCommand(
+        campaign,
+        command,
+      );
       const result: CampaignResult<DpmCampaignWorkflowCommandEvidence> = {
         campaignKey: campaign.key,
         value: buildCampaignWorkflowCommandEvidence(
@@ -175,12 +138,7 @@ export function useDpmCampaignCommands({
     mutationKey: dpmCampaignMutationKeys.launch(),
     scope: { id: DPM_CAMPAIGN_COMMAND_SCOPE },
     mutationFn: async (campaign: DpmCampaignDefinitionRow) => {
-      const value = await launchDpmCampaignDefinition({
-        campaignId: campaign.campaignId,
-        campaignVersion: campaign.campaignVersion,
-        requestedAsOfDate:
-          campaign.asOfDate === "N/A" ? undefined : campaign.asOfDate,
-      });
+      const value = await executeDpmCampaignLaunch(campaign);
       queryClient.setQueryData(
         dpmCampaignQueryKeys.launchResult(campaign),
         value,
@@ -315,155 +273,4 @@ function mutationError(record?: MutationRecord<unknown>): string | null {
       ? record.error.message
       : "Campaign action failed."
     : null;
-}
-
-function validateLifecycleCommand(command: DpmCampaignLifecycleCommandInput) {
-  const reason =
-    command.commandType === "retire"
-      ? command.body.retirement_reason.trim()
-      : command.body.supersession_reason.trim();
-  if (
-    !campaignCommandActorId(command).trim() ||
-    !reason ||
-    !command.body.correlation_id.trim()
-  ) {
-    throw new Error(
-      "Campaign lifecycle command requires actor, rationale, and correlation evidence.",
-    );
-  }
-  if (
-    command.commandType === "supersede" &&
-    !command.body.superseded_by_campaign_version.trim()
-  ) {
-    throw new Error(
-      "Supersede requires an existing replacement campaign version.",
-    );
-  }
-}
-
-async function runWorkflowCommand(
-  context: { campaignId: string; campaignVersion: string; actorId: string },
-  command: DpmCampaignWorkflowCommandInput,
-) {
-  return command.commandType === "approval_decision"
-    ? await createDpmCampaignApprovalDecision({
-        ...context,
-        body: command.body,
-      })
-    : command.commandType === "assignment_action"
-      ? await createDpmCampaignAssignmentAction({
-          ...context,
-          body: command.body,
-        })
-      : command.commandType === "assignment_task"
-        ? await createDpmCampaignAssignmentTask({
-            ...context,
-            body: command.body,
-          })
-        : command.commandType === "task_transition"
-          ? await createDpmCampaignAssignmentTaskTransition({
-              ...context,
-              taskRef: command.taskRef,
-              body: command.body,
-            })
-          : await createDpmCampaignMakerCheckerControl({
-              ...context,
-              body: command.body,
-            });
-}
-
-function buildCampaignLifecycleCommandEvidence(
-  commandType: DpmCampaignLifecycleCommandType,
-  response: DpmCampaignDefinitionGatewayResponse,
-): DpmCampaignLifecycleCommandEvidence {
-  const data = response.data;
-  return {
-    commandLabel:
-      commandType === "retire" ? "Retire campaign" : "Supersede campaign",
-    status:
-      readString(data.status) || readString(data.supportability_state) || "N/A",
-    actor:
-      readString(data.retired_by) ||
-      readString(data.superseded_by) ||
-      readString(data.actor_id) ||
-      readString(data.actor) ||
-      "N/A",
-    reason:
-      readString(data.retirement_reason) ||
-      readString(data.supersession_reason) ||
-      formatList(data.reason_codes),
-    replacementCampaignVersion:
-      readString(data.superseded_by_campaign_version) ||
-      readString(data.replacement_campaign_version) ||
-      "N/A",
-    correlationId: readString(data.correlation_id) || response.correlation_id,
-    sourceService: response.source_service,
-    upstreamStatus: String(response.upstream_status),
-    contentHash: readString(data.content_hash) || "N/A",
-    reasonCodes: formatList(data.reason_codes),
-    operatingBoundaries: formatList(data.operating_boundaries),
-  };
-}
-
-function isLifecycleCommandBlocked(
-  response: DpmCampaignDefinitionGatewayResponse,
-) {
-  return ["BLOCKED", "UNSUPPORTED", "NOT_SUPPORTED"].includes(
-    readString(response.data.supportability_state).toUpperCase(),
-  );
-}
-
-function buildCampaignWorkflowCommandEvidence(
-  commandType: DpmCampaignWorkflowCommandType,
-  response: DpmCampaignWorkflowGatewayResponse,
-): DpmCampaignWorkflowCommandEvidence {
-  const data = response.data;
-  return {
-    commandLabel: campaignWorkflowCommandLabel(commandType),
-    evidenceRef:
-      readString(data.evidence_ref) ||
-      readString(data.decision_ref) ||
-      readString(data.action_ref) ||
-      readString(data.task_ref) ||
-      readString(data.control_ref) ||
-      "N/A",
-    correlationId: response.correlation_id,
-    sourceService: response.source_service,
-    upstreamStatus: String(response.upstream_status),
-    contentHash:
-      readString(data.content_hash) ||
-      response.supportability?.content_hash ||
-      "N/A",
-    reasonCodes: formatList(data.reason_codes),
-    operatingBoundaries: formatList(data.operating_boundaries),
-  };
-}
-
-function campaignWorkflowCommandLabel(
-  commandType: DpmCampaignWorkflowCommandType,
-) {
-  return {
-    approval_decision: "Approval decision",
-    assignment_action: "Assignment action",
-    assignment_task: "Assignment task",
-    task_transition: "Task transition",
-    maker_checker_control: "Maker-checker control",
-  }[commandType];
-}
-
-function readString(value: unknown) {
-  return typeof value === "string"
-    ? value
-    : typeof value === "number" || typeof value === "boolean"
-      ? String(value)
-      : "";
-}
-
-function formatList(value: unknown) {
-  if (typeof value === "string" && value.length > 0) return value;
-  if (!Array.isArray(value)) return "N/A";
-  const values = value.filter(
-    (item): item is string => typeof item === "string" && item.length > 0,
-  );
-  return values.length > 0 ? values.join(", ") : "N/A";
 }
