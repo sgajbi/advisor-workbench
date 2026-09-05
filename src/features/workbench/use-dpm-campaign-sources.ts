@@ -29,6 +29,7 @@ type CampaignSelection = Readonly<{
 }>;
 
 type InitialWorkflowEvidence = Readonly<{
+  readId: string;
   approvalDecisions: DpmCampaignWorkflowGatewayResponse | null;
   assignmentActions: DpmCampaignWorkflowGatewayResponse | null;
   assignmentTasks: DpmCampaignWorkflowGatewayResponse | null;
@@ -45,8 +46,10 @@ type OffsetSelection = Readonly<{ campaignKey: string; offset: number }>;
 type ConfirmationLock = Readonly<{
   message: string;
 }>;
-type WorkflowRecovery = InitialWorkflowEvidence &
-  Readonly<{ campaignKey: string }>;
+type WorkflowRecovery = Readonly<{
+  campaignKey: string;
+  readId: string;
+}>;
 
 const NO_CAMPAIGN = {
   campaignId: "__no_campaign__",
@@ -113,6 +116,7 @@ export function useDpmCampaignSources({
       ? historySelection.offset
       : 0;
   const {
+    readId: initialWorkflowReadId,
     approvalDecisions,
     assignmentActions,
     assignmentTasks,
@@ -142,10 +146,7 @@ export function useDpmCampaignSources({
   const workflowRecoveredForCurrentInput =
     workflowRecovery !== null &&
     workflowRecovery.campaignKey === selection?.key &&
-    workflowRecovery.approvalDecisions === approvalDecisions &&
-    workflowRecovery.assignmentActions === assignmentActions &&
-    workflowRecovery.assignmentTasks === assignmentTasks &&
-    workflowRecovery.makerCheckerControls === makerCheckerControls;
+    workflowRecovery.readId === initialWorkflowReadId;
   const workflowRequiresRecovery =
     initialWorkflowIsAuthoritative &&
     !initialWorkflow &&
@@ -413,10 +414,7 @@ export function useDpmCampaignSources({
     }
     setWorkflowRecovery({
       campaignKey: row.key,
-      approvalDecisions,
-      assignmentActions,
-      assignmentTasks,
-      makerCheckerControls,
+      readId: initialWorkflowReadId,
     });
   }
 }
@@ -431,7 +429,7 @@ function toRequiredSelection(row: DpmCampaignDefinitionRow): CampaignSelection {
 }
 
 function completeInitialWorkflowEvidence(
-  evidence: InitialWorkflowEvidence,
+  evidence: Omit<InitialWorkflowEvidence, "readId">,
 ): DpmCampaignWorkflowEvidence | undefined {
   return evidence.approvalDecisions &&
     evidence.assignmentActions &&

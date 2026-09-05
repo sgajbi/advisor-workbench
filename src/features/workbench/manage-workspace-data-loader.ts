@@ -501,6 +501,7 @@ function createEmptyManageWorkspaceData(portfolio: PortfolioResponse): ManageWor
     campaignAssignmentPlanError: null,
     campaignWorkflowAutomation: null,
     campaignWorkflowAutomationError: null,
+    campaignWorkflowReadId: crypto.randomUUID(),
     campaignApprovalDecisions: null,
     campaignApprovalDecisionsError: null,
     campaignAssignmentActions: null,

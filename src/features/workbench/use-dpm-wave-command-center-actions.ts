@@ -41,6 +41,7 @@ type UseDpmWaveCommandCenterActionsInput = {
   campaignWorkflowBoard?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentPlan?: DpmCampaignWorkflowGatewayResponse | null;
   campaignWorkflowAutomation?: DpmCampaignWorkflowGatewayResponse | null;
+  campaignWorkflowReadId: string;
   campaignApprovalDecisions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentActions?: DpmCampaignWorkflowGatewayResponse | null;
   campaignAssignmentTasks?: DpmCampaignWorkflowGatewayResponse | null;
@@ -132,6 +133,7 @@ export function useDpmWaveCommandCenterActions({
   campaignWorkflowBoard = null,
   campaignAssignmentPlan = null,
   campaignWorkflowAutomation = null,
+  campaignWorkflowReadId,
   campaignApprovalDecisions = null,
   campaignAssignmentActions = null,
   campaignAssignmentTasks = null,
@@ -241,6 +243,7 @@ export function useDpmWaveCommandCenterActions({
     selectedCampaign,
     initialCampaignKey,
     initialWorkflowEvidence: {
+      readId: campaignWorkflowReadId,
       approvalDecisions: campaignApprovalDecisions,
       assignmentActions: campaignAssignmentActions,
       assignmentTasks: campaignAssignmentTasks,

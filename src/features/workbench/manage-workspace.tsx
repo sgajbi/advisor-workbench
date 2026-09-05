@@ -190,6 +190,7 @@ function renderManageMode(
             campaignWorkflowBoard={data.campaignWorkflowBoard}
             campaignAssignmentPlan={data.campaignAssignmentPlan}
             campaignWorkflowAutomation={data.campaignWorkflowAutomation}
+            campaignWorkflowReadId={data.campaignWorkflowReadId}
             campaignApprovalDecisions={data.campaignApprovalDecisions}
             campaignAssignmentActions={data.campaignAssignmentActions}
             campaignAssignmentTasks={data.campaignAssignmentTasks}

@@ -365,6 +365,7 @@ function renderActions(
     () =>
       useDpmWaveCommandCenterActions({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
+        campaignWorkflowReadId: "workflow-read-default",
         waveList: sourceWaveList,
         campaignDefinitions: definitions,
       }),
@@ -1667,6 +1668,7 @@ describe("useDpmWaveCommandCenterActions", () => {
       ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
         useDpmWaveCommandCenterActions({
           portfolioId: "PB_SG_GLOBAL_BAL_001",
+          campaignWorkflowReadId: "workflow-read-default",
           waveList: sourceWaveList,
           campaignDefinitions,
         }),
@@ -1745,6 +1747,7 @@ describe("useDpmWaveCommandCenterActions", () => {
       ({ sourceWaveList }: { sourceWaveList: DpmWaveGatewayResponse }) =>
         useDpmWaveCommandCenterActions({
           portfolioId: "PB_SG_GLOBAL_BAL_001",
+          campaignWorkflowReadId: "workflow-read-default",
           waveList: sourceWaveList,
           campaignDefinitions,
         }),

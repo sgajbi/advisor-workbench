@@ -1,7 +1,8 @@
+import type { ComponentProps } from "react";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import DpmWaveCommandCenterPanel from "../../src/features/workbench/components/dpm-wave-command-center-panel";
+import ProductionDpmWaveCommandCenterPanel from "../../src/features/workbench/components/dpm-wave-command-center-panel";
 import {
   approveDpmWave,
   createDpmWave,
@@ -29,6 +30,20 @@ import type {
   DpmWaveGatewayResponse,
 } from "../../src/features/workbench/types";
 import { renderWithQueryClient } from "../helpers/query-client-test-harness";
+
+function DpmWaveCommandCenterPanel(
+  props: Omit<
+    ComponentProps<typeof ProductionDpmWaveCommandCenterPanel>,
+    "campaignWorkflowReadId"
+  >,
+) {
+  return (
+    <ProductionDpmWaveCommandCenterPanel
+      {...props}
+      campaignWorkflowReadId="workflow-read-default"
+    />
+  );
+}
 
 vi.mock("../../src/features/workbench/dpm-wave-api", () => ({
   approveDpmWave: vi.fn(),
