@@ -289,11 +289,20 @@ export function campaignWorkflowEvidenceTotalCount(
   receipt: DpmCampaignWorkflowConfirmationReceipt,
 ): number {
   const response = evidence[receipt.source];
-  const reported = Number(response.data.total_count);
-  if (Number.isFinite(reported) && reported >= 0) return reported;
-  const supported = Number(response.supportability?.total_count);
-  if (Number.isFinite(supported) && supported >= 0) return supported;
+  const reported = finiteNonNegativeNumber(response.data.total_count);
+  if (reported !== null) return reported;
+  const supported = finiteNonNegativeNumber(
+    response.supportability?.total_count,
+  );
+  if (supported !== null) return supported;
   return readDpmCampaignWorkflowRecords(response.data).length;
+}
+
+function finiteNonNegativeNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const reported = Number(value);
+  if (Number.isFinite(reported) && reported >= 0) return reported;
+  return null;
 }
 
 function receipt(

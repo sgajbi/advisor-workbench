@@ -100,7 +100,7 @@ export function useDpmCampaignCommands({
           "Manage did not accept the campaign lifecycle command.",
         );
       }
-      revokeLaunchAuthorization(queryClient, campaign);
+      await revokeLaunchAuthorization(queryClient, campaign);
       const result: CampaignResult<DpmCampaignLifecycleCommandEvidence> = {
         campaignKey: campaign.key,
         value: buildCampaignLifecycleCommandEvidence(
@@ -159,7 +159,7 @@ export function useDpmCampaignCommands({
     gcTime: Infinity,
     mutationFn: async (campaign: DpmCampaignDefinitionRow) => {
       const value = await executeDpmCampaignLaunch(campaign);
-      revokeLaunchAuthorization(queryClient, campaign);
+      await revokeLaunchAuthorization(queryClient, campaign);
       queryClient.setQueryData(
         dpmCampaignQueryKeys.launchResult(campaign),
         value,
@@ -251,20 +251,29 @@ export function useDpmCampaignCommands({
   };
 }
 
-function revokeLaunchAuthorization(
+async function revokeLaunchAuthorization(
   queryClient: ReturnType<typeof useQueryClient>,
   campaign: DpmCampaignDefinitionRow,
 ) {
   const requestedAsOfDate =
     campaign.asOfDate === "N/A" ? undefined : campaign.asOfDate;
+  const previewReadinessKey = dpmCampaignQueryKeys.previewReadiness(
+    campaign,
+    requestedAsOfDate,
+  );
+  const launchPackageKey = dpmCampaignQueryKeys.launchPackage(
+    campaign,
+    requestedAsOfDate,
+  );
+  await Promise.all([
+    queryClient.cancelQueries({ queryKey: previewReadinessKey, exact: true }),
+    queryClient.cancelQueries({ queryKey: launchPackageKey, exact: true }),
+  ]);
   queryClient.setQueryData(
-    dpmCampaignQueryKeys.previewReadiness(campaign, requestedAsOfDate),
+    previewReadinessKey,
     null,
   );
-  queryClient.setQueryData(
-    dpmCampaignQueryKeys.launchPackage(campaign, requestedAsOfDate),
-    null,
-  );
+  queryClient.setQueryData(launchPackageKey, null);
 }
 
 type MutationRecord<T> = Readonly<{
