@@ -2303,6 +2303,51 @@ describe("useDpmWaveCommandCenterActions", () => {
     expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
   });
 
+  it("does not restore launch authorization from a readiness read cancelled by lifecycle acceptance", async () => {
+    let resolveLaunchPackage!: (
+      value: DpmCampaignDefinitionGatewayResponse,
+    ) => void;
+    vi.mocked(getDpmCampaignDefinitionLaunchPackage).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveLaunchPackage = resolve;
+      }),
+    );
+    vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
+      new Error("Campaign definitions refresh failed"),
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    act(() => {
+      void result.current.checkCampaignLaunchReadiness(
+        result.current.selectedCampaign!,
+      );
+    });
+    await waitFor(() =>
+      expect(getDpmCampaignDefinitionLaunchPackage).toHaveBeenCalledTimes(1),
+    );
+
+    await act(async () => {
+      await result.current.recordCampaignLifecycleCommand({
+        commandType: "retire",
+        body: {
+          retired_by: "pm_sg_1",
+          retirement_reason: "The campaign review cycle is complete.",
+          correlation_id: "corr-campaign-retire",
+        },
+      });
+    });
+    act(() => resolveLaunchPackage(launchPackageResponse));
+
+    await waitFor(() =>
+      expect(result.current.model.campaignLaunchPosture.canLaunch).toBe(false),
+    );
+    await act(async () => {
+      await result.current.launchCampaign(result.current.selectedCampaign!);
+    });
+    expect(launchDpmCampaignDefinition).not.toHaveBeenCalled();
+  });
+
   it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {
     vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
       new Error("Campaign definitions refresh failed"),

@@ -132,6 +132,44 @@ describe("DPM campaign command evidence", () => {
       ),
     ).toBe(12);
   });
+
+  it("falls through null totals before calculating the workflow watermark", () => {
+    const supportabilityTotal: DpmCampaignWorkflowGatewayResponse = {
+      ...workflowResponse({
+        items: [{ decision_ref: "accepted-reference" }],
+        total_count: null,
+      }),
+      supportability: { total_count: 12 },
+    };
+    const collectionTotal: DpmCampaignWorkflowGatewayResponse = {
+      ...workflowResponse({
+        items: [
+          { decision_ref: "accepted-reference" },
+          { decision_ref: "second-reference" },
+        ],
+        total_count: null,
+      }),
+      supportability: { total_count: null },
+    };
+    const receipt = {
+      evidenceRef: "accepted-reference",
+      source: "approvalDecisions" as const,
+      transition: false,
+    };
+
+    expect(
+      campaignWorkflowEvidenceTotalCount(
+        workflowEvidence(supportabilityTotal, "approvalDecisions"),
+        receipt,
+      ),
+    ).toBe(12);
+    expect(
+      campaignWorkflowEvidenceTotalCount(
+        workflowEvidence(collectionTotal, "approvalDecisions"),
+        receipt,
+      ),
+    ).toBe(2);
+  });
 });
 
 function workflowResponse(
