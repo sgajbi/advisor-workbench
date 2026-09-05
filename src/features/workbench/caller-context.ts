@@ -597,13 +597,14 @@ function resolveIdeaRouteCapability({
   }
 
   const actionCapability = {
+    "ai-explanations": "idea.ai-explanation.generate",
     "review-actions": "idea.review.record",
     feedback: "idea.feedback.record",
     "conversion-intents": "idea.conversion.intent.record",
     "presentation-receipts": "idea.presentation-receipt.record",
   } as const;
   const actionMatch = upstreamPath.match(
-    /^api\/v1\/ideas\/candidates\/[^/]+\/(review-actions|feedback|conversion-intents|presentation-receipts)$/,
+    /^api\/v1\/ideas\/candidates\/[^/]+\/(ai-explanations|review-actions|feedback|conversion-intents|presentation-receipts)$/,
   );
   return method === "POST" && actionMatch
     ? actionCapability[actionMatch[1] as keyof typeof actionCapability]

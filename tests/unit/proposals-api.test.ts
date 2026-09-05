@@ -27,6 +27,7 @@ import {
   recordAdvisorIdeaFeedback,
   recordAdvisorIdeaPresentationReceipt,
   recordAdvisorIdeaReviewAction,
+  requestAdvisorIdeaAIExplanation,
   getBankDemoScenarioContract,
   getBankDemoSupportedClaimRegister,
   getProposalExecutionStatus,
@@ -728,6 +729,64 @@ describe("proposal api", () => {
       }),
     );
     expect(result.supportedFeaturePromoted).toBe(false);
+  });
+
+  it("requests an identity-matched governed Idea explanation through the Gateway BFF", async () => {
+    const request = {
+      requestId: "request-001",
+      purpose: "advisor_rationale_draft" as const,
+      requestedAtUtc: "2026-09-05T08:00:00.000Z",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            status: "EXPLANATION_SERVED",
+            disposition: "executed",
+            lotusAiRunId: "run-001",
+            lotusAiRuntimeExecutionConfirmed: true,
+            evaluationVerdict: "accepted",
+            explanation: {
+              requestId: request.requestId,
+              candidateId: "idea_high_cash_001",
+              posture: "ready_for_advisor_review",
+              verifierOutcome: "passed",
+              explanationText: "Cash weight is above the policy threshold.",
+              fallbackUsed: false,
+              fallbackReason: null,
+              grantsDownstreamAuthority: false,
+              supportedFeaturePromoted: false,
+              executionProvenancePosture: "unattested_local_test_fixture",
+              aiLineageRecorded: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    const result = await requestAdvisorIdeaAIExplanation({
+      candidateId: "idea_high_cash_001",
+      portfolioId: "PB_SG_GLOBAL_BAL_001",
+      idempotencyKey: "idea-explanation-request-001",
+      request,
+    });
+
+    const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(
+      `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001/ai-explanations`,
+    );
+    expect((init.headers as Headers).get("Idempotency-Key")).toBe(
+      "idea-explanation-request-001",
+    );
+    expect((init.headers as Headers).get("X-Caller-Capabilities")).toBeNull();
+    expect(init.body).toBe(JSON.stringify(request));
+    expect(result).toMatchObject({
+      status: "EXPLANATION_SERVED",
+      lotusAiRunId: "run-001",
+    });
   });
 
   it("records Idea feedback through the scoped Gateway BFF", async () => {
