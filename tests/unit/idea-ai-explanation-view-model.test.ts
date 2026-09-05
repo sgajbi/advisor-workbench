@@ -40,6 +40,9 @@ const servedResponse: AdvisorIdeaAIExplanationResponse = {
       ],
     },
     redactedEvidence: {
+      evidencePacketId: "evidence-001",
+      evidenceContentHash: "sha256:evidence-001",
+      sourceRevisionVectorDigest: "sha256:revision-001",
       reasonCodes: ["high_cash_ratio", "review_required"],
       unsupportedReasons: ["benchmark_evidence_missing"],
       scorePolicyVersion: "idle-liquidity-v2",
