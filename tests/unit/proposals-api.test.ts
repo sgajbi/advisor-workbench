@@ -605,7 +605,12 @@ describe("proposal api", () => {
           new Response(
             JSON.stringify({
               candidate: { candidateId: "idea_high_cash_001" },
-              evidence: { sourceRefs: [] },
+              evidence: {
+                evidencePacketId: "evidence_high_cash_001",
+                evidenceContentHash: "sha256:evidence-high-cash-001",
+                sourceRevisionVectorDigest: "sha256:revision-high-cash-001",
+                sourceRefs: [],
+              },
               lifecycleHistory: [],
               reviewDecisions: [],
               feedbackEvents: [],
@@ -635,6 +640,9 @@ describe("proposal api", () => {
       `${expectedBaseUrl}/ideas/candidates/idea_high_cash_001`,
     );
     expect(result.candidate?.candidateId).toBe("idea_high_cash_001");
+    expect(result.evidence?.sourceRevisionVectorDigest).toBe(
+      "sha256:revision-high-cash-001",
+    );
   });
 
   it("unwraps the Gateway envelope for Lotus Idea candidate detail", async () => {
@@ -648,7 +656,12 @@ describe("proposal api", () => {
               contractVersion: "idea-gateway-v1",
               data: {
                 candidate: { candidateId: "idea_gateway_001" },
-                evidence: { sourceRefs: [{ sourceProductId: "Core" }] },
+                evidence: {
+                  evidencePacketId: "evidence_gateway_001",
+                  evidenceContentHash: "sha256:evidence-gateway-001",
+                  sourceRevisionVectorDigest: "sha256:revision-gateway-001",
+                  sourceRefs: [{ sourceProductId: "Core" }],
+                },
                 lifecycleHistory: [],
                 reviewDecisions: [],
                 feedbackEvents: [],
