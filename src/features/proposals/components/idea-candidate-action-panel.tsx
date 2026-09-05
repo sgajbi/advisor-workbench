@@ -23,6 +23,7 @@ import {
   resolveAdvisorIdeaFeedbackReason,
   usefulFeedbackReasonOption,
 } from "../idea-feedback";
+import type { AdvisorIdeaEvidenceIdentity } from "../idea-ai-explanation-contract";
 import type {
   AdvisorIdeaConversionIntentRequest,
   AdvisorIdeaFeedbackOutcome,
@@ -73,11 +74,13 @@ const FEEDBACK_OUTCOME_OPTIONS = [
 export default function IdeaCandidateActionPanel({
   candidateId,
   candidateReasonCodes,
+  evidenceIdentity,
   portfolioId,
   onRecorded,
 }: {
   candidateId: string;
   candidateReasonCodes: readonly string[];
+  evidenceIdentity?: AdvisorIdeaEvidenceIdentity;
   portfolioId: string;
   onRecorded: () => Promise<boolean>;
 }) {
@@ -280,6 +283,7 @@ export default function IdeaCandidateActionPanel({
       </div>
       <IdeaCandidateExplanation
         candidateId={candidateId}
+        evidenceIdentity={evidenceIdentity}
         portfolioId={portfolioId}
       />
       <div className={styles.actionForms}>

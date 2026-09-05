@@ -647,6 +647,9 @@ export type AdvisorIdeaCandidateDetailData = {
   candidate?: IdeaCandidateSummary;
   evidence?: {
     evidencePacketId?: string;
+    evidenceContentHash?: string;
+    sourceRevisionVectorDigest?: string;
+    sourceCutPosture?: string;
     supportability?: string;
     lineageId?: string;
     sourceRefs?: Array<Record<string, unknown>>;

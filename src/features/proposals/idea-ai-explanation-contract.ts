@@ -41,6 +41,9 @@ const verifiedOutputSchema = z
 
 const redactedEvidenceSchema = z
   .object({
+    evidencePacketId: z.string().min(1),
+    evidenceContentHash: z.string().min(1),
+    sourceRevisionVectorDigest: z.string().min(1),
     reasonCodes: z.array(z.string().min(1)),
     unsupportedReasons: z.array(z.string().min(1)),
     scorePolicyVersion: z.string().min(1).nullable(),
@@ -87,10 +90,45 @@ export type AdvisorIdeaAIExplanationRequest = {
 
 export type AdvisorIdeaAIExplanationResponse = z.infer<typeof responseSchema>;
 export type AdvisorIdeaAIExplanation = AdvisorIdeaAIExplanationResponse["explanation"];
+export type AdvisorIdeaEvidenceIdentity = {
+  evidencePacketId: string;
+  evidenceContentHash: string;
+  sourceRevisionVectorDigest: string;
+};
+
+const evidenceIdentitySchema = z.object({
+  evidencePacketId: z.string().min(1),
+  evidenceContentHash: z.string().min(1),
+  sourceRevisionVectorDigest: z.string().min(1),
+});
+
+export function readAdvisorIdeaEvidenceIdentity(
+  value: unknown,
+): AdvisorIdeaEvidenceIdentity | undefined {
+  const result = evidenceIdentitySchema.safeParse(value);
+  return result.success ? result.data : undefined;
+}
+
+export function isSameAdvisorIdeaEvidence(
+  left: AdvisorIdeaEvidenceIdentity | undefined,
+  right: AdvisorIdeaEvidenceIdentity | undefined,
+): boolean {
+  return Boolean(
+    left &&
+      right &&
+      left.evidencePacketId === right.evidencePacketId &&
+      left.evidenceContentHash === right.evidenceContentHash &&
+      left.sourceRevisionVectorDigest === right.sourceRevisionVectorDigest,
+  );
+}
 
 export function parseAdvisorIdeaAIExplanationResponse(
   value: unknown,
-  expected: { candidateId: string; requestId: string },
+  expected: {
+    candidateId: string;
+    requestId: string;
+    evidenceIdentity: AdvisorIdeaEvidenceIdentity;
+  },
 ): AdvisorIdeaAIExplanationResponse {
   const response = responseSchema.parse(value);
   if (
@@ -99,6 +137,16 @@ export function parseAdvisorIdeaAIExplanationResponse(
   ) {
     throw new Error(
       "Idea explanation response did not match the requested candidate and request identity.",
+    );
+  }
+  if (
+    !isSameAdvisorIdeaEvidence(
+      response.explanation.redactedEvidence,
+      expected.evidenceIdentity,
+    )
+  ) {
+    throw new Error(
+      "Idea explanation response did not match the requested candidate evidence.",
     );
   }
   if (
