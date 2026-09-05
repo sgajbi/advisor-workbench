@@ -75,7 +75,16 @@ function servedResponse() {
         reasonCodes: ["high_cash_ratio"],
         unsupportedReasons: ["benchmark_evidence_missing"],
         scorePolicyVersion: "idle-liquidity-v2",
-        sourceRefs: [],
+        sourceRefs: [
+          {
+            productId: "idea-eligibility-v1",
+            sourceSystem: "lotus-idea",
+            productVersion: "v1",
+            asOfDate: "2026-06-21",
+            freshness: "current",
+            dataQualityStatus: "complete",
+          },
+        ],
       },
     },
   };
@@ -104,6 +113,8 @@ describe("IdeaCandidateExplanation", () => {
     ).not.toHaveLength(0);
     expect(screen.getByText("Benchmark Evidence Missing")).toBeInTheDocument();
     expect(screen.getByText("High Cash Ratio")).toBeInTheDocument();
+    expect(screen.getByText("Supporting evidence")).toBeInTheDocument();
+    expect(screen.getByText(/idea-eligibility-v1 · lotus-idea/)).toBeInTheDocument();
     expect(screen.getByText("run-001")).toBeInTheDocument();
     expect(screen.getByText("unattested_local_test_fixture")).toBeInTheDocument();
     expect(
@@ -177,6 +188,36 @@ describe("IdeaCandidateExplanation", () => {
       dependencies.requestAdvisorIdeaAIExplanation.mock.calls[1][0],
     ).toEqual(dependencies.requestAdvisorIdeaAIExplanation.mock.calls[0][0]);
     expect(dependencies.unavailable).toHaveBeenCalledWith("request_failed");
+  });
+
+  it("creates a fresh request identity after candidate evidence conflicts", async () => {
+    vi.mocked(crypto.randomUUID)
+      .mockReturnValueOnce("conflicted-request")
+      .mockReturnValueOnce("fresh-request");
+    dependencies.requestAdvisorIdeaAIExplanation
+      .mockRejectedValueOnce(new WorkbenchApiError("explanation", 409))
+      .mockImplementationOnce(async ({ request }) => ({
+        ...servedResponse(),
+        explanation: {
+          ...servedResponse().explanation,
+          requestId: request.requestId,
+        },
+      }));
+    renderExplanation();
+
+    fireEvent.click(screen.getByRole("button", { name: "Explain this idea" }));
+    expect(await screen.findByTestId("idea-explanation-error")).toHaveTextContent(
+      "evidence changed",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Retry explanation" }));
+    await screen.findByText("Rationale available");
+
+    const [first, second] = dependencies.requestAdvisorIdeaAIExplanation.mock.calls.map(
+      ([submission]) => submission,
+    );
+    expect(first.request.requestId).toContain("conflicted-request");
+    expect(second.request.requestId).toContain("fresh-request");
+    expect(second.idempotencyKey).toBe(second.request.requestId);
   });
 
   it("shows an explicit failure when secure request identity is unavailable", async () => {

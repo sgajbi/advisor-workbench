@@ -111,5 +111,13 @@ export function parseAdvisorIdeaAIExplanationResponse(
       "Unavailable Idea explanation response did not confirm deterministic fallback evidence.",
     );
   }
+  if (
+    response.status === "EXPLANATION_SERVED" &&
+    response.explanation.fallbackUsed
+  ) {
+    throw new Error(
+      "Served Idea explanation response was marked as fallback evidence.",
+    );
+  }
   return response;
 }

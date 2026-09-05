@@ -15,6 +15,10 @@ type EvidenceSource = {
   quality: string;
 };
 
+type ExplanationSourceRef = NonNullable<
+  AdvisorIdeaAIExplanationResponse["explanation"]["redactedEvidence"]
+>["sourceRefs"][number];
+
 export type AdvisorIdeaExplanationViewModel = {
   state: "served" | "unavailable";
   disposition: string;
@@ -28,6 +32,7 @@ export type AdvisorIdeaExplanationViewModel = {
   }>;
   evidenceGaps: string[];
   evidenceSignals: string[];
+  supportingSources: EvidenceSource[];
   evidenceDetailAvailable: boolean;
   disclosure: AiAssistanceDisclosureModel;
 };
@@ -45,7 +50,7 @@ export function buildAdvisorIdeaExplanationViewModel(
   const sourceIdentities = new Set(
     allSourceRefs.map(
       (source) =>
-        `${source.productId}\u0000${source.productVersion}\u0000${source.asOfDate}`,
+        `${source.productId}\u0000${source.sourceSystem}\u0000${source.productVersion}\u0000${source.asOfDate}`,
     ),
   );
   const served = response.status === "EXPLANATION_SERVED";
@@ -76,18 +81,13 @@ export function buildAdvisorIdeaExplanationViewModel(
     rationale: claims.map((claim) => ({
       id: claim.claimId,
       text: claim.claimText,
-      sources: claim.sourceRefs.map((source) => ({
-        id: `${source.productId}-${source.productVersion}-${source.asOfDate}`,
-        identity: `${source.productId} · ${source.sourceSystem}`,
-        asOf: formatBusinessDateValue(source.asOfDate, {
-          nullDisplay: "Date not reported",
-        }),
-        freshness: formatCode(source.freshness),
-        quality: formatCode(source.dataQualityStatus),
-      })),
+      sources: claim.sourceRefs.map(toEvidenceSource),
     })),
     evidenceGaps,
     evidenceSignals,
+    supportingSources: uniqueEvidenceSources(
+      (evidence?.sourceRefs ?? []).map(toEvidenceSource),
+    ),
     evidenceDetailAvailable: Boolean(evidence),
     disclosure: createAiAssistanceDisclosure({
       scopeLabel: "Idea rationale draft",
@@ -132,6 +132,22 @@ export function buildAdvisorIdeaExplanationViewModel(
       ],
     }),
   };
+}
+
+function toEvidenceSource(source: ExplanationSourceRef): EvidenceSource {
+  return {
+    id: `${source.productId}-${source.sourceSystem}-${source.productVersion}-${source.asOfDate}`,
+    identity: `${source.productId} · ${source.sourceSystem}`,
+    asOf: formatBusinessDateValue(source.asOfDate, {
+      nullDisplay: "Date not reported",
+    }),
+    freshness: formatCode(source.freshness),
+    quality: formatCode(source.dataQualityStatus),
+  };
+}
+
+function uniqueEvidenceSources(sources: EvidenceSource[]): EvidenceSource[] {
+  return [...new Map(sources.map((source) => [source.id, source])).values()];
 }
 
 function uniqueBusinessLabels(values: readonly string[]): string[] {
