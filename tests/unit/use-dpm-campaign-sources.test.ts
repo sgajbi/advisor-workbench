@@ -141,6 +141,36 @@ describe("useDpmCampaignSources", () => {
     expect(result.current).toBeNull();
   });
 
+  it("does not seed an empty definitions cache with evidence rejected by a retained receipt", async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.lifecycleConfirmationReceipt(rowA),
+      {
+        campaignId: rowA.campaignId,
+        campaignVersion: rowA.campaignVersion,
+        status: "SUPERSEDED",
+        replacementCampaignVersion: "2",
+      },
+    );
+    const staleActiveDefinitions = definitionListResponse("ACTIVE");
+
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignDefinitionsSource(
+          staleActiveDefinitions,
+          "definitions-before-confirmed-transition",
+        ),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    expect(result.current).toBeNull();
+    await waitFor(() =>
+      expect(
+        queryClient.getQueryData(dpmCampaignQueryKeys.definitions()),
+      ).toBeUndefined(),
+    );
+  });
+
   it("publishes newer server workflow evidence over retained query data", async () => {
     const queryClient = createTestQueryClient();
     const prior = ["approval-old", "action-old", "task-old", "control-old"].map(
@@ -183,6 +213,45 @@ describe("useDpmCampaignSources", () => {
         approvalDecisions: DpmCampaignWorkflowGatewayResponse;
       }>(dpmCampaignQueryKeys.workflow(rowA))?.approvalDecisions,
     ).toEqual(current[0]);
+  });
+
+  it("does not seed an empty workflow cache with evidence rejected by a retained receipt", async () => {
+    const queryClient = createTestQueryClient();
+    queryClient.setQueryData(
+      dpmCampaignQueryKeys.workflowConfirmationReceipt(rowA),
+      {
+        evidenceRef: "accepted-reference",
+        source: "approvalDecisions",
+        transition: false,
+        confirmedTotalCount: 1,
+      },
+    );
+    const stale = ["approval-old", "action-old", "task-old", "control-old"].map(
+      workflowResponse,
+    );
+
+    const { result } = renderHook(
+      () =>
+        useDpmCampaignSources({
+          selectedCampaign: rowA,
+          initialCampaignKey: rowA.key,
+          initialWorkflowEvidence: {
+            readId: "workflow-before-confirmed-command",
+            approvalDecisions: stale[0],
+            assignmentActions: stale[1],
+            assignmentTasks: stale[2],
+            makerCheckerControls: stale[3],
+          },
+        }),
+      { wrapper: createQueryClientWrapper(queryClient) },
+    );
+
+    expect(result.current.workflow).toBeNull();
+    expect(result.current.workflowResolved).toBe(false);
+    await waitFor(() => expect(result.current.workflowPending).toBe(false));
+    expect(
+      queryClient.getQueryData(dpmCampaignQueryKeys.workflow(rowA)),
+    ).toBeUndefined();
   });
 
   it("preserves client-confirmed workflow evidence when the initial campaign is reselected", async () => {

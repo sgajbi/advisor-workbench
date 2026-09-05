@@ -133,14 +133,6 @@ export function useDpmCampaignSources({
   );
   const initialWorkflowIsAuthoritative =
     selection?.key === initialCampaignKey;
-  const workflowRecoveredForCurrentInput =
-    workflowRecovery !== null &&
-    workflowRecovery.campaignKey === selection?.key &&
-    workflowRecovery.readId === initialWorkflowReadId;
-  const workflowRequiresRecovery =
-    initialWorkflowIsAuthoritative &&
-    !initialWorkflow &&
-    !workflowRecoveredForCurrentInput;
   const lifecycleQuery = useQuery({
     ...dpmCampaignLifecycleQueryOptions(queryIdentity),
     enabled: false,
@@ -171,11 +163,6 @@ export function useDpmCampaignSources({
     ),
     enabled: false,
   });
-  const workflowQuery = useQuery({
-    ...dpmCampaignWorkflowQueryOptions(queryIdentity),
-    enabled: false,
-    initialData: initialWorkflow,
-  });
   const workflowConfirmationReadQuery = useQuery({
     ...dpmCampaignWorkflowConfirmationQueryOptions(queryIdentity),
     enabled: false,
@@ -197,16 +184,34 @@ export function useDpmCampaignSources({
   const initialWorkflowContainsConfirmedReceipt =
     !workflowConfirmationReceiptQuery.data ||
     (initialWorkflow !== undefined &&
-      (containsCampaignWorkflowEvidence(
-          initialWorkflow,
-          workflowConfirmationReceiptQuery.data,
-        ) ||
-        (workflowConfirmationReceiptQuery.data.confirmedTotalCount !==
-          undefined &&
-          campaignWorkflowEvidenceTotalCount(
-            initialWorkflow,
-            workflowConfirmationReceiptQuery.data,
-          ) > workflowConfirmationReceiptQuery.data.confirmedTotalCount)));
+      workflowEvidenceSatisfiesReceipt(
+        initialWorkflow,
+        workflowConfirmationReceiptQuery.data,
+      ));
+  const workflowRecoveredForCurrentInput =
+    workflowRecovery !== null &&
+    workflowRecovery.campaignKey === selection?.key &&
+    workflowRecovery.readId === initialWorkflowReadId;
+  const workflowQuery = useQuery({
+    ...dpmCampaignWorkflowQueryOptions(queryIdentity),
+    enabled: false,
+    initialData: initialWorkflowContainsConfirmedReceipt
+      ? initialWorkflow
+      : undefined,
+  });
+  const retainedWorkflowContainsConfirmedReceipt =
+    !workflowConfirmationReceiptQuery.data ||
+    (workflowQuery.data !== undefined &&
+      workflowEvidenceSatisfiesReceipt(
+        workflowQuery.data,
+        workflowConfirmationReceiptQuery.data,
+      ));
+  const workflowRequiresRecovery =
+    initialWorkflowIsAuthoritative &&
+    (!initialWorkflow ||
+      (!initialWorkflowContainsConfirmedReceipt &&
+        (!workflowQuery.data || !retainedWorkflowContainsConfirmedReceipt))) &&
+    !workflowRecoveredForCurrentInput;
   const workflowServerReadKey = useMemo(
     () => dpmCampaignQueryKeys.workflowServerRead(queryIdentity),
     [queryIdentity],
@@ -563,7 +568,7 @@ export function useDpmCampaignSources({
     workflowResolved:
       !workflowServerReadAdmissionPending &&
       !workflowRequiresRecovery &&
-      (Boolean(initialWorkflow) ||
+      (Boolean(initialWorkflow && initialWorkflowContainsConfirmedReceipt) ||
         workflowQuery.isFetched ||
         workflowQuery.data !== undefined),
     loadLifecycle,
@@ -608,6 +613,18 @@ function completeInitialWorkflowEvidence(
         makerCheckerControls: evidence.makerCheckerControls,
       }
     : undefined;
+}
+
+function workflowEvidenceSatisfiesReceipt(
+  evidence: DpmCampaignWorkflowEvidence,
+  receipt: DpmCampaignWorkflowConfirmationReceipt,
+): boolean {
+  return (
+    containsCampaignWorkflowEvidence(evidence, receipt) ||
+    (receipt.confirmedTotalCount !== undefined &&
+      campaignWorkflowEvidenceTotalCount(evidence, receipt) >
+        receipt.confirmedTotalCount)
+  );
 }
 
 function errorMessage(error: unknown): string | null {

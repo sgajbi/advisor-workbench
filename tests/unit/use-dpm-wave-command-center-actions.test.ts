@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
+import { dpmCampaignQueryKeys } from "../../src/features/workbench/dpm-campaign-query-keys";
 import { dpmWaveQueryKeys } from "../../src/features/workbench/dpm-wave-query-keys";
 import type { DpmCampaignLifecycleCommandInput } from "../../src/features/workbench/dpm-campaign-command-contracts";
 import {
@@ -2437,7 +2438,7 @@ describe("useDpmWaveCommandCenterActions", () => {
     );
   });
 
-  it("retains accepted lifecycle evidence and its confirmation lock beyond default cache collection", async () => {
+  it("retains lifecycle confirmation truth while suppressing a stale active definition after cache collection", async () => {
     vi.mocked(listDpmCampaignDefinitions).mockRejectedValueOnce(
       new Error("Campaign definitions refresh failed"),
     );
@@ -2471,14 +2472,28 @@ describe("useDpmWaveCommandCenterActions", () => {
 
     const second = renderActions(campaignDefinitions, queryClient);
     await waitFor(() => {
-      expect(second.result.current.campaignLifecycleCommandEvidence).toMatchObject({
-        commandLabel: "Retire campaign",
-        contentHash: "sha256:campaign-retired",
-      });
-      expect(second.result.current.campaignLifecycleError).toContain(
-        "updated campaign record could not be loaded",
-      );
+      expect(second.result.current.selectedCampaign).toBeNull();
+      expect(second.result.current.model.campaignRows).toEqual([]);
     });
+    expect(
+      queryClient.getQueryData(
+        dpmCampaignQueryKeys.lifecycleConfirmationReceipt({
+          campaignId: "campaign-holdings-202605",
+          campaignVersion: "2026.05",
+        }),
+      ),
+    ).toMatchObject({ status: "RETIRED" });
+    expect(
+      queryClient.getQueryData(
+        dpmCampaignQueryKeys.confirmationLock(
+          {
+            campaignId: "campaign-holdings-202605",
+            campaignVersion: "2026.05",
+          },
+          "lifecycle",
+        ),
+      ),
+    ).toBeDefined();
   });
 
   it("never renders a late campaign A response under campaign B", async () => {
