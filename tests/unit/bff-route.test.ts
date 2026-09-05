@@ -493,6 +493,7 @@ describe("BFF proxy route", () => {
   });
 
   it.each([
+    ["ai-explanations", "idea.ai-explanation.generate"],
     ["review-actions", "idea.review.record"],
     ["feedback", "idea.feedback.record"],
     ["conversion-intents", "idea.conversion.intent.record"],

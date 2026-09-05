@@ -73,6 +73,11 @@ import {
   type IdeaPresentationReceiptDraft,
   type IdeaPresentationReceiptResponse,
 } from "./idea-presentation-receipt";
+import {
+  parseAdvisorIdeaAIExplanationResponse,
+  type AdvisorIdeaAIExplanationRequest,
+  type AdvisorIdeaAIExplanationResponse,
+} from "./idea-ai-explanation-contract";
 import { parseProposalListEnvelope } from "./proposal-list-contract";
 import {
   parseProposalRiskImpactEnvelope,
@@ -133,6 +138,13 @@ export type AdvisorIdeaPresentationReceiptInput = {
   portfolioId: string;
   idempotencyKey: string;
   request: IdeaPresentationReceiptDraft;
+};
+
+export type AdvisorIdeaAIExplanationInput = {
+  candidateId: string;
+  portfolioId: string;
+  idempotencyKey: string;
+  request: AdvisorIdeaAIExplanationRequest;
 };
 
 export async function getBankDemoScenarioContract(): Promise<BankDemoScenarioContractData> {
@@ -360,6 +372,36 @@ export async function getAdvisorIdeaCandidateDetail({
     "advisor idea candidate detail",
   );
   return unwrapGatewayData<AdvisorIdeaCandidateDetailData>(payload);
+}
+
+export async function requestAdvisorIdeaAIExplanation(
+  input: AdvisorIdeaAIExplanationInput,
+): Promise<AdvisorIdeaAIExplanationResponse> {
+  requireSelectedIdeaPortfolio(input.portfolioId);
+  return await observeWorkbenchMutation(
+    "idea.candidate.ai-explanation",
+    async () => {
+      const headers = new Headers();
+      headers.set("Content-Type", "application/json");
+      headers.set("Idempotency-Key", input.idempotencyKey);
+      const payload = await fetchWorkbenchMutation<unknown>(
+        `${BFF_PROXY_BASE}/ideas/candidates/${encodeURIComponent(input.candidateId)}/ai-explanations`,
+        "advisor idea explanation",
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(input.request),
+        },
+      );
+      return parseAdvisorIdeaAIExplanationResponse(
+        unwrapGatewayData<unknown>(payload),
+        {
+          candidateId: input.candidateId,
+          requestId: input.request.requestId,
+        },
+      );
+    },
+  );
 }
 
 export async function recordAdvisorIdeaReviewAction(
