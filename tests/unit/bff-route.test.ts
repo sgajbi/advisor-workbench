@@ -502,16 +502,30 @@ describe("BFF proxy route", () => {
     async (routeSuffix, expectedCapability) => {
       const fetchMock = vi.mocked(fetch);
       fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+      const explanationRequestId =
+        "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111";
+      const idempotencyKey =
+        routeSuffix === "ai-explanations"
+          ? explanationRequestId
+          : `idem-${routeSuffix}`;
+      const body =
+        routeSuffix === "ai-explanations"
+          ? {
+              requestId: explanationRequestId,
+              purpose: "advisor_rationale_draft",
+              requestedAtUtc: "2026-09-05T11:30:00Z",
+            }
+          : { reasonCodes: ["review_required"] };
       const request = new NextRequest(
         `http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/${routeSuffix}`,
         {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "Idempotency-Key": `idem-${routeSuffix}`,
+            "Idempotency-Key": idempotencyKey,
             "X-Caller-Capabilities": "idea.admin",
           },
-          body: JSON.stringify({ reasonCodes: ["review_required"] }),
+          body: JSON.stringify(body),
         },
       );
 
@@ -534,10 +548,99 @@ describe("BFF proxy route", () => {
         expectedCapability,
       );
       expect(upstreamHeaders.get("Idempotency-Key")).toBe(
-        `idem-${routeSuffix}`,
+        idempotencyKey,
       );
     },
   );
+
+  it.each([
+    {
+      name: "an unrecognized field",
+      idempotencyKey:
+        "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+      body: {
+        requestId:
+          "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+        purpose: "advisor_rationale_draft",
+        requestedAtUtc: "2026-09-05T11:30:00Z",
+        prompt: "Make this persuasive",
+      },
+    },
+    {
+      name: "a caller-selected purpose",
+      idempotencyKey:
+        "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+      body: {
+        requestId:
+          "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+        purpose: "client_recommendation",
+        requestedAtUtc: "2026-09-05T11:30:00Z",
+      },
+    },
+    {
+      name: "a mismatched idempotency key",
+      idempotencyKey: "different-request",
+      body: {
+        requestId:
+          "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+        purpose: "advisor_rationale_draft",
+        requestedAtUtc: "2026-09-05T11:30:00Z",
+      },
+    },
+    {
+      name: "an identity that was not securely generated for the candidate",
+      idempotencyKey: "reused-request",
+      body: {
+        requestId: "reused-request",
+        purpose: "advisor_rationale_draft",
+        requestedAtUtc: "2026-09-05T11:30:00Z",
+      },
+    },
+    {
+      name: "a timestamp without timezone evidence",
+      idempotencyKey:
+        "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+      body: {
+        requestId:
+          "idea-explanation-idea_high_cash_001-11111111-1111-4111-8111-111111111111",
+        purpose: "advisor_rationale_draft",
+        requestedAtUtc: "2026-09-05T11:30:00",
+      },
+    },
+  ])("rejects Idea explanation authority for $name", async ({ idempotencyKey, body }) => {
+    const fetchMock = vi.mocked(fetch);
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/ideas/candidates/idea_high_cash_001/ai-explanations",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    const response = await POST(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "ideas",
+          "candidates",
+          "idea_high_cash_001",
+          "ai-explanations",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      code: "idea_request_invalid",
+      status: "rejected",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   it("injects the single entitled tenant into an exact Idea presentation receipt", async () => {
     process.env.WORKBENCH_IDEA_CALLER_TENANT_IDS = "tenant-private-bank-sg";
