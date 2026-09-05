@@ -11,7 +11,7 @@ type PreparedIdeaExplanationBody =
 
 export function prepareIdeaExplanationBody(
   bodyText: string | undefined,
-  encodedCandidateId: string,
+  candidateId: string,
   idempotencyKey: string | null,
 ): PreparedIdeaExplanationBody {
   if (!bodyText || !idempotencyKey) {
@@ -34,7 +34,6 @@ export function prepareIdeaExplanationBody(
     ) {
       return invalidRequest();
     }
-    const candidateId = decodeURIComponent(encodedCandidateId);
     if (!isSecureRequestId(request.requestId, candidateId)) {
       return invalidRequest();
     }
