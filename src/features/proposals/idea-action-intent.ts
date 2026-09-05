@@ -3,7 +3,7 @@ import { getWorkbenchApiErrorStatus } from "@/features/workbench/api-client";
 
 import {
   buildIdeaActionReasonCodes,
-  type IdeaBusinessReasonOption,
+  ideaBusinessReasonLabel,
 } from "./idea-action-reasons";
 import type {
   AdvisorIdeaConversionIntentRequest,
@@ -175,7 +175,6 @@ export function hasInlineRetry(
 
 export function reviewRetryDetails(
   request: AdvisorIdeaReviewActionRequest,
-  businessReasonOptions: IdeaBusinessReasonOption[],
 ): IdeaActionRetryDetail[] {
   const details: IdeaActionRetryDetail[] = [
     {
@@ -186,7 +185,7 @@ export function reviewRetryDetails(
     },
     {
       label: "Review basis",
-      value: businessReasonLabel(request.reasonCodes, businessReasonOptions),
+      value: ideaBusinessReasonLabel(request.reasonCodes),
     },
   ];
   if (request.suppressionReason) {
@@ -208,7 +207,6 @@ export function reviewRetryDetails(
 
 export function conversionRetryDetails(
   request: AdvisorIdeaConversionIntentRequest,
-  businessReasonOptions: IdeaBusinessReasonOption[],
 ): IdeaActionRetryDetail[] {
   const targetLabels: Record<
     AdvisorIdeaConversionIntentRequest["target"],
@@ -222,7 +220,7 @@ export function conversionRetryDetails(
     { label: "Target workflow", value: targetLabels[request.target] },
     {
       label: "Conversion basis",
-      value: businessReasonLabel(request.reasonCodes, businessReasonOptions),
+      value: ideaBusinessReasonLabel(request.reasonCodes),
     },
   ];
 }
@@ -273,16 +271,6 @@ function sameReasonCodes(
   return (
     left.length === right.length &&
     left.every((value, index) => value === right[index])
-  );
-}
-
-function businessReasonLabel(
-  reasonCodes: readonly AdvisorIdeaReasonCode[],
-  options: IdeaBusinessReasonOption[],
-): string {
-  return (
-    options.find((option) => reasonCodes.includes(option.value))?.label ??
-    "Adviser review required"
   );
 }
 

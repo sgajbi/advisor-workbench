@@ -14,11 +14,6 @@ import {
 } from "../../src/features/proposals/idea-action-intent";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
-const businessReasons = [
-  { value: "high_cash_ratio" as const, label: "Cash balance requires review" },
-  { value: "review_required" as const, label: "Advisor review is required" },
-];
-
 describe("Idea action intent", () => {
   it("compares review terms independently of request and decision identity", () => {
     const intent = buildReviewIntent({
@@ -127,21 +122,32 @@ describe("Idea action intent", () => {
   });
 
   it("renders exact suppression terms in the retained review summary", () => {
-    const details = reviewRetryDetails(
-      {
-        reviewId: "review-001",
-        action: "suppress",
-        reasonCodes: ["review_suppressed", "high_cash_ratio"],
-        suppressionReason: "unsupported_evidence",
-        decidedAtUtc: "2026-09-06T01:00:00Z",
-      },
-      businessReasons,
-    );
+    const details = reviewRetryDetails({
+      reviewId: "review-001",
+      action: "suppress",
+      reasonCodes: ["review_suppressed", "high_cash_ratio"],
+      suppressionReason: "unsupported_evidence",
+      decidedAtUtc: "2026-09-06T01:00:00Z",
+    });
 
     expect(details).toEqual([
       { label: "Review action", value: "Suppress candidate" },
       { label: "Review basis", value: "Cash balance requires review" },
       { label: "Suppression reason", value: "Unsupported evidence" },
     ]);
+  });
+
+  it("resolves a persisted basis from the closed vocabulary after queue context changes", () => {
+    const details = reviewRetryDetails({
+      reviewId: "review-001",
+      action: "approve_for_conversion",
+      reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
+      decidedAtUtc: "2026-09-06T01:00:00Z",
+    });
+
+    expect(details).toContainEqual({
+      label: "Review basis",
+      value: "Cash balance requires review",
+    });
   });
 });

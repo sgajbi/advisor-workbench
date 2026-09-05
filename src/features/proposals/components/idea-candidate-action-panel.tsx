@@ -145,15 +145,9 @@ export default function IdeaCandidateActionPanel({
   );
   const latestRecordedDetails =
     latestRecordedSubmission?.kind === "review"
-      ? reviewRetryDetails(
-          latestRecordedSubmission.request,
-          businessReasonOptions,
-        )
+      ? reviewRetryDetails(latestRecordedSubmission.request)
       : latestRecordedSubmission?.kind === "conversion"
-        ? conversionRetryDetails(
-            latestRecordedSubmission.request,
-            businessReasonOptions,
-          )
+        ? conversionRetryDetails(latestRecordedSubmission.request)
         : [];
 
   const actionMutation = useMutation({
