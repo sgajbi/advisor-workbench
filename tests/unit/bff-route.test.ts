@@ -165,6 +165,36 @@ describe("BFF proxy route", () => {
     expect(await response.text()).toBe('{"ok":true}');
   });
 
+  it("preserves encoded source identities when forwarding through the BFF", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"ok":true}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings%2F202605/versions/2026.05%20final",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: [
+          "api",
+          "v1",
+          "dpm",
+          "command-center",
+          "waves",
+          "campaign-definitions",
+          "campaign-holdings/202605",
+          "versions",
+          "2026.05 final",
+        ],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "http://gateway.dev.lotus/api/v1/dpm/command-center/waves/campaign-definitions/campaign-holdings%2F202605/versions/2026.05%20final",
+    );
+  });
+
   it.each([
     ["portfolio", "GET", "api/v1/portfolios/PF_1001/book"],
     ["performance", "GET", "api/v1/workbench/PF_1001/performance/summary"],
