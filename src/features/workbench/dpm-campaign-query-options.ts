@@ -124,27 +124,41 @@ export function dpmCampaignLaunchPackageQueryOptions(
 export function dpmCampaignWorkflowQueryOptions(identity: DpmCampaignIdentity) {
   return queryOptions({
     queryKey: dpmCampaignQueryKeys.workflow(identity),
-    queryFn: async (): Promise<DpmCampaignWorkflowEvidence> => {
-      const params = apiIdentity(identity);
-      const [
-        approvalDecisions,
-        assignmentActions,
-        assignmentTasks,
-        makerCheckerControls,
-      ] = await Promise.all([
-        getDpmCampaignApprovalDecisions(params, "client"),
-        getDpmCampaignAssignmentActions(params, "client"),
-        getDpmCampaignAssignmentTasks(params, "client"),
-        getDpmCampaignMakerCheckerControls(params, "client"),
-      ]);
-      return {
-        approvalDecisions,
-        assignmentActions,
-        assignmentTasks,
-        makerCheckerControls,
-      };
-    },
+    queryFn: () => fetchDpmCampaignWorkflow(identity),
   });
+}
+
+export function dpmCampaignWorkflowConfirmationQueryOptions(
+  identity: DpmCampaignIdentity,
+) {
+  return queryOptions({
+    queryKey: dpmCampaignQueryKeys.workflowConfirmationRead(identity),
+    queryFn: () => fetchDpmCampaignWorkflow(identity),
+    staleTime: 0,
+  });
+}
+
+async function fetchDpmCampaignWorkflow(
+  identity: DpmCampaignIdentity,
+): Promise<DpmCampaignWorkflowEvidence> {
+  const params = apiIdentity(identity);
+  const [
+    approvalDecisions,
+    assignmentActions,
+    assignmentTasks,
+    makerCheckerControls,
+  ] = await Promise.all([
+    getDpmCampaignApprovalDecisions(params, "client"),
+    getDpmCampaignAssignmentActions(params, "client"),
+    getDpmCampaignAssignmentTasks(params, "client"),
+    getDpmCampaignMakerCheckerControls(params, "client"),
+  ]);
+  return {
+    approvalDecisions,
+    assignmentActions,
+    assignmentTasks,
+    makerCheckerControls,
+  };
 }
 
 function apiIdentity({ campaignId, campaignVersion }: DpmCampaignIdentity) {

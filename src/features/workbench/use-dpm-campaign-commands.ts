@@ -40,7 +40,10 @@ export type {
 
 type CampaignSources = Readonly<{
   refreshLifecycle: (row: DpmCampaignDefinitionRow) => Promise<unknown>;
-  refreshWorkflow: (row: DpmCampaignDefinitionRow) => Promise<unknown>;
+  refreshWorkflow: (
+    row: DpmCampaignDefinitionRow,
+    requiredEvidenceRef?: string,
+  ) => Promise<unknown>;
 }>;
 
 type CampaignResult<T> = Readonly<{ campaignKey: string; value: T }>;
@@ -128,7 +131,7 @@ export function useDpmCampaignCommands({
         ),
       };
       try {
-        await sources.refreshWorkflow(campaign);
+        await sources.refreshWorkflow(campaign, result.value.evidenceRef);
       } catch {
         // The accepted command evidence remains visible while source state owns confirmation failure.
       }

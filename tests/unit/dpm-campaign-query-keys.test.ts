@@ -41,6 +41,12 @@ describe("DPM campaign query identity", () => {
       "2026.05",
       "workflow",
     ]);
+    expect(dpmCampaignQueryKeys.workflowConfirmationRead(campaign).at(-1)).toBe(
+      "workflow-confirmation-read",
+    );
+    expect(
+      dpmCampaignQueryKeys.workflowConfirmationReceipt(campaign).at(-1),
+    ).toBe("workflow-confirmation-receipt");
     expect(dpmCampaignQueryKeys.workflowServerRead(campaign)).toEqual([
       "workbench",
       "dpm-campaigns",
