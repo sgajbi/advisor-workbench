@@ -31,3 +31,11 @@ export function recordIdeaExplanationUnavailable(disposition: string) {
     reason: disposition,
   });
 }
+
+export function recordIdeaExplanationFailed() {
+  return recordAnalyticsUiPanelState({
+    context: CONTEXT,
+    state: "error",
+    reason: "request_failed",
+  });
+}

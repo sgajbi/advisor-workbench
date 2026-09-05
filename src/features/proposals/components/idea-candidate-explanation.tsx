@@ -22,6 +22,7 @@ import {
   recordIdeaExplanationOpened,
   recordIdeaExplanationServed,
   recordIdeaExplanationUnavailable,
+  recordIdeaExplanationFailed,
 } from "../idea-ai-explanation-telemetry";
 import {
   buildAdvisorIdeaExplanationViewModel,
@@ -69,7 +70,7 @@ export default function IdeaCandidateExplanation({
       if (getWorkbenchApiErrorStatus(error) === 409) {
         retryableSubmission.current = undefined;
       }
-      recordIdeaExplanationUnavailable("request_failed");
+      recordIdeaExplanationFailed();
     },
   });
 
