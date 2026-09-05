@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  skipToken,
   useMutation,
   useMutationState,
   useQuery,
@@ -70,16 +71,15 @@ export function useDpmCampaignCommands({
   );
   const launchResultQuery = useQuery<DpmWaveGatewayResponse>({
     queryKey: launchResultKey,
-    queryFn: async () => {
-      throw new Error(
-        "Campaign launch results are written by the launch command.",
-      );
-    },
-    enabled: false,
+    queryFn: skipToken,
+    gcTime: Infinity,
+    initialData: () =>
+      queryClient.getQueryData<DpmWaveGatewayResponse>(launchResultKey),
   });
   const lifecycleMutation = useMutation({
     mutationKey: dpmCampaignMutationKeys.lifecycle(),
     scope: { id: DPM_CAMPAIGN_COMMAND_SCOPE },
+    gcTime: Infinity,
     mutationFn: async ({ campaign, command }: LifecycleVariables) => {
       validateCampaignLifecycleCommand(command);
       const response = await executeDpmCampaignLifecycleCommand(
@@ -109,6 +109,7 @@ export function useDpmCampaignCommands({
   const workflowMutation = useMutation({
     mutationKey: dpmCampaignMutationKeys.workflow(),
     scope: { id: DPM_CAMPAIGN_COMMAND_SCOPE },
+    gcTime: Infinity,
     mutationFn: async ({ campaign, command }: WorkflowVariables) => {
       if (command.commandType === "task_transition" && !command.taskRef) {
         throw new Error(
@@ -137,6 +138,7 @@ export function useDpmCampaignCommands({
   const launchMutation = useMutation({
     mutationKey: dpmCampaignMutationKeys.launch(),
     scope: { id: DPM_CAMPAIGN_COMMAND_SCOPE },
+    gcTime: Infinity,
     mutationFn: async (campaign: DpmCampaignDefinitionRow) => {
       const value = await executeDpmCampaignLaunch(campaign);
       queryClient.setQueryData(

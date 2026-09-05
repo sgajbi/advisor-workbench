@@ -16,7 +16,10 @@ import {
   type DpmCampaignDefinitionRow,
   type DpmWaveCommandCenterPanelModel,
 } from "@/features/workbench/dpm-wave-command-center-view-model";
-import { useDpmCampaignSources } from "@/features/workbench/use-dpm-campaign-sources";
+import {
+  useDpmCampaignDefinitionsSource,
+  useDpmCampaignSources,
+} from "@/features/workbench/use-dpm-campaign-sources";
 import {
   useDpmCampaignCommands,
   type DpmCampaignLifecycleCommandEvidence,
@@ -180,6 +183,13 @@ export function useDpmWaveCommandCenterActions({
       campaignRowKey: "",
       selectedCampaignKey: null,
     });
+  const governedCampaignDefinitions = useDpmCampaignDefinitionsSource(
+    campaignDefinitions,
+  );
+  const initialCampaignKey = buildDpmWaveCommandCenterModel({
+    waveList: null,
+    campaignDefinitions,
+  }).campaignRows[0]?.key ?? null;
 
   const commonModelInput = {
     selectedWaveId: selectedSourceWaveId,
@@ -201,7 +211,7 @@ export function useDpmWaveCommandCenterActions({
     waveAiMemoSourceWaveId: selectedSourceWaveId,
     operationsHandoffSummary: waveCommands.operationsHandoffSummary,
     operationsHandoffSummarySourceWaveId: selectedSourceWaveId,
-    campaignDefinitions,
+    campaignDefinitions: governedCampaignDefinitions,
     campaignDiscovery,
     campaignOperatingQueue,
     campaignApprovalInbox,
@@ -220,7 +230,6 @@ export function useDpmWaveCommandCenterActions({
     )
       ? selectedCampaignState.selectedCampaignKey
       : (campaignListModel.campaignRows[0]?.key ?? null);
-  const initialCampaignKey = campaignListModel.campaignRows[0]?.key ?? null;
   const useInitialCampaignEvidence = selectedCampaignKey === initialCampaignKey;
   const selectedCampaign =
     campaignListModel.campaignRows.find(
@@ -230,7 +239,6 @@ export function useDpmWaveCommandCenterActions({
     null;
   const campaignSources = useDpmCampaignSources({
     selectedCampaign,
-    initialDefinitions: campaignDefinitions,
     initialCampaignKey,
     initialWorkflowEvidence: {
       approvalDecisions: campaignApprovalDecisions,
@@ -241,7 +249,7 @@ export function useDpmWaveCommandCenterActions({
   });
   const campaignSourceModel = buildDpmWaveCommandCenterModel({
     ...commonModelInput,
-    campaignDefinitions: campaignSources.definitions,
+    campaignDefinitions: governedCampaignDefinitions,
     campaignLifecycleEvents: campaignSources.lifecycle,
     campaignLaunchHistory: campaignSources.launchHistory,
     campaignPreviewReadiness: campaignSources.previewReadiness,
@@ -267,7 +275,7 @@ export function useDpmWaveCommandCenterActions({
   });
   const model = buildDpmWaveCommandCenterModel({
     ...commonModelInput,
-    campaignDefinitions: campaignSources.definitions,
+    campaignDefinitions: governedCampaignDefinitions,
     campaignLifecycleEvents: campaignSources.lifecycle,
     campaignLaunchHistory: campaignSources.launchHistory,
     campaignPreviewReadiness: campaignSources.previewReadiness,
