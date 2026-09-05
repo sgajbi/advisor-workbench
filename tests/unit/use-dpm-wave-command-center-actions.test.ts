@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDpmWaveCommandCenterActions } from "../../src/features/workbench/use-dpm-wave-command-center-actions";
 import { dpmWaveQueryKeys } from "../../src/features/workbench/dpm-wave-query-keys";
+import type { DpmCampaignLifecycleCommandInput } from "../../src/features/workbench/dpm-campaign-command-contracts";
 import {
   approveDpmWave,
   createDpmCampaignApprovalDecision,
@@ -2384,5 +2385,82 @@ describe("useDpmWaveCommandCenterActions", () => {
       ),
     );
     expect(getDpmCampaignAssignmentTasks).not.toHaveBeenCalled();
+  });
+
+  it("does not submit a second campaign lifecycle command while the first remains pending", async () => {
+    let resolveRetirement!: (
+      value: DpmCampaignDefinitionGatewayResponse,
+    ) => void;
+    vi.mocked(retireDpmCampaignDefinition).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRetirement = resolve;
+      }),
+    );
+    const { result } = renderActions();
+
+    await waitFor(() => expect(result.current.selectedCampaign).not.toBeNull());
+    const command: DpmCampaignLifecycleCommandInput = {
+      commandType: "retire",
+      body: {
+        retired_by: "pm_sg_1",
+        retirement_reason: "The campaign review cycle is complete.",
+        correlation_id: "corr-campaign-retire-once",
+      },
+    };
+    act(() => {
+      void result.current.recordCampaignLifecycleCommand(command);
+      void result.current.recordCampaignLifecycleCommand(command);
+    });
+
+    await waitFor(() =>
+      expect(retireDpmCampaignDefinition).toHaveBeenCalledTimes(1),
+    );
+    act(() => resolveRetirement(campaignLifecycleCommandResponse));
+    await waitFor(() =>
+      expect(result.current.pendingCampaignLifecycleCommand).toBe(false),
+    );
+  });
+
+  it("retains exact campaign command evidence across a workspace remount", async () => {
+    const queryClient = createTestQueryClient();
+    const first = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() =>
+      expect(first.result.current.selectedCampaign).not.toBeNull(),
+    );
+
+    await act(async () => {
+      await first.result.current.recordCampaignWorkflowCommand({
+        commandType: "assignment_task",
+        body: {
+          task_ref: "task-review-001",
+          task_type: "ASSIGNMENT",
+          opened_by: "pm_sg_1",
+          task_reason: "Portfolio manager review is required.",
+          assigned_actor_ids: ["pm_sg_1"],
+          escalation_tier: "PM",
+          sla_posture: "ON_TRACK",
+          correlation_id: "corr-campaign-task-remount",
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(
+        first.result.current.campaignWorkflowCommandEvidence,
+      ).toMatchObject({
+        evidenceRef: "task-review-001",
+        contentHash: "sha256:task-transition",
+      }),
+    );
+    first.unmount();
+
+    const second = renderActions(campaignDefinitions, queryClient);
+    await waitFor(() =>
+      expect(
+        second.result.current.campaignWorkflowCommandEvidence,
+      ).toMatchObject({
+        evidenceRef: "task-review-001",
+        contentHash: "sha256:task-transition",
+      }),
+    );
   });
 });
