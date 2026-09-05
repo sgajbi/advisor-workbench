@@ -92,6 +92,42 @@ describe("parseAdvisorIdeaAIExplanationResponse", () => {
     ).toThrow(/without an accepted source evaluation/);
   });
 
+  it("rejects a failure disposition paired with served status", () => {
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(
+        response({ disposition: "output_not_accepted" }),
+        { candidateId: "idea-001", requestId: "request-001" },
+      ),
+    ).toThrow(/served status with a failure disposition/);
+  });
+
+  it("rejects a source reference with an invalid business date", () => {
+    const value = response();
+    value.explanation = {
+      ...value.explanation,
+      verifiedOutput: {
+        groundedClaims: [
+          {
+            ...value.explanation.verifiedOutput.groundedClaims[0],
+            sourceRefs: [
+              {
+                ...value.explanation.verifiedOutput.groundedClaims[0].sourceRefs[0],
+                asOfDate: "2026-02-30",
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(() =>
+      parseAdvisorIdeaAIExplanationResponse(value, {
+        candidateId: "idea-001",
+        requestId: "request-001",
+      }),
+    ).toThrow(/Invalid source business date/);
+  });
+
   it("rejects a served explanation without confirmed runtime execution", () => {
     expect(() =>
       parseAdvisorIdeaAIExplanationResponse(
