@@ -7717,3 +7717,51 @@ the implemented boundary, including same-candidate evidence revision, late-respo
 identity, and exact retry behavior. The Opportunities and Ideas workflow gains a visible capability and its
 source/recovery rules change, so the screen guide and repository context change in the same PR and
 the wiki must be published after merge.
+
+## 2026-09-05 — Exact Idea action retry versus edited adviser intent (#1002)
+
+### Decision question
+
+How can an adviser recover from an unconfirmed review or conversion response without silently
+resubmitting old terms after editing the visible form?
+
+### Evidence consulted
+
+1. The IETF Idempotency-Key draft requires a client not to reuse one key with a different payload.
+2. Stripe's low-level error guidance recommends retrying an ambiguous request with the same key and
+   parameters so the owner can reconcile the original operation.
+3. Carbon's inline-notification pattern keeps actionable recovery beside the affected task, while
+   its loading guidance supports disabling related controls during the transaction.
+4. WCAG 2.2 status-message guidance requires asynchronous recovery posture to be programmatically
+   available without moving focus.
+5. Exact Gateway and Idea source confirmed that Gateway forwards payload and key unchanged and Idea
+   fingerprints the complete payload: unchanged replay is valid; changed payload under the same key
+   is a deterministic conflict.
+
+### Adopted decisions
+
+1. Retain one frozen review or conversion submission only after an ambiguous transport/server
+   outcome, and show its exact business terms in an inline status notice.
+2. Give exact retry its own explicit action. Reusing it preserves both payload and idempotency key.
+3. Treat any material edit as a new adviser intent with a fresh key. Disable the normal form action
+   while its visible terms still equal the retained submission so it cannot masquerade as new.
+4. Freeze all material action fields while a mutation is pending. Keep review and conversion retry
+   state separate and isolate both when the selected candidate remounts.
+5. Clear retry authority after deterministic conflict, validation failure, source-confirmed
+   success, or saved-but-refresh-failed posture; none of those states justify repeating the write.
+
+### Rejected decisions
+
+Automatic retry, optimistic success, persisting retry state in a browser cache, replacing visible
+edited values with retained values on ordinary form submit, or creating a cross-workflow command
+abstraction without another proven consumer.
+
+### Validation and publication decision
+
+Pure transition tests and action-panel tests prove response loss, edited review and conversion
+terms, delayed completion, candidate remount, deterministic conflict, accepted/replayed persistence,
+and saved-but-refresh-failed behavior. The optimized browser journey proves that rendered retained
+terms match the dispatched payload/key. The workflow recovery contract changes, so repository
+context and the Opportunities and Ideas screen guide change and the wiki must be published. Existing
+frontend delivery guidance already defines superseded requests and source-owned recovery authority;
+no central skill change is warranted for this bounded product correction.

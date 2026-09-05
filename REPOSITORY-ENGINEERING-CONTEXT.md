@@ -717,10 +717,17 @@ Current repository posture:
     use the closed Gateway/Idea vocabulary and preserve the selected candidate's source basis.
     Feedback separately consumes `idea-feedback-taxonomy-v1`: the adviser records useful or not
     useful first, then one source-owned business reason; Workbench never derives that reason from
-    candidate evidence. A retry reuses the exact failed submission. Success requires an accepted or
-    replayed source persistence receipt, matching feedback-event evidence where applicable, and
+    candidate evidence. An ambiguous review or conversion response retains one frozen submission
+    per action kind and exposes its exact business terms through an explicit inline retry. Exact
+    retry reuses that payload and idempotency key; editing any material field creates a new intent
+    with a fresh key, and the normal form action must never substitute the retained payload.
+    Deterministic owner conflict or validation failure clears exact-retry authority. A pending
+    action freezes every material action field, and candidate remount isolates retained state.
+    Success requires an accepted or replayed source persistence receipt, matching feedback-event
+    evidence where applicable, and
     completes only after source-owned detail and queue refresh; persistence, evidence, and refresh
-    failures remain distinct. The canonical browser validator proves those states through stable
+    failures remain distinct. A saved-but-refresh-failed result acknowledges persistence but never
+    offers mutation retry. The canonical browser validator proves those states through stable
     action test ids and `recorded-and-refreshed`, with product copy as supporting evidence rather
     than the sole assertion. Candidate presentation must not be inferred from queue fetch,
     component mount, AG Grid row-buffer membership, or a

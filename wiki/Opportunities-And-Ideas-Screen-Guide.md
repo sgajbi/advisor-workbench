@@ -46,6 +46,9 @@ completed or an explicit refresh-failed posture is shown.
   background tab requires a fresh visibility observation; cached row position is never reused.
 - Captures usefulness first, then the canonical business reason; candidate signals never become the
   adviser's feedback reason.
+- After an ambiguous review or conversion response, keeps the exact submitted business terms in an
+  inline recovery notice. The adviser can retry that unchanged submission or edit the form to
+  record a new intent; Workbench never sends retained terms through the edited form action.
 - Refreshes queue and detail after persistence and distinguishes refresh failure.
 
 ## Decisions And Actions
@@ -103,8 +106,10 @@ feedback, or conversion-intent controls.
 | Explanation request failure | Retry the unchanged request or continue the candidate review without it |
 | Viewing evidence unavailable | Continue reviewing; no viewing confirmation is claimed |
 | Viewing evidence persistence failure | Continue reviewing or retry the unchanged observation |
+| Review or conversion outcome not confirmed | Inspect the retained terms, then choose exact retry or edit the form and record a new intent |
+| Deterministic conflict or invalid action | Correct the stated problem; Workbench does not retain an exact retry that the source has rejected |
 | Mutation or evidence failure | Review the explicit error; no success is shown and the displayed opportunity remains unchanged |
-| Persisted, refresh failed | Persistence is acknowledged while stale detail is withheld |
+| Persisted, refresh failed | Persistence is acknowledged while stale detail is withheld; do not retry the mutation |
 | Persisted and refreshed | Review the updated queue and detail posture |
 
 ## Workbench Boundaries
