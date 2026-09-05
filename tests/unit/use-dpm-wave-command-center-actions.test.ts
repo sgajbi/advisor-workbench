@@ -2310,16 +2310,18 @@ describe("useDpmWaveCommandCenterActions", () => {
       },
       "client",
     );
-    expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
-      evidenceRef: "task-review-001",
-      correlationId: "corr-campaign-command",
-      sourceService: "lotus-manage",
-      contentHash: "sha256:task-transition",
+    await waitFor(() => {
+      expect(result.current.campaignWorkflowCommandEvidence).toMatchObject({
+        evidenceRef: "task-review-001",
+        correlationId: "corr-campaign-command",
+        sourceService: "lotus-manage",
+        contentHash: "sha256:task-transition",
+      });
+      expect(
+        result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef,
+      ).toBe("task-review-001");
+      expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
     });
-    expect(
-      result.current.model.campaignWorkflowEvidenceRows[0]?.evidenceRef,
-    ).toBe("task-review-001");
-    expect(result.current.campaignWorkflowEvidenceResolved).toBe(true);
   });
 
   it("preserves accepted governance evidence when the follow-up refresh fails", async () => {
