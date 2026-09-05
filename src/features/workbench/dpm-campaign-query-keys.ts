@@ -51,6 +51,11 @@ export const dpmCampaignQueryKeys = {
     ] as const,
   workflow: (identity: DpmCampaignIdentity) =>
     [...dpmCampaignQueryKeys.campaign(identity), "workflow"] as const,
+  workflowServerRead: (identity: DpmCampaignIdentity) =>
+    [
+      ...dpmCampaignQueryKeys.campaign(identity),
+      "workflow-server-read",
+    ] as const,
   confirmationLock: (
     identity: DpmCampaignIdentity,
     kind: DpmCampaignConfirmationKind,

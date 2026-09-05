@@ -36,6 +36,14 @@ describe("DPM campaign query identity", () => {
       "2026.05",
       "workflow",
     ]);
+    expect(dpmCampaignQueryKeys.workflowServerRead(campaign)).toEqual([
+      "workbench",
+      "dpm-campaigns",
+      "campaign",
+      "campaign-1",
+      "2026.05",
+      "workflow-server-read",
+    ]);
   });
 
   it("includes paging and business-date inputs that change returned evidence", () => {
