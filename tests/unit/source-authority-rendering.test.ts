@@ -230,6 +230,15 @@ async function renderIdeaExplanationCase({ identity, state }: RenderProofCase) {
   explanation.requestId =
     `idea-explanation-${identity}-00000000-0000-4000-8000-000000000000`;
   explanation.fallbackUsed = state === "EXPLANATION_UNAVAILABLE";
+  explanation.posture =
+    state === "EXPLANATION_SERVED" ? "ready_for_advisor_review" : "fallback_only";
+  explanation.verifierOutcome =
+    state === "EXPLANATION_SERVED" ? "passed" : "not_run";
+  explanation.executionProvenancePosture =
+    state === "EXPLANATION_SERVED"
+      ? "unattested_local_test_fixture"
+      : "runtime_unavailable";
+  explanation.aiLineageRecorded = state === "EXPLANATION_SERVED";
   const evidenceIdentity = {
     evidencePacketId: "evidence-source-authority-proof",
     evidenceContentHash: "sha256:evidence-source-authority-proof",
