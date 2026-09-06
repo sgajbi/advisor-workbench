@@ -7,9 +7,7 @@ import {
   submitPortfolioReviewOrder,
 } from "@/features/report-ordering/api";
 import { parseReportOrderingResponse } from "@/features/report-ordering/contracts";
-import {
-  useReportOrderingWorkflow as useReportOrderingWorkflowSource,
-} from "@/features/report-ordering/use-report-ordering-workflow";
+import { useReportOrderingWorkflow as useReportOrderingWorkflowSource } from "@/features/report-ordering/use-report-ordering-workflow";
 import { WorkbenchApiError } from "@/features/workbench/api-client";
 import {
   buildReportJobListResponse,
@@ -51,13 +49,15 @@ describe("useReportOrderingWorkflow", () => {
       parseReportOrderingResponse(buildReportOrderingResponse()),
     );
     historyMock.mockResolvedValue(buildReportJobListResponse());
-    submitMock.mockResolvedValue({
-      report_request_id: "rrq_2",
-      report_job_id: "rjob_2",
-      status: "accepted",
-      status_url: "/api/v1/report-jobs/rjob_2",
-      idempotency_key: "intent_2",
-    });
+    submitMock.mockImplementation(({ idempotencyKey }) =>
+      Promise.resolve({
+        report_request_id: "rrq_2",
+        report_job_id: "rjob_2",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_2",
+        idempotency_key: idempotencyKey,
+      }),
+    );
   });
 
   it("loads source choices and recent requests for the selected portfolio", async () => {
@@ -81,7 +81,9 @@ describe("useReportOrderingWorkflow", () => {
         outputFormat: "json",
       }),
     );
-    expect(result.current.historyRows[0].statusLabel).toBe("Report data complete");
+    expect(result.current.historyRows[0].statusLabel).toBe(
+      "Report data complete",
+    );
   });
 
   it("keeps the newest request history when refreshes complete out of order", async () => {
@@ -94,9 +96,11 @@ describe("useReportOrderingWorkflow", () => {
     );
     await waitFor(() => expect(result.current.historyState).toBe("ready"));
 
-    let resolveOlder: ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
+    let resolveOlder:
+      ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
       null;
-    let resolveNewer: ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
+    let resolveNewer:
+      ((value: ReturnType<typeof buildReportJobListResponse>) => void) | null =
       null;
     historyMock
       .mockImplementationOnce(
@@ -165,10 +169,16 @@ describe("useReportOrderingWorkflow", () => {
       await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
       act(() => expect(result.current.reviewRequest()).toBe(true));
       await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
-      await act(async () => expect(await result.current.submitRequest()).toBe(true));
-      await waitFor(() => expect(result.current.history?.items[0].status).toBe("accepted"));
+      await act(async () =>
+        expect(await result.current.submitRequest()).toBe(true),
+      );
       await waitFor(() =>
-        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(true),
+        expect(result.current.history?.items[0].status).toBe("accepted"),
+      );
+      await waitFor(() =>
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(
+          true,
+        ),
       );
       const poll = [...timerSpy.mock.calls]
         .reverse()
@@ -177,7 +187,9 @@ describe("useReportOrderingWorkflow", () => {
       await act(async () => {
         (poll as () => void)();
       });
-      await waitFor(() => expect(result.current.history?.items[0].status).toBe("completed"));
+      await waitFor(() =>
+        expect(result.current.history?.items[0].status).toBe("completed"),
+      );
       expect(historyMock).toHaveBeenCalledTimes(3);
     } finally {
       timerSpy.mockRestore();
@@ -200,8 +212,12 @@ describe("useReportOrderingWorkflow", () => {
       );
 
       await waitFor(() => expect(result.current.historyState).toBe("ready"));
-      expect(result.current.historyRows[0].statusLabel).toBe("Report data complete");
-      expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(false);
+      expect(result.current.historyRows[0].statusLabel).toBe(
+        "Report data complete",
+      );
+      expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(
+        false,
+      );
     } finally {
       timerSpy.mockRestore();
     }
@@ -225,7 +241,10 @@ describe("useReportOrderingWorkflow", () => {
         reportJobId: "rjob_2",
         reportRequestId: "rrq_2",
       };
-      const item = unreportedHistory.items[0] as unknown as Record<string, unknown>;
+      const item = unreportedHistory.items[0] as unknown as Record<
+        string,
+        unknown
+      >;
       if (status === undefined) {
         delete item.status;
       } else {
@@ -248,15 +267,25 @@ describe("useReportOrderingWorkflow", () => {
             reportingCurrency: "SGD",
           }),
         );
-        await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
-        act(() => expect(result.current.reviewRequest()).toBe(true));
-        await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
-        await act(async () => expect(await result.current.submitRequest()).toBe(true));
         await waitFor(() =>
-          expect(result.current.historyRows[0].statusLabel).toBe("Status not reported"),
+          expect(result.current.catalogueState).toBe("ready"),
+        );
+        act(() => expect(result.current.reviewRequest()).toBe(true));
+        await waitFor(() =>
+          expect(result.current.preflightReviewed).toBe(true),
+        );
+        await act(async () =>
+          expect(await result.current.submitRequest()).toBe(true),
+        );
+        await waitFor(() =>
+          expect(result.current.historyRows[0].statusLabel).toBe(
+            "Status not reported",
+          ),
         );
 
-        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(false);
+        expect(timerSpy.mock.calls.some(([, delay]) => delay === 5_000)).toBe(
+          false,
+        );
       } finally {
         timerSpy.mockRestore();
       }
@@ -300,11 +329,17 @@ describe("useReportOrderingWorkflow", () => {
 
       act(() => expect(result.current.reviewRequest()).toBe(true));
       await waitFor(() => expect(result.current.preflightReviewed).toBe(true));
-      await act(async () => expect(await result.current.submitRequest()).toBe(true));
-      await waitFor(() => expect(result.current.historyState).toBe("permission_blocked"));
+      await act(async () =>
+        expect(await result.current.submitRequest()).toBe(true),
+      );
+      await waitFor(() =>
+        expect(result.current.historyState).toBe("permission_blocked"),
+      );
 
       expect(
-        timerSpy.mock.calls.some(([, delay]) => delay === 5_000 || delay === 10_000),
+        timerSpy.mock.calls.some(
+          ([, delay]) => delay === 5_000 || delay === 10_000,
+        ),
       ).toBe(false);
       expect(historyMock).toHaveBeenCalledTimes(2);
     } finally {
@@ -315,13 +350,15 @@ describe("useReportOrderingWorkflow", () => {
   it("preserves one idempotency intent across a safe retry", async () => {
     submitMock
       .mockRejectedValueOnce(new Error("temporary unavailable"))
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_2",
-        report_job_id: "rjob_2",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_2",
-        idempotency_key: "intent_2",
-      });
+      .mockImplementationOnce(({ idempotencyKey }) =>
+        Promise.resolve({
+          report_request_id: "rrq_2",
+          report_job_id: "rjob_2",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_2",
+          idempotency_key: idempotencyKey,
+        }),
+      );
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -339,14 +376,18 @@ describe("useReportOrderingWorkflow", () => {
     await act(async () => {
       expect(await result.current.submitRequest()).toBe(false);
     });
-    expect(result.current.submissionError).toContain("preserved for a safe retry");
+    expect(result.current.submissionError).toContain(
+      "preserved for a safe retry",
+    );
     await act(async () => {
       expect(await result.current.submitRequest()).toBe(true);
     });
 
     const firstIntent = submitMock.mock.calls[0][0].idempotencyKey;
     const secondIntent = submitMock.mock.calls[1][0].idempotencyKey;
-    expect(submitMock.mock.calls[0][0]).not.toHaveProperty("allocationDimensions");
+    expect(submitMock.mock.calls[0][0]).not.toHaveProperty(
+      "allocationDimensions",
+    );
     expect(firstIntent).toBe(secondIntent);
     expect(firstIntent).toMatch(/^workbench-report-order-/);
     expect(result.current.canSubmitReviewedRequest).toBe(false);
@@ -354,20 +395,24 @@ describe("useReportOrderingWorkflow", () => {
 
   it("starts another report for the current portfolio with a fresh reviewed intent", async () => {
     submitMock
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_2",
-        report_job_id: "rjob_2",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_2",
-        idempotency_key: "intent_2",
-      })
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_3",
-        report_job_id: "rjob_3",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_3",
-        idempotency_key: "intent_3",
-      });
+      .mockImplementationOnce(({ idempotencyKey }) =>
+        Promise.resolve({
+          report_request_id: "rrq_2",
+          report_job_id: "rjob_2",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_2",
+          idempotency_key: idempotencyKey,
+        }),
+      )
+      .mockImplementationOnce(({ idempotencyKey }) =>
+        Promise.resolve({
+          report_request_id: "rrq_3",
+          report_job_id: "rjob_3",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_3",
+          idempotency_key: idempotencyKey,
+        }),
+      );
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
@@ -431,7 +476,9 @@ describe("useReportOrderingWorkflow", () => {
       }),
     );
 
-    await waitFor(() => expect(result.current.configuration?.outputFormat).toBe("pdf"));
+    await waitFor(() =>
+      expect(result.current.configuration?.outputFormat).toBe("pdf"),
+    );
     expect(result.current.model?.canSubmit).toBe(true);
     act(() => {
       expect(result.current.reviewRequest()).toBe(true);
@@ -450,13 +497,16 @@ describe("useReportOrderingWorkflow", () => {
 
   it("submits only optional configuration published by the selected report family", async () => {
     const payload = buildReportOrderingResponse();
-    payload.reportFamilies[0].configurationFields = payload.reportFamilies[0].configurationFields.filter(
-      (field) => field.fieldId === "as_of_date",
+    payload.reportFamilies[0].configurationFields =
+      payload.reportFamilies[0].configurationFields.filter(
+        (field) => field.fieldId === "as_of_date",
+      );
+    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map(
+      (section) => ({
+        ...section,
+        dependencyFieldIds: [],
+      }),
     );
-    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map((section) => ({
-      ...section,
-      dependencyFieldIds: [],
-    }));
     optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
@@ -558,7 +608,9 @@ describe("useReportOrderingWorkflow", () => {
 
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
-    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    await waitFor(() =>
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+    );
     expect(result.current.preflightReviewed).toBe(false);
     expect(result.current.submittedHandle).toBeNull();
   });
@@ -582,7 +634,9 @@ describe("useReportOrderingWorkflow", () => {
 
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
-    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    await waitFor(() =>
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+    );
     await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
     expect(result.current.preflightReviewed).toBe(false);
 
@@ -626,7 +680,9 @@ describe("useReportOrderingWorkflow", () => {
     expect(result.current.submittedHandle?.report_job_id).toBe("rjob_2");
 
     rerender({ portfolioId: "PB_SG_OTHER_002" });
-    await waitFor(() => expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"));
+    await waitFor(() =>
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+    );
     act(() => {
       result.current.updateConfiguration({ asOfDate: "2026-04-23" });
     });
@@ -649,20 +705,24 @@ describe("useReportOrderingWorkflow", () => {
       return Promise.resolve(parseReportOrderingResponse(payload));
     });
     submitMock
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_a",
-        report_job_id: "rjob_a",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_a",
-        idempotency_key: "intent_a",
-      })
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_b",
-        report_job_id: "rjob_b",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_b",
-        idempotency_key: "intent_b",
-      });
+      .mockImplementationOnce(({ idempotencyKey }) =>
+        Promise.resolve({
+          report_request_id: "rrq_a",
+          report_job_id: "rjob_a",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_a",
+          idempotency_key: idempotencyKey,
+        }),
+      )
+      .mockImplementationOnce(({ idempotencyKey }) =>
+        Promise.resolve({
+          report_request_id: "rrq_b",
+          report_job_id: "rjob_b",
+          status: "accepted",
+          status_url: "/api/v1/report-jobs/rjob_b",
+          idempotency_key: idempotencyKey,
+        }),
+      );
 
     const { result, rerender } = renderHook(
       ({ portfolioId }) =>
@@ -687,7 +747,9 @@ describe("useReportOrderingWorkflow", () => {
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
     await waitFor(() =>
-      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe("PB_SG_OTHER_002"),
+      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe(
+        "PB_SG_OTHER_002",
+      ),
     );
     act(() => {
       expect(result.current.reviewRequest()).toBe(true);
@@ -708,12 +770,14 @@ describe("useReportOrderingWorkflow", () => {
   });
 
   it("ignores a late catalogue response from the previously selected portfolio", async () => {
-    let resolveFirst: ((value: ReturnType<typeof parseReportOrderingResponse>) => void) | null = null;
-    const firstResponse = new Promise<ReturnType<typeof parseReportOrderingResponse>>(
-      (resolve) => {
-        resolveFirst = resolve;
-      },
-    );
+    let resolveFirst:
+      ((value: ReturnType<typeof parseReportOrderingResponse>) => void) | null =
+      null;
+    const firstResponse = new Promise<
+      ReturnType<typeof parseReportOrderingResponse>
+    >((resolve) => {
+      resolveFirst = resolve;
+    });
     const secondPayload = buildReportOrderingResponse();
     secondPayload.scopeSelection.scopeId = "PB_SG_OTHER_002";
     optionsMock.mockImplementation((portfolioId) =>
@@ -733,14 +797,20 @@ describe("useReportOrderingWorkflow", () => {
 
     rerender({ portfolioId: "PB_SG_OTHER_002" });
     await waitFor(() =>
-      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe("PB_SG_OTHER_002"),
+      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe(
+        "PB_SG_OTHER_002",
+      ),
     );
     act(() => {
-      resolveFirst?.(parseReportOrderingResponse(buildReportOrderingResponse()));
+      resolveFirst?.(
+        parseReportOrderingResponse(buildReportOrderingResponse()),
+      );
     });
 
     await waitFor(() =>
-      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe("PB_SG_OTHER_002"),
+      expect(result.current.catalogue?.scopeSelection?.scopeId).toBe(
+        "PB_SG_OTHER_002",
+      ),
     );
   });
 });
