@@ -258,10 +258,16 @@ export function confirmRefreshedProposalVersionEvidence({
       "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
     );
   }
+  const refreshedVersionNo = proposalDetail?.proposal.current_version_no;
+  const createdVersionRetained = lineage?.versions?.some(
+    (version) => version.version_no === expectedVersionNo,
+  );
   if (
     agreement.issue === "active-version-mismatch" ||
     expectedVersionNo <= previousVersionNo ||
-    proposalDetail?.proposal.current_version_no !== expectedVersionNo
+    !Number.isInteger(refreshedVersionNo) ||
+    (refreshedVersionNo ?? 0) < expectedVersionNo ||
+    !createdVersionRetained
   ) {
     throw new ProposalActionBusinessError(
       "The source action returned lineage that does not confirm the newly created proposal version. Use Recheck earlier action before continuing.",
