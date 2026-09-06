@@ -57,8 +57,8 @@ These use cases do not substitute for authenticated production-role or portfolio
    and neither mode changes the proposal lifecycle merely by being opened.
 5. Perform a lifecycle, narrative, memo, or package action only after its visible prerequisites are
    satisfied.
-6. Treat success as confirmed only after the Gateway response identifies the same proposal and
-   resulting posture, then the owning source reads reconcile to that exact result.
+6. Treat success as confirmed only after Gateway persistence and the owning source reads reconcile
+   the same proposal and resulting posture identified by the action response.
 7. Use the business-labelled return link to restore the originating portfolio and lifecycle view.
 
 ## Implemented Capabilities
