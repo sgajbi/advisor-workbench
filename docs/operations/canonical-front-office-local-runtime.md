@@ -369,9 +369,12 @@ separate from readiness, browser, and screenshot evidence gathering.
 
 To write demo screenshots to a caller-provided directory:
 
+Here, `<temp-dir>` means a caller-selected temporary directory outside the repository. Replace it
+before running the command.
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1 `
-  -ScreenshotDirectory C:\Users\Sandeep\AppData\Local\Temp\lotus-risk-module-shots
+  -ScreenshotDirectory <temp-dir>\lotus-risk-module-shots
 ```
 
 Validation layers:
