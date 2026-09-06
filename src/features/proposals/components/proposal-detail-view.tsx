@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -85,6 +85,7 @@ import {
   ProposalLineageAuditPanel,
   ProposalReviewHistoryPanel,
 } from "./proposal-detail-domain-panels";
+import { proposalDetailQueryKeys } from "../proposal-detail-query-keys";
 
 type Props = {
   proposalId: string;
@@ -94,16 +95,7 @@ type Props = {
   returnSourceWindow?: ProposalSourceWindowContext;
 };
 
-type ProposalDetailWorkspaceProps = Props & {
-  revision: number;
-  onAdvanceRevision: (proposalId: string) => void;
-};
-
 type ProposalReviewMode = "narrative" | "memo";
-
-function proposalRefreshGenerationKey(proposalId: string) {
-  return ["proposal-detail-refresh-generation", proposalId] as const;
-}
 
 function isNotFound(error: unknown): boolean {
   return getWorkbenchApiErrorStatus(error) === 404;
@@ -116,21 +108,6 @@ export default function ProposalDetailView({
   returnMode,
   returnSourceWindow,
 }: Props) {
-  const queryClient = useQueryClient();
-  const { data: revision = 0 } = useQuery({
-    queryKey: proposalRefreshGenerationKey(proposalId),
-    queryFn: async () => 0,
-    initialData: 0,
-    enabled: false,
-    staleTime: Number.POSITIVE_INFINITY,
-  });
-  const advanceRevision = useCallback((refreshedProposalId: string) => {
-    queryClient.setQueryData<number>(
-      proposalRefreshGenerationKey(refreshedProposalId),
-      (current) => (current ?? 0) + 1
-    );
-  }, [queryClient]);
-
   return (
     <ProposalDetailWorkspace
       key={proposalId}
@@ -139,8 +116,6 @@ export default function ProposalDetailView({
       returnReviewContext={returnReviewContext}
       returnMode={returnMode}
       returnSourceWindow={returnSourceWindow}
-      revision={revision}
-      onAdvanceRevision={advanceRevision}
     />
   );
 }
@@ -151,9 +126,8 @@ function ProposalDetailWorkspace({
   returnReviewContext,
   returnMode,
   returnSourceWindow,
-  revision,
-  onAdvanceRevision,
-}: ProposalDetailWorkspaceProps) {
+}: Props) {
+  const queryClient = useQueryClient();
   const fallbackReturnHref =
     returnPortfolioId && returnMode
       ? buildProposalDetailReturnHref({
@@ -196,31 +170,31 @@ function ProposalDetailWorkspace({
 
   const proposalIdValid = isValidProposalId(proposalId);
   const queryKey = useMemo(
-    () => ["proposal-detail", proposalId, revision, includeEvidence],
-    [proposalId, revision, includeEvidence]
+    () => proposalDetailQueryKeys.detail(proposalId, includeEvidence),
+    [proposalId, includeEvidence]
   );
   const detailQuery = useQuery({
     queryKey,
     queryFn: async () => await getProposal(proposalId, includeEvidence),
     enabled: proposalIdValid,
     placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[1] === proposalId ? previousData : undefined,
+      previousQuery?.queryKey[2] === proposalId ? previousData : undefined,
     ...workbenchStrictQueryDefaults,
   });
   const workflowQuery = useQuery({
-    queryKey: ["proposal-workflow", proposalId, revision],
+    queryKey: proposalDetailQueryKeys.workflow(proposalId),
     queryFn: async () => await getProposalWorkflowEvents(proposalId),
     enabled: !!detailQuery.data?.proposal,
     ...workbenchStrictQueryDefaults,
   });
   const approvalsQuery = useQuery({
-    queryKey: ["proposal-approvals", proposalId, revision],
+    queryKey: proposalDetailQueryKeys.approvals(proposalId),
     queryFn: async () => await getProposalApprovals(proposalId),
     enabled: !!detailQuery.data?.proposal,
     ...workbenchStrictQueryDefaults,
   });
   const lineageQuery = useQuery({
-    queryKey: ["proposal-lineage", proposalId, revision],
+    queryKey: proposalDetailQueryKeys.lineage(proposalId),
     queryFn: async () => await getProposalLineage(proposalId),
     enabled: !!detailQuery.data?.proposal,
     ...workbenchStrictQueryDefaults,
@@ -493,7 +467,9 @@ function ProposalDetailWorkspace({
       const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
       setCreatedVersionNo(currentVersionNo ?? null);
       detailContextTransitionRef.current = true;
-      onAdvanceRevision(proposalId);
+      await queryClient.invalidateQueries({
+        queryKey: proposalDetailQueryKeys.proposal(proposalId),
+      });
     } catch (err) {
       if (activeVersionCreationRef.current?.token !== versionContext.token) {
         return;
