@@ -347,8 +347,11 @@ promote dormant labels into product ownership just because historical route file
   from workflow, approval, and lineage reads so available source evidence remains usable with an
   explicit partial-state message. Stable proposal-scoped Query identities own those reads; lifecycle
   and version commands invalidate and refetch the exact detail, workflow, approval, and lineage
-  records instead of creating revision-suffixed cache entries. A mutation is announced as successful
-  only after Gateway persistence succeeds and those owning reads refresh coherently from source truth. This
+  records instead of creating revision-suffixed cache entries. A lifecycle mutation is announced as
+  successful only when its Gateway response identifies the selected proposal and resulting posture,
+  then those owning reads refresh to the same source truth. Version creation additionally requires a
+  returned and refreshed version newer than the pre-command version. Read-only historical lookup does
+  not join the persisted-command lock. This
   presentation does not add client-release, approval, communication, or execution authority.
 - Implementation Status reads one selected record from
   `GET /api/v1/proposals/{proposal_id}/execution-status` with discriminator

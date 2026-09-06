@@ -292,8 +292,10 @@ retry from cancelling or masquerading as another revision's evidence.
   checkout-specific port and does not disturb the canonical runtime.
 - The Proposal Detail lifecycle regression verifies that one persisted command produces one exact
   confirmation read for detail, workflow, approvals, and lineage before the business success state
-  appears. Component proof rejects source mismatch, duplicate commands, orphaned revision caches,
-  failed confirmation, and late prior-workspace completions.
+  appears. Component proof rejects response/source identity mismatch, non-advancing version replay,
+  source mismatch, duplicate commands, orphaned revision caches, failed confirmation, and late
+  prior-workspace completions; read-only historical lookup remains independent from the persisted
+  command lock.
 - The focused Proposal Detail memo proof verifies explicit advisor identity, current-version memo
   evidence, exact review and package prerequisites, source-aligned success, persistence and refresh
   failure, optional non-authoritative commentary, stable canonical selectors, keyboard operation,

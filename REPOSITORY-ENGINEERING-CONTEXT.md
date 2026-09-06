@@ -698,7 +698,10 @@ Current repository posture:
     and the action-specific authoritative reads refresh coherently from source truth. Keep Proposal
     Detail's detail, workflow, approval, and lineage reads under stable proposal-scoped TanStack
     Query keys; persisted lifecycle and version commands share a serial proposal scope, invalidate
-    those exact records, and confirm from their refreshed values. Do not restore revision-counter
+    those exact records, and confirm from their refreshed values. Lifecycle success must bind the
+    Gateway response's proposal and resulting state to the same refreshed source posture; version
+    creation must advance beyond the pre-command active version. Keep read-only historical lookup
+    outside the persisted-command lock. Do not restore revision-counter
     queries, revision-suffixed cache identities, or component-owned async token/state machinery.
     Narrative
     review is confirmed from the current-version narrative read; delivery summary and events remain
