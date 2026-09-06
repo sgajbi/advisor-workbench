@@ -183,7 +183,7 @@ bounded implementation gap in #1020; do not present a top-level `pwsh` invocatio
 | Unit tests | `npm test` |
 | Coverage gate | `npm run test:coverage` |
 | Production build | `npm run build` |
-| Local PR parity | Run `npm run security:audit`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, and `npm run build` in order (`make check` shortcut) |
+| Local core quality gate | Run `npm run security:audit`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, and `npm run build` in order (`make check` shortcut) |
 | Browser smoke | `npm run test:e2e` |
 | Deterministic fixture families | `npm run test:e2e:fixtures` |
 | Container parity | `docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local` |
@@ -194,7 +194,9 @@ bounded implementation gap in #1020; do not present a top-level `pwsh` invocatio
 | Canonical teardown (Windows PowerShell) | `npm run live:stack:down` |
 
 Use the narrowest focused test during development, then run repository-native gates proportionate
-to the change. [Development Workflow](wiki/Development-Workflow.md),
+to the change. The local core quality gate is not full PR parity; protected CI also proves runtime
+ownership, isolated Next.js artifacts, browser and fixture scenarios, image security, scale, and
+container parity. [Development Workflow](wiki/Development-Workflow.md),
 [Validation and CI](wiki/Validation-and-CI.md), and the
 [canonical runtime guide](docs/operations/canonical-front-office-local-runtime.md) own details.
 
