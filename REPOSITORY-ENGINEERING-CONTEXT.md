@@ -184,6 +184,11 @@ Current repository posture:
    report, preserve only valid setup, review again, and receive a fresh idempotency key for the new
    intent. Batch acceptance is not portfolio completion: refresh item lifecycle from Gateway and
    retain complete, in-progress, retryable, terminal, cancelled, and recovery posture separately.
+   Single-report acceptance requires a structurally valid handle whose echoed idempotency key is
+   the exact reviewed intent and whose Gateway-relative status path decodes to the returned opaque
+   report job id. Validate that receipt before storing its handle or publishing accepted state;
+   mismatches retain the reviewed setup for an exact-key retry. A later history-refresh failure is
+   a distinct read posture and must not erase a valid accepted receipt.
    Fence catalogue, history, and submission publication by a monotonic workspace generation so an
    `A -> B -> A` navigation cannot make an obsolete completion current again. If batch outcome
    refresh is unavailable or returns no support posture, retain the accepted handle's last

@@ -109,6 +109,10 @@ controls and do not occur on this screen.
   date, report, output, section, or currency changes require a fresh review.
 - Submits one stable idempotency key for an unchanged reviewed intent and relies on Gateway to
   verify current membership and report eligibility again.
+- Admits a single-report acceptance only when its echoed idempotency key matches the exact reviewed
+  intent and its Gateway status reference names the returned report job. A malformed or mismatched
+  receipt remains **Report request not accepted**, preserves the reviewed setup for exact retry,
+  and never publishes a support reference.
 - Refreshes source-owned batch posture after acceptance and presents portfolio-report count,
   complete, in-progress, and attention measures plus each portfolio's lifecycle, attempts, and
   support reference.
@@ -158,7 +162,7 @@ outcomes remain separate and never inflate completion.
 | Earliest and latest report dates, active reporting currency, and supported currencies | Reused from the confirmed portfolio workspace; presented as bounded controls rather than browser policy | Gateway portfolio-workspace contract over source-owned portfolio context |
 | Conditional configuration values | Collected only when a published catalogue field applies to a selected section; submitted without browser-created aliases or defaults | Gateway over Lotus Report catalogue and request contracts |
 | Advisor-book portfolio membership, active status, mandate, client reference, currency, and booking centre | Read through the Workbench BFF for selection; not reconstructed from the global portfolio catalogue | Gateway over Core `PortfolioManagerBookMembership:v1` |
-| Single-portfolio report request and acceptance | Submitted only after exact intent review with a bounded idempotency key | Gateway and Lotus Report portfolio-review contract |
+| Single-portfolio report request and acceptance | Submitted only after exact intent review; accepted only when the returned key and job/status identity bind the receipt to that reviewed request | Gateway and Lotus Report portfolio-review contract |
 | Portfolio-bundle handle, materialized portfolios, item lifecycle, attempts, failure summary, and support reference | Submitted, rehydrated, and refreshed through the BFF; no lifecycle is calculated from browser timers and no URL address is treated as source proof | Gateway and Lotus Report batch contracts |
 | Recent single-portfolio report-data job history | Presented from the source response without implying archive or delivery | Gateway and Lotus Report job contract |
 | Caller role and portfolio scope | Browser-supplied authority is removed; development context is server-configured and non-development fails closed | Governed Workbench runtime context, with Gateway as final authorization boundary |
@@ -178,6 +182,7 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | Restricted | A source or caller boundary prevents ordering | Verify governed role and scope; do not add browser headers to bypass it |
 | Degraded or partial | Available evidence remains visible with source limitations | Use only evidenced portfolios and outputs; Gateway still fails closed on unverifiable membership |
 | Submission not accepted | An explicit failure with the reviewed setup retained for controlled retry | Retry only the unchanged reviewed intent or correct the setup and review again |
+| Acceptance receipt mismatch | **Report request not accepted**, with no returned job or support reference promoted into the workspace | Retry the unchanged reviewed request; persistent mismatch is a Gateway/Report contract incident |
 | Status not reported | The request remains visible, but no known lifecycle or step is asserted | Refresh the source evidence; do not treat the request as preparing, complete, or failed until Report publishes a recognized state |
 | Single-request refresh unavailable | The last source-confirmed request rows remain visible with an explicit current-evidence warning | Choose **Refresh** to check again. Recognized active requests otherwise follow bounded automatic refresh; terminal or unreported requests do not |
 | Partially complete bundle | Separate complete, in-progress, retryable, and terminal portfolio outcomes | Refresh outcomes; use the affected item's support reference if it remains unresolved |
@@ -218,6 +223,8 @@ implemented behavior; it is not a claim of bank approval or competitor superiori
 
 - Contract, API, form-model, view-model, state, hook, BFF-route, and integration tests cover single and bundle
   success and failure paths, explicit review, idempotency, authority stripping, selection fencing,
+  exact single-report receipt binding, malformed receipt rejection, same-key replay, accepted-order
+  continuity during history-refresh failure,
   governed date and currency controls, conditional catalogue fields, field-associated errors and
   focus, exact lifecycle mapping, retained-evidence refresh, outcome refresh, direct-address
   rehydration, identity mismatch, Back/Forward stale-response fencing, no-resubmission, and
