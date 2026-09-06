@@ -73,6 +73,34 @@ describe("exact portfolio transaction record", () => {
       expect.objectContaining({ failure: "identity_mismatch" }),
     );
   });
+
+  it.each([
+    ["an empty body", ""],
+    ["malformed JSON", "{"],
+  ])(
+    "classifies %s on a successful response as an invalid source contract",
+    async (_case, body) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () =>
+            new Response(body, {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+        ),
+      );
+
+      await expect(
+        getPortfolioTransactionRecord("PB_SG_GLOBAL_BAL_001", "TX_250", {
+          asOfDate: "2026-08-21",
+          reportingCurrency: "SGD",
+        }),
+      ).rejects.toEqual(
+        expect.objectContaining({ failure: "source_contract_invalid" }),
+      );
+    },
+  );
 });
 
 function buildRecord(transactionId: string) {
