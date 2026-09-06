@@ -97,10 +97,10 @@ const {
     created_at: "2026-02-22T00:00:00Z",
     artifact_hash: "sha256:artifact-001",
   })),
-  submitProposalMock: vi.fn(async () => ({ data: { current_state: "RISK_REVIEW" } })),
-  approveRiskMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
-  approveComplianceMock: vi.fn(async () => ({ data: { current_state: "AWAITING_CLIENT_CONSENT" } })),
-  recordClientConsentMock: vi.fn(async () => ({ data: { current_state: "EXECUTION_READY" } })),
+  submitProposalMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } })),
+  approveRiskMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "AWAITING_CLIENT_CONSENT" } })),
+  approveComplianceMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "AWAITING_CLIENT_CONSENT" } })),
+  recordClientConsentMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "EXECUTION_READY" } })),
   getWorkflowEventsMock: vi.fn(async () => ({
     proposal_id: "pp-1",
     current_state: "DRAFT",
@@ -699,7 +699,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
       })
     );
     getProposalMock
@@ -720,6 +720,27 @@ describe("ProposalDetailView", () => {
     await act(async () => completeSubmission?.());
     await screen.findByTestId("proposal-action-status");
     expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
+  });
+
+  it("withholds lifecycle success when the response posture differs from refreshed source truth", async () => {
+    submitProposalMock.mockResolvedValueOnce({
+      data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" },
+    });
+    prepareCoherentActionRefresh("RISK_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    renderWithQueryClient();
+
+    await clickReadyButton("Submit for risk review");
+
+    expect(
+      await screen.findByText(
+        "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
   });
 
   it("does not publish success when refreshed sources disagree on proposal posture", async () => {
@@ -811,7 +832,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
       })
     );
     prepareCoherentActionRefresh("RISK_REVIEW");
@@ -1164,6 +1185,23 @@ describe("ProposalDetailView", () => {
     expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
   });
 
+  it("rejects a created-version replay that does not advance the active version", async () => {
+    const proposalReadsBeforeTest = getProposalMock.mock.calls.length;
+    getProposalMock.mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 2));
+    getLineageMock.mockResolvedValueOnce(lineageEvidence("pp-1", 2));
+    renderWithQueryClient();
+
+    await clickReadyButton("Create next version");
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
+    expect(getProposalMock).toHaveBeenCalledTimes(proposalReadsBeforeTest + 1);
+  });
+
   it("keeps the proposal decision visible when ancillary workflow evidence fails", async () => {
     getWorkflowEventsMock.mockRejectedValueOnce(new Error("workflow unavailable"));
 
@@ -1318,7 +1356,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
       })
     );
     getProposalMock
@@ -1512,5 +1550,37 @@ describe("ProposalDetailView", () => {
     await waitFor(() => {
       expect(screen.queryByText("Loaded Version 9")).not.toBeInTheDocument();
     });
+  });
+
+  it("keeps persisted actions independent from a pending historical version lookup", async () => {
+    let completeVersionLookup: (() => void) | undefined;
+    getProposalVersionMock.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        completeVersionLookup = () => resolve({
+          proposal_id: "pp-1",
+          version_no: 1,
+          status_at_creation: "DRAFT",
+          created_at: "2026-02-22T00:00:00Z",
+          artifact_hash: "sha256:version-1",
+        });
+      }),
+    );
+    prepareCoherentActionRefresh("RISK_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    renderWithQueryClient();
+
+    fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
+    await clickReadyButton("Load version");
+    const submit = screen.getByRole("button", { name: "Submit for risk review" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByTestId("proposal-action-status")).toHaveTextContent(
+      "Proposal submitted for risk review.",
+    );
+    await act(async () => completeVersionLookup?.());
+    expect(await screen.findByText("Loaded Version 1")).toBeInTheDocument();
   });
 });
