@@ -9,7 +9,10 @@ import {
   type IdeaActionKind,
   type RetryableIdeaActionSubmission,
 } from "../idea-action-intent";
-import type { IdeaBusinessReasonOption } from "../idea-action-reasons";
+import {
+  ideaBusinessReasonLabel,
+  type IdeaBusinessReasonOption,
+} from "../idea-action-reasons";
 import type {
   AdvisorIdeaReasonCode,
   AdvisorIdeaReviewAction,
@@ -241,6 +244,7 @@ function IdeaBusinessReasonSelect({
   value: AdvisorIdeaReasonCode;
 }) {
   const descriptionId = `${id}-description`;
+  const selectionIsCurrent = options.some((option) => option.value === value);
   return (
     <div className={styles.actionField}>
       <label htmlFor={id}>{label}</label>
@@ -253,15 +257,28 @@ function IdeaBusinessReasonSelect({
           onChange(event.target.value as AdvisorIdeaReasonCode)
         }
       >
+        {!selectionIsCurrent ? (
+          <option value={value}>
+            Retained draft — {ideaBusinessReasonLabel([value])}
+          </option>
+        ) : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
-      <span id={descriptionId} className={styles.fieldHint}>
-        Candidate reason, or Adviser review required when no reason is
-        available.
+      <span
+        id={descriptionId}
+        className={styles.fieldHint}
+        data-testid={
+          selectionIsCurrent ? undefined : `${id}-retained-draft`
+        }
+        role={selectionIsCurrent ? undefined : "status"}
+      >
+        {selectionIsCurrent
+          ? "Candidate reason, or Adviser review required when no reason is available."
+          : "This draft basis is not in the latest opportunity reasons. Keep it if it remains your judgement, or select a current basis."}
       </span>
     </div>
   );
