@@ -70,7 +70,8 @@ These use cases do not substitute for authenticated production-role or portfolio
   lifecycle action or announcing its success.
 - Confirms the exact action-specific workflow event returned by Gateway against refreshed workflow
   history. Risk, compliance, and consent also require the exact returned approval record, so their
-  shared target posture cannot substitute for proof of the action the reviewer actually took.
+  shared target posture cannot substitute for proof of the action the reviewer actually took. A
+  later coherent source transition does not erase that exact historical proof or strand recovery.
 - Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
   Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
   until all four refreshed sources agree; refresh never creates a parallel revision cache.
@@ -87,8 +88,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   current. Current posture remains the independently refreshed Gateway/Advise record.
 - Keeps full-evidence and historical-version reads independent from ancillary action-source
   readiness. Missing workflow, approval, or lineage evidence blocks writes, while the available
-  read controls remain usable for investigation. A live persisted command still fences changes to
-  its evidence context.
+  read controls remain usable for investigation. Invalid recovery storage likewise blocks writes,
+  not GET-only investigation. A live persisted command still fences changes to its evidence
+  context.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
   history already returned by the proposal contracts.
 - Presents proposal version, lineage, narrative review, implementation, and other exact audit

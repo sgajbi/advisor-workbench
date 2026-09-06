@@ -28,9 +28,12 @@ Lifecycle confirmation also binds the response's exact workflow-event identity, 
 actor, timestamp, prior posture, and resulting posture to the refreshed workflow register. Risk,
 compliance, and consent commands additionally require the exact returned approval identity and
 fields in the refreshed approval register. The shared `AWAITING_CLIENT_CONSENT` target can therefore
-never make a risk response look like compliance evidence. Persisted recovery accepts only the
+never make a risk response look like compliance evidence. If another valid source action advances
+the coherent current posture before refresh completes, the exact earlier event remains sufficient
+historical proof rather than creating a permanent retry fence. Persisted recovery accepts only the
 closed prior-state/action combinations. Missing ancillary action evidence still blocks writes, but
-does not disable full-evidence or historical-version reads that can help an advisor investigate.
+does not disable full-evidence or historical-version reads that can help an advisor investigate;
+invalid recovery storage blocks writes but not those GET-only controls.
 
 The proposal-scoped mutation record retains the latest command's pending, success, or failure state
 outside a transient component observer and is not discarded by time-based mutation garbage
@@ -59,8 +62,8 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
   retained pending/success/failure command presentation on revisit, bounded settled-command
   replacement, persisted-confirmation fencing beyond the default mutation-cache lifetime, and
   lifecycle/version recovery after reload with byte-equivalent request arguments and idempotency
-  keys, distinct risk/compliance proof, and independent read-only evidence controls during an
-  ancillary-source failure.
+  keys, distinct risk/compliance proof, later coherent source advancement, and independent
+  read-only evidence controls during ancillary-source or recovery-storage failure.
 - `tests/e2e/proposal-memo-posture.spec.ts` proves in an optimized production browser that lifecycle
   success appears only after detail, workflow, approvals, and lineage each perform the exact
   confirmation read; a forced confirmation failure remains fenced through reload and rechecks the
