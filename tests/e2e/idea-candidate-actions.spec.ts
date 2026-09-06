@@ -16,6 +16,9 @@ const explanationEvidenceDirectory = process.env.ISSUE_996_EVIDENCE_DIR
 const actionRetryEvidenceDirectory = process.env.ISSUE_1002_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_1002_EVIDENCE_DIR)
   : null;
+const visibleBasisEvidenceDirectory = process.env.ISSUE_1010_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_1010_EVIDENCE_DIR)
+  : null;
 const notUsefulFeedbackReasons = [
   "not_relevant",
   "already_known",
@@ -26,7 +29,13 @@ const notUsefulFeedbackReasons = [
   "client_specific_constraint",
 ] as const;
 
-async function mockIdeaCandidateActions(page: import("@playwright/test").Page) {
+async function mockIdeaCandidateActions(
+  page: import("@playwright/test").Page,
+  currentReasonCodes: () => readonly string[] = () => [
+    "high_cash_ratio",
+    "review_required",
+  ],
+) {
   await page.route(
     "**/api/bff/api/v1/ideas/review-queues/advisor**",
     async (route) => {
@@ -43,7 +52,7 @@ async function mockIdeaCandidateActions(page: import("@playwright/test").Page) {
                 rank: 1,
                 score: "82",
                 priorityBucket: "high",
-                reasonCodes: ["high_cash_ratio", "review_required"],
+                reasonCodes: [...currentReasonCodes()],
                 candidate: {
                   candidateId,
                   family: "high_cash",
@@ -149,6 +158,127 @@ test("records a source-owned Idea review without creating a proposal", async ({
     page.getByRole("link", { name: /Open Proposal Builder/ }),
   ).toBeVisible();
   await expect(page.getByText(/proposal created/i)).toHaveCount(0);
+});
+
+test("keeps refreshed Idea action drafts visible and submits the displayed basis", async ({
+  page,
+}, testInfo) => {
+  let currentReasonCodes: readonly string[] = [
+    "high_cash_ratio",
+    "review_required",
+  ];
+  await mockIdeaCandidateActions(page, () => currentReasonCodes);
+  const reviewRequests: Array<Record<string, unknown>> = [];
+  const conversionRequests: Array<Record<string, unknown>> = [];
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/review-actions`,
+    async (route) => {
+      reviewRequests.push(
+        route.request().postDataJSON() as Record<string, unknown>,
+      );
+      currentReasonCodes = ["concentration_attention"];
+      await route.fulfill({
+        json: {
+          data: {
+            persistence: { decision: "accepted" },
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+          },
+        },
+      });
+    },
+  );
+  await page.route(
+    `**/api/bff/api/v1/ideas/candidates/${candidateId}/conversion-intents`,
+    async (route) => {
+      conversionRequests.push(
+        route.request().postDataJSON() as Record<string, unknown>,
+      );
+      await route.fulfill({
+        json: {
+          data: {
+            persistence: { decision: "accepted" },
+            durableStorageBacked: true,
+            supportedFeaturePromoted: false,
+          },
+        },
+      });
+    },
+  );
+
+  await page.goto(
+    `/recommendations?mode=opportunities&portfolioId=${portfolioId}&candidateId=${candidateId}`,
+    { waitUntil: "domcontentloaded" },
+  );
+
+  await expect(page.getByLabel("Review basis")).toHaveValue("high_cash_ratio");
+  await page.getByRole("button", { name: "Record review" }).click();
+
+  const firstReviewStatus = page.getByTestId("idea-action-review-status");
+  await expect(firstReviewStatus).toHaveAttribute(
+    "data-action-state",
+    "recorded-and-refreshed",
+  );
+  await expect(firstReviewStatus).toContainText("Cash balance requires review");
+  await expect(page.getByLabel("Review basis")).toHaveValue("high_cash_ratio");
+  await expect(page.getByLabel("Conversion basis")).toHaveValue(
+    "high_cash_ratio",
+  );
+  await expect(
+    page.getByTestId("idea-review-business-reason-retained-draft"),
+  ).toContainText("not in the latest opportunity reasons");
+  await expect(
+    page.getByTestId("idea-conversion-business-reason-retained-draft"),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Review basis").getByRole("option", {
+      name: "Retained draft — Cash balance requires review",
+    }),
+  ).toBeAttached();
+
+  const screenshot = await page.screenshot({ fullPage: true });
+  await testInfo.attach("idea-action-visible-retained-basis", {
+    body: screenshot,
+    contentType: "image/png",
+  });
+  if (visibleBasisEvidenceDirectory) {
+    await mkdir(visibleBasisEvidenceDirectory, { recursive: true });
+    await page.screenshot({
+      path: path.join(
+        visibleBasisEvidenceDirectory,
+        "idea-action-visible-retained-basis.png",
+      ),
+      fullPage: true,
+    });
+  }
+
+  await page.getByRole("button", { name: "Record intent" }).click();
+  const conversionStatus = page.getByTestId("idea-action-conversion-status");
+  await expect(conversionStatus).toContainText("Cash balance requires review");
+  expect(conversionRequests).toHaveLength(1);
+  expect(conversionRequests[0]).toMatchObject({
+    reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
+  });
+
+  await page.getByLabel("Review basis").selectOption("concentration_attention");
+  await expect(
+    page.getByTestId("idea-conversion-business-reason-retained-draft"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("idea-review-business-reason-retained-draft"),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Record review" }).click();
+  await expect(page.getByTestId("idea-action-review-status")).toContainText(
+    "Concentration requires attention",
+  );
+
+  expect(reviewRequests).toHaveLength(2);
+  expect(reviewRequests[0]).toMatchObject({
+    reasonCodes: ["review_approved_for_conversion", "high_cash_ratio"],
+  });
+  expect(reviewRequests[1]).toMatchObject({
+    reasonCodes: ["review_approved_for_conversion", "concentration_attention"],
+  });
 });
 
 test("separates exact Idea retry from an edited advisor intent", async ({
