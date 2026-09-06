@@ -84,7 +84,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   tab before submission. If persistence cannot be confirmed, **Recheck earlier action** survives a
   reload and repeats only that exact request. Invalid or unavailable recovery storage blocks a new
   action, and impossible action/prior-state combinations are rejected; authentication and
-  entitlement material is never stored there.
+  entitlement material is never stored there. A source `409` state conflict proves the request was
+  rejected, clears that obsolete recovery identity, and asks the advisor to refresh current
+  evidence rather than offering a permanently conflicting recheck.
 - Describes a completed action as a historical outcome without labelling its resulting posture as
   current. Current posture remains the independently refreshed Gateway/Advise record.
 - Keeps full-evidence and historical-version reads independent from ancillary action-source
