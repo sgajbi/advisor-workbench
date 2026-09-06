@@ -98,10 +98,76 @@ const {
     created_at: "2026-02-22T00:00:00Z",
     artifact_hash: "sha256:artifact-001",
   })),
-  submitProposalMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } })),
-  approveRiskMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "AWAITING_CLIENT_CONSENT" } })),
-  approveComplianceMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "AWAITING_CLIENT_CONSENT" } })),
-  recordClientConsentMock: vi.fn(async () => ({ data: { proposal_id: "pp-1", current_state: "EXECUTION_READY" } })),
+  submitProposalMock: vi.fn(async () => ({ data: {
+    approval: null,
+    proposal_id: "pp-1",
+    current_state: "RISK_REVIEW",
+    latest_workflow_event: {
+      event_id: "event-RISK_REVIEW",
+      event_type: "SUBMITTED_FOR_RISK_REVIEW",
+      from_state: "DRAFT",
+      to_state: "RISK_REVIEW",
+      actor_id: "advisor_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+  } })),
+  approveRiskMock: vi.fn(async () => ({ data: {
+    proposal_id: "pp-1",
+    current_state: "AWAITING_CLIENT_CONSENT",
+    latest_workflow_event: {
+      event_id: "event-AWAITING_CLIENT_CONSENT",
+      event_type: "RISK_APPROVED",
+      from_state: "RISK_REVIEW",
+      to_state: "AWAITING_CLIENT_CONSENT",
+      actor_id: "risk_officer_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+    approval: {
+      approval_id: "approval-RISK",
+      approval_type: "RISK",
+      approved: true,
+      actor_id: "risk_officer_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+  } })),
+  approveComplianceMock: vi.fn(async () => ({ data: {
+    proposal_id: "pp-1",
+    current_state: "AWAITING_CLIENT_CONSENT",
+    latest_workflow_event: {
+      event_id: "event-AWAITING_CLIENT_CONSENT",
+      event_type: "COMPLIANCE_APPROVED",
+      from_state: "COMPLIANCE_REVIEW",
+      to_state: "AWAITING_CLIENT_CONSENT",
+      actor_id: "compliance_officer_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+    approval: {
+      approval_id: "approval-COMPLIANCE",
+      approval_type: "COMPLIANCE",
+      approved: true,
+      actor_id: "compliance_officer_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+  } })),
+  recordClientConsentMock: vi.fn(async () => ({ data: {
+    proposal_id: "pp-1",
+    current_state: "EXECUTION_READY",
+    latest_workflow_event: {
+      event_id: "event-EXECUTION_READY",
+      event_type: "CLIENT_CONSENT_RECORDED",
+      from_state: "AWAITING_CLIENT_CONSENT",
+      to_state: "EXECUTION_READY",
+      actor_id: "advisor_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+    approval: {
+      approval_id: "approval-CLIENT_CONSENT",
+      approval_type: "CLIENT_CONSENT",
+      approved: true,
+      actor_id: "advisor_1",
+      occurred_at: "2026-02-22T00:01:00Z",
+    },
+  } })),
   getWorkflowEventsMock: vi.fn(async () => ({
     proposal_id: "pp-1",
     current_state: "DRAFT",
@@ -109,7 +175,7 @@ const {
       {
         event_id: "pwe_1",
         event_type: "CREATED",
-        from_state: null,
+        from_state: null as string | null,
         to_state: "DRAFT",
         actor_id: "advisor_1",
         occurred_at: "2026-02-22T00:00:00Z",
@@ -231,7 +297,7 @@ describe("ProposalDetailView", () => {
         {
           event_id: `event-${state}`,
           event_type: state === "DRAFT" ? "CREATED" : "SUBMITTED_FOR_REVIEW",
-          from_state: null,
+          from_state: null as string | null,
           to_state: state,
           actor_id: "advisor_1",
           occurred_at: "2026-02-22T00:00:00Z",
@@ -261,15 +327,76 @@ describe("ProposalDetailView", () => {
   }
 
   function prepareCoherentActionRefresh(nextState: string, initialState = "DRAFT") {
+    const eventType = nextState === "RISK_REVIEW"
+      ? "SUBMITTED_FOR_RISK_REVIEW"
+      : nextState === "COMPLIANCE_REVIEW"
+        ? "SUBMITTED_FOR_COMPLIANCE_REVIEW"
+        : nextState === "EXECUTION_READY"
+          ? "CLIENT_CONSENT_RECORDED"
+          : initialState === "COMPLIANCE_REVIEW"
+            ? "COMPLIANCE_APPROVED"
+            : "RISK_APPROVED";
+    const actorId = eventType === "RISK_APPROVED"
+      ? "risk_officer_1"
+      : eventType === "COMPLIANCE_APPROVED"
+        ? "compliance_officer_1"
+        : "advisor_1";
+    const approvalType = eventType === "RISK_APPROVED"
+      ? "RISK"
+      : eventType === "COMPLIANCE_APPROVED"
+        ? "COMPLIANCE"
+        : eventType === "CLIENT_CONSENT_RECORDED"
+          ? "CLIENT_CONSENT"
+          : null;
+    const confirmedEvent = {
+      event_id: `event-${nextState}`,
+      event_type: eventType,
+      from_state: initialState,
+      to_state: nextState,
+      actor_id: actorId,
+      occurred_at: "2026-02-22T00:01:00Z",
+    };
     getWorkflowEventsMock
       .mockResolvedValueOnce(workflowEvidence(initialState))
-      .mockResolvedValueOnce(workflowEvidence(nextState));
+      .mockResolvedValueOnce({ ...workflowEvidence(nextState), events: [confirmedEvent] });
     getApprovalsMock
       .mockResolvedValueOnce(approvalsEvidence(initialState))
-      .mockResolvedValueOnce(approvalsEvidence(nextState));
+      .mockResolvedValueOnce({
+        ...approvalsEvidence(nextState),
+        approvals: approvalType ? [{
+          approval_id: `approval-${approvalType}`,
+          approval_type: approvalType,
+          approved: true,
+          actor_id: actorId,
+          occurred_at: "2026-02-22T00:01:00Z",
+        }] : [],
+      });
     getLineageMock
       .mockResolvedValueOnce(lineageEvidence())
       .mockResolvedValueOnce(lineageEvidence());
+  }
+
+  function submitTransitionResponse(
+    currentState = "RISK_REVIEW",
+    proposalId = "pp-1",
+  ) {
+    return {
+      data: {
+        approval: null,
+        proposal_id: proposalId,
+        current_state: currentState,
+        latest_workflow_event: {
+          event_id: `event-${currentState}`,
+          event_type: currentState === "COMPLIANCE_REVIEW"
+            ? "SUBMITTED_FOR_COMPLIANCE_REVIEW"
+            : "SUBMITTED_FOR_RISK_REVIEW",
+          from_state: "DRAFT",
+          to_state: currentState,
+          actor_id: "advisor_1",
+          occurred_at: "2026-02-22T00:01:00Z",
+        },
+      },
+    };
   }
 
   function prepareCoherentVersionRefresh(versionNo = 2) {
@@ -601,7 +728,10 @@ describe("ProposalDetailView", () => {
       () => new Promise((resolve) => {
         completeWorkflowRead = () => resolve(workflowEvidence("DRAFT"));
       })
-    ).mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    ).mockResolvedValueOnce({
+      ...workflowEvidence("RISK_REVIEW"),
+      events: [submitTransitionResponse().data.latest_workflow_event],
+    });
     getApprovalsMock
       .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
       .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
@@ -705,7 +835,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve(submitTransitionResponse());
       })
     );
     getProposalMock
@@ -729,9 +859,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("withholds lifecycle success when the response posture differs from refreshed source truth", async () => {
-    submitProposalMock.mockResolvedValueOnce({
-      data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" },
-    });
+    submitProposalMock.mockResolvedValueOnce(submitTransitionResponse());
     prepareCoherentActionRefresh("COMPLIANCE_REVIEW");
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
@@ -750,9 +878,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("fences a lifecycle response that does not match the requested target state", async () => {
-    submitProposalMock.mockResolvedValueOnce({
-      data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" },
-    });
+    submitProposalMock.mockResolvedValueOnce(submitTransitionResponse("COMPLIANCE_REVIEW"));
     renderWithQueryClient();
 
     const action = await screen.findByRole("button", { name: "Submit for risk review" });
@@ -860,7 +986,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve(submitTransitionResponse());
       })
     );
     prepareCoherentActionRefresh("RISK_REVIEW");
@@ -1073,8 +1199,14 @@ describe("ProposalDetailView", () => {
     getWorkflowEventsMock
       .mockResolvedValueOnce(workflowEvidence("DRAFT"))
       .mockRejectedValueOnce(new Error("workflow refresh failed"))
-      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"))
-      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+      .mockResolvedValueOnce({
+        ...workflowEvidence("RISK_REVIEW"),
+        events: [submitTransitionResponse().data.latest_workflow_event],
+      })
+      .mockResolvedValueOnce({
+        ...workflowEvidence("RISK_REVIEW"),
+        events: [submitTransitionResponse().data.latest_workflow_event],
+      });
     getApprovalsMock
       .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
       .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"))
@@ -1315,6 +1447,28 @@ describe("ProposalDetailView", () => {
     });
   });
 
+  it("confirms compliance with its exact approval record despite the shared target posture", async () => {
+    prepareCoherentActionRefresh("AWAITING_CLIENT_CONSENT", "COMPLIANCE_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("COMPLIANCE_REVIEW"))
+      .mockResolvedValueOnce(proposalDetail("AWAITING_CLIENT_CONSENT"));
+
+    renderWithQueryClient();
+    await clickReadyButton("Approve compliance review");
+
+    await waitFor(() => expect(approveComplianceMock).toHaveBeenCalledWith(
+      "pp-1",
+      expect.objectContaining({
+        actor_id: "compliance_officer_1",
+        expected_state: "COMPLIANCE_REVIEW",
+      }),
+      expect.stringMatching(/^ui-approve-compliance-pp-1-\d+$/),
+    ));
+    expect(await screen.findByTestId("proposal-action-status")).toHaveTextContent(
+      "Compliance review recorded.",
+    );
+  });
+
   it("rejects a created-version response for another proposal before refreshing", async () => {
     createProposalVersionMock.mockResolvedValueOnce({
       data: {
@@ -1394,6 +1548,10 @@ describe("ProposalDetailView", () => {
     expect(screen.getByText("Proposed changes")).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
+    fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
+    expect(screen.getByRole("switch", { name: "Load full evidence bundle" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Load version" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create next version" })).toBeDisabled();
     expect(
       screen.getByText(
         "Proposal actions are unavailable until all review evidence can be confirmed. Reload the proposal to continue."
@@ -1537,7 +1695,7 @@ describe("ProposalDetailView", () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" } });
+        completeSubmission = () => resolve(submitTransitionResponse("COMPLIANCE_REVIEW"));
       })
     );
     getProposalMock
