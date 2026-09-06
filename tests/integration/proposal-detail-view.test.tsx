@@ -711,15 +711,15 @@ describe("ProposalDetailView", () => {
     const previousCallCount = submitProposalMock.mock.calls.length;
     await waitFor(() => expect(action).toBeEnabled());
     fireEvent.click(action);
+    fireEvent.click(action);
+
     await waitFor(() => {
       expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
     });
-    fireEvent.click(action);
-
-    expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
     await waitFor(() => expect(action).toBeDisabled());
     await act(async () => completeSubmission?.());
     await screen.findByTestId("proposal-action-status");
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
   });
 
   it("does not publish success when refreshed sources disagree on proposal posture", async () => {
