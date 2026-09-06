@@ -1115,6 +1115,55 @@ describe("ProposalDetailView", () => {
     });
   });
 
+  it("rejects a created-version response for another proposal before refreshing", async () => {
+    createProposalVersionMock.mockResolvedValueOnce({
+      data: {
+        proposal: {
+          proposal_id: "pp-1",
+          current_state: "DRAFT",
+          current_version_no: 2,
+        },
+        version: {
+          proposal_version_id: "ppv-2",
+          proposal_id: "pp-2",
+          version_no: 2,
+        },
+        latest_workflow_event: {
+          event_id: "pwe-2",
+          event_type: "NEW_VERSION_CREATED",
+          to_state: "DRAFT",
+          actor_id: "advisor_1",
+          occurred_at: "2026-02-22T00:01:00Z",
+        },
+      },
+    });
+    renderWithQueryClient();
+
+    await clickReadyButton("Create next version");
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
+  });
+
+  it("withholds created-version success until refreshed source evidence confirms it", async () => {
+    renderWithQueryClient();
+
+    await clickReadyButton("Create next version");
+
+    expect(
+      await screen.findByText(
+        "The source action returned lineage that does not confirm the newly created proposal version. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
+  });
+
   it("keeps the proposal decision visible when ancillary workflow evidence fails", async () => {
     getWorkflowEventsMock.mockRejectedValueOnce(new Error("workflow unavailable"));
 
