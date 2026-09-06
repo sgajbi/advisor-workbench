@@ -367,15 +367,15 @@ npm run live:validate
 This is the preferred operator path after `npm run live:stack:up` because it keeps service startup
 separate from readiness, browser, and screenshot evidence gathering.
 
-To write demo screenshots to a caller-provided directory:
-
-Here, `<temp-dir>` means a caller-selected temporary directory outside the repository. Replace it
-before running the command.
+To write demo screenshots to a temporary directory outside the repository:
 
 ```powershell
+$screenshotDirectory = Join-Path ([IO.Path]::GetTempPath()) "lotus-risk-module-shots"
 powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1 `
-  -ScreenshotDirectory <temp-dir>\lotus-risk-module-shots
+  -ScreenshotDirectory $screenshotDirectory
 ```
+
+Set `$screenshotDirectory` to another caller-owned path when evidence must be retained elsewhere.
 
 Validation layers:
 
