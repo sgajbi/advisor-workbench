@@ -362,6 +362,7 @@ function PortfolioTransactionsGridBody({
                 onRowSelect?.(params.data!);
               }}
               aria-label={`Review transaction ${params.data.transactionId}`}
+              data-transaction-review-id={params.data.transactionId}
             >
               Review
             </Button>

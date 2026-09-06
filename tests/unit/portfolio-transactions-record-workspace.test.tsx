@@ -27,6 +27,7 @@ vi.mock("ag-grid-react", () => ({
       {rowData.map((row) => (
         <button
           key={row.transactionId}
+          data-transaction-review-id={row.transactionId}
           onClick={() => onRowClicked?.({ data: row })}
         >
           Review {row.transactionId}
@@ -39,13 +40,20 @@ vi.mock("ag-grid-react", () => ({
 vi.mock(
   "../../src/apps/portfolio/components/portfolio-detail-drawer-controller",
   () => ({
-    default: ({ detailDrawer }: { detailDrawer?: MockDetailDrawer | null }) =>
+    default: ({
+      detailDrawer,
+      onClose,
+    }: {
+      detailDrawer?: MockDetailDrawer | null;
+      onClose: () => void;
+    }) =>
       detailDrawer ? (
         <aside>
           <h2>{detailDrawer.title}</h2>
           {detailDrawer.tabs.map((tab) => (
             <React.Fragment key={tab.key}>{tab.content}</React.Fragment>
           ))}
+          <button onClick={onClose}>Close</button>
         </aside>
       ) : null,
   }),
@@ -89,13 +97,23 @@ describe("portfolio transactions record workspace", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Review TX_1" }));
+    const reviewTransactionButton = screen.getByRole("button", {
+      name: "Review TX_1",
+    });
+    reviewTransactionButton.focus();
+    fireEvent.click(reviewTransactionButton);
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
     expect(screen.getAllByText("FXC-2026-0001").length).toBeGreaterThan(0);
     expect(routerPushMock).toHaveBeenCalledWith(
       "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_1",
       { scroll: false },
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Review TX_1" })).toHaveFocus(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_1" }));
 
     fireEvent.click(
       screen.getByRole("button", { name: "Open FX Contract Transactions" }),
