@@ -701,7 +701,11 @@ Current repository posture:
     those exact records, and confirm from their refreshed values. Lifecycle success must bind the
     Gateway response's proposal and resulting state to the same refreshed source posture; version
     creation must advance beyond the pre-command active version. Keep read-only historical lookup
-    outside the persisted-command lock. Do not restore revision-counter
+    outside the persisted-command lock. A persisted command's latest pending, success, or failure
+    state belongs to the stable proposal scope, not the currently mounted mutation observer. Retain
+    it across proposal and route remounts without a time-based eviction window; when a new command
+    of the same kind is admitted, remove its prior settled record so session state stays bounded.
+    Do not restore revision-counter
     queries, revision-suffixed cache identities, or component-owned async token/state machinery.
     Narrative
     review is confirmed from the current-version narrative read; delivery summary and events remain
