@@ -54,10 +54,7 @@ import {
 } from "../proposal-action-error";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
-import {
-  evaluateProposalActionEvidence,
-  ProposalPersistedEvidenceConfirmationError,
-} from "../proposal-action-evidence";
+import { evaluateProposalActionEvidence } from "../proposal-action-evidence";
 import {
   buildProposalDetailReturnHref,
   getProposalDetailReturnTitle,
@@ -147,6 +144,7 @@ function ProposalDetailWorkspace({
     hasPendingCommand,
     lineageQuery,
     persistedCommandCount,
+    persistedConfirmationFailure,
     versionLookupMutation,
     workflowQuery,
   } = useProposalDetailQueryState({ includeEvidence, proposalId, proposalIdValid });
@@ -194,9 +192,7 @@ function ProposalDetailWorkspace({
   );
   const acting = actionMutation.isPending;
   const creatingVersion = createVersionMutation.isPending;
-  const actionEvidenceBlocked =
-    actionMutation.error instanceof ProposalPersistedEvidenceConfirmationError
-    || createVersionMutation.error instanceof ProposalPersistedEvidenceConfirmationError;
+  const actionEvidenceBlocked = persistedConfirmationFailure !== null;
   const actionError = actionMutation.error;
   const error = actionError ? proposalActionFailureCopy(actionError, "advance_proposal") : null;
   const errorSupportEvidence = actionError
