@@ -34,6 +34,9 @@ describe("Portfolio smoke scenario runner", () => {
     expect(packageJson.scripts["test:e2e:portfolio:transactions-status"]).toContain(
       "run-portfolio-smoke-scenario.mjs transactions-status",
     );
+    expect(packageJson.scripts["test:e2e:portfolio:transaction-navigation"]).toContain(
+      "run-portfolio-smoke-scenario.mjs transaction-navigation",
+    );
     expect(packageJson.scripts["test:e2e:portfolio:allocation-recovery"]).toContain(
       "run-portfolio-smoke-scenario.mjs allocation-recovery",
     );

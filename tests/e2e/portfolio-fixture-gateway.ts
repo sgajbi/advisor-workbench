@@ -12,7 +12,8 @@ export type PortfolioFixtureScenario =
   | 'review-context-states'
   | 'shell-unavailable'
   | 'positions-status'
-  | 'transactions-status';
+  | 'transactions-status'
+  | 'transaction-navigation';
 
 export type PortfolioFixtureGateway = {
   close: () => Promise<void>;
@@ -99,14 +100,43 @@ export async function startPortfolioFixtureGateway({
       return;
     }
 
-    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/transactions`) {
-      const transactions =
-        scenario === 'transactions-status' ? buildTransactionSettlementMatrix() : [];
+    const exactTransactionMatch = requestUrl.pathname.match(
+      new RegExp(`^/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/transactions/([^/]+)$`),
+    );
+    if (exactTransactionMatch) {
+      const transactionId = decodeURIComponent(exactTransactionMatch[1] ?? '');
+      const transaction = buildTransactionNavigationLedger().find(
+        (candidate) => candidate.transaction_id === transactionId,
+      );
+      if (scenario !== 'transaction-navigation' || !transaction) {
+        sendJson(response, { detail: { code: 'portfolio_transaction_not_found' } }, 404);
+        return;
+      }
       sendJson(response, {
-        total: transactions.length,
-        skip: 0,
-        limit: 200,
-        transactions,
+        correlation_id: `corr-${transactionId}`,
+        contract_version: 'v1',
+        portfolio_id: PORTFOLIO_ID,
+        reporting_currency: requestUrl.searchParams.get('reporting_currency'),
+        transaction,
+        reason_codes: ['TRANSACTION_LEDGER_READY'],
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === `/api/v1/portfolio/portfolios/${PORTFOLIO_ID}/transactions`) {
+      const allTransactions =
+        scenario === 'transactions-status'
+          ? buildTransactionSettlementMatrix()
+          : scenario === 'transaction-navigation'
+            ? buildTransactionNavigationLedger()
+            : [];
+      const skip = Number.parseInt(requestUrl.searchParams.get('skip') ?? '0', 10);
+      const limit = Number.parseInt(requestUrl.searchParams.get('limit') ?? '200', 10);
+      sendJson(response, {
+        total: allTransactions.length,
+        skip,
+        limit,
+        transactions: allTransactions.slice(skip, skip + limit),
       });
       return;
     }
@@ -774,6 +804,24 @@ function buildTransactionSettlementMatrix() {
       settlement_status: null,
     },
   ];
+}
+
+function buildTransactionNavigationLedger() {
+  return Array.from({ length: 201 }, (_, index) => ({
+    transaction_id: index === 200 ? 'TX_PAGE_201' : `TX_PAGE_${String(index + 1).padStart(3, '0')}`,
+    transaction_date: '2026-04-09T00:00:00Z',
+    settlement_date: '2026-04-11T00:00:00Z',
+    transaction_type: index === 200 ? 'SELL' : 'BUY',
+    component_type: 'TRADE',
+    security_id: `SEC_${index + 1}`,
+    instrument_id: index === 200 ? 'Global Equity Rebalance' : `Instrument ${index + 1}`,
+    quantity: index + 1,
+    gross_amount: (index + 1) * 100,
+    currency: 'USD',
+    net_cost_base: (index + 1) * 100,
+    settlement_status: 'SETTLED',
+    source_system: 'CORE_LEDGER',
+  }));
 }
 
 function buildPerformanceResponse({

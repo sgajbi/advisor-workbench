@@ -76,6 +76,13 @@
           "expected_tests": [
             "transactions keep settlement applicability truthful across screen, detail, export, and evidence"
           ]
+        },
+        "transaction-navigation": {
+          "fixture_value": "transaction-navigation",
+          "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
+          "expected_tests": [
+            "transaction deep links survive reload and browser history beyond the first ledger page"
+          ]
         }
       }
     },

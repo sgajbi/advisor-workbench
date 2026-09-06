@@ -40,7 +40,8 @@ const OWNED_E2E_FIXTURE_GATEWAYS = [
       "review-context-states",
       "shell-unavailable",
       "positions-status",
-      "transactions-status",
+        "transactions-status",
+        "transaction-navigation",
     ]),
   },
   {
