@@ -2,9 +2,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getPortfolioTransactionRecord } from "../../src/apps/portfolio/api";
 import { parsePortfolioTransactionRecord } from "../../src/apps/portfolio/portfolio-transaction-record";
+import {
+  getAnalyticsUiMetricEvents,
+  resetAnalyticsUiMetricEvents,
+} from "../../src/features/analytics-observability/metrics";
 
 describe("exact portfolio transaction record", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetAnalyticsUiMetricEvents();
+  });
 
   it("requests and accepts only the addressed source record", async () => {
     const fetchMock = vi.fn(async () => jsonResponse(buildRecord("TX_250")));
@@ -101,6 +108,55 @@ describe("exact portfolio transaction record", () => {
       );
     },
   );
+
+  it("preserves cancellation while the exact response body is being decoded", async () => {
+    const controller = new AbortController();
+    const cancellation = new DOMException("Exact record request cancelled", "AbortError");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => {
+          controller.abort(cancellation);
+          throw cancellation;
+        },
+      })),
+    );
+
+    await expect(
+      getPortfolioTransactionRecord("PB_SG_GLOBAL_BAL_001", "TX_250", {
+        asOfDate: "2026-08-21",
+        reportingCurrency: "SGD",
+        signal: controller.signal,
+      }),
+    ).rejects.toBe(cancellation);
+    expect(getAnalyticsUiMetricEvents()).toEqual([]);
+  });
+
+  it("preserves cancellation while the exact error body is being decoded", async () => {
+    const controller = new AbortController();
+    const cancellation = new DOMException("Exact record request cancelled", "AbortError");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        status: 502,
+        json: async () => {
+          controller.abort(cancellation);
+          throw cancellation;
+        },
+      })),
+    );
+
+    await expect(
+      getPortfolioTransactionRecord("PB_SG_GLOBAL_BAL_001", "TX_250", {
+        asOfDate: "2026-08-21",
+        reportingCurrency: "SGD",
+        signal: controller.signal,
+      }),
+    ).rejects.toBe(cancellation);
+    expect(getAnalyticsUiMetricEvents()).toEqual([]);
+  });
 });
 
 function buildRecord(transactionId: string) {
