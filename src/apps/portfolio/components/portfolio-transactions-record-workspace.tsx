@@ -3,8 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import Button from "@mui/material/Button";
-
+import { ActionButton, SourceRefreshAction } from "@/design-system";
 import type {
   PortfolioTransactionDrilldownFilter,
   PortfolioWorkspace,
@@ -62,13 +61,14 @@ export default function PortfolioTransactionsRecordWorkspace({
       : (initialTransactionRows.find(
           (transaction) => transaction.transactionId === selectedRecordId,
         ) ?? null);
+  const exactRecordQueryKey = portfolioQueryKeys.transactionRecord(
+    workspace.portfolio.portfolio_id,
+    selectedRecordId ?? "unselected",
+    asOfDate,
+    reportingCurrency,
+  );
   const exactRecordQuery = useQuery({
-    queryKey: portfolioQueryKeys.transactionRecord(
-      workspace.portfolio.portfolio_id,
-      selectedRecordId ?? "unselected",
-      asOfDate,
-      reportingCurrency,
-    ),
+    queryKey: exactRecordQueryKey,
     queryFn: ({ signal }) =>
       getPortfolioTransactionRecord(
         workspace.portfolio.portfolio_id,
@@ -77,6 +77,8 @@ export default function PortfolioTransactionsRecordWorkspace({
       ),
     enabled: Boolean(selectedRecordId && !localTransaction),
     retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
   const exactTransactionRow = useMemo(() => {
     const transaction = exactRecordQuery.data?.transaction;
@@ -187,7 +189,10 @@ export default function PortfolioTransactionsRecordWorkspace({
       {selectedRecordId && !selectedTransaction && exactRecordQuery.isError ? (
         <TransactionRecordFailureState
           error={exactRecordQuery.error}
+          isRetrying={exactRecordQuery.isFetching}
+          onRetry={() => exactRecordQuery.refetch()}
           onClear={handleCloseRecord}
+          refreshScope={JSON.stringify(exactRecordQueryKey)}
         />
       ) : null}
       <PortfolioTransactionsGrid
@@ -212,19 +217,34 @@ export default function PortfolioTransactionsRecordWorkspace({
 
 function TransactionRecordFailureState({
   error,
+  isRetrying,
+  onRetry,
   onClear,
+  refreshScope,
 }: {
   error: Error;
+  isRetrying: boolean;
+  onRetry: () => Promise<unknown>;
   onClear: () => void;
+  refreshScope: string;
 }) {
   const failure =
     error instanceof PortfolioTransactionRecordError
       ? error.failure
       : "unavailable";
   const action = (
-    <Button size="small" variant="outlined" onClick={onClear}>
-      Clear transaction review
-    </Button>
+    <>
+      <SourceRefreshAction
+        refreshScope={refreshScope}
+        idleLabel="Retry transaction"
+        busyLabel="Retrying transaction"
+        isRefreshing={isRetrying}
+        onRefresh={onRetry}
+      />
+      <ActionButton priority="quiet" onClick={onClear}>
+        Clear transaction review
+      </ActionButton>
+    </>
   );
   switch (failure) {
     case "not_found":
