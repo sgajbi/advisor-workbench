@@ -182,6 +182,30 @@ describe("proposal action evidence", () => {
     })).toThrow("does not contain its exact workflow or approval record");
   });
 
+  it("retains exact action proof when coherent source posture has advanced", () => {
+    const confirmation = confirmProposalTransitionResponse(riskResponse(), riskIntent);
+    const current = evidence();
+    current.detail.proposal.current_state = "EXECUTION_READY";
+    current.workflow.current_state = "EXECUTION_READY";
+    current.approvals.current_state = "EXECUTION_READY";
+    const advancedEvidence = {
+      ...current,
+      approvals: { ...current.approvals, approvals: [riskResponse().data.approval] },
+      workflow: { ...current.workflow, events: [riskResponse().data.latest_workflow_event] },
+    };
+
+    expect(confirmRefreshedProposalActionEvidence({
+      approvals: advancedEvidence.approvals,
+      confirmation,
+      expectedProposalId: "proposal-1",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      lineage: current.lineage,
+      previousState: "RISK_REVIEW",
+      proposalDetail: current.detail,
+      workflow: advancedEvidence.workflow,
+    })).toBe("EXECUTION_READY");
+  });
+
   it("accepts source evidence only when proposal, posture, and active version agree", () => {
     expect(evaluateProposalActionEvidence({
       ...evidence(),

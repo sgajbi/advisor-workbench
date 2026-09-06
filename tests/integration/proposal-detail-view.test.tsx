@@ -858,7 +858,7 @@ describe("ProposalDetailView", () => {
     expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
   });
 
-  it("withholds lifecycle success when the response posture differs from refreshed source truth", async () => {
+  it("withholds lifecycle success when refreshed history omits the exact returned event", async () => {
     submitProposalMock.mockResolvedValueOnce(submitTransitionResponse());
     prepareCoherentActionRefresh("COMPLIANCE_REVIEW");
     getProposalMock
@@ -870,11 +870,54 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
+        "The source action returned, but the refreshed review history does not contain its exact workflow or approval record. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve compliance review" })).toBeDisabled();
+  });
+
+  it("confirms the exact submitted event after source posture advances again", async () => {
+    const submittedEvent = submitTransitionResponse().data.latest_workflow_event;
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("AWAITING_CLIENT_CONSENT"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce({
+        ...workflowEvidence("AWAITING_CLIENT_CONSENT"),
+        events: [submittedEvent, {
+          event_id: "event-risk-approved",
+          event_type: "RISK_APPROVED",
+          from_state: "RISK_REVIEW",
+          to_state: "AWAITING_CLIENT_CONSENT",
+          actor_id: "risk_officer_1",
+          occurred_at: "2026-02-22T00:02:00Z",
+        }],
+      });
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce({
+        ...approvalsEvidence("AWAITING_CLIENT_CONSENT"),
+        approvals: [{
+          approval_id: "approval-risk-later",
+          approval_type: "RISK",
+          approved: true,
+          actor_id: "risk_officer_1",
+          occurred_at: "2026-02-22T00:02:00Z",
+        }],
+      });
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+    renderWithQueryClient();
+
+    await clickReadyButton("Submit for risk review");
+
+    expect(await screen.findByTestId("proposal-action-status")).toHaveTextContent(
+      "Proposal submitted for risk review.",
+    );
+    expect(screen.getByRole("button", { name: "Record client consent" })).toBeEnabled();
   });
 
   it("fences a lifecycle response that does not match the requested target state", async () => {
@@ -1771,6 +1814,23 @@ describe("ProposalDetailView", () => {
     ).toBeInTheDocument();
     fireEvent.click(returnedAction);
     expect(submitProposalMock).toHaveBeenCalledTimes(actionCallCount);
+  });
+
+  it("keeps investigative reads available when recovery storage is invalid", async () => {
+    window.sessionStorage.setItem(
+      "lotus:proposal-command-recovery:pp-1",
+      "{not-valid-json",
+    );
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    await waitFor(() => expect(action).toBeDisabled());
+    fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
+
+    expect(screen.getByRole("switch", { name: "Load full evidence bundle" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Load version" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create next version" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
   });
 
   it("retains refreshed version evidence across proposal and route transitions", async () => {
