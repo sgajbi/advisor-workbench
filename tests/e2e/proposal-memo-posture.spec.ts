@@ -525,7 +525,7 @@ async function mockProposalDetail(
       json: {
         correlation_id: "corr-submit",
         contract_version: "v1",
-        data: { current_state: sourceState },
+        data: { proposal_id: "pp_1", current_state: sourceState },
       },
     });
   });
