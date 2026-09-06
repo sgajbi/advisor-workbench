@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Alert,
   CircularProgress,
@@ -12,16 +11,9 @@ import {
 import {
   approveCompliance,
   approveRisk,
-  createProposalVersion,
-  getProposal,
-  getProposalApprovals,
-  getProposalLineage,
-  getProposalVersion,
-  getProposalWorkflowEvents,
   recordClientConsent,
   submitProposal,
 } from "../api";
-import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
   isQuerySourceSettledAndAvailable,
   projectQuerySourcePosture,
@@ -44,7 +36,6 @@ import {
   ProposalApprovalsData,
   ProposalDetailData,
   ProposalLineageData,
-  ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "../types";
 import ProposalNarrativePosturePanel from "./proposal-narrative-posture-panel";
@@ -58,16 +49,14 @@ import {
   proposalStageLabel,
 } from "../proposal-workflow-copy";
 import {
-  ProposalActionBusinessError,
   proposalActionFailureCopy,
   proposalActionFailureSupportEvidence,
-  type ProposalActionSupportEvidence,
 } from "../proposal-action-error";
 import ProposalAdvisoryWorkspace from "./proposal-advisory-workspace";
 import { buildProposalDetailEvidenceModel } from "../proposal-detail-evidence-view-model";
 import {
-  confirmRefreshedProposalActionEvidence,
   evaluateProposalActionEvidence,
+  ProposalPersistedEvidenceConfirmationError,
 } from "../proposal-action-evidence";
 import {
   buildProposalDetailReturnHref,
@@ -85,7 +74,7 @@ import {
   ProposalLineageAuditPanel,
   ProposalReviewHistoryPanel,
 } from "./proposal-detail-domain-panels";
-import { proposalDetailQueryKeys } from "../proposal-detail-query-keys";
+import { useProposalDetailQueryState } from "../use-proposal-detail-query-state";
 
 type Props = {
   proposalId: string;
@@ -127,7 +116,6 @@ function ProposalDetailWorkspace({
   returnMode,
   returnSourceWindow,
 }: Props) {
-  const queryClient = useQueryClient();
   const fallbackReturnHref =
     returnPortfolioId && returnMode
       ? buildProposalDetailReturnHref({
@@ -146,59 +134,22 @@ function ProposalDetailWorkspace({
         portfolioId: returnPortfolioId,
       })
     : null;
-  const [acting, setActing] = useState(false);
-  const [actionEvidenceBlocked, setActionEvidenceBlocked] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [errorSupportEvidence, setErrorSupportEvidence] = useState<
-    ProposalActionSupportEvidence | null
-  >(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [reviewMode, setReviewMode] = useState<ProposalReviewMode>("narrative");
   const [includeEvidence, setIncludeEvidence] = useState(false);
   const [versionLookupNo, setVersionLookupNo] = useState<number>(1);
-  const [versionLookup, setVersionLookup] = useState<ProposalVersionData | null>(null);
-  const [versionActionError, setVersionActionError] = useState<string | null>(null);
-  const [versionActionErrorSupportEvidence, setVersionActionErrorSupportEvidence] = useState<
-    ProposalActionSupportEvidence | null
-  >(null);
-  const [creatingVersion, setCreatingVersion] = useState(false);
-  const [createdVersionNo, setCreatedVersionNo] = useState<number | null>(null);
-  const activeActionRef = useRef<{ proposalId: string; token: symbol } | null>(null);
-  const actionEvidenceBlockedRef = useRef(false);
-  const activeVersionCreationRef = useRef<{ proposalId: string; token: symbol } | null>(null);
-  const detailContextTransitionRef = useRef(false);
 
   const proposalIdValid = isValidProposalId(proposalId);
-  const queryKey = useMemo(
-    () => proposalDetailQueryKeys.detail(proposalId, includeEvidence),
-    [proposalId, includeEvidence]
-  );
-  const detailQuery = useQuery({
-    queryKey,
-    queryFn: async () => await getProposal(proposalId, includeEvidence),
-    enabled: proposalIdValid,
-    placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[2] === proposalId ? previousData : undefined,
-    ...workbenchStrictQueryDefaults,
-  });
-  const workflowQuery = useQuery({
-    queryKey: proposalDetailQueryKeys.workflow(proposalId),
-    queryFn: async () => await getProposalWorkflowEvents(proposalId),
-    enabled: !!detailQuery.data?.proposal,
-    ...workbenchStrictQueryDefaults,
-  });
-  const approvalsQuery = useQuery({
-    queryKey: proposalDetailQueryKeys.approvals(proposalId),
-    queryFn: async () => await getProposalApprovals(proposalId),
-    enabled: !!detailQuery.data?.proposal,
-    ...workbenchStrictQueryDefaults,
-  });
-  const lineageQuery = useQuery({
-    queryKey: proposalDetailQueryKeys.lineage(proposalId),
-    queryFn: async () => await getProposalLineage(proposalId),
-    enabled: !!detailQuery.data?.proposal,
-    ...workbenchStrictQueryDefaults,
-  });
+  const {
+    actionMutation,
+    approvalsQuery,
+    createVersionMutation,
+    detailQuery,
+    hasPendingCommand,
+    lineageQuery,
+    persistedCommandCount,
+    versionLookupMutation,
+    workflowQuery,
+  } = useProposalDetailQueryState({ includeEvidence, proposalId, proposalIdValid });
   const workflowSourcePosture = projectQuerySourcePosture({
     hasData: Boolean(workflowQuery.data),
     isLoading: workflowQuery.isLoading || (!workflowQuery.data && !workflowQuery.error),
@@ -238,11 +189,31 @@ function ProposalDetailWorkspace({
     workflow: workflowQuery.data,
   });
   const actionSourcesReady = actionSourcesTransportReady && currentEvidenceAgreement.issue === null;
-  const detailSourceReady = isQuerySourceSettledAndAvailable(detailSourcePosture);
   const actionSourcesChecking = actionSourcePostures.some(
     (posture) => posture.isInitialLoading || posture.isRefreshing
   );
-  const actionDisabled = acting || creatingVersion || actionEvidenceBlocked || !actionSourcesReady;
+  const acting = actionMutation.isPending;
+  const creatingVersion = createVersionMutation.isPending;
+  const actionEvidenceBlocked =
+    actionMutation.error instanceof ProposalPersistedEvidenceConfirmationError
+    || createVersionMutation.error instanceof ProposalPersistedEvidenceConfirmationError;
+  const actionError = actionMutation.error;
+  const error = actionError ? proposalActionFailureCopy(actionError, "advance_proposal") : null;
+  const errorSupportEvidence = actionError
+    ? proposalActionFailureSupportEvidence(actionError)
+    : null;
+  const actionMessage = actionMutation.data ?? null;
+  const versionError = createVersionMutation.error ?? versionLookupMutation.error;
+  const versionActionError = versionError
+    ? proposalActionFailureCopy(
+        versionError,
+        createVersionMutation.error ? "create_version" : "load_version",
+      )
+    : null;
+  const versionActionErrorSupportEvidence = versionError
+    ? proposalActionFailureSupportEvidence(versionError)
+    : null;
+  const actionDisabled = persistedCommandCount > 0 || actionEvidenceBlocked || !actionSourcesReady;
   const actionDisabledReason = actionEvidenceBlocked
     ? "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
     : acting
@@ -257,88 +228,27 @@ function ProposalDetailWorkspace({
           ? "Proposal actions are unavailable because current detail, workflow, approvals, and version lineage do not agree. Reload the proposal to continue."
         : undefined;
 
-  useEffect(() => {
-    if (
-      detailContextTransitionRef.current
-      && detailSourceReady
-      && detailQuery.data?.proposal?.proposal_id === proposalId
-    ) {
-      detailContextTransitionRef.current = false;
-    }
-  }, [detailQuery.data?.proposal?.proposal_id, detailSourceReady, proposalId]);
-
-  async function refreshActionEvidence(
-    previousState: string,
-    expectedProposalId: string,
-  ): Promise<string> {
-    const [detailResult, workflowResult, approvalsResult, lineageResult] = await Promise.all([
-      detailQuery.refetch(),
-      workflowQuery.refetch(),
-      approvalsQuery.refetch(),
-      lineageQuery.refetch(),
-    ]);
-    if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
-      throw new ProposalActionBusinessError(
-        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
-      );
-    }
-    return confirmRefreshedProposalActionEvidence({
-      approvals: approvalsResult.data,
-      detail: detailResult.data,
-      expectedProposalId,
-      lineage: lineageResult.data,
-      previousState,
-      workflow: workflowResult.data,
-    });
-  }
-
-  async function runProposalAction(
+  function runProposalAction(
     action: () => Promise<unknown>,
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
     if (
       !previousState
-      || activeActionRef.current
-      || activeVersionCreationRef.current
-      || detailContextTransitionRef.current
-      || actionEvidenceBlockedRef.current
+      || hasPendingCommand()
       || !actionSourcesReady
-    ) return;
-    const actionContext = { proposalId, token: Symbol("proposal-action") };
-    activeActionRef.current = actionContext;
-    setActing(true);
-    setError(null);
-    setErrorSupportEvidence(null);
-    setActionMessage(null);
-    let sourceActionCompleted = false;
-    try {
-      await action();
-      sourceActionCompleted = true;
-      const refreshedState = await refreshActionEvidence(previousState, actionContext.proposalId);
-      if (activeActionRef.current?.token !== actionContext.token) return;
-      setActionMessage(`${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`);
-    } catch (err) {
-      if (activeActionRef.current?.token !== actionContext.token) return;
-      if (sourceActionCompleted) {
-        actionEvidenceBlockedRef.current = true;
-        setActionEvidenceBlocked(true);
-      }
-      setError(proposalActionFailureCopy(err, "advance_proposal"));
-      setErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
-    } finally {
-      if (activeActionRef.current?.token === actionContext.token) {
-        activeActionRef.current = null;
-        setActing(false);
-      }
+      || actionEvidenceBlocked
+    ) {
+      return;
     }
+    actionMutation.mutate({ action, previousState, successPrefix });
   }
 
-  async function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
+  function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    await runProposalAction(async () => {
+    runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, `submit-${reviewType.toLowerCase()}`);
       await submitProposal(proposalId, {
         actor_id: "advisor_1",
@@ -349,11 +259,11 @@ function ProposalDetailWorkspace({
     }, `Proposal submitted for ${reviewType === "RISK" ? "risk" : "compliance"} review.`);
   }
 
-  async function onApproveRisk() {
+  function onApproveRisk() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    await runProposalAction(async () => {
+    runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-risk");
       await approveRisk(proposalId, {
         actor_id: "risk_officer_1",
@@ -363,11 +273,11 @@ function ProposalDetailWorkspace({
     }, "Risk review recorded.");
   }
 
-  async function onApproveCompliance() {
+  function onApproveCompliance() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    await runProposalAction(async () => {
+    runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-compliance");
       await approveCompliance(proposalId, {
         actor_id: "compliance_officer_1",
@@ -377,11 +287,11 @@ function ProposalDetailWorkspace({
     }, "Compliance review recorded.");
   }
 
-  async function onRecordClientConsent() {
+  function onRecordClientConsent() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    await runProposalAction(async () => {
+    runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "record-client-consent");
       await recordClientConsent(proposalId, {
         actor_id: "advisor_1",
@@ -402,31 +312,22 @@ function ProposalDetailWorkspace({
     );
   }
 
-  async function onLoadVersion() {
+  function onLoadVersion() {
     if (
-      activeActionRef.current
-      || activeVersionCreationRef.current
-      || detailContextTransitionRef.current
+      hasPendingCommand()
+      || versionLookupMutation.isPending
+      || actionEvidenceBlocked
     ) {
       return;
     }
-    setVersionActionError(null);
-    setVersionActionErrorSupportEvidence(null);
-    try {
-      const data = await getProposalVersion(proposalId, versionLookupNo, includeEvidence);
-      setVersionLookup(data);
-    } catch (err) {
-      setVersionActionError(proposalActionFailureCopy(err, "load_version"));
-      setVersionActionErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
-    }
+    createVersionMutation.reset();
+    versionLookupMutation.mutate({ includeEvidence, versionNo: versionLookupNo });
   }
 
-  async function onCreateNextVersion() {
+  function onCreateNextVersion() {
     if (
-      activeActionRef.current
-      || activeVersionCreationRef.current
-      || detailContextTransitionRef.current
-      || actionEvidenceBlockedRef.current
+      hasPendingCommand()
+      || actionEvidenceBlocked
       || !actionSourcesReady
     ) {
       return;
@@ -436,52 +337,12 @@ function ProposalDetailWorkspace({
       | undefined;
     const simulateRequest = (currentVersionData?.simulate_request as Record<string, unknown> | undefined) ?? null;
     if (!simulateRequest) {
-      setVersionActionError(
-        "Current proposal evidence does not include the source inputs required to create a new version. Refresh the full evidence record before trying again."
-      );
-      setVersionActionErrorSupportEvidence(null);
+      versionLookupMutation.reset();
+      createVersionMutation.mutate(null);
       return;
     }
-    const versionContext = { proposalId, token: Symbol("proposal-version") };
-    activeVersionCreationRef.current = versionContext;
-    setVersionActionError(null);
-    setVersionActionErrorSupportEvidence(null);
-    setCreatingVersion(true);
-    setCreatedVersionNo(null);
-    try {
-      const idempotencyKey = `ui-version-${proposalId}-${Date.now()}`;
-      const response = await createProposalVersion(
-        proposalId,
-        {
-          body: {
-            created_by: "advisor_1",
-            simulate_request: simulateRequest,
-          },
-        },
-        idempotencyKey
-      );
-      if (activeVersionCreationRef.current?.token !== versionContext.token) {
-        return;
-      }
-      const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
-      const currentVersionNo = (proposalData?.current_version_no as number | undefined) ?? undefined;
-      setCreatedVersionNo(currentVersionNo ?? null);
-      detailContextTransitionRef.current = true;
-      await queryClient.invalidateQueries({
-        queryKey: proposalDetailQueryKeys.proposal(proposalId),
-      });
-    } catch (err) {
-      if (activeVersionCreationRef.current?.token !== versionContext.token) {
-        return;
-      }
-      setVersionActionError(proposalActionFailureCopy(err, "create_version"));
-      setVersionActionErrorSupportEvidence(proposalActionFailureSupportEvidence(err));
-    } finally {
-      if (activeVersionCreationRef.current?.token === versionContext.token) {
-        activeVersionCreationRef.current = null;
-        setCreatingVersion(false);
-      }
-    }
+    versionLookupMutation.reset();
+    createVersionMutation.mutate(simulateRequest);
   }
 
   const queryError = detailQuery.error;
@@ -754,20 +615,19 @@ function ProposalDetailWorkspace({
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
             controlsDisabled={
-              acting
-              || creatingVersion
+              persistedCommandCount > 0
+              || versionLookupMutation.isPending
               || actionEvidenceBlocked
               || !actionSourcesReady
             }
             onIncludeEvidenceChange={(value) => {
               if (
-                !activeActionRef.current
-                && !activeVersionCreationRef.current
-                && !detailContextTransitionRef.current
-                && !actionEvidenceBlockedRef.current
+                persistedCommandCount === 0
+                && !versionLookupMutation.isPending
+                && !actionEvidenceBlocked
                 && actionSourcesReady
               ) {
-                detailContextTransitionRef.current = true;
+                versionLookupMutation.reset();
                 setIncludeEvidence(value);
               }
             }}
@@ -776,8 +636,8 @@ function ProposalDetailWorkspace({
             onLoadVersion={() => void onLoadVersion()}
             onCreateNextVersion={() => void onCreateNextVersion()}
             creatingVersion={creatingVersion}
-            createdVersionNo={createdVersionNo}
-            versionLookup={versionLookup}
+            createdVersionNo={createVersionMutation.data ?? null}
+            versionLookup={versionLookupMutation.data ?? null}
             versionActionError={versionActionError}
             versionActionErrorSupportEvidence={versionActionErrorSupportEvidence}
           />

@@ -1,0 +1,195 @@
+"use client";
+
+import {
+  useIsMutating,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+
+import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
+import {
+  createProposalVersion,
+  getProposal,
+  getProposalApprovals,
+  getProposalLineage,
+  getProposalVersion,
+  getProposalWorkflowEvents,
+} from "./api";
+import { ProposalActionBusinessError } from "./proposal-action-error";
+import {
+  confirmRefreshedProposalActionEvidence,
+  confirmRefreshedProposalVersionEvidence,
+  ProposalPersistedEvidenceConfirmationError,
+} from "./proposal-action-evidence";
+import {
+  proposalDetailCommandScope,
+  proposalDetailMutationKeys,
+  proposalDetailQueryKeys,
+} from "./proposal-detail-query-keys";
+import { proposalStageDescription } from "./proposal-workflow-copy";
+
+type LifecycleActionVariables = Readonly<{
+  action: () => Promise<unknown>;
+  previousState: string;
+  successPrefix: string;
+}>;
+
+function persistedConfirmationError(error: unknown) {
+  const message = error instanceof Error
+    ? error.message
+    : "The source action completed, but refreshed review evidence could not be confirmed.";
+  return new ProposalPersistedEvidenceConfirmationError(message);
+}
+
+export function useProposalDetailQueryState({
+  includeEvidence,
+  proposalId,
+  proposalIdValid,
+}: {
+  includeEvidence: boolean;
+  proposalId: string;
+  proposalIdValid: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const detailQuery = useQuery({
+    queryKey: proposalDetailQueryKeys.detail(proposalId, includeEvidence),
+    queryFn: async () => await getProposal(proposalId, includeEvidence),
+    enabled: proposalIdValid,
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery?.queryKey[2] === proposalId ? previousData : undefined,
+    ...workbenchStrictQueryDefaults,
+  });
+  const workflowQuery = useQuery({
+    queryKey: proposalDetailQueryKeys.workflow(proposalId),
+    queryFn: async () => await getProposalWorkflowEvents(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    ...workbenchStrictQueryDefaults,
+  });
+  const approvalsQuery = useQuery({
+    queryKey: proposalDetailQueryKeys.approvals(proposalId),
+    queryFn: async () => await getProposalApprovals(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    ...workbenchStrictQueryDefaults,
+  });
+  const lineageQuery = useQuery({
+    queryKey: proposalDetailQueryKeys.lineage(proposalId),
+    queryFn: async () => await getProposalLineage(proposalId),
+    enabled: !!detailQuery.data?.proposal,
+    ...workbenchStrictQueryDefaults,
+  });
+
+  async function refreshProposalEvidence() {
+    await queryClient.invalidateQueries({
+      queryKey: proposalDetailQueryKeys.proposal(proposalId),
+      refetchType: "none",
+    });
+    const [detailResult, workflowResult, approvalsResult, lineageResult] = await Promise.all([
+      detailQuery.refetch(),
+      workflowQuery.refetch(),
+      approvalsQuery.refetch(),
+      lineageQuery.refetch(),
+    ]);
+    if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
+      throw new ProposalActionBusinessError(
+        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing.",
+      );
+    }
+    return {
+      approvals: approvalsResult.data,
+      detail: detailResult.data,
+      lineage: lineageResult.data,
+      workflow: workflowResult.data,
+    };
+  }
+
+  const actionMutation = useMutation({
+    mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
+    scope: { id: proposalDetailCommandScope(proposalId) },
+    mutationFn: async ({ action, previousState, successPrefix }: LifecycleActionVariables) => {
+      await action();
+      try {
+        const refreshed = await refreshProposalEvidence();
+        const refreshedState = confirmRefreshedProposalActionEvidence({
+          ...refreshed,
+          expectedProposalId: proposalId,
+          previousState,
+        });
+        return `${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`;
+      } catch (error) {
+        throw persistedConfirmationError(error);
+      }
+    },
+  });
+
+  const createVersionMutation = useMutation({
+    mutationKey: proposalDetailMutationKeys.createVersion(proposalId),
+    scope: { id: proposalDetailCommandScope(proposalId) },
+    mutationFn: async (simulateRequest: Record<string, unknown> | null) => {
+      if (!simulateRequest) {
+        throw new ProposalActionBusinessError(
+          "Current proposal evidence does not include the source inputs required to create a new version. Refresh the full evidence record before trying again.",
+        );
+      }
+      const response = await createProposalVersion(
+        proposalId,
+        {
+          body: {
+            created_by: "advisor_1",
+            simulate_request: simulateRequest,
+          },
+        },
+        `ui-version-${proposalId}-${Date.now()}`,
+      );
+      const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
+      const expectedVersionNo = proposalData?.current_version_no;
+      if (typeof expectedVersionNo !== "number" || !Number.isInteger(expectedVersionNo)) {
+        throw new ProposalPersistedEvidenceConfirmationError(
+          "The source action completed, but did not identify the newly created proposal version. Reload the proposal before continuing.",
+        );
+      }
+      try {
+        const refreshed = await refreshProposalEvidence();
+        return confirmRefreshedProposalVersionEvidence({
+          ...refreshed,
+          expectedProposalId: proposalId,
+          expectedVersionNo,
+        });
+      } catch (error) {
+        throw persistedConfirmationError(error);
+      }
+    },
+  });
+
+  const versionLookupMutation = useMutation({
+    mutationKey: proposalDetailMutationKeys.loadVersion(proposalId),
+    mutationFn: async ({
+      includeEvidence: requestedEvidence,
+      versionNo,
+    }: {
+      includeEvidence: boolean;
+      versionNo: number;
+    }) => await getProposalVersion(proposalId, versionNo, requestedEvidence),
+  });
+  const persistedCommandCount = useIsMutating({
+    mutationKey: proposalDetailMutationKeys.all(proposalId),
+  });
+
+  function hasPendingCommand(): boolean {
+    return queryClient.isMutating({
+      mutationKey: proposalDetailMutationKeys.all(proposalId),
+    }) > 0;
+  }
+
+  return {
+    actionMutation,
+    approvalsQuery,
+    createVersionMutation,
+    detailQuery,
+    hasPendingCommand,
+    lineageQuery,
+    persistedCommandCount,
+    versionLookupMutation,
+    workflowQuery,
+  };
+}
