@@ -71,6 +71,10 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
   Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
   until all four refreshed sources agree; refresh never creates a parallel revision cache.
+- Keeps the latest lifecycle or version command's progress and outcome with its proposal when the
+  advisor opens another record and returns. An uncertain command therefore remains visibly fenced
+  instead of becoming available for accidental resubmission; a later admitted command of the same
+  kind replaces the prior settled message.
 - Keeps read-only historical-version lookup outside the persisted-command lock, so inspecting an
   earlier record does not block an otherwise admitted lifecycle decision.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
