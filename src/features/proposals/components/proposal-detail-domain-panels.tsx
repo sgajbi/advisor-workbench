@@ -25,6 +25,9 @@ export function ProposalAdvisorActionsPanel({
   stageItems,
   actionDisabled,
   actionDisabledReason,
+  recoveryActionAvailable,
+  recoveryActionPending,
+  onRecoverPersistedCommand,
   onSubmitForRiskReview,
   onSubmitForComplianceReview,
   onApproveRisk,
@@ -36,6 +39,9 @@ export function ProposalAdvisorActionsPanel({
   stageItems: ProposalDetailStageItem[];
   actionDisabled: boolean;
   actionDisabledReason?: string;
+  recoveryActionAvailable: boolean;
+  recoveryActionPending: boolean;
+  onRecoverPersistedCommand: () => void;
   onSubmitForRiskReview: () => void;
   onSubmitForComplianceReview: () => void;
   onApproveRisk: () => void;
@@ -55,6 +61,16 @@ export function ProposalAdvisorActionsPanel({
         <Alert severity="info" sx={{ py: 0, alignItems: "center" }}>
           {actionDisabledReason}
         </Alert>
+      ) : null}
+      {recoveryActionAvailable ? (
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={onRecoverPersistedCommand}
+          disabled={recoveryActionPending}
+        >
+          {recoveryActionPending ? "Rechecking earlier action..." : "Recheck earlier action"}
+        </Button>
       ) : null}
       <div className={detailStyles.stageList}>
         {stageItems.map((stage) => (

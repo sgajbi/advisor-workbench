@@ -9,12 +9,6 @@ import {
 } from "@mui/material";
 
 import {
-  approveCompliance,
-  approveRisk,
-  recordClientConsent,
-  submitProposal,
-} from "../api";
-import {
   isQuerySourceSettledAndAvailable,
   projectQuerySourcePosture,
   querySourceAvailability,
@@ -72,6 +66,7 @@ import {
   ProposalReviewHistoryPanel,
 } from "./proposal-detail-domain-panels";
 import { useProposalDetailQueryState } from "../use-proposal-detail-query-state";
+import type { ProposalLifecycleCommandIntent } from "../use-proposal-command-recovery";
 
 type Props = {
   proposalId: string;
@@ -147,6 +142,9 @@ function ProposalDetailWorkspace({
     lineageQuery,
     persistedCommandCount,
     persistedConfirmationFailure,
+    recoverPersistedCommand,
+    recoveryState,
+    recoveryStateLoading,
     versionLookupMutation,
     workflowQuery,
   } = useProposalDetailQueryState({ includeEvidence, proposalId, proposalIdValid });
@@ -194,7 +192,10 @@ function ProposalDetailWorkspace({
   );
   const acting = actionCommandState?.status === "pending";
   const creatingVersion = createVersionCommandState?.status === "pending";
-  const actionEvidenceBlocked = persistedConfirmationFailure !== null;
+  const actionEvidenceBlocked =
+    persistedConfirmationFailure !== null
+    || recoveryState !== null
+    || recoveryStateLoading;
   const actionError = actionCommandState?.status === "error"
     ? actionCommandState.error
     : null;
@@ -219,12 +220,18 @@ function ProposalDetailWorkspace({
     ? proposalActionFailureSupportEvidence(versionError)
     : null;
   const actionDisabled = persistedCommandCount > 0 || actionEvidenceBlocked || !actionSourcesReady;
-  const actionDisabledReason = actionEvidenceBlocked
-    ? "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
-    : acting
-      ? "Recording the source action and refreshing review evidence."
-      : creatingVersion
-        ? "Creating the next proposal version and refreshing review evidence."
+  const actionDisabledReason = recoveryStateLoading
+    ? "Checking for an earlier proposal action before new actions are available."
+    : recoveryState?.state === "invalid"
+      ? "Proposal actions remain unavailable because the earlier recovery record cannot be verified in this browser session."
+      : acting
+        ? "Recording the source action and refreshing review evidence."
+        : creatingVersion
+          ? "Creating the next proposal version and refreshing review evidence."
+          : recoveryState?.state === "recoverable"
+            ? "An earlier proposal action still needs source confirmation. Recheck that exact action before continuing."
+            : persistedConfirmationFailure !== null
+              ? "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Recheck the earlier action before continuing."
       : !actionSourcesTransportReady
         ? actionSourcesChecking
           ? "Checking current proposal evidence before actions are available."
@@ -233,79 +240,99 @@ function ProposalDetailWorkspace({
           ? "Proposal actions are unavailable because current detail, workflow, approvals, and version lineage do not agree. Reload the proposal to continue."
         : undefined;
 
-  function runProposalAction(
-    action: () => ReturnType<typeof submitProposal>,
-    expectedState: string,
-    successPrefix: string,
-  ) {
-    const previousState = detailQuery.data?.proposal?.current_state;
+  function runProposalAction(intent: ProposalLifecycleCommandIntent) {
     if (
-      !previousState
-      || hasPendingCommand()
+      hasPendingCommand()
       || !actionSourcesReady
       || actionEvidenceBlocked
     ) {
       return;
     }
-    actionMutation.mutate({ action, expectedState, previousState, successPrefix });
+    actionMutation.mutate(intent);
   }
 
   function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    runProposalAction(async () => {
-      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, `submit-${reviewType.toLowerCase()}`);
-      return await submitProposal(proposalId, {
+    const previousState = detailQuery.data.proposal.current_state;
+    runProposalAction({
+      action: "submit",
+      expectedState: reviewType === "RISK" ? "RISK_REVIEW" : "COMPLIANCE_REVIEW",
+      idempotencyKey: buildProposalActionIdempotencyKey(
+        proposalId,
+        `submit-${reviewType.toLowerCase()}`,
+      ),
+      kind: "lifecycle",
+      previousState,
+      proposalId,
+      request: {
         actor_id: "advisor_1",
-        expected_state: detailQuery.data.proposal.current_state,
+        expected_state: previousState,
         review_type: reviewType,
         reason: { source: "ui" },
-      }, idempotencyKey);
-    }, reviewType === "RISK" ? "RISK_REVIEW" : "COMPLIANCE_REVIEW",
-    `Proposal submitted for ${reviewType === "RISK" ? "risk" : "compliance"} review.`);
+      },
+    });
   }
 
   function onApproveRisk() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    runProposalAction(async () => {
-      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-risk");
-      return await approveRisk(proposalId, {
+    const previousState = detailQuery.data.proposal.current_state;
+    runProposalAction({
+      action: "approve-risk",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      idempotencyKey: buildProposalActionIdempotencyKey(proposalId, "approve-risk"),
+      kind: "lifecycle",
+      previousState,
+      proposalId,
+      request: {
         actor_id: "risk_officer_1",
-        expected_state: detailQuery.data.proposal.current_state,
+        expected_state: previousState,
         details: { source: "ui" },
-      }, idempotencyKey);
-    }, "AWAITING_CLIENT_CONSENT", "Risk review recorded.");
+      },
+    });
   }
 
   function onApproveCompliance() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    runProposalAction(async () => {
-      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-compliance");
-      return await approveCompliance(proposalId, {
+    const previousState = detailQuery.data.proposal.current_state;
+    runProposalAction({
+      action: "approve-compliance",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      idempotencyKey: buildProposalActionIdempotencyKey(proposalId, "approve-compliance"),
+      kind: "lifecycle",
+      previousState,
+      proposalId,
+      request: {
         actor_id: "compliance_officer_1",
-        expected_state: detailQuery.data.proposal.current_state,
+        expected_state: previousState,
         details: { source: "ui" },
-      }, idempotencyKey);
-    }, "AWAITING_CLIENT_CONSENT", "Compliance review recorded.");
+      },
+    });
   }
 
   function onRecordClientConsent() {
     if (!detailQuery.data?.proposal?.current_state) {
       return;
     }
-    runProposalAction(async () => {
-      const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "record-client-consent");
-      return await recordClientConsent(proposalId, {
+    const previousState = detailQuery.data.proposal.current_state;
+    runProposalAction({
+      action: "record-client-consent",
+      expectedState: "EXECUTION_READY",
+      idempotencyKey: buildProposalActionIdempotencyKey(proposalId, "record-client-consent"),
+      kind: "lifecycle",
+      previousState,
+      proposalId,
+      request: {
         actor_id: "advisor_1",
-        expected_state: detailQuery.data.proposal.current_state,
+        expected_state: previousState,
         details: { channel: "IN_PERSON", source: "ui" },
-      }, idempotencyKey);
-    }, "EXECUTION_READY", "Client consent recorded.");
+      },
+    });
   }
 
   if (detailQuery.isLoading) {
@@ -349,11 +376,19 @@ function ProposalDetailWorkspace({
     }
     if (!simulateRequest) {
       versionLookupMutation.reset();
-      createVersionMutation.mutate({ previousVersionNo, simulateRequest: null });
+      createVersionMutation.mutate({
+        idempotencyKey: buildProposalActionIdempotencyKey(proposalId, "create-version"),
+        previousVersionNo,
+        simulateRequest: null,
+      });
       return;
     }
     versionLookupMutation.reset();
-    createVersionMutation.mutate({ previousVersionNo, simulateRequest });
+    createVersionMutation.mutate({
+      idempotencyKey: buildProposalActionIdempotencyKey(proposalId, "create-version"),
+      previousVersionNo,
+      simulateRequest,
+    });
   }
 
   const queryError = detailQuery.error;
@@ -592,6 +627,9 @@ function ProposalDetailWorkspace({
             stageItems={evidenceModel.stageItems}
             actionDisabled={actionDisabled}
             actionDisabledReason={actionDisabledReason}
+            recoveryActionAvailable={recoveryState?.state === "recoverable"}
+            recoveryActionPending={persistedCommandCount > 0}
+            onRecoverPersistedCommand={recoverPersistedCommand}
             onSubmitForRiskReview={() => void onSubmitForReview("RISK")}
             onSubmitForComplianceReview={() => void onSubmitForReview("COMPLIANCE")}
             onApproveRisk={() => void onApproveRisk()}

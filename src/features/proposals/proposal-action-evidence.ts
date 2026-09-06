@@ -30,7 +30,7 @@ export function confirmProposalTransitionResponse(
     || responseData.current_state !== expectedState
   ) {
     throw new ProposalActionBusinessError(
-      "The source action completed, but did not confirm the expected proposal and workflow posture. Reload the proposal before continuing.",
+      "The source action completed, but did not confirm the expected proposal and workflow posture. Use Recheck earlier action before continuing.",
     );
   }
   return responseData.current_state;
@@ -123,7 +123,7 @@ export function confirmRefreshedProposalActionEvidence({
   );
   if (agreement.issue === "proposal-mismatch") {
     throw new ProposalActionBusinessError(
-      "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
+      "The source action returned evidence for a different proposal. Use Recheck earlier action before continuing.",
     );
   }
   if (
@@ -132,12 +132,12 @@ export function confirmRefreshedProposalActionEvidence({
     (agreement.issue === null && agreement.currentState !== expectedState)
   ) {
     throw new ProposalActionBusinessError(
-      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
+      "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
     );
   }
   if (agreement.issue === "active-version-mismatch") {
     throw new ProposalActionBusinessError(
-      "The source action returned lineage that does not confirm the active proposal version. Reload the proposal before continuing.",
+      "The source action returned lineage that does not confirm the active proposal version. Use Recheck earlier action before continuing.",
     );
   }
   const refreshedState = agreement.currentState;
@@ -146,7 +146,7 @@ export function confirmRefreshedProposalActionEvidence({
     || refreshedState === previousState
   ) {
     throw new ProposalActionBusinessError(
-      "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing.",
+      "The source action returned, but the proposal posture has not changed. Use Recheck earlier action before continuing.",
     );
   }
   return refreshedState;
@@ -175,12 +175,12 @@ export function confirmRefreshedProposalVersionEvidence({
   );
   if (agreement.issue === "proposal-mismatch") {
     throw new ProposalActionBusinessError(
-      "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
+      "The source action returned evidence for a different proposal. Use Recheck earlier action before continuing.",
     );
   }
   if (agreement.issue === "state-mismatch" || agreement.issue === "missing-evidence") {
     throw new ProposalActionBusinessError(
-      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
+      "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
     );
   }
   if (
@@ -189,7 +189,7 @@ export function confirmRefreshedProposalVersionEvidence({
     proposalDetail?.proposal.current_version_no !== expectedVersionNo
   ) {
     throw new ProposalActionBusinessError(
-      "The source action returned lineage that does not confirm the newly created proposal version. Reload the proposal before continuing.",
+      "The source action returned lineage that does not confirm the newly created proposal version. Use Recheck earlier action before continuing.",
     );
   }
   return expectedVersionNo;

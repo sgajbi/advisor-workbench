@@ -10,7 +10,6 @@ import {
 
 import { workbenchStrictQueryDefaults } from "@/features/platform-runtime/query-policy";
 import {
-  createProposalVersion,
   getProposal,
   getProposalApprovals,
   getProposalLineage,
@@ -18,6 +17,14 @@ import {
   getProposalWorkflowEvents,
 } from "./api";
 import { ProposalActionBusinessError } from "./proposal-action-error";
+import {
+  asPersistedProposalConfirmationError,
+  confirmCreatedProposalVersion,
+  executeProposalLifecycleCommand,
+  executeProposalVersionCommand,
+  isAmbiguousProposalCommandFailure,
+  proposalLifecycleSuccessMessage,
+} from "./proposal-command-execution";
 import {
   latestCommandSnapshot,
   removeSettledCommandHistory,
@@ -34,33 +41,17 @@ import {
   proposalDetailMutationKeys,
   proposalDetailQueryKeys,
 } from "./proposal-detail-query-keys";
-import { proposalStageDescription } from "./proposal-workflow-copy";
-import type { ProposalStateTransitionEnvelopeResponse } from "./types";
-
-type LifecycleActionVariables = Readonly<{
-  action: () => Promise<ProposalStateTransitionEnvelopeResponse>;
-  expectedState: string;
-  previousState: string;
-  successPrefix: string;
-}>;
+import {
+  useProposalCommandRecovery,
+  type ProposalLifecycleCommandIntent,
+  type ProposalVersionCommandIntent,
+} from "./use-proposal-command-recovery";
 
 type CreateVersionVariables = Readonly<{
+  idempotencyKey: string;
   previousVersionNo: number;
   simulateRequest: Record<string, unknown> | null;
 }>;
-
-function persistedConfirmationError(error: unknown) {
-  const message = error instanceof Error
-    ? error.message
-    : "The source action completed, but refreshed review evidence could not be confirmed.";
-  return new ProposalPersistedEvidenceConfirmationError(message);
-}
-
-function objectRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null
-    ? value as Record<string, unknown>
-    : undefined;
-}
 
 export function useProposalDetailQueryState({
   includeEvidence,
@@ -72,6 +63,7 @@ export function useProposalDetailQueryState({
   proposalIdValid: boolean;
 }) {
   const queryClient = useQueryClient();
+  const commandRecovery = useProposalCommandRecovery(proposalId, proposalIdValid);
   const detailQuery = useQuery({
     queryKey: proposalDetailQueryKeys.record(proposalId, includeEvidence),
     queryFn: async () => await getProposal(proposalId, includeEvidence),
@@ -112,7 +104,7 @@ export function useProposalDetailQueryState({
     ]);
     if (detailResult.error || workflowResult.error || approvalsResult.error || lineageResult.error) {
       throw new ProposalActionBusinessError(
-        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing.",
+        "The source action completed, but the refreshed review evidence could not be confirmed. Use Recheck earlier action before continuing.",
       );
     }
     return {
@@ -133,23 +125,37 @@ export function useProposalDetailQueryState({
         proposalDetailMutationKeys.lifecycle(proposalId),
       );
     },
-    mutationFn: async ({ action, expectedState, previousState, successPrefix }: LifecycleActionVariables) => {
-      const response = await action();
+    mutationFn: async (intent: ProposalLifecycleCommandIntent) => {
+      if (!commandRecovery.remember(intent)) {
+        throw new ProposalActionBusinessError(
+          "This browser cannot retain a replay-safe proposal action. No proposal change was requested.",
+        );
+      }
+      let response;
       try {
-        confirmProposalTransitionResponse(response, proposalId, expectedState);
+        response = await executeProposalLifecycleCommand(intent);
+      } catch (error) {
+        if (!isAmbiguousProposalCommandFailure(error)) {
+          commandRecovery.forget();
+        }
+        throw error;
+      }
+      try {
+        confirmProposalTransitionResponse(response, proposalId, intent.expectedState);
         const refreshed = await refreshProposalEvidence();
-        const refreshedState = confirmRefreshedProposalActionEvidence({
+        confirmRefreshedProposalActionEvidence({
           approvals: refreshed.approvals,
           expectedProposalId: proposalId,
-          expectedState,
+          expectedState: intent.expectedState,
           lineage: refreshed.lineage,
-          previousState,
+          previousState: intent.previousState,
           proposalDetail: refreshed.proposalDetail,
           workflow: refreshed.workflow,
         });
-        return `${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`;
+        commandRecovery.forget();
+        return proposalLifecycleSuccessMessage(intent);
       } catch (error) {
-        throw persistedConfirmationError(error);
+        throw asPersistedProposalConfirmationError(error);
       }
     },
   });
@@ -164,42 +170,41 @@ export function useProposalDetailQueryState({
         proposalDetailMutationKeys.createVersion(proposalId),
       );
     },
-    mutationFn: async ({ previousVersionNo, simulateRequest }: CreateVersionVariables) => {
+    mutationFn: async ({ idempotencyKey, previousVersionNo, simulateRequest }: CreateVersionVariables) => {
       if (!simulateRequest) {
         throw new ProposalActionBusinessError(
           "Current proposal evidence does not include the source inputs required to create a new version. Refresh the full evidence record before trying again.",
         );
       }
-      const response = await createProposalVersion(
+      const intent: ProposalVersionCommandIntent = {
+        idempotencyKey,
+        kind: "create-version",
+        previousVersionNo,
         proposalId,
-        {
-          body: {
-            created_by: "advisor_1",
-            simulate_request: simulateRequest,
-          },
-        },
-        `ui-version-${proposalId}-${Date.now()}`,
-      );
+        simulateRequest,
+      };
+      if (!commandRecovery.remember(intent)) {
+        throw new ProposalActionBusinessError(
+          "This browser cannot retain replay-safe version recovery. No proposal change was requested.",
+        );
+      }
+      let response;
       try {
-        const responseData = objectRecord(objectRecord(response)?.data);
-        const proposalData = objectRecord(responseData?.proposal);
-        const versionData = objectRecord(responseData?.version);
-        const expectedVersionNo = proposalData?.current_version_no;
-        if (
-          proposalData?.proposal_id !== proposalId
-          || versionData?.proposal_id !== proposalId
-          || versionData?.version_no !== expectedVersionNo
-          || typeof expectedVersionNo !== "number"
-          || !Number.isInteger(expectedVersionNo)
-          || expectedVersionNo < 1
-          || expectedVersionNo <= previousVersionNo
-        ) {
-          throw new ProposalPersistedEvidenceConfirmationError(
-            "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
-          );
+        response = await executeProposalVersionCommand(intent);
+      } catch (error) {
+        if (!isAmbiguousProposalCommandFailure(error)) {
+          commandRecovery.forget();
         }
+        throw error;
+      }
+      try {
+        const expectedVersionNo = confirmCreatedProposalVersion(
+          response,
+          proposalId,
+          previousVersionNo,
+        );
         const refreshed = await refreshProposalEvidence();
-        return confirmRefreshedProposalVersionEvidence({
+        const confirmedVersionNo = confirmRefreshedProposalVersionEvidence({
           approvals: refreshed.approvals,
           expectedProposalId: proposalId,
           expectedVersionNo,
@@ -208,8 +213,10 @@ export function useProposalDetailQueryState({
           proposalDetail: refreshed.proposalDetail,
           workflow: refreshed.workflow,
         });
+        commandRecovery.forget();
+        return confirmedVersionNo;
       } catch (error) {
-        throw persistedConfirmationError(error);
+        throw asPersistedProposalConfirmationError(error);
       }
     },
   });
@@ -271,6 +278,18 @@ export function useProposalDetailQueryState({
     }) > 0;
   }
 
+  function recoverPersistedCommand(): void {
+    const recovery = commandRecovery.query.data;
+    if (recovery?.state !== "recoverable" || hasPendingCommand()) {
+      return;
+    }
+    if (recovery.intent.kind === "lifecycle") {
+      actionMutation.mutate(recovery.intent);
+    } else {
+      createVersionMutation.mutate(recovery.intent);
+    }
+  }
+
   return {
     actionCommandState: latestCommandSnapshot(lifecycleCommandSnapshots),
     actionMutation,
@@ -282,6 +301,9 @@ export function useProposalDetailQueryState({
     lineageQuery,
     persistedCommandCount,
     persistedConfirmationFailure,
+    recoverPersistedCommand,
+    recoveryState: commandRecovery.query.data ?? null,
+    recoveryStateLoading: commandRecovery.query.isPending,
     versionLookupMutation,
     workflowQuery,
   };
