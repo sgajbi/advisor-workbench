@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import Button from "@mui/material/Button";
@@ -40,7 +40,9 @@ export default function PortfolioTransactionsRecordWorkspace({
     useState<TransactionRow | null>(null);
   const [externalFilter, setExternalFilter] =
     useState<PortfolioTransactionDrilldownFilter | null>(null);
-  const focusReturnTransactionIdRef = useRef<string | null>(null);
+  const [focusReturnTransactionId, setFocusReturnTransactionId] = useState<
+    string | null
+  >(null);
   const { selectedRecordId, listHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
@@ -89,7 +91,7 @@ export default function PortfolioTransactionsRecordWorkspace({
 
   const handleTransactionSelect = useCallback(
     (transaction: TransactionRow) => {
-      focusReturnTransactionIdRef.current = transaction.transactionId;
+      setFocusReturnTransactionId(transaction.transactionId);
       setSelectedTransactionRecord(transaction);
       openRecord(transaction.transactionId);
     },
@@ -99,18 +101,19 @@ export default function PortfolioTransactionsRecordWorkspace({
   const handleCloseRecord = useCallback(() => {
     setSelectedTransactionRecord(null);
     closeRecord();
-    const transactionId = focusReturnTransactionIdRef.current;
     window.setTimeout(() => {
       for (const candidate of document.querySelectorAll<HTMLElement>(
         "[data-transaction-review-id]",
       )) {
-        if (candidate.dataset.transactionReviewId === transactionId) {
+        if (
+          candidate.dataset.transactionReviewId === focusReturnTransactionId
+        ) {
           candidate.focus();
           return;
         }
       }
     }, 300);
-  }, [closeRecord]);
+  }, [closeRecord, focusReturnTransactionId]);
 
   const detailDrawer = useMemo(() => {
     if (!selectedTransaction) {
