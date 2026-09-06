@@ -1266,6 +1266,38 @@ describe("ProposalDetailView", () => {
     ).toBeInTheDocument();
   });
 
+  it("clears recovery after a deterministic version state conflict", async () => {
+    createProposalVersionMock.mockRejectedValueOnce(
+      new WorkbenchApiError("proposal request", 409, "corr-version-conflict-001"),
+    );
+    renderWithQueryClient();
+
+    await clickReadyButton("Create next version");
+
+    expect(await screen.findByText(
+      "The source proposal changed before this action completed. Refresh current evidence before trying again.",
+    )).toBeInTheDocument();
+    expect(window.sessionStorage.getItem("lotus:proposal-command-recovery:pp-1")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create next version" })).toBeEnabled();
+  });
+
+  it("clears recovery after a deterministic lifecycle state conflict", async () => {
+    submitProposalMock.mockRejectedValueOnce(
+      new WorkbenchApiError("proposal request", 409, "corr-state-conflict-001"),
+    );
+    renderWithQueryClient();
+
+    await clickReadyButton("Submit for risk review");
+
+    expect(await screen.findByText(
+      "The source proposal changed before this action completed. Refresh current evidence before trying again.",
+    )).toBeInTheDocument();
+    expect(window.sessionStorage.getItem("lotus:proposal-command-recovery:pp-1")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeEnabled();
+  });
+
   it("recovers an unconfirmed action after reload with the exact request identity", async () => {
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
