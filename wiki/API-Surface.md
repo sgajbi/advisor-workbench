@@ -345,8 +345,10 @@ promote dormant labels into product ownership just because historical route file
   gates; Narrative and Memo are peer advisor-review modes; and version, lineage, replay, and review
   history remain available through progressive disclosure. Primary detail settles independently
   from workflow, approval, and lineage reads so available source evidence remains usable with an
-  explicit partial-state message. A mutation is announced as successful only after Gateway
-  persistence succeeds and the owning proposal reads refresh coherently from source truth. This
+  explicit partial-state message. Stable proposal-scoped Query identities own those reads; lifecycle
+  and version commands invalidate and refetch the exact detail, workflow, approval, and lineage
+  records instead of creating revision-suffixed cache entries. A mutation is announced as successful
+  only after Gateway persistence succeeds and those owning reads refresh coherently from source truth. This
   presentation does not add client-release, approval, communication, or execution authority.
 - Implementation Status reads one selected record from
   `GET /api/v1/proposals/{proposal_id}/execution-status` with discriminator

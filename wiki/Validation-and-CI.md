@@ -290,6 +290,10 @@ retry from cancelling or masquerading as another revision's evidence.
   visible element at 1440/768/640/519 pixels. It writes reviewed desktop and compact images under
   `docs/evidence/issue-798-product-copy/narrative-review/`; the browser uses an isolated
   checkout-specific port and does not disturb the canonical runtime.
+- The Proposal Detail lifecycle regression verifies that one persisted command produces one exact
+  confirmation read for detail, workflow, approvals, and lineage before the business success state
+  appears. Component proof rejects source mismatch, duplicate commands, orphaned revision caches,
+  failed confirmation, and late prior-workspace completions.
 - The focused Proposal Detail memo proof verifies explicit advisor identity, current-version memo
   evidence, exact review and package prerequisites, source-aligned success, persistence and refresh
   failure, optional non-authoritative commentary, stable canonical selectors, keyboard operation,
