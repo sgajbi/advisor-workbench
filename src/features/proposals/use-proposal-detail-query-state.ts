@@ -49,6 +49,12 @@ function persistedConfirmationError(error: unknown) {
   return new ProposalPersistedEvidenceConfirmationError(message);
 }
 
+function objectRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
 export function useProposalDetailQueryState({
   includeEvidence,
   proposalId,
@@ -153,23 +159,24 @@ export function useProposalDetailQueryState({
         },
         `ui-version-${proposalId}-${Date.now()}`,
       );
-      const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
-      const versionData = (response.data.version as Record<string, unknown> | undefined) ?? undefined;
-      const expectedVersionNo = proposalData?.current_version_no;
-      if (
-        proposalData?.proposal_id !== proposalId
-        || versionData?.proposal_id !== proposalId
-        || versionData?.version_no !== expectedVersionNo
-        || typeof expectedVersionNo !== "number"
-        || !Number.isInteger(expectedVersionNo)
-        || expectedVersionNo < 1
-        || expectedVersionNo <= previousVersionNo
-      ) {
-        throw new ProposalPersistedEvidenceConfirmationError(
-          "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
-        );
-      }
       try {
+        const responseData = objectRecord(objectRecord(response)?.data);
+        const proposalData = objectRecord(responseData?.proposal);
+        const versionData = objectRecord(responseData?.version);
+        const expectedVersionNo = proposalData?.current_version_no;
+        if (
+          proposalData?.proposal_id !== proposalId
+          || versionData?.proposal_id !== proposalId
+          || versionData?.version_no !== expectedVersionNo
+          || typeof expectedVersionNo !== "number"
+          || !Number.isInteger(expectedVersionNo)
+          || expectedVersionNo < 1
+          || expectedVersionNo <= previousVersionNo
+        ) {
+          throw new ProposalPersistedEvidenceConfirmationError(
+            "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
+          );
+        }
         const refreshed = await refreshProposalEvidence();
         return confirmRefreshedProposalVersionEvidence({
           approvals: refreshed.approvals,
