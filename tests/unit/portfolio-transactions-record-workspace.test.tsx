@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { onlineManager } from "@tanstack/react-query";
+import { focusManager, onlineManager } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type MockTransactionRow = { transactionId: string };
@@ -78,6 +78,7 @@ describe("portfolio transactions record workspace", () => {
   });
 
   afterEach(() => {
+    focusManager.setFocused(undefined);
     onlineManager.setOnline(true);
     vi.unstubAllGlobals();
     routerPushMock.mockClear();
@@ -167,7 +168,7 @@ describe("portfolio transactions record workspace", () => {
     );
   });
 
-  it("does not repeat the exact read on reconnect or remount within one hydration", async () => {
+  it("does not repeat the exact read on focus, reconnect, or remount within one hydration", async () => {
     const fetchMock = vi.fn(
       async () =>
         new Response(JSON.stringify(buildExactRecord("TX_250")), {
@@ -199,6 +200,11 @@ describe("portfolio transactions record workspace", () => {
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
     firstMount.unmount();
     renderWithQueryClient(workspace, queryClient);
     expect(
@@ -208,7 +214,7 @@ describe("portfolio transactions record workspace", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retries the active exact transaction only when the adviser requests recovery", async () => {
+  it("retains a failed exact read across remount and retries only when the adviser requests recovery", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -226,8 +232,8 @@ describe("portfolio transactions record workspace", () => {
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
-
-    renderWithQueryClient(
+    const queryClient = createTestQueryClient();
+    const workspace = (
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
@@ -235,12 +241,23 @@ describe("portfolio transactions record workspace", () => {
         defaultEndDate="2026-03-28"
         initialSelectedRecordId="TX_250"
         reportingCurrency="SGD"
-      />,
+      />
     );
+
+    const firstMount = renderWithQueryClient(workspace, queryClient);
 
     expect(
       await screen.findByText("Transaction source temporarily unavailable"),
     ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    firstMount.unmount();
+    renderWithQueryClient(workspace, queryClient);
+
+    expect(
+      await screen.findByText("Transaction source temporarily unavailable"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Retry transaction" }));
