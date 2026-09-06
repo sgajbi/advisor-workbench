@@ -71,7 +71,8 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Confirms the exact action-specific workflow event returned by Gateway against refreshed workflow
   history. Risk, compliance, and consent also require the exact returned approval record, so their
   shared target posture cannot substitute for proof of the action the reviewer actually took. A
-  later coherent source transition does not erase that exact historical proof or strand recovery.
+  later coherent source transition does not erase that exact historical proof or strand recovery;
+  a posture that still precedes the event cannot confirm it.
 - Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
   Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
   until all four refreshed sources agree; refresh never creates a parallel revision cache.
