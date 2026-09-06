@@ -183,8 +183,7 @@ export function confirmRefreshedProposalActionEvidence({
   }
   if (
     agreement.issue === "state-mismatch" ||
-    agreement.issue === "missing-evidence" ||
-    (agreement.issue === null && agreement.currentState !== expectedState)
+    agreement.issue === "missing-evidence"
   ) {
     throw new ProposalActionBusinessError(
       "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
@@ -198,10 +197,9 @@ export function confirmRefreshedProposalActionEvidence({
   const refreshedState = agreement.currentState;
   if (
     !refreshedState
-    || refreshedState === previousState
   ) {
     throw new ProposalActionBusinessError(
-      "The source action returned, but the proposal posture has not changed. Use Recheck earlier action before continuing.",
+      "The source action returned, but the current proposal posture could not be confirmed. Use Recheck earlier action before continuing.",
     );
   }
   const eventConfirmed = workflow?.events.some(

@@ -667,7 +667,6 @@ function ProposalDetailWorkspace({
               persistedCommandCount > 0
               || detailQuery.isFetching
               || versionLookupMutation.isPending
-              || actionEvidenceBlocked
             }
             createVersionDisabled={actionDisabled}
             onIncludeEvidenceChange={(value) => {
@@ -675,7 +674,6 @@ function ProposalDetailWorkspace({
                 persistedCommandCount === 0
                 && !detailQuery.isFetching
                 && !versionLookupMutation.isPending
-                && !actionEvidenceBlocked
               ) {
                 versionLookupMutation.reset();
                 setIncludeEvidence(value);
