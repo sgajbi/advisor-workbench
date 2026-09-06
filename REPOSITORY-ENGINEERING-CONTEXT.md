@@ -725,8 +725,11 @@ Current repository posture:
     malformed recovery storage, including impossible prior-state/action combinations, as a
     fail-closed action fence. Do not store credentials, cookies, tokens, or authorization context.
     Treat an owner-reported `409` state conflict as deterministic rejection, clear the obsolete
-    recovery identity, and require refreshed current evidence instead of repeating a request that
-    can no longer satisfy its expected-state precondition.
+    recovery identity, and refresh detail, workflow, approvals, and lineage before writes unlock
+    instead of repeating a request that can no longer satisfy its expected-state precondition. If
+    that refresh fails, the unavailable query posture remains the write fence. Compare workflow and
+    approval timestamps through the shared exact-instant authority: equivalent UTC and offset
+    representations may agree, while malformed timestamps never confirm an action.
     Historical success copy may describe the completed action but
     must not claim a current posture that later source refreshes can supersede.
     Do not restore revision-counter queries, revision-suffixed cache identities, or component-owned

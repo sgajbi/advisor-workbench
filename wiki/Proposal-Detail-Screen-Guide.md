@@ -72,7 +72,8 @@ These use cases do not substitute for authenticated production-role or portfolio
   history. Risk, compliance, and consent also require the exact returned approval record, so their
   shared target posture cannot substitute for proof of the action the reviewer actually took. A
   later coherent source transition does not erase that exact historical proof or strand recovery;
-  a posture that still precedes the event cannot confirm it.
+  a posture that still precedes the event cannot confirm it. Event and approval times compare as
+  strict zoned instants, so equivalent UTC and offset forms agree while malformed values cannot.
 - Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
   Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
   until all four refreshed sources agree; refresh never creates a parallel revision cache.
@@ -85,8 +86,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   reload and repeats only that exact request. Invalid or unavailable recovery storage blocks a new
   action, and impossible action/prior-state combinations are rejected; authentication and
   entitlement material is never stored there. A source `409` state conflict proves the request was
-  rejected, clears that obsolete recovery identity, and asks the advisor to refresh current
-  evidence rather than offering a permanently conflicting recheck.
+  rejected, clears that obsolete recovery identity, and refreshes detail, workflow, approvals, and
+  lineage before writes unlock. If that refresh fails, the unavailable source posture keeps actions
+  fenced rather than offering stale controls or a permanently conflicting recheck.
 - Describes a completed action as a historical outcome without labelling its resulting posture as
   current. Current posture remains the independently refreshed Gateway/Advise record.
 - Keeps full-evidence and historical-version reads independent from ancillary action-source
