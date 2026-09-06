@@ -173,6 +173,9 @@ Commands through container parity are directly runnable in PowerShell, Bash, and
 prerequisite. Canonical front-office orchestration is currently supported only from Windows
 PowerShell: its nested commands and workspace discovery are not yet portable to Unix. Track that
 bounded implementation gap in #1020; do not present a top-level `pwsh` invocation as working proof.
+For the canonical commands below, first set
+`$workspaceRoot = (Resolve-Path (Join-Path $PWD '..')).Path` from the repository root. This resolves
+the documented sibling-checkout layout without relying on the scripts' personal default.
 
 | Purpose | Command |
 | --- | --- |
@@ -190,9 +193,9 @@ bounded implementation gap in #1020; do not present a top-level `pwsh` invocatio
 | Container parity | `docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local` |
 | Container parity teardown | `docker compose -f docker-compose.ci-local.yml down -v --remove-orphans` |
 | Scale regression | `npm run scale:proof` then `npm run scale:proof:down` |
-| Canonical stack (Windows PowerShell) | `npm run live:stack:up` |
+| Canonical stack (Windows PowerShell) | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -ProjectsRoot $workspaceRoot` |
 | Canonical validation (Windows PowerShell) | `npm run live:validate` |
-| Canonical teardown (Windows PowerShell) | `npm run live:stack:down` |
+| Canonical teardown (Windows PowerShell) | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1 -ProjectsRoot $workspaceRoot` |
 
 Use the narrowest focused test during development, then run repository-native gates proportionate
 to the change. The local core quality gate is not full PR parity; protected CI also proves runtime

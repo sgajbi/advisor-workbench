@@ -9,7 +9,7 @@ does not by itself certify populated source data, integrated panel support, or d
 | If you need to | Start with | Evidence boundary |
 | --- | --- | --- |
 | Install dependencies or work on isolated UI code | `make install`, then `make run` | Local development only |
-| Validate Workbench with the governed Lotus services | `npm run live:stack:up`, then `npm run live:validate` | Integrated source and panel checks must pass |
+| Validate Workbench with the governed Lotus services | Use the [Windows PowerShell sequence](#canonical-local-runtime) below | Integrated source and panel checks must pass |
 | Capture support or demo evidence | Complete canonical validation before `npm run live:evidence` | Diagnostic output is not promoted as demo proof |
 
 ## Navigating Workbench
@@ -48,13 +48,14 @@ make run
 Run the canonical lifecycle from Windows PowerShell:
 
 ```powershell
-npm run live:stack:up
+$workspaceRoot = (Resolve-Path (Join-Path $PWD '..')).Path
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1 -ProjectsRoot $workspaceRoot
 npm run live:validate
-npm run live:stack:down
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1 -ProjectsRoot $workspaceRoot
 ```
 
-Use `npm run live:stack:up:workbench-local` when Workbench UI changes need hot reload while the
-rest of the canonical app set remains Docker-backed.
+When Workbench UI changes need hot reload while the rest of the canonical app set remains
+Docker-backed, add `-LocalApps workbench` to the `Start-LotusFrontOfficeCanonical.ps1` command.
 
 The canonical runner is not currently supported from Bash or Unix PowerShell because its workspace
 discovery and nested commands remain Windows-specific. Workbench
