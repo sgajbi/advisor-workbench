@@ -61,14 +61,13 @@ export default function PortfolioTransactionsRecordWorkspace({
       : (initialTransactionRows.find(
           (transaction) => transaction.transactionId === selectedRecordId,
         ) ?? null);
-  const exactRecordQueryKey = portfolioQueryKeys.transactionRecord(
-    workspace.portfolio.portfolio_id,
-    selectedRecordId ?? "unselected",
-    asOfDate,
-    reportingCurrency,
-  );
   const exactRecordQuery = useQuery({
-    queryKey: exactRecordQueryKey,
+    queryKey: portfolioQueryKeys.transactionRecord(
+      workspace.portfolio.portfolio_id,
+      selectedRecordId ?? "unselected",
+      asOfDate,
+      reportingCurrency,
+    ),
     queryFn: ({ signal }) =>
       getPortfolioTransactionRecord(
         workspace.portfolio.portfolio_id,
@@ -192,7 +191,14 @@ export default function PortfolioTransactionsRecordWorkspace({
           isRetrying={exactRecordQuery.isFetching}
           onRetry={() => exactRecordQuery.refetch()}
           onClear={handleCloseRecord}
-          refreshScope={JSON.stringify(exactRecordQueryKey)}
+          refreshScope={JSON.stringify(
+            portfolioQueryKeys.transactionRecord(
+              workspace.portfolio.portfolio_id,
+              selectedRecordId,
+              asOfDate,
+              reportingCurrency,
+            ),
+          )}
         />
       ) : null}
       <PortfolioTransactionsGrid
