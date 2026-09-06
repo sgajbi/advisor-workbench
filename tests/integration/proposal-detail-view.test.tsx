@@ -1,10 +1,11 @@
 import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
 import { proposalDetailQueryKeys } from "../../src/features/proposals/proposal-detail-query-keys";
+import { readProposalCommandRecovery } from "../../src/features/proposals/use-proposal-command-recovery";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const {
@@ -189,6 +190,10 @@ vi.mock("../../src/features/proposals/api", () => ({
 }));
 
 describe("ProposalDetailView", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
   function proposalDetail(state = "DRAFT", proposalId = "pp-1", currentVersionNo = 1) {
     return {
       proposal: {
@@ -584,8 +589,9 @@ describe("ProposalDetailView", () => {
     );
     await waitFor(() => {
       expect(screen.getByTestId("proposal-action-status")).toHaveTextContent(
-        "Proposal submitted for risk review. Current posture: Risk team review is currently pending."
+        "Proposal submitted for risk review."
       );
+      expect(screen.getByTestId("proposal-action-status")).not.toHaveTextContent("Current posture");
     });
   });
 
@@ -736,7 +742,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
+        "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -756,7 +762,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action completed, but did not confirm the expected proposal and workflow posture. Reload the proposal before continuing.",
+        "The source action completed, but did not confirm the expected proposal and workflow posture. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -784,7 +790,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing."
+        "The source action returned review evidence that does not agree on the current proposal posture. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -818,7 +824,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned lineage that does not confirm the active proposal version. Reload the proposal before continuing."
+        "The source action returned lineage that does not confirm the active proposal version. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -844,7 +850,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned evidence for a different proposal. Reload the proposal before continuing."
+        "The source action returned evidence for a different proposal. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -941,7 +947,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing."
+        "The source action completed, but did not identify a matching newly created proposal version. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/Version created successfully/)).not.toBeInTheDocument();
@@ -1058,36 +1064,124 @@ describe("ProposalDetailView", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not publish action success when refreshed review evidence fails", async () => {
+  it("recovers an unconfirmed action after reload with the exact request identity", async () => {
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"))
       .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
     getWorkflowEventsMock
       .mockResolvedValueOnce(workflowEvidence("DRAFT"))
-      .mockRejectedValueOnce(new Error("workflow refresh failed"));
-    renderWithQueryClient();
+      .mockRejectedValueOnce(new Error("workflow refresh failed"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+    const firstView = renderWithQueryClient();
 
     fireEvent.click((await screen.findByTestId("proposal-evidence-disclosure")).querySelector("summary")!);
     const createVersion = screen.getByRole("button", { name: "Create next version" });
     const previousVersionCount = createProposalVersionMock.mock.calls.length;
+    const previousSubmissionCount = submitProposalMock.mock.calls.length;
 
     await clickReadyButton("Submit for risk review");
 
     expect(
       await screen.findByText(
-        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+        "The source action completed, but the refreshed review evidence could not be confirmed. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
     expect(
       screen.getByText(
-        "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+        "An earlier proposal action still needs source confirmation. Recheck that exact action before continuing."
       )
     ).toBeInTheDocument();
     expect(createVersion).toBeDisabled();
     fireEvent.click(createVersion);
     expect(createProposalVersionMock).toHaveBeenCalledTimes(previousVersionCount);
+
+    const firstSubmission = submitProposalMock.mock.calls.at(-1);
+    expect(readProposalCommandRecovery("pp-1")).toMatchObject({
+      state: "recoverable",
+    });
+    firstView.unmount();
+    renderWithQueryClient();
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    expect(
+      screen.getByText(
+        "An earlier proposal action still needs source confirmation. Recheck that exact action before continuing."
+      )
+    ).toBeInTheDocument();
+    await clickReadyButton("Recheck earlier action");
+
+    await waitFor(() => {
+      expect(submitProposalMock).toHaveBeenCalledTimes(previousSubmissionCount + 2);
+    });
+    expect(submitProposalMock.mock.calls[previousSubmissionCount + 1]).toEqual(firstSubmission);
+    expect(await screen.findByTestId("proposal-action-status")).toHaveTextContent(
+      "Proposal submitted for risk review."
+    );
+    expect(screen.getByTestId("proposal-action-status")).not.toHaveTextContent("Current posture");
+    expect(readProposalCommandRecovery("pp-1")).toBeNull();
+  });
+
+  it("recovers an unconfirmed version after reload with the exact request identity", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 1))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 2))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 2))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 2));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockRejectedValueOnce(new Error("workflow refresh failed"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 1))
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 2))
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 2))
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 2));
+    const previousVersionCount = createProposalVersionMock.mock.calls.length;
+    const firstView = renderWithQueryClient();
+
+    await clickReadyButton("Create next version");
+    expect(
+      await screen.findByText(
+        "The source action completed, but the refreshed review evidence could not be confirmed. Use Recheck earlier action before continuing."
+      )
+    ).toBeInTheDocument();
+    const firstVersionRequest = createProposalVersionMock.mock.calls.at(-1);
+    expect(readProposalCommandRecovery("pp-1")).toMatchObject({ state: "recoverable" });
+
+    firstView.unmount();
+    renderWithQueryClient();
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    await clickReadyButton("Recheck earlier action");
+
+    await waitFor(() => {
+      expect(createProposalVersionMock).toHaveBeenCalledTimes(previousVersionCount + 2);
+    });
+    expect(createProposalVersionMock.mock.calls[previousVersionCount + 1]).toEqual(
+      firstVersionRequest,
+    );
+    expect(await screen.findByText("Version created successfully: 2")).toBeInTheDocument();
+    expect(readProposalCommandRecovery("pp-1")).toBeNull();
   });
 
   it("preserves cached proposal evidence when the confirmation detail refresh fails", async () => {
@@ -1110,7 +1204,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action completed, but the refreshed review evidence could not be confirmed. Reload the proposal before continuing."
+        "The source action completed, but the refreshed review evidence could not be confirmed. Use Recheck earlier action before continuing."
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Proposal pp-1" })).toBeInTheDocument();
@@ -1249,7 +1343,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
+        "The source action completed, but did not identify a matching newly created proposal version. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
@@ -1263,7 +1357,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action returned lineage that does not confirm the newly created proposal version. Reload the proposal before continuing.",
+        "The source action returned lineage that does not confirm the newly created proposal version. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
@@ -1280,7 +1374,7 @@ describe("ProposalDetailView", () => {
 
     expect(
       await screen.findByText(
-        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
+        "The source action completed, but did not identify a matching newly created proposal version. Use Recheck earlier action before continuing.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Version created successfully: 2")).not.toBeInTheDocument();
@@ -1514,7 +1608,7 @@ describe("ProposalDetailView", () => {
     await waitFor(() => expect(returnedAction).toBeDisabled());
     expect(
       screen.getByText(
-        "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing.",
+        "An earlier proposal action still needs source confirmation. Recheck that exact action before continuing.",
       ),
     ).toBeInTheDocument();
     fireEvent.click(returnedAction);

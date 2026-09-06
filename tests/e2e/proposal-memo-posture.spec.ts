@@ -13,9 +13,13 @@ const memoEvidenceDirectory = process.env.ISSUE_798_EVIDENCE_DIR
 const memoRecoveryEvidenceDirectory = process.env.ISSUE_877_EVIDENCE_DIR
   ? path.resolve(process.env.ISSUE_877_EVIDENCE_DIR)
   : null;
+const proposalRecoveryEvidenceDirectory = process.env.ISSUE_1012_EVIDENCE_DIR
+  ? path.resolve(process.env.ISSUE_1012_EVIDENCE_DIR)
+  : null;
 
 type ProposalMockOptions = {
   actionFailure?: boolean;
+  actionConfirmationWorkflowFailureOnce?: boolean;
   blocked?: boolean;
   detailFailureStatus?: 403 | 404;
   memoCreateFailure?: boolean;
@@ -58,6 +62,8 @@ async function mockProposalDetail(
     lineage: 0,
     workflow: 0,
   };
+  const submitRequests: Array<{ body: unknown; idempotencyKey: string | undefined }> = [];
+  let actionConfirmationWorkflowFailed = false;
   let memoCommentaryEventId = memoCommentaryRecorded
     ? "memo-ai-event-prior"
     : null;
@@ -114,6 +120,15 @@ async function mockProposalDetail(
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/workflow-events", async (route) => {
     sourceReadCounts.workflow += 1;
+    if (
+      options.actionConfirmationWorkflowFailureOnce
+      && sourceState !== "DRAFT"
+      && !actionConfirmationWorkflowFailed
+    ) {
+      actionConfirmationWorkflowFailed = true;
+      await route.fulfill({ status: 503, body: "WORKFLOW_SOURCE_UNAVAILABLE" });
+      return;
+    }
     if (options.workflowFailure) {
       await route.fulfill({ status: 503, body: "WORKFLOW_SOURCE_UNAVAILABLE" });
       return;
@@ -516,6 +531,10 @@ async function mockProposalDetail(
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/submit", async (route) => {
+    submitRequests.push({
+      body: route.request().postDataJSON(),
+      idempotencyKey: route.request().headers()["idempotency-key"],
+    });
     if (options.actionFailure) {
       await route.fulfill({ status: 500, body: "INTERNAL_SOURCE_DETAIL" });
       return;
@@ -635,6 +654,9 @@ async function mockProposalDetail(
     },
     getSourceReadCounts() {
       return { ...sourceReadCounts };
+    },
+    getSubmitRequests() {
+      return [...submitRequests];
     },
   };
 }
@@ -926,7 +948,7 @@ test.describe("proposal memo posture", () => {
     const status = page.getByTestId("proposal-action-status");
     await expect(status).toHaveAttribute("role", "status");
     await expect(status).toContainText("Proposal submitted for risk review.");
-    await expect(status).toContainText("Risk team review is currently pending.");
+    await expect(status).not.toContainText("Current posture");
     await expect(page.getByRole("button", { name: "Approve risk review" })).toBeVisible();
     expect(controls.getSourceReadCounts()).toEqual({
       approvals: 2,
@@ -934,6 +956,35 @@ test.describe("proposal memo posture", () => {
       lineage: 2,
       workflow: 2,
     });
+  });
+
+  test("rechecks an uncertain action after reload with the exact request identity", async ({ page }) => {
+    const controls = await mockProposalDetail(page, {
+      actionConfirmationWorkflowFailureOnce: true,
+    });
+    await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
+
+    await page.getByRole("button", { name: "Submit for risk review" }).click();
+    await expect(page.getByRole("button", { name: "Recheck earlier action" })).toBeVisible();
+    await expect(page.getByTestId("proposal-action-status")).toHaveCount(0);
+    if (proposalRecoveryEvidenceDirectory) {
+      await mkdir(proposalRecoveryEvidenceDirectory, { recursive: true });
+      await page.screenshot({
+        path: path.join(proposalRecoveryEvidenceDirectory, "proposal-action-recovery.png"),
+        fullPage: true,
+      });
+    }
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const recheck = page.getByRole("button", { name: "Recheck earlier action" });
+    await expect(recheck).toBeVisible();
+    await recheck.click();
+
+    await expect(page.getByTestId("proposal-action-status")).toContainText(
+      "Proposal submitted for risk review.",
+    );
+    expect(controls.getSubmitRequests()).toHaveLength(2);
+    expect(controls.getSubmitRequests()[1]).toEqual(controls.getSubmitRequests()[0]);
   });
 
   test("keeps source action failure explicit without exposing internal response text", async ({ page }) => {
