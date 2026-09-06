@@ -342,6 +342,41 @@ test("tracks an accepted request and deliberately starts a second at constrained
   await captureDiagnosticScreenshot(page, "accepted-next-request-720");
 });
 
+test("does not present a single report as accepted when its status reference names another job", async ({
+  page,
+}) => {
+  await page.route("**/api/bff/api/v1/reports/portfolio-reviews", async (route) => {
+    const idempotencyKey = route.request().headers()["idempotency-key"];
+    await route.fulfill({
+      status: 202,
+      contentType: "application/json",
+      body: JSON.stringify({
+        report_request_id: "rrq_mismatched_receipt",
+        report_job_id: "rjob_reviewed",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_other",
+        idempotency_key: idempotencyKey,
+      }),
+    });
+  });
+  await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await page.getByRole("button", { name: "Review Request" }).click();
+  await page.getByRole("button", { name: "Submit Report Request" }).click();
+
+  await expect(
+    page.getByRole("alert").getByRole("heading", { name: "Report request not accepted" }),
+  ).toBeVisible();
+  await expect(page.getByText("rjob_reviewed", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("rjob_other", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retry Report Request" })).toBeEnabled();
+});
+
 test("keeps report lifecycle and support discoverable across content-width changes", async ({
   page,
 }) => {

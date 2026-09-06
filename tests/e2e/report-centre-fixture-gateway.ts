@@ -130,6 +130,11 @@ export async function startReportCentreFixtureGateway({
       requestUrl.pathname === "/api/v1/reports/portfolio-reviews" &&
       request.method === "POST"
     ) {
+      const idempotencyKey = request.headers["idempotency-key"];
+      if (typeof idempotencyKey !== "string" || !idempotencyKey.trim()) {
+        sendJson(response, { detail: "A reviewed idempotency key is required." }, 400);
+        return;
+      }
       acceptedRequestCount += 1;
       const requestReference = `e2e_${acceptedRequestCount}`;
       sendJson(
@@ -139,7 +144,7 @@ export async function startReportCentreFixtureGateway({
           report_job_id: `rjob_${requestReference}`,
           status: "accepted",
           status_url: `/api/v1/report-jobs/rjob_${requestReference}`,
-          idempotency_key: `report-centre-fixture-${requestReference}`,
+          idempotency_key: idempotencyKey,
         },
         202,
       );
