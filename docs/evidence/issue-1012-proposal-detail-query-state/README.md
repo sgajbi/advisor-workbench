@@ -8,14 +8,14 @@ command state with governed TanStack Query ownership.
 
 | Measure | Before | After |
 | --- | ---: | ---: |
-| Proposal Detail screen-owner lines | 827 | 663 |
+| Proposal Detail screen-owner lines | 827 | 667 |
 | Local `useState` owners | 13 | 3 |
 | Operation and transition refs | 4 | 0 |
 | Revision-counter queries | 1 | 0 |
 | Revision-bearing source query families | 4 | 0 |
 | Canonical source query families | 0 | 4 |
 
-The extracted 209-line query-state owner contains the four source queries, serial persisted-command
+The extracted 220-line query-state owner contains the four source queries, serial persisted-command
 mutations, exact invalidation/refetch transaction, current-version confirmation, and historical
 version lookup. It does not calculate or infer proposal, approval, workflow, or lineage truth.
 The same slice removes one opaque copy-shaped property from the governed inventory and ratchets the
