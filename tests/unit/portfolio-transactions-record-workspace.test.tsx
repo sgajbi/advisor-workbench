@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { onlineManager } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type MockTransactionRow = { transactionId: string };
@@ -61,10 +62,14 @@ vi.mock(
 
 import PortfolioTransactionsRecordWorkspace from "../../src/apps/portfolio/components/portfolio-transactions-record-workspace";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
-import { renderWithQueryClient } from "../helpers/query-client-test-harness";
+import {
+  createTestQueryClient,
+  renderWithQueryClient,
+} from "../helpers/query-client-test-harness";
 
 describe("portfolio transactions record workspace", () => {
   beforeEach(() => {
+    onlineManager.setOnline(true);
     window.history.replaceState(
       {},
       "",
@@ -73,6 +78,7 @@ describe("portfolio transactions record workspace", () => {
   });
 
   afterEach(() => {
+    onlineManager.setOnline(true);
     vi.unstubAllGlobals();
     routerPushMock.mockClear();
   });
@@ -159,6 +165,124 @@ describe("portfolio transactions record workspace", () => {
     expect(String((fetchMock.mock.calls as unknown[][])[0]?.[0])).toContain(
       "/portfolio/portfolios/MANUAL_PB_USD_001/transactions/TX_250?as_of_date=2026-03-28&include_projected=false&reporting_currency=SGD",
     );
+  });
+
+  it("does not repeat the exact read on reconnect or remount within one hydration", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify(buildExactRecord("TX_250")), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const queryClient = createTestQueryClient();
+    const workspace = (
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_250"
+        reportingCurrency="SGD"
+      />
+    );
+    const firstMount = renderWithQueryClient(workspace, queryClient);
+
+    expect(
+      await screen.findByRole("heading", { name: "Sell" }),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    onlineManager.setOnline(false);
+    onlineManager.setOnline(true);
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    firstMount.unmount();
+    renderWithQueryClient(workspace, queryClient);
+    expect(
+      await screen.findByRole("heading", { name: "Sell" }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries the active exact transaction only when the adviser requests recovery", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            detail: { code: "portfolio_transaction_source_unavailable" },
+          }),
+          { status: 502, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(buildExactRecord("TX_250")), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_250"
+        reportingCurrency="SGD"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Transaction source temporarily unavailable"),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry transaction" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Sell" }),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["an empty body", ""],
+    ["malformed JSON", "{"],
+  ])("keeps %s distinct as unverified transaction evidence", async (_case, body) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(body, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
+    );
+
+    renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_250"
+        reportingCurrency="SGD"
+      />,
+    );
+
+    expect(
+      await screen.findByText("Transaction evidence could not be verified"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Review TX_1" }),
+    ).toBeInTheDocument();
   });
 
   it.each([
