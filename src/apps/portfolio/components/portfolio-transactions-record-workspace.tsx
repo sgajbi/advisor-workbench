@@ -75,6 +75,7 @@ export default function PortfolioTransactionsRecordWorkspace({
         { asOfDate, reportingCurrency, signal },
       ),
     enabled: Boolean(selectedRecordId && !localTransaction),
+    gcTime: Infinity,
     retry: false,
     retryOnMount: false,
     refetchOnWindowFocus: false,

@@ -1917,7 +1917,9 @@ Most relevant current governance:
 24. URL-addressed transaction detail must use Gateway's exact transaction-record endpoint when the
     record is outside the loaded ledger page. Key governed Query state by portfolio, transaction,
     as-of date, reporting currency, and projected posture; disable automatic retry, retry-on-mount,
-    window-focus, reconnect, and remount reads so successful and failed route hydration pays one exact read. Preserve a visible explicit retry that
+    window-focus, reconnect, and remount reads, and retain the exact result for the QueryClient session,
+    so successful and failed route hydration pays one exact read even after the standard inactive-query
+    collection window. Preserve a visible explicit retry that
     recontacts Gateway for the unchanged active context. Accept the detail only after strict JSON
     decoding, contract parsing, and exact
     portfolio/transaction identity agreement. Keep not-found, access-restricted, invalid-request,
