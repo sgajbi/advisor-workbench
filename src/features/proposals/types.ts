@@ -111,6 +111,18 @@ export type ProposalEnvelopeResponse = {
   data: Record<string, unknown>;
 };
 
+export type ProposalStateTransitionEnvelopeResponse = Omit<
+  ProposalEnvelopeResponse,
+  "data"
+> & {
+  data: {
+    proposal_id: string;
+    current_state: string;
+    latest_workflow_event: Record<string, unknown>;
+    approval: Record<string, unknown> | null;
+  };
+};
+
 export type AdvisoryPolicyEnvelopeResponse = {
   correlation_id: string;
   contract_version: string;

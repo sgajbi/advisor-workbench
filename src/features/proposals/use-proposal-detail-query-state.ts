@@ -18,6 +18,7 @@ import {
 } from "./api";
 import { ProposalActionBusinessError } from "./proposal-action-error";
 import {
+  confirmProposalTransitionResponse,
   confirmRefreshedProposalActionEvidence,
   confirmRefreshedProposalVersionEvidence,
   ProposalPersistedEvidenceConfirmationError,
@@ -28,11 +29,17 @@ import {
   proposalDetailQueryKeys,
 } from "./proposal-detail-query-keys";
 import { proposalStageDescription } from "./proposal-workflow-copy";
+import type { ProposalStateTransitionEnvelopeResponse } from "./types";
 
 type LifecycleActionVariables = Readonly<{
-  action: () => Promise<unknown>;
+  action: () => Promise<ProposalStateTransitionEnvelopeResponse>;
   previousState: string;
   successPrefix: string;
+}>;
+
+type CreateVersionVariables = Readonly<{
+  previousVersionNo: number;
+  simulateRequest: Record<string, unknown> | null;
 }>;
 
 function persistedConfirmationError(error: unknown) {
@@ -107,12 +114,14 @@ export function useProposalDetailQueryState({
     mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
     mutationFn: async ({ action, previousState, successPrefix }: LifecycleActionVariables) => {
-      await action();
+      const response = await action();
       try {
+        const expectedState = confirmProposalTransitionResponse(response, proposalId);
         const refreshed = await refreshProposalEvidence();
         const refreshedState = confirmRefreshedProposalActionEvidence({
           approvals: refreshed.approvals,
           expectedProposalId: proposalId,
+          expectedState,
           lineage: refreshed.lineage,
           previousState,
           proposalDetail: refreshed.proposalDetail,
@@ -128,7 +137,7 @@ export function useProposalDetailQueryState({
   const createVersionMutation = useMutation({
     mutationKey: proposalDetailMutationKeys.createVersion(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
-    mutationFn: async (simulateRequest: Record<string, unknown> | null) => {
+    mutationFn: async ({ previousVersionNo, simulateRequest }: CreateVersionVariables) => {
       if (!simulateRequest) {
         throw new ProposalActionBusinessError(
           "Current proposal evidence does not include the source inputs required to create a new version. Refresh the full evidence record before trying again.",
@@ -154,6 +163,7 @@ export function useProposalDetailQueryState({
         || typeof expectedVersionNo !== "number"
         || !Number.isInteger(expectedVersionNo)
         || expectedVersionNo < 1
+        || expectedVersionNo <= previousVersionNo
       ) {
         throw new ProposalPersistedEvidenceConfirmationError(
           "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
@@ -166,6 +176,7 @@ export function useProposalDetailQueryState({
           expectedProposalId: proposalId,
           expectedVersionNo,
           lineage: refreshed.lineage,
+          previousVersionNo,
           proposalDetail: refreshed.proposalDetail,
           workflow: refreshed.workflow,
         });
@@ -186,12 +197,12 @@ export function useProposalDetailQueryState({
     }) => await getProposalVersion(proposalId, versionNo, requestedEvidence),
   });
   const persistedCommandCount = useIsMutating({
-    mutationKey: proposalDetailMutationKeys.all(proposalId),
+    mutationKey: proposalDetailMutationKeys.persisted(proposalId),
   });
 
   function hasPendingCommand(): boolean {
     return queryClient.isMutating({
-      mutationKey: proposalDetailMutationKeys.all(proposalId),
+      mutationKey: proposalDetailMutationKeys.persisted(proposalId),
     }) > 0;
   }
 

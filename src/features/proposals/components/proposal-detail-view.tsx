@@ -229,7 +229,7 @@ function ProposalDetailWorkspace({
         : undefined;
 
   function runProposalAction(
-    action: () => Promise<unknown>,
+    action: () => ReturnType<typeof submitProposal>,
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
@@ -250,7 +250,7 @@ function ProposalDetailWorkspace({
     }
     runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, `submit-${reviewType.toLowerCase()}`);
-      await submitProposal(proposalId, {
+      return await submitProposal(proposalId, {
         actor_id: "advisor_1",
         expected_state: detailQuery.data.proposal.current_state,
         review_type: reviewType,
@@ -265,7 +265,7 @@ function ProposalDetailWorkspace({
     }
     runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-risk");
-      await approveRisk(proposalId, {
+      return await approveRisk(proposalId, {
         actor_id: "risk_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
@@ -279,7 +279,7 @@ function ProposalDetailWorkspace({
     }
     runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "approve-compliance");
-      await approveCompliance(proposalId, {
+      return await approveCompliance(proposalId, {
         actor_id: "compliance_officer_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
@@ -293,7 +293,7 @@ function ProposalDetailWorkspace({
     }
     runProposalAction(async () => {
       const idempotencyKey = buildProposalActionIdempotencyKey(proposalId, "record-client-consent");
-      await recordClientConsent(proposalId, {
+      return await recordClientConsent(proposalId, {
         actor_id: "advisor_1",
         expected_state: detailQuery.data.proposal.current_state,
         details: { channel: "IN_PERSON", source: "ui" },
@@ -336,13 +336,17 @@ function ProposalDetailWorkspace({
       | Record<string, unknown>
       | undefined;
     const simulateRequest = (currentVersionData?.simulate_request as Record<string, unknown> | undefined) ?? null;
+    const previousVersionNo = detailQuery.data?.proposal?.current_version_no;
+    if (typeof previousVersionNo !== "number" || !Number.isInteger(previousVersionNo)) {
+      return;
+    }
     if (!simulateRequest) {
       versionLookupMutation.reset();
-      createVersionMutation.mutate(null);
+      createVersionMutation.mutate({ previousVersionNo, simulateRequest: null });
       return;
     }
     versionLookupMutation.reset();
-    createVersionMutation.mutate(simulateRequest);
+    createVersionMutation.mutate({ previousVersionNo, simulateRequest });
   }
 
   const queryError = detailQuery.error;

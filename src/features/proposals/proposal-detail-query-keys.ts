@@ -21,10 +21,12 @@ export const proposalDetailQueryKeys = {
 export const proposalDetailMutationKeys = {
   all: (proposalId: string) =>
     [...proposalDetailQueryKeys.proposal(proposalId), "mutation"] as const,
+  persisted: (proposalId: string) =>
+    [...proposalDetailMutationKeys.all(proposalId), "persisted"] as const,
   lifecycle: (proposalId: string) =>
-    [...proposalDetailMutationKeys.all(proposalId), "lifecycle"] as const,
+    [...proposalDetailMutationKeys.persisted(proposalId), "lifecycle"] as const,
   createVersion: (proposalId: string) =>
-    [...proposalDetailMutationKeys.all(proposalId), "create-version"] as const,
+    [...proposalDetailMutationKeys.persisted(proposalId), "create-version"] as const,
   loadVersion: (proposalId: string) =>
     [...proposalDetailMutationKeys.all(proposalId), "load-version"] as const,
 };
