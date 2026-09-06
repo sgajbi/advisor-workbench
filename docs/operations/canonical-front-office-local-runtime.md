@@ -376,16 +376,10 @@ powershell -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeC
   -ScreenshotDirectory $screenshotDirectory
 ```
 
-From Bash on Unix with PowerShell 7 installed:
-
-```bash
-screenshot_directory="${TMPDIR:-/tmp}/lotus-risk-module-shots"
-pwsh -NoProfile -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1 \
-  -ScreenshotDirectory "$screenshot_directory"
-```
-
-Set the platform-appropriate screenshot-directory variable to another caller-owned path when
-evidence must be retained elsewhere.
+Canonical orchestration is currently supported only from Windows PowerShell. A top-level `pwsh`
+invocation on Unix is not a supported alternative because startup still contains Windows workspace
+defaults and nested `powershell` calls; #1020 owns that implementation gap. Set
+`$screenshotDirectory` to another caller-owned path when evidence must be retained elsewhere.
 
 Validation layers:
 

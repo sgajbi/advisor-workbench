@@ -170,8 +170,9 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 Run commands from the `lotus-workbench` repository root. Supported versions are Node 22 and npm 10.
 Commands through container parity are directly runnable in PowerShell, Bash, and CI shells. The
 `Makefile` exposes equivalent shortcuts where Make is installed; it is not a Windows development
-prerequisite. Canonical runtime orchestration additionally requires Windows PowerShell on Windows
-or PowerShell 7 (`pwsh`) on Unix.
+prerequisite. Canonical front-office orchestration is currently supported only from Windows
+PowerShell: its nested commands and workspace discovery are not yet portable to Unix. Track that
+bounded implementation gap in #1020; do not present a top-level `pwsh` invocation as working proof.
 
 | Purpose | Command |
 | --- | --- |
@@ -188,9 +189,9 @@ or PowerShell 7 (`pwsh`) on Unix.
 | Container parity | `docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local` |
 | Container parity teardown | `docker compose -f docker-compose.ci-local.yml down -v --remove-orphans` |
 | Scale regression | `npm run scale:proof` then `npm run scale:proof:down` |
-| Canonical stack | Windows: `npm run live:stack:up`; Unix: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/live/Start-LotusFrontOfficeCanonical.ps1` |
-| Canonical validation | Windows: `npm run live:validate`; Unix: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/live/Validate-LotusFrontOfficeCanonical.ps1` |
-| Canonical teardown | Windows: `npm run live:stack:down`; Unix: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/live/Stop-LotusFrontOfficeCanonical.ps1` |
+| Canonical stack (Windows PowerShell) | `npm run live:stack:up` |
+| Canonical validation (Windows PowerShell) | `npm run live:validate` |
+| Canonical teardown (Windows PowerShell) | `npm run live:stack:down` |
 
 Use the narrowest focused test during development, then run repository-native gates proportionate
 to the change. [Development Workflow](wiki/Development-Workflow.md),
