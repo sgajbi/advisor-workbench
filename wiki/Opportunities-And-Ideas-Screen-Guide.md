@@ -49,6 +49,10 @@ completed or an explicit refresh-failed posture is shown.
 - After an ambiguous review or conversion response, keeps the exact submitted business terms in an
   inline recovery notice. The adviser can retry that unchanged submission or edit the form to
   record a new intent; Workbench never sends retained terms through the edited form action.
+- If refreshed opportunity reasons no longer include an adviser-selected review or conversion
+  basis, keeps that draft visibly selected and identifies it as a retained draft. The adviser can
+  keep that judgement or explicitly select a current basis; the submitted basis always matches the
+  form.
 - Refreshes queue and detail after persistence and distinguishes refresh failure.
 
 ## Decisions And Actions
@@ -67,6 +71,10 @@ posture, action persistence, and `idea-feedback-taxonomy-v1`. Workbench formats 
 carries only BFF-governed calls. Useful feedback is recorded as relevant; not-useful feedback
 requires one explicit source-owned reason. Workbench accepts success only when the returned feedback
 event matches the submitted candidate, taxonomy, outcome, reason, and time.
+Queue reasons remain source-owned suggestions. A review or conversion basis already selected in an
+adviser draft remains adviser-owned: if the refreshed source list changes, Workbench shows that
+exact closed-vocabulary value as a retained draft alongside the current choices. It does not
+silently replace, hide, reinterpret, or submit a different basis.
 For viewing evidence, Idea owns the global queue rank, queue and ranking policy versions, and
 candidate material and evidence versions. Workbench measures the independently visible candidate
 set, preserves the same observation and idempotency key on retry, and accepts success only when the
@@ -106,6 +114,7 @@ feedback, or conversion-intent controls.
 | Explanation request failure | Retry the unchanged request or continue the candidate review without it |
 | Viewing evidence unavailable | Continue reviewing; no viewing confirmation is claimed |
 | Viewing evidence persistence failure | Continue reviewing or retry the unchanged observation |
+| Draft basis no longer in current opportunity reasons | Review the labelled retained draft; keep it deliberately or select a current basis before recording the next action |
 | Review or conversion outcome not confirmed | Inspect the retained terms, then choose exact retry or edit the form and record a new intent |
 | Deterministic conflict or invalid action | Correct the stated problem; Workbench does not retain an exact retry that the source has rejected |
 | Mutation or evidence failure | Review the explicit error; no success is shown and the displayed opportunity remains unchanged |
@@ -132,6 +141,7 @@ claims, invent evidence revisions, upgrade provenance, or use an explanation as 
 - `tests/unit/use-idea-presentation-receipts.test.tsx`
 - `tests/e2e/idea-candidate-presentation.spec.ts`
 - `tests/e2e/idea-candidate-actions.spec.ts`
+- `docs/evidence/issue-1010-visible-idea-basis/`
 - `scripts/live/validation/browser-workflows.mjs`
 
 ## First Support Step
