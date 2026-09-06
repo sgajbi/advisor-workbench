@@ -17,6 +17,19 @@ export const portfolioQueryKeys = {
     ["portfolio", "workspace", "review-context-intent"] as const,
   activeShellGeneration: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId, "active-shell-generation"] as const,
+  transactionRecord: (
+    portfolioId: string,
+    transactionId: string,
+    asOfDate: string,
+    reportingCurrency: string,
+  ) =>
+    [
+      "portfolio",
+      "transactions",
+      portfolioId,
+      transactionId,
+      { asOfDate, reportingCurrency, includeProjected: false },
+    ] as const,
   summaryDetailsRoot: (portfolioId: string) =>
     ["portfolio", "workspace", portfolioId, "summary-details"] as const,
   summaryDetails: (

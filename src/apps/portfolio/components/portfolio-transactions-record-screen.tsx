@@ -5,7 +5,9 @@ import PortfolioRecordScreenShell from "./portfolio-record-screen-shell";
 import PortfolioTransactionsRecordWorkspace from "./portfolio-transactions-record-workspace";
 import { usePortfolioRecordWorkspaceContext } from "./use-portfolio-record-workspace-context";
 
-export default function PortfolioTransactionsRecordScreen(props: PortfolioRecordScreenData) {
+export default function PortfolioTransactionsRecordScreen(
+  props: PortfolioRecordScreenData,
+) {
   const context = usePortfolioRecordWorkspaceContext(props.workspace);
 
   return (
@@ -18,6 +20,9 @@ export default function PortfolioTransactionsRecordScreen(props: PortfolioRecord
           defaultStartDate={props.startDate ?? context.effectivePeriodStartDate}
           defaultEndDate={props.endDate ?? context.effectivePeriodEndDate}
           initialSelectedRecordId={props.selectedRecordId}
+          reportingCurrency={
+            props.reportingCurrency ?? props.workspace.portfolio.base_currency
+          }
         />
       ) : null}
     </PortfolioRecordScreenShell>
