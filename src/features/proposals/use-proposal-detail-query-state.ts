@@ -142,10 +142,18 @@ export function useProposalDetailQueryState({
         `ui-version-${proposalId}-${Date.now()}`,
       );
       const proposalData = (response.data.proposal as Record<string, unknown> | undefined) ?? undefined;
+      const versionData = (response.data.version as Record<string, unknown> | undefined) ?? undefined;
       const expectedVersionNo = proposalData?.current_version_no;
-      if (typeof expectedVersionNo !== "number" || !Number.isInteger(expectedVersionNo)) {
+      if (
+        proposalData?.proposal_id !== proposalId
+        || versionData?.proposal_id !== proposalId
+        || versionData?.version_no !== expectedVersionNo
+        || typeof expectedVersionNo !== "number"
+        || !Number.isInteger(expectedVersionNo)
+        || expectedVersionNo < 1
+      ) {
         throw new ProposalPersistedEvidenceConfirmationError(
-          "The source action completed, but did not identify the newly created proposal version. Reload the proposal before continuing.",
+          "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing.",
         );
       }
       try {
