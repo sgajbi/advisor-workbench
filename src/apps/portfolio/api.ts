@@ -852,7 +852,13 @@ export async function getPortfolioTransactionRecord(
           await resolveTransactionRecordFailure(response),
         );
       }
-      return parsePortfolioTransactionRecord(await response.json(), {
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+      return parsePortfolioTransactionRecord(payload, {
         portfolioId,
         transactionId,
       });
