@@ -3,6 +3,7 @@
 import {
   useIsMutating,
   useMutation,
+  useMutationState,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -207,6 +208,19 @@ export function useProposalDetailQueryState({
   const persistedCommandCount = useIsMutating({
     mutationKey: proposalDetailMutationKeys.persisted(proposalId),
   });
+  const persistedCommandErrors = useMutationState({
+    filters: {
+      mutationKey: proposalDetailMutationKeys.persisted(proposalId),
+      status: "error",
+    },
+    select: (mutation) => mutation.state.error,
+  });
+  let persistedConfirmationFailure: ProposalPersistedEvidenceConfirmationError | null = null;
+  for (const error of persistedCommandErrors) {
+    if (error instanceof ProposalPersistedEvidenceConfirmationError) {
+      persistedConfirmationFailure = error;
+    }
+  }
 
   function hasPendingCommand(): boolean {
     return queryClient.isMutating({
@@ -222,6 +236,7 @@ export function useProposalDetailQueryState({
     hasPendingCommand,
     lineageQuery,
     persistedCommandCount,
+    persistedConfirmationFailure,
     versionLookupMutation,
     workflowQuery,
   };
