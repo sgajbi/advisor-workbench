@@ -1490,6 +1490,34 @@ describe("ProposalDetailView", () => {
     });
   });
 
+  it("confirms the created version after a later source version becomes active", async () => {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 1))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 3));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 1))
+      .mockResolvedValueOnce({
+        proposal_id: "pp-1",
+        versions: [
+          ...lineageEvidence("pp-1", 2).versions,
+          ...lineageEvidence("pp-1", 3).versions,
+        ],
+      });
+
+    renderWithQueryClient();
+    await clickReadyButton("Create next version");
+
+    expect(await screen.findByText("Version created successfully: 2")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio pf_1 · Version 3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create next version" })).toBeEnabled();
+  });
+
   it("confirms compliance with its exact approval record despite the shared target posture", async () => {
     prepareCoherentActionRefresh("AWAITING_CLIENT_CONSENT", "COMPLIANCE_REVIEW");
     getProposalMock
@@ -1828,7 +1856,11 @@ describe("ProposalDetailView", () => {
     fireEvent.click(screen.getByTestId("proposal-evidence-disclosure").querySelector("summary")!);
 
     expect(screen.getByRole("switch", { name: "Load full evidence bundle" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Load version" })).toBeEnabled();
+    const loadVersion = screen.getByRole("button", { name: "Load version" });
+    expect(loadVersion).toBeEnabled();
+    fireEvent.click(loadVersion);
+    await waitFor(() => expect(getProposalVersionMock).toHaveBeenCalledWith("pp-1", 1, false));
+    expect(await screen.findByText("Loaded Version 1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create next version" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
   });
