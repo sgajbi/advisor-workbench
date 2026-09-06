@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type MockTransactionRow = { transactionId: string };
@@ -53,6 +53,7 @@ vi.mock(
 
 import PortfolioTransactionsRecordWorkspace from "../../src/apps/portfolio/components/portfolio-transactions-record-workspace";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
+import { renderWithQueryClient } from "../helpers/query-client-test-harness";
 
 describe("portfolio transactions record workspace", () => {
   beforeEach(() => {
@@ -69,20 +70,22 @@ describe("portfolio transactions record workspace", () => {
   });
 
   it("opens booked-event detail and applies a supported FX contract drill-down", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response(
-        JSON.stringify({ total: 1, skip: 0, limit: 200, transactions: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ total: 1, skip: 0, limit: 200, transactions: [] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithQueryClient(
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
+        reportingCurrency="USD"
       />,
     );
 
@@ -104,7 +107,154 @@ describe("portfolio transactions record workspace", () => {
       String((fetchMock.mock.calls as unknown[][])[0]?.[0] ?? ""),
     ).toContain("fx_contract_id=FXC-2026-0001");
   });
+
+  it("rehydrates an addressed transaction outside the loaded page with one exact read", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_250",
+    );
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify(buildExactRecord("TX_250")), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_250"
+        reportingCurrency="SGD"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Sell" }),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String((fetchMock.mock.calls as unknown[][])[0]?.[0])).toContain(
+      "/portfolio/portfolios/MANUAL_PB_USD_001/transactions/TX_250?as_of_date=2026-03-28&include_projected=false&reporting_currency=SGD",
+    );
+  });
+
+  it.each([
+    [404, "portfolio_transaction_not_found", "Transaction no longer available"],
+    [
+      403,
+      "portfolio_transaction_access_denied",
+      "Transaction access restricted",
+    ],
+    [
+      502,
+      "portfolio_transaction_source_unavailable",
+      "Transaction source temporarily unavailable",
+    ],
+  ])("keeps source failure %s distinct", async (status, code, title) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ detail: { code } }), {
+            status,
+            headers: { "Content-Type": "application/json" },
+          }),
+      ),
+    );
+
+    renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_250"
+        reportingCurrency="USD"
+      />,
+    );
+
+    expect(await screen.findByText(title)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Review TX_1" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not let a delayed prior address replace the current transaction", async () => {
+    let resolveOldResponse!: (response: Response) => void;
+    const oldResponse = new Promise<Response>((resolve) => {
+      resolveOldResponse = resolve;
+    });
+    const fetchMock = vi.fn((input: string | URL) =>
+      input.toString().includes("TX_OLD")
+        ? oldResponse
+        : Promise.resolve(
+            new Response(JSON.stringify(buildExactRecord("TX_CURRENT")), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+          ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_OLD"
+        reportingCurrency="USD"
+      />,
+    );
+
+    result.rerender(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        initialSelectedRecordId="TX_CURRENT"
+        reportingCurrency="USD"
+      />,
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Sell" }),
+    ).toBeInTheDocument();
+
+    resolveOldResponse(
+      new Response(JSON.stringify(buildExactRecord("TX_OLD")), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("TX_CURRENT")).toBeInTheDocument();
+    expect(screen.queryByText("TX_OLD")).not.toBeInTheDocument();
+  });
 });
+
+function buildExactRecord(transactionId: string) {
+  return {
+    correlation_id: "corr-exact-transaction",
+    contract_version: "v1",
+    portfolio_id: "MANUAL_PB_USD_001",
+    reporting_currency: "SGD",
+    transaction: {
+      transaction_id: transactionId,
+      transaction_date: "2026-03-19T00:00:00Z",
+      transaction_type: "SELL",
+      security_id: "EQ_2",
+      instrument_id: "MSFT",
+      quantity: 20,
+      currency: "SGD",
+    },
+    reason_codes: ["TRANSACTION_LEDGER_READY"],
+  };
+}
 
 function buildWorkspace(): PortfolioWorkspace {
   return {
