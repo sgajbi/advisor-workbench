@@ -141,10 +141,11 @@ export function useProposalDetailQueryState({
         throw error;
       }
       try {
-        confirmProposalTransitionResponse(response, proposalId, intent.expectedState);
+        const confirmation = confirmProposalTransitionResponse(response, intent);
         const refreshed = await refreshProposalEvidence();
         confirmRefreshedProposalActionEvidence({
           approvals: refreshed.approvals,
+          confirmation,
           expectedProposalId: proposalId,
           expectedState: intent.expectedState,
           lineage: refreshed.lineage,

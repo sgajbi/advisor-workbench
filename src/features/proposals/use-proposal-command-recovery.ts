@@ -70,18 +70,26 @@ function lifecycleIntentMatchesClosedWorkflow(value: Record<string, unknown>): b
   switch (value.action) {
     case "submit":
       return (
-        value.expectedState === `${String(value.request.review_type)}_REVIEW`
+        value.previousState === "DRAFT"
+        && value.request.expected_state === "DRAFT"
+        && value.expectedState === `${String(value.request.review_type)}_REVIEW`
         && ["RISK", "COMPLIANCE"].includes(String(value.request.review_type))
         && value.request.actor_id === "advisor_1"
       );
     case "approve-risk":
-      return value.expectedState === "AWAITING_CLIENT_CONSENT"
+      return value.previousState === "RISK_REVIEW"
+        && value.request.expected_state === "RISK_REVIEW"
+        && value.expectedState === "AWAITING_CLIENT_CONSENT"
         && value.request.actor_id === "risk_officer_1";
     case "approve-compliance":
-      return value.expectedState === "AWAITING_CLIENT_CONSENT"
+      return value.previousState === "COMPLIANCE_REVIEW"
+        && value.request.expected_state === "COMPLIANCE_REVIEW"
+        && value.expectedState === "AWAITING_CLIENT_CONSENT"
         && value.request.actor_id === "compliance_officer_1";
     case "record-client-consent":
-      return value.expectedState === "EXECUTION_READY"
+      return value.previousState === "AWAITING_CLIENT_CONSENT"
+        && value.request.expected_state === "AWAITING_CLIENT_CONSENT"
+        && value.expectedState === "EXECUTION_READY"
         && value.request.actor_id === "advisor_1";
     default:
       return false;

@@ -663,18 +663,19 @@ function ProposalDetailWorkspace({
         <div className={detailStyles.evidenceGrid}>
           <ProposalEvidenceControlsPanel
             includeEvidence={includeEvidence}
-            controlsDisabled={
+            readControlsDisabled={
               persistedCommandCount > 0
+              || detailQuery.isFetching
               || versionLookupMutation.isPending
               || actionEvidenceBlocked
-              || !actionSourcesReady
             }
+            createVersionDisabled={actionDisabled}
             onIncludeEvidenceChange={(value) => {
               if (
                 persistedCommandCount === 0
+                && !detailQuery.isFetching
                 && !versionLookupMutation.isPending
                 && !actionEvidenceBlocked
-                && actionSourcesReady
               ) {
                 versionLookupMutation.reset();
                 setIncludeEvidence(value);
