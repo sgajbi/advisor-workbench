@@ -230,6 +230,7 @@ function ProposalDetailWorkspace({
 
   function runProposalAction(
     action: () => ReturnType<typeof submitProposal>,
+    expectedState: string,
     successPrefix: string,
   ) {
     const previousState = detailQuery.data?.proposal?.current_state;
@@ -241,7 +242,7 @@ function ProposalDetailWorkspace({
     ) {
       return;
     }
-    actionMutation.mutate({ action, previousState, successPrefix });
+    actionMutation.mutate({ action, expectedState, previousState, successPrefix });
   }
 
   function onSubmitForReview(reviewType: "RISK" | "COMPLIANCE") {
@@ -256,7 +257,8 @@ function ProposalDetailWorkspace({
         review_type: reviewType,
         reason: { source: "ui" },
       }, idempotencyKey);
-    }, `Proposal submitted for ${reviewType === "RISK" ? "risk" : "compliance"} review.`);
+    }, reviewType === "RISK" ? "RISK_REVIEW" : "COMPLIANCE_REVIEW",
+    `Proposal submitted for ${reviewType === "RISK" ? "risk" : "compliance"} review.`);
   }
 
   function onApproveRisk() {
@@ -270,7 +272,7 @@ function ProposalDetailWorkspace({
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       }, idempotencyKey);
-    }, "Risk review recorded.");
+    }, "AWAITING_CLIENT_CONSENT", "Risk review recorded.");
   }
 
   function onApproveCompliance() {
@@ -284,7 +286,7 @@ function ProposalDetailWorkspace({
         expected_state: detailQuery.data.proposal.current_state,
         details: { source: "ui" },
       }, idempotencyKey);
-    }, "Compliance review recorded.");
+    }, "AWAITING_CLIENT_CONSENT", "Compliance review recorded.");
   }
 
   function onRecordClientConsent() {
@@ -298,7 +300,7 @@ function ProposalDetailWorkspace({
         expected_state: detailQuery.data.proposal.current_state,
         details: { channel: "IN_PERSON", source: "ui" },
       }, idempotencyKey);
-    }, "Client consent recorded.");
+    }, "EXECUTION_READY", "Client consent recorded.");
   }
 
   if (detailQuery.isLoading) {
