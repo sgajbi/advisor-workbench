@@ -5,6 +5,7 @@ import type {
   ProposalWorkflowEventsData,
   ProposalStateTransitionEnvelopeResponse,
 } from "./types";
+import { timestampsRepresentSameInstant } from "@/design-system/utils/financial-formatters";
 import { ProposalActionBusinessError } from "./proposal-action-error";
 import type { ProposalLifecycleCommandIntent } from "./use-proposal-command-recovery";
 
@@ -214,7 +215,7 @@ export function confirmRefreshedProposalActionEvidence({
       && event.from_state === previousState
       && event.to_state === expectedState
       && event.actor_id === confirmation.actorId
-      && event.occurred_at === confirmation.eventOccurredAt,
+      && timestampsRepresentSameInstant(event.occurred_at, confirmation.eventOccurredAt),
   );
   const approvalConfirmed = confirmation.approvalId === null
     ? confirmation.approvalType === null
@@ -223,7 +224,10 @@ export function confirmRefreshedProposalActionEvidence({
         && approval.approval_type === confirmation.approvalType
         && approval.approved === true
         && approval.actor_id === confirmation.actorId
-        && approval.occurred_at === confirmation.approvalOccurredAt,
+        && timestampsRepresentSameInstant(
+          approval.occurred_at,
+          confirmation.approvalOccurredAt,
+        ),
     );
   if (!eventConfirmed || !approvalConfirmed) {
     throw new ProposalActionBusinessError(

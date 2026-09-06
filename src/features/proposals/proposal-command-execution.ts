@@ -57,6 +57,10 @@ export function isAmbiguousProposalCommandFailure(error: unknown): boolean {
   return status == null || status === 408 || status === 429 || status >= 500;
 }
 
+export function isProposalCommandStateConflict(error: unknown): boolean {
+  return getWorkbenchApiErrorStatus(error) === 409;
+}
+
 export function asPersistedProposalConfirmationError(error: unknown) {
   const message = error instanceof Error
     ? error.message
