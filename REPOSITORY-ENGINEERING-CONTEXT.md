@@ -90,7 +90,11 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 
 ### Gateway and authority
 
-- Feature clients use the governed Workbench JSON transport for same-origin BFF calls.
+- Product/source reads and commands use the governed Workbench JSON transport through the
+  same-origin `/api/bff/**` boundary. Browser experience telemetry separately posts bounded events
+  to the same-origin `/api/metrics/events` ingest; telemetry is never business or source authority.
+  See [Observability Evidence](wiki/Observability-Evidence.md) for that contract.
+  Feature clients use the governed transport for BFF calls.
   `WorkbenchApiError` is the client authority for HTTP status. Do not parse status from text or
   render transport exceptions as adviser copy.
 - Every BFF request enters Gateway through `buildGatewayBffRequestHeaders`. Browser authorization,
@@ -164,20 +168,23 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 ## Repo-Native Commands
 
 Run commands from the `lotus-workbench` repository root. Supported versions are Node 22 and npm 10.
+The commands below are directly runnable in PowerShell, Bash, and CI shells. The `Makefile` exposes
+equivalent shortcuts where Make is installed; it is not a Windows development prerequisite.
 
 | Purpose | Command |
 | --- | --- |
-| Install | `make install` |
-| Develop | `make run` |
+| Install | `npm ci --no-audit --no-fund` |
+| Develop | `npm run dev` |
 | Lint and architecture gates | `npm run lint` |
 | Type safety | `npm run typecheck` |
 | Unit tests | `npm test` |
 | Coverage gate | `npm run test:coverage` |
 | Production build | `npm run build` |
-| Local PR parity | `make check` |
-| Browser smoke | `make test-e2e` |
-| Deterministic fixture families | `make test-e2e-fixtures` |
-| Container parity | `make ci-local-docker` |
+| Local PR parity | Run `npm run security:audit`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, and `npm run build` in order (`make check` shortcut) |
+| Browser smoke | `npm run test:e2e` |
+| Deterministic fixture families | `npm run test:e2e:fixtures` |
+| Container parity | `docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local` |
+| Container parity teardown | `docker compose -f docker-compose.ci-local.yml down -v --remove-orphans` |
 | Scale regression | `npm run scale:proof` then `npm run scale:proof:down` |
 | Canonical stack | `npm run live:stack:up` |
 | Canonical validation | `npm run live:validate` |
