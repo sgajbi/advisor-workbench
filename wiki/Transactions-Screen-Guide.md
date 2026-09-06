@@ -61,6 +61,9 @@ These are business uses, not production entitlement statements.
 ## Implemented Capabilities
 
 - Loads a bounded, paged transaction ledger through Gateway for the selected portfolio and window.
+- Restores an addressed transaction beyond the loaded ledger page through Gateway's exact-record
+  endpoint, binding the request to the selected portfolio, as-of date, reporting currency, and
+  non-projected posture. It never scans ledger pages or substitutes a nearby booking.
 - Keeps gross transaction-currency amounts distinct from net cost and realized P&L in portfolio
   currency.
 - Supports activity-type, booking-component, date, and quick-search refinement.
@@ -81,6 +84,7 @@ These are business uses, not production entitlement statements.
 | Refine the ledger | Selected portfolio and valid date window | None; Gateway returns a bounded read projection |
 | Search or change columns | Loaded ledger rows | None; presentation only |
 | Review a transaction | Source-returned row | None; opens current detail evidence |
+| Reopen a transaction link | Exact portfolio and transaction identity confirmed by Gateway | None; restores the addressed detail without changing the ledger |
 | Follow related activity | Source-supplied linkage identifier | None; narrows the ledger to a linked source group |
 | Export transactions | Current projected rows | Local CSV download only |
 | Change portfolio | Source-backed portfolio selection | None; Workbench requests the new mandate's ledger |
@@ -115,6 +119,10 @@ and ownership flow in [Integrations](Integrations).
 | Not applicable | No reported status and the component does not carry the documented cash-settlement lifecycle | No settlement exception is manufactured for that row |
 | Partial evidence | Available rows remain visible while a named source posture needs attention | Use only returned evidence and restore the affected source |
 | Ledger unavailable | Explicit unavailable state replaces the ledger | Retry through the governed read path or use the approved support process |
+| Addressed transaction not found | The source no longer returns that identity in the selected review context | Clear the transaction review; no substitute booking is opened |
+| Addressed transaction restricted | Access to the exact source record is denied | Continue with the permitted ledger and follow the approved access process |
+| Addressed evidence inconsistent | Portfolio/transaction identity or required contract evidence does not agree | Do not display the returned record; retry or escalate with the request reference |
+| Addressed source unavailable | The exact read cannot reach its source | The ledger stays usable while the addressed detail remains unavailable |
 
 ## Workbench Boundaries
 
@@ -151,6 +159,10 @@ claim of bank approval or competitor superiority.
   applicable missing status, inapplicable missing status, and aggregate priority.
 - Grid-helper and drawer tests prove grid, summary, detail, evidence, and CSV use the same business
   state rather than duplicating mapping logic.
+- Exact-record tests prove one direct request, strict response parsing, portfolio/transaction
+  identity agreement, distinct source failures, and stale-response fencing. The owned browser
+  scenario proves page-two selection, direct-link reload, Back/Forward behavior, and focus return
+  at desktop and compact widths.
 - The owned production-browser matrix proves all four states, raw-code suppression, explicit
   applicable denominator, detail parity, CSV parity, and no page-level overflow at desktop,
   tablet, and narrow widths.
