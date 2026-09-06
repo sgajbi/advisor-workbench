@@ -22,7 +22,9 @@ idempotency key in tab-scoped session storage before source submission; a 96-lin
 keeps API dispatch and response-envelope checks out of the screen. No credential, cookie, token, or
 authorization value is retained. A reload offers **Recheck earlier action**, which repeats only the
 same request under the same key. Invalid recovery data fails closed, and the record clears only
-after coherent source confirmation or a definitive pre-persistence failure.
+after coherent source confirmation or a definitive pre-persistence failure. Owner-reported `409`
+state conflicts are definitive rejections, so their obsolete request identity is cleared rather
+than exposed as an impossible **Recheck earlier action** loop.
 
 Lifecycle confirmation also binds the response's exact workflow-event identity, action vocabulary,
 actor, timestamp, prior posture, and resulting posture to the refreshed workflow register. Risk,
@@ -61,6 +63,9 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
 - `tests/unit/proposal-command-recovery.test.ts` proves exact lifecycle/version round trips,
   proposal isolation, clearing, and fail-closed rejection of every impossible action/prior-state
   combination.
+- `tests/unit/proposal-command-execution.test.ts` separates deterministic HTTP rejection from
+  genuinely uncertain persistence outcomes; `409` clears recovery while timeout, throttling,
+  transport loss, and server failure retain the exact admitted identity.
 - `tests/integration/proposal-detail-view.test.tsx` proves source-confirmed lifecycle and version
   success, immediate duplicate-command prevention, post-persistence failure lock, late-completion
   fencing, stable canonical query identities, independent historical lookup, response/source

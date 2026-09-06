@@ -724,6 +724,9 @@ Current repository posture:
     no new command identity may be minted until source confirmation succeeds. Treat unavailable or
     malformed recovery storage, including impossible prior-state/action combinations, as a
     fail-closed action fence. Do not store credentials, cookies, tokens, or authorization context.
+    Treat an owner-reported `409` state conflict as deterministic rejection, clear the obsolete
+    recovery identity, and require refreshed current evidence instead of repeating a request that
+    can no longer satisfy its expected-state precondition.
     Historical success copy may describe the completed action but
     must not claim a current posture that later source refreshes can supersede.
     Do not restore revision-counter queries, revision-suffixed cache identities, or component-owned
