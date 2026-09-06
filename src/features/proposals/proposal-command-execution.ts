@@ -54,7 +54,7 @@ export async function executeProposalVersionCommand(intent: ProposalVersionComma
 
 export function isAmbiguousProposalCommandFailure(error: unknown): boolean {
   const status = getWorkbenchApiErrorStatus(error);
-  return status == null || status === 408 || status === 409 || status === 429 || status >= 500;
+  return status == null || status === 408 || status === 429 || status >= 500;
 }
 
 export function asPersistedProposalConfirmationError(error: unknown) {
