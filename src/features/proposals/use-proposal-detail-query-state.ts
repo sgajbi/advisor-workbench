@@ -19,6 +19,11 @@ import {
 } from "./api";
 import { ProposalActionBusinessError } from "./proposal-action-error";
 import {
+  latestCommandSnapshot,
+  removeSettledCommandHistory,
+  type PersistedCommandSnapshot,
+} from "./proposal-detail-command-state";
+import {
   confirmProposalTransitionResponse,
   confirmRefreshedProposalActionEvidence,
   confirmRefreshedProposalVersionEvidence,
@@ -121,6 +126,13 @@ export function useProposalDetailQueryState({
   const actionMutation = useMutation({
     mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
+    gcTime: Infinity,
+    onMutate: () => {
+      removeSettledCommandHistory(
+        queryClient,
+        proposalDetailMutationKeys.lifecycle(proposalId),
+      );
+    },
     mutationFn: async ({ action, expectedState, previousState, successPrefix }: LifecycleActionVariables) => {
       const response = await action();
       try {
@@ -145,6 +157,13 @@ export function useProposalDetailQueryState({
   const createVersionMutation = useMutation({
     mutationKey: proposalDetailMutationKeys.createVersion(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
+    gcTime: Infinity,
+    onMutate: () => {
+      removeSettledCommandHistory(
+        queryClient,
+        proposalDetailMutationKeys.createVersion(proposalId),
+      );
+    },
     mutationFn: async ({ previousVersionNo, simulateRequest }: CreateVersionVariables) => {
       if (!simulateRequest) {
         throw new ProposalActionBusinessError(
@@ -208,6 +227,30 @@ export function useProposalDetailQueryState({
   const persistedCommandCount = useIsMutating({
     mutationKey: proposalDetailMutationKeys.persisted(proposalId),
   });
+  const lifecycleCommandSnapshots = useMutationState({
+    filters: {
+      exact: true,
+      mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
+    },
+    select: (mutation): PersistedCommandSnapshot<string> => ({
+      data: typeof mutation.state.data === "string" ? mutation.state.data : null,
+      error: mutation.state.error,
+      status: mutation.state.status,
+      submittedAt: mutation.state.submittedAt,
+    }),
+  });
+  const createVersionCommandSnapshots = useMutationState({
+    filters: {
+      exact: true,
+      mutationKey: proposalDetailMutationKeys.createVersion(proposalId),
+    },
+    select: (mutation): PersistedCommandSnapshot<number> => ({
+      data: typeof mutation.state.data === "number" ? mutation.state.data : null,
+      error: mutation.state.error,
+      status: mutation.state.status,
+      submittedAt: mutation.state.submittedAt,
+    }),
+  });
   const persistedCommandErrors = useMutationState({
     filters: {
       mutationKey: proposalDetailMutationKeys.persisted(proposalId),
@@ -229,8 +272,10 @@ export function useProposalDetailQueryState({
   }
 
   return {
+    actionCommandState: latestCommandSnapshot(lifecycleCommandSnapshots),
     actionMutation,
     approvalsQuery,
+    createVersionCommandState: latestCommandSnapshot(createVersionCommandSnapshots),
     createVersionMutation,
     detailQuery,
     hasPendingCommand,

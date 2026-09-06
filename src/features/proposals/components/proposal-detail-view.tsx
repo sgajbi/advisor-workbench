@@ -137,8 +137,10 @@ function ProposalDetailWorkspace({
 
   const proposalIdValid = isValidProposalId(proposalId);
   const {
+    actionCommandState,
     actionMutation,
     approvalsQuery,
+    createVersionCommandState,
     createVersionMutation,
     detailQuery,
     hasPendingCommand,
@@ -190,20 +192,27 @@ function ProposalDetailWorkspace({
   const actionSourcesChecking = actionSourcePostures.some(
     (posture) => posture.isInitialLoading || posture.isRefreshing
   );
-  const acting = actionMutation.isPending;
-  const creatingVersion = createVersionMutation.isPending;
+  const acting = actionCommandState?.status === "pending";
+  const creatingVersion = createVersionCommandState?.status === "pending";
   const actionEvidenceBlocked = persistedConfirmationFailure !== null;
-  const actionError = actionMutation.error;
+  const actionError = actionCommandState?.status === "error"
+    ? actionCommandState.error
+    : null;
   const error = actionError ? proposalActionFailureCopy(actionError, "advance_proposal") : null;
   const errorSupportEvidence = actionError
     ? proposalActionFailureSupportEvidence(actionError)
     : null;
-  const actionMessage = actionMutation.data ?? null;
-  const versionError = createVersionMutation.error ?? versionLookupMutation.error;
+  const actionMessage = actionCommandState?.status === "success"
+    ? actionCommandState.data
+    : null;
+  const versionCreationError = createVersionCommandState?.status === "error"
+    ? createVersionCommandState.error
+    : null;
+  const versionError = versionCreationError ?? versionLookupMutation.error;
   const versionActionError = versionError
     ? proposalActionFailureCopy(
         versionError,
-        createVersionMutation.error ? "create_version" : "load_version",
+        versionCreationError ? "create_version" : "load_version",
       )
     : null;
   const versionActionErrorSupportEvidence = versionError
@@ -638,7 +647,11 @@ function ProposalDetailWorkspace({
             onLoadVersion={() => void onLoadVersion()}
             onCreateNextVersion={() => void onCreateNextVersion()}
             creatingVersion={creatingVersion}
-            createdVersionNo={createVersionMutation.data ?? null}
+            createdVersionNo={
+              createVersionCommandState?.status === "success"
+                ? createVersionCommandState.data
+                : null
+            }
             versionLookup={versionLookupMutation.data ?? null}
             versionActionError={versionActionError}
             versionActionErrorSupportEvidence={versionActionErrorSupportEvidence}
