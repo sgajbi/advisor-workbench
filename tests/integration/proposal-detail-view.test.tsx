@@ -860,10 +860,18 @@ describe("ProposalDetailView", () => {
 
   it("withholds lifecycle success when refreshed history omits the exact returned event", async () => {
     submitProposalMock.mockResolvedValueOnce(submitTransitionResponse());
-    prepareCoherentActionRefresh("COMPLIANCE_REVIEW");
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
-      .mockResolvedValueOnce(proposalDetail("COMPLIANCE_REVIEW"));
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
     renderWithQueryClient();
 
     await clickReadyButton("Submit for risk review");
@@ -874,7 +882,7 @@ describe("ProposalDetailView", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Approve compliance review" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
   });
 
   it("confirms the exact submitted event after source posture advances again", async () => {
@@ -918,6 +926,31 @@ describe("ProposalDetailView", () => {
       "Proposal submitted for risk review.",
     );
     expect(screen.getByRole("button", { name: "Record client consent" })).toBeEnabled();
+  });
+
+  it("withholds submission success while refreshed posture still precedes its exact event", async () => {
+    const submittedEvent = submitTransitionResponse().data.latest_workflow_event;
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce({ ...workflowEvidence("DRAFT"), events: [submittedEvent] });
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence())
+      .mockResolvedValueOnce(lineageEvidence());
+    renderWithQueryClient();
+
+    await clickReadyButton("Submit for risk review");
+
+    expect(await screen.findByText(
+      "The source action returned, but the current proposal posture does not confirm that transition. Use Recheck earlier action before continuing.",
+    )).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
   });
 
   it("fences a lifecycle response that does not match the requested target state", async () => {

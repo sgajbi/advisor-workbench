@@ -206,6 +206,27 @@ describe("proposal action evidence", () => {
     })).toBe("EXECUTION_READY");
   });
 
+  it("rejects exact action history while refreshed source posture still precedes it", () => {
+    const confirmation = confirmProposalTransitionResponse(riskResponse(), riskIntent);
+    const current = evidence();
+    const staleEvidence = {
+      ...current,
+      approvals: { ...current.approvals, approvals: [riskResponse().data.approval] },
+      workflow: { ...current.workflow, events: [riskResponse().data.latest_workflow_event] },
+    };
+
+    expect(() => confirmRefreshedProposalActionEvidence({
+      approvals: staleEvidence.approvals,
+      confirmation,
+      expectedProposalId: "proposal-1",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      lineage: current.lineage,
+      previousState: "RISK_REVIEW",
+      proposalDetail: current.detail,
+      workflow: staleEvidence.workflow,
+    })).toThrow("current proposal posture does not confirm that transition");
+  });
+
   it("accepts source evidence only when proposal, posture, and active version agree", () => {
     expect(evaluateProposalActionEvidence({
       ...evidence(),
