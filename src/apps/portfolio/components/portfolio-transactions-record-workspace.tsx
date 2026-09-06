@@ -76,6 +76,8 @@ export default function PortfolioTransactionsRecordWorkspace({
       ),
     enabled: Boolean(selectedRecordId && !localTransaction),
     retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });

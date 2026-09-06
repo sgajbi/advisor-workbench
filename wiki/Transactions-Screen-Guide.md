@@ -63,7 +63,7 @@ These are business uses, not production entitlement statements.
 - Loads a bounded, paged transaction ledger through Gateway for the selected portfolio and window.
 - Restores an addressed transaction beyond the loaded ledger page through Gateway's exact-record
   endpoint, binding the request to the selected portfolio, as-of date, reporting currency, and
-  non-projected posture. One hydration performs one read: reconnect and component remount reuse its
+  non-projected posture. One hydration performs one read: window focus, reconnect, and successful or failed component remount reuse its
   governed result, while **Retry transaction** explicitly recontacts Gateway for the same context.
   It never scans ledger pages or substitutes a nearby booking.
 - Keeps gross transaction-currency amounts distinct from net cost and realized P&L in portfolio
@@ -161,7 +161,7 @@ claim of bank approval or competitor superiority.
   applicable missing status, inapplicable missing status, and aggregate priority.
 - Grid-helper and drawer tests prove grid, summary, detail, evidence, and CSV use the same business
   state rather than duplicating mapping logic.
-- Exact-record tests prove one direct request across reconnect and remount, explicit recovery,
+- Exact-record tests prove one direct request across window focus, reconnect and successful or failed remount, explicit recovery,
   empty/malformed success-body rejection, strict response parsing, portfolio/transaction identity
   agreement, distinct source failures, and stale-response fencing. The owned browser
   scenario proves page-two selection, direct-link reload, Back/Forward behavior, and focus return

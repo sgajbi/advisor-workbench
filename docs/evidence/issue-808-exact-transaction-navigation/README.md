@@ -7,7 +7,7 @@ event from a durable address even when the transaction is beyond the first 200-r
 
 - Workbench calls Gateway's exact transaction endpoint once per route hydration with the selected portfolio,
   transaction, as-of date, reporting currency, and `include_projected=false`.
-- Reconnect and component remount do not silently repeat that read. A visible retry is the only
+- Window focus, reconnect, and successful or failed component remount do not silently repeat that read. A visible retry is the only
   recovery action that recontacts Gateway for the unchanged active review context.
 - Strict parsing rejects malformed evidence and any portfolio or transaction identity mismatch.
 - Empty or malformed successful response bodies are treated as invalid source contracts rather
