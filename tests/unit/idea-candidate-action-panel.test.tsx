@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -34,11 +40,15 @@ function wrapper({ children }: { children: ReactNode }) {
 function renderPanel(
   onRecorded: () => Promise<boolean>,
   evidenceIdentity: typeof EVIDENCE_IDENTITY | null = EVIDENCE_IDENTITY,
+  candidateReasonCodes: readonly string[] = [
+    "high_cash_ratio",
+    "review_required",
+  ],
 ) {
   return render(
     <IdeaCandidateActionPanel
       candidateId="idea_high_cash_001"
-      candidateReasonCodes={["high_cash_ratio", "review_required"]}
+      candidateReasonCodes={candidateReasonCodes}
       evidenceIdentity={evidenceIdentity ?? undefined}
       portfolioId="PB_SG_GLOBAL_BAL_001"
       onRecorded={onRecorded}
@@ -121,6 +131,120 @@ describe("IdeaCandidateActionPanel", () => {
     expect(status).toHaveTextContent(
       "Feedback saved. Opportunity detail and worklist are current.",
     );
+  });
+
+  it("keeps a review draft basis visible when the same candidate loses its source reasons", async () => {
+    const onRecorded = vi.fn(async () => true);
+    const rendered = renderPanel(onRecorded);
+
+    rendered.rerender(
+      <IdeaCandidateActionPanel
+        candidateId="idea_high_cash_001"
+        candidateReasonCodes={[]}
+        evidenceIdentity={EVIDENCE_IDENTITY}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        onRecorded={onRecorded}
+      />,
+    );
+
+    const reviewBasis = screen.getByLabelText("Review basis");
+    expect(reviewBasis).toHaveValue("high_cash_ratio");
+    expect(
+      within(reviewBasis).getByRole("option", {
+        name: "Retained draft — Cash balance requires review",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("idea-review-business-reason-retained-draft"),
+    ).toHaveTextContent(
+      "This draft basis is not in the latest opportunity reasons",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Record review" }));
+
+    await waitFor(() =>
+      expect(ideaApi.recordAdvisorIdeaReviewAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            reasonCodes: [
+              "review_approved_for_conversion",
+              "high_cash_ratio",
+            ],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("lets conversion explicitly move from a visible retained draft to a current basis", async () => {
+    const onRecorded = vi.fn(async () => true);
+    const rendered = renderPanel(onRecorded);
+
+    rendered.rerender(
+      <IdeaCandidateActionPanel
+        candidateId="idea_high_cash_001"
+        candidateReasonCodes={["concentration_attention"]}
+        evidenceIdentity={EVIDENCE_IDENTITY}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        onRecorded={onRecorded}
+      />,
+    );
+
+    const conversionBasis = screen.getByLabelText("Conversion basis");
+    expect(conversionBasis).toHaveValue("high_cash_ratio");
+    expect(
+      screen.getByTestId("idea-conversion-business-reason-retained-draft"),
+    ).toBeVisible();
+
+    fireEvent.change(conversionBasis, {
+      target: { value: "concentration_attention" },
+    });
+
+    expect(conversionBasis).toHaveValue("concentration_attention");
+    expect(
+      screen.queryByTestId(
+        "idea-conversion-business-reason-retained-draft",
+      ),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Record intent" }));
+
+    await waitFor(() =>
+      expect(ideaApi.recordAdvisorIdeaConversionIntent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          request: expect.objectContaining({
+            reasonCodes: [
+              "review_approved_for_conversion",
+              "concentration_attention",
+            ],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("retains an unchanged adviser basis without presenting it as stale", () => {
+    const onRecorded = vi.fn(async () => true);
+    const rendered = renderPanel(onRecorded);
+    fireEvent.change(screen.getByLabelText("Review basis"), {
+      target: { value: "review_required" },
+    });
+
+    rendered.rerender(
+      <IdeaCandidateActionPanel
+        candidateId="idea_high_cash_001"
+        candidateReasonCodes={["high_cash_ratio", "review_required"]}
+        evidenceIdentity={EVIDENCE_IDENTITY}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        onRecorded={onRecorded}
+      />,
+    );
+
+    expect(screen.getByLabelText("Review basis")).toHaveValue(
+      "review_required",
+    );
+    expect(
+      screen.queryByTestId("idea-review-business-reason-retained-draft"),
+    ).not.toBeInTheDocument();
   });
 
   it("requires a reason for not-useful feedback and focuses the missing field", () => {
@@ -268,7 +392,7 @@ describe("IdeaCandidateActionPanel", () => {
         durableStorageBacked: true,
         supportedFeaturePromoted: false,
       });
-    renderPanel(onRecorded);
+    const rendered = renderPanel(onRecorded);
 
     fireEvent.change(screen.getByLabelText("Review action"), {
       target: { value: "snooze" },
@@ -292,6 +416,16 @@ describe("IdeaCandidateActionPanel", () => {
     expect(
       screen.getByText(/Retry the exact unconfirmed review/),
     ).toBeVisible();
+
+    rendered.rerender(
+      <IdeaCandidateActionPanel
+        candidateId="idea_high_cash_001"
+        candidateReasonCodes={["concentration_attention"]}
+        evidenceIdentity={EVIDENCE_IDENTITY}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        onRecorded={onRecorded}
+      />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Retry exact review" }));
     await screen.findByTestId("idea-action-review-status");
@@ -336,10 +470,19 @@ describe("IdeaCandidateActionPanel", () => {
         durableStorageBacked: true,
         supportedFeaturePromoted: false,
       });
-    renderPanel(async () => true);
+    const rendered = renderPanel(async () => true);
 
     fireEvent.click(screen.getByRole("button", { name: "Record review" }));
     await screen.findByTestId("idea-review-retry");
+    rendered.rerender(
+      <IdeaCandidateActionPanel
+        candidateId="idea_high_cash_001"
+        candidateReasonCodes={["review_required"]}
+        evidenceIdentity={EVIDENCE_IDENTITY}
+        portfolioId="PB_SG_GLOBAL_BAL_001"
+        onRecorded={async () => true}
+      />,
+    );
     fireEvent.change(screen.getByLabelText("Review action"), {
       target: { value: "reject" },
     });
