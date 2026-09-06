@@ -34,7 +34,8 @@ test.beforeAll(async () => {
     scenario !== 'review-context-states' &&
     scenario !== 'shell-unavailable' &&
     scenario !== 'positions-status' &&
-    scenario !== 'transactions-status'
+    scenario !== 'transactions-status' &&
+    scenario !== 'transaction-navigation'
   ) {
     return;
   }
@@ -1668,5 +1669,67 @@ test.describe('Portfolio workbench smoke', () => {
 
     await expect(page.getByText(/Related booking group LTG-PB_SG_GLOBAL_BAL_001-INT-UST-001/i)).toBeVisible();
     await expect(page.getByText('2 matching transactions in the selected period', { exact: true })).toBeVisible();
+  });
+
+  test('transaction deep links survive reload and browser history beyond the first ledger page', async ({ page, request }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'transaction-navigation',
+      'Requires the exact-transaction navigation fixture.',
+    );
+    const portfolioId = await resolveSmokePortfolioId(request);
+    expect(portfolioId).toBe('PB_SG_GLOBAL_BAL_001');
+
+    for (const viewport of [
+      { width: 1600, height: 1000 },
+      { width: 768, height: 1024 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(
+        `/transactions?portfolioId=${portfolioId}&asOfDate=2026-04-10&period=30D&reportingCurrency=USD`,
+        { waitUntil: 'domcontentloaded' },
+      );
+      await expect(page.getByRole('button', { name: 'Next entries' })).toBeEnabled();
+      await page.getByRole('button', { name: 'Next entries' }).click();
+      await expect(
+        page
+          .getByLabel('Transaction ledger pages')
+          .getByText('201–201 of 201 ledger entries', { exact: true }),
+      ).toBeVisible({ timeout: 15_000 });
+      const reviewButton = page.getByRole('button', { name: 'Review transaction TX_PAGE_201' });
+      await expect(reviewButton).toBeVisible({ timeout: 15_000 });
+      await reviewButton.click();
+      await expect(page).toHaveURL(/selectedRecordId=TX_PAGE_201/);
+      await expect(page.getByRole('heading', { name: 'Sell' })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Close' }).click();
+      await expect(page).not.toHaveURL(/selectedRecordId=/);
+      await expect(reviewButton).toBeFocused();
+      await reviewButton.click();
+      await expect(page).toHaveURL(/selectedRecordId=TX_PAGE_201/);
+
+      const exactRequests: string[] = [];
+      const recordExactRequest = (request: import('@playwright/test').Request) => {
+        if (request.url().includes('/transactions/TX_PAGE_201')) {
+          exactRequests.push(request.url());
+        }
+      };
+      page.on('request', recordExactRequest);
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await expect(page.getByRole('heading', { name: 'Sell' })).toBeVisible();
+      await expect(page.getByText('TX_PAGE_201', { exact: true })).toBeVisible();
+      expect(exactRequests).toHaveLength(1);
+      expect(exactRequests[0]).toContain(
+        'as_of_date=2026-04-10&include_projected=false&reporting_currency=USD',
+      );
+      page.off('request', recordExactRequest);
+
+      await page.goBack({ waitUntil: 'domcontentloaded' });
+      await expect(page).not.toHaveURL(/selectedRecordId=/);
+      await expect(page.locator('.portfolio-detail-drawer')).toHaveCount(0);
+      await page.goForward({ waitUntil: 'domcontentloaded' });
+      await expect(page).toHaveURL(/selectedRecordId=TX_PAGE_201/);
+      await expect(page.getByText('TX_PAGE_201', { exact: true })).toBeVisible();
+    }
   });
 });
