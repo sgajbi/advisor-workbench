@@ -15,9 +15,11 @@ command state with governed TanStack Query ownership.
 | Revision-bearing source query families | 4 | 0 |
 | Canonical source query families | 0 | 4 |
 
-The extracted 195-line query-state owner contains the four source queries, serial persisted-command
+The extracted 209-line query-state owner contains the four source queries, serial persisted-command
 mutations, exact invalidation/refetch transaction, current-version confirmation, and historical
 version lookup. It does not calculate or infer proposal, approval, workflow, or lineage truth.
+The same slice removes one opaque copy-shaped property from the governed inventory and ratchets the
+exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is left behind.
 
 ## Behavioural Proof
 
