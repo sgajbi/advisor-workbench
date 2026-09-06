@@ -704,9 +704,12 @@ Current repository posture:
     identity and fields to the refreshed approval register; a shared target state is not proof of
     the requested action. Permit the independently coherent current posture to have advanced after
     that exact event; current posture is source truth and must not strand recovery of a historically
-    proven command. Version creation must advance beyond the pre-command active version.
+    proven command. Version creation must advance beyond the pre-command active version. Confirm
+    the exact returned version from refreshed lineage even when a later valid source version is
+    already active; require lineage to retain both the created version and the active version.
     Keep read-only historical lookup
     independent from ancillary workflow/approval/lineage readiness and invalid recovery storage;
+    an enabled historical lookup must execute its GET rather than inherit a write-only fence;
     only writes require the full coherent source set. A live persisted command may still fence
     evidence-context changes. A
     persisted command's latest pending, success, or failure state belongs to the stable proposal
