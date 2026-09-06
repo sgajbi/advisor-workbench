@@ -1914,6 +1914,16 @@ Most relevant current governance:
     exercise functions without asserting advisor-visible behavior. Raise the floor when exact-head
     measurement improves; any controlled threshold failure must remain diagnostic and must never
     rewrite the checked-in threshold.
+24. URL-addressed transaction detail must use Gateway's exact transaction-record endpoint when the
+    record is outside the loaded ledger page. Key governed Query state by portfolio, transaction,
+    as-of date, reporting currency, and projected posture; disable automatic retries so one route
+    hydration pays one exact read. Accept the detail only after strict contract parsing and exact
+    portfolio/transaction identity agreement. Keep not-found, access-restricted, invalid-request,
+    source-unavailable, malformed-contract, and identity-mismatch outcomes distinct, leave the
+    surrounding ledger usable, and never scan pages or display a substitute booking. Query-key
+    ownership must fence delayed prior-address responses from the current drawer. Browser proof
+    covers later-page selection, direct-link reload, Back/Forward navigation, and focus return at
+    desktop and compact widths.
 
 ## Context Maintenance Rule
 
