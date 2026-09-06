@@ -16,6 +16,8 @@ export const proposalDetailQueryKeys = {
     [...proposalDetailQueryKeys.proposal(proposalId), "approvals"] as const,
   lineage: (proposalId: string) =>
     [...proposalDetailQueryKeys.proposal(proposalId), "lineage"] as const,
+  commandRecovery: (proposalId: string) =>
+    [...proposalDetailQueryKeys.proposal(proposalId), "command-recovery"] as const,
 };
 
 export const proposalDetailMutationKeys = {
