@@ -62,6 +62,7 @@ vi.mock(
 
 import PortfolioTransactionsRecordWorkspace from "../../src/apps/portfolio/components/portfolio-transactions-record-workspace";
 import type { PortfolioWorkspace } from "../../src/apps/portfolio/types";
+import { WORKBENCH_QUERY_GC_TIME_MS } from "../../src/features/platform-runtime/query-policy";
 import {
   createTestQueryClient,
   renderWithQueryClient,
@@ -78,6 +79,7 @@ describe("portfolio transactions record workspace", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     focusManager.setFocused(undefined);
     onlineManager.setOnline(true);
     vi.unstubAllGlobals();
@@ -205,7 +207,10 @@ describe("portfolio transactions record workspace", () => {
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
+    vi.useFakeTimers();
     firstMount.unmount();
+    vi.advanceTimersByTime(WORKBENCH_QUERY_GC_TIME_MS + 1);
+    vi.useRealTimers();
     renderWithQueryClient(workspace, queryClient);
     expect(
       await screen.findByRole("heading", { name: "Sell" }),
@@ -214,7 +219,7 @@ describe("portfolio transactions record workspace", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retains a failed exact read across remount and retries only when the adviser requests recovery", async () => {
+  it("retains a failed exact read beyond collection and retries only when the adviser requests recovery", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -251,7 +256,10 @@ describe("portfolio transactions record workspace", () => {
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
+    vi.useFakeTimers();
     firstMount.unmount();
+    vi.advanceTimersByTime(WORKBENCH_QUERY_GC_TIME_MS + 1);
+    vi.useRealTimers();
     renderWithQueryClient(workspace, queryClient);
 
     expect(
