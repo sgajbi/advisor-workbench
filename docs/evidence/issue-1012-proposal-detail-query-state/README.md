@@ -24,10 +24,12 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
 ## Behavioural Proof
 
 - `tests/unit/proposal-action-evidence.test.ts` proves exact proposal, posture, and active-version
-  agreement, including newly created version confirmation and mismatch rejection.
+  agreement, including transition-response identity, newly created version advancement, and
+  mismatch rejection.
 - `tests/integration/proposal-detail-view.test.tsx` proves source-confirmed lifecycle and version
   success, immediate duplicate-command prevention, post-persistence failure lock, late-completion
-  fencing, stable canonical query identities, and retained confirmed version evidence on revisit.
+  fencing, stable canonical query identities, independent historical lookup, response/source
+  agreement, non-advancing replay rejection, and retained confirmed version evidence on revisit.
 - `tests/e2e/proposal-memo-posture.spec.ts` proves in an optimized production browser that lifecycle
   success appears only after detail, workflow, approvals, and lineage each perform the exact
   confirmation read.

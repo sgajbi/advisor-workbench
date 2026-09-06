@@ -57,7 +57,8 @@ These use cases do not substitute for authenticated production-role or portfolio
    and neither mode changes the proposal lifecycle merely by being opened.
 5. Perform a lifecycle, narrative, memo, or package action only after its visible prerequisites are
    satisfied.
-6. Treat success as confirmed only after Gateway persistence and the owning source reads reconcile.
+6. Treat success as confirmed only after the Gateway response identifies the same proposal and
+   resulting posture, then the owning source reads reconcile to that exact result.
 7. Use the business-labelled return link to restore the originating portfolio and lifecycle view.
 
 ## Implemented Capabilities
@@ -70,6 +71,8 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
   Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
   until all four refreshed sources agree; refresh never creates a parallel revision cache.
+- Keeps read-only historical-version lookup outside the persisted-command lock, so inspecting an
+  earlier record does not block an otherwise admitted lifecycle decision.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
   history already returned by the proposal contracts.
 - Presents proposal version, lineage, narrative review, implementation, and other exact audit
@@ -126,8 +129,9 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Treats generated commentary as an optional working aid. It never upgrades the retained memo,
   advisor review, suitability evidence, client-release posture, or proposal lifecycle state.
 - Creates a next proposal version only from the current source proposal's retained simulation
-  request. Success is shown only after refreshed detail identifies the returned new version and
-  workflow, approvals, and lineage agree with that active record.
+  request. The returned version must be newer than the pre-command active version; success is shown
+  only after refreshed detail identifies that returned version and workflow, approvals, and lineage
+  agree with the active record.
 - Preserves a deterministic return to Approval Queue, Suitability, Risk and Impact, Discussion Pack,
   or Implementation when valid originating context is supplied.
 - Preserves that return path in routine, invalid-id, not-found, restricted, and unavailable states.
