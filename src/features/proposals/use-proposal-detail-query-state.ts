@@ -97,8 +97,8 @@ export function useProposalDetailQueryState({
     }
     return {
       approvals: approvalsResult.data,
-      detail: detailResult.data,
       lineage: lineageResult.data,
+      proposalDetail: detailResult.data,
       workflow: workflowResult.data,
     };
   }
@@ -111,9 +111,12 @@ export function useProposalDetailQueryState({
       try {
         const refreshed = await refreshProposalEvidence();
         const refreshedState = confirmRefreshedProposalActionEvidence({
-          ...refreshed,
+          approvals: refreshed.approvals,
+          detail: refreshed.proposalDetail,
           expectedProposalId: proposalId,
+          lineage: refreshed.lineage,
           previousState,
+          workflow: refreshed.workflow,
         });
         return `${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`;
       } catch (error) {
@@ -159,9 +162,12 @@ export function useProposalDetailQueryState({
       try {
         const refreshed = await refreshProposalEvidence();
         return confirmRefreshedProposalVersionEvidence({
-          ...refreshed,
+          approvals: refreshed.approvals,
+          detail: refreshed.proposalDetail,
           expectedProposalId: proposalId,
           expectedVersionNo,
+          lineage: refreshed.lineage,
+          workflow: refreshed.workflow,
         });
       } catch (error) {
         throw persistedConfirmationError(error);
