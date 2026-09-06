@@ -72,4 +72,35 @@ describe("proposal command recovery", () => {
 
     expect(readProposalCommandRecovery("pp-1")).toEqual({ state: "invalid" });
   });
+
+  it.each([
+    ["submit", "RISK_REVIEW", "RISK_REVIEW", "RISK_REVIEW", "advisor_1", { review_type: "RISK" }],
+    ["approve-risk", "DRAFT", "DRAFT", "AWAITING_CLIENT_CONSENT", "risk_officer_1", {}],
+    ["approve-compliance", "RISK_REVIEW", "RISK_REVIEW", "AWAITING_CLIENT_CONSENT", "compliance_officer_1", {}],
+    ["record-client-consent", "COMPLIANCE_REVIEW", "COMPLIANCE_REVIEW", "EXECUTION_READY", "advisor_1", {}],
+  ])("rejects impossible persisted prior state for %s", (
+    action,
+    previousState,
+    requestState,
+    expectedState,
+    actorId,
+    requestFields,
+  ) => {
+    window.sessionStorage.setItem("lotus:proposal-command-recovery:pp-1", JSON.stringify({
+      action,
+      expectedState,
+      idempotencyKey: `ui-${action}-invalid-prior`,
+      kind: "lifecycle",
+      previousState,
+      proposalId: "pp-1",
+      request: {
+        actor_id: actorId,
+        expected_state: requestState,
+        ...requestFields,
+      },
+      storageVersion: 1,
+    }));
+
+    expect(readProposalCommandRecovery("pp-1")).toEqual({ state: "invalid" });
+  });
 });

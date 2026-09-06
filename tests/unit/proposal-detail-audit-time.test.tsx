@@ -20,7 +20,8 @@ describe("proposal detail audit-time presentation", () => {
       <>
         <ProposalEvidenceControlsPanel
           includeEvidence={false}
-          controlsDisabled={false}
+          readControlsDisabled={false}
+          createVersionDisabled={false}
           onIncludeEvidenceChange={vi.fn()}
           versionLookupNo={2}
           onVersionLookupNoChange={vi.fn()}
