@@ -19,6 +19,7 @@ import type {
   ReportJobListResponse,
   ReportOrderingResponse,
 } from "./contracts";
+import { admitReportJobReceipt } from "./report-job-receipt";
 import {
   buildReportOrderingScreenState,
   type ReportOrderingCatalogueState,
@@ -711,9 +712,13 @@ export function useReportOrderingWorkflow({
           return false;
         }
       } else {
+        const reportHandle = admitReportJobReceipt(
+          handle as ReportJobHandle,
+          activeReviewedIntent.idempotencyKey,
+        );
         setSubmittedHandlesByPortfolio((current) => ({
           ...current,
-          [portfolioId]: handle as ReportJobHandle,
+          [portfolioId]: reportHandle,
         }));
       }
       setSubmissionProgress({ portfolioId, state: "accepted", error: null });
