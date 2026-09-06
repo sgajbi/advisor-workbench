@@ -75,6 +75,12 @@ These use cases do not substitute for authenticated production-role or portfolio
   advisor opens another record and returns. An uncertain command therefore remains visibly fenced
   instead of becoming available for accidental resubmission; a later admitted command of the same
   kind replaces the prior settled message.
+- Retains the exact admitted lifecycle or version request and idempotency key in the current browser
+  tab before submission. If persistence cannot be confirmed, **Recheck earlier action** survives a
+  reload and repeats only that exact request. Invalid or unavailable recovery storage blocks a new
+  action; authentication and entitlement material is never stored there.
+- Describes a completed action as a historical outcome without labelling its resulting posture as
+  current. Current posture remains the independently refreshed Gateway/Advise record.
 - Keeps read-only historical-version lookup outside the persisted-command lock, so inspecting an
   earlier record does not block an otherwise admitted lifecycle decision.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
@@ -184,6 +190,8 @@ and [Integrations](Integrations).
 | Memo not prepared | Gateway confirms that memo, projection, and replay are absent while complete lineage confirms no memo for the current proposal version | Enter the advisor or reviewer reference, then use **Prepare advisor memo** |
 | Partial supporting evidence | Available proposal evidence remains visible and the missing source family is named | Restore the missing evidence before a lifecycle action |
 | Action pending | The initiating action remains fenced across same-proposal version changes and conflicting controls are unavailable | Wait for persistence and coherent refresh |
+| Lifecycle or version action awaiting confirmation | No success is shown; current source posture remains visible and **Recheck earlier action** is available | Recheck the exact stored request and idempotency identity; do not start a replacement action |
+| Recovery record unavailable or invalid | The screen cannot prove a safe exact retry and all proposal-changing actions remain unavailable | Keep the record open and use the support path; do not reconstruct or resubmit the action |
 | Current-version action confirmation failed | No success is shown; the persisted receipt remains under the current proposal version and conflicting same-version memo actions are fenced | Use **Refresh record** to reconcile the original action; the mutation is not repeated |
 | Historical action awaiting confirmation | The earlier version and its recovery remain explicit while the current proposal workflow stays usable | Continue current-version work where its own source evidence admits it; recheck the earlier record before relying on that historical action |
 | Historical evidence unavailable | The persisted earlier action remains identified, but complete source lineage no longer supplies that version's retained memo evidence | Do not interpret it as confirmed or as source disagreement; use the support path for the named earlier version |

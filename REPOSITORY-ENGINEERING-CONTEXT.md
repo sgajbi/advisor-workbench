@@ -705,6 +705,13 @@ Current repository posture:
     state belongs to the stable proposal scope, not the currently mounted mutation observer. Retain
     it across proposal and route remounts without a time-based eviction window; when a new command
     of the same kind is admitted, remove its prior settled record so session state stays bounded.
+    Before a lifecycle or version command reaches the source, retain its exact request and
+    idempotency key in proposal-scoped, tab-scoped recovery storage. An uncertain completion must
+    survive document reload and expose **Recheck earlier action**, which repeats that exact identity;
+    no new command identity may be minted until source confirmation succeeds. Treat unavailable or
+    malformed recovery storage as a fail-closed action fence. Do not store credentials, cookies,
+    tokens, or authorization context. Historical success copy may describe the completed action but
+    must not claim a current posture that later source refreshes can supersede.
     Do not restore revision-counter
     queries, revision-suffixed cache identities, or component-owned async token/state machinery.
     Narrative
