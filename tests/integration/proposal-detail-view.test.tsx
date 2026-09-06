@@ -1270,6 +1270,7 @@ describe("ProposalDetailView", () => {
     createProposalVersionMock.mockRejectedValueOnce(
       new WorkbenchApiError("proposal request", 409, "corr-version-conflict-001"),
     );
+    prepareCoherentVersionRefresh(2);
     renderWithQueryClient();
 
     await clickReadyButton("Create next version");
@@ -1279,6 +1280,7 @@ describe("ProposalDetailView", () => {
     )).toBeInTheDocument();
     expect(window.sessionStorage.getItem("lotus:proposal-command-recovery:pp-1")).toBeNull();
     expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
+    expect(screen.getByText("Portfolio pf_1 · Version 2")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create next version" })).toBeEnabled();
   });
 
@@ -1286,6 +1288,10 @@ describe("ProposalDetailView", () => {
     submitProposalMock.mockRejectedValueOnce(
       new WorkbenchApiError("proposal request", 409, "corr-state-conflict-001"),
     );
+    prepareCoherentActionRefresh("RISK_REVIEW");
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
     renderWithQueryClient();
 
     await clickReadyButton("Submit for risk review");
@@ -1295,7 +1301,27 @@ describe("ProposalDetailView", () => {
     )).toBeInTheDocument();
     expect(window.sessionStorage.getItem("lotus:proposal-command-recovery:pp-1")).toBeNull();
     expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Submit for risk review" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeEnabled();
+  });
+
+  it("keeps writes fenced when conflict reconciliation cannot refresh current evidence", async () => {
+    submitProposalMock.mockRejectedValueOnce(
+      new WorkbenchApiError("proposal request", 409, "corr-refresh-failed-001"),
+    );
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT"))
+      .mockRejectedValueOnce(new Error("current proposal unavailable"));
+    renderWithQueryClient();
+
+    await clickReadyButton("Submit for risk review");
+
+    expect(await screen.findByText(
+      "The source proposal changed before this action completed. Refresh current evidence before trying again.",
+    )).toBeInTheDocument();
+    expect(window.sessionStorage.getItem("lotus:proposal-command-recovery:pp-1")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Recheck earlier action" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit for risk review" })).toBeDisabled();
   });
 
   it("recovers an unconfirmed action after reload with the exact request identity", async () => {

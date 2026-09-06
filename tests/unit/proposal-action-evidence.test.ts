@@ -182,6 +182,60 @@ describe("proposal action evidence", () => {
     })).toThrow("does not contain its exact workflow or approval record");
   });
 
+  it("matches exact action timestamps by instant across source timezone representations", () => {
+    const response = riskResponse();
+    const confirmation = confirmProposalTransitionResponse(response, riskIntent);
+    const current = evidence();
+    current.detail.proposal.current_state = "AWAITING_CLIENT_CONSENT";
+    current.workflow.current_state = "AWAITING_CLIENT_CONSENT";
+    current.approvals.current_state = "AWAITING_CLIENT_CONSENT";
+
+    expect(confirmRefreshedProposalActionEvidence({
+      approvals: {
+        ...current.approvals,
+        approvals: [{
+          ...response.data.approval,
+          occurred_at: "2026-09-06T09:00:00+08:00",
+        }],
+      },
+      confirmation,
+      expectedProposalId: "proposal-1",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      lineage: current.lineage,
+      previousState: "RISK_REVIEW",
+      proposalDetail: current.detail,
+      workflow: {
+        ...current.workflow,
+        events: [{
+          ...response.data.latest_workflow_event,
+          occurred_at: "2026-09-06T09:00:00+08:00",
+        }],
+      },
+    })).toBe("AWAITING_CLIENT_CONSENT");
+  });
+
+  it("rejects matching but malformed action timestamps", () => {
+    const response = riskResponse();
+    response.data.latest_workflow_event.occurred_at = "not-a-time";
+    response.data.approval.occurred_at = "not-a-time";
+    const confirmation = confirmProposalTransitionResponse(response, riskIntent);
+    const current = evidence();
+    current.detail.proposal.current_state = "AWAITING_CLIENT_CONSENT";
+    current.workflow.current_state = "AWAITING_CLIENT_CONSENT";
+    current.approvals.current_state = "AWAITING_CLIENT_CONSENT";
+
+    expect(() => confirmRefreshedProposalActionEvidence({
+      approvals: { ...current.approvals, approvals: [response.data.approval] },
+      confirmation,
+      expectedProposalId: "proposal-1",
+      expectedState: "AWAITING_CLIENT_CONSENT",
+      lineage: current.lineage,
+      previousState: "RISK_REVIEW",
+      proposalDetail: current.detail,
+      workflow: { ...current.workflow, events: [response.data.latest_workflow_event] },
+    })).toThrow("does not contain its exact workflow or approval record");
+  });
+
   it("retains exact action proof when coherent source posture has advanced", () => {
     const confirmation = confirmProposalTransitionResponse(riskResponse(), riskIntent);
     const current = evidence();
