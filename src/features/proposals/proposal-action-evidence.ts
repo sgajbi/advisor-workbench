@@ -46,6 +46,14 @@ function expectedTransitionEvidence(intent: ProposalLifecycleCommandIntent) {
   }
 }
 
+function confirmsReachedTransition(currentState: string, expectedState: string): boolean {
+  if (currentState === expectedState) return true;
+  if (expectedState === "RISK_REVIEW" || expectedState === "COMPLIANCE_REVIEW") {
+    return currentState === "AWAITING_CLIENT_CONSENT" || currentState === "EXECUTION_READY";
+  }
+  return expectedState === "AWAITING_CLIENT_CONSENT" && currentState === "EXECUTION_READY";
+}
+
 export function confirmProposalTransitionResponse(
   response: ProposalStateTransitionEnvelopeResponse,
   intent: ProposalLifecycleCommandIntent,
@@ -195,11 +203,9 @@ export function confirmRefreshedProposalActionEvidence({
     );
   }
   const refreshedState = agreement.currentState;
-  if (
-    !refreshedState
-  ) {
+  if (!refreshedState || !confirmsReachedTransition(refreshedState, expectedState)) {
     throw new ProposalActionBusinessError(
-      "The source action returned, but the current proposal posture could not be confirmed. Use Recheck earlier action before continuing.",
+      "The source action returned, but the current proposal posture does not confirm that transition. Use Recheck earlier action before continuing.",
     );
   }
   const eventConfirmed = workflow?.events.some(
