@@ -702,10 +702,13 @@ Current repository posture:
     Gateway response's proposal, action-specific workflow event, and resulting state to the exact
     refreshed workflow record. Risk, compliance, and consent must also bind the returned approval
     identity and fields to the refreshed approval register; a shared target state is not proof of
-    the requested action. Version creation must advance beyond the pre-command active version.
+    the requested action. Permit the independently coherent current posture to have advanced after
+    that exact event; current posture is source truth and must not strand recovery of a historically
+    proven command. Version creation must advance beyond the pre-command active version.
     Keep read-only historical lookup
-    independent from ancillary workflow/approval/lineage readiness; only writes require the full
-    coherent source set. A live persisted command may still fence evidence-context changes. A
+    independent from ancillary workflow/approval/lineage readiness and invalid recovery storage;
+    only writes require the full coherent source set. A live persisted command may still fence
+    evidence-context changes. A
     persisted command's latest pending, success, or failure state belongs to the stable proposal
     scope, not the currently mounted mutation observer. Retain
     it across proposal and route remounts without a time-based eviction window; when a new command
