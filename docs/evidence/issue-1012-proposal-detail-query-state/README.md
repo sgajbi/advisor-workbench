@@ -8,21 +8,29 @@ command state with governed TanStack Query ownership.
 
 | Measure | Before | After |
 | --- | ---: | ---: |
-| Proposal Detail screen-owner lines | 827 | 678 |
+| Proposal Detail screen-owner lines | 827 | 716 |
 | Local `useState` owners | 13 | 3 |
 | Operation and transition refs | 4 | 0 |
 | Revision-counter queries | 1 | 0 |
 | Revision-bearing source query families | 4 | 0 |
 | Canonical source query families | 0 | 4 |
 
-The extracted 288-line query-state owner contains the four source queries, serial persisted-command
+The extracted 310-line query-state owner contains the four source queries, serial persisted-command
 mutations, exact invalidation/refetch transaction, current-version confirmation, and historical
-version lookup. The proposal-scoped mutation record retains the latest command's pending, success,
-or failure state outside a transient component observer and is not discarded by time-based mutation
-garbage collection. Starting the next admitted command of the same kind removes its prior settled
-record, keeping the retained state bounded. A route remount therefore cannot silently restore an
-uncertain action or erase its user-visible outcome. The owner does not calculate or infer proposal,
-approval, workflow, or lineage truth.
+version lookup. A focused 198-line recovery owner records the exact admitted command and
+idempotency key in tab-scoped session storage before source submission; a 96-line execution owner
+keeps API dispatch and response-envelope checks out of the screen. No credential, cookie, token, or
+authorization value is retained. A reload offers **Recheck earlier action**, which repeats only the
+same request under the same key. Invalid recovery data fails closed, and the record clears only
+after coherent source confirmation or a definitive pre-persistence failure.
+
+The proposal-scoped mutation record retains the latest command's pending, success, or failure state
+outside a transient component observer and is not discarded by time-based mutation garbage
+collection. Starting the next admitted command of the same kind removes its prior settled record,
+keeping the retained state bounded. A route remount therefore cannot erase an uncertain action or
+allow a new request identity. Completed-action copy records the historical outcome only; current
+posture remains owned by refreshed source evidence. These owners do not calculate or infer
+proposal, approval, workflow, or lineage truth.
 The same slice removes one opaque copy-shaped property from the governed inventory and ratchets the
 exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is left behind.
 
@@ -33,16 +41,22 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
   mismatch rejection.
 - `tests/unit/proposal-detail-command-state.test.ts` proves latest-command projection and exact-key,
   pending-safe cleanup of prior settled records.
+- `tests/unit/proposal-command-recovery.test.ts` proves exact lifecycle/version round trips,
+  proposal isolation, clearing, and fail-closed rejection of a corrupted action/state combination.
 - `tests/integration/proposal-detail-view.test.tsx` proves source-confirmed lifecycle and version
   success, immediate duplicate-command prevention, post-persistence failure lock, late-completion
   fencing, stable canonical query identities, independent historical lookup, response/source
   agreement, requested-target binding, malformed-success fencing, non-advancing replay rejection,
   retained pending/success/failure command presentation on revisit, bounded settled-command
-  replacement, and persisted-confirmation fencing beyond the default mutation-cache lifetime.
+  replacement, persisted-confirmation fencing beyond the default mutation-cache lifetime, and
+  lifecycle/version recovery after reload with byte-equivalent request arguments and idempotency
+  keys.
 - `tests/e2e/proposal-memo-posture.spec.ts` proves in an optimized production browser that lifecycle
   success appears only after detail, workflow, approvals, and lineage each perform the exact
-  confirmation read.
+  confirmation read; a forced confirmation failure remains fenced through reload and rechecks the
+  exact source request identity.
 
-No screenshot is added because no visual composition, copy, state presentation, focus behavior, or
-responsive behavior changed. Existing Proposal Detail evidence remains representative; the browser
-regression is the relevant rendered proof for this state-ownership slice.
+The rendered recovery state is captured in
+[`proposal-action-recovery.png`](proposal-action-recovery.png). It shows the historical failure,
+the source-owned current posture, disabled conflicting action, and explicit recovery command
+without presenting the earlier action result as current truth.
