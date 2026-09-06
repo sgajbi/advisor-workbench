@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 
 import ProposalDetailView from "../../src/features/proposals/components/proposal-detail-view";
+import { proposalDetailQueryKeys } from "../../src/features/proposals/proposal-detail-query-keys";
 import { WorkbenchApiError } from "../../src/features/workbench/api-client";
 
 const {
@@ -264,6 +265,21 @@ describe("ProposalDetailView", () => {
     getLineageMock
       .mockResolvedValueOnce(lineageEvidence())
       .mockResolvedValueOnce(lineageEvidence());
+  }
+
+  function prepareCoherentVersionRefresh(versionNo = 2) {
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", 1))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1", versionNo));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1", 1))
+      .mockResolvedValueOnce(lineageEvidence("pp-1", versionNo));
   }
 
   function renderWithQueryClient(proposalId = "pp-1") {
@@ -695,6 +711,9 @@ describe("ProposalDetailView", () => {
     const previousCallCount = submitProposalMock.mock.calls.length;
     await waitFor(() => expect(action).toBeEnabled());
     fireEvent.click(action);
+    await waitFor(() => {
+      expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
+    });
     fireEvent.click(action);
 
     expect(submitProposalMock).toHaveBeenCalledTimes(previousCallCount + 1);
@@ -817,6 +836,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("fences proposal actions and detail-context controls during version creation", async () => {
+    prepareCoherentVersionRefresh();
     let completeVersionCreation: (() => void) | undefined;
     createProposalVersionMock.mockImplementationOnce(
       () => new Promise((resolve) => {
@@ -1051,6 +1071,7 @@ describe("ProposalDetailView", () => {
   });
 
   it("reads current_version_no from the proposal envelope after creating a new version", async () => {
+    prepareCoherentVersionRefresh();
     let completeVersionCreation: (() => void) | undefined;
     createProposalVersionMock.mockImplementationOnce(
       () => new Promise((resolve) => {
@@ -1382,6 +1403,20 @@ describe("ProposalDetailView", () => {
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
     expect(screen.getByText(/Portfolio pf_1 · Version 2/)).toBeInTheDocument();
     expect(getProposalMock.mock.calls.length - proposalCallsBeforeTest).toBe(3);
+    expect(
+      queryClient.getQueryCache().getAll()
+        .map((query) => query.queryKey)
+        .filter((key) => key[0] === "workbench" && key[1] === "proposal-detail" && key[2] === "pp-1"),
+    ).toEqual(expect.arrayContaining([
+      proposalDetailQueryKeys.detail("pp-1", false),
+      proposalDetailQueryKeys.workflow("pp-1"),
+      proposalDetailQueryKeys.approvals("pp-1"),
+      proposalDetailQueryKeys.lineage("pp-1"),
+    ]));
+    expect(
+      queryClient.getQueryCache().getAll()
+        .some((query) => query.queryKey.includes("proposal-detail-refresh-generation")),
+    ).toBe(false);
   });
 
   it("does not publish an earlier version lookup after leaving and returning to a proposal", async () => {
