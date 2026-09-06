@@ -699,23 +699,28 @@ Current repository posture:
     Detail's detail, workflow, approval, and lineage reads under stable proposal-scoped TanStack
     Query keys; persisted lifecycle and version commands share a serial proposal scope, invalidate
     those exact records, and confirm from their refreshed values. Lifecycle success must bind the
-    Gateway response's proposal and resulting state to the same refreshed source posture; version
-    creation must advance beyond the pre-command active version. Keep read-only historical lookup
-    outside the persisted-command lock. A persisted command's latest pending, success, or failure
-    state belongs to the stable proposal scope, not the currently mounted mutation observer. Retain
+    Gateway response's proposal, action-specific workflow event, and resulting state to the exact
+    refreshed workflow record. Risk, compliance, and consent must also bind the returned approval
+    identity and fields to the refreshed approval register; a shared target state is not proof of
+    the requested action. Version creation must advance beyond the pre-command active version.
+    Keep read-only historical lookup
+    independent from ancillary workflow/approval/lineage readiness; only writes require the full
+    coherent source set. A live persisted command may still fence evidence-context changes. A
+    persisted command's latest pending, success, or failure state belongs to the stable proposal
+    scope, not the currently mounted mutation observer. Retain
     it across proposal and route remounts without a time-based eviction window; when a new command
     of the same kind is admitted, remove its prior settled record so session state stays bounded.
     Before a lifecycle or version command reaches the source, retain its exact request and
     idempotency key in proposal-scoped, tab-scoped recovery storage. An uncertain completion must
     survive document reload and expose **Recheck earlier action**, which repeats that exact identity;
     no new command identity may be minted until source confirmation succeeds. Treat unavailable or
-    malformed recovery storage as a fail-closed action fence. Do not store credentials, cookies,
-    tokens, or authorization context. Historical success copy may describe the completed action but
+    malformed recovery storage, including impossible prior-state/action combinations, as a
+    fail-closed action fence. Do not store credentials, cookies, tokens, or authorization context.
+    Historical success copy may describe the completed action but
     must not claim a current posture that later source refreshes can supersede.
-    Do not restore revision-counter
-    queries, revision-suffixed cache identities, or component-owned async token/state machinery.
-    Narrative
-    review is confirmed from the current-version narrative read; delivery summary and events remain
+    Do not restore revision-counter queries, revision-suffixed cache identities, or component-owned
+    async token/state machinery. Narrative review is confirmed from the current-version narrative
+    read; delivery summary and events remain
     independent downstream package posture and cannot authorize review. Delivery history must be
     complete, chronological, uniquely identified, bound event-by-event to the active proposal
     version, and consistent with its final/latest record. A discussion-pack action is confirmed only
