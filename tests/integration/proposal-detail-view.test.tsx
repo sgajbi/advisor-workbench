@@ -906,6 +906,28 @@ describe("ProposalDetailView", () => {
     expect(evidenceMode).toBeEnabled();
   });
 
+  it("fences a malformed successful version response as an unconfirmed persisted outcome", async () => {
+    createProposalVersionMock.mockResolvedValueOnce({ data: null } as never);
+    renderWithQueryClient();
+
+    const createVersion = await screen.findByRole("button", {
+      name: "Create next version",
+    });
+    await waitFor(() => expect(createVersion).toBeEnabled());
+    const previousVersionCount = createProposalVersionMock.mock.calls.length;
+    fireEvent.click(createVersion);
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but did not identify a matching newly created proposal version. Reload the proposal before continuing."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Version created successfully/)).not.toBeInTheDocument();
+    expect(createVersion).toBeDisabled();
+    fireEvent.click(createVersion);
+    expect(createProposalVersionMock).toHaveBeenCalledTimes(previousVersionCount + 1);
+  });
+
   it("renders a typed missing-version posture without transport copy", async () => {
     getProposalVersionMock.mockRejectedValueOnce(
       new WorkbenchApiError("proposal version", 404)
