@@ -130,4 +130,25 @@ describe("portfolioQueryKeys", () => {
       "active-shell-generation",
     ]);
   });
+
+  it("keys exact transaction evidence by record and review context", () => {
+    expect(
+      portfolioQueryKeys.transactionRecord(
+        "PB_SG_GLOBAL_BAL_001",
+        "TX_250",
+        "2026-03-31",
+        "SGD",
+      ),
+    ).toEqual([
+      "portfolio",
+      "transactions",
+      "PB_SG_GLOBAL_BAL_001",
+      "TX_250",
+      {
+        asOfDate: "2026-03-31",
+        reportingCurrency: "SGD",
+        includeProjected: false,
+      },
+    ]);
+  });
 });

@@ -11,6 +11,7 @@ import type { HoldingsRow } from "../../src/apps/portfolio/components/portfolio-
 import PortfolioAllocationRecordScreen from "../../src/apps/portfolio/components/portfolio-allocation-record-screen";
 import PortfolioPositionsRecordScreen from "../../src/apps/portfolio/components/portfolio-positions-record-screen";
 import PortfolioTransactionsRecordScreen from "../../src/apps/portfolio/components/portfolio-transactions-record-screen";
+import { renderWithQueryClient } from "../helpers/query-client-test-harness";
 
 type MockGridRow = { transactionId: string };
 const routerPushMock = vi.fn();
@@ -548,7 +549,7 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       "TX_FIRST",
       "FXC-FIRST",
     );
-    const { rerender } = render(
+    const { rerender } = renderWithQueryClient(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
@@ -606,13 +607,30 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
     expect(screen.getByRole("button", { name: "Review TX_THIRD" })).toBeInTheDocument();
   });
 
-  it("rehydrates only an addressed transaction in the loaded source page", () => {
+  it("rehydrates an addressed transaction through exact source evidence", async () => {
     const workspace = buildWorkspaceWithTransaction(
       "PB_SG_GLOBAL_BAL_001",
       "TX_DIRECT",
       "FXC-DIRECT",
     );
-    const { rerender } = render(
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          correlation_id: "corr-exact",
+          contract_version: "v1",
+          portfolio_id: "PB_SG_GLOBAL_BAL_001",
+          reporting_currency: "SGD",
+          transaction: {
+            ...workspace.recent_transactions[0],
+            transaction_id: "TX_NOT_IN_WINDOW",
+          },
+          reason_codes: ["TRANSACTION_LEDGER_READY"],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { rerender } = renderWithQueryClient(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
@@ -631,10 +649,8 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
         selectedRecordId="TX_NOT_IN_WINDOW"
       />,
     );
-    expect(
-      screen.getByText("Transaction is not in the loaded activity page"),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Buy" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Buy" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 
