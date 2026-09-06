@@ -169,13 +169,13 @@ describe("ReportOrderingWorkspace", () => {
       parseReportOrderingResponse(buildReportOrderingResponse()),
     );
     historyMock.mockResolvedValue(buildReportJobListResponse());
-    submitMock.mockResolvedValue({
+    submitMock.mockImplementation(async (order) => ({
       report_request_id: "rrq_2",
       report_job_id: "rjob_2",
       status: "accepted",
       status_url: "/api/v1/report-jobs/rjob_2",
-      idempotency_key: "intent_2",
-    });
+      idempotency_key: order.idempotencyKey,
+    }));
     submitBatchMock.mockImplementation(async (order) => {
       const handle = buildReportBatchHandle();
       handle.idempotency_key = order.idempotencyKey;
@@ -350,6 +350,96 @@ describe("ReportOrderingWorkspace", () => {
     );
     expect(screen.queryByText("Report request accepted")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Submit Report Request" })).toBeDisabled();
+  });
+
+  it("rejects acceptance for a different reviewed request without storing its handle", async () => {
+    submitMock.mockResolvedValue({
+      report_request_id: "rrq_wrong",
+      report_job_id: "rjob_wrong",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_wrong",
+      idempotency_key: "another-reviewed-request",
+    });
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByRole("heading", { name: "Report request not accepted" })).toBeInTheDocument();
+    expect(screen.queryByText("rjob_wrong")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Report request accepted" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry Report Request" })).toBeEnabled();
+  });
+
+  it("rejects acceptance whose status reference names another report job", async () => {
+    submitMock.mockImplementation(async (order) => ({
+      report_request_id: "rrq_2",
+      report_job_id: "rjob_2",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_other",
+      idempotency_key: order.idempotencyKey,
+    }));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole("heading", { name: "Report request not accepted" })).toBeInTheDocument();
+    expect(screen.queryByText("rjob_2")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry Report Request" })).toBeEnabled();
+  });
+
+  it("replays an unchanged reviewed request with the same idempotency identity", async () => {
+    submitMock
+      .mockRejectedValueOnce(new Error("temporary unavailable"))
+      .mockImplementationOnce(async (order) => ({
+        report_request_id: "rrq_retry",
+        report_job_id: "rjob_retry",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_retry",
+        idempotency_key: order.idempotencyKey,
+      }));
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+    fireEvent.click(await screen.findByRole("button", { name: "Retry Report Request" }));
+
+    expect(await screen.findByRole("heading", { name: "Report request accepted" })).toBeInTheDocument();
+    expect(submitMock).toHaveBeenCalledTimes(2);
+    expect(submitMock.mock.calls[1][0]).toEqual(submitMock.mock.calls[0][0]);
+    expect(screen.getByText("rjob_retry")).toBeInTheDocument();
+  });
+
+  it("keeps a valid acceptance distinct when the subsequent history refresh fails", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    await screen.findByRole("table", { name: "Recent portfolio report requests" });
+    historyMock.mockRejectedValueOnce(new Error("history unavailable"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", { name: "Submit Report Request" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole("heading", { name: "Report request accepted" })).toBeInTheDocument();
+    expect(screen.getByText("rjob_2")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "The latest lifecycle check did not complete. Previously confirmed requests remain visible; use Refresh to check again.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("rjob_1")).toHaveLength(2);
   });
 
   it("selects a source-backed portfolio bundle and shows per-portfolio outcomes", async () => {
@@ -1476,21 +1566,16 @@ describe("ReportOrderingWorkspace", () => {
   });
 
   it("creates a second reviewed request with a fresh idempotency intent", async () => {
-    submitMock
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_2",
-        report_job_id: "rjob_2",
+    submitMock.mockImplementation(async (order) => {
+      const requestNumber = submitMock.mock.calls.length;
+      return {
+        report_request_id: `rrq_${requestNumber + 1}`,
+        report_job_id: `rjob_${requestNumber + 1}`,
         status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_2",
-        idempotency_key: "intent_2",
-      })
-      .mockResolvedValueOnce({
-        report_request_id: "rrq_3",
-        report_job_id: "rjob_3",
-        status: "accepted",
-        status_url: "/api/v1/report-jobs/rjob_3",
-        idempotency_key: "intent_3",
-      });
+        status_url: `/api/v1/report-jobs/rjob_${requestNumber + 1}`,
+        idempotency_key: order.idempotencyKey,
+      };
+    });
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
 
@@ -1723,7 +1808,7 @@ describe("ReportOrderingWorkspace", () => {
         report_job_id: "rjob_2",
         status: "accepted",
         status_url: "/api/v1/report-jobs/rjob_2",
-        idempotency_key: "intent_2",
+        idempotency_key: submitMock.mock.calls[0][0].idempotencyKey,
       });
     });
     expect(
