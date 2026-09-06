@@ -52,10 +52,17 @@ async function mockProposalDetail(
   let memoReviewRequestCount = 0;
   let memoReportRecorded = initialMemoState === "complete";
   let memoCommentaryRecorded = options.memoCommentaryInitiallyRecorded ?? false;
+  const sourceReadCounts = {
+    approvals: 0,
+    detail: 0,
+    lineage: 0,
+    workflow: 0,
+  };
   let memoCommentaryEventId = memoCommentaryRecorded
     ? "memo-ai-event-prior"
     : null;
   await page.route("**/api/bff/api/v1/proposals/pp_1?include_evidence=false", async (route) => {
+    sourceReadCounts.detail += 1;
     if (options.detailFailureStatus) {
       await route.fulfill({
         status: options.detailFailureStatus,
@@ -106,6 +113,7 @@ async function mockProposalDetail(
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/workflow-events", async (route) => {
+    sourceReadCounts.workflow += 1;
     if (options.workflowFailure) {
       await route.fulfill({ status: 503, body: "WORKFLOW_SOURCE_UNAVAILABLE" });
       return;
@@ -132,6 +140,7 @@ async function mockProposalDetail(
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/approvals", async (route) => {
+    sourceReadCounts.approvals += 1;
     await route.fulfill({
       json: {
         correlation_id: "corr-approvals",
@@ -141,6 +150,7 @@ async function mockProposalDetail(
     });
   });
   await page.route("**/api/bff/api/v1/proposals/pp_1/lineage", async (route) => {
+    sourceReadCounts.lineage += 1;
     await route.fulfill({
       json: {
         correlation_id: "corr-lineage",
@@ -623,6 +633,9 @@ async function mockProposalDetail(
     getMemoReviewRequestCount() {
       return memoReviewRequestCount;
     },
+    getSourceReadCounts() {
+      return { ...sourceReadCounts };
+    },
   };
 }
 
@@ -905,7 +918,7 @@ test.describe("proposal memo posture", () => {
   }
 
   test("confirms an action only after refreshed source posture is coherent", async ({ page }) => {
-    await mockProposalDetail(page);
+    const controls = await mockProposalDetail(page);
     await page.goto("/proposals/pp_1", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("button", { name: "Submit for risk review" }).click();
@@ -915,6 +928,12 @@ test.describe("proposal memo posture", () => {
     await expect(status).toContainText("Proposal submitted for risk review.");
     await expect(status).toContainText("Risk team review is currently pending.");
     await expect(page.getByRole("button", { name: "Approve risk review" })).toBeVisible();
+    expect(controls.getSourceReadCounts()).toEqual({
+      approvals: 2,
+      detail: 2,
+      lineage: 2,
+      workflow: 2,
+    });
   });
 
   test("keeps source action failure explicit without exposing internal response text", async ({ page }) => {
