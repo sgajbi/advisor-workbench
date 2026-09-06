@@ -1004,7 +1004,26 @@ describe("ProposalDetailView", () => {
     submitProposalMock.mockRejectedValueOnce(
       new Error("Proposal request failed (500): internal downstream detail")
     );
-    renderWithQueryClient();
+    getProposalMock
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
+    getWorkflowEventsMock
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-2"));
+    getApprovalsMock
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-1"))
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2"));
+    getLineageMock
+      .mockResolvedValueOnce(lineageEvidence("pp-1"))
+      .mockResolvedValueOnce(lineageEvidence("pp-2"));
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { gcTime: 1 } },
+    });
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
 
     await clickReadyButton("Submit for risk review");
 
@@ -1015,6 +1034,28 @@ describe("ProposalDetailView", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/internal downstream detail/)).not.toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    expect(
+      screen.getByText(
+        "The proposal action could not be completed. Review the current posture and try again."
+      )
+    ).toBeInTheDocument();
   });
 
   it("does not publish action success when refreshed review evidence fails", async () => {
@@ -1334,7 +1375,9 @@ describe("ProposalDetailView", () => {
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
       .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { gcTime: 1 } },
+    });
     const view = render(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-1" />
@@ -1440,9 +1483,30 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
-    const returnedAction = screen.getByRole("button", { name: "Submit for risk review" });
+    expect(
+      screen.getByText("Recording the source action and refreshing review evidence.")
+    ).toBeInTheDocument();
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-2" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
 
     await act(async () => completeSubmission?.());
+    await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <ProposalDetailView proposalId="pp-1" />
+      </QueryClientProvider>
+    );
+    await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    const returnedAction = screen.getByRole("button", { name: "Submit for risk review" });
 
     await waitFor(() => {
       expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
@@ -1501,7 +1565,9 @@ describe("ProposalDetailView", () => {
       .mockResolvedValueOnce(lineageEvidence("pp-1", 2))
       .mockResolvedValueOnce(lineageEvidence("pp-2", 1));
     const proposalCallsBeforeTest = getProposalMock.mock.calls.length;
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { gcTime: 1 } },
+    });
     const view = render(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-1" />
@@ -1520,6 +1586,9 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-2" });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
     view.rerender(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-1" />
@@ -1528,6 +1597,7 @@ describe("ProposalDetailView", () => {
 
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
     expect(screen.getByText(/Portfolio pf_1 · Version 2/)).toBeInTheDocument();
+    expect(screen.getByText("Version created successfully: 2")).toBeInTheDocument();
 
     view.rerender(
       <QueryClientProvider client={queryClient}>
@@ -1535,6 +1605,9 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
     expect(screen.queryByRole("heading", { level: 1, name: "Proposal pp-1" })).not.toBeInTheDocument();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
     view.rerender(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-1" />
@@ -1543,6 +1616,7 @@ describe("ProposalDetailView", () => {
 
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
     expect(screen.getByText(/Portfolio pf_1 · Version 2/)).toBeInTheDocument();
+    expect(screen.getByText("Version created successfully: 2")).toBeInTheDocument();
     expect(getProposalMock.mock.calls.length - proposalCallsBeforeTest).toBe(3);
     expect(
       queryClient.getQueryCache().getAll()
