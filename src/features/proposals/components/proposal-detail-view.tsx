@@ -350,7 +350,6 @@ function ProposalDetailWorkspace({
     if (
       hasPendingCommand()
       || versionLookupMutation.isPending
-      || actionEvidenceBlocked
     ) {
       return;
     }
