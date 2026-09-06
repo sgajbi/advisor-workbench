@@ -8,6 +8,12 @@ import type {
 } from "./types";
 import type { PortfolioTimeWindow } from "./view-model";
 import {
+  parsePortfolioTransactionRecord,
+  PortfolioTransactionRecordError,
+  type PortfolioTransactionRecordFailure,
+  type PortfolioTransactionRecordResponse,
+} from "./portfolio-transaction-record";
+import {
   buildPortfolioPerformanceWindowQuery,
   isPortfolioPerformanceWindowCurrent,
 } from "./portfolio-performance-window";
@@ -59,7 +65,7 @@ function resolvePortfolioOperation(path: string): ObservedPortfolioOperation {
   if (path.endsWith("/liquidity")) {
     return "portfolio.liquidity";
   }
-  if (path.endsWith("/transactions")) {
+  if (/\/transactions(?:\/[^/]+)?$/.test(path)) {
     return "portfolio.transactions";
   }
   if (path.endsWith("/readiness")) {
@@ -811,6 +817,75 @@ export async function getPortfolioTransactionLedger(
   } catch {
     return null;
   }
+}
+
+export async function getPortfolioTransactionRecord(
+  portfolioId: string,
+  transactionId: string,
+  params: {
+    asOfDate: string;
+    reportingCurrency: string;
+    signal?: AbortSignal;
+  },
+): Promise<PortfolioTransactionRecordResponse> {
+  const target = resolvePortfolioRequestTarget();
+  const path = `/portfolio/portfolios/${encodeURIComponent(portfolioId)}/transactions/${encodeURIComponent(transactionId)}`;
+  const query = new URLSearchParams({
+    as_of_date: params.asOfDate,
+    include_projected: "false",
+    reporting_currency: params.reportingCurrency,
+  });
+  const url = buildPortfolioApiUrl(target, path, query);
+
+  return await observeWorkbenchAnalyticsRequest(
+    observedPortfolioSurface(path),
+    async () => {
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal: params.signal,
+        ...(target === "client"
+          ? { headers: buildAnalyticsUiCorrelationHeaders() }
+          : {}),
+      });
+      if (!response.ok) {
+        throw new PortfolioTransactionRecordError(
+          await resolveTransactionRecordFailure(response),
+        );
+      }
+      return parsePortfolioTransactionRecord(await response.json(), {
+        portfolioId,
+        transactionId,
+      });
+    },
+  );
+}
+
+async function resolveTransactionRecordFailure(
+  response: Response,
+): Promise<PortfolioTransactionRecordFailure> {
+  let code: unknown;
+  try {
+    const body = (await response.json()) as unknown;
+    code = isRecord(body) && isRecord(body.detail) ? body.detail.code : undefined;
+  } catch {
+    code = undefined;
+  }
+  const failures: Record<string, PortfolioTransactionRecordFailure> = {
+    portfolio_transaction_not_found: "not_found",
+    portfolio_transaction_access_denied: "access_denied",
+    portfolio_transaction_request_invalid: "invalid_request",
+    portfolio_transaction_source_unavailable: "source_unavailable",
+    portfolio_transaction_source_contract_invalid: "source_contract_invalid",
+    portfolio_transaction_record_identity_mismatch: "identity_mismatch",
+  };
+  if (typeof code === "string" && failures[code]) {
+    return failures[code];
+  }
+  if (response.status === 404) return "not_found";
+  if (response.status === 401 || response.status === 403) return "access_denied";
+  if (response.status === 400 || response.status === 422) return "invalid_request";
+  if (response.status >= 500) return "source_unavailable";
+  return "unavailable";
 }
 
 export async function getPortfolioAllocationViews(

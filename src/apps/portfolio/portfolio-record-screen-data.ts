@@ -27,6 +27,7 @@ export type PortfolioRecordScreenData = {
   endDate?: string;
   timeWindow?: PortfolioTimeWindow;
   selectedRecordId?: string;
+  reportingCurrency?: string;
   reviewContextError?: string;
 };
 
@@ -162,5 +163,6 @@ export async function loadPortfolioRecordScreenData({
     endDate: window.endDate,
     timeWindow: controls.timeWindow,
     selectedRecordId: reviewContextResult.context.selectedRecordId,
+    reportingCurrency: controls.reportingCurrency,
   };
 }

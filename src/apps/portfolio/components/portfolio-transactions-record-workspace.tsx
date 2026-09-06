@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import Button from "@mui/material/Button";
 
@@ -8,6 +9,9 @@ import type {
   PortfolioTransactionDrilldownFilter,
   PortfolioWorkspace,
 } from "../types";
+import { getPortfolioTransactionRecord } from "../api";
+import { portfolioQueryKeys } from "../portfolio-query-keys";
+import { PortfolioTransactionRecordError } from "../portfolio-transaction-record";
 import { buildTransactionDrawer } from "./portfolio-record-drawer-builders";
 import PortfolioDetailDrawerController from "./portfolio-detail-drawer-controller";
 import PortfolioTransactionsGrid, {
@@ -23,12 +27,14 @@ export default function PortfolioTransactionsRecordWorkspace({
   defaultStartDate,
   defaultEndDate,
   initialSelectedRecordId,
+  reportingCurrency,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
   defaultStartDate: string;
   defaultEndDate: string;
   initialSelectedRecordId?: string;
+  reportingCurrency: string;
 }) {
   const [selectedTransactionRecord, setSelectedTransactionRecord] =
     useState<TransactionRow | null>(null);
@@ -47,12 +53,38 @@ export default function PortfolioTransactionsRecordWorkspace({
       ),
     [workspace.portfolio.base_currency, workspace.recent_transactions],
   );
-  const selectedTransaction =
+  const localTransaction =
     selectedTransactionRecord?.transactionId === selectedRecordId
       ? selectedTransactionRecord
       : (initialTransactionRows.find(
           (transaction) => transaction.transactionId === selectedRecordId,
         ) ?? null);
+  const exactRecordQuery = useQuery({
+    queryKey: portfolioQueryKeys.transactionRecord(
+      workspace.portfolio.portfolio_id,
+      selectedRecordId ?? "unselected",
+      asOfDate,
+      reportingCurrency,
+    ),
+    queryFn: ({ signal }) =>
+      getPortfolioTransactionRecord(
+        workspace.portfolio.portfolio_id,
+        selectedRecordId!,
+        { asOfDate, reportingCurrency, signal },
+      ),
+    enabled: Boolean(selectedRecordId && !localTransaction),
+    retry: false,
+  });
+  const exactTransactionRow = useMemo(() => {
+    const transaction = exactRecordQuery.data?.transaction;
+    return transaction
+      ? (buildTransactionRows(
+          [transaction],
+          workspace.portfolio.base_currency,
+        )[0] ?? null)
+      : null;
+  }, [exactRecordQuery.data?.transaction, workspace.portfolio.base_currency]);
+  const selectedTransaction = localTransaction ?? exactTransactionRow;
 
   const handleTransactionSelect = useCallback(
     (transaction: TransactionRow) => {
@@ -72,10 +104,11 @@ export default function PortfolioTransactionsRecordWorkspace({
       return null;
     }
 
-    const openDrilldown = (filter: PortfolioTransactionDrilldownFilter) => () => {
-      setExternalFilter(filter);
-      handleCloseRecord();
-    };
+    const openDrilldown =
+      (filter: PortfolioTransactionDrilldownFilter) => () => {
+        setExternalFilter(filter);
+        handleCloseRecord();
+      };
     const raw = selectedTransaction.raw;
 
     return buildTransactionDrawer(
@@ -125,12 +158,21 @@ export default function PortfolioTransactionsRecordWorkspace({
 
   return (
     <>
-      {selectedRecordId && !selectedTransaction ? (
+      {selectedRecordId &&
+      !selectedTransaction &&
+      exactRecordQuery.isPending ? (
+        <PortfolioModuleState
+          variant="loading"
+          title="Opening transaction"
+          message="Confirming the exact booked event for this portfolio and review context."
+          rows={2}
+        />
+      ) : null}
+      {selectedRecordId && !selectedTransaction && exactRecordQuery.isError ? (
         <PortfolioModuleState
           variant="status"
           state="error"
-          title="Transaction is not in the loaded activity page"
-          body="The requested transaction identity was not returned in the current source page for this portfolio and review period. No alternative booking was opened."
+          {...transactionRecordFailureCopy(exactRecordQuery.error)}
           action={
             <Button size="small" variant="outlined" onClick={handleCloseRecord}>
               Clear transaction review
@@ -156,4 +198,51 @@ export default function PortfolioTransactionsRecordWorkspace({
       />
     </>
   );
+}
+
+function transactionRecordFailureCopy(error: Error): {
+  title: string;
+  body: string;
+} {
+  const failure =
+    error instanceof PortfolioTransactionRecordError
+      ? error.failure
+      : "unavailable";
+  switch (failure) {
+    case "not_found":
+      return {
+        title: "Transaction no longer available",
+        body: "The source ledger did not return this transaction for the selected portfolio and review context. No alternative booking was opened.",
+      };
+    case "access_denied":
+      return {
+        title: "Transaction access restricted",
+        body: "Your current portfolio access does not permit this booked event to be reviewed. The surrounding ledger remains available.",
+      };
+    case "invalid_request":
+      return {
+        title: "Transaction review could not be validated",
+        body: "The selected portfolio, date, currency, or transaction identity was not accepted by the source. No substitute evidence was displayed.",
+      };
+    case "identity_mismatch":
+      return {
+        title: "Transaction identity could not be confirmed",
+        body: "The source response did not match the transaction in this address. No mismatched booking was displayed.",
+      };
+    case "source_contract_invalid":
+      return {
+        title: "Transaction evidence could not be verified",
+        body: "The source returned an incomplete or inconsistent transaction record. The unverified booking was not displayed.",
+      };
+    case "source_unavailable":
+      return {
+        title: "Transaction source temporarily unavailable",
+        body: "The exact booked event could not be retrieved. The surrounding ledger remains available for review.",
+      };
+    case "unavailable":
+      return {
+        title: "Transaction unavailable",
+        body: "The exact booked event could not be confirmed. No alternative booking was opened.",
+      };
+  }
 }
