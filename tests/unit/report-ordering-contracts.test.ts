@@ -326,6 +326,39 @@ describe("report ordering contracts", () => {
     ]);
   });
 
+  it.each([
+    ["missing report job", {
+      report_request_id: "rrq_1",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_1",
+      idempotency_key: "intent_1",
+    }],
+    ["empty status reference", {
+      report_request_id: "rrq_1",
+      report_job_id: "rjob_1",
+      status: "accepted",
+      status_url: "",
+      idempotency_key: "intent_1",
+    }],
+    ["non-string request identity", {
+      report_request_id: 42,
+      report_job_id: "rjob_1",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_1",
+      idempotency_key: "intent_1",
+    }],
+    ["unexpected receipt field", {
+      report_request_id: "rrq_1",
+      report_job_id: "rjob_1",
+      status: "accepted",
+      status_url: "/api/v1/report-jobs/rjob_1",
+      idempotency_key: "intent_1",
+      inferred_success: true,
+    }],
+  ])("rejects a malformed single-report receipt: %s", (_caseName, receipt) => {
+    expect(() => parseReportJobHandle(receipt)).toThrow();
+  });
+
   it("keeps valid report history when a legacy job has no correlation reference", () => {
     const response = buildReportJobListResponse();
     response.items[0].correlationId = "";
