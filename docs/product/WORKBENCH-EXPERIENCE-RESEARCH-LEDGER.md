@@ -7805,3 +7805,50 @@ agreement. This changes the documented BFF contract, so repository context and t
 no screen guide or screenshot is warranted because no visible workflow or layout changes. Existing
 frontend delivery guidance already requires one governed transport boundary, so no platform skill
 change is justified.
+
+## 2026-09-06 — Visible Idea action draft after source-reason refresh (#1010)
+
+### Decision question
+
+How should review and conversion forms behave when the same candidate's refreshed opportunity
+reasons no longer contain the basis already selected by the adviser?
+
+### Evidence consulted
+
+1. The official [React select reference](https://react.dev/reference/react-dom/components/select)
+   requires every controlled value to match a rendered option. Without that invariant, browser
+   presentation can diverge from React request state.
+2. [WCAG 2.2 error identification](https://www.w3.org/WAI/WCAG22/Understanding/error-identification)
+   requires an out-of-set value to be identified in text with a useful correction path rather than
+   silently substituted.
+3. Current Workbench source shows that the candidate panel intentionally survives queue/detail
+   refresh for the same candidate, while frozen retries and saved receipts are separate records of
+   exact submitted terms.
+
+### Adopted decisions
+
+1. Keep the adviser-owned draft rather than silently resetting it after a source refresh.
+2. When that value is absent from current source suggestions, render the exact closed-vocabulary
+   value as **Retained draft** and state that it is not in the latest opportunity reasons.
+3. Keep current source bases in the same control for deliberate reselection. Ordinary submission
+   always uses the visibly selected value.
+4. Keep review and conversion drafts independent. Frozen exact retry continues to use its original
+   payload/key, while saved receipts continue to describe persisted terms rather than current form
+   state.
+
+### Rejected decisions
+
+Displaying the browser's first option while retaining hidden state; silently selecting the first
+new source reason; resetting the whole candidate panel and losing unrelated drafts/receipts; adding
+a second reason vocabulary; or changing Gateway/Idea conflict and persistence semantics.
+
+### Validation and publication decision
+
+Real component rerenders cover empty, different, and unchanged reason lists across review and
+conversion, including explicit reselection, exact retry, receipts, and candidate isolation. An
+optimized-production browser journey proves the request body equals the visible retained/current
+basis after Gateway/BFF-backed refresh and records rendered evidence under
+`docs/evidence/issue-1010-visible-idea-basis/`. The visible workflow and recovery guidance change,
+so repository context and the Opportunities and Ideas wiki guide change and the wiki must be
+published after merge. Existing frontend-delivery guidance already requires visible/source truth;
+no central skill change is needed for this bounded correction.

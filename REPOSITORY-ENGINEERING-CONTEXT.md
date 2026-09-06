@@ -725,7 +725,12 @@ Current repository posture:
     supported-feature promotion posture, and links only to Gateway candidate detail. Candidate detail
     can record source-owned review actions, feedback, and bounded conversion intents through the
     Workbench BFF with server-derived authority and idempotency. Review and conversion reason codes
-    use the closed Gateway/Idea vocabulary and preserve the selected candidate's source basis.
+    use the closed Gateway/Idea vocabulary and preserve the selected candidate's source basis. If
+    a same-candidate refresh removes an adviser-selected draft basis from the current opportunity
+    reasons, both action forms must keep that exact draft visibly selected and label it as retained;
+    they must never let the browser display a different option while submitting the hidden value.
+    Current source bases remain available for explicit reselection, and a new submission always
+    carries the basis visible in its form.
     Feedback separately consumes `idea-feedback-taxonomy-v1`: the adviser records useful or not
     useful first, then one source-owned business reason; Workbench never derives that reason from
     candidate evidence. An ambiguous review or conversion response retains one frozen submission
