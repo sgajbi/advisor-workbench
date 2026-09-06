@@ -144,7 +144,7 @@ async function mockProposalDetail(
             ? []
             : [{
                 event_id: "event-risk-review",
-                event_type: "SUBMITTED_FOR_REVIEW",
+                event_type: "SUBMITTED_FOR_RISK_REVIEW",
                 from_state: "DRAFT",
                 to_state: sourceState,
                 actor_id: "advisor_1",
@@ -544,7 +544,19 @@ async function mockProposalDetail(
       json: {
         correlation_id: "corr-submit",
         contract_version: "v1",
-        data: { proposal_id: "pp_1", current_state: sourceState },
+        data: {
+          approval: null,
+          proposal_id: "pp_1",
+          current_state: sourceState,
+          latest_workflow_event: {
+            event_id: "event-risk-review",
+            event_type: "SUBMITTED_FOR_RISK_REVIEW",
+            from_state: "DRAFT",
+            to_state: sourceState,
+            actor_id: "advisor_1",
+            occurred_at: "2026-05-24T10:01:00Z",
+          },
+        },
       },
     });
   });
