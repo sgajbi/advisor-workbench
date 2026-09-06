@@ -8,7 +8,7 @@ command state with governed TanStack Query ownership.
 
 | Measure | Before | After |
 | --- | ---: | ---: |
-| Proposal Detail screen-owner lines | 827 | 717 |
+| Proposal Detail screen-owner lines | 827 | 714 |
 | Local `useState` owners | 13 | 3 |
 | Operation and transition refs | 4 | 0 |
 | Revision-counter queries | 1 | 0 |
@@ -34,6 +34,10 @@ historical proof rather than creating a permanent retry fence. Persisted recover
 closed prior-state/action combinations. Missing ancillary action evidence still blocks writes, but
 does not disable full-evidence or historical-version reads that can help an advisor investigate;
 invalid recovery storage blocks writes but not those GET-only controls.
+Created-version confirmation likewise follows exact historical evidence: the refreshed active
+version may advance beyond the returned version, but lineage must retain both the exact created
+version and the newer active version. An enabled historical lookup always reaches its GET when no
+command is live, including while recovery storage is invalid.
 
 The proposal-scoped mutation record retains the latest command's pending, success, or failure state
 outside a transient component observer and is not discarded by time-based mutation garbage
@@ -49,7 +53,8 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
 
 - `tests/unit/proposal-action-evidence.test.ts` proves exact proposal, posture, workflow-event,
   approval, actor, timestamp, and active-version agreement, including distinct risk/compliance
-  evidence, newly created version advancement, and missing/mismatched record rejection.
+  evidence, newly created version advancement, later active-version progression, and
+  missing/mismatched exact-version rejection.
 - `tests/unit/proposal-detail-command-state.test.ts` proves latest-command projection and exact-key,
   pending-safe cleanup of prior settled records.
 - `tests/unit/proposal-command-recovery.test.ts` proves exact lifecycle/version round trips,
@@ -63,7 +68,8 @@ exact unresolved-copy baseline from 1,703 to 1,702; no replacement headroom is l
   replacement, persisted-confirmation fencing beyond the default mutation-cache lifetime, and
   lifecycle/version recovery after reload with byte-equivalent request arguments and idempotency
   keys, distinct risk/compliance proof, later coherent source advancement, and independent
-  read-only evidence controls during ancillary-source or recovery-storage failure.
+  read-only evidence controls during ancillary-source or recovery-storage failure, including an
+  executed historical-version GET rather than button-state-only proof.
 - `tests/e2e/proposal-memo-posture.spec.ts` proves in an optimized production browser that lifecycle
   success appears only after detail, workflow, approvals, and lineage each perform the exact
   confirmation read; a forced confirmation failure remains fenced through reload and rechecks the

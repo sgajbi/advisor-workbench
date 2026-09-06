@@ -89,7 +89,8 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Keeps full-evidence and historical-version reads independent from ancillary action-source
   readiness. Missing workflow, approval, or lineage evidence blocks writes, while the available
   read controls remain usable for investigation. Invalid recovery storage likewise blocks writes,
-  not GET-only investigation. A live persisted command still fences changes to its evidence
+  not GET-only investigation; an enabled historical lookup reaches the source rather than being
+  silently discarded. A live persisted command still fences changes to its evidence
   context.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
   history already returned by the proposal contracts.
@@ -148,8 +149,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   advisor review, suitability evidence, client-release posture, or proposal lifecycle state.
 - Creates a next proposal version only from the current source proposal's retained simulation
   request. The returned version must be newer than the pre-command active version; success is shown
-  only after refreshed detail identifies that returned version and workflow, approvals, and lineage
-  agree with the active record.
+  only after refreshed lineage retains that exact version and workflow, approvals, and lineage
+  agree with the active record. A newer active version may already exist; it remains current source
+  truth and does not prevent confirmation of the exact earlier creation.
 - Preserves a deterministic return to Approval Queue, Suitability, Risk and Impact, Discussion Pack,
   or Implementation when valid originating context is supplied.
 - Preserves that return path in routine, invalid-id, not-found, restricted, and unavailable states.
