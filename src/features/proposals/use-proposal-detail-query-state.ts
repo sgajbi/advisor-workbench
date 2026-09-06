@@ -23,6 +23,7 @@ import {
   executeProposalLifecycleCommand,
   executeProposalVersionCommand,
   isAmbiguousProposalCommandFailure,
+  isProposalCommandStateConflict,
   proposalLifecycleSuccessMessage,
 } from "./proposal-command-execution";
 import {
@@ -115,6 +116,17 @@ export function useProposalDetailQueryState({
     };
   }
 
+  async function reconcileRejectedCommand(error: unknown) {
+    if (isProposalCommandStateConflict(error)) {
+      commandRecovery.forget();
+      await refreshProposalEvidence().catch(() => undefined);
+      return;
+    }
+    if (!isAmbiguousProposalCommandFailure(error)) {
+      commandRecovery.forget();
+    }
+  }
+
   const actionMutation = useMutation({
     mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
@@ -135,9 +147,7 @@ export function useProposalDetailQueryState({
       try {
         response = await executeProposalLifecycleCommand(intent);
       } catch (error) {
-        if (!isAmbiguousProposalCommandFailure(error)) {
-          commandRecovery.forget();
-        }
+        await reconcileRejectedCommand(error);
         throw error;
       }
       try {
@@ -193,9 +203,7 @@ export function useProposalDetailQueryState({
       try {
         response = await executeProposalVersionCommand(intent);
       } catch (error) {
-        if (!isAmbiguousProposalCommandFailure(error)) {
-          commandRecovery.forget();
-        }
+        await reconcileRejectedCommand(error);
         throw error;
       }
       try {
