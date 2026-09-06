@@ -184,6 +184,7 @@ bounded implementation gap in #1020; do not present a top-level `pwsh` invocatio
 | Coverage gate | `npm run test:coverage` |
 | Production build | `npm run build` |
 | Local core quality gate | Run `npm run security:audit`, `npm run lint`, `npm run typecheck`, `npm run test:coverage`, and `npm run build` in order (`make check` shortcut) |
+| Install the governed browser | `node node_modules/playwright/cli.js install chromium` (once after `npm ci`, and again when the Playwright version changes) |
 | Browser smoke | `npm run test:e2e` |
 | Deterministic fixture families | `npm run test:e2e:fixtures` |
 | Container parity | `docker compose -f docker-compose.ci-local.yml up --build --abort-on-container-exit --exit-code-from ci-local ci-local` |
