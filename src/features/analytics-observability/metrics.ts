@@ -1100,6 +1100,9 @@ export async function observeWorkbenchAnalyticsRequest<T>(
     });
     return response;
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     const durationMs = nowMs() - startedAt;
     const statusClass = statusClassFromError(error);
     recordAnalyticsUiApiRequest({
@@ -1132,6 +1135,15 @@ export async function observeWorkbenchAnalyticsRequest<T>(
     });
     throw error;
   }
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  );
 }
 
 export function recordAnalyticsUiExternalMetricEvent(

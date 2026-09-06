@@ -849,13 +849,14 @@ export async function getPortfolioTransactionRecord(
       });
       if (!response.ok) {
         throw new PortfolioTransactionRecordError(
-          await resolveTransactionRecordFailure(response),
+          await resolveTransactionRecordFailure(response, params.signal),
         );
       }
       let payload: unknown;
       try {
         payload = await response.json();
       } catch {
+        params.signal?.throwIfAborted();
         payload = null;
       }
       return parsePortfolioTransactionRecord(payload, {
@@ -868,12 +869,14 @@ export async function getPortfolioTransactionRecord(
 
 async function resolveTransactionRecordFailure(
   response: Response,
+  signal?: AbortSignal,
 ): Promise<PortfolioTransactionRecordFailure> {
   let code: unknown;
   try {
     const body = (await response.json()) as unknown;
     code = isRecord(body) && isRecord(body.detail) ? body.detail.code : undefined;
   } catch {
+    signal?.throwIfAborted();
     code = undefined;
   }
   const failures: Record<string, PortfolioTransactionRecordFailure> = {

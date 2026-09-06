@@ -1131,6 +1131,18 @@ describe("analytics UI observability metrics", () => {
     ]);
   });
 
+  it("does not classify an intentional request cancellation as a product failure", async () => {
+    const cancellation = new DOMException("Request cancelled", "AbortError");
+
+    await expect(
+      observeWorkbenchAnalyticsRequest(context, async () => {
+        throw cancellation;
+      }),
+    ).rejects.toBe(cancellation);
+
+    expect(getAnalyticsUiMetricEvents()).toEqual([]);
+  });
+
   it("preserves transport success while classifying rejected response evidence", async () => {
     await expect(
       observeWorkbenchAnalyticsRequest(context, async () => {
