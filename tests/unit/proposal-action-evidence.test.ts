@@ -224,6 +224,24 @@ describe("proposal action evidence", () => {
     })).toBe(3);
   });
 
+  it("confirms a created version retained in lineage after a later version becomes active", () => {
+    const advanced = evidence(4);
+    advanced.lineage.versions.unshift({
+      artifact_hash: "artifact-3",
+      request_hash: "request-3",
+      simulation_hash: "simulation-3",
+      version_no: 3,
+    });
+
+    expect(confirmRefreshedProposalVersionEvidence({
+      ...advanced,
+      proposalDetail: advanced.detail,
+      expectedProposalId: "proposal-1",
+      expectedVersionNo: 3,
+      previousVersionNo: 2,
+    })).toBe(3);
+  });
+
   it("rejects a response version that is newer than refreshed proposal evidence", () => {
     const current = evidence(2);
     expect(() => confirmRefreshedProposalVersionEvidence({
@@ -244,6 +262,20 @@ describe("proposal action evidence", () => {
     expect(() => confirmRefreshedProposalVersionEvidence({
       ...mismatched,
       proposalDetail: mismatched.detail,
+      expectedProposalId: "proposal-1",
+      expectedVersionNo: 3,
+      previousVersionNo: 2,
+    })).toThrow(
+      "The source action returned lineage that does not confirm the newly created proposal version.",
+    );
+  });
+
+  it("rejects advanced active evidence when lineage omits the exact created version", () => {
+    const advanced = evidence(4);
+
+    expect(() => confirmRefreshedProposalVersionEvidence({
+      ...advanced,
+      proposalDetail: advanced.detail,
       expectedProposalId: "proposal-1",
       expectedVersionNo: 3,
       previousVersionNo: 2,
