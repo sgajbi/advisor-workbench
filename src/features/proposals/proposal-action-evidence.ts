@@ -6,6 +6,8 @@ import type {
 } from "./types";
 import { ProposalActionBusinessError } from "./proposal-action-error";
 
+export class ProposalPersistedEvidenceConfirmationError extends ProposalActionBusinessError {}
+
 export type ProposalActionEvidenceIssue =
   | "missing-evidence"
   | "proposal-mismatch"
@@ -107,4 +109,47 @@ export function confirmRefreshedProposalActionEvidence({
     );
   }
   return refreshedState;
+}
+
+export function confirmRefreshedProposalVersionEvidence({
+  approvals,
+  detail,
+  expectedProposalId,
+  expectedVersionNo,
+  lineage,
+  workflow,
+}: {
+  approvals?: ProposalApprovalsData;
+  detail?: ProposalDetailData;
+  expectedProposalId: string;
+  expectedVersionNo: number;
+  lineage?: ProposalLineageData;
+  workflow?: ProposalWorkflowEventsData;
+}): number {
+  const agreement = evaluateProposalActionEvidence({
+    approvals,
+    detail,
+    expectedProposalId,
+    lineage,
+    workflow,
+  });
+  if (agreement.issue === "proposal-mismatch") {
+    throw new ProposalActionBusinessError(
+      "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
+    );
+  }
+  if (agreement.issue === "state-mismatch" || agreement.issue === "missing-evidence") {
+    throw new ProposalActionBusinessError(
+      "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
+    );
+  }
+  if (
+    agreement.issue === "active-version-mismatch" ||
+    detail?.proposal.current_version_no !== expectedVersionNo
+  ) {
+    throw new ProposalActionBusinessError(
+      "The source action returned lineage that does not confirm the newly created proposal version. Reload the proposal before continuing.",
+    );
+  }
+  return expectedVersionNo;
 }
