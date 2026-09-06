@@ -46,16 +46,20 @@ describe("proposal action evidence", () => {
   });
 
   it("confirms the newly created version from the refreshed source set", () => {
+    const current = evidence(3);
     expect(confirmRefreshedProposalVersionEvidence({
-      ...evidence(3),
+      ...current,
+      proposalDetail: current.detail,
       expectedProposalId: "proposal-1",
       expectedVersionNo: 3,
     })).toBe(3);
   });
 
   it("rejects a response version that is newer than refreshed proposal evidence", () => {
+    const current = evidence(2);
     expect(() => confirmRefreshedProposalVersionEvidence({
-      ...evidence(2),
+      ...current,
+      proposalDetail: current.detail,
       expectedProposalId: "proposal-1",
       expectedVersionNo: 3,
     })).toThrow(
@@ -69,6 +73,7 @@ describe("proposal action evidence", () => {
 
     expect(() => confirmRefreshedProposalVersionEvidence({
       ...mismatched,
+      proposalDetail: mismatched.detail,
       expectedProposalId: "proposal-1",
       expectedVersionNo: 3,
     })).toThrow(
@@ -77,8 +82,10 @@ describe("proposal action evidence", () => {
   });
 
   it("rejects a refreshed source set for another proposal", () => {
+    const current = evidence(2, "proposal-2");
     expect(() => confirmRefreshedProposalVersionEvidence({
-      ...evidence(2, "proposal-2"),
+      ...current,
+      proposalDetail: current.detail,
       expectedProposalId: "proposal-1",
       expectedVersionNo: 2,
     })).toThrow("The source action returned evidence for a different proposal.");

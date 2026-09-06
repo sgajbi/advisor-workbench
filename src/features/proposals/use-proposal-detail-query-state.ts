@@ -53,7 +53,7 @@ export function useProposalDetailQueryState({
 }) {
   const queryClient = useQueryClient();
   const detailQuery = useQuery({
-    queryKey: proposalDetailQueryKeys.detail(proposalId, includeEvidence),
+    queryKey: proposalDetailQueryKeys.record(proposalId, includeEvidence),
     queryFn: async () => await getProposal(proposalId, includeEvidence),
     enabled: proposalIdValid,
     placeholderData: (previousData, previousQuery) =>
@@ -112,10 +112,10 @@ export function useProposalDetailQueryState({
         const refreshed = await refreshProposalEvidence();
         const refreshedState = confirmRefreshedProposalActionEvidence({
           approvals: refreshed.approvals,
-          detail: refreshed.proposalDetail,
           expectedProposalId: proposalId,
           lineage: refreshed.lineage,
           previousState,
+          proposalDetail: refreshed.proposalDetail,
           workflow: refreshed.workflow,
         });
         return `${successPrefix} Current posture: ${proposalStageDescription(refreshedState)}`;
@@ -163,10 +163,10 @@ export function useProposalDetailQueryState({
         const refreshed = await refreshProposalEvidence();
         return confirmRefreshedProposalVersionEvidence({
           approvals: refreshed.approvals,
-          detail: refreshed.proposalDetail,
           expectedProposalId: proposalId,
           expectedVersionNo,
           lineage: refreshed.lineage,
+          proposalDetail: refreshed.proposalDetail,
           workflow: refreshed.workflow,
         });
       } catch (error) {
