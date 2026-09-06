@@ -30,7 +30,8 @@ compliance, and consent commands additionally require the exact returned approva
 fields in the refreshed approval register. The shared `AWAITING_CLIENT_CONSENT` target can therefore
 never make a risk response look like compliance evidence. If another valid source action advances
 the coherent current posture before refresh completes, the exact earlier event remains sufficient
-historical proof rather than creating a permanent retry fence. Persisted recovery accepts only the
+historical proof rather than creating a permanent retry fence. A coherent posture that still
+precedes that event is not confirmation and remains fenced. Persisted recovery accepts only the
 closed prior-state/action combinations. Missing ancillary action evidence still blocks writes, but
 does not disable full-evidence or historical-version reads that can help an advisor investigate;
 invalid recovery storage blocks writes but not those GET-only controls.
