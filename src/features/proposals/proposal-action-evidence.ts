@@ -3,6 +3,7 @@ import type {
   ProposalDetailData,
   ProposalLineageData,
   ProposalWorkflowEventsData,
+  ProposalStateTransitionEnvelopeResponse,
 } from "./types";
 import { ProposalActionBusinessError } from "./proposal-action-error";
 
@@ -17,6 +18,23 @@ export type ProposalActionEvidenceIssue =
 export type ProposalActionEvidenceAgreement =
   | { issue: null; currentState: string }
   | { issue: ProposalActionEvidenceIssue; currentState?: string };
+
+export function confirmProposalTransitionResponse(
+  response: ProposalStateTransitionEnvelopeResponse,
+  expectedProposalId: string,
+): string {
+  const responseData = response?.data;
+  if (
+    responseData?.proposal_id !== expectedProposalId
+    || typeof responseData.current_state !== "string"
+    || responseData.current_state.trim().length === 0
+  ) {
+    throw new ProposalActionBusinessError(
+      "The source action completed, but did not confirm the expected proposal and workflow posture. Reload the proposal before continuing.",
+    );
+  }
+  return responseData.current_state;
+}
 
 export function evaluateProposalActionEvidence({
   approvals,
@@ -84,6 +102,7 @@ function evaluateProposalActionEvidenceValues(
 
 export function confirmRefreshedProposalActionEvidence({
   approvals,
+  expectedState,
   expectedProposalId,
   lineage,
   previousState,
@@ -91,6 +110,7 @@ export function confirmRefreshedProposalActionEvidence({
   workflow,
 }: {
   approvals?: ProposalApprovalsData;
+  expectedState: string;
   expectedProposalId: string;
   lineage?: ProposalLineageData;
   previousState: string;
@@ -108,7 +128,8 @@ export function confirmRefreshedProposalActionEvidence({
   }
   if (
     agreement.issue === "state-mismatch" ||
-    agreement.issue === "missing-evidence"
+    agreement.issue === "missing-evidence" ||
+    (agreement.issue === null && agreement.currentState !== expectedState)
   ) {
     throw new ProposalActionBusinessError(
       "The source action returned review evidence that does not agree on the current proposal posture. Reload the proposal before continuing.",
@@ -120,7 +141,10 @@ export function confirmRefreshedProposalActionEvidence({
     );
   }
   const refreshedState = agreement.currentState;
-  if (!refreshedState || refreshedState === previousState) {
+  if (
+    !refreshedState
+    || refreshedState === previousState
+  ) {
     throw new ProposalActionBusinessError(
       "The source action returned, but the proposal posture has not changed. Reload the proposal before continuing.",
     );
@@ -131,6 +155,7 @@ export function confirmRefreshedProposalActionEvidence({
 export function confirmRefreshedProposalVersionEvidence({
   approvals,
   expectedProposalId,
+  previousVersionNo,
   expectedVersionNo,
   lineage,
   proposalDetail,
@@ -138,6 +163,7 @@ export function confirmRefreshedProposalVersionEvidence({
 }: {
   approvals?: ProposalApprovalsData;
   expectedProposalId: string;
+  previousVersionNo: number;
   expectedVersionNo: number;
   lineage?: ProposalLineageData;
   proposalDetail?: ProposalDetailData;
@@ -159,6 +185,7 @@ export function confirmRefreshedProposalVersionEvidence({
   }
   if (
     agreement.issue === "active-version-mismatch" ||
+    expectedVersionNo <= previousVersionNo ||
     proposalDetail?.proposal.current_version_no !== expectedVersionNo
   ) {
     throw new ProposalActionBusinessError(

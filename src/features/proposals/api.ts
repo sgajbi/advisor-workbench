@@ -64,6 +64,7 @@ import {
   ProposalReportRequest,
   ProposalReportRequestData,
   ProposalSubmitRequest,
+  ProposalStateTransitionEnvelopeResponse,
   ProposalVersionData,
   ProposalWorkflowEventsData,
 } from "./types";
@@ -1051,8 +1052,8 @@ export async function submitProposal(
   proposalId: string,
   payload: ProposalSubmitRequest,
   idempotencyKey: string,
-): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
+): Promise<ProposalStateTransitionEnvelopeResponse> {
+  return await postJson<ProposalStateTransitionEnvelopeResponse>(
     `/proposals/${proposalId}/submit`,
     payload,
     idempotencyKey,
@@ -1063,8 +1064,8 @@ export async function approveRisk(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
   idempotencyKey: string,
-): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
+): Promise<ProposalStateTransitionEnvelopeResponse> {
+  return await postJson<ProposalStateTransitionEnvelopeResponse>(
     `/proposals/${proposalId}/approve-risk`,
     payload,
     idempotencyKey,
@@ -1075,8 +1076,8 @@ export async function approveCompliance(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
   idempotencyKey: string,
-): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
+): Promise<ProposalStateTransitionEnvelopeResponse> {
+  return await postJson<ProposalStateTransitionEnvelopeResponse>(
     `/proposals/${proposalId}/approve-compliance`,
     payload,
     idempotencyKey,
@@ -1087,8 +1088,8 @@ export async function recordClientConsent(
   proposalId: string,
   payload: ProposalApprovalActionRequest,
   idempotencyKey: string,
-): Promise<ProposalEnvelopeResponse> {
-  return await postJson(
+): Promise<ProposalStateTransitionEnvelopeResponse> {
+  return await postJson<ProposalStateTransitionEnvelopeResponse>(
     `/proposals/${proposalId}/record-client-consent`,
     payload,
     idempotencyKey,
@@ -1115,16 +1116,16 @@ export async function getProposalApprovals(
   return envelope.data as unknown as ProposalApprovalsData;
 }
 
-async function postJson(
+async function postJson<TResponse extends ProposalEnvelopeResponse = ProposalEnvelopeResponse>(
   path: string,
   payload: unknown,
   idempotencyKey?: string,
-): Promise<ProposalEnvelopeResponse> {
+): Promise<TResponse> {
   const headers: Record<string, string> = {};
   if (idempotencyKey) {
     headers["Idempotency-Key"] = idempotencyKey;
   }
-  return await fetchWorkbenchMutation<ProposalEnvelopeResponse>(
+  return await fetchWorkbenchMutation<TResponse>(
     `${BFF_PROXY_BASE}${path}`,
     "proposal request",
     {
