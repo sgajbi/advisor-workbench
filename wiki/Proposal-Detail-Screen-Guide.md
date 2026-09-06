@@ -67,6 +67,9 @@ These use cases do not substitute for authenticated production-role or portfolio
   does not erase usable primary proposal evidence.
 - Reconciles proposal identity, workflow state, and active-version lineage before enabling a
   lifecycle action or announcing its success.
+- Keeps detail, workflow, approvals, and lineage under stable proposal-scoped Query identities.
+  Lifecycle and version commands are serialized, invalidate those exact records, and remain pending
+  until all four refreshed sources agree; refresh never creates a parallel revision cache.
 - Presents proposed changes, allocation comparison, evidence hashes, review gates, and source
   history already returned by the proposal contracts.
 - Presents proposal version, lineage, narrative review, implementation, and other exact audit
@@ -123,7 +126,8 @@ These use cases do not substitute for authenticated production-role or portfolio
 - Treats generated commentary as an optional working aid. It never upgrades the retained memo,
   advisor review, suitability evidence, client-release posture, or proposal lifecycle state.
 - Creates a next proposal version only from the current source proposal's retained simulation
-  request and refreshes the active record after source success.
+  request. Success is shown only after refreshed detail identifies the returned new version and
+  workflow, approvals, and lineage agree with that active record.
 - Preserves a deterministic return to Approval Queue, Suitability, Risk and Impact, Discussion Pack,
   or Implementation when valid originating context is supplied.
 - Preserves that return path in routine, invalid-id, not-found, restricted, and unavailable states.
@@ -206,7 +210,8 @@ Proposal Detail deliberately does not:
 - `tests/unit/proposal-detail-evidence-view-model.test.ts` proves the decision-evidence projection.
 - `tests/integration/proposal-detail-view.test.tsx` proves source reconciliation, positive and
   negative lifecycle actions, no premature success, independent ancillary failure, source-owned
-  portfolio return, and routine/restricted/unavailable/not-found return context.
+  portfolio return, stable query identity without revision caches, and
+  routine/restricted/unavailable/not-found return context.
 - `tests/unit/proposal-narrative-posture-panel.test.tsx` and
   `tests/unit/proposal-memo-posture-panel.test.tsx` prove the two advisor-review modes and their
   fail-closed action posture. The memo proof distinguishes source-confirmed absence from permission,
@@ -219,7 +224,8 @@ Proposal Detail deliberately does not:
 - `tests/e2e/proposal-memo-posture.spec.ts` provides optimized-production browser proof for proposal
   detail, source-confirmed first memo preparation, explicit preparation failure, memo review,
   source-confirmed narrative review, discussion-pack gating, safe action failure,
-  refresh disagreement, keyboard, responsive container reflow, and exact visible-overflow behavior.
+  refresh disagreement, exact four-source lifecycle confirmation, keyboard, responsive container
+  reflow, and exact visible-overflow behavior.
 - Reviewed Proposal Detail narrative screenshots are published under
   `docs/evidence/issue-798-product-copy/narrative-review/`; they support visual review but do not
   replace Gateway action and refreshed-read proof.

@@ -695,7 +695,12 @@ Current repository posture:
     available decision evidence visible when an ancillary source is unavailable, presents
     Narrative and Memo as peer advisor-review modes, and keeps technical audit history under
     progressive disclosure. A proposal action is confirmed only after Gateway persistence succeeds
-    and the action-specific authoritative reads refresh coherently from source truth. Narrative
+    and the action-specific authoritative reads refresh coherently from source truth. Keep Proposal
+    Detail's detail, workflow, approval, and lineage reads under stable proposal-scoped TanStack
+    Query keys; persisted lifecycle and version commands share a serial proposal scope, invalidate
+    those exact records, and confirm from their refreshed values. Do not restore revision-counter
+    queries, revision-suffixed cache identities, or component-owned async token/state machinery.
+    Narrative
     review is confirmed from the current-version narrative read; delivery summary and events remain
     independent downstream package posture and cannot authorize review. Delivery history must be
     complete, chronological, uniquely identified, bound event-by-event to the active proposal
