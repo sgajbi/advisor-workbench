@@ -77,13 +77,17 @@ resolution remains tracked by
 [lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563).
 
 For a populated integrated run, use the governed front-office flow and canonical portfolio
-`PB_SG_GLOBAL_BAL_001`:
+`PB_SG_GLOBAL_BAL_001` from Windows PowerShell:
 
-```bash
+```powershell
 npm run live:stack:up
 npm run live:validate
 npm run live:stack:down
 ```
+
+The canonical runner is not currently supported from Bash or Unix PowerShell because its workspace
+discovery and nested commands remain Windows-specific. Workbench
+[#1020](https://github.com/sgajbi/lotus-workbench/issues/1020) owns that portability gap.
 
 The complete configuration inventory, preflight behavior, failure recovery, and evidence locations
 are owned by the
