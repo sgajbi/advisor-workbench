@@ -45,13 +45,21 @@ make run
 
 ## Canonical local runtime
 
-```bash
+Run the canonical lifecycle from Windows PowerShell:
+
+```powershell
 npm run live:stack:up
 npm run live:validate
+npm run live:stack:down
 ```
 
 Use `npm run live:stack:up:workbench-local` when Workbench UI changes need hot reload while the
 rest of the canonical app set remains Docker-backed.
+
+The canonical runner is not currently supported from Bash or Unix PowerShell because its workspace
+discovery and nested commands remain Windows-specific. Workbench
+[#1020](https://github.com/sgajbi/lotus-workbench/issues/1020) owns that portability gap; do not
+translate these commands to `pwsh` and claim equivalent runtime proof.
 
 Canonical identities:
 
