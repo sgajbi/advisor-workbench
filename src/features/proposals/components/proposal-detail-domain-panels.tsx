@@ -122,7 +122,8 @@ export function ProposalAdvisorActionsPanel({
 
 export function ProposalEvidenceControlsPanel({
   includeEvidence,
-  controlsDisabled,
+  readControlsDisabled,
+  createVersionDisabled,
   onIncludeEvidenceChange,
   versionLookupNo,
   onVersionLookupNoChange,
@@ -135,7 +136,8 @@ export function ProposalEvidenceControlsPanel({
   versionActionErrorSupportEvidence,
 }: {
   includeEvidence: boolean;
-  controlsDisabled: boolean;
+  readControlsDisabled: boolean;
+  createVersionDisabled: boolean;
   onIncludeEvidenceChange: (value: boolean) => void;
   versionLookupNo: number;
   onVersionLookupNoChange: (value: number) => void;
@@ -157,7 +159,7 @@ export function ProposalEvidenceControlsPanel({
           <Switch
             size="small"
             checked={includeEvidence}
-            disabled={controlsDisabled}
+            disabled={readControlsDisabled}
             onChange={(event) => onIncludeEvidenceChange(event.target.checked)}
           />
         }
@@ -171,21 +173,21 @@ export function ProposalEvidenceControlsPanel({
             type="number"
             min={1}
             value={versionLookupNo}
-            disabled={controlsDisabled}
+            disabled={readControlsDisabled}
             onChange={(event) => {
               const next = Number.parseInt(event.target.value, 10);
               onVersionLookupNoChange(Number.isNaN(next) ? 1 : next);
             }}
           />
         </label>
-        <Button type="button" variant="outlined" onClick={onLoadVersion} disabled={controlsDisabled}>
+        <Button type="button" variant="outlined" onClick={onLoadVersion} disabled={readControlsDisabled}>
           Load version
         </Button>
         <Button
           type="button"
           variant="outlined"
           onClick={onCreateNextVersion}
-          disabled={creatingVersion || controlsDisabled}
+          disabled={creatingVersion || createVersionDisabled}
         >
           {creatingVersion ? "Creating version..." : "Create next version"}
         </Button>

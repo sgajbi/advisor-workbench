@@ -6,6 +6,7 @@ import type {
   ProposalStateTransitionEnvelopeResponse,
 } from "./types";
 import { ProposalActionBusinessError } from "./proposal-action-error";
+import type { ProposalLifecycleCommandIntent } from "./use-proposal-command-recovery";
 
 export class ProposalPersistedEvidenceConfirmationError extends ProposalActionBusinessError {}
 
@@ -19,21 +20,73 @@ export type ProposalActionEvidenceAgreement =
   | { issue: null; currentState: string }
   | { issue: ProposalActionEvidenceIssue; currentState?: string };
 
+export type ProposalTransitionConfirmation = Readonly<{
+  actorId: string;
+  approvalId: string | null;
+  approvalOccurredAt: string | null;
+  approvalType: "CLIENT_CONSENT" | "COMPLIANCE" | "RISK" | null;
+  eventId: string;
+  eventOccurredAt: string;
+  eventType: string;
+}>;
+
+function expectedTransitionEvidence(intent: ProposalLifecycleCommandIntent) {
+  switch (intent.action) {
+    case "submit":
+      return {
+        approvalType: null,
+        eventType: `SUBMITTED_FOR_${intent.request.review_type}_REVIEW`,
+      } as const;
+    case "approve-risk":
+      return { approvalType: "RISK", eventType: "RISK_APPROVED" } as const;
+    case "approve-compliance":
+      return { approvalType: "COMPLIANCE", eventType: "COMPLIANCE_APPROVED" } as const;
+    case "record-client-consent":
+      return { approvalType: "CLIENT_CONSENT", eventType: "CLIENT_CONSENT_RECORDED" } as const;
+  }
+}
+
 export function confirmProposalTransitionResponse(
   response: ProposalStateTransitionEnvelopeResponse,
-  expectedProposalId: string,
-  expectedState: string,
-): string {
+  intent: ProposalLifecycleCommandIntent,
+): ProposalTransitionConfirmation {
   const responseData = response?.data;
+  const event = responseData?.latest_workflow_event;
+  const expected = expectedTransitionEvidence(intent);
+  const approval = responseData?.approval;
   if (
-    responseData?.proposal_id !== expectedProposalId
-    || responseData.current_state !== expectedState
+    responseData?.proposal_id !== intent.proposalId
+    || responseData.current_state !== intent.expectedState
+    || !event?.event_id
+    || event.proposal_id != null && event.proposal_id !== intent.proposalId
+    || event.event_type !== expected.eventType
+    || event.from_state !== intent.previousState
+    || event.to_state !== intent.expectedState
+    || event.actor_id !== intent.request.actor_id
+    || !event.occurred_at
+    || (expected.approvalType === null && approval !== null)
+    || (expected.approvalType !== null && (
+      !approval?.approval_id
+      || approval.proposal_id != null && approval.proposal_id !== intent.proposalId
+      || approval.approval_type !== expected.approvalType
+      || approval.approved !== true
+      || approval.actor_id !== intent.request.actor_id
+      || !approval.occurred_at
+    ))
   ) {
     throw new ProposalActionBusinessError(
       "The source action completed, but did not confirm the expected proposal and workflow posture. Use Recheck earlier action before continuing.",
     );
   }
-  return responseData.current_state;
+  return {
+    actorId: intent.request.actor_id,
+    approvalId: approval?.approval_id ?? null,
+    approvalOccurredAt: approval?.occurred_at ?? null,
+    approvalType: expected.approvalType,
+    eventId: event.event_id,
+    eventOccurredAt: event.occurred_at,
+    eventType: expected.eventType,
+  };
 }
 
 export function evaluateProposalActionEvidence({
@@ -102,6 +155,7 @@ function evaluateProposalActionEvidenceValues(
 
 export function confirmRefreshedProposalActionEvidence({
   approvals,
+  confirmation,
   expectedState,
   expectedProposalId,
   lineage,
@@ -110,6 +164,7 @@ export function confirmRefreshedProposalActionEvidence({
   workflow,
 }: {
   approvals?: ProposalApprovalsData;
+  confirmation: ProposalTransitionConfirmation;
   expectedState: string;
   expectedProposalId: string;
   lineage?: ProposalLineageData;
@@ -147,6 +202,28 @@ export function confirmRefreshedProposalActionEvidence({
   ) {
     throw new ProposalActionBusinessError(
       "The source action returned, but the proposal posture has not changed. Use Recheck earlier action before continuing.",
+    );
+  }
+  const eventConfirmed = workflow?.events.some(
+    (event) => event.event_id === confirmation.eventId
+      && event.event_type === confirmation.eventType
+      && event.from_state === previousState
+      && event.to_state === expectedState
+      && event.actor_id === confirmation.actorId
+      && event.occurred_at === confirmation.eventOccurredAt,
+  );
+  const approvalConfirmed = confirmation.approvalId === null
+    ? confirmation.approvalType === null
+    : approvals?.approvals.some(
+      (approval) => approval.approval_id === confirmation.approvalId
+        && approval.approval_type === confirmation.approvalType
+        && approval.approved === true
+        && approval.actor_id === confirmation.actorId
+        && approval.occurred_at === confirmation.approvalOccurredAt,
+    );
+  if (!eventConfirmed || !approvalConfirmed) {
+    throw new ProposalActionBusinessError(
+      "The source action returned, but the refreshed review history does not contain its exact workflow or approval record. Use Recheck earlier action before continuing.",
     );
   }
   return refreshedState;

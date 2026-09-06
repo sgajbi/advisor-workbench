@@ -118,8 +118,8 @@ export type ProposalStateTransitionEnvelopeResponse = Omit<
   data: {
     proposal_id: string;
     current_state: string;
-    latest_workflow_event: Record<string, unknown>;
-    approval: Record<string, unknown> | null;
+    latest_workflow_event: ProposalWorkflowEvent;
+    approval: ProposalApprovalRecord | null;
   };
 };
 
@@ -769,6 +769,7 @@ export type ProposalApprovalActionRequest = {
 
 export type ProposalWorkflowEvent = {
   event_id: string;
+  proposal_id?: string | null;
   event_type: string;
   from_state?: string | null;
   to_state: string;
@@ -784,6 +785,7 @@ export type ProposalWorkflowEventsData = {
 
 export type ProposalApprovalRecord = {
   approval_id: string;
+  proposal_id?: string | null;
   approval_type: string;
   approved: boolean;
   actor_id: string;
