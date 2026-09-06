@@ -49,7 +49,7 @@ describe("proposal action evidence", () => {
         latest_workflow_event: {},
         proposal_id: "proposal-1",
       },
-    }, "proposal-1")).toBe("RISK_REVIEW");
+    }, "proposal-1", "RISK_REVIEW")).toBe("RISK_REVIEW");
   });
 
   it("rejects a transition response for another proposal", () => {
@@ -62,7 +62,20 @@ describe("proposal action evidence", () => {
         latest_workflow_event: {},
         proposal_id: "proposal-2",
       },
-    }, "proposal-1")).toThrow("did not confirm the expected proposal");
+    }, "proposal-1", "RISK_REVIEW")).toThrow("did not confirm the expected proposal");
+  });
+
+  it("rejects a transition response that does not match the requested target state", () => {
+    expect(() => confirmProposalTransitionResponse({
+      contract_version: "v1",
+      correlation_id: "corr-1",
+      data: {
+        approval: null,
+        current_state: "COMPLIANCE_REVIEW",
+        latest_workflow_event: {},
+        proposal_id: "proposal-1",
+      },
+    }, "proposal-1", "RISK_REVIEW")).toThrow("did not confirm the expected proposal");
   });
 
   it("accepts source evidence only when proposal, posture, and active version agree", () => {

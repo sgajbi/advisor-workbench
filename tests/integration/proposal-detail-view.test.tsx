@@ -724,12 +724,12 @@ describe("ProposalDetailView", () => {
 
   it("withholds lifecycle success when the response posture differs from refreshed source truth", async () => {
     submitProposalMock.mockResolvedValueOnce({
-      data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" },
+      data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" },
     });
-    prepareCoherentActionRefresh("RISK_REVIEW");
+    prepareCoherentActionRefresh("COMPLIANCE_REVIEW");
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT"))
-      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW"));
+      .mockResolvedValueOnce(proposalDetail("COMPLIANCE_REVIEW"));
     renderWithQueryClient();
 
     await clickReadyButton("Submit for risk review");
@@ -740,7 +740,29 @@ describe("ProposalDetailView", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Approve risk review" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Approve compliance review" })).toBeDisabled();
+  });
+
+  it("fences a lifecycle response that does not match the requested target state", async () => {
+    submitProposalMock.mockResolvedValueOnce({
+      data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" },
+    });
+    renderWithQueryClient();
+
+    const action = await screen.findByRole("button", { name: "Submit for risk review" });
+    const previousActionCount = submitProposalMock.mock.calls.length;
+    await waitFor(() => expect(action).toBeEnabled());
+    fireEvent.click(action);
+
+    expect(
+      await screen.findByText(
+        "The source action completed, but did not confirm the expected proposal and workflow posture. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
+    expect(action).toBeDisabled();
+    fireEvent.click(action);
+    expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount + 1);
   });
 
   it("does not publish success when refreshed sources disagree on proposal posture", async () => {
