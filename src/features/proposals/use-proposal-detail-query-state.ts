@@ -33,6 +33,7 @@ import type { ProposalStateTransitionEnvelopeResponse } from "./types";
 
 type LifecycleActionVariables = Readonly<{
   action: () => Promise<ProposalStateTransitionEnvelopeResponse>;
+  expectedState: string;
   previousState: string;
   successPrefix: string;
 }>;
@@ -119,10 +120,10 @@ export function useProposalDetailQueryState({
   const actionMutation = useMutation({
     mutationKey: proposalDetailMutationKeys.lifecycle(proposalId),
     scope: { id: proposalDetailCommandScope(proposalId) },
-    mutationFn: async ({ action, previousState, successPrefix }: LifecycleActionVariables) => {
+    mutationFn: async ({ action, expectedState, previousState, successPrefix }: LifecycleActionVariables) => {
       const response = await action();
       try {
-        const expectedState = confirmProposalTransitionResponse(response, proposalId);
+        confirmProposalTransitionResponse(response, proposalId, expectedState);
         const refreshed = await refreshProposalEvidence();
         const refreshedState = confirmRefreshedProposalActionEvidence({
           approvals: refreshed.approvals,

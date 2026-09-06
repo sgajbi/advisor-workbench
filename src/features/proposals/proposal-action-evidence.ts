@@ -22,12 +22,12 @@ export type ProposalActionEvidenceAgreement =
 export function confirmProposalTransitionResponse(
   response: ProposalStateTransitionEnvelopeResponse,
   expectedProposalId: string,
+  expectedState: string,
 ): string {
   const responseData = response?.data;
   if (
     responseData?.proposal_id !== expectedProposalId
-    || typeof responseData.current_state !== "string"
-    || responseData.current_state.trim().length === 0
+    || responseData.current_state !== expectedState
   ) {
     throw new ProposalActionBusinessError(
       "The source action completed, but did not confirm the expected proposal and workflow posture. Reload the proposal before continuing.",
