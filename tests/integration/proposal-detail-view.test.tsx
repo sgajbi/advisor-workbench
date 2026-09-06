@@ -1396,29 +1396,25 @@ describe("ProposalDetailView", () => {
     expect(screen.getByTestId("proposal-evidence-disclosure")).not.toHaveAttribute("open");
   });
 
-  it("does not publish an earlier action completion after leaving and returning to a proposal", async () => {
+  it("retains an unconfirmed action fence after leaving and returning to a proposal", async () => {
     let completeSubmission: (() => void) | undefined;
     submitProposalMock.mockImplementationOnce(
       () => new Promise((resolve) => {
-        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "RISK_REVIEW" } });
+        completeSubmission = () => resolve({ data: { proposal_id: "pp-1", current_state: "COMPLIANCE_REVIEW" } });
       })
     );
     getProposalMock
       .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-1"))
-      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"))
-      .mockResolvedValueOnce(proposalDetail("RISK_REVIEW", "pp-1"));
+      .mockResolvedValueOnce(proposalDetail("DRAFT", "pp-2"));
     getWorkflowEventsMock
       .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-1"))
-      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-2"))
-      .mockResolvedValueOnce(workflowEvidence("RISK_REVIEW", "pp-1"));
+      .mockResolvedValueOnce(workflowEvidence("DRAFT", "pp-2"));
     getApprovalsMock
       .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-1"))
-      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2"))
-      .mockResolvedValueOnce(approvalsEvidence("RISK_REVIEW", "pp-1"));
+      .mockResolvedValueOnce(approvalsEvidence("DRAFT", "pp-2"));
     getLineageMock
       .mockResolvedValueOnce(lineageEvidence("pp-1"))
-      .mockResolvedValueOnce(lineageEvidence("pp-2"))
-      .mockResolvedValueOnce(lineageEvidence("pp-1"));
+      .mockResolvedValueOnce(lineageEvidence("pp-2"));
     const queryClient = new QueryClient();
     const view = render(
       <QueryClientProvider client={queryClient}>
@@ -1426,7 +1422,12 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
 
+    const previousActionCount = submitProposalMock.mock.calls.length;
     await clickReadyButton("Submit for risk review");
+    await waitFor(() => {
+      expect(submitProposalMock).toHaveBeenCalledTimes(previousActionCount + 1);
+    });
+    const actionCallCount = submitProposalMock.mock.calls.length;
     view.rerender(
       <QueryClientProvider client={queryClient}>
         <ProposalDetailView proposalId="pp-2" />
@@ -1439,12 +1440,21 @@ describe("ProposalDetailView", () => {
       </QueryClientProvider>
     );
     await screen.findByRole("heading", { level: 1, name: "Proposal pp-1" });
+    const returnedAction = screen.getByRole("button", { name: "Submit for risk review" });
 
     await act(async () => completeSubmission?.());
 
     await waitFor(() => {
       expect(screen.queryByTestId("proposal-action-status")).not.toBeInTheDocument();
     });
+    await waitFor(() => expect(returnedAction).toBeDisabled());
+    expect(
+      screen.getByText(
+        "Proposal actions remain unavailable because refreshed review evidence could not be confirmed. Reload the proposal before continuing.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(returnedAction);
+    expect(submitProposalMock).toHaveBeenCalledTimes(actionCallCount);
   });
 
   it("retains refreshed version evidence across proposal and route transitions", async () => {
