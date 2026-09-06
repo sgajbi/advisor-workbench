@@ -1457,7 +1457,7 @@ describe("ProposalDetailView", () => {
         .map((query) => query.queryKey)
         .filter((key) => key[0] === "workbench" && key[1] === "proposal-detail" && key[2] === "pp-1"),
     ).toEqual(expect.arrayContaining([
-      proposalDetailQueryKeys.detail("pp-1", false),
+      proposalDetailQueryKeys.record("pp-1", false),
       proposalDetailQueryKeys.workflow("pp-1"),
       proposalDetailQueryKeys.approvals("pp-1"),
       proposalDetailQueryKeys.lineage("pp-1"),

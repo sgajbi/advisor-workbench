@@ -31,18 +31,38 @@ export function evaluateProposalActionEvidence({
   lineage?: ProposalLineageData;
   workflow?: ProposalWorkflowEventsData;
 }): ProposalActionEvidenceAgreement {
-  if (!detail?.proposal || !workflow || !approvals || !lineage) {
+  return evaluateProposalActionEvidenceValues(
+    { approvals, expectedProposalId, lineage, workflow },
+    detail,
+  );
+}
+
+function evaluateProposalActionEvidenceValues(
+  {
+    approvals,
+    expectedProposalId,
+    lineage,
+    workflow,
+  }: {
+    approvals?: ProposalApprovalsData;
+    expectedProposalId: string;
+    lineage?: ProposalLineageData;
+    workflow?: ProposalWorkflowEventsData;
+  },
+  proposalRecord?: ProposalDetailData,
+): ProposalActionEvidenceAgreement {
+  if (!proposalRecord?.proposal || !workflow || !approvals || !lineage) {
     return { issue: "missing-evidence" };
   }
   if (
-    detail.proposal.proposal_id !== expectedProposalId ||
+    proposalRecord.proposal.proposal_id !== expectedProposalId ||
     workflow.proposal_id !== expectedProposalId ||
     approvals.proposal_id !== expectedProposalId ||
     lineage.proposal_id !== expectedProposalId
   ) {
     return { issue: "proposal-mismatch" };
   }
-  const currentState = detail.proposal.current_state;
+  const currentState = proposalRecord.proposal.current_state;
   if (
     !currentState ||
     workflow.current_state !== currentState ||
@@ -50,7 +70,7 @@ export function evaluateProposalActionEvidence({
   ) {
     return { issue: "state-mismatch", currentState };
   }
-  const activeVersionNo = detail.proposal.current_version_no;
+  const activeVersionNo = proposalRecord.proposal.current_version_no;
   if (
     !Number.isInteger(activeVersionNo) ||
     !lineage.versions?.some(
@@ -64,26 +84,23 @@ export function evaluateProposalActionEvidence({
 
 export function confirmRefreshedProposalActionEvidence({
   approvals,
-  detail,
   expectedProposalId,
   lineage,
   previousState,
+  proposalDetail,
   workflow,
 }: {
   approvals?: ProposalApprovalsData;
-  detail?: ProposalDetailData;
   expectedProposalId: string;
   lineage?: ProposalLineageData;
   previousState: string;
+  proposalDetail?: ProposalDetailData;
   workflow?: ProposalWorkflowEventsData;
 }): string {
-  const agreement = evaluateProposalActionEvidence({
-    approvals,
-    detail,
-    expectedProposalId,
-    lineage,
-    workflow,
-  });
+  const agreement = evaluateProposalActionEvidenceValues(
+    { approvals, expectedProposalId, lineage, workflow },
+    proposalDetail,
+  );
   if (agreement.issue === "proposal-mismatch") {
     throw new ProposalActionBusinessError(
       "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
@@ -113,26 +130,23 @@ export function confirmRefreshedProposalActionEvidence({
 
 export function confirmRefreshedProposalVersionEvidence({
   approvals,
-  detail,
   expectedProposalId,
   expectedVersionNo,
   lineage,
+  proposalDetail,
   workflow,
 }: {
   approvals?: ProposalApprovalsData;
-  detail?: ProposalDetailData;
   expectedProposalId: string;
   expectedVersionNo: number;
   lineage?: ProposalLineageData;
+  proposalDetail?: ProposalDetailData;
   workflow?: ProposalWorkflowEventsData;
 }): number {
-  const agreement = evaluateProposalActionEvidence({
-    approvals,
-    detail,
-    expectedProposalId,
-    lineage,
-    workflow,
-  });
+  const agreement = evaluateProposalActionEvidenceValues(
+    { approvals, expectedProposalId, lineage, workflow },
+    proposalDetail,
+  );
   if (agreement.issue === "proposal-mismatch") {
     throw new ProposalActionBusinessError(
       "The source action returned evidence for a different proposal. Reload the proposal before continuing.",
@@ -145,7 +159,7 @@ export function confirmRefreshedProposalVersionEvidence({
   }
   if (
     agreement.issue === "active-version-mismatch" ||
-    detail?.proposal.current_version_no !== expectedVersionNo
+    proposalDetail?.proposal.current_version_no !== expectedVersionNo
   ) {
     throw new ProposalActionBusinessError(
       "The source action returned lineage that does not confirm the newly created proposal version. Reload the proposal before continuing.",

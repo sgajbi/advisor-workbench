@@ -4,7 +4,7 @@ export const proposalDetailQueryKeys = {
   all: ["workbench", "proposal-detail"] as const,
   proposal: (proposalId: string) =>
     [...proposalDetailQueryKeys.all, proposalId] as const,
-  detail: (proposalId: string, includeEvidence: boolean) =>
+  record: (proposalId: string, includeEvidence: boolean) =>
     [
       ...proposalDetailQueryKeys.proposal(proposalId),
       "detail",
