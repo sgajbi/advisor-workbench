@@ -182,15 +182,9 @@ export default function PortfolioTransactionsRecordWorkspace({
         />
       ) : null}
       {selectedRecordId && !selectedTransaction && exactRecordQuery.isError ? (
-        <PortfolioModuleState
-          variant="status"
-          state="error"
-          {...transactionRecordFailureCopy(exactRecordQuery.error)}
-          action={
-            <Button size="small" variant="outlined" onClick={handleCloseRecord}>
-              Clear transaction review
-            </Button>
-          }
+        <TransactionRecordFailureState
+          error={exactRecordQuery.error}
+          onClear={handleCloseRecord}
         />
       ) : null}
       <PortfolioTransactionsGrid
@@ -213,49 +207,92 @@ export default function PortfolioTransactionsRecordWorkspace({
   );
 }
 
-function transactionRecordFailureCopy(error: Error): {
-  title: string;
-  body: string;
-} {
+function TransactionRecordFailureState({
+  error,
+  onClear,
+}: {
+  error: Error;
+  onClear: () => void;
+}) {
   const failure =
     error instanceof PortfolioTransactionRecordError
       ? error.failure
       : "unavailable";
+  const action = (
+    <Button size="small" variant="outlined" onClick={onClear}>
+      Clear transaction review
+    </Button>
+  );
   switch (failure) {
     case "not_found":
-      return {
-        title: "Transaction no longer available",
-        body: "The source ledger did not return this transaction for the selected portfolio and review context. No alternative booking was opened.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction no longer available"
+          body="The source ledger did not return this transaction for the selected portfolio and review context. No alternative booking was opened."
+        />
+      );
     case "access_denied":
-      return {
-        title: "Transaction access restricted",
-        body: "Your current portfolio access does not permit this booked event to be reviewed. The surrounding ledger remains available.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction access restricted"
+          body="Your current portfolio access does not permit this booked event to be reviewed. The surrounding ledger remains available."
+        />
+      );
     case "invalid_request":
-      return {
-        title: "Transaction review could not be validated",
-        body: "The selected portfolio, date, currency, or transaction identity was not accepted by the source. No substitute evidence was displayed.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction review could not be validated"
+          body="The selected portfolio, date, currency, or transaction identity was not accepted by the source. No substitute evidence was displayed."
+        />
+      );
     case "identity_mismatch":
-      return {
-        title: "Transaction identity could not be confirmed",
-        body: "The source response did not match the transaction in this address. No mismatched booking was displayed.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction identity could not be confirmed"
+          body="The source response did not match the transaction in this address. No mismatched booking was displayed."
+        />
+      );
     case "source_contract_invalid":
-      return {
-        title: "Transaction evidence could not be verified",
-        body: "The source returned an incomplete or inconsistent transaction record. The unverified booking was not displayed.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction evidence could not be verified"
+          body="The source returned an incomplete or inconsistent transaction record. The unverified booking was not displayed."
+        />
+      );
     case "source_unavailable":
-      return {
-        title: "Transaction source temporarily unavailable",
-        body: "The exact booked event could not be retrieved. The surrounding ledger remains available for review.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction source temporarily unavailable"
+          body="The exact booked event could not be retrieved. The surrounding ledger remains available for review."
+        />
+      );
     case "unavailable":
-      return {
-        title: "Transaction unavailable",
-        body: "The exact booked event could not be confirmed. No alternative booking was opened.",
-      };
+      return (
+        <PortfolioModuleState
+          variant="status"
+          state="error"
+          action={action}
+          title="Transaction unavailable"
+          body="The exact booked event could not be confirmed. No alternative booking was opened."
+        />
+      );
   }
 }
