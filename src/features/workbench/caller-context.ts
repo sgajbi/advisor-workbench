@@ -520,7 +520,16 @@ function validateReportingWorkspaceRequest(
   if (request.upstreamPath === "api/v1/report-ordering/options") {
     const scopeType = readSingleQueryValue(request.searchParams, "scopeType");
     const scopeId = readSingleQueryValue(request.searchParams, "scopeId");
-    if (scopeType !== "portfolio" || !scopeId) {
+    const asOfDates = request.searchParams.getAll("asOfDate");
+    const reportingCurrencies = request.searchParams.getAll("reportingCurrency");
+    if (
+      scopeType !== "portfolio" ||
+      !scopeId ||
+      asOfDates.length > 1 ||
+      reportingCurrencies.length > 1 ||
+      (asOfDates.length === 1 && !asOfDates[0]?.trim()) ||
+      (reportingCurrencies.length === 1 && !reportingCurrencies[0]?.trim())
+    ) {
       return { status: "rejected", reason: "invalid_reporting_request" };
     }
     if (!entitledPortfolioIds.has(scopeId)) {
@@ -531,6 +540,10 @@ function validateReportingWorkspaceRequest(
       admittedSearch: replaceQueryValues(request.searchParams, {
         scopeType,
         scopeId,
+        ...(asOfDates.length === 1 ? { asOfDate: asOfDates[0].trim() } : {}),
+        ...(reportingCurrencies.length === 1
+          ? { reportingCurrency: reportingCurrencies[0].trim() }
+          : {}),
       }),
     };
   }
