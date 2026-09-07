@@ -71,10 +71,12 @@ Local product endpoints:
 - Gateway: `http://gateway.dev.lotus`
 
 Set `BFF_BASE_URL=http://gateway.dev.lotus` for the normal local Gateway boundary. The local caller
-fixture is development-only and is not production identity evidence. Production principal/session
-resolution remains tracked by
+fixture is development-only and is not production identity evidence. Promoted and unconfigured
+environments refuse generic BFF and direct server-to-Gateway reads until verified principal
+resolution is available. Production principal/session resolution remains tracked by
 [Workbench #436](https://github.com/sgajbi/lotus-workbench/issues/436) and
-[lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563).
+[lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563), with delegated grant
+resolution tracked by [lotus-platform #775](https://github.com/sgajbi/lotus-platform/issues/775).
 
 For a populated integrated run, use the governed front-office flow and canonical portfolio
 `PB_SG_GLOBAL_BAL_001` from Windows PowerShell:

@@ -64,41 +64,44 @@ must travel through Gateway-shaped contracts.
    before Gateway is called, and the upstream request is built from the exact normalized scope the
    BFF admitted. Other environments fail closed until an authenticated-principal resolver is
    available.
-9. Structured report data and governed PDF readiness are independent source states. Report-data
+9. Generic BFF routes and direct server-rendered Gateway reads add static caller authority only in
+   explicit development environments. Promoted and unconfigured environments stop before Gateway;
+   they never downgrade to configured headers while authenticated principal resolution is absent.
+10. Structured report data and governed PDF readiness are independent source states. Report-data
    completion does not mean archive, advisor approval, client delivery, or communication.
-10. Workbench can submit an explicit portfolio bundle and read its source-owned status only when
+11. Workbench can submit an explicit portfolio bundle and read its source-owned status only when
     Reporting publishes the exact capability and route. Gateway owns final membership and
     eligibility verification; Report owns materialization and per-portfolio lifecycle. Workbench
     does not expose report-worker run-once, browser-defined worker capacity, ad hoc archive lookup,
     direct document download, or client-distribution controls.
-11. Outcome-review report job requests use Gateway `POST /api/v1/reports/outcome-reviews` through
+12. Outcome-review report job requests use Gateway `POST /api/v1/reports/outcome-reviews` through
     `/api/bff/api/v1/reports/outcome-reviews` after loading manage-owned `DpmOutcomeReportInput`.
     Workbench does not call `lotus-report`, `lotus-render`, or `lotus-archive` directly for
     report materialization.
-12. Outcome-review AI narrative requests use Gateway
+13. Outcome-review AI narrative requests use Gateway
     `POST /api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative` through
     `/api/bff/api/v1/dpm/command-center/outcome-reviews/{outcome_review_id}/ai-narrative`.
     Workbench does not call `lotus-manage` or `lotus-ai` directly, does not construct prompts, and
     displays only bounded workflow-pack run posture returned by Gateway.
-13. Construction alternative generation, retrieval, and selection use Gateway
+14. Construction alternative generation, retrieval, and selection use Gateway
     `/api/v1/dpm/command-center/construction/alternative-sets*` through the Workbench BFF.
     Workbench sends stateful source selectors for manage/core resolution, displays manage-owned
     comparison and supportability truth, and records PM selection through Gateway; it does not call
     `lotus-manage` directly or invent stateless portfolio snapshots, prices, optimizer output, or
     selected-alternative state.
-14. Rebalance action-register supportability is read from the Gateway portfolio overview
+15. Rebalance action-register supportability is read from the Gateway portfolio overview
     `rebalance_snapshot`. Workbench displays manage-owned status, source support state, freshness,
     run count, operation count, workflow decision count, last-run identity, bounded recent runs,
     workflow posture, run issue count, and reason posture; it does not call `lotus-manage`
     directly and does not convert missing supportability or absent recent runs into apparently
     verified zero activity.
-15. RFC-0108 analytics UI observability is centralized in
+16. RFC-0108 analytics UI observability is centralized in
     `src/features/analytics-observability/metrics.ts`. Supported Portfolio, Intake, Performance,
     Risk, Reporting, Data Products, and legacy advisor Workbench gateway-backed reads/mutations
     emit bounded route, panel, operation, freshness, and supportability labels only; portfolio,
     intake payload, document, session, trace, request, response, and screen-content identifiers
     must not appear in metric labels.
-16. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
+17. `lotus-manage` is not a proposal/advisory upstream for Workbench. DPM product surfaces must be
     backed by strategic Gateway APIs before Workbench exposes them. RFC-0098 keeps Workbench as a
     renderer of Gateway-composed mandate and proof-pack truth, not a direct caller of manage, risk,
     performance, core, report, archive, or AI. RFC-0040 proof-pack JSON, hashes, Markdown,
@@ -204,7 +207,7 @@ must travel through Gateway-shaped contracts.
     readiness, construct report input, generate memo or exception-summary narrative locally, reconstruct
     portfolio-memory events, claim external execution, or optimize construction alternatives;
     proof-pack sections and wave report input remain manage-owned evidence.
-17. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
+18. The implemented RFC-0038 mandate command-center cockpit consumes Gateway
     `/api/v1/dpm/command-center`, `/monitoring/run-once`, `/exceptions`, and `/mandates*`
     contracts. Workbench renders Manage-owned mandate health, source readiness, supportability,
     active exceptions, exception-specific owners and next steps, monitoring-run lineage, and health
@@ -214,7 +217,7 @@ must travel through Gateway-shaped contracts.
     state. Manage owns exception ordering and continuation cursors; Workbench keeps each valid
     returned view reviewable, labels partial scope explicitly, and uses the BFF for continuation
     without merging views or inventing a complete count.
-18. `lotus-advise` owns advisor-led proposal workflow truth. Workbench proposal queue/detail
+19. `lotus-advise` owns advisor-led proposal workflow truth. Workbench proposal queue/detail
     routes consume that truth through Gateway proposal endpoints only. The RFC-0023 proposal detail
     panel can record advisor-use narrative review and request reviewed narrative report packaging
     through Gateway, then display delivery-summary and delivery-event posture. It does not generate
@@ -222,7 +225,7 @@ must travel through Gateway-shaped contracts.
     call `lotus-advise`, `lotus-report`, `lotus-render`, or `lotus-archive` directly. The top-level
     shell `Proposal` entry remains capability-disabled until broader product promotion is
     separately proven.
-19. RFC-0024 advisor memo and evidence-pack posture is also owned by `lotus-advise` and consumed
+20. RFC-0024 advisor memo and evidence-pack posture is also owned by `lotus-advise` and consumed
     through Gateway proposal memo endpoints only. Workbench can create or replay advisor-use memo
     evidence, record advisor-use memo review, request memo report-package posture, request
     non-authoritative commentary, and display memo lineage/replay posture. It does not infer memo
@@ -230,18 +233,18 @@ must travel through Gateway-shaped contracts.
     commentary as authoritative evidence, contact clients, or call source services directly.
     Canonical Workbench proof classifies `proposal.memo_evidence_pack` as `lotus-advise` owned and
     captures governed screenshot evidence after advisor-use memo review.
-20. RFC-0028 bank-demo proof posture is owned by `lotus-advise` and exposed through Gateway
+21. RFC-0028 bank-demo proof posture is owned by `lotus-advise` and exposed through Gateway
     `/api/v1/advisory/bank-demo-proof/*`. Workbench consumes the scenario contract and
     supported-claim register through the BFF only, renders source-owned classifications and
     publication boundaries, and does not construct proof packs, classify claims, approve sign-off,
     promote client-ready publication, contact clients, create orders, or claim OMS/fill/settlement
     truth. Canonical Workbench proof classifies `advisory.bank_demo_proof` as `lotus-advise` owned.
-21. Implementation Status reads `proposal-implementation-status.v1` through Gateway for one
+22. Implementation Status reads `proposal-implementation-status.v1` through Gateway for one
     selected proposal. Gateway owns the validated experience projection, Advise owns advisory
     handoff and reconciliation, and the named downstream provider remains the execution system of
     record. Workbench never calls Advise or an execution provider directly and does not reinterpret
     downstream references as orders, fills, allocations, settlement, custody, or accounting proof.
-22. Suitability review consumes the Advise-owned policy-review queue, evaluation, sign-off package,
+23. Suitability review consumes the Advise-owned policy-review queue, evaluation, sign-off package,
     workflow, and bounded evidence-request mutation only through the Workbench BFF and Gateway. The
     queue is the screen's sole count authority; selected evidence reads do not fan out across every
     row. Workbench requires exact selected identity agreement before action, keeps a failed compound

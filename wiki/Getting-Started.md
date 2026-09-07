@@ -87,9 +87,11 @@ WORKBENCH_BFF_BOOKING_CENTER_CODE=SG
 WORKBENCH_BFF_ROLE=advisor
 ```
 
-The BFF always removes browser-supplied authority before deriving trusted server context. Use the
-server-side overrides for scenario-specific validation that needs a named actor, tenant, region,
-booking centre, or role; browser headers never override them.
+The BFF always removes browser-supplied authority. It derives configured server context only when
+`LOTUS_ENVIRONMENT` explicitly names `dev`, `development`, `local`, or `test`. Use server-side
+overrides for scenario-specific development validation that needs a named actor, tenant, region,
+booking centre, or role; browser headers never override them. Promoted and unconfigured
+environments fail before Gateway while authenticated principal resolution remains unavailable.
 
 ### Lotus Idea local authority fixture
 

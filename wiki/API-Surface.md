@@ -129,7 +129,10 @@ promote dormant labels into product ownership just because historical route file
   internal `/api/bff/api/v1/domain-products/*` bridge only. Catalogue failure blocks discovery;
   assurance or graph failure leaves confirmed catalogue evidence available and does not authorize
   a browser fallback or direct platform-artifact read.
-- internal browser-to-gateway traffic can flow through `/api/bff/*`
+- internal browser-to-gateway traffic can flow through `/api/bff/*`. Static caller context is
+  development-only; generic BFF and direct server-rendered Gateway paths return a permission
+  failure before upstream access in promoted or unconfigured environments until verified principal
+  resolution is implemented.
 - `/book` consumes `GET /api/v1/advisor-book/portfolios` through the Workbench BFF. The BFF
   replaces browser-supplied actor, tenant, region, booking-centre, role, and capability headers;
   strips browser `Authorization`, browser `Cookie`, proxy authorization, session id, and upstream

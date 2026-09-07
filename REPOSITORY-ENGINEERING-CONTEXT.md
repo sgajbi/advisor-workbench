@@ -39,7 +39,9 @@ facts; it must not invent reassuring defaults, thresholds, authority, or success
 - Portfolio and Performance/Risk source reads use root-owned TanStack Query state with complete
   business-context keys, explicit source admission, and bounded freshness policy.
 - Product reads and commands call same-origin `/api/bff/**` routes. Those routes strip
-  browser-supplied authority and forward only the closed server-owned caller context to Gateway.
+  browser-supplied authority. Static server-owned caller context is added only in an explicit
+  development environment; promoted and unconfigured environments fail before Gateway until a
+  verified principal resolver is available.
 - The current server caller context is a bounded local/development posture, not production identity.
   Authenticated actor, tenant, entitlement, expiry, and revocation authority remain owned by
   [#436](https://github.com/sgajbi/lotus-workbench/issues/436) with Platform #563/#775.
@@ -105,6 +107,9 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 - Every BFF request enters Gateway through `buildGatewayBffRequestHeaders`. Browser authorization,
   cookies, forwarding aliases, roles, capabilities, service identity, and tenant scope are not
   trusted inputs.
+- Generic BFF routes and direct server-rendered Gateway reads refuse non-development requests while
+  authenticated principal resolution is unavailable. Do not restore configured development
+  headers as a production fallback; RFC-0109 requires verified delegated authority instead.
 - A BFF that narrows query scope must reject missing or repeated required values and forward the
   exact admitted representation. Gateway remains the final object-authorization authority.
 - The BFF describes emitted bytes: it requests identity encoding, removes hop-by-hop and stale
@@ -262,8 +267,9 @@ policy; it is not the default first read for a bounded Workbench change.
 
 ## Known Constraints And Implementation Notes
 
-- Production principal/session resolution is not implemented; browser headers, local caller
-  fixtures, and canonical local QA are not production attribution.
+- Production principal/session resolution is not implemented. Browser headers, local caller
+  fixtures, and canonical local QA are not production attribution; generic BFF and direct
+  server-to-Gateway paths fail closed outside explicit development environments.
 - Some top-level advisory/proposal capabilities remain bounded or disabled. Check Supported Features
   before claiming availability.
 - `quality:feature-transport` has a closed baseline for historical raw-fetch owners pending #791;

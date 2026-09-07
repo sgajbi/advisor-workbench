@@ -10,15 +10,17 @@ These controls reduce impersonation, contract-drift, dependency, and unsupported
 do **not** certify production authentication, authorization, entitlement, data privacy, operational
 resilience, regulatory compliance, or bank acceptance. Production principal/session resolution is
 still owned by [Workbench #436](https://github.com/sgajbi/lotus-workbench/issues/436) and
-[lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563). Local configured callers
-are non-certifying development fixtures and fail closed outside permitted development environments.
+[lotus-platform #563](https://github.com/sgajbi/lotus-platform/issues/563), with delegated grant
+resolution tracked by [lotus-platform #775](https://github.com/sgajbi/lotus-platform/issues/775).
+Local configured callers are non-certifying development fixtures. Generic BFF and direct
+server-to-Gateway paths fail closed outside permitted development environments.
 
 ## Control And Evidence Map
 
 | Control area | Implemented boundary | Primary evidence | Remaining boundary |
 | --- | --- | --- | --- |
 | Browser request trust | BFF rebuilds Gateway headers from a closed allowlist and discards browser-supplied authority | `quality:bff-header-boundary`, behavioral BFF tests | Not an IdP or session implementation |
-| Route authority | Server-owned development context is narrowed per route; query-scoped routes execute the exact single-valued scope admitted by the BFF | Route-family tests and canonical local validation | Production claims await authenticated principal resolution |
+| Route authority | Server-owned development context is narrowed per route; promoted and unconfigured environments stop before Gateway while no verified principal exists | Route-family and direct-server negative tests, plus canonical local validation | Production claims await authenticated principal and delegated-grant resolution |
 | Capability truth | Disabled, unsupported, partial, and unavailable states remain explicit | `quality:screen-docs`, product-copy gate, browser scenarios | Implemented route does not imply production promotion |
 | Dependency and image risk | Direct dependency admission, `npm audit`, pinned production image, vulnerability and SBOM gates | Feature, PR, and main releasability lanes | Not a production penetration test or deployment certification |
 | Release governance | Signed commits, protected CI, exact-head review authority, exact-main validation | GitHub PR checks and Main Releasability | Green CI cannot override a blocking review finding |
@@ -55,9 +57,11 @@ The allowlist is limited to:
 
 Browser `Authorization`, cookies, proxy authorization, session identifiers, forwarding aliases,
 caller identity, tenant, region, booking centre, role, capability, principal status, service
-identity, and portfolio/client/book entitlements are not forwarded. The BFF always writes its
-configured development caller context and specialized adapters may replace it with narrower
-server-derived route authority.
+identity, and portfolio/client/book entitlements are not forwarded. The BFF writes configured
+caller context only in explicit development environments, where specialized adapters may narrow it
+for a route. Promoted and unconfigured environments receive no static replacement authority and
+are rejected before Gateway. Direct server-rendered Gateway reads follow the same environment
+fence.
 
 `npm run quality:bff-header-boundary` is a syntax-aware CI backstop that fails when a BFF route
 omits the shared builder, accesses browser headers outside it, or the scanner finds no BFF routes.
@@ -66,8 +70,8 @@ header across portfolio, Performance, Risk, DPM, proposals, advisory workspaces,
 Intake, lookups, and platform route families.
 
 This is a request-boundary control, not production authentication. It neither creates an IdP
-session nor certifies identity, token claims, logout, or revocation. Workbench #436 and platform
-#563 remain the owners of that separate production-principal contract.
+session nor certifies identity, token claims, logout, or revocation. Workbench #436 and Platform
+#563/#775 remain the owners of the authenticated principal and delegated-grant path.
 
 ### Query-scoped route admission
 
