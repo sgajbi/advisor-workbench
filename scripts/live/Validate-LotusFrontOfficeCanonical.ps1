@@ -106,6 +106,9 @@ function Read-IdeaCandidateSeedEvidence {
   if ([string]$evidence.portfolioId -ne $PortfolioId) {
     throw "Canonical Lotus Idea candidate seed evidence does not match portfolio $PortfolioId."
   }
+  if ([string]$evidence.asOfDate -ne $AsOfDate) {
+    throw "Canonical Lotus Idea candidate seed evidence does not match business date $AsOfDate."
+  }
   if ([string]$evidence.candidateId -notmatch '^idea_high_cash_[0-9a-f]{16}$') {
     throw "Canonical Lotus Idea candidate seed evidence has an invalid candidate identity."
   }

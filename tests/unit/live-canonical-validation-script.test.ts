@@ -807,6 +807,13 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain(
       'review-queues/advisor?evaluatedAtUtc=$encodedEvaluatedAtUtc',
     );
+    expect(startScript).toContain(
+      "[datetimeoffset]$queue.evaluatedAtUtc -ne [datetimeoffset]$queueEvaluatedAtUtc",
+    );
+    expect(startScript).toContain("asOfDate = $asOfDate");
+    expect(validationScript).toContain(
+      "candidate seed evidence does not match business date $AsOfDate",
+    );
     expect(validationScript).toContain(
       "-EvaluatedAtUtc $ideaCandidateSeedEvidence.queueEvaluatedAtUtc",
     );
