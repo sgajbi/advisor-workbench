@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/runtime/start-workbench-development.mjs",
     "build": "node scripts/quality/clean-next-build-artifacts.mjs && next build && npm run quality:portfolio-record-bundles",
     "start": "next start",
     "lint": "npm run quality:runtime-support && npm run quality:runtime-state && npm run quality:bff-header-boundary && npm run quality:feature-transport && npm run quality:source-authority && npm run quality:dependency-risk && npm run quality:font-assets && npm run quality:product-copy && npm run quality:e2e-scenarios && npm run lint:css-global && npm run lint:risk-architecture && npm run quality:screen-docs && npm run lint:react-compiler && npm run lint:eslint",

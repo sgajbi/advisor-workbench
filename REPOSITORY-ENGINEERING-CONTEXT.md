@@ -190,7 +190,7 @@ the documented sibling-checkout layout without relying on the scripts' personal 
 | Purpose | Command |
 | --- | --- |
 | Install | `npm ci --no-audit --no-fund` |
-| Develop | `npm run dev` |
+| Develop | `npm run dev` (the governed launcher supplies `LOTUS_ENVIRONMENT=dev` only when absent) |
 | Lint and architecture gates | `npm run lint` |
 | Type safety | `npm run typecheck` |
 | Unit tests | `npm test` |

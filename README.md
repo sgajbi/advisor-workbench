@@ -65,6 +65,10 @@ make install
 make run
 ```
 
+The governed development launcher supplies `LOTUS_ENVIRONMENT=dev` when the variable is absent;
+an explicitly configured environment is preserved. Promoted environments must use their deployment
+entry point and authenticated principal contract, not this local-development command.
+
 Local product endpoints:
 
 - Workbench: `http://workbench.dev.lotus`

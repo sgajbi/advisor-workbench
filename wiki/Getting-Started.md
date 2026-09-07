@@ -43,6 +43,10 @@ make install
 make run
 ```
 
+`make run` delegates to the governed Node development launcher. It supplies
+`LOTUS_ENVIRONMENT=dev` when the variable is absent and preserves an explicitly configured value.
+This local-development default does not apply to production builds or promoted deployments.
+
 ## Canonical local runtime
 
 Run the canonical lifecycle from Windows PowerShell:
@@ -88,7 +92,9 @@ WORKBENCH_BFF_ROLE=advisor
 ```
 
 The BFF always removes browser-supplied authority. It derives configured server context only when
-`LOTUS_ENVIRONMENT` explicitly names `dev`, `development`, `local`, or `test`. Use server-side
+The governed `make run` / `npm run dev` path supplies `dev` when the variable is absent. Other
+startup paths must ensure `LOTUS_ENVIRONMENT` explicitly names `dev`, `development`, `local`, or
+`test`. Use server-side
 overrides for scenario-specific development validation that needs a named actor, tenant, region,
 booking centre, or role; browser headers never override them. Promoted and unconfigured
 environments fail before Gateway while authenticated principal resolution remains unavailable.
