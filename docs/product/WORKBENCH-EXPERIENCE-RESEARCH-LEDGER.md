@@ -138,8 +138,9 @@ Research was reviewed on 2026-08-24 from current official sources:
    route-family authority adapter.
 2. Carry only content negotiation/type, idempotency, HTTP conditional/range controls, and validated
    correlation/trace context.
-3. Write configured caller context unconditionally, then let explicit family adapters replace it
-   with narrower server-derived authority.
+3. Write configured caller context only in an explicit development environment, then let explicit
+   family adapters narrow it. Promoted and unconfigured environments refuse generic BFF and direct
+   server-to-Gateway access until verified principal resolution exists.
 4. Combine table-driven behavioral proof across every active BFF family with a repository scanner
    that rejects raw browser-header access or a missing builder.
 
@@ -152,14 +153,17 @@ Research was reviewed on 2026-08-24 from current official sources:
 3. Depend only on the five specialized authority adapters: portfolio, analytics, DPM, document,
    Intake, lookup, and platform routes require the same secure default.
 4. Treat this boundary as production authentication or entitlement certification.
+5. Preserve static caller configuration as a production fallback: RFC-0109 requires verified
+   delegated authority, and an unavailable resolver must stop before Gateway.
 
 ### Implementation and validation decision
 
-Workbench #825 owns the non-visual security prerequisite. No screen hierarchy, business workflow,
-Gateway/OpenAPI shape, runtime topology, or supported-feature claim changes, so rendered evidence
-is not applicable. Focused evidence is the exact allowlist unit contract, ten-family GET/POST BFF
-matrix, correlation validation, mutation-tested architecture gate, protected review/CI, exact-main
-validation, wiki publication/parity, and clean branch restoration.
+Workbench #825 owns the closed browser-header allowlist. Workbench #436 owns the subsequent
+environment fence and authenticated-principal adoption. Neither change alters screen hierarchy,
+Gateway/OpenAPI shape, or supported-feature posture, so rendered evidence is not applicable.
+Focused evidence is the exact allowlist contract, non-development zero-upstream-call behavior,
+route-family regression coverage, protected review/CI, exact-main validation, wiki parity, and
+clean branch restoration.
 
 ## Portfolio and Performance review context: source acceptance before presentation (#46)
 
