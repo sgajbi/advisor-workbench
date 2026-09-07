@@ -171,6 +171,7 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
   });
 
   it("loads Gateway-backed Lotus Idea candidates", async () => {
+    const mountedAfterUtc = Date.now();
     renderWithQueryClient(
       <AdvisoryOpportunitiesWorkspace
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -181,8 +182,14 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     await waitFor(() => {
       expect(getAdvisorIdeaReviewQueueMock).toHaveBeenCalledWith({
         portfolioId: "PB_SG_GLOBAL_BAL_001",
+        evaluatedAtUtc: expect.any(String),
       });
     });
+    const [{ evaluatedAtUtc }] = getAdvisorIdeaReviewQueueMock.mock.calls[0] as [
+      { evaluatedAtUtc: string },
+    ];
+    expect(Date.parse(evaluatedAtUtc)).toBeGreaterThanOrEqual(mountedAfterUtc);
+    expect(Date.parse(evaluatedAtUtc)).toBeLessThanOrEqual(Date.now());
 
     expect(
       await screen.findByRole("heading", {
