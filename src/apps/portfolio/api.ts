@@ -23,6 +23,7 @@ import {
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
 import { buildAnalyticsUiCorrelationHeaders } from "@/features/analytics-observability/correlation";
+import { buildServerGatewayHeaders } from "@/features/workbench/api-client";
 import {
   WORKBENCH_ANALYTICS_UI_OBSERVED_SURFACES,
   observeWorkbenchAnalyticsRequest,
@@ -842,10 +843,8 @@ export async function getPortfolioTransactionRecord(
     async () => {
       const response = await fetch(url, {
         cache: "no-store",
+        headers: buildPortfolioRequestHeaders(target),
         signal: params.signal,
-        ...(target === "client"
-          ? { headers: buildAnalyticsUiCorrelationHeaders() }
-          : {}),
       });
       if (!response.ok) {
         throw new PortfolioTransactionRecordError(
@@ -1095,6 +1094,12 @@ function resolveBffBaseUrlForTarget(target: PortfolioRequestTarget): string {
   return resolveGatewayBaseUrl();
 }
 
+function buildPortfolioRequestHeaders(target: PortfolioRequestTarget): Headers {
+  return target === "client"
+    ? buildAnalyticsUiCorrelationHeaders()
+    : buildServerGatewayHeaders();
+}
+
 async function fetchPortfolioJson<T>(
   target: PortfolioRequestTarget,
   path: string,
@@ -1109,10 +1114,8 @@ async function fetchPortfolioJson<T>(
     async () => {
       const response = await fetch(url, {
         cache: "no-store",
+        headers: buildPortfolioRequestHeaders(target),
         signal: options.signal,
-        ...(target === "client"
-          ? { headers: buildAnalyticsUiCorrelationHeaders() }
-          : {}),
       });
       if (!response.ok) {
         return null;
