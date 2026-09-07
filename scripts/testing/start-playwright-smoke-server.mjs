@@ -131,6 +131,8 @@ function startServer(environment) {
 
 async function main() {
   const environment = { ...process.env };
+  environment.LOTUS_ENVIRONMENT =
+    environment.LOTUS_ENVIRONMENT?.trim() || "dev";
   let sourceFixture = null;
   try {
     if (!environment.BFF_BASE_URL?.trim()) {

@@ -74,4 +74,10 @@ describe("Playwright smoke server launcher", () => {
     );
     expect(source).toContain("await sourceFixture?.close()");
   });
+
+  it("starts the fixture-backed Workbench in an explicit test authority posture", () => {
+    expect(source).toContain(
+      'environment.LOTUS_ENVIRONMENT?.trim() || "dev"',
+    );
+  });
 });

@@ -146,6 +146,8 @@ export async function runFixtureScenario({
 
 export function normalizePlaywrightChildEnvironment(environment) {
   const childEnvironment = { ...environment };
+  childEnvironment.LOTUS_ENVIRONMENT =
+    childEnvironment.LOTUS_ENVIRONMENT?.trim() || "dev";
   delete childEnvironment.NO_COLOR;
   return childEnvironment;
 }
