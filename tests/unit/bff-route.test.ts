@@ -1999,6 +1999,21 @@ describe("BFF proxy route", () => {
         "scopeType=portfolio&scopeId=UNENTITLED_PORTFOLIO&scopeId=PB_SG_GLOBAL_BAL_001",
     },
     {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&asOfDate=2026-04-22",
+    },
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&asOfDate=2026-04-23",
+    },
+    {
+      route: "report-ordering/options",
+      query:
+        "scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&reportingCurrency=SGD&reportingCurrency=USD",
+    },
+    {
       route: "report-jobs",
       query:
         "portfolioId=PB_SG_GLOBAL_BAL_001&portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
@@ -2060,6 +2075,26 @@ describe("BFF proxy route", () => {
     expect(response.status).toBe(200);
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
       "http://gateway.dev.lotus/api/v1/report-jobs?limit=10&portfolioId=PB_SG_GLOBAL_BAL_001&reportType=portfolio_review",
+    );
+  });
+
+  it("forwards one normalized Advisor Commentary availability context", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response('{"data":[]}', { status: 200 }));
+    const request = new NextRequest(
+      "http://localhost:3000/api/bff/api/v1/report-ordering/options?scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&asOfDate=%202026-04-22%20&reportingCurrency=%20SGD%20",
+      { method: "GET" },
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({
+        path: ["api", "v1", "report-ordering", "options"],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      "http://gateway.dev.lotus/api/v1/report-ordering/options?scopeType=portfolio&scopeId=PB_SG_GLOBAL_BAL_001&asOfDate=2026-04-22&reportingCurrency=SGD",
     );
   });
 
