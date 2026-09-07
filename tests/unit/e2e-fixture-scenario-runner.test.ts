@@ -46,8 +46,15 @@ describe("governed E2E fixture scenario runner", () => {
       }),
     ).toEqual({
       FORCE_COLOR: "1",
+      LOTUS_ENVIRONMENT: "dev",
       WORKBENCH_E2E_SCENARIO_ID: "mandate-health",
     });
+  });
+
+  it("preserves an explicitly configured Workbench environment", () => {
+    expect(
+      normalizePlaywrightChildEnvironment({ LOTUS_ENVIRONMENT: "uat" }),
+    ).toMatchObject({ LOTUS_ENVIRONMENT: "uat" });
   });
 
   it.each(["--grep", "--grep-invert", "--reporter", "--list"])(
