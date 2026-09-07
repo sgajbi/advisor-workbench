@@ -26,6 +26,7 @@ import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
 import {
   findPortfolioReviewBatchMode,
   clearContextBoundReportSections,
+  reconcileReportSectionAvailability,
   type ReportOrderingConfiguration,
   type ReportOrderingScopeMode,
 } from "../view-model";
@@ -303,14 +304,19 @@ function ReportOrderingWorkspaceSession({
                         selectedPortfolioIds={selectedPortfolioIds}
                         onScopeModeChange={(mode) => {
                           if (configurationLocked) return;
-                          if (
-                            mode === "explicit_portfolio_batch" &&
-                            workflow.configuration
-                          ) {
-                            const next = clearContextBoundReportSections(
-                              workflow.model?.family ?? null,
-                              workflow.configuration,
-                            );
+                          if (workflow.configuration) {
+                            const next =
+                              mode === "explicit_portfolio_batch"
+                                ? clearContextBoundReportSections(
+                                    workflow.model?.family ?? null,
+                                    workflow.configuration,
+                                  )
+                                : workflow.catalogue
+                                  ? reconcileReportSectionAvailability(
+                                      workflow.catalogue,
+                                      workflow.configuration,
+                                    )
+                                  : workflow.configuration;
                             workflow.updateConfiguration({
                               selectedSections: next.selectedSections,
                               configurationValues: next.configurationValues,
