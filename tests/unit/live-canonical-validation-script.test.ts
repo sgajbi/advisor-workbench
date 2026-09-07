@@ -814,6 +814,24 @@ describe("canonical live validation script", () => {
     expect(validationScript).toContain(
       "candidate seed evidence does not match business date $AsOfDate",
     );
+    const utcTimestampPattern = validationScript.match(
+      /\$canonicalUtcTimestampPattern = '([^']+)'/,
+    )?.[1];
+    expect(utcTimestampPattern).toBeDefined();
+    const utcTimestampContract = new RegExp(utcTimestampPattern!);
+    expect(utcTimestampContract.test("2026-09-07T05:03:19.594Z")).toBe(true);
+    for (const invalidTimestamp of [
+      "2026-09-07T05:03:19.594",
+      "2026-09-07T05:03:19.594+00:00",
+      "2026-09-07 05:03:19.594Z",
+      "09/07/2026 05:03:19Z",
+    ]) {
+      expect(utcTimestampContract.test(invalidTimestamp)).toBe(false);
+    }
+    expect(validationScript).toContain(
+      "$Value -notmatch $canonicalUtcTimestampPattern",
+    );
+    expect(validationScript).toContain("[datetimeoffset]::TryParseExact(");
     expect(validationScript).toContain(
       "-EvaluatedAtUtc $ideaCandidateSeedEvidence.queueEvaluatedAtUtc",
     );
