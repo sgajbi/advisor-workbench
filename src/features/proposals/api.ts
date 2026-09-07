@@ -362,7 +362,13 @@ export async function getAdvisorIdeaReviewQueue({
     `${BFF_PROXY_BASE}/ideas/review-queues/advisor${query}`,
     "advisor idea queue",
   );
-  return unwrapGatewayData<AdvisorIdeaReviewQueueData>(payload);
+  const data = unwrapGatewayData<AdvisorIdeaReviewQueueData>(payload);
+  if (evaluatedAtUtc && data.evaluatedAtUtc !== evaluatedAtUtc) {
+    throw new WorkbenchResponseEvidenceError(
+      "The opportunity worklist did not confirm the requested evaluation time. No current worklist is shown.",
+    );
+  }
+  return data;
 }
 
 export async function getAdvisorIdeaCandidateDetail({

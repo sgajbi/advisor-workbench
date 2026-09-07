@@ -566,6 +566,39 @@ describe("proposal api", () => {
     );
   });
 
+  it.each([
+    ["a missing boundary", undefined],
+    ["a different boundary", "2026-06-21T10:09:59Z"],
+  ])("rejects %s from an explicitly evaluated Idea queue", async (_case, returnedBoundary) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              evaluatedAtUtc: returnedBoundary,
+              items: [],
+              exclusions: [],
+              supportedFeaturePromoted: false,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+      ),
+    );
+
+    await expect(
+      getAdvisorIdeaReviewQueue({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        evaluatedAtUtc: "2026-06-21T10:10:00Z",
+      }),
+    ).rejects.toThrow(
+      "The opportunity worklist did not confirm the requested evaluation time.",
+    );
+  });
+
   it("unwraps the Gateway envelope for the Lotus Idea advisor queue", async () => {
     vi.stubGlobal(
       "fetch",
