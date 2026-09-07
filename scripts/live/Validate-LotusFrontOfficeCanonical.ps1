@@ -37,6 +37,33 @@ $canonicalCallerContextHeaders = @{
   "X-Tenant-Id" = "tenant-sg"
   "X-Region" = "APAC"
 }
+$canonicalUtcTimestampPattern = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$'
+
+function ConvertFrom-CanonicalUtcTimestamp {
+  param(
+    [string]$Value,
+    [string]$FieldName
+  )
+
+  if ($Value -notmatch $canonicalUtcTimestampPattern) {
+    throw "Canonical Lotus Idea candidate seed evidence has invalid $FieldName."
+  }
+  $parsedTimestamp = [datetimeoffset]::MinValue
+  $parseStyle = (
+    [Globalization.DateTimeStyles]::AssumeUniversal -bor
+    [Globalization.DateTimeStyles]::AdjustToUniversal
+  )
+  if (-not [datetimeoffset]::TryParseExact(
+      $Value,
+      "yyyy-MM-dd'T'HH:mm:ss.fff'Z'",
+      [Globalization.CultureInfo]::InvariantCulture,
+      $parseStyle,
+      [ref]$parsedTimestamp
+    )) {
+    throw "Canonical Lotus Idea candidate seed evidence has invalid $FieldName."
+  }
+  return $parsedTimestamp
+}
 
 function Test-CanonicalHost {
   param(
@@ -118,24 +145,21 @@ function Read-IdeaCandidateSeedEvidence {
   if ([string]::IsNullOrWhiteSpace([string]$evidence.runId)) {
     throw "Canonical Lotus Idea candidate seed evidence has no run identity."
   }
+  $parsedEvidenceTimestamps = @{}
   foreach ($field in @(
       "sourceObservedAtUtc",
       "evaluatedAtUtc",
       "lifecycleObservedAtUtc",
       "queueEvaluatedAtUtc"
     )) {
-    $parsedTimestamp = [datetimeoffset]::MinValue
-    if (-not [datetimeoffset]::TryParse([string]$evidence.$field, [ref]$parsedTimestamp)) {
-      throw "Canonical Lotus Idea candidate seed evidence has invalid $field."
-    }
-    if ($parsedTimestamp.Offset -ne [timespan]::Zero) {
-      throw "Canonical Lotus Idea candidate seed evidence has non-UTC $field."
-    }
+    $parsedEvidenceTimestamps[$field] = ConvertFrom-CanonicalUtcTimestamp `
+      -Value ([string]$evidence.$field) `
+      -FieldName $field
   }
   if (
-    [datetimeoffset]$evidence.sourceObservedAtUtc -gt [datetimeoffset]$evidence.evaluatedAtUtc -or
-    [datetimeoffset]$evidence.evaluatedAtUtc -gt [datetimeoffset]$evidence.lifecycleObservedAtUtc -or
-    [datetimeoffset]$evidence.lifecycleObservedAtUtc -gt [datetimeoffset]$evidence.queueEvaluatedAtUtc
+    $parsedEvidenceTimestamps.sourceObservedAtUtc -gt $parsedEvidenceTimestamps.evaluatedAtUtc -or
+    $parsedEvidenceTimestamps.evaluatedAtUtc -gt $parsedEvidenceTimestamps.lifecycleObservedAtUtc -or
+    $parsedEvidenceTimestamps.lifecycleObservedAtUtc -gt $parsedEvidenceTimestamps.queueEvaluatedAtUtc
   ) {
     throw "Canonical Lotus Idea candidate seed evidence has incoherent run chronology."
   }
