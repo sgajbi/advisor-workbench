@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, CircularProgress, Stack } from "@mui/material";
 
@@ -39,9 +39,11 @@ export default function AdvisoryOpportunitiesWorkspace({
 }) {
   const queryClient = useQueryClient();
   const isCanonicalIdeaPortfolio = portfolioId === CANONICAL_IDEA_PORTFOLIO_ID;
+  const [queueEvaluatedAtUtc] = useState(() => new Date().toISOString());
   const { data, isLoading, error } = useQuery({
-    queryKey: ["advisory-opportunities", portfolioId],
-    queryFn: async () => await getAdvisorIdeaReviewQueue({ portfolioId }),
+    queryKey: ["advisory-opportunities", portfolioId, queueEvaluatedAtUtc],
+    queryFn: async () =>
+      await getAdvisorIdeaReviewQueue({ portfolioId, evaluatedAtUtc: queueEvaluatedAtUtc }),
     ...workbenchStrictQueryDefaults,
     enabled: isCanonicalIdeaPortfolio,
   });
