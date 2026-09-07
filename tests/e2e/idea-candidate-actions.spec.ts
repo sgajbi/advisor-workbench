@@ -39,11 +39,15 @@ async function mockIdeaCandidateActions(
   await page.route(
     "**/api/bff/api/v1/ideas/review-queues/advisor**",
     async (route) => {
+      const requestedBoundary = new URL(
+        route.request().url(),
+      ).searchParams.get("evaluatedAtUtc");
+      expect(requestedBoundary).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       await route.fulfill({
         json: {
           data: {
             policyVersion: "idea-deterministic-ranking-v1",
-            evaluatedAtUtc: "2026-07-17T08:00:00Z",
+            evaluatedAtUtc: requestedBoundary,
             durableStorageBacked: true,
             supportedFeaturePromoted: false,
             exclusions: [],

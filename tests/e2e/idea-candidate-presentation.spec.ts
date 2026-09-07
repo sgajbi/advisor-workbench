@@ -14,15 +14,27 @@ function candidateId(rank: number): string {
   return `idea_candidate_${String(rank).padStart(3, "0")}`;
 }
 
+function requestedQueueBoundary(route: Route): string {
+  const boundary = new URL(route.request().url()).searchParams.get(
+    "evaluatedAtUtc",
+  );
+  if (!boundary) {
+    throw new Error("Idea queue request omitted evaluatedAtUtc");
+  }
+  expect(boundary).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  return boundary;
+}
+
 async function mockIdeaQueue(page: Page) {
   await page.route(
     "**/api/bff/api/v1/ideas/review-queues/advisor**",
     async (route) => {
+      const requestedBoundary = requestedQueueBoundary(route);
       await route.fulfill({
         json: {
           data: {
             policyVersion: "idea-deterministic-ranking-v1",
-            evaluatedAtUtc: "2026-08-31T07:00:00Z",
+            evaluatedAtUtc: requestedBoundary,
             durableStorageBacked: true,
             supportedFeaturePromoted: false,
             exclusions: [],
@@ -283,11 +295,12 @@ test("searches the complete rendered queue-position value", async ({ page }) => 
   await page.route(
     "**/api/bff/api/v1/ideas/review-queues/advisor**",
     async (route) => {
+      const requestedBoundary = requestedQueueBoundary(route);
       await route.fulfill({
         json: {
           data: {
             policyVersion: "idea-deterministic-ranking-v1",
-            evaluatedAtUtc: "2026-08-31T07:00:00Z",
+            evaluatedAtUtc: requestedBoundary,
             durableStorageBacked: true,
             supportedFeaturePromoted: false,
             exclusions: [],
