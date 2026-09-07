@@ -533,6 +533,56 @@ describe("useReportOrderingWorkflow", () => {
     expect(submittedOrder).not.toHaveProperty("allocationDimensions");
   });
 
+  it("does not restore single-portfolio commentary when a bundle changes report family", async () => {
+    const payload = buildReportOrderingResponse();
+    const alternateFamily = structuredClone(payload.reportFamilies[0]);
+    alternateFamily.reportFamilyId = "portfolio_review_alternate";
+    alternateFamily.businessLabel = "Alternate portfolio review";
+    const commentary = alternateFamily.sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) {
+      throw new Error("Advisor Commentary fixture is required");
+    }
+    commentary.defaultSelected = true;
+    payload.reportFamilies.push(alternateFamily);
+    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
+
+    const { result } = renderHook(() =>
+      useReportOrderingWorkflow({
+        portfolioId: "PB_SG_GLOBAL_BAL_001",
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+        scopeMode: "explicit_portfolio_batch",
+        selectedPortfolioIds: [
+          "PB_SG_GLOBAL_BAL_001",
+          "PB_SG_INCOME_002",
+        ],
+      }),
+    );
+
+    await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
+    act(() => {
+      result.current.updateConfiguration({
+        familyId: "portfolio_review_alternate",
+      });
+    });
+
+    expect(result.current.configuration?.selectedSections).not.toContain(
+      "ADVISOR_COMMENTARY",
+    );
+    expect(
+      result.current.configuration?.configurationValues.advisor_brief_run_id,
+    ).toBe("");
+    expect(
+      result.current.model?.sectionChoices.find(
+        (section) => section.id === "ADVISOR_COMMENTARY",
+      ),
+    ).toEqual(
+      expect.objectContaining({ selected: false, selectable: false }),
+    );
+  });
+
   it("invalidates reviewed preflight when output-affecting configuration changes", async () => {
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
