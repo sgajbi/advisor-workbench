@@ -180,10 +180,12 @@ test("uses the exact source-reviewed Advisor Brief without manual authority", as
   await expect(page.getByRole("heading", { name: "Approved report" })).toBeVisible({
     timeout: 15_000,
   });
-  const reportDate = page.getByLabel("Report date");
+  const reportDate = page.getByRole("textbox", { name: "Report date" });
   await expect(reportDate).toHaveAttribute("min", "2026-04-01");
   await expect(reportDate).toHaveAttribute("max", "2026-04-22");
-  const reportingCurrency = page.getByLabel("Reporting currency");
+  const reportingCurrency = page.getByRole("combobox", {
+    name: "Reporting currency",
+  });
   await expect(reportingCurrency.locator("option")).toHaveText(["SGD", "USD"]);
   await expect(page.getByLabel("Comparison benchmark")).toHaveCount(0);
 
