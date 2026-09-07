@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   buildGatewayBffRequestHeaders,
@@ -10,6 +10,20 @@ const validTraceparent =
   "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01";
 
 describe("Gateway BFF request-header boundary", () => {
+  const originalEnvironment = process.env.LOTUS_ENVIRONMENT;
+
+  beforeEach(() => {
+    process.env.LOTUS_ENVIRONMENT = "test";
+  });
+
+  afterEach(() => {
+    if (originalEnvironment === undefined) {
+      delete process.env.LOTUS_ENVIRONMENT;
+    } else {
+      process.env.LOTUS_ENVIRONMENT = originalEnvironment;
+    }
+  });
+
   it("forwards only the governed browser header allowlist", () => {
     const browserHeaders = new Headers({
       Accept: "application/json, application/pdf",
@@ -76,4 +90,25 @@ describe("Gateway BFF request-header boundary", () => {
       expect(gatewayHeaders.get(headerName), headerName).toBeNull();
     }
   });
+
+  it.each([undefined, "uat", "production"])(
+    "does not replace stripped browser authority in %s posture",
+    (environment) => {
+      if (environment === undefined) {
+        delete process.env.LOTUS_ENVIRONMENT;
+      } else {
+        process.env.LOTUS_ENVIRONMENT = environment;
+      }
+      const browserHeaders = new Headers();
+      for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
+        browserHeaders.set(headerName, "browser-supplied-authority");
+      }
+
+      const gatewayHeaders = buildGatewayBffRequestHeaders(browserHeaders);
+
+      for (const headerName of FORBIDDEN_BROWSER_AUTHORITY_HEADERS) {
+        expect(gatewayHeaders.get(headerName), headerName).toBeNull();
+      }
+    },
+  );
 });

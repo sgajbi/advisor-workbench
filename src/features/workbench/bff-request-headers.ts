@@ -1,4 +1,5 @@
 import { prepareAnalyticsUiProxyHeaders } from "@/features/analytics-observability/correlation";
+import { isDevelopmentAuthorityEnvironment } from "./authority-mode";
 import {
   applyDefaultCallerContextHeaders,
   stripBrowserSuppliedAuthorityHeaders,
@@ -43,7 +44,9 @@ export function buildGatewayBffRequestHeaders(
   // Defence in depth: a future allowlist edit cannot silently promote an
   // authority header into the browser-controlled request surface.
   stripBrowserSuppliedAuthorityHeaders(gatewayHeaders);
-  applyDefaultCallerContextHeaders(gatewayHeaders);
+  if (isDevelopmentAuthorityEnvironment()) {
+    applyDefaultCallerContextHeaders(gatewayHeaders);
+  }
 
   // Node Fetch decodes supported content codings before exposing response
   // bytes. Request identity so range offsets and representation metadata stay

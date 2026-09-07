@@ -172,6 +172,45 @@ describe("BFF proxy route", () => {
     expect(await response.text()).toBe('{"ok":true}');
   });
 
+  it.each([undefined, "uat", "production"])(
+    "rejects a generic BFF request in %s before Gateway authority is available",
+    async (environment) => {
+      if (environment === undefined) {
+        delete process.env.LOTUS_ENVIRONMENT;
+      } else {
+        process.env.LOTUS_ENVIRONMENT = environment;
+      }
+      const fetchMock = vi.mocked(fetch);
+      const request = new NextRequest(
+        "http://localhost:3000/api/bff/api/v1/lookups/portfolios?limit=1",
+        {
+          method: "GET",
+          headers: {
+            "X-Actor-Id": "browser-actor",
+            "X-Tenant-Id": "browser-tenant",
+            "X-Caller-Capabilities": "manage.write",
+            Authorization: "Bearer browser-credential",
+            Cookie: "lotus_session=browser-session",
+          },
+        },
+      );
+
+      const response = await GET(request, {
+        params: Promise.resolve({
+          path: ["api", "v1", "lookups", "portfolios"],
+        }),
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(401);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      await expect(response.json()).resolves.toEqual({
+        code: "workbench_authenticated_principal_required",
+        status: "rejected",
+      });
+    },
+  );
+
   it("describes decoded JSON bytes instead of forwarding stale compression metadata", async () => {
     const fetchMock = vi.mocked(fetch);
     const decodedBody = new TextEncoder().encode('{"status":"ready"}');
