@@ -566,8 +566,8 @@ export function useReportOrderingWorkflow({
     batchStatusRequestSequenceRef.current += 1;
     sourceFingerprintRef.current = "";
     catalogueRequestSequenceRef.current += 1;
-    setSectionAvailabilityEvidence(null);
     const timer = window.setTimeout(() => {
+      setSectionAvailabilityEvidence(null);
       void loadCatalogue(true);
       void loadHistory();
       if (initialBatchId) {
@@ -594,7 +594,7 @@ export function useReportOrderingWorkflow({
             reportingCurrency: configuration.reportingCurrency,
           }
         : null,
-    [configuration?.asOfDate, configuration?.reportingCurrency],
+    [configuration],
   );
   const configurationAvailabilityContextKey = configurationAvailabilityContext
     ? reportAvailabilityContextKey(configurationAvailabilityContext)
