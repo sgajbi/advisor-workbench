@@ -36,6 +36,14 @@ trusted caller again and verifies current book membership and reporting eligibil
 materializes separate per-portfolio items. Workbench never describes the bundle as a consolidated
 client, household, or book report.
 
+For a single portfolio, Workbench sends the selected report date and reporting currency when it
+loads ordering options. If Reporting publishes `ADVISOR_COMMENTARY` as ready, Workbench can submit
+only the exact accepted Advisor Brief run returned for that context. Review-required,
+context-mismatch, availability-unknown, and not-evaluated states remain distinct and non-selectable.
+Changing date or currency clears the prior selection while the source is rechecked; an older or
+failed response cannot restore that prior brief as current. Portfolio bundles do not reuse a
+single-portfolio accepted brief.
+
 The BFF removes browser-supplied reporting authority headers, derives the development caller role
 and portfolio entitlement from server configuration, and rejects unentitled scopes before calling
 Gateway. Outside explicit development environments, report ordering fails closed until an

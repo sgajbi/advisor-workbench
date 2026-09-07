@@ -144,7 +144,10 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 - Idea explanations are source-bound to the displayed candidate evidence identity. Explanation
   loading or failure never changes review, feedback, conversion, or other candidate actions.
 - Report ordering accepts only receipts bound to the exact submitted request and preserves the
-  difference between an accepted order and a failed history refresh.
+  difference between an accepted order and a failed history refresh. Advisor Commentary is
+  selectable only from Gateway's accepted-brief availability for the exact report date and
+  currency; Workbench neither accepts a typed run identifier nor carries an older binding into a
+  changed context.
 - Selected portfolio identity is presented once through `ReviewContextStrip`; URL values are
   requests until source-confirmed.
 - Decision queues use `WorkbenchWorklist` and source-admitted selection where the primary task is to

@@ -7856,3 +7856,46 @@ basis after Gateway/BFF-backed refresh and records rendered evidence under
 so repository context and the Opportunities and Ideas wiki guide change and the wiki must be
 published after merge. Existing frontend-delivery guidance already requires visible/source truth;
 no central skill change is needed for this bounded correction.
+
+## 2026-09-07 — Source-bound Advisor Commentary ordering (#990)
+
+### Decision question
+
+How should Report centre let an adviser include reviewed commentary without making a source-owned
+run identifier or evidence binding a manual browser decision?
+
+### Evidence consulted
+
+1. [W3C Forms Tutorial](https://www.w3.org/WAI/tutorials/forms/) and
+   [WCAG 2.2 Error Identification](https://www.w3.org/WAI/WCAG22/Understanding/error-identification)
+   require clear controls and specific, actionable recovery when input cannot be accepted.
+2. [W3C supportive forms guidance](https://www.w3.org/WAI/WCAG2/supplemental/patterns/o4p04-supportive-forms/)
+   supports reducing avoidable user entry and preserving useful context.
+3. BlackRock's [Aladdin Auto Commentary](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor)
+   and [Advisor Center 360](https://www.blackrock.com/us/financial-professionals/tools/advisor-center-360)
+   place reviewed narrative and reporting inside the adviser workflow rather than behind system-id
+   entry.
+
+### Adopted decisions
+
+1. Send the exact report date and currency to Gateway when asking whether commentary is available.
+2. Make the source-published accepted brief the only selectable and submitted value; remove manual
+   identifier entry.
+3. Distinguish accepted, review-required, context-mismatch, unknown, not-evaluated, and checking
+   postures with the next valid business action.
+4. Clear prior commentary selection on a context change and fence late responses, so old review
+   evidence cannot appear current beside revised report terms.
+
+### Rejected decisions
+
+Free-text run identifiers; inferring an accepted brief; treating absent availability as ready;
+reusing one portfolio's accepted brief for a portfolio bundle; generic unavailable copy; or keeping
+old commentary selected while a changed date or currency is checked.
+
+### Validation and publication decision
+
+Contract, API, view-model, component, and optimized-browser proof cover exact source binding,
+distinct unavailable states, absence without manual fallback, context refresh, and late-response
+fencing. The visible workflow and support guidance change, so the Report Centre guide and wiki must
+publish after merge. Existing frontend governance already requires source authority and race
+fencing; no platform skill change is justified.

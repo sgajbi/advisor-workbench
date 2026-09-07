@@ -75,8 +75,8 @@ delegated, supervisory, household, or unrestricted book access.
 3. Choose **Selected portfolio** or **Portfolio bundle**. For a bundle, search and select at least
    two active portfolios returned by **My book**.
 4. Choose the approved report, a source-supported report date, a published reporting currency,
-   sections, and available output. Complete any conditional catalogue fields that the selected
-   report requires.
+   sections, and available output. When reviewed Advisor Commentary is available for that exact
+   date and currency, select it without entering a system identifier.
 5. Select **Review Request** or **Review Portfolio Bundle**. Material changes invalidate the review.
 6. Submit the reviewed intent. Workbench shows acceptance only after Gateway accepts the request.
 7. For a bundle, review the source-owned completion summary and every separate portfolio outcome.
@@ -95,6 +95,9 @@ controls and do not occur on this screen.
 - Renders catalogue-published conditional fields only for the selected report sections and includes
   their exact reviewed values in the submission. Workbench does not invent configuration fields,
   requirements, or defaults.
+- Presents Advisor Commentary only when Reporting confirms an accepted Advisor Brief for the
+  selected report date and currency. The exact accepted run is source-bound and not editable;
+  changing either term clears the selection until refreshed availability returns.
 - Preserves the current selected-portfolio workflow for one reviewed, idempotent portfolio-review
   request and recent report-data job history.
 - Presents each exact request instant as readable, disclosed UTC while keeping the selected report
@@ -161,6 +164,7 @@ outcomes remain separate and never inflate completion.
 | Approved report choices, fields, sections, outputs, and submission modes | Validated and presented through the Workbench BFF | Gateway over Lotus Report catalogue and capability contracts |
 | Earliest and latest report dates, active reporting currency, and supported currencies | Reused from the confirmed portfolio workspace; presented as bounded controls rather than browser policy | Gateway portfolio-workspace contract over source-owned portfolio context |
 | Conditional configuration values | Collected only when a published catalogue field applies to a selected section; submitted without browser-created aliases or defaults | Gateway over Lotus Report catalogue and request contracts |
+| Reviewed Advisor Commentary | Shows accepted, review-required, context-mismatch, unknown, checking, and not-evaluated posture; submits only the exact accepted run for the active date and currency | Gateway over Lotus Report and Lotus AI review evidence |
 | Advisor-book portfolio membership, active status, mandate, client reference, currency, and booking centre | Read through the Workbench BFF for selection; not reconstructed from the global portfolio catalogue | Gateway over Core `PortfolioManagerBookMembership:v1` |
 | Single-portfolio report request and acceptance | Submitted only after exact intent review; accepted only when the returned key and job/status identity bind the receipt to that reviewed request | Gateway and Lotus Report portfolio-review contract |
 | Portfolio-bundle handle, materialized portfolios, item lifecycle, attempts, failure summary, and support reference | Submitted, rehydrated, and refreshed through the BFF; no lifecycle is calculated from browser timers and no URL address is treated as source proof | Gateway and Lotus Report batch contracts |
@@ -176,6 +180,10 @@ Shared endpoint and ownership detail remains in [API Surface](API-Surface) and
 | --- | --- | --- |
 | Loading | Dedicated catalogue, book, job, or outcome loading evidence | Wait for the source response; no fallback catalogue or fabricated result is substituted |
 | Ready | Approved choices, scope, complete request summary, review gate, and enabled actions | Confirm the portfolio/date context before review |
+| Commentary review required | Advisor Commentary remains visible but cannot be selected | Open **Advisor Brief**, complete its governed review, then return and recheck availability |
+| Commentary context mismatch | An accepted brief exists for a different date or currency; it is not reused | Review an Advisor Brief for the selected report context, or deliberately restore the matching report terms |
+| Commentary availability unknown or not evaluated | No absence or readiness claim is made and the section remains non-selectable | Choose **Recheck availability**; do not type or infer a run identifier |
+| Commentary availability refreshing | The prior commentary selection and run are cleared while the changed date/currency is checked | Wait for current source evidence; late responses for the previous context cannot become current |
 | Compact request history | One record per request with lifecycle first, both dates visible, and support detail on demand | Open **Support reference** with keyboard or touch; no request field is omitted from the comparison table |
 | Empty catalogue | A source-confirmed absence of orderable reports | Do not submit; follow the first support step if reports are expected |
 | Empty or filtered book | No assigned portfolios, or no portfolios matching the current search | Revise the search; an empty own book cannot be replaced with the global portfolio list |
@@ -236,6 +244,9 @@ implemented behavior; it is not a claim of bank approval or competitor superiori
   and no page-level horizontal overflow.
 - Diagnostic browser captures are written under `output/playwright/`; they are not demo-readiness
   evidence.
+- Focused contract and browser proof covers every Advisor Commentary availability reason, exact
+  accepted-run submission, absence without manual fallback, date/currency refresh, and late-response
+  fencing.
 - Canonical front-office validation uses `PB_SG_GLOBAL_BAL_001` for selected-portfolio reporting.
   Certifying the bundle in the canonical runtime also requires at least two source-confirmed
   memberships for the governed caller and business date.
