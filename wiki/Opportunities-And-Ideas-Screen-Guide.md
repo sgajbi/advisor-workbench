@@ -71,6 +71,10 @@ posture, action persistence, and `idea-feedback-taxonomy-v1`. Workbench formats 
 carries only BFF-governed calls. Useful feedback is recorded as relevant; not-useful feedback
 requires one explicit source-owned reason. Workbench accepts success only when the returned feedback
 event matches the submitted candidate, taxonomy, outcome, reason, and time.
+Workbench supplies one explicit UTC queue-evaluation boundary per mounted review queue and includes
+that boundary in governed Query identity. Idea evaluates eligibility at that requested instant and
+returns the authoritative evaluated time; Workbench does not substitute Idea's example-time default
+or use the portfolio business date as a live queue clock.
 Queue reasons remain source-owned suggestions. A review or conversion basis already selected in an
 adviser draft remains adviser-owned: if the refreshed source list changes, Workbench shows that
 exact closed-vocabulary value as a retained draft alongside the current choices. It does not

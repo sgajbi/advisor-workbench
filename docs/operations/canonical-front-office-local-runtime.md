@@ -183,21 +183,25 @@ The Lotus Idea advisor-queue seed reads the governed canonical as-of date from
 `lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json` instead of
 duplicating date literals in Workbench automation. If the platform contract is missing the date
 policy, canonical startup fails closed before seeding Idea evidence.
-Each canonical startup run binds the synthetic source observation and persistence idempotency key
-to that run's provenance identity. The resulting candidate is fresh for the browser journey, while
-a retry inside the same run remains idempotent. This prevents a previously converted candidate from
-being reused as though it were still in the advisor queue. The seed reads candidate detail with the
-complete canonical entitlement scope before and after each Idea-owned lifecycle transition. It
-advances only the required next state, treats an already source-confirmed state within the same run
-as idempotent replay evidence, and fails on gaps, mismatched identity, or a state outside the
-seedable path. Workbench does not calculate or bypass Idea lifecycle policy.
+The business as-of date is not used as a runtime clock. After Idea is ready, each canonical startup
+captures ordered current-run timestamps for source observation, candidate evaluation, lifecycle
+observation, and queue evaluation. This keeps a slow image build from ageing the lifecycle request
+outside Idea's trusted control-time policy. The queue request always supplies its evaluation time;
+it never relies on Idea's governed example default. The persistence and lifecycle idempotency keys
+remain bound to the run and exact observation, so replay does not duplicate candidate history.
+
+The seed reads candidate detail with the complete canonical entitlement scope before and after each
+Idea-owned lifecycle transition. It advances only the required next state, treats an already
+source-confirmed state within the same run as idempotent replay evidence, and fails on gaps,
+mismatched identity, or a state outside the seedable path. Workbench does not calculate or bypass
+Idea lifecycle policy.
 After the source queue returns that candidate exactly once, startup records
-`output/canonical-front-office/idea-candidate-seed-evidence.json`. Validation rejects a missing,
-mismatched, or non-reviewable artifact, proves Gateway exposes the same current-run candidate, and
-rejects evidence whose run identity differs from the active Idea `/version` build identity before
-targeting that exact queue row. Earlier unconverted canonical candidates or stale artifacts
-therefore cannot make the browser select an arbitrary row or fabricate continuity with the current
-run.
+`output/canonical-front-office/idea-candidate-seed-evidence.json` using schema v2. Validation rejects
+a missing, malformed, non-UTC, out-of-order, mismatched, or non-reviewable artifact; asks Gateway
+for the queue at the recorded queue-evaluation boundary; proves the same candidate exactly once;
+and rejects evidence whose run identity differs from the active Idea `/version` build identity.
+Earlier unconverted candidates, stale artifacts, and fixed example-time defaults therefore cannot
+stand in for current-run browser evidence.
 
 Canonical startup binds the server-owned BFF header and PM Operating Quality seed to the governed
 Workbench caller tenant. Command-centre reads retain their separate platform-contract query tenant,
