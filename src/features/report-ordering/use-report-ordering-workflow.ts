@@ -769,7 +769,12 @@ export function useReportOrderingWorkflow({
           patch.familyId &&
           patch.familyId !== current.familyId
         ) {
-          return selectReportOrderingFamily(catalogue, current, patch.familyId);
+          return selectReportOrderingFamily(
+            catalogue,
+            current,
+            patch.familyId,
+            currentSectionAvailabilityEvidence,
+          );
         }
         const next = { ...current, ...patch };
         const contextChanged =
@@ -788,7 +793,13 @@ export function useReportOrderingWorkflow({
           : { portfolioId, state: "idle", error: null },
       );
     },
-    [activeSubmissionProgress.state, catalogue, model?.family, portfolioId],
+    [
+      activeSubmissionProgress.state,
+      catalogue,
+      currentSectionAvailabilityEvidence,
+      model?.family,
+      portfolioId,
+    ],
   );
 
   const toggleSection = useCallback(

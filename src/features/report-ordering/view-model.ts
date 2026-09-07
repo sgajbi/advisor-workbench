@@ -133,6 +133,7 @@ export function selectReportOrderingFamily(
   response: ReportOrderingResponse,
   current: ReportOrderingConfiguration,
   familyId: string,
+  sectionAvailabilityEvidence: ReportSectionAvailabilityEvidence = "current",
 ): ReportOrderingConfiguration {
   const family = response.reportFamilies.find(
     (candidate) =>
@@ -145,7 +146,7 @@ export function selectReportOrderingFamily(
     return current;
   }
 
-  return {
+  const next = {
     ...current,
     familyId: family.reportFamilyId,
     modeId: mode.modeId,
@@ -154,6 +155,9 @@ export function selectReportOrderingFamily(
     selectedSections: defaultSelectedSectionIds(family),
     outputFormat: resolveReadyOutputFormat(family, mode),
   };
+  return sectionAvailabilityEvidence === "current"
+    ? next
+    : clearContextBoundReportSections(family, next);
 }
 
 export function buildReportOrderingViewModel(
@@ -185,6 +189,7 @@ export function buildReportOrderingViewModel(
     configuration,
     sourceContext,
     "single_portfolio",
+    sectionAvailabilityEvidence,
   );
   const batchReadiness = evaluateReadiness(
     response,
@@ -193,6 +198,7 @@ export function buildReportOrderingViewModel(
     configuration,
     sourceContext,
     "explicit_portfolio_batch",
+    sectionAvailabilityEvidence,
   );
   const sectionChoices = family
     ? family.sections
@@ -514,6 +520,7 @@ function evaluateReadiness(
   configuration: ReportOrderingConfiguration,
   sourceContext: ReportOrderingSourceContext,
   scopeMode: ReportOrderingScopeMode,
+  sectionAvailabilityEvidence: ReportSectionAvailabilityEvidence,
 ): ReportOrderingReadiness {
   const issues: string[] = [];
   if (response.catalogueAvailability.state === "unavailable") {
@@ -565,6 +572,17 @@ function evaluateReadiness(
       !configuration.selectedSections.includes(section.sectionId)
     ) {
       issues.push(`${section.businessLabel} is required.`);
+    }
+    if (
+      isAdvisorCommentarySection(section) &&
+      configuration.selectedSections.includes(section.sectionId) &&
+      (sectionAvailabilityEvidence !== "current" ||
+        section.availability?.state !== "ready" ||
+        !section.availability.acceptedBrief)
+    ) {
+      issues.push(
+        "Confirm reviewed commentary for the current report date and currency, or remove it from this request.",
+      );
     }
   }
   if (

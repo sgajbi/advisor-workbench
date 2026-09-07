@@ -470,6 +470,58 @@ describe("ReportOrderingWorkspace", () => {
     );
   });
 
+  it("does not restore a default commentary selection when changing report after a failed recheck", async () => {
+    const payload = buildReportOrderingResponse();
+    const alternateFamily = structuredClone(payload.reportFamilies[0]);
+    alternateFamily.reportFamilyId = "portfolio_review_condensed";
+    alternateFamily.businessLabel = "Condensed portfolio review";
+    const commentary = alternateFamily.sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) throw new Error("Advisor commentary fixture missing");
+    commentary.defaultSelected = true;
+    optionsMock.mockResolvedValueOnce(
+      parseReportOrderingResponse({
+        ...payload,
+        reportFamilies: [...payload.reportFamilies, alternateFamily],
+      }),
+    );
+
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    optionsMock.mockRejectedValueOnce(new Error("reporting unavailable"));
+    fireEvent.change(screen.getByLabelText("Report date"), {
+      target: { value: "2026-04-21" },
+    });
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledTimes(2));
+
+    fireEvent.click(
+      screen.getByRole("radio", { name: /Condensed portfolio review/ }),
+    );
+    const commentaryChoice = screen.getByRole("checkbox", {
+      name: /Advisor commentary/,
+    });
+    expect(commentaryChoice).not.toBeChecked();
+    expect(commentaryChoice).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", {
+      name: "Submit Report Request",
+    });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        asOfDate: "2026-04-21",
+        configurationValues: {},
+        sections: expect.not.arrayContaining(["ADVISOR_COMMENTARY"]),
+      }),
+    );
+  });
+
   it("requires an explicit review before idempotent submission", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
