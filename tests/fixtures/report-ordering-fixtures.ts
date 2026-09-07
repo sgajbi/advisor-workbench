@@ -21,7 +21,8 @@ export function buildReportOrderingResponse() {
         description: "Advisor review pack for a client portfolio.",
         intendedUse: "advisor_client_portfolio_review",
         audienceRoles: ["client_advisor"],
-        clientReleasePosture: "advisor_review_required_distribution_not_supported",
+        clientReleasePosture:
+          "advisor_review_required_distribution_not_supported",
         orderingModes: [
           {
             modeId: "single_portfolio",
@@ -45,13 +46,15 @@ export function buildReportOrderingResponse() {
           {
             modeId: "explicit_portfolio_batch",
             businessLabel: "Portfolio bundle",
-            description: "Create the same report separately for selected portfolios in your book.",
+            description:
+              "Create the same report separately for selected portfolios in your book.",
             defaultOutputFormat: "json",
             interactive: true,
             eligibility: {
               state: "partial",
               reasonCode: "explicit_portfolio_selection_required",
-              message: "Select the portfolios to include before submitting the report bundle.",
+              message:
+                "Select the portfolios to include before submitting the report bundle.",
             },
             submission: {
               capabilityId: "reporting.portfolio_review.explicit_batch",
@@ -112,7 +115,8 @@ export function buildReportOrderingResponse() {
           {
             fieldId: "allocation_dimensions",
             businessLabel: "Allocation views",
-            description: "Business dimensions used to group portfolio allocation.",
+            description:
+              "Business dimensions used to group portfolio allocation.",
             inputType: "multi_select",
             requirement: "optional",
             defaultingPolicy: "asset_class_when_omitted",
@@ -125,7 +129,8 @@ export function buildReportOrderingResponse() {
           {
             fieldId: "advisor_brief_run_id",
             businessLabel: "Accepted advisor brief",
-            description: "Accepted advisor brief run included as reviewed commentary evidence.",
+            description:
+              "Accepted advisor brief run included as reviewed commentary evidence.",
             inputType: "text",
             requirement: "conditional",
             defaultingPolicy: "caller_required",
@@ -155,11 +160,23 @@ export function buildReportOrderingResponse() {
           {
             sectionId: "ADVISOR_COMMENTARY",
             businessLabel: "Advisor commentary",
-            description: "Reviewed advisor commentary for the client conversation.",
+            description:
+              "Reviewed advisor commentary for the client conversation.",
             displayOrder: 25,
             selectionPosture: "optional",
             defaultSelected: false,
             dependencyFieldIds: ["advisor_brief_run_id"],
+            availability: {
+              state: "ready",
+              reasonCode: "advisor_brief_accepted",
+              message:
+                "An accepted Advisor Brief is available for this report context.",
+              acceptedBrief: {
+                runId: "abr_accepted_1",
+                reviewedBy: "advisor.sg.301",
+                reviewedAt: "2026-04-22T08:30:00Z",
+              },
+            },
           },
           {
             sectionId: "PERFORMANCE",
@@ -240,22 +257,36 @@ export function buildReportBatchStatus() {
     status_counts: { succeeded: 1, failed_retryable: 1 },
     items: [
       {
-        batch_item_id: "rbit_1", item_position: 1,
-        portfolio_id: "PB_SG_GLOBAL_BAL_001", status: "succeeded",
-        report_job_id: "rjob_1", attempt_count: 1, retry_eligible: false,
-        next_retry_at: null, last_error_category: null, last_error_summary: null,
-        created_at: "2026-04-22T09:00:00Z", started_at: "2026-04-22T09:00:01Z",
-        completed_at: "2026-04-22T09:01:00Z", cancelled_at: null,
+        batch_item_id: "rbit_1",
+        item_position: 1,
+        portfolio_id: "PB_SG_GLOBAL_BAL_001",
+        status: "succeeded",
+        report_job_id: "rjob_1",
+        attempt_count: 1,
+        retry_eligible: false,
+        next_retry_at: null,
+        last_error_category: null,
+        last_error_summary: null,
+        created_at: "2026-04-22T09:00:00Z",
+        started_at: "2026-04-22T09:00:01Z",
+        completed_at: "2026-04-22T09:01:00Z",
+        cancelled_at: null,
       },
       {
-        batch_item_id: "rbit_2", item_position: 2,
-        portfolio_id: "PB_SG_INCOME_002", status: "failed_retryable",
-        report_job_id: null, attempt_count: 1, retry_eligible: true,
+        batch_item_id: "rbit_2",
+        item_position: 2,
+        portfolio_id: "PB_SG_INCOME_002",
+        status: "failed_retryable",
+        report_job_id: null,
+        attempt_count: 1,
+        retry_eligible: true,
         next_retry_at: "2026-04-22T09:05:00Z",
         last_error_category: "source_unavailable",
         last_error_summary: "Portfolio evidence is temporarily unavailable.",
-        created_at: "2026-04-22T09:00:00Z", started_at: "2026-04-22T09:00:01Z",
-        completed_at: null, cancelled_at: null,
+        created_at: "2026-04-22T09:00:00Z",
+        started_at: "2026-04-22T09:00:01Z",
+        completed_at: null,
+        cancelled_at: null,
       },
     ],
     created_at: "2026-04-22T09:00:00Z",

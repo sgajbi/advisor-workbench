@@ -27,18 +27,26 @@ describe("report ordering API", () => {
   it("loads selected-portfolio options through the Gateway BFF", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(JSON.stringify(buildReportOrderingResponse()), { status: 200 }),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(buildReportOrderingResponse()), {
+            status: 200,
+          }),
       ),
     );
 
-    await getReportOrderingOptions("PB_SG_GLOBAL_BAL_001");
+    await getReportOrderingOptions("PB_SG_GLOBAL_BAL_001", {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
 
     const fetchMock = vi.mocked(fetch);
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain("/api/bff/api/v1/report-ordering/options?");
     expect(String(url)).toContain("scopeType=portfolio");
     expect(String(url)).toContain("scopeId=PB_SG_GLOBAL_BAL_001");
+    expect(String(url)).toContain("asOfDate=2026-04-22");
+    expect(String(url)).toContain("reportingCurrency=SGD");
     expect(init?.headers).toBeInstanceOf(Headers);
     expect(JSON.stringify(getAnalyticsUiMetricEvents())).not.toContain(
       "PB_SG_GLOBAL_BAL_001",
@@ -138,8 +146,11 @@ describe("report ordering API", () => {
   it("loads bounded portfolio history without exposing identifiers in metrics", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(JSON.stringify(buildReportJobListResponse()), { status: 200 }),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(buildReportJobListResponse()), {
+            status: 200,
+          }),
       ),
     );
 
@@ -158,8 +169,15 @@ describe("report ordering API", () => {
   });
 
   it("submits an explicit portfolio selection without browser-authored candidate authority", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () =>
-      new Response(JSON.stringify(buildReportBatchHandle()), { status: 202 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(buildReportBatchHandle()), {
+            status: 202,
+          }),
+      ),
+    );
 
     await submitPortfolioReviewBatch({
       portfolioIds: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
@@ -174,7 +192,9 @@ describe("report ordering API", () => {
     const [url, init] = vi.mocked(fetch).mock.calls[0];
     const body = JSON.parse(String(init?.body));
     expect(String(url)).toBe("/api/bff/api/v1/report-batches");
-    expect((init?.headers as Headers).get("Idempotency-Key")).toBe("batch_intent_1");
+    expect((init?.headers as Headers).get("Idempotency-Key")).toBe(
+      "batch_intent_1",
+    );
     expect(body).toEqual({
       selector_mode: "explicit_portfolio_list",
       portfolio_ids: ["PB_SG_GLOBAL_BAL_001", "PB_SG_INCOME_002"],
@@ -187,8 +207,15 @@ describe("report ordering API", () => {
   });
 
   it("loads source-owned portfolio outcomes for a known report batch", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () =>
-      new Response(JSON.stringify(buildReportBatchStatus()), { status: 200 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(buildReportBatchStatus()), {
+            status: 200,
+          }),
+      ),
+    );
 
     const response = await getPortfolioReviewBatchStatus("rbch_1");
 

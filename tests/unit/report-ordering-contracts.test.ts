@@ -43,9 +43,73 @@ describe("report ordering contracts", () => {
         expect.objectContaining({
           sectionId: "ADVISOR_COMMENTARY",
           dependencyFieldIds: ["advisor_brief_run_id"],
+          availability: expect.objectContaining({
+            state: "ready",
+            reasonCode: "advisor_brief_accepted",
+            acceptedBrief: expect.objectContaining({ runId: "abr_accepted_1" }),
+          }),
         }),
       ]),
     );
+  });
+
+  it.each([
+    [
+      "ready without accepted evidence",
+      (availability: Record<string, unknown>) => {
+        delete availability.acceptedBrief;
+      },
+    ],
+    [
+      "unavailable with accepted evidence",
+      (availability: Record<string, unknown>) => {
+        availability.state = "unavailable";
+        availability.reasonCode = "advisor_brief_not_reviewed";
+      },
+    ],
+    [
+      "accepted reason with unavailable state",
+      (availability: Record<string, unknown>) => {
+        availability.state = "unavailable";
+      },
+    ],
+    [
+      "unrecognized reason",
+      (availability: Record<string, unknown>) => {
+        availability.state = "unavailable";
+        availability.reasonCode = "advisor_brief_assumed_missing";
+        delete availability.acceptedBrief;
+      },
+    ],
+    [
+      "review evidence without an offset",
+      (availability: Record<string, unknown>) => {
+        const acceptedBrief = availability.acceptedBrief as Record<
+          string,
+          unknown
+        >;
+        acceptedBrief.reviewedAt = "2026-04-22T08:30:00";
+      },
+    ],
+  ])(
+    "rejects section availability with %s",
+    (_scenario, mutateAvailability) => {
+      const response = buildReportOrderingResponse();
+      const availability = response.reportFamilies[0].sections[2]
+        .availability as Record<string, unknown>;
+      mutateAvailability(availability);
+
+      expect(() => parseReportOrderingResponse(response)).toThrow();
+    },
+  );
+
+  it("keeps absent section availability distinct from unavailable", () => {
+    const response = buildReportOrderingResponse();
+    delete response.reportFamilies[0].sections[1].availability;
+
+    const parsed = parseReportOrderingResponse(response);
+
+    expect(parsed.reportFamilies[0].sections[1].availability).toBeUndefined();
   });
 
   it.each([
@@ -61,7 +125,8 @@ describe("report ordering contracts", () => {
       response.reportFamilies[0].configurationFields.push({
         fieldId,
         businessLabel: "Conflicting report option",
-        description: "A generic value must not replace a structured report option.",
+        description:
+          "A generic value must not replace a structured report option.",
         inputType: "text",
         requirement: "optional",
         defaultingPolicy: "caller_optional",
@@ -91,7 +156,9 @@ describe("report ordering contracts", () => {
 
   it("rejects a report section dependency without an admitted configuration field", () => {
     const response = buildReportOrderingResponse();
-    response.reportFamilies[0].sections[0].dependencyFieldIds = ["missing_evidence"];
+    response.reportFamilies[0].sections[0].dependencyFieldIds = [
+      "missing_evidence",
+    ];
 
     expect(() => parseReportOrderingResponse(response)).toThrow();
   });
@@ -113,7 +180,8 @@ describe("report ordering contracts", () => {
       response.reportFamilies[0].configurationFields.push({
         fieldId: "source_owned_reference",
         businessLabel: "Source-owned reference",
-        description: "A source-owned value must not become an advisor override.",
+        description:
+          "A source-owned value must not become an advisor override.",
         inputType: "text",
         requirement: "optional",
         defaultingPolicy: "source_owned",
@@ -133,24 +201,21 @@ describe("report ordering contracts", () => {
     "advisor/note",
     "Advisor_Note",
     "advisor-note",
-  ])(
-    "rejects the non-canonical text field identifier %s",
-    (fieldId) => {
-      const response = buildReportOrderingResponse();
-      response.reportFamilies[0].configurationFields.push({
-        fieldId,
-        businessLabel: "Advisor evidence",
-        description: "The identifier must remain a flat form value.",
-        inputType: "text",
-        requirement: "optional",
-        defaultingPolicy: "caller_optional",
-        valueSource: "caller",
-        options: [],
-      });
+  ])("rejects the non-canonical text field identifier %s", (fieldId) => {
+    const response = buildReportOrderingResponse();
+    response.reportFamilies[0].configurationFields.push({
+      fieldId,
+      businessLabel: "Advisor evidence",
+      description: "The identifier must remain a flat form value.",
+      inputType: "text",
+      requirement: "optional",
+      defaultingPolicy: "caller_optional",
+      valueSource: "caller",
+      options: [],
+    });
 
-      expect(() => parseReportOrderingResponse(response)).toThrow();
-    },
-  );
+    expect(() => parseReportOrderingResponse(response)).toThrow();
+  });
 
   it.each([
     ["as_of_date", "portfolio_date_when_omitted"],
@@ -178,14 +243,17 @@ describe("report ordering contracts", () => {
     ["currentStep", undefined],
     ["currentStep", null],
     ["currentStep", ""],
-  ])("admits missing lifecycle evidence for fail-closed row rendering: %s=%s", (key, value) => {
-    const response = buildReportJobListResponse();
-    const item = response.items[0] as Record<string, unknown>;
-    if (value === undefined) delete item[key];
-    else item[key] = value;
+  ])(
+    "admits missing lifecycle evidence for fail-closed row rendering: %s=%s",
+    (key, value) => {
+      const response = buildReportJobListResponse();
+      const item = response.items[0] as Record<string, unknown>;
+      if (value === undefined) delete item[key];
+      else item[key] = value;
 
-    expect(parseReportJobListResponse(response).items).toHaveLength(1);
-  });
+      expect(parseReportJobListResponse(response).items).toHaveLength(1);
+    },
+  );
 
   it("rejects duplicate configuration field identifiers", () => {
     const response = buildReportOrderingResponse();
@@ -327,34 +395,46 @@ describe("report ordering contracts", () => {
   });
 
   it.each([
-    ["missing report job", {
-      report_request_id: "rrq_1",
-      status: "accepted",
-      status_url: "/api/v1/report-jobs/rjob_1",
-      idempotency_key: "intent_1",
-    }],
-    ["empty status reference", {
-      report_request_id: "rrq_1",
-      report_job_id: "rjob_1",
-      status: "accepted",
-      status_url: "",
-      idempotency_key: "intent_1",
-    }],
-    ["non-string request identity", {
-      report_request_id: 42,
-      report_job_id: "rjob_1",
-      status: "accepted",
-      status_url: "/api/v1/report-jobs/rjob_1",
-      idempotency_key: "intent_1",
-    }],
-    ["unexpected receipt field", {
-      report_request_id: "rrq_1",
-      report_job_id: "rjob_1",
-      status: "accepted",
-      status_url: "/api/v1/report-jobs/rjob_1",
-      idempotency_key: "intent_1",
-      inferred_success: true,
-    }],
+    [
+      "missing report job",
+      {
+        report_request_id: "rrq_1",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_1",
+        idempotency_key: "intent_1",
+      },
+    ],
+    [
+      "empty status reference",
+      {
+        report_request_id: "rrq_1",
+        report_job_id: "rjob_1",
+        status: "accepted",
+        status_url: "",
+        idempotency_key: "intent_1",
+      },
+    ],
+    [
+      "non-string request identity",
+      {
+        report_request_id: 42,
+        report_job_id: "rjob_1",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_1",
+        idempotency_key: "intent_1",
+      },
+    ],
+    [
+      "unexpected receipt field",
+      {
+        report_request_id: "rrq_1",
+        report_job_id: "rjob_1",
+        status: "accepted",
+        status_url: "/api/v1/report-jobs/rjob_1",
+        idempotency_key: "intent_1",
+        inferred_success: true,
+      },
+    ],
   ])("rejects a malformed single-report receipt: %s", (_caseName, receipt) => {
     expect(() => parseReportJobHandle(receipt)).toThrow();
   });
@@ -378,7 +458,10 @@ describe("report ordering contracts", () => {
     expect(parseReportBatchHandle(buildReportBatchHandle()).item_count).toBe(2);
     const status = parseReportBatchStatus(buildReportBatchStatus());
     expect(status.status).toBe("completed_with_failures");
-    expect(status.items.map((item) => item.status)).toEqual(["succeeded", "failed_retryable"]);
+    expect(status.items.map((item) => item.status)).toEqual([
+      "succeeded",
+      "failed_retryable",
+    ]);
   });
 
   it("fails closed when a batch status invents an unsupported item state", () => {
@@ -388,25 +471,44 @@ describe("report ordering contracts", () => {
   });
 
   it.each([
-    ["a mismatched item count", (response: ReturnType<typeof buildReportBatchStatus>) => {
-      response.item_count = 3;
-    }],
-    ["duplicate materialized portfolios", (response: ReturnType<typeof buildReportBatchStatus>) => {
-      response.materialized_portfolio_ids[1] = response.materialized_portfolio_ids[0];
-    }],
-    ["duplicate outcome positions", (response: ReturnType<typeof buildReportBatchStatus>) => {
-      response.items[1].item_position = response.items[0].item_position;
-    }],
-    ["duplicate outcome portfolios", (response: ReturnType<typeof buildReportBatchStatus>) => {
-      response.items[1].portfolio_id = response.items[0].portfolio_id;
-    }],
-    ["an outcome outside the materialized selection", (response: ReturnType<typeof buildReportBatchStatus>) => {
-      response.items[1].portfolio_id = "PB_SG_UNREVIEWED_003";
-    }],
-  ])("fails closed when batch status contains %s", (_scenario, mutateResponse) => {
-    const response = buildReportBatchStatus();
-    mutateResponse(response);
+    [
+      "a mismatched item count",
+      (response: ReturnType<typeof buildReportBatchStatus>) => {
+        response.item_count = 3;
+      },
+    ],
+    [
+      "duplicate materialized portfolios",
+      (response: ReturnType<typeof buildReportBatchStatus>) => {
+        response.materialized_portfolio_ids[1] =
+          response.materialized_portfolio_ids[0];
+      },
+    ],
+    [
+      "duplicate outcome positions",
+      (response: ReturnType<typeof buildReportBatchStatus>) => {
+        response.items[1].item_position = response.items[0].item_position;
+      },
+    ],
+    [
+      "duplicate outcome portfolios",
+      (response: ReturnType<typeof buildReportBatchStatus>) => {
+        response.items[1].portfolio_id = response.items[0].portfolio_id;
+      },
+    ],
+    [
+      "an outcome outside the materialized selection",
+      (response: ReturnType<typeof buildReportBatchStatus>) => {
+        response.items[1].portfolio_id = "PB_SG_UNREVIEWED_003";
+      },
+    ],
+  ])(
+    "fails closed when batch status contains %s",
+    (_scenario, mutateResponse) => {
+      const response = buildReportBatchStatus();
+      mutateResponse(response);
 
-    expect(() => parseReportBatchStatus(response)).toThrow();
-  });
+      expect(() => parseReportBatchStatus(response)).toThrow();
+    },
+  );
 });
