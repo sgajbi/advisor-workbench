@@ -773,7 +773,9 @@ export function useReportOrderingWorkflow({
             catalogue,
             current,
             patch.familyId,
-            currentSectionAvailabilityEvidence,
+            scopeMode === "explicit_portfolio_batch"
+              ? "unavailable"
+              : currentSectionAvailabilityEvidence,
           );
         }
         const next = { ...current, ...patch };
@@ -811,6 +813,7 @@ export function useReportOrderingWorkflow({
       currentSectionAvailabilityEvidence,
       model?.family,
       portfolioId,
+      scopeMode,
       sectionAvailabilityEvidence,
     ],
   );
