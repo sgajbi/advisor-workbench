@@ -7,7 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PerformanceAnalyticsPage from "../../src/apps/performance/performance-analytics-page";
 import {
@@ -155,10 +155,15 @@ async function renderPerformancePage(
 }
 
 describe("PerformanceAnalyticsPage", () => {
+  beforeEach(() => {
+    vi.stubEnv("LOTUS_ENVIRONMENT", "test");
+  });
+
   afterEach(() => {
     replaceMock.mockReset();
     pushMock.mockReset();
     resetAnalyticsUiMetricEvents();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
