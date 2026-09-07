@@ -1,6 +1,6 @@
 import { fireEvent, render as baseRender, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import WorkbenchPage from "../../src/app/workbench/[portfolioId]/page";
 import { expectReviewContextOwns } from "../review-context-census";
@@ -28,7 +28,12 @@ function renderWithQueryClient(ui: React.ReactElement) {
 }
 
 describe("WorkbenchPage", () => {
+  beforeEach(() => {
+    vi.stubEnv("LOTUS_ENVIRONMENT", "test");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
