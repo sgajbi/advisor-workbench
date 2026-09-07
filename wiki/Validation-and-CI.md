@@ -319,13 +319,15 @@ retry from cancelling or masquerading as another revision's evidence.
   copy remains supporting evidence and may evolve without weakening persistence or refresh proof.
   It also proves no reranking, no auto-proposal creation, no suitability
   authority, no execution authority, and no client-publication claims.
-    The canonical Lotus Idea seed takes its as-of date from the platform demo-data contract instead of
-    duplicating date literals in Workbench startup automation.
-    Startup records the exact current-run review-ready candidate in
-    `output/canonical-front-office/idea-candidate-seed-evidence.json`; validation proves the same
-    identity through Gateway and matches the artifact's run ID to the active Idea `/version` build
-    identity before targeting its exact queue row. A broad title match, stale artifact, or older
-    unconverted canonical candidate cannot stand in for current-run evidence.
+  The canonical Lotus Idea seed takes its business as-of date from the platform demo-data contract,
+  then captures source observation, evaluation, lifecycle, and queue times after Idea readiness.
+  Queue reads always carry the explicit current-run evaluation boundary; neither slow image startup
+  nor Idea's example-time default can silently empty the adviser queue. Startup records those ordered
+  UTC timestamps and the exact review-ready candidate in
+  `output/canonical-front-office/idea-candidate-seed-evidence.json`. Validation reuses the recorded
+  queue boundary through Gateway, proves the candidate exactly once, and matches the artifact's run
+  ID to the active Idea `/version` build identity. A broad title match, stale artifact, older
+  unconverted candidate, or incoherent clock cannot stand in for current-run evidence.
 - RFC or mainline certification runs must invoke the canonical startup script with
   `-RequireMainlineSources`. The preflight writes a source-safe provenance manifest and fails
   before Docker, seeding, or screenshots when any canonical participant is dirty or not exactly at

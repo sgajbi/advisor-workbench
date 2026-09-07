@@ -169,6 +169,10 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
 
 - The governed local path is the Workbench canonical front-office runtime, not the Platform
   infrastructure-only stack. Use portfolio `PB_SG_GLOBAL_BAL_001` for canonical populated proof.
+- Canonical Idea orchestration keeps the platform business as-of date separate from live source,
+  evaluation, lifecycle, and queue clocks. Capture live clocks only after Idea readiness, pass the
+  queue boundary explicitly, and retain their ordered UTC identities in candidate-seed evidence.
+  Never widen Idea's temporal controls or rely on its example-time default to make a queue pass.
 - `/api/health/live` and `/api/health/ready` support orchestration and diagnosis.
 - Correlation id, request id, HTTP status, and support reference are distinct. Expose a support
   reference only when its semantics and operator queryability are proven.
