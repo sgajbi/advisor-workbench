@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getPortfolioCatalog,
@@ -19,7 +19,12 @@ import {
 import { buildPortfolioWorkspace } from "../fixtures/portfolio-workspace-component-fixtures";
 
 describe("portfolio api", () => {
+  beforeEach(() => {
+    vi.stubEnv("LOTUS_ENVIRONMENT", "test");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     resetAnalyticsUiMetricEvents();
   });
@@ -2251,6 +2256,23 @@ describe("portfolio api", () => {
       }
     }
   });
+
+  it.each([undefined, "uat", "production"])(
+    "does not contact Gateway for a server-rendered Portfolio read in %s posture",
+    async (environment) => {
+      if (environment === undefined) {
+        vi.stubEnv("LOTUS_ENVIRONMENT", "");
+      } else {
+        vi.stubEnv("LOTUS_ENVIRONMENT", environment);
+      }
+      vi.stubGlobal("window", undefined);
+      const fetchSpy = vi.fn();
+      vi.stubGlobal("fetch", fetchSpy);
+
+      await expect(getPortfolioCatalog()).resolves.toEqual([]);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not cache failed portfolio responses", async () => {
     const fetchSpy = vi
