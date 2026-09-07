@@ -1547,7 +1547,7 @@ test.describe('Performance workbench smoke', () => {
 
     await (await openPerformanceWorkflowStep(page, /^Performance overview/i)).click();
     await expect(page.getByLabel('Executive return strip')).toBeVisible();
-    expect(new URL(page.url()).searchParams.get('mode')).toBeNull();
+    await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBeNull();
     await (await openPerformanceWorkflowStep(page, /^Risk review/i)).click();
     await expect(
       page.getByRole('region', { name: 'Risk executive overview' }),
