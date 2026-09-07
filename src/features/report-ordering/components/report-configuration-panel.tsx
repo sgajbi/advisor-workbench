@@ -3,6 +3,7 @@
 import { useImperativeHandle, useMemo, type Ref } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 
 import { FieldLabel, SectionBlock, SemanticBadge } from "@/design-system";
 
@@ -13,7 +14,11 @@ import {
   REPORT_REQUIRED_EVIDENCE_FORM_ERROR,
   type ReportOrderingFormValues,
 } from "../report-ordering-form";
-import type { ReportOrderingConfiguration, ReportOrderingViewModel } from "../view-model";
+import {
+  isAdvisorCommentarySection,
+  type ReportOrderingConfiguration,
+  type ReportOrderingViewModel,
+} from "../view-model";
 import styles from "../report-ordering-workspace.module.css";
 
 export type ReportConfigurationPanelHandle = {
@@ -26,6 +31,8 @@ type ReportConfigurationPanelProps = {
   disabled: boolean;
   updateConfiguration: (patch: Partial<ReportOrderingConfiguration>) => void;
   toggleSection: (sectionId: string) => void;
+  advisorBriefHref: string;
+  refreshAvailability: () => void;
   ref?: Ref<ReportConfigurationPanelHandle>;
 };
 
@@ -35,22 +42,33 @@ export function ReportConfigurationPanel({
   disabled,
   updateConfiguration,
   toggleSection,
+  advisorBriefHref,
+  refreshAvailability,
   ref,
 }: ReportConfigurationPanelProps) {
   const configurationFields = new Map(
-    model.family?.configurationFields.map((field) => [field.fieldId, field]) ?? [],
+    model.family?.configurationFields.map((field) => [field.fieldId, field]) ??
+      [],
   );
   const currencyField = configurationFields.get("reporting_currency");
   const allocationField = configurationFields.get("allocation_dimensions");
-  const textFields = (model.family?.configurationFields ?? []).filter((field) => {
-    if (field.inputType !== "text") return false;
-    if (field.requirement !== "conditional") return true;
-    return (model.family?.sections ?? []).some(
-      (section) =>
-        configuration.selectedSections.includes(section.sectionId) &&
-        section.dependencyFieldIds.includes(field.fieldId),
-    );
-  });
+  const sourceBoundTextFieldIds = new Set(
+    (model.family?.sections ?? [])
+      .filter(isAdvisorCommentarySection)
+      .flatMap((section) => section.dependencyFieldIds),
+  );
+  const textFields = (model.family?.configurationFields ?? []).filter(
+    (field) => {
+      if (field.inputType !== "text") return false;
+      if (sourceBoundTextFieldIds.has(field.fieldId)) return false;
+      if (field.requirement !== "conditional") return true;
+      return (model.family?.sections ?? []).some(
+        (section) =>
+          configuration.selectedSections.includes(section.sectionId) &&
+          section.dependencyFieldIds.includes(field.fieldId),
+      );
+    },
+  );
   const selectedSectionCount = model.sectionChoices.filter(
     (section) => section.selected,
   ).length;
@@ -78,7 +96,8 @@ export function ReportConfigurationPanel({
   useImperativeHandle(
     ref,
     () => ({
-      validate: async () => await form.trigger(undefined, { shouldFocus: true }),
+      validate: async () =>
+        await form.trigger(undefined, { shouldFocus: true }),
     }),
     [form],
   );
@@ -106,13 +125,23 @@ export function ReportConfigurationPanel({
                     value={family.reportFamilyId}
                     checked={selected}
                     disabled={disabled}
-                    onChange={() => updateConfiguration({ familyId: family.reportFamilyId })}
+                    onChange={() =>
+                      updateConfiguration({ familyId: family.reportFamilyId })
+                    }
                   />
                   <span className={styles.choiceBody}>
                     <span className={styles.choiceHeading}>
                       <strong>{family.businessLabel}</strong>
-                      <SemanticBadge tone={family.availability.state === "ready" ? "success" : "warn"}>
-                        {family.availability.state === "ready" ? "Available" : "Available with limits"}
+                      <SemanticBadge
+                        tone={
+                          family.availability.state === "ready"
+                            ? "success"
+                            : "warn"
+                        }
+                      >
+                        {family.availability.state === "ready"
+                          ? "Available"
+                          : "Available with limits"}
                       </SemanticBadge>
                     </span>
                     <span>{family.description}</span>
@@ -130,15 +159,19 @@ export function ReportConfigurationPanel({
               <div>
                 <strong>Created through business workflows</strong>
                 <p>
-                  These evidence packs are created from their originating advisory or
-                  portfolio-management process, rather than ordered here.
+                  These evidence packs are created from their originating
+                  advisory or portfolio-management process, rather than ordered
+                  here.
                 </p>
               </div>
               <SemanticBadge>Workflow generated</SemanticBadge>
             </div>
             <div className={styles.workflowManagedGrid}>
               {model.workflowManagedFamilies.map((family) => (
-                <article key={family.reportFamilyId} className={styles.workflowManagedCard}>
+                <article
+                  key={family.reportFamilyId}
+                  className={styles.workflowManagedCard}
+                >
                   <strong>{family.businessLabel}</strong>
                   <span>{family.description}</span>
                   <small>
@@ -159,7 +192,9 @@ export function ReportConfigurationPanel({
       >
         <div className={styles.fieldGrid}>
           <div className={styles.fieldGroup}>
-            <FieldLabel htmlFor="report-ordering-as-of-date">Report date</FieldLabel>
+            <FieldLabel htmlFor="report-ordering-as-of-date">
+              Report date
+            </FieldLabel>
             <Controller
               control={form.control}
               name="asOfDate"
@@ -188,9 +223,14 @@ export function ReportConfigurationPanel({
                     }
                   />
                   <small id="report-ordering-as-of-help">
-                    Available from {model.sourceContext.earliestReportDate} to {model.sourceContext.latestReportDate}, as confirmed by the portfolio record.
+                    Available from {model.sourceContext.earliestReportDate} to{" "}
+                    {model.sourceContext.latestReportDate}, as confirmed by the
+                    portfolio record.
                   </small>
-                  <FieldError id="report-ordering-as-of-error" visible={Boolean(fieldState.error)}>
+                  <FieldError
+                    id="report-ordering-as-of-error"
+                    visible={Boolean(fieldState.error)}
+                  >
                     {REPORT_DATE_FORM_ERROR}
                   </FieldError>
                 </>
@@ -214,10 +254,15 @@ export function ReportConfigurationPanel({
                       onBlur={field.onBlur}
                       ref={field.ref}
                       className={`${styles.fieldInput} workbench-input`}
-                      disabled={disabled || model.sourceContext.reportingCurrencies.length === 0}
+                      disabled={
+                        disabled ||
+                        model.sourceContext.reportingCurrencies.length === 0
+                      }
                       onChange={(event) => {
                         field.onChange(event);
-                        updateConfiguration({ reportingCurrency: event.target.value });
+                        updateConfiguration({
+                          reportingCurrency: event.target.value,
+                        });
                       }}
                       aria-invalid={fieldState.invalid}
                       aria-describedby={
@@ -226,9 +271,13 @@ export function ReportConfigurationPanel({
                           : "report-ordering-currency-help"
                       }
                     >
-                      {model.sourceContext.reportingCurrencies.map((currency) => (
-                        <option key={currency} value={currency}>{currency}</option>
-                      ))}
+                      {model.sourceContext.reportingCurrencies.map(
+                        (currency) => (
+                          <option key={currency} value={currency}>
+                            {currency}
+                          </option>
+                        ),
+                      )}
                     </select>
                     <small id="report-ordering-currency-help">
                       Choices are confirmed by the portfolio reporting controls.
@@ -250,7 +299,9 @@ export function ReportConfigurationPanel({
             const errorId = `${fieldId}-error`;
             return (
               <div key={fieldDefinition.fieldId} className={styles.fieldGroup}>
-                <FieldLabel htmlFor={fieldId}>{fieldDefinition.businessLabel}</FieldLabel>
+                <FieldLabel htmlFor={fieldId}>
+                  {fieldDefinition.businessLabel}
+                </FieldLabel>
                 <Controller
                   control={form.control}
                   name={`configurationValues.${fieldDefinition.fieldId}`}
@@ -275,10 +326,15 @@ export function ReportConfigurationPanel({
                           });
                         }}
                         aria-invalid={fieldState.invalid}
-                        aria-describedby={fieldState.error ? `${helpId} ${errorId}` : helpId}
+                        aria-describedby={
+                          fieldState.error ? `${helpId} ${errorId}` : helpId
+                        }
                       />
                       <small id={helpId}>{fieldDefinition.description}</small>
-                      <FieldError id={errorId} visible={Boolean(fieldState.error)}>
+                      <FieldError
+                        id={errorId}
+                        visible={Boolean(fieldState.error)}
+                      >
                         {REPORT_REQUIRED_EVIDENCE_FORM_ERROR}
                       </FieldError>
                     </>
@@ -298,13 +354,23 @@ export function ReportConfigurationPanel({
                 <label key={option.value} className={styles.checkChoice}>
                   <input
                     type="checkbox"
-                    checked={configuration.allocationDimensions.includes(option.value)}
+                    checked={configuration.allocationDimensions.includes(
+                      option.value,
+                    )}
                     disabled={disabled}
                     onChange={() =>
                       updateConfiguration({
-                        allocationDimensions: configuration.allocationDimensions.includes(option.value)
-                          ? configuration.allocationDimensions.filter((value) => value !== option.value)
-                          : [...configuration.allocationDimensions, option.value],
+                        allocationDimensions:
+                          configuration.allocationDimensions.includes(
+                            option.value,
+                          )
+                            ? configuration.allocationDimensions.filter(
+                                (value) => value !== option.value,
+                              )
+                            : [
+                                ...configuration.allocationDimensions,
+                                option.value,
+                              ],
                       })
                     }
                   />
@@ -312,7 +378,10 @@ export function ReportConfigurationPanel({
                 </label>
               ))}
             </div>
-            <small>With no selection, Reporting applies the default allocation view maintained for this portfolio.</small>
+            <small>
+              With no selection, Reporting applies the default allocation view
+              maintained for this portfolio.
+            </small>
           </fieldset>
         ) : null}
       </SectionBlock>
@@ -329,33 +398,86 @@ export function ReportConfigurationPanel({
           <summary className={styles.contentSummary}>
             <span className={styles.contentSummaryCopy}>
               <strong>Review report contents</strong>
-              <small>Open to tailor optional sections for this client review.</small>
+              <small>
+                Open to tailor optional sections for this client review.
+              </small>
             </span>
             <SemanticBadge>{selectedSectionCount} included</SemanticBadge>
           </summary>
           <fieldset className={styles.contentChoices}>
             <legend className={styles.srOnly}>Select report sections</legend>
             <div className={styles.sectionChoiceGrid}>
-              {model.sectionChoices.map((section) => (
-                <label key={section.id} className={styles.sectionChoice}>
-                  <input
-                    type="checkbox"
-                    checked={section.selected}
-                    disabled={disabled || section.required}
-                    onChange={() => toggleSection(section.id)}
-                  />
-                  <span className={styles.choiceBody}>
-                    <span className={styles.choiceHeading}>
-                      <strong>{section.label}</strong>
-                      {section.required ? <SemanticBadge>Required</SemanticBadge> : null}
-                    </span>
-                    <span>{section.detail}</span>
-                    {section.dependencyLabels.length ? (
-                      <small>Uses {section.dependencyLabels.join(" and ").toLowerCase()}.</small>
+              {model.sectionChoices.map((section) => {
+                const inputId = `report-ordering-section-${section.id.toLowerCase()}`;
+                const availabilityId = `${inputId}-availability`;
+                return (
+                  <div
+                    key={section.id}
+                    className={`${styles.sectionChoice} ${
+                      !section.selectable ? styles.choiceCardDisabled : ""
+                    }`}
+                    data-accepted-brief-run-id={section.acceptedBrief?.runId}
+                  >
+                    <input
+                      id={inputId}
+                      type="checkbox"
+                      checked={section.selected}
+                      disabled={
+                        disabled || section.required || !section.selectable
+                      }
+                      onChange={() => toggleSection(section.id)}
+                      aria-describedby={
+                        section.availabilityDetail ? availabilityId : undefined
+                      }
+                    />
+                    <label htmlFor={inputId} className={styles.choiceBody}>
+                      <span className={styles.choiceHeading}>
+                        <strong>{section.label}</strong>
+                        {section.required ? (
+                          <SemanticBadge>Required</SemanticBadge>
+                        ) : null}
+                        {section.availabilityLabel ? (
+                          <SemanticBadge
+                            tone={section.acceptedBrief ? "success" : "warn"}
+                          >
+                            {section.availabilityLabel}
+                          </SemanticBadge>
+                        ) : null}
+                      </span>
+                      <span>{section.detail}</span>
+                      {section.availabilityDetail ? (
+                        <small id={availabilityId}>
+                          {section.availabilityDetail}
+                        </small>
+                      ) : null}
+                      {section.dependencyLabels.length ? (
+                        <small>
+                          Uses{" "}
+                          {section.dependencyLabels.join(" and ").toLowerCase()}
+                          .
+                        </small>
+                      ) : null}
+                    </label>
+                    {section.recovery === "advisor_brief" ? (
+                      <Link
+                        className={styles.sectionRecovery}
+                        href={advisorBriefHref}
+                      >
+                        Open Advisor Brief
+                      </Link>
+                    ) : section.recovery === "refresh" ? (
+                      <button
+                        className={styles.sectionRecovery}
+                        type="button"
+                        disabled={disabled}
+                        onClick={refreshAvailability}
+                      >
+                        Recheck availability
+                      </button>
                     ) : null}
-                  </span>
-                </label>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </fieldset>
         </details>
@@ -373,7 +495,9 @@ export function ReportConfigurationPanel({
               <label
                 key={output.id}
                 className={`${styles.choiceCard} ${
-                  configuration.outputFormat === output.id ? styles.choiceCardSelected : ""
+                  configuration.outputFormat === output.id
+                    ? styles.choiceCardSelected
+                    : ""
                 } ${!output.available ? styles.choiceCardDisabled : ""}`}
               >
                 <input
@@ -382,7 +506,9 @@ export function ReportConfigurationPanel({
                   value={output.id}
                   checked={configuration.outputFormat === output.id}
                   disabled={disabled || !output.available}
-                  onChange={() => updateConfiguration({ outputFormat: output.id })}
+                  onChange={() =>
+                    updateConfiguration({ outputFormat: output.id })
+                  }
                 />
                 <span className={styles.choiceBody}>
                   <span className={styles.choiceHeading}>
@@ -412,5 +538,9 @@ function FieldError({
   visible: boolean;
   children: string;
 }) {
-  return visible ? <small id={id} className={styles.fieldError}>{children}</small> : null;
+  return visible ? (
+    <small id={id} className={styles.fieldError}>
+      {children}
+    </small>
+  ) : null;
 }

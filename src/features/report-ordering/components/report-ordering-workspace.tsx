@@ -15,12 +15,17 @@ import {
   WorkbenchPageFrame,
   WorkbenchSectionStack,
 } from "@/design-system";
-import { buildReviewContextNavigationHref } from "@/shell/review-context";
+import { isBusinessDateValue } from "@/design-system/utils/financial-formatters";
+import {
+  buildReviewContextHref,
+  buildReviewContextNavigationHref,
+} from "@/shell/review-context";
 
 import { REPORT_CENTRE_TITLE } from "../report-ordering-terminology";
 import { useReportOrderingWorkflow } from "../use-report-ordering-workflow";
 import {
   findPortfolioReviewBatchMode,
+  clearContextBoundReportSections,
   type ReportOrderingConfiguration,
   type ReportOrderingScopeMode,
 } from "../view-model";
@@ -83,9 +88,12 @@ function ReportOrderingWorkspaceSession({
   const [scopeMode, setScopeMode] = useState<ReportOrderingScopeMode>(
     initialBatchId ? "explicit_portfolio_batch" : "single_portfolio",
   );
-  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
-  const [portfolioSelectionState, setPortfolioSelectionState] =
-    useState<"loading" | "ready" | "error">("loading");
+  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>(
+    [],
+  );
+  const [portfolioSelectionState, setPortfolioSelectionState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
   const commitBatchAddress = useCallback(
     (
       batchId: string,
@@ -139,8 +147,26 @@ function ReportOrderingWorkspaceSession({
   const configurationPanelRef = useRef<ReportConfigurationPanelHandle>(null);
   const focusIntentRef = useRef(0);
   const workspaceState = workflow.screenState.workspace;
-  const batchAvailable = Boolean(findPortfolioReviewBatchMode(workflow.model?.family ?? null));
+  const batchAvailable = Boolean(
+    findPortfolioReviewBatchMode(workflow.model?.family ?? null),
+  );
   const configurationLocked = workflow.submissionState === "submitting";
+  const advisorBriefHref = buildReviewContextHref(
+    "/performance?mode=advisor-brief",
+    {
+      portfolioId: portfolio.portfolioId,
+      ...(workflow.configuration &&
+      isBusinessDateValue(workflow.configuration.asOfDate)
+        ? { asOfDate: workflow.configuration.asOfDate }
+        : {}),
+      ...(workflow.configuration &&
+      portfolio.reportingCurrencies.includes(
+        workflow.configuration.reportingCurrency,
+      )
+        ? { reportingCurrency: workflow.configuration.reportingCurrency }
+        : {}),
+    },
+  );
 
   function updateConfiguration(patch: Partial<ReportOrderingConfiguration>) {
     if (
@@ -219,13 +245,15 @@ function ReportOrderingWorkspaceSession({
                   <ReportBatchStatusPanel
                     status={workflow.batchStatus}
                     acceptedHandle={workflow.submittedBatchHandle}
-                    requestedOutputFormats={workflow.batchRequestedOutputFormats}
+                    requestedOutputFormats={
+                      workflow.batchRequestedOutputFormats
+                    }
                     error={workflow.batchStatusError}
                     onRefresh={() => void workflow.refreshBatchStatus()}
                     onReturnToSetup={clearBatchAddress}
                   />
                 ) : workspaceState.kind !== "configuration" &&
-                workspaceState.kind !== "accepted" ? (
+                  workspaceState.kind !== "accepted" ? (
                   <ScreenStatePanel
                     className={styles.terminalState}
                     kind={workspaceState.kind}
@@ -235,7 +263,9 @@ function ReportOrderingWorkspaceSession({
                     rows={workspaceState.kind === "loading" ? 5 : undefined}
                     action={
                       workspaceState.actionLabel ? (
-                        <ActionButton onClick={() => void workflow.refreshCatalogue()}>
+                        <ActionButton
+                          onClick={() => void workflow.refreshCatalogue()}
+                        >
                           {workspaceState.actionLabel}
                         </ActionButton>
                       ) : undefined
@@ -246,11 +276,15 @@ function ReportOrderingWorkspaceSession({
                     <ReportBatchStatusPanel
                       status={workflow.batchStatus}
                       acceptedHandle={workflow.submittedBatchHandle}
-                      requestedOutputFormats={workflow.batchRequestedOutputFormats}
+                      requestedOutputFormats={
+                        workflow.batchRequestedOutputFormats
+                      }
                       error={workflow.batchStatusError}
                       onRefresh={() => void workflow.refreshBatchStatus()}
                     />
-                  ) : requestHistory
+                  ) : (
+                    requestHistory
+                  )
                 ) : workflow.configuration ? (
                   <>
                     <div
@@ -268,10 +302,25 @@ function ReportOrderingWorkspaceSession({
                         disabled={configurationLocked}
                         selectedPortfolioIds={selectedPortfolioIds}
                         onScopeModeChange={(mode) => {
-                          if (!configurationLocked) setScopeMode(mode);
+                          if (configurationLocked) return;
+                          if (
+                            mode === "explicit_portfolio_batch" &&
+                            workflow.configuration
+                          ) {
+                            const next = clearContextBoundReportSections(
+                              workflow.model?.family ?? null,
+                              workflow.configuration,
+                            );
+                            workflow.updateConfiguration({
+                              selectedSections: next.selectedSections,
+                              configurationValues: next.configurationValues,
+                            });
+                          }
+                          setScopeMode(mode);
                         }}
                         onSelectionChange={(portfolioIds) => {
-                          if (!configurationLocked) setSelectedPortfolioIds(portfolioIds);
+                          if (!configurationLocked)
+                            setSelectedPortfolioIds(portfolioIds);
                         }}
                         onBookStateChange={setPortfolioSelectionState}
                       />
@@ -282,6 +331,10 @@ function ReportOrderingWorkspaceSession({
                         disabled={configurationLocked}
                         updateConfiguration={updateConfiguration}
                         toggleSection={workflow.toggleSection}
+                        advisorBriefHref={advisorBriefHref}
+                        refreshAvailability={() =>
+                          void workflow.refreshCatalogue()
+                        }
                       />
                     </div>
                     {requestHistory}
@@ -306,13 +359,15 @@ function ReportOrderingWorkspaceSession({
                   canSubmitReviewedRequest={workflow.canSubmitReviewedRequest}
                   submissionState={workflow.submissionState}
                   supportReference={workflow.supportReference}
-                  scopeLabel={scopeMode === "explicit_portfolio_batch"
-                    ? workflow.batchPortfolioIds.length > 0
-                      ? `${workflow.batchPortfolioIds.length} selected portfolios`
-                      : initialBatchId
-                        ? "Addressed portfolio bundle"
-                        : `${selectedPortfolioIds.length} selected portfolios`
-                    : "Selected portfolio"}
+                  scopeLabel={
+                    scopeMode === "explicit_portfolio_batch"
+                      ? workflow.batchPortfolioIds.length > 0
+                        ? `${workflow.batchPortfolioIds.length} selected portfolios`
+                        : initialBatchId
+                          ? "Addressed portfolio bundle"
+                          : `${selectedPortfolioIds.length} selected portfolios`
+                      : "Selected portfolio"
+                  }
                   isPortfolioBundle={scopeMode === "explicit_portfolio_batch"}
                   onReview={() => void reviewRequest()}
                   onSubmit={() => void submitRequest()}
