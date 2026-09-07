@@ -172,6 +172,53 @@ describe("portfolio transactions record workspace", () => {
     expect(() => vi.advanceTimersByTime(300)).not.toThrow();
   });
 
+  it("cancels pending focus restoration when another transaction review opens", () => {
+    vi.useFakeTimers();
+    const workspace = buildWorkspace();
+    workspace.recent_transactions.push({
+      ...workspace.recent_transactions[0],
+      transaction_id: "TX_2",
+      instrument_id: "MSFT",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              total: 1,
+              skip: 0,
+              limit: 200,
+              transactions: [],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+    renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={workspace}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        reportingCurrency="USD"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(vi.getTimerCount()).toBe(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_2" }));
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(() => vi.advanceTimersByTime(300)).not.toThrow();
+    expect(routerPushMock).toHaveBeenLastCalledWith(
+      "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_2",
+      { scroll: false },
+    );
+  });
+
   it("rehydrates an addressed transaction outside the loaded page with one exact read", async () => {
     window.history.replaceState(
       {},
