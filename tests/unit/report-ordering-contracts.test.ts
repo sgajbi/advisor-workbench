@@ -104,6 +104,24 @@ describe("report ordering contracts", () => {
     );
   });
 
+  it("rejects duplicate commentary identities before choosing accepted evidence", () => {
+    const response = buildReportOrderingResponse();
+    const commentary = response.reportFamilies[0].sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) throw new Error("Advisor commentary section missing");
+    const duplicate = structuredClone(commentary);
+    if (!duplicate.availability?.acceptedBrief) {
+      throw new Error("Accepted commentary fixture missing");
+    }
+    duplicate.availability.acceptedBrief.runId = "abr_accepted_2";
+    response.reportFamilies[0].sections.push(duplicate);
+
+    expect(() => parseReportOrderingResponse(response)).toThrow(
+      "Report section identifiers must be unique",
+    );
+  });
+
   it.each([
     [
       "ready without accepted evidence",
