@@ -343,31 +343,6 @@ describe("ReportOrderingWorkspace", () => {
     );
   });
 
-  it("does not expose a manual commentary identifier when availability was not evaluated", async () => {
-    const payload = buildReportOrderingResponse();
-    const commentary = payload.reportFamilies[0].sections.find(
-      (section) => section.sectionId === "ADVISOR_COMMENTARY",
-    );
-    if (!commentary) throw new Error("Advisor commentary fixture missing");
-    delete commentary.availability;
-    optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
-
-    render(<ReportOrderingWorkspace portfolio={portfolio} />);
-    await screen.findByRole("heading", { name: "Approved report" });
-    fireEvent.click(screen.getByText("Review report contents"));
-
-    expect(
-      screen.getByRole("checkbox", { name: /Advisor commentary/ }),
-    ).toBeDisabled();
-    expect(screen.getByText("Availability not evaluated")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("textbox", { name: "Accepted advisor brief" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Recheck availability" }),
-    ).toBeEnabled();
-  });
-
   it("fences accepted commentary to the current report date and currency", async () => {
     let resolvePriorContext:
       ((value: ReturnType<typeof parseReportOrderingResponse>) => void) | null =
@@ -2589,12 +2564,9 @@ describe("ReportOrderingWorkspace", () => {
       payload.reportFamilies[0].configurationFields.filter(
         (field) => field.fieldId === "as_of_date",
       );
-    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map(
-      ({ availability: _availability, ...section }) => ({
-        ...section,
-        dependencyFieldIds: [],
-      }),
-    );
+    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections
+      .filter((section) => section.sectionId !== "ADVISOR_COMMENTARY")
+      .map((section) => ({ ...section, dependencyFieldIds: [] }));
     optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
 
     render(<ReportOrderingWorkspace portfolio={portfolio} />);

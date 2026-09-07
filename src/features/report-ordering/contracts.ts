@@ -250,7 +250,15 @@ const reportFamilySchema = z
       }
     });
 
+    const sectionIds = family.sections.map((section) => section.sectionId);
     family.sections.forEach((section, sectionIndex) => {
+      if (sectionIds.indexOf(section.sectionId) !== sectionIndex) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Report section identifiers must be unique",
+          path: ["sections", sectionIndex, "sectionId"],
+        });
+      }
       if (section.sectionId === "ADVISOR_COMMENTARY") {
         const dependencyFieldIndex = family.configurationFields.findIndex(
           (field) => field.fieldId === "advisor_brief_run_id",

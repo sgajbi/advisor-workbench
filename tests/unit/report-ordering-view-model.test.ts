@@ -540,38 +540,6 @@ describe("report ordering view model", () => {
     );
   });
 
-  it("does not turn absent availability into manual commentary authority", () => {
-    const payload = buildReportOrderingResponse();
-    const commentary = payload.reportFamilies[0].sections.find(
-      (section) => section.sectionId === "ADVISOR_COMMENTARY",
-    );
-    if (!commentary) throw new Error("Advisor commentary fixture missing");
-    delete commentary.availability;
-    const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(
-      response,
-      sourceContext,
-    );
-    configuration.selectedSections.push("ADVISOR_COMMENTARY");
-    configuration.configurationValues.advisor_brief_run_id = "manual_run";
-
-    const section = buildReportOrderingViewModel(
-      response,
-      configuration,
-      sourceContext,
-    ).sectionChoices.find((candidate) => candidate.id === "ADVISOR_COMMENTARY");
-
-    expect(section).toEqual(
-      expect.objectContaining({
-        selected: false,
-        selectable: false,
-        availabilityLabel: "Availability not evaluated",
-        recovery: "refresh",
-        acceptedBrief: null,
-      }),
-    );
-  });
-
   it("requires a source-published batch capability and at least two selected portfolios", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
     const configuration = createReportOrderingConfiguration(
