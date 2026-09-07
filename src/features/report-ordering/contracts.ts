@@ -136,8 +136,8 @@ const reportSectionAcceptedBriefSchema = z
   })
   .strict();
 
-const reportSectionAvailabilitySchema = z
-  .object({
+const reportSectionAvailabilitySchema = availabilitySchema
+  .extend({
     state: z.enum(["ready", "unavailable"]),
     reasonCode: z.enum([
       "advisor_brief_accepted",
@@ -145,7 +145,6 @@ const reportSectionAvailabilitySchema = z
       "advisor_brief_context_mismatch",
       "advisor_brief_availability_unknown",
     ]),
-    message: z.string().min(1),
     acceptedBrief: reportSectionAcceptedBriefSchema.nullable().optional(),
   })
   .strict()

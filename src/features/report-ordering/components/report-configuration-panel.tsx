@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
 import { FieldLabel, SectionBlock, SemanticBadge } from "@/design-system";
+import { formatTimestampValue } from "@/design-system/utils/financial-formatters";
 
 import {
   buildReportOrderingFormSchema,
@@ -19,6 +20,10 @@ import {
   type ReportOrderingConfiguration,
   type ReportOrderingViewModel,
 } from "../view-model";
+import {
+  REPORT_ADVISOR_BRIEF_ACTION,
+  REPORT_COMMENTARY_RECHECK_ACTION,
+} from "../report-ordering-terminology";
 import styles from "../report-ordering-workspace.module.css";
 
 export type ReportConfigurationPanelHandle = {
@@ -450,6 +455,16 @@ export function ReportConfigurationPanel({
                           {section.availabilityDetail}
                         </small>
                       ) : null}
+                      {section.acceptedBrief ? (
+                        <small>
+                          Accepted by {section.acceptedBrief.reviewedBy} on{" "}
+                          {formatTimestampValue(
+                            section.acceptedBrief.reviewedAt,
+                            { nullDisplay: "Review time unavailable" },
+                          )}
+                          .
+                        </small>
+                      ) : null}
                       {section.dependencyLabels.length ? (
                         <small>
                           Uses{" "}
@@ -463,7 +478,7 @@ export function ReportConfigurationPanel({
                         className={styles.sectionRecovery}
                         href={advisorBriefHref}
                       >
-                        Open Advisor Brief
+                        {REPORT_ADVISOR_BRIEF_ACTION}
                       </Link>
                     ) : section.recovery === "refresh" ? (
                       <button
@@ -472,7 +487,7 @@ export function ReportConfigurationPanel({
                         disabled={disabled}
                         onClick={refreshAvailability}
                       >
-                        Recheck availability
+                        {REPORT_COMMENTARY_RECHECK_ACTION}
                       </button>
                     ) : null}
                   </div>

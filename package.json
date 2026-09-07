@@ -35,7 +35,7 @@
     "quality:source-authority": "node scripts/quality/check-source-authority-contracts.mjs && node node_modules/vitest/vitest.mjs run tests/unit/source-authority-rendering.test.ts --coverage=false",
     "quality:dependency-risk": "node scripts/quality/check-dependency-risk-inventory.mjs",
     "quality:font-assets": "node scripts/quality/check-font-asset-governance.mjs",
-    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=227 --max-unresolved=1702 --unresolved-digest=be7ba63c027a5848667103592c5d4633e5599a37e03002469cfd3ceaebbd1309",
+    "quality:product-copy": "node scripts/quality/check-product-copy-governance.mjs --max=227 --max-unresolved=1702 --unresolved-digest=a11016ab3ad5c34e788b7cd303917a776fc91b02d8ed7eb6a9d62a5b1893904f",
     "quality:e2e-scenarios": "node scripts/quality/check-e2e-scenario-governance.mjs",
     "quality:portfolio-record-bundles": "node scripts/quality/check-portfolio-record-bundles.mjs",
     "scale:proof": "node scripts/scale/run-workbench-scale-proof.mjs",

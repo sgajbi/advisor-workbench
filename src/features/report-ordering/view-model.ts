@@ -795,7 +795,7 @@ function toSectionAvailability(
     return {
       selectable: true,
       label: "Accepted brief ready",
-      detail: `Accepted by ${section.availability.acceptedBrief.reviewedBy} on ${formatTimestampValue(section.availability.acceptedBrief.reviewedAt, { nullDisplay: "Review time unavailable" })}.`,
+      detail: "Accepted commentary matches this report date and currency.",
       recovery: null,
       acceptedBrief: section.availability.acceptedBrief,
     } as const;
