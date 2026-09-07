@@ -71,6 +71,41 @@ describe("report ordering contracts", () => {
 
   it.each([
     [
+      "missing availability",
+      (section: Record<string, unknown>) => delete section.availability,
+    ],
+    [
+      "null availability",
+      (section: Record<string, unknown>) => {
+        section.availability = null;
+      },
+    ],
+    [
+      "missing accepted-brief dependency",
+      (section: Record<string, unknown>) => {
+        section.dependencyFieldIds = [];
+      },
+    ],
+    [
+      "different dependency",
+      (section: Record<string, unknown>) => {
+        section.dependencyFieldIds = ["benchmark_code"];
+      },
+    ],
+  ])("rejects Advisor Commentary with %s", (_scenario, mutateSection) => {
+    const response = buildReportOrderingResponse();
+    const section = response.reportFamilies[0].sections.find(
+      (candidate) => candidate.sectionId === "ADVISOR_COMMENTARY",
+    ) as unknown as Record<string, unknown>;
+    mutateSection(section);
+
+    expect(() => parseReportOrderingResponse(response)).toThrow(
+      "Section availability must use the implemented Advisor Commentary binding",
+    );
+  });
+
+  it.each([
+    [
       "ready without accepted evidence",
       (availability: Record<string, unknown>) => {
         delete availability.acceptedBrief;
