@@ -492,12 +492,12 @@ export function useReportOrderingWorkflow({
         asOfDate: sourceContext.asOfDate,
         reportingCurrency: sourceContext.reportingCurrency,
       },
-      retainCatalogue = false,
+      retainedCatalogue: ReportOrderingResponse | null = null,
     ) => {
       const workspaceGeneration = workspaceGenerationRef.current;
       const requestSequence = ++catalogueRequestSequenceRef.current;
       const contextKey = reportAvailabilityContextKey(availabilityContext);
-      if (retainCatalogue) {
+      if (retainedCatalogue) {
         setSectionAvailabilityEvidence({ contextKey, state: "checking" });
       } else {
         setCatalogueState("loading");
@@ -541,7 +541,12 @@ export function useReportOrderingWorkflow({
         ) {
           return;
         }
-        if (retainCatalogue) {
+        if (retainedCatalogue) {
+          sourceFingerprintRef.current = catalogueSourceFingerprint(
+            retainedCatalogue,
+            sourceContext,
+            contextKey,
+          );
           setSectionAvailabilityEvidence({ contextKey, state: "unavailable" });
           setReviewedIntent(null);
           return;
@@ -615,12 +620,17 @@ export function useReportOrderingWorkflow({
       return;
     }
     const timer = window.setTimeout(() => {
-      void loadCatalogue(false, configurationAvailabilityContext, true);
+      void loadCatalogue(
+        false,
+        configurationAvailabilityContext,
+        catalogue,
+      );
     }, 250);
     return () => window.clearTimeout(timer);
   }, [
     configurationAvailabilityContext,
     configurationAvailabilityContextKey,
+    catalogue,
     loadCatalogue,
     sectionAvailabilityEvidence?.contextKey,
     sourceContext.earliestReportDate,
@@ -1029,7 +1039,7 @@ export function useReportOrderingWorkflow({
       loadCatalogue(
         false,
         configurationAvailabilityContext ?? sourceContext,
-        Boolean(catalogue),
+        catalogue,
       ),
     refreshHistory: loadHistory,
     refreshBatchStatus: () =>

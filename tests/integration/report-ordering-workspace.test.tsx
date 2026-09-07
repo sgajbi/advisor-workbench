@@ -435,6 +435,41 @@ describe("ReportOrderingWorkspace", () => {
     ).toHaveAttribute("data-accepted-brief-run-id", "abr_current_context");
   });
 
+  it("keeps non-commentary ordering reviewable after an availability recheck fails", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    optionsMock.mockRejectedValueOnce(new Error("reporting unavailable"));
+    fireEvent.change(screen.getByLabelText("Report date"), {
+      target: { value: "2026-04-21" },
+    });
+
+    await waitFor(() => expect(optionsMock).toHaveBeenCalledTimes(2));
+    fireEvent.click(screen.getByText("Review report contents"));
+    expect(
+      await screen.findByText("Availability not confirmed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /Advisor commentary/ }),
+    ).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", {
+      name: "Submit Report Request",
+    });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        asOfDate: "2026-04-21",
+        configurationValues: {},
+        sections: expect.not.arrayContaining(["ADVISOR_COMMENTARY"]),
+      }),
+    );
+  });
+
   it("requires an explicit review before idempotent submission", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
