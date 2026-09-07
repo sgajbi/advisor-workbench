@@ -33,7 +33,10 @@ const submissionCapabilitySchema = z
       "reporting.portfolio_review.explicit_batch",
     ]),
     method: z.literal("POST"),
-    path: z.enum(["/api/v1/reports/portfolio-reviews", "/api/v1/report-batches"]),
+    path: z.enum([
+      "/api/v1/reports/portfolio-reviews",
+      "/api/v1/report-batches",
+    ]),
     state: eligibilityStateSchema,
     reasonCode: z.string().min(1),
   })
@@ -65,18 +68,18 @@ const editableTextFieldIdSchema = z
   );
 
 const configurationFieldBaseSchema = z.object({
-    fieldId: z.string().min(1),
-    businessLabel: z.string().min(1),
-    description: z.string().min(1),
-    defaultingPolicy: z.string().min(1),
-    valueSource: z.enum([
-      "caller",
-      "portfolio_context_or_caller",
-      "gateway_eligible_benchmark",
-      "report_catalogue",
-    ]),
-    options: z.array(configurationOptionSchema),
-  });
+  fieldId: z.string().min(1),
+  businessLabel: z.string().min(1),
+  description: z.string().min(1),
+  defaultingPolicy: z.string().min(1),
+  valueSource: z.enum([
+    "caller",
+    "portfolio_context_or_caller",
+    "gateway_eligible_benchmark",
+    "report_catalogue",
+  ]),
+  options: z.array(configurationOptionSchema),
+});
 
 const configurationFieldSchema = z.union([
   configurationFieldBaseSchema
@@ -125,6 +128,42 @@ const configurationFieldSchema = z.union([
     .strict(),
 ]);
 
+const reportSectionAcceptedBriefSchema = z
+  .object({
+    runId: z.string().min(1),
+    reviewedBy: z.string().min(1),
+    reviewedAt: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+const reportSectionAvailabilitySchema = z
+  .object({
+    state: z.enum(["ready", "unavailable"]),
+    reasonCode: z.enum([
+      "advisor_brief_accepted",
+      "advisor_brief_not_reviewed",
+      "advisor_brief_context_mismatch",
+      "advisor_brief_availability_unknown",
+    ]),
+    message: z.string().min(1),
+    acceptedBrief: reportSectionAcceptedBriefSchema.nullable().optional(),
+  })
+  .strict()
+  .superRefine((availability, context) => {
+    const acceptedBrief = availability.acceptedBrief ?? null;
+    const ready = availability.state === "ready";
+    if (
+      ready !== (availability.reasonCode === "advisor_brief_accepted") ||
+      ready !== Boolean(acceptedBrief)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "Section availability must bind ready state to one accepted brief",
+      });
+    }
+  });
+
 const reportSectionSchema = z
   .object({
     sectionId: z.string().min(1),
@@ -134,6 +173,7 @@ const reportSectionSchema = z
     selectionPosture: z.enum(["required", "optional"]),
     defaultSelected: z.boolean(),
     dependencyFieldIds: z.array(z.string().min(1)),
+    availability: reportSectionAvailabilitySchema.nullable().optional(),
   })
   .strict();
 
@@ -184,11 +224,11 @@ const reportFamilySchema = z
   })
   .strict()
   .superRefine((family, context) => {
-    const configurationFieldIds = family.configurationFields.map((field) => field.fieldId);
+    const configurationFieldIds = family.configurationFields.map(
+      (field) => field.fieldId,
+    );
     family.configurationFields.forEach((field, fieldIndex) => {
-      if (
-        configurationFieldIds.indexOf(field.fieldId) !== fieldIndex
-      ) {
+      if (configurationFieldIds.indexOf(field.fieldId) !== fieldIndex) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Configuration field identifiers must be unique",
@@ -204,29 +244,59 @@ const reportFamilySchema = z
       ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Conditional configuration fields must be bound to a report section",
+          message:
+            "Conditional configuration fields must be bound to a report section",
           path: ["configurationFields", fieldIndex, "fieldId"],
         });
       }
     });
 
     family.sections.forEach((section, sectionIndex) => {
-      section.dependencyFieldIds.forEach((dependencyFieldId, dependencyIndex) => {
-        if (!configurationFieldIds.includes(dependencyFieldId)) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Report section dependencies must identify an admitted configuration field",
-            path: ["sections", sectionIndex, "dependencyFieldIds", dependencyIndex],
-          });
-        }
-        if (section.dependencyFieldIds.indexOf(dependencyFieldId) !== dependencyIndex) {
-          context.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Report section dependency identifiers must be unique",
-            path: ["sections", sectionIndex, "dependencyFieldIds", dependencyIndex],
-          });
-        }
-      });
+      if (
+        section.availability !== undefined &&
+        (section.sectionId !== "ADVISOR_COMMENTARY" ||
+          section.dependencyFieldIds.length !== 1 ||
+          section.dependencyFieldIds[0] !== "advisor_brief_run_id")
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Section availability must use the implemented Advisor Commentary binding",
+          path: ["sections", sectionIndex, "availability"],
+        });
+      }
+      section.dependencyFieldIds.forEach(
+        (dependencyFieldId, dependencyIndex) => {
+          if (!configurationFieldIds.includes(dependencyFieldId)) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message:
+                "Report section dependencies must identify an admitted configuration field",
+              path: [
+                "sections",
+                sectionIndex,
+                "dependencyFieldIds",
+                dependencyIndex,
+              ],
+            });
+          }
+          if (
+            section.dependencyFieldIds.indexOf(dependencyFieldId) !==
+            dependencyIndex
+          ) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Report section dependency identifiers must be unique",
+              path: [
+                "sections",
+                sectionIndex,
+                "dependencyFieldIds",
+                dependencyIndex,
+              ],
+            });
+          }
+        },
+      );
     });
   });
 
@@ -294,94 +364,117 @@ export const reportJobListResponseSchema = z
   .strict();
 
 const batchStatusSchema = z.enum([
-  "materialized", "running", "paused", "cancelled", "completed",
-  "completed_with_failures", "failed",
+  "materialized",
+  "running",
+  "paused",
+  "cancelled",
+  "completed",
+  "completed_with_failures",
+  "failed",
 ]);
 const batchItemStatusSchema = z.enum([
-  "materialized", "leased", "waiting_on_report_job", "succeeded",
-  "failed_retryable", "failed_terminal", "cancelled", "recovery_pending",
+  "materialized",
+  "leased",
+  "waiting_on_report_job",
+  "succeeded",
+  "failed_retryable",
+  "failed_terminal",
+  "cancelled",
+  "recovery_pending",
 ]);
-const reportingSupportabilitySchema = z.object({
-  feature_key: z.string().min(1),
-  state: z.string().min(1),
-  reason: z.string().min(1),
-  freshness_bucket: z.string().min(1),
-  evidence_feature_count: z.number().int().min(0),
-  ready_evidence_feature_count: z.number().int().min(0),
-  degraded_evidence_feature_count: z.number().int().min(0),
-  workflow_count: z.number().int().min(0),
-  ready_workflow_count: z.number().int().min(0),
-}).strict();
-const renderSupportabilitySchema = z.object({
-  feature_key: z.string().min(1),
-  state: z.string().min(1),
-  reason: z.string().min(1),
-  freshness_bucket: z.string().min(1),
-  deterministic_output_supported: z.boolean(),
-  render_store_ready: z.boolean(),
-  template_registry_ready: z.boolean(),
-  default_output_format: z.string().min(1).nullable(),
-  supported_output_formats: z.array(z.string().min(1)),
-}).strict();
+const reportingSupportabilitySchema = z
+  .object({
+    feature_key: z.string().min(1),
+    state: z.string().min(1),
+    reason: z.string().min(1),
+    freshness_bucket: z.string().min(1),
+    evidence_feature_count: z.number().int().min(0),
+    ready_evidence_feature_count: z.number().int().min(0),
+    degraded_evidence_feature_count: z.number().int().min(0),
+    workflow_count: z.number().int().min(0),
+    ready_workflow_count: z.number().int().min(0),
+  })
+  .strict();
+const renderSupportabilitySchema = z
+  .object({
+    feature_key: z.string().min(1),
+    state: z.string().min(1),
+    reason: z.string().min(1),
+    freshness_bucket: z.string().min(1),
+    deterministic_output_supported: z.boolean(),
+    render_store_ready: z.boolean(),
+    template_registry_ready: z.boolean(),
+    default_output_format: z.string().min(1).nullable(),
+    supported_output_formats: z.array(z.string().min(1)),
+  })
+  .strict();
 
-export const reportBatchHandleSchema = z.object({
-  batch_id: z.string().min(1),
-  status: batchStatusSchema,
-  status_url: z.string().min(1),
-  idempotency_key: z.string().min(1),
-  item_count: z.number().int().min(0),
-  supportability: reportingSupportabilitySchema.nullable(),
-  render_supportability: renderSupportabilitySchema.nullable(),
-}).strict();
+export const reportBatchHandleSchema = z
+  .object({
+    batch_id: z.string().min(1),
+    status: batchStatusSchema,
+    status_url: z.string().min(1),
+    idempotency_key: z.string().min(1),
+    item_count: z.number().int().min(0),
+    supportability: reportingSupportabilitySchema.nullable(),
+    render_supportability: renderSupportabilitySchema.nullable(),
+  })
+  .strict();
 
-const reportBatchItemSchema = z.object({
-  batch_item_id: z.string().min(1),
-  item_position: z.number().int().min(1),
-  portfolio_id: z.string().min(1),
-  status: batchItemStatusSchema,
-  report_job_id: z.string().min(1).nullable(),
-  attempt_count: z.number().int().min(0),
-  retry_eligible: z.boolean(),
-  next_retry_at: z.string().min(1).nullable(),
-  last_error_category: z.string().min(1).nullable(),
-  last_error_summary: z.string().min(1).nullable(),
-  created_at: z.string().min(1),
-  started_at: z.string().min(1).nullable(),
-  completed_at: z.string().min(1).nullable(),
-  cancelled_at: z.string().min(1).nullable(),
-}).strict();
+const reportBatchItemSchema = z
+  .object({
+    batch_item_id: z.string().min(1),
+    item_position: z.number().int().min(1),
+    portfolio_id: z.string().min(1),
+    status: batchItemStatusSchema,
+    report_job_id: z.string().min(1).nullable(),
+    attempt_count: z.number().int().min(0),
+    retry_eligible: z.boolean(),
+    next_retry_at: z.string().min(1).nullable(),
+    last_error_category: z.string().min(1).nullable(),
+    last_error_summary: z.string().min(1).nullable(),
+    created_at: z.string().min(1),
+    started_at: z.string().min(1).nullable(),
+    completed_at: z.string().min(1).nullable(),
+    cancelled_at: z.string().min(1).nullable(),
+  })
+  .strict();
 
-const reportBatchStatusBaseSchema = z.object({
-  batch_id: z.string().min(1),
-  selector_mode: z.literal("explicit_portfolio_list"),
-  tenant_id: z.string().min(1),
-  region: z.string().min(1),
-  materialized_portfolio_ids: z.array(z.string().min(1)).min(1),
-  as_of_date: businessDateSchema,
-  requested_output_formats: z.array(z.string().min(1)).min(1),
-  reporting_currency: z.string().min(1).nullable(),
-  status: batchStatusSchema,
-  item_count: z.number().int().min(0),
-  status_counts: z.record(z.string(), z.number().int().min(0)),
-  items: z.array(reportBatchItemSchema),
-  created_at: z.string().min(1),
-  updated_at: z.string().min(1).nullable(),
-  started_at: z.string().min(1).nullable(),
-  completed_at: z.string().min(1).nullable(),
-  cancelled_at: z.string().min(1).nullable(),
-  failed_at: z.string().min(1).nullable(),
-  correlation_id: z.string().min(1),
-  trace_id: z.string().min(1),
-  supportability: reportingSupportabilitySchema.nullable(),
-  render_supportability: renderSupportabilitySchema.nullable(),
-}).strict();
+const reportBatchStatusBaseSchema = z
+  .object({
+    batch_id: z.string().min(1),
+    selector_mode: z.literal("explicit_portfolio_list"),
+    tenant_id: z.string().min(1),
+    region: z.string().min(1),
+    materialized_portfolio_ids: z.array(z.string().min(1)).min(1),
+    as_of_date: businessDateSchema,
+    requested_output_formats: z.array(z.string().min(1)).min(1),
+    reporting_currency: z.string().min(1).nullable(),
+    status: batchStatusSchema,
+    item_count: z.number().int().min(0),
+    status_counts: z.record(z.string(), z.number().int().min(0)),
+    items: z.array(reportBatchItemSchema),
+    created_at: z.string().min(1),
+    updated_at: z.string().min(1).nullable(),
+    started_at: z.string().min(1).nullable(),
+    completed_at: z.string().min(1).nullable(),
+    cancelled_at: z.string().min(1).nullable(),
+    failed_at: z.string().min(1).nullable(),
+    correlation_id: z.string().min(1),
+    trace_id: z.string().min(1),
+    supportability: reportingSupportabilitySchema.nullable(),
+    render_supportability: renderSupportabilitySchema.nullable(),
+  })
+  .strict();
 
 function validateReportBatchStatus(
   status: z.infer<typeof reportBatchStatusBaseSchema>,
   context: z.RefinementCtx,
 ) {
   const materializedPortfolioIds = new Set(status.materialized_portfolio_ids);
-  const itemPortfolioIds = new Set(status.items.map((item) => item.portfolio_id));
+  const itemPortfolioIds = new Set(
+    status.items.map((item) => item.portfolio_id),
+  );
   const itemPositions = new Set(status.items.map((item) => item.item_position));
 
   if (
@@ -390,10 +483,13 @@ function validateReportBatchStatus(
   ) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Batch item count must match materialized portfolios and outcomes",
+      message:
+        "Batch item count must match materialized portfolios and outcomes",
     });
   }
-  if (materializedPortfolioIds.size !== status.materialized_portfolio_ids.length) {
+  if (
+    materializedPortfolioIds.size !== status.materialized_portfolio_ids.length
+  ) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Materialized portfolio identifiers must be unique",
@@ -413,7 +509,9 @@ function validateReportBatchStatus(
   }
   if (
     materializedPortfolioIds.size !== itemPortfolioIds.size ||
-    [...materializedPortfolioIds].some((portfolioId) => !itemPortfolioIds.has(portfolioId))
+    [...materializedPortfolioIds].some(
+      (portfolioId) => !itemPortfolioIds.has(portfolioId),
+    )
   ) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
@@ -426,9 +524,12 @@ export const reportBatchStatusSchema = reportBatchStatusBaseSchema.superRefine(
   validateReportBatchStatus,
 );
 
-export type ReportOrderingResponse = z.infer<typeof reportOrderingResponseSchema>;
+export type ReportOrderingResponse = z.infer<
+  typeof reportOrderingResponseSchema
+>;
 export type ReportFamily = ReportOrderingResponse["reportFamilies"][number];
-export type ReportConfigurationField = ReportFamily["configurationFields"][number];
+export type ReportConfigurationField =
+  ReportFamily["configurationFields"][number];
 export type ReportSection = ReportFamily["sections"][number];
 export type ReportOutputFormat = ReportFamily["outputFormats"][number];
 export type ReportOrderingMode = ReportFamily["orderingModes"][number];
@@ -443,7 +544,9 @@ export type ReportBatchReference = Pick<
 >;
 export type ReportBatchItem = ReportBatchStatus["items"][number];
 
-export function parseReportOrderingResponse(value: unknown): ReportOrderingResponse {
+export function parseReportOrderingResponse(
+  value: unknown,
+): ReportOrderingResponse {
   return reportOrderingResponseSchema.parse(value);
 }
 
@@ -451,7 +554,9 @@ export function parseReportJobHandle(value: unknown): ReportJobHandle {
   return reportJobHandleSchema.parse(value);
 }
 
-export function parseReportJobListResponse(value: unknown): ReportJobListResponse {
+export function parseReportJobListResponse(
+  value: unknown,
+): ReportJobListResponse {
   return reportJobListResponseSchema.parse(value);
 }
 
