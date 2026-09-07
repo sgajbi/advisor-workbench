@@ -273,10 +273,12 @@ const reportFamilySchema = z
         }
       }
       if (
-        section.availability !== undefined &&
+        (section.sectionId === "ADVISOR_COMMENTARY" ||
+          section.availability !== undefined) &&
         (section.sectionId !== "ADVISOR_COMMENTARY" ||
           section.dependencyFieldIds.length !== 1 ||
-          section.dependencyFieldIds[0] !== "advisor_brief_run_id")
+          section.dependencyFieldIds[0] !== "advisor_brief_run_id" ||
+          !section.availability)
       ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
