@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getPortfolio360,
@@ -12,7 +12,12 @@ import {
 } from "../../src/features/analytics-observability/metrics";
 
 describe("workbench core api", () => {
+  beforeEach(() => {
+    vi.stubEnv("LOTUS_ENVIRONMENT", "test");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     resetAnalyticsUiMetricEvents();
   });
