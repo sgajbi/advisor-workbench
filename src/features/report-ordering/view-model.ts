@@ -32,7 +32,10 @@ export type ReportOrderingSourceContext = {
   reportingCurrencies: string[];
 };
 
-export type ReportOrderingScopeMode = "single_portfolio" | "explicit_portfolio_batch";
+export type ReportOrderingScopeMode =
+  "single_portfolio" | "explicit_portfolio_batch";
+export type ReportSectionAvailabilityEvidence =
+  "current" | "checking" | "unavailable";
 
 export type ReportOrderingReadiness = {
   state: "ready" | "partial" | "blocked";
@@ -62,7 +65,16 @@ export type ReportOrderingViewModel = {
     detail: string;
     required: boolean;
     selected: boolean;
+    selectable: boolean;
     dependencyLabels: string[];
+    availabilityLabel: string | null;
+    availabilityDetail: string | null;
+    recovery: "advisor_brief" | "refresh" | null;
+    acceptedBrief: {
+      runId: string;
+      reviewedBy: string;
+      reviewedAt: string;
+    } | null;
   }>;
   audienceLabel: string;
   clientReleaseLabel: string;
@@ -88,6 +100,14 @@ export type ReportRequestRow = {
   tone: "default" | "success" | "warn" | "danger";
   supportReference: string;
 };
+
+export function isAdvisorCommentarySection(section: ReportSection): boolean {
+  return (
+    section.sectionId === "ADVISOR_COMMENTARY" &&
+    section.dependencyFieldIds.length === 1 &&
+    section.dependencyFieldIds[0] === "advisor_brief_run_id"
+  );
+}
 
 export function createReportOrderingConfiguration(
   response: ReportOrderingResponse,
@@ -140,18 +160,24 @@ export function buildReportOrderingViewModel(
   response: ReportOrderingResponse,
   configuration: ReportOrderingConfiguration,
   sourceContext: ReportOrderingSourceContext,
+  sectionAvailabilityEvidence: ReportSectionAvailabilityEvidence = "current",
 ): ReportOrderingViewModel {
   const eligibleFamilies = response.reportFamilies.filter(
-    (family) => family.eligibility.state === "ready" && firstSupportedMode(family),
+    (family) =>
+      family.eligibility.state === "ready" && firstSupportedMode(family),
   );
   const workflowManagedFamilies = response.reportFamilies.filter(
-    (family) => family.eligibility.state === "ready" && !firstSupportedMode(family),
+    (family) =>
+      family.eligibility.state === "ready" && !firstSupportedMode(family),
   );
   const family =
-    eligibleFamilies.find((candidate) => candidate.reportFamilyId === configuration.familyId) ??
-    null;
+    eligibleFamilies.find(
+      (candidate) => candidate.reportFamilyId === configuration.familyId,
+    ) ?? null;
   const mode =
-    family?.orderingModes.find((candidate) => candidate.modeId === configuration.modeId) ?? null;
+    family?.orderingModes.find(
+      (candidate) => candidate.modeId === configuration.modeId,
+    ) ?? null;
   const readiness = evaluateReadiness(
     response,
     family,
@@ -172,9 +198,20 @@ export function buildReportOrderingViewModel(
     ? family.sections
         .slice()
         .sort(byDisplayOrder)
-        .map((section) => toSectionChoice(section, family, configuration))
+        .map((section) =>
+          toSectionChoice(
+            section,
+            family,
+            configuration,
+            sectionAvailabilityEvidence,
+          ),
+        )
     : [];
-  const fieldErrors = reportOrderingFieldErrors(family, configuration, sourceContext);
+  const fieldErrors = reportOrderingFieldErrors(
+    family,
+    configuration,
+    sourceContext,
+  );
   const formIssues = [
     fieldErrors.asOfDate,
     fieldErrors.reportingCurrency,
@@ -191,7 +228,9 @@ export function buildReportOrderingViewModel(
     workflowManagedFamilies,
     outputChoices: (family?.outputFormats ?? []).map(toOutputChoice),
     sectionChoices,
-    audienceLabel: family ? audienceLabel(family.audienceRoles) : "No eligible audience",
+    audienceLabel: family
+      ? audienceLabel(family.audienceRoles)
+      : "No eligible audience",
     clientReleaseLabel: family
       ? clientReleaseLabel(family.clientReleasePosture)
       : "Client release posture is unavailable.",
@@ -199,7 +238,8 @@ export function buildReportOrderingViewModel(
     canSubmit: readiness.state === "ready",
     canReview:
       readiness.state === "ready" ||
-      (readiness.issues.length > 0 && readiness.issues.every((issue) => formIssues.includes(issue))),
+      (readiness.issues.length > 0 &&
+        readiness.issues.every((issue) => formIssues.includes(issue))),
     formIssues,
   };
 }
@@ -213,6 +253,20 @@ export function applyReportScopeReadiness(
   if (scopeMode === "single_portfolio") {
     return model;
   }
+  const sectionChoices = model.sectionChoices.map((section) =>
+    section.acceptedBrief || section.availabilityLabel
+      ? {
+          ...section,
+          selected: false,
+          selectable: false,
+          availabilityLabel: "Single portfolio only",
+          availabilityDetail:
+            "Prepare reviewed commentary separately for each portfolio before including it in a report.",
+          recovery: null,
+          acceptedBrief: null,
+        }
+      : section,
+  );
   const issues = [...model.batchReadiness.issues];
   if (portfolioSelectionState !== "ready") {
     issues.push(
@@ -222,11 +276,14 @@ export function applyReportScopeReadiness(
     );
   }
   if (selectedPortfolioIds.length < 2) {
-    issues.push("Select at least two portfolios from your book for a portfolio bundle.");
+    issues.push(
+      "Select at least two portfolios from your book for a portfolio bundle.",
+    );
   }
   if (issues.length === 0) {
     return {
       ...model,
+      sectionChoices,
       readiness: {
         state: "ready",
         title: "Bundle ready for review",
@@ -239,41 +296,50 @@ export function applyReportScopeReadiness(
   }
   return {
     ...model,
+    sectionChoices,
     readiness: {
       state: "blocked",
       title: "Complete the portfolio bundle",
-      detail: "Resolve the highlighted items before reviewing this report bundle.",
+      detail:
+        "Resolve the highlighted items before reviewing this report bundle.",
       issues: [...new Set(issues)],
     },
     canSubmit: false,
     canReview:
-      issues.length > 0 && issues.every((issue) => model.formIssues.includes(issue)),
+      issues.length > 0 &&
+      issues.every((issue) => model.formIssues.includes(issue)),
   };
 }
 
 export function findPortfolioReviewBatchMode(
   family: ReportFamily | null,
 ): ReportOrderingMode | null {
-  return family?.orderingModes.find(
-    (mode) =>
-      mode.modeId === "explicit_portfolio_batch" &&
-      mode.interactive &&
-      mode.eligibility.state === "partial" &&
-      mode.eligibility.reasonCode === "explicit_portfolio_selection_required" &&
-      mode.submission?.capabilityId === "reporting.portfolio_review.explicit_batch" &&
-      mode.submission.path === "/api/v1/report-batches" &&
-      mode.submission.state === "partial" &&
-      mode.submission.reasonCode === "explicit_portfolio_selection_required",
-  ) ?? null;
+  return (
+    family?.orderingModes.find(
+      (mode) =>
+        mode.modeId === "explicit_portfolio_batch" &&
+        mode.interactive &&
+        mode.eligibility.state === "partial" &&
+        mode.eligibility.reasonCode ===
+          "explicit_portfolio_selection_required" &&
+        mode.submission?.capabilityId ===
+          "reporting.portfolio_review.explicit_batch" &&
+        mode.submission.path === "/api/v1/report-batches" &&
+        mode.submission.state === "partial" &&
+        mode.submission.reasonCode === "explicit_portfolio_selection_required",
+    ) ?? null
+  );
 }
 
-export function configurationFingerprint(configuration: ReportOrderingConfiguration): string {
+export function configurationFingerprint(
+  configuration: ReportOrderingConfiguration,
+): string {
   return JSON.stringify({
     ...configuration,
     allocationDimensions: [...configuration.allocationDimensions].sort(),
     configurationValues: Object.fromEntries(
-      Object.entries(configuration.configurationValues).sort(([left], [right]) =>
-        left.localeCompare(right),
+      Object.entries(configuration.configurationValues).sort(
+        ([left], [right]) => left.localeCompare(right),
       ),
     ),
     selectedSections: [...configuration.selectedSections].sort(),
@@ -303,11 +369,73 @@ export function selectedReportConfigurationValues(
   );
 }
 
+export function clearContextBoundReportSections(
+  family: ReportFamily | null,
+  configuration: ReportOrderingConfiguration,
+): ReportOrderingConfiguration {
+  const contextBoundSections = new Set(
+    (family?.sections ?? [])
+      .filter(isAdvisorCommentarySection)
+      .map((section) => section.sectionId),
+  );
+  const contextBoundFields = new Set(
+    (family?.sections ?? [])
+      .filter((section) => contextBoundSections.has(section.sectionId))
+      .flatMap((section) => section.dependencyFieldIds),
+  );
+  return {
+    ...configuration,
+    selectedSections: configuration.selectedSections.filter(
+      (sectionId) => !contextBoundSections.has(sectionId),
+    ),
+    configurationValues: Object.fromEntries(
+      Object.entries(configuration.configurationValues).map(
+        ([fieldId, value]) => [
+          fieldId,
+          contextBoundFields.has(fieldId) ? "" : value,
+        ],
+      ),
+    ),
+  };
+}
+
+export function reconcileReportSectionAvailability(
+  response: ReportOrderingResponse,
+  configuration: ReportOrderingConfiguration,
+): ReportOrderingConfiguration {
+  const family = response.reportFamilies.find(
+    (candidate) => candidate.reportFamilyId === configuration.familyId,
+  );
+  if (!family) return configuration;
+
+  const previouslySelectedSections = new Set(configuration.selectedSections);
+  const next = clearContextBoundReportSections(family, configuration);
+  for (const section of family.sections) {
+    if (
+      section.availability?.state !== "ready" ||
+      !section.availability.acceptedBrief
+    ) {
+      continue;
+    }
+    for (const fieldId of section.dependencyFieldIds) {
+      next.configurationValues[fieldId] =
+        section.availability.acceptedBrief.runId;
+    }
+    if (previouslySelectedSections.has(section.sectionId)) {
+      next.selectedSections.push(section.sectionId);
+    }
+  }
+  return next;
+}
+
 export function reportOrderingFieldErrors(
   family: ReportFamily | null,
   configuration: Pick<
     ReportOrderingConfiguration,
-    "asOfDate" | "reportingCurrency" | "configurationValues" | "selectedSections"
+    | "asOfDate"
+    | "reportingCurrency"
+    | "configurationValues"
+    | "selectedSections"
   >,
   sourceContext: ReportOrderingSourceContext,
 ): ReportOrderingFieldErrors {
@@ -318,15 +446,17 @@ export function reportOrderingFieldErrors(
     configuration.asOfDate < sourceContext.earliestReportDate ||
     configuration.asOfDate > sourceContext.latestReportDate
   ) {
-    errors.asOfDate =
-      `Select a report date from ${formatBusinessDateValue(sourceContext.earliestReportDate)} to ${formatBusinessDateValue(sourceContext.latestReportDate)}.`;
+    errors.asOfDate = `Select a report date from ${formatBusinessDateValue(sourceContext.earliestReportDate)} to ${formatBusinessDateValue(sourceContext.latestReportDate)}.`;
   }
 
   if (
-    family?.configurationFields.some((field) => field.fieldId === "reporting_currency") &&
+    family?.configurationFields.some(
+      (field) => field.fieldId === "reporting_currency",
+    ) &&
     !sourceContext.reportingCurrencies.includes(configuration.reportingCurrency)
   ) {
-    errors.reportingCurrency = "Select a reporting currency confirmed for this portfolio.";
+    errors.reportingCurrency =
+      "Select a reporting currency confirmed for this portfolio.";
   }
 
   for (const field of family?.configurationFields ?? []) {
@@ -340,7 +470,9 @@ export function reportOrderingFieldErrors(
       field.requirement === "required" ||
       (field.requirement === "conditional" && dependentSections.length > 0);
     if (required && !configuration.configurationValues[field.fieldId]?.trim()) {
-      const dependency = dependentSections.map((section) => section.businessLabel).join(" and ");
+      const dependency = dependentSections
+        .map((section) => section.businessLabel)
+        .join(" and ");
       errors.configurationValues[field.fieldId] = dependency
         ? `${field.businessLabel} is required when ${dependency} is included.`
         : `${field.businessLabel} is required.`;
@@ -349,7 +481,9 @@ export function reportOrderingFieldErrors(
   return errors;
 }
 
-export function toReportRequestRows(items: ReportJobListItem[]): ReportRequestRow[] {
+export function toReportRequestRows(
+  items: ReportJobListItem[],
+): ReportRequestRow[] {
   return items.map((item) => {
     const lifecycle = reportLifecycleCopy(
       item.status,
@@ -359,8 +493,12 @@ export function toReportRequestRows(items: ReportJobListItem[]): ReportRequestRo
     return {
       key: item.reportJobId,
       reportLabel: "Portfolio review",
-      reportDate: formatBusinessDateValue(item.asOfDate, { nullDisplay: "Date unavailable" }),
-      requestedAt: formatTimestampValue(item.createdAt, { nullDisplay: "Time unavailable" }),
+      reportDate: formatBusinessDateValue(item.asOfDate, {
+        nullDisplay: "Date unavailable",
+      }),
+      requestedAt: formatTimestampValue(item.createdAt, {
+        nullDisplay: "Time unavailable",
+      }),
       statusLabel: lifecycle.label,
       statusDetail: lifecycle.detail,
       tone: lifecycle.tone,
@@ -385,18 +523,28 @@ function evaluateReadiness(
     issues.push(response.scopeEligibility.message);
   }
   if (!family) {
-    issues.push("No report is available for the selected portfolio and business role.");
+    issues.push(
+      "No report is available for the selected portfolio and business role.",
+    );
   } else if (family.availability.state === "unavailable") {
     issues.push(family.availability.message);
   }
   if (scopeMode === "single_portfolio") {
     if (!mode) {
-      issues.push("Single-portfolio ordering is not currently available for this report.");
+      issues.push(
+        "Single-portfolio ordering is not currently available for this report.",
+      );
     }
   } else if (!mode) {
-    issues.push("Portfolio bundle ordering is not currently published for this report.");
+    issues.push(
+      "Portfolio bundle ordering is not currently published for this report.",
+    );
   }
-  const fieldErrors = reportOrderingFieldErrors(family, configuration, sourceContext);
+  const fieldErrors = reportOrderingFieldErrors(
+    family,
+    configuration,
+    sourceContext,
+  );
   issues.push(
     ...[fieldErrors.asOfDate, fieldErrors.reportingCurrency].filter(
       (issue): issue is string => Boolean(issue),
@@ -419,7 +567,10 @@ function evaluateReadiness(
       issues.push(`${section.businessLabel} is required.`);
     }
   }
-  if ((family?.sections ?? []).length > 0 && configuration.selectedSections.length === 0) {
+  if (
+    (family?.sections ?? []).length > 0 &&
+    configuration.selectedSections.length === 0
+  ) {
     issues.push("Select at least one report section.");
   }
 
@@ -428,7 +579,8 @@ function evaluateReadiness(
     return {
       state: "blocked",
       title: "Complete the report setup",
-      detail: "Resolve the highlighted items before submitting this report request.",
+      detail:
+        "Resolve the highlighted items before submitting this report request.",
       issues: uniqueIssues,
     };
   }
@@ -439,42 +591,66 @@ function evaluateReadiness(
     return {
       state: "ready",
       title: "Ready with available outputs",
-      detail: "The report data package is ready. Unavailable document outputs remain excluded.",
+      detail:
+        "The report data package is ready. Unavailable document outputs remain excluded.",
       issues: [],
     };
   }
   return {
     state: "ready",
     title: "Ready to request",
-    detail: "The selected report and configuration are available for this portfolio.",
+    detail:
+      "The selected report and configuration are available for this portfolio.",
     issues: [],
   };
 }
 
-function firstEligibleFamily(response: ReportOrderingResponse): ReportFamily | null {
+function firstEligibleFamily(
+  response: ReportOrderingResponse,
+): ReportFamily | null {
   return (
     response.reportFamilies.find(
-      (family) => family.eligibility.state === "ready" && firstSupportedMode(family),
+      (family) =>
+        family.eligibility.state === "ready" && firstSupportedMode(family),
     ) ?? null
   );
 }
 
 function defaultSelectedSectionIds(family: ReportFamily): string[] {
   return family.sections
-    .filter((section) => section.selectionPosture === "required" || section.defaultSelected)
+    .filter(
+      (section) =>
+        section.selectionPosture === "required" || section.defaultSelected,
+    )
     .sort(byDisplayOrder)
     .map((section) => section.sectionId);
 }
 
-function defaultConfigurationValues(family: ReportFamily): Record<string, string> {
-  return Object.fromEntries(
+function defaultConfigurationValues(
+  family: ReportFamily,
+): Record<string, string> {
+  const values = Object.fromEntries(
     family.configurationFields
       .filter((field) => field.inputType === "text")
       .map((field) => [field.fieldId, ""]),
   );
+  for (const section of family.sections) {
+    if (
+      section.availability?.state !== "ready" ||
+      !section.availability.acceptedBrief
+    ) {
+      continue;
+    }
+    for (const fieldId of section.dependencyFieldIds) {
+      values[fieldId] = section.availability.acceptedBrief.runId;
+    }
+  }
+  return values;
 }
 
-function findSinglePortfolioMode(family: ReportFamily | null): ReportOrderingMode | null {
+function findSinglePortfolioMode(
+  family: ReportFamily | null,
+): ReportOrderingMode | null {
   return (
     family?.orderingModes.find(
       (mode) =>
@@ -489,7 +665,9 @@ function findSinglePortfolioMode(family: ReportFamily | null): ReportOrderingMod
 }
 
 function firstSupportedMode(family: ReportFamily): ReportOrderingMode | null {
-  return findSinglePortfolioMode(family) ?? findPortfolioReviewBatchMode(family);
+  return (
+    findSinglePortfolioMode(family) ?? findPortfolioReviewBatchMode(family)
+  );
 }
 
 function resolveReadyOutputFormat(
@@ -497,9 +675,15 @@ function resolveReadyOutputFormat(
   mode: ReportOrderingMode | null,
 ): "json" | "pdf" {
   const preferred = family?.outputFormats.find(
-    (format) => format.formatId === mode?.defaultOutputFormat && format.state === "ready",
+    (format) =>
+      format.formatId === mode?.defaultOutputFormat && format.state === "ready",
   );
-  return preferred?.formatId ?? family?.outputFormats.find((format) => format.state === "ready")?.formatId ?? "json";
+  return (
+    preferred?.formatId ??
+    family?.outputFormats.find((format) => format.state === "ready")
+      ?.formatId ??
+    "json"
+  );
 }
 
 function toOutputChoice(output: ReportOutputFormat) {
@@ -533,20 +717,115 @@ function toSectionChoice(
   section: ReportSection,
   family: ReportFamily,
   configuration: ReportOrderingConfiguration,
+  evidence: ReportSectionAvailabilityEvidence,
 ) {
   const fieldsById = new Map(
-    family.configurationFields.map((field) => [field.fieldId, field.businessLabel]),
+    family.configurationFields.map((field) => [
+      field.fieldId,
+      field.businessLabel,
+    ]),
   );
+  const availability = toSectionAvailability(section, evidence);
   return {
     id: section.sectionId,
     label: section.businessLabel,
     detail: section.description,
     required: section.selectionPosture === "required",
-    selected: configuration.selectedSections.includes(section.sectionId),
+    selected:
+      availability.selectable &&
+      configuration.selectedSections.includes(section.sectionId),
+    selectable: availability.selectable,
     dependencyLabels: section.dependencyFieldIds.map(
       (fieldId) => fieldsById.get(fieldId) ?? "Additional report context",
     ),
+    availabilityLabel: availability.label,
+    availabilityDetail: availability.detail,
+    recovery: availability.recovery,
+    acceptedBrief: availability.acceptedBrief,
   };
+}
+
+function toSectionAvailability(
+  section: ReportSection,
+  evidence: ReportSectionAvailabilityEvidence,
+) {
+  if (section.availability === undefined) {
+    if (isAdvisorCommentarySection(section)) {
+      return {
+        selectable: false,
+        label: "Availability not evaluated",
+        detail:
+          "Reporting did not evaluate reviewed commentary for this report context.",
+        recovery: "refresh",
+        acceptedBrief: null,
+      } as const;
+    }
+    return {
+      selectable: true,
+      label: null,
+      detail: null,
+      recovery: null,
+      acceptedBrief: null,
+    } as const;
+  }
+  if (evidence === "checking") {
+    return {
+      selectable: false,
+      label: "Checking accepted brief",
+      detail:
+        "Checking whether reviewed commentary matches this report date and currency.",
+      recovery: null,
+      acceptedBrief: null,
+    } as const;
+  }
+  if (evidence === "unavailable") {
+    return {
+      selectable: false,
+      label: "Availability not confirmed",
+      detail:
+        "Reviewed commentary availability could not be confirmed for this report context.",
+      recovery: "refresh",
+      acceptedBrief: null,
+    } as const;
+  }
+  if (
+    section.availability?.state === "ready" &&
+    section.availability.acceptedBrief
+  ) {
+    return {
+      selectable: true,
+      label: "Accepted brief ready",
+      detail: `Accepted by ${section.availability.acceptedBrief.reviewedBy} on ${formatTimestampValue(section.availability.acceptedBrief.reviewedAt, { nullDisplay: "Review time unavailable" })}.`,
+      recovery: null,
+      acceptedBrief: section.availability.acceptedBrief,
+    } as const;
+  }
+  if (section.availability?.reasonCode === "advisor_brief_not_reviewed") {
+    return {
+      selectable: false,
+      label: "Review required",
+      detail: "Review and accept an Advisor Brief before including commentary.",
+      recovery: "advisor_brief",
+      acceptedBrief: null,
+    } as const;
+  }
+  if (section.availability?.reasonCode === "advisor_brief_context_mismatch") {
+    return {
+      selectable: false,
+      label: "Different report context",
+      detail:
+        "The accepted Advisor Brief does not match this report date and currency.",
+      recovery: "advisor_brief",
+      acceptedBrief: null,
+    } as const;
+  }
+  return {
+    selectable: false,
+    label: "Availability not confirmed",
+    detail: "Reviewed commentary availability cannot be determined right now.",
+    recovery: "refresh",
+    acceptedBrief: null,
+  } as const;
 }
 
 function audienceLabel(roles: string[]): string {
@@ -560,7 +839,9 @@ function audienceLabel(roles: string[]): string {
   return [...new Set(labels)].join(" · ");
 }
 
-function clientReleaseLabel(posture: ReportFamily["clientReleasePosture"]): string {
+function clientReleaseLabel(
+  posture: ReportFamily["clientReleasePosture"],
+): string {
   return posture === "advisor_review_required_distribution_not_supported"
     ? "Advisor review is required. Client distribution is not included in this request."
     : "For internal control use only. Client distribution is not supported.";
@@ -576,21 +857,24 @@ function reportLifecycleCopy(
   if (!normalized || !normalizedStep) {
     return {
       label: "Status not reported",
-      detail: "Reporting returned a lifecycle state that this screen cannot safely interpret.",
+      detail:
+        "Reporting returned a lifecycle state that this screen cannot safely interpret.",
       tone: "default" as const,
     };
   }
   if (normalized === "completed" || normalized === "data_ready") {
     return {
       label: "Report data complete",
-      detail: "Report data is complete. Archive and client delivery remain separate states.",
+      detail:
+        "Report data is complete. Archive and client delivery remain separate states.",
       tone: "success" as const,
     };
   }
   if (normalized === "archived") {
     return {
       label: "Archived",
-      detail: "The report is held in the document archive. Client delivery remains separate.",
+      detail:
+        "The report is held in the document archive. Client delivery remains separate.",
       tone: "success" as const,
     };
   }
@@ -607,7 +891,8 @@ function reportLifecycleCopy(
   if (normalized === "completed_with_warnings") {
     return {
       label: "Completed with attention items",
-      detail: "Some report evidence needs review before the result can be used.",
+      detail:
+        "Some report evidence needs review before the result can be used.",
       tone: "warn" as const,
     };
   }
@@ -621,7 +906,8 @@ function reportLifecycleCopy(
   if (normalized === "archiving") {
     return {
       label: "Archiving report",
-      detail: "Report data is complete and the archive record is being prepared.",
+      detail:
+        "Report data is complete and the archive record is being prepared.",
       tone: "warn" as const,
     };
   }
@@ -636,14 +922,16 @@ function reportFailureLifecycleCopy(failureCategory: string | null) {
   if (failureCategory === "data_incomplete") {
     return {
       label: "Request failed",
-      detail: "Report data could not be completed from its sources; the request was not resumed.",
+      detail:
+        "Report data could not be completed from its sources; the request was not resumed.",
       tone: "danger" as const,
     };
   }
   if (failureCategory === "upstream_data_failed") {
     return {
       label: "Request failed",
-      detail: "Required source evidence was unavailable. Reporting may permit an operational retry.",
+      detail:
+        "Required source evidence was unavailable. Reporting may permit an operational retry.",
       tone: "danger" as const,
     };
   }
@@ -654,14 +942,21 @@ function reportFailureLifecycleCopy(failureCategory: string | null) {
       tone: "danger" as const,
     };
   }
-  if (failureCategory === "render_validation_failed" || failureCategory === "render_conflict") {
+  if (
+    failureCategory === "render_validation_failed" ||
+    failureCategory === "render_conflict"
+  ) {
     return {
       label: "Request failed",
-      detail: "The requested document could not be created from the completed report data.",
+      detail:
+        "The requested document could not be created from the completed report data.",
       tone: "danger" as const,
     };
   }
-  if (failureCategory === "archive_storage_failed" || failureCategory === "archive_execution_failed") {
+  if (
+    failureCategory === "archive_storage_failed" ||
+    failureCategory === "archive_execution_failed"
+  ) {
     return {
       label: "Request failed",
       detail: "The report could not be placed in the document archive.",
@@ -671,13 +966,15 @@ function reportFailureLifecycleCopy(failureCategory: string | null) {
   if (failureCategory) {
     return {
       label: "Request failed",
-      detail: "Reporting recorded a failure that requires operational review before any retry.",
+      detail:
+        "Reporting recorded a failure that requires operational review before any retry.",
       tone: "danger" as const,
     };
   }
   return {
     label: "Request failed",
-    detail: "The report request failed without a confirmed reason. Use the support reference for review.",
+    detail:
+      "The report request failed without a confirmed reason. Use the support reference for review.",
     tone: "danger" as const,
   };
 }

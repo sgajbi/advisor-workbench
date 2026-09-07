@@ -31,8 +31,15 @@ const sourceContext = {
 describe("report ordering view model", () => {
   it("selects the source-ready JSON path while keeping unavailable PDF visible", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
-    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
     expect(configuration.outputFormat).toBe("json");
     expect(model.canSubmit).toBe(true);
@@ -51,10 +58,17 @@ describe("report ordering view model", () => {
 
   it("keeps required sections selected and blocks invalid report dates", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
     configuration.asOfDate = "not-a-date";
     configuration.selectedSections = [];
-    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
     expect(model.canSubmit).toBe(false);
     expect(model.readiness.issues).toEqual(
@@ -68,27 +82,39 @@ describe("report ordering view model", () => {
 
   it("blocks report dates outside the source-confirmed portfolio range", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
     configuration.asOfDate = "2026-04-23";
 
     expect(
-      buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues,
+      buildReportOrderingViewModel(response, configuration, sourceContext)
+        .readiness.issues,
     ).toContain("Select a report date from 06 Jan 2025 to 22 Apr 2026.");
   });
 
   it("blocks reporting currencies not confirmed by the portfolio source", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
     configuration.reportingCurrency = "XYZ";
 
-    expect(buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues).toContain(
-      "Select a reporting currency confirmed for this portfolio.",
-    );
     expect(
-      buildReportOrderingViewModel(response, {
-        ...configuration,
-        reportingCurrency: "",
-      }, sourceContext).canSubmit,
+      buildReportOrderingViewModel(response, configuration, sourceContext)
+        .readiness.issues,
+    ).toContain("Select a reporting currency confirmed for this portfolio.");
+    expect(
+      buildReportOrderingViewModel(
+        response,
+        {
+          ...configuration,
+          reportingCurrency: "",
+        },
+        sourceContext,
+      ).canSubmit,
     ).toBe(false);
   });
 
@@ -99,10 +125,17 @@ describe("report ordering view model", () => {
         (field) => field.fieldId !== "reporting_currency",
       );
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
     configuration.reportingCurrency = "XYZ";
 
-    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
     expect(model.canSubmit).toBe(true);
     expect(model.readiness.issues).not.toContain(
@@ -119,8 +152,15 @@ describe("report ordering view model", () => {
     };
     payload.reportFamilies = [];
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
-    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
     expect(model.canSubmit).toBe(false);
     expect(model.readiness.issues.join(" ")).toContain(
@@ -135,12 +175,17 @@ describe("report ordering view model", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
     const first = createReportOrderingConfiguration(response, sourceContext);
     first.selectedSections = ["OVERVIEW", "CLIENT_PROFILE"];
-    const second = { ...first, selectedSections: ["CLIENT_PROFILE", "OVERVIEW"] };
+    const second = {
+      ...first,
+      selectedSections: ["CLIENT_PROFILE", "OVERVIEW"],
+    };
 
-    expect(configurationFingerprint(first)).toBe(configurationFingerprint(second));
-    expect(configurationFingerprint({ ...second, asOfDate: "2026-04-23" })).not.toBe(
-      configurationFingerprint(first),
+    expect(configurationFingerprint(first)).toBe(
+      configurationFingerprint(second),
     );
+    expect(
+      configurationFingerprint({ ...second, asOfDate: "2026-04-23" }),
+    ).not.toBe(configurationFingerprint(first));
   });
 
   it("labels completed report data separately from archive and client delivery", () => {
@@ -151,7 +196,9 @@ describe("report ordering view model", () => {
         reportDate: "22 Apr 2026",
         requestedAt: "22 Apr 2026, 09:00 UTC",
         statusLabel: "Report data complete",
-        statusDetail: expect.stringContaining("Archive and client delivery remain separate"),
+        statusDetail: expect.stringContaining(
+          "Archive and client delivery remain separate",
+        ),
         tone: "success",
       }),
     );
@@ -201,7 +248,9 @@ describe("report ordering view model", () => {
     } as ReportJobListItem;
 
     const row = toReportRequestRows([item])[0];
-    expect(row.statusDetail).toContain("could not be completed from its sources");
+    expect(row.statusDetail).toContain(
+      "could not be completed from its sources",
+    );
     expect(JSON.stringify(row)).not.toContain("data_incomplete");
   });
 
@@ -247,15 +296,22 @@ describe("report ordering view model", () => {
         },
       ],
     });
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
-    const model = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
-    expect(model.eligibleFamilies.map((family) => family.reportFamilyId)).toEqual([
-      "portfolio_review",
-    ]);
-    expect(model.workflowManagedFamilies.map((family) => family.reportFamilyId)).toEqual([
-      "proof_pack",
-    ]);
+    expect(
+      model.eligibleFamilies.map((family) => family.reportFamilyId),
+    ).toEqual(["portfolio_review"]);
+    expect(
+      model.workflowManagedFamilies.map((family) => family.reportFamilyId),
+    ).toEqual(["proof_pack"]);
     expect(model.canSubmit).toBe(true);
   });
 
@@ -297,44 +353,153 @@ describe("report ordering view model", () => {
     );
   });
 
-  it("requires and submits a conditional catalogue field only for its selected section", () => {
+  it("submits the exact source-bound accepted brief only for its selected section", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
     configuration.selectedSections.push("ADVISOR_COMMENTARY");
 
-    expect(
-      buildReportOrderingViewModel(response, configuration, sourceContext).readiness.issues,
-    ).toContain(
-      "Accepted advisor brief is required when Advisor commentary is included.",
+    expect(configuration.configurationValues.advisor_brief_run_id).toBe(
+      "abr_accepted_1",
     );
-
-    configuration.configurationValues.advisor_brief_run_id = " abr_accepted_1 ";
     expect(
-      buildReportOrderingViewModel(response, configuration, sourceContext).canSubmit,
+      buildReportOrderingViewModel(response, configuration, sourceContext)
+        .canSubmit,
     ).toBe(true);
-    expect(selectedReportConfigurationValues(response.reportFamilies[0], configuration)).toEqual({
+    expect(
+      selectedReportConfigurationValues(
+        response.reportFamilies[0],
+        configuration,
+      ),
+    ).toEqual({
       advisor_brief_run_id: "abr_accepted_1",
     });
 
     configuration.selectedSections = configuration.selectedSections.filter(
       (sectionId) => sectionId !== "ADVISOR_COMMENTARY",
     );
-    expect(selectedReportConfigurationValues(response.reportFamilies[0], configuration)).toEqual({});
+    expect(
+      selectedReportConfigurationValues(
+        response.reportFamilies[0],
+        configuration,
+      ),
+    ).toEqual({});
+  });
+
+  it.each([
+    ["advisor_brief_not_reviewed", "Review required", "advisor_brief"],
+    [
+      "advisor_brief_context_mismatch",
+      "Different report context",
+      "advisor_brief",
+    ],
+    [
+      "advisor_brief_availability_unknown",
+      "Availability not confirmed",
+      "refresh",
+    ],
+  ] as const)(
+    "keeps unavailable commentary fail closed for %s",
+    (reasonCode, label, recovery) => {
+      const payload = buildReportOrderingResponse();
+      const commentary = payload.reportFamilies[0].sections.find(
+        (section) => section.sectionId === "ADVISOR_COMMENTARY",
+      );
+      if (!commentary) throw new Error("Advisor commentary fixture missing");
+      const availability = commentary.availability as {
+        state: string;
+        reasonCode: string;
+        message: string;
+        acceptedBrief?: unknown;
+      };
+      availability.state = "unavailable";
+      availability.reasonCode = reasonCode;
+      availability.message = "Source-owned availability message.";
+      delete availability.acceptedBrief;
+      const response = parseReportOrderingResponse(payload);
+      const configuration = createReportOrderingConfiguration(
+        response,
+        sourceContext,
+      );
+      configuration.selectedSections.push("ADVISOR_COMMENTARY");
+      configuration.configurationValues.advisor_brief_run_id = "manual_run";
+
+      const section = buildReportOrderingViewModel(
+        response,
+        configuration,
+        sourceContext,
+      ).sectionChoices.find(
+        (candidate) => candidate.id === "ADVISOR_COMMENTARY",
+      );
+
+      expect(section).toEqual(
+        expect.objectContaining({
+          selected: false,
+          selectable: false,
+          availabilityLabel: label,
+          recovery,
+          acceptedBrief: null,
+        }),
+      );
+    },
+  );
+
+  it("does not turn absent availability into manual commentary authority", () => {
+    const payload = buildReportOrderingResponse();
+    const commentary = payload.reportFamilies[0].sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) throw new Error("Advisor commentary fixture missing");
+    delete commentary.availability;
+    const response = parseReportOrderingResponse(payload);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    configuration.selectedSections.push("ADVISOR_COMMENTARY");
+    configuration.configurationValues.advisor_brief_run_id = "manual_run";
+
+    const section = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    ).sectionChoices.find((candidate) => candidate.id === "ADVISOR_COMMENTARY");
+
+    expect(section).toEqual(
+      expect.objectContaining({
+        selected: false,
+        selectable: false,
+        availabilityLabel: "Availability not evaluated",
+        recovery: "refresh",
+        acceptedBrief: null,
+      }),
+    );
   });
 
   it("requires a source-published batch capability and at least two selected portfolios", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
-    const baseModel = buildReportOrderingViewModel(response, configuration, sourceContext);
-
-    expect(findPortfolioReviewBatchMode(baseModel.family)?.submission?.path).toBe(
-      "/api/v1/report-batches",
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
     );
+    const baseModel = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
+
+    expect(
+      findPortfolioReviewBatchMode(baseModel.family)?.submission?.path,
+    ).toBe("/api/v1/report-batches");
     expect(
       applyReportScopeReadiness(baseModel, "explicit_portfolio_batch", [
         "PB_SG_GLOBAL_BAL_001",
       ]).readiness.issues,
-    ).toContain("Select at least two portfolios from your book for a portfolio bundle.");
+    ).toContain(
+      "Select at least two portfolios from your book for a portfolio bundle.",
+    );
     expect(
       applyReportScopeReadiness(baseModel, "explicit_portfolio_batch", [
         "PB_SG_GLOBAL_BAL_001",
@@ -360,8 +525,15 @@ describe("report ordering view model", () => {
     singleMode.submission.state = "unavailable";
     singleMode.submission.reasonCode = "single_portfolio_unavailable";
     const response = parseReportOrderingResponse(payload);
-    const configuration = createReportOrderingConfiguration(response, sourceContext);
-    const baseModel = buildReportOrderingViewModel(response, configuration, sourceContext);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    const baseModel = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
 
     expect(baseModel.family?.reportFamilyId).toBe("portfolio_review");
     expect(baseModel.readiness.issues).toContain(
@@ -372,10 +544,12 @@ describe("report ordering view model", () => {
         "PB_SG_GLOBAL_BAL_001",
         "PB_SG_INCOME_002",
       ]),
-    ).toEqual(expect.objectContaining({
-      canSubmit: true,
-      readiness: expect.objectContaining({ state: "ready", issues: [] }),
-    }));
+    ).toEqual(
+      expect.objectContaining({
+        canSubmit: true,
+        readiness: expect.objectContaining({ state: "ready", issues: [] }),
+      }),
+    );
   });
 
   it("accepts only the governed selection-required batch capability posture", () => {
@@ -400,7 +574,8 @@ describe("report ordering view model", () => {
 
   it("fails closed when the published batch path is not the governed Gateway endpoint", () => {
     const payload = buildReportOrderingResponse();
-    payload.reportFamilies[0].orderingModes[1].submission.path = "/api/v1/internal/batches";
+    payload.reportFamilies[0].orderingModes[1].submission.path =
+      "/api/v1/internal/batches";
 
     expect(() => parseReportOrderingResponse(payload)).toThrow();
   });
