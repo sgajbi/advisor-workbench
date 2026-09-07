@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   approveDpmWave,
@@ -110,7 +110,12 @@ import { resolveGatewayBaseUrl } from "../../src/features/platform-runtime/servi
 const expectedBaseUrl = "/api/bff/api/v1";
 
 describe("workbench api", () => {
+  beforeEach(() => {
+    vi.stubEnv("LOTUS_ENVIRONMENT", "test");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     resetAnalyticsUiMetricEvents();
   });
