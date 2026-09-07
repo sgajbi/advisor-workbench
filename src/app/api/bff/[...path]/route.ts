@@ -12,6 +12,7 @@ import {
   applyReportOrderingRouteCallerContextHeaders,
   matchesIdeaPresentationReceiptTenantAuthority,
 } from "@/features/workbench/caller-context";
+import { requiresAuthenticatedSessionPrincipal } from "@/features/workbench/authority-mode";
 import { buildGatewayBffRequestHeaders } from "@/features/workbench/bff-request-headers";
 import { readGatewayBffResponse } from "@/features/workbench/bff-response";
 
@@ -114,6 +115,15 @@ async function proxy(request: NextRequest, params: { path: string[] }) {
         status: "rejected",
       },
       { status: rejection.status, headers: { "cache-control": "no-store" } },
+    );
+  }
+  if (requiresAuthenticatedSessionPrincipal()) {
+    return NextResponse.json(
+      {
+        code: "workbench_authenticated_principal_required",
+        status: "rejected",
+      },
+      { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
   const upstreamSearch =

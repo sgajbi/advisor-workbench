@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  buildServerGatewayHeaders,
   getWorkbenchApiErrorEvidence,
   getWorkbenchApiErrorStatus,
   fetchWorkbenchJson,
@@ -9,9 +10,40 @@ import {
 } from "@/features/workbench/api-client";
 
 describe("workbench API error classification", () => {
+  const originalEnvironment = process.env.LOTUS_ENVIRONMENT;
+
   afterEach(() => {
     vi.unstubAllGlobals();
+    if (originalEnvironment === undefined) {
+      delete process.env.LOTUS_ENVIRONMENT;
+    } else {
+      process.env.LOTUS_ENVIRONMENT = originalEnvironment;
+    }
   });
+
+  it("builds direct Gateway authority only for explicit development posture", () => {
+    process.env.LOTUS_ENVIRONMENT = "test";
+
+    const headers = buildServerGatewayHeaders();
+
+    expect(headers.get("X-Actor-Id")).toBe("workbench-system");
+    expect(headers.get("X-Tenant-Id")).toBe("tenant-sg");
+  });
+
+  it.each([undefined, "uat", "production"])(
+    "rejects direct Gateway authority in %s posture",
+    (environment) => {
+      if (environment === undefined) {
+        delete process.env.LOTUS_ENVIRONMENT;
+      } else {
+        process.env.LOTUS_ENVIRONMENT = environment;
+      }
+
+      expect(() => buildServerGatewayHeaders()).toThrowError(
+        expect.objectContaining({ status: 401 }),
+      );
+    },
+  );
 
   it.each([401, 403])("recognizes typed permission response %s", (status) => {
     expect(

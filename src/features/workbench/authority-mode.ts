@@ -13,6 +13,12 @@ export function isDevelopmentAuthorityEnvironment(
   );
 }
 
+export function requiresAuthenticatedSessionPrincipal(
+  environment = process.env.LOTUS_ENVIRONMENT,
+): boolean {
+  return !isDevelopmentAuthorityEnvironment(environment);
+}
+
 export type ConfiguredAuthorityMode =
   | "development_configured"
   | "authenticated_session";

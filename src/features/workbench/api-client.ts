@@ -10,6 +10,7 @@ import {
   resolveWorkbenchApiBase,
   type ServiceRequestTarget,
 } from "@/features/platform-runtime/service-addressing";
+import { requiresAuthenticatedSessionPrincipal } from "./authority-mode";
 import { applyDefaultCallerContextHeaders } from "./caller-context";
 
 export const BFF_PROXY_BASE = `${resolveBffProxyBaseUrl()}/api/v1`;
@@ -181,6 +182,9 @@ export function buildWorkbenchUrl(
  * replaced by the server-owned Workbench context below.
  */
 export function buildServerGatewayHeaders(initialHeaders?: HeadersInit): Headers {
+  if (requiresAuthenticatedSessionPrincipal()) {
+    throw new WorkbenchApiError("authenticated Workbench principal", 401);
+  }
   const headers = buildAnalyticsUiCorrelationHeaders(initialHeaders);
   applyDefaultCallerContextHeaders(headers);
   return headers;
