@@ -293,7 +293,12 @@
             "respects the shared rail content capacity at 580px",
             "respects the shared rail content capacity at 561px",
             "keeps portfolio context and navigation compact and keyboard-complete on mobile"
-          ]
+          ],
+          "focuses": {
+            "advisor-commentary": [
+              "uses the exact source-reviewed Advisor Brief without manual authority"
+            ]
+          }
         }
       }
     }

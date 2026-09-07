@@ -187,13 +187,17 @@ test("uses the exact source-reviewed Advisor Brief without manual authority", as
     name: "Reporting currency",
   });
   await expect(reportingCurrency.locator("option")).toHaveText(["SGD", "USD"]);
-  await expect(page.getByLabel("Comparison benchmark")).toHaveCount(0);
+  await expect(
+    page.getByRole("combobox", { name: "Comparison benchmark" }),
+  ).toHaveCount(0);
 
   await page.getByText("Review report contents", { exact: true }).click();
   const commentary = page.getByRole("checkbox", { name: /Advisor commentary/ });
   await expect(commentary).toBeEnabled();
   await expect(page.getByText("Accepted brief ready", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Accepted advisor brief")).toHaveCount(0);
+  await expect(
+    page.getByRole("textbox", { name: "Accepted advisor brief" }),
+  ).toHaveCount(0);
   await expect(commentary.locator("xpath=.."))
     .toHaveAttribute("data-accepted-brief-run-id", "abr_accepted_1");
   await commentary.check();
