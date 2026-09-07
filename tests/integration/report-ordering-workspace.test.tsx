@@ -659,6 +659,41 @@ describe("ReportOrderingWorkspace", () => {
     expect(screen.getAllByText("rjob_1")).toHaveLength(2);
   });
 
+  it("restores accepted commentary evidence after leaving portfolio bundle mode", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+    fireEvent.click(screen.getByText("Review report contents"));
+
+    const commentary = screen.getByRole("checkbox", {
+      name: /Advisor commentary/,
+    });
+    fireEvent.click(commentary);
+    expect(commentary).toBeChecked();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Portfolio bundle/ }));
+    expect(commentary).not.toBeChecked();
+    expect(commentary).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Selected portfolio/ }));
+    expect(commentary).toBeEnabled();
+    fireEvent.click(commentary);
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", {
+      name: "Submit Report Request",
+    });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configurationValues: { advisor_brief_run_id: "abr_accepted_1" },
+        sections: expect.arrayContaining(["ADVISOR_COMMENTARY"]),
+      }),
+    );
+    expect(submitBatchMock).not.toHaveBeenCalled();
+  });
+
   it("selects a source-backed portfolio bundle and shows per-portfolio outcomes", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
