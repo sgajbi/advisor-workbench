@@ -751,6 +751,9 @@ function Invoke-CanonicalIdeaSeed {
   $queue = Invoke-RestMethod `
     -Uri "$ideaBaseUrl/api/v1/review-queues/advisor?evaluatedAtUtc=$encodedEvaluatedAtUtc" `
     -Headers $queueHeaders
+  if ([datetimeoffset]$queue.evaluatedAtUtc -ne [datetimeoffset]$queueEvaluatedAtUtc) {
+    throw "Canonical Lotus Idea advisor queue did not preserve the requested evaluation boundary."
+  }
   $seededQueueItems = @($queue.items | Where-Object {
       [string]$_.candidate.candidateId -eq $candidateId
     })
@@ -767,6 +770,7 @@ function Invoke-CanonicalIdeaSeed {
     runId = $ideaCanonicalRunId
     candidateId = $candidateId
     portfolioId = $PortfolioId
+    asOfDate = $asOfDate
     lifecycleStatus = "ready_for_review"
     sourceObservedAtUtc = $sourceObservedAtUtc
     evaluatedAtUtc = $evaluatedAtUtc
