@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { ActionButton, SourceRefreshAction } from "@/design-system";
@@ -42,6 +42,8 @@ export default function PortfolioTransactionsRecordWorkspace({
   const [focusReturnTransactionId, setFocusReturnTransactionId] = useState<
     string | null
   >(null);
+  const [focusReturnRequestVersion, setFocusReturnRequestVersion] =
+    useState(0);
   const { selectedRecordId, listHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
@@ -93,6 +95,25 @@ export default function PortfolioTransactionsRecordWorkspace({
   }, [exactRecordQuery.data?.transaction, workspace.portfolio.base_currency]);
   const selectedTransaction = localTransaction ?? exactTransactionRow;
 
+  useEffect(() => {
+    if (focusReturnRequestVersion === 0) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      for (const candidate of document.querySelectorAll<HTMLElement>(
+        "[data-transaction-review-id]",
+      )) {
+        if (
+          candidate.dataset.transactionReviewId === focusReturnTransactionId
+        ) {
+          candidate.focus();
+          return;
+        }
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [focusReturnRequestVersion, focusReturnTransactionId]);
+
   const handleTransactionSelect = useCallback(
     (transaction: TransactionRow) => {
       setFocusReturnTransactionId(transaction.transactionId);
@@ -105,19 +126,8 @@ export default function PortfolioTransactionsRecordWorkspace({
   const handleCloseRecord = useCallback(() => {
     setSelectedTransactionRecord(null);
     closeRecord();
-    window.setTimeout(() => {
-      for (const candidate of document.querySelectorAll<HTMLElement>(
-        "[data-transaction-review-id]",
-      )) {
-        if (
-          candidate.dataset.transactionReviewId === focusReturnTransactionId
-        ) {
-          candidate.focus();
-          return;
-        }
-      }
-    }, 300);
-  }, [closeRecord, focusReturnTransactionId]);
+    setFocusReturnRequestVersion((current) => current + 1);
+  }, [closeRecord]);
 
   const detailDrawer = useMemo(() => {
     if (!selectedTransaction) {

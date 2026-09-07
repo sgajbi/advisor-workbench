@@ -135,6 +135,43 @@ describe("portfolio transactions record workspace", () => {
     ).toContain("fx_contract_id=FXC-2026-0001");
   });
 
+  it("cancels pending focus restoration when the transaction workspace unmounts", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              total: 1,
+              skip: 0,
+              limit: 200,
+              transactions: [],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+    const view = renderWithQueryClient(
+      <PortfolioTransactionsRecordWorkspace
+        workspace={buildWorkspace()}
+        asOfDate="2026-03-28"
+        defaultStartDate="2026-03-01"
+        defaultEndDate="2026-03-28"
+        reportingCurrency="USD"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Review TX_1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(vi.getTimerCount()).toBe(1);
+
+    view.unmount();
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(() => vi.advanceTimersByTime(300)).not.toThrow();
+  });
+
   it("rehydrates an addressed transaction outside the loaded page with one exact read", async () => {
     window.history.replaceState(
       {},
