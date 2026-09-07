@@ -620,7 +620,10 @@ function defaultSelectedSectionIds(family: ReportFamily): string[] {
   return family.sections
     .filter(
       (section) =>
-        section.selectionPosture === "required" || section.defaultSelected,
+        (!isAdvisorCommentarySection(section) ||
+          (section.availability?.state === "ready" &&
+            Boolean(section.availability.acceptedBrief))) &&
+        (section.selectionPosture === "required" || section.defaultSelected),
     )
     .sort(byDisplayOrder)
     .map((section) => section.sectionId);

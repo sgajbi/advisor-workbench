@@ -446,6 +446,52 @@ describe("report ordering view model", () => {
     },
   );
 
+  it("does not retain unavailable default commentary as a hidden selection", () => {
+    const payload = buildReportOrderingResponse();
+    const commentary = payload.reportFamilies[0].sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) throw new Error("Advisor commentary fixture missing");
+    commentary.defaultSelected = true;
+    const availability = commentary.availability as {
+      state: string;
+      reasonCode: string;
+      message: string;
+      acceptedBrief?: unknown;
+    };
+    availability.state = "unavailable";
+    availability.reasonCode = "advisor_brief_not_reviewed";
+    availability.message = "Review and accept the Advisor Brief first.";
+    delete availability.acceptedBrief;
+
+    const response = parseReportOrderingResponse(payload);
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+    );
+
+    expect(configuration.selectedSections).not.toContain(
+      "ADVISOR_COMMENTARY",
+    );
+    expect(model.canSubmit).toBe(true);
+    expect(
+      model.sectionChoices.find(
+        (section) => section.id === "ADVISOR_COMMENTARY",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        selected: false,
+        selectable: false,
+        availabilityLabel: "Review required",
+      }),
+    );
+  });
+
   it("does not turn absent availability into manual commentary authority", () => {
     const payload = buildReportOrderingResponse();
     const commentary = payload.reportFamilies[0].sections.find(
