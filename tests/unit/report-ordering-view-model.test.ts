@@ -353,6 +353,54 @@ describe("report ordering view model", () => {
     );
   });
 
+  it("does not restore context-bound defaults without current availability evidence", () => {
+    const payload = buildReportOrderingResponse();
+    const alternateFamily = structuredClone(payload.reportFamilies[0]);
+    alternateFamily.reportFamilyId = "portfolio_review_condensed";
+    alternateFamily.businessLabel = "Condensed portfolio review";
+    const commentary = alternateFamily.sections.find(
+      (section) => section.sectionId === "ADVISOR_COMMENTARY",
+    );
+    if (!commentary) throw new Error("Advisor commentary fixture missing");
+    commentary.defaultSelected = true;
+    const response = parseReportOrderingResponse({
+      ...payload,
+      reportFamilies: [...payload.reportFamilies, alternateFamily],
+    });
+    const current = createReportOrderingConfiguration(response, sourceContext);
+
+    const selected = selectReportOrderingFamily(
+      response,
+      current,
+      "portfolio_review_condensed",
+      "unavailable",
+    );
+
+    expect(selected.selectedSections).not.toContain("ADVISOR_COMMENTARY");
+    expect(selected.configurationValues.advisor_brief_run_id).toBe("");
+  });
+
+  it("blocks a retained commentary selection when current evidence is unavailable", () => {
+    const response = parseReportOrderingResponse(buildReportOrderingResponse());
+    const configuration = createReportOrderingConfiguration(
+      response,
+      sourceContext,
+    );
+    configuration.selectedSections.push("ADVISOR_COMMENTARY");
+
+    const model = buildReportOrderingViewModel(
+      response,
+      configuration,
+      sourceContext,
+      "unavailable",
+    );
+
+    expect(model.canSubmit).toBe(false);
+    expect(model.readiness.issues).toContain(
+      "Confirm reviewed commentary for the current report date and currency, or remove it from this request.",
+    );
+  });
+
   it("submits the exact source-bound accepted brief only for its selected section", () => {
     const response = parseReportOrderingResponse(buildReportOrderingResponse());
     const configuration = createReportOrderingConfiguration(
