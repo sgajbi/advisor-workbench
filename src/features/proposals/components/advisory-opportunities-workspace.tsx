@@ -28,6 +28,24 @@ import styles from "./advisory-opportunities-workspace.module.css";
 
 const CANONICAL_IDEA_PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001";
 
+function advisorIdeaQueueQueryOptions(
+  portfolioId: string,
+  evaluatedAtUtc: string,
+) {
+  return {
+    queryKey: ["advisory-opportunities", portfolioId, evaluatedAtUtc] as const,
+    queryFn: async () =>
+      await getAdvisorIdeaReviewQueue({ portfolioId, evaluatedAtUtc }),
+    ...workbenchStrictQueryDefaults,
+  };
+}
+
+function nextQueueEvaluationBoundary(previousBoundary: string): string {
+  return new Date(
+    Math.max(Date.now(), Date.parse(previousBoundary) + 1),
+  ).toISOString();
+}
+
 export default function AdvisoryOpportunitiesWorkspace({
   portfolioId,
   reviewContext,
@@ -39,12 +57,11 @@ export default function AdvisoryOpportunitiesWorkspace({
 }) {
   const queryClient = useQueryClient();
   const isCanonicalIdeaPortfolio = portfolioId === CANONICAL_IDEA_PORTFOLIO_ID;
-  const [queueEvaluatedAtUtc] = useState(() => new Date().toISOString());
+  const [queueEvaluatedAtUtc, setQueueEvaluatedAtUtc] = useState(() =>
+    new Date().toISOString(),
+  );
   const { data, isLoading, error } = useQuery({
-    queryKey: ["advisory-opportunities", portfolioId, queueEvaluatedAtUtc],
-    queryFn: async () =>
-      await getAdvisorIdeaReviewQueue({ portfolioId, evaluatedAtUtc: queueEvaluatedAtUtc }),
-    ...workbenchStrictQueryDefaults,
+    ...advisorIdeaQueueQueryOptions(portfolioId, queueEvaluatedAtUtc),
     enabled: isCanonicalIdeaPortfolio,
   });
   const selectedCandidate = selectedCandidateId?.trim();
@@ -163,32 +180,33 @@ export default function AdvisoryOpportunitiesWorkspace({
           selectedCandidateId={selectedCandidate}
           sourceSignalIds={selectedQueueItem?.candidate?.sourceSignalIds ?? []}
           onActionRecorded={async () => {
-            const queryKeys = [
-              ["advisory-opportunities", portfolioId],
-              [
-                "advisory-opportunity-detail",
-                portfolioId,
-                selectedCandidate,
-              ],
+            const refreshedQueueEvaluatedAtUtc = nextQueueEvaluationBoundary(
+              queueEvaluatedAtUtc,
+            );
+            const detailQueryKey = [
+              "advisory-opportunity-detail",
+              portfolioId,
+              selectedCandidate,
             ];
 
             try {
-              await Promise.all(
-                queryKeys.map((queryKey) =>
-                  queryClient.invalidateQueries({
-                    queryKey,
-                    refetchType: "none",
-                  }),
-                ),
-              );
-              await Promise.all(
-                queryKeys.map((queryKey) =>
-                  queryClient.refetchQueries(
-                    { queryKey, type: "active" },
-                    { throwOnError: true },
+              await queryClient.invalidateQueries({
+                queryKey: detailQueryKey,
+                refetchType: "none",
+              });
+              await Promise.all([
+                queryClient.fetchQuery(
+                  advisorIdeaQueueQueryOptions(
+                    portfolioId,
+                    refreshedQueueEvaluatedAtUtc,
                   ),
                 ),
-              );
+                queryClient.refetchQueries(
+                  { queryKey: detailQueryKey, type: "active" },
+                  { throwOnError: true },
+                ),
+              ]);
+              setQueueEvaluatedAtUtc(refreshedQueueEvaluatedAtUtc);
               return true;
             } catch {
               return false;

@@ -67,9 +67,11 @@ function reviewContext(portfolioId: string): WorkspaceReviewContext {
   };
 }
 
-const getAdvisorIdeaReviewQueueMock = vi.fn(async (_filters?: unknown) => ({
+const getAdvisorIdeaReviewQueueMock = vi.fn(async (filters?: {
+  evaluatedAtUtc?: string;
+}) => ({
   policyVersion: "idea-deterministic-ranking-v1",
-  evaluatedAtUtc: "2026-06-21T10:10:00Z",
+  evaluatedAtUtc: filters?.evaluatedAtUtc ?? "2026-06-21T10:10:00Z",
   durableStorageBacked: true,
   supportedFeaturePromoted: false,
   exclusions: [],
@@ -135,8 +137,9 @@ const recordAdvisorIdeaPresentationReceiptMock = vi.fn(async (_input?: unknown) 
 vi.mock("../../src/features/proposals/api", () => ({
   getAdvisorIdeaCandidateDetail: (filters: unknown) =>
     getAdvisorIdeaCandidateDetailMock(filters),
-  getAdvisorIdeaReviewQueue: (filters: unknown) =>
-    getAdvisorIdeaReviewQueueMock(filters),
+  getAdvisorIdeaReviewQueue: (filters: {
+    evaluatedAtUtc?: string;
+  } | undefined) => getAdvisorIdeaReviewQueueMock(filters),
   recordAdvisorIdeaReviewAction: (input: unknown) =>
     recordAdvisorIdeaReviewActionMock(input),
   recordAdvisorIdeaFeedback: (input: unknown) =>
@@ -279,8 +282,11 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
     expect(
       screen.getByText("Queue policy: idea-deterministic-ranking-v1"),
     ).toBeInTheDocument();
+    const [{ evaluatedAtUtc }] = getAdvisorIdeaReviewQueueMock.mock.calls[0] as [
+      { evaluatedAtUtc: string },
+    ];
     expect(
-      screen.getByText("Queue evaluated: 2026-06-21T10:10:00Z"),
+      screen.getByText(`Queue evaluated: ${evaluatedAtUtc}`),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -354,6 +360,15 @@ describe("AdvisoryOpportunitiesWorkspace", () => {
       "Review saved. Opportunity detail and worklist are current.",
     );
     expect(recordAdvisorIdeaConversionIntentMock).not.toHaveBeenCalled();
+    expect(getAdvisorIdeaReviewQueueMock).toHaveBeenCalledTimes(2);
+    const [initialFilters, refreshedFilters] =
+      getAdvisorIdeaReviewQueueMock.mock.calls as [
+        [{ evaluatedAtUtc: string }],
+        [{ evaluatedAtUtc: string }],
+      ];
+    expect(Date.parse(refreshedFilters[0].evaluatedAtUtc)).toBeGreaterThan(
+      Date.parse(initialFilters[0].evaluatedAtUtc),
+    );
   });
 
   it("warns when a recorded advisor action cannot refresh source-owned posture", async () => {
