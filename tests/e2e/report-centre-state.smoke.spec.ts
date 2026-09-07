@@ -171,7 +171,7 @@ test("renders a genuine empty catalogue without dead-end actions", async ({ page
   await captureDiagnosticScreenshot(page, "empty-compact-1024");
 });
 
-test("uses source-governed ordering controls and focuses conditional evidence", async ({ page }) => {
+test("uses the exact source-reviewed Advisor Brief without manual authority", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.goto(`/reports?portfolioId=${REPORT_CENTRE_FIXTURE_PORTFOLIOS.ready}`, {
     waitUntil: "domcontentloaded",
@@ -188,20 +188,13 @@ test("uses source-governed ordering controls and focuses conditional evidence", 
   await expect(page.getByLabel("Comparison benchmark")).toHaveCount(0);
 
   await page.getByText("Review report contents", { exact: true }).click();
-  await page.getByRole("checkbox", { name: /Advisor commentary/ }).check();
-  const advisorBrief = page.getByLabel("Accepted advisor brief");
-  await expect(advisorBrief).toBeVisible();
-  await page.getByRole("button", { name: "Review Request" }).click();
-  await expect(advisorBrief).toBeFocused();
-  await expect(advisorBrief).toHaveAttribute("aria-invalid", "true");
-  await expect(
-    page.getByText(
-      "Complete this required report evidence before review.",
-      { exact: true },
-    ),
-  ).toBeVisible();
-
-  await advisorBrief.fill("abr_e2e_reviewed_1");
+  const commentary = page.getByRole("checkbox", { name: /Advisor commentary/ });
+  await expect(commentary).toBeEnabled();
+  await expect(page.getByText("Accepted brief ready", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Accepted advisor brief")).toHaveCount(0);
+  await expect(commentary.locator("xpath=.."))
+    .toHaveAttribute("data-accepted-brief-run-id", "abr_accepted_1");
+  await commentary.check();
   await page.getByRole("button", { name: "Review Request" }).click();
   await expect(page.getByRole("button", { name: "Submit Report Request" })).toBeEnabled();
   await captureDiagnosticScreenshot(page, "governed-configuration-1440");

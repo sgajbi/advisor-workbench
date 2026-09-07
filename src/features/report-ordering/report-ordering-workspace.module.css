@@ -267,7 +267,33 @@
   background: #fff;
   color: #25323d;
   cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.sectionRecovery {
+  align-self: center;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #234f78;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.sectionRecovery:focus-visible {
+  outline: 2px solid #315d8a;
+  outline-offset: 3px;
+}
+
+.sectionRecovery:disabled {
+  color: #78838e;
+  cursor: not-allowed;
 }
 
 .choiceCard:hover,
