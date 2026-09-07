@@ -53,6 +53,22 @@ describe("report ordering contracts", () => {
     );
   });
 
+  it.each(["required", "optional"])(
+    "rejects Advisor Commentary evidence with %s requirement",
+    (requirement) => {
+      const response = buildReportOrderingResponse();
+      const field = response.reportFamilies[0].configurationFields.find(
+        (candidate) => candidate.fieldId === "advisor_brief_run_id",
+      );
+      if (!field) throw new Error("Advisor commentary field missing");
+      field.requirement = requirement;
+
+      expect(() => parseReportOrderingResponse(response)).toThrow(
+        "Advisor Commentary evidence must be conditional",
+      );
+    },
+  );
+
   it.each([
     [
       "ready without accepted evidence",

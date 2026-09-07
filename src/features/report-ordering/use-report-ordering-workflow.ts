@@ -782,9 +782,21 @@ export function useReportOrderingWorkflow({
             patch.asOfDate !== current.asOfDate) ||
           (patch.reportingCurrency !== undefined &&
             patch.reportingCurrency !== current.reportingCurrency);
-        return contextChanged
-          ? clearContextBoundReportSections(model?.family ?? null, next)
-          : next;
+        if (!contextChanged) return next;
+
+        const cleared = clearContextBoundReportSections(
+          model?.family ?? null,
+          next,
+        );
+        const nextContextKey = reportAvailabilityContextKey({
+          asOfDate: next.asOfDate,
+          reportingCurrency: next.reportingCurrency,
+        });
+        return catalogue &&
+          sectionAvailabilityEvidence?.state === "current" &&
+          sectionAvailabilityEvidence.contextKey === nextContextKey
+          ? reconcileReportSectionAvailability(catalogue, cleared)
+          : cleared;
       });
       setReviewedIntent(null);
       setSubmissionProgress((current) =>
@@ -799,6 +811,7 @@ export function useReportOrderingWorkflow({
       currentSectionAvailabilityEvidence,
       model?.family,
       portfolioId,
+      sectionAvailabilityEvidence,
     ],
   );
 
