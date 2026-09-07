@@ -251,6 +251,27 @@ const reportFamilySchema = z
     });
 
     family.sections.forEach((section, sectionIndex) => {
+      if (section.sectionId === "ADVISOR_COMMENTARY") {
+        const dependencyFieldIndex = family.configurationFields.findIndex(
+          (field) => field.fieldId === "advisor_brief_run_id",
+        );
+        if (
+          dependencyFieldIndex >= 0 &&
+          family.configurationFields[dependencyFieldIndex].requirement !==
+            "conditional"
+        ) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "Advisor Commentary evidence must be conditional on selecting its section",
+            path: [
+              "configurationFields",
+              dependencyFieldIndex,
+              "requirement",
+            ],
+          });
+        }
+      }
       if (
         section.availability !== undefined &&
         (section.sectionId !== "ADVISOR_COMMENTARY" ||

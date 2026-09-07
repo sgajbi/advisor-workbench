@@ -435,6 +435,38 @@ describe("ReportOrderingWorkspace", () => {
     ).toHaveAttribute("data-accepted-brief-run-id", "abr_current_context");
   });
 
+  it("restores accepted commentary evidence when a debounced context change is cancelled", async () => {
+    render(<ReportOrderingWorkspace portfolio={portfolio} />);
+    await screen.findByRole("heading", { name: "Approved report" });
+
+    const reportDate = screen.getByLabelText("Report date");
+    fireEvent.change(reportDate, { target: { value: "2026-04-21" } });
+    fireEvent.change(reportDate, { target: { value: "2026-04-22" } });
+
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+    expect(optionsMock).toHaveBeenCalledTimes(1);
+    const commentary = screen.getByRole("checkbox", {
+      name: /Advisor commentary/,
+    });
+    expect(commentary).toBeEnabled();
+    fireEvent.click(commentary);
+    fireEvent.click(screen.getByRole("button", { name: "Review Request" }));
+    const submit = screen.getByRole("button", {
+      name: "Submit Report Request",
+    });
+    await waitFor(() => expect(submit).toBeEnabled());
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        asOfDate: "2026-04-22",
+        configurationValues: { advisor_brief_run_id: "abr_accepted_1" },
+        sections: expect.arrayContaining(["ADVISOR_COMMENTARY"]),
+      }),
+    );
+  });
+
   it("keeps non-commentary ordering reviewable after an availability recheck fails", async () => {
     render(<ReportOrderingWorkspace portfolio={portfolio} />);
     await screen.findByRole("heading", { name: "Approved report" });
