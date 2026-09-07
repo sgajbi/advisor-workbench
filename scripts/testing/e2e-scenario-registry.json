@@ -276,6 +276,7 @@
             "recovers both Report Centre regions from a source failure",
             "keeps restricted state coherent at tablet width",
             "renders a genuine empty catalogue without dead-end actions",
+            "uses the exact source-reviewed Advisor Brief without manual authority",
             "orders a reviewed portfolio bundle and renders source-owned outcomes",
             "tracks an accepted request and deliberately starts a second at constrained width",
             "keeps report lifecycle and support discoverable across content-width changes",
