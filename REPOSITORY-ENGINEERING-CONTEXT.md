@@ -32,12 +32,14 @@ facts; it must not invent reassuring defaults, thresholds, authority, or success
 ## Current-State Summary
 
 - The production application is Next.js 15 with React 19 and TypeScript. MUI, TanStack Query,
-  AG Grid, ECharts, React Hook Form, Zod, Vitest, and Playwright are admitted through the governed
-  dependency inventory.
+  AG Grid, ECharts, React Hook Form, and Zod are admitted through the governed direct-production
+  dependency inventory. Playwright is governed separately under `validationTooling` in the runtime
+  support policy. Vitest is pinned by `package.json` and `package-lock.json` and exercised by CI; it
+  is not represented in either of those inventories.
 - Portfolio and Performance/Risk source reads use root-owned TanStack Query state with complete
   business-context keys, explicit source admission, and bounded freshness policy.
-- The browser calls same-origin `/api/bff/**` routes. Those routes strip browser-supplied authority
-  and forward only the closed server-owned caller context to Gateway.
+- Product reads and commands call same-origin `/api/bff/**` routes. Those routes strip
+  browser-supplied authority and forward only the closed server-owned caller context to Gateway.
 - The current server caller context is a bounded local/development posture, not production identity.
   Authenticated actor, tenant, entitlement, expiry, and revocation authority remain owned by
   [#436](https://github.com/sgajbi/lotus-workbench/issues/436) with Platform #563/#775.
@@ -94,9 +96,12 @@ cross-service boundaries are in [API Surface](wiki/API-Surface.md),
   same-origin `/api/bff/**` boundary. Browser experience telemetry separately posts bounded events
   to the same-origin `/api/metrics/events` ingest; telemetry is never business or source authority.
   See [Observability Evidence](wiki/Observability-Evidence.md) for that contract.
-  Feature clients use the governed transport for BFF calls.
-  `WorkbenchApiError` is the client authority for HTTP status. Do not parse status from text or
-  render transport exceptions as adviser copy.
+  New and migrated feature clients use the governed transport for BFF calls. Historical raw-fetch
+  exceptions are enumerated exactly in `RAW_FEATURE_TRANSPORT_BASELINE` in
+  `scripts/quality/check-feature-transport-boundary.mjs`; some still decode responses directly and
+  throw plain `Error` values. The baseline cannot grow and must ratchet when #791 migrates an owner.
+  Within the governed JSON transport, `WorkbenchApiError` is the client authority for HTTP status.
+  Do not parse status from text or render transport exceptions as adviser copy.
 - Every BFF request enters Gateway through `buildGatewayBffRequestHeaders`. Browser authorization,
   cookies, forwarding aliases, roles, capabilities, service identity, and tenant scope are not
   trusted inputs.
@@ -266,8 +271,8 @@ policy; it is not the default first read for a bounded Workbench change.
 - Product-copy scanning is transitional. Apply its current gate, but do not expand it into runtime
   evaluation; #872 owns replacement after simpler authority covers the behavior.
 - Global presentation cleanup under #492 is selected only for real workflow, hierarchy, or deletion benefit.
-- The absolute path in `auto:refresh:pas` is a runtime configuration defect owned by #913, not a
-  documented portability convention.
+- The absolute path in `auto:refresh:pas` is a runtime configuration defect covered by #1020 and
+  the Platform #604/#727 repository-resolution contract; closed duplicate #913 is historical only.
 - Verify dynamic imports, route registries, exports, tests, saved recovery work, and supported
   consumers before declaring code dead. Remove proven dead code only within the bounded issue.
 - Active work, blockers, PRs, SHAs, and execution chronology belong in GitHub, not this file.
