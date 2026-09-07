@@ -780,7 +780,36 @@ describe("canonical live validation script", () => {
     expect(startScript).toContain("Get-CanonicalFrontOfficeDatePolicy");
     expect(startScript).toContain('"invoke-idea-candidate-lifecycle-seed.mjs"');
     expect(startScript).toContain("--candidate-id $candidateId");
-    expect(startScript).toContain("--generated-at-utc $generatedAtUtc");
+    expect(startScript).toContain("--observed-at-utc $lifecycleObservedAtUtc");
+    expect(startScript).toContain(
+      '$evaluatedAtUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")',
+    );
+    const ideaSeedStart = startScript.indexOf("function Invoke-CanonicalIdeaSeed");
+    const ideaReadyBoundary = startScript.indexOf(
+      'throw "lotus-idea did not become ready before canonical advisor queue seed."',
+      ideaSeedStart,
+    );
+    const liveSourceClock = startScript.indexOf(
+      '$sourceObservedAtUtc = (Get-Date).ToUniversalTime()',
+      ideaSeedStart,
+    );
+    expect(liveSourceClock).toBeGreaterThan(ideaReadyBoundary);
+    expect(startScript.indexOf("$evaluatedAtUtc =", liveSourceClock)).toBeGreaterThan(
+      liveSourceClock,
+    );
+    expect(startScript.indexOf("$lifecycleObservedAtUtc =", liveSourceClock)).toBeGreaterThan(
+      startScript.indexOf("$evaluatedAtUtc =", liveSourceClock),
+    );
+    expect(startScript.indexOf("$queueEvaluatedAtUtc =", liveSourceClock)).toBeGreaterThan(
+      startScript.indexOf("$lifecycleObservedAtUtc =", liveSourceClock),
+    );
+    expect(startScript).toContain("evaluatedAtUtc = $evaluatedAtUtc");
+    expect(startScript).toContain(
+      'review-queues/advisor?evaluatedAtUtc=$encodedEvaluatedAtUtc',
+    );
+    expect(validationScript).toContain(
+      "-EvaluatedAtUtc $ideaCandidateSeedEvidence.queueEvaluatedAtUtc",
+    );
     expect(startScript).toContain("--tenant-id $payload.accessScope.tenantId");
     expect(startScript).toContain("--book-id $payload.accessScope.bookId");
     expect(startScript).toContain("--portfolio-id $payload.accessScope.portfolioId");

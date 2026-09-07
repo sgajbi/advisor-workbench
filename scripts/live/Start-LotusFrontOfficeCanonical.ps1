@@ -634,7 +634,6 @@ function Invoke-CanonicalIdeaSeed {
   $ideaBaseUrl = "http://127.0.0.1:8330"
   $datePolicy = Get-CanonicalFrontOfficeDatePolicy
   $asOfDate = $datePolicy.AsOfDate
-  $generatedAtUtc = $datePolicy.GeneratedAtUtc
   $deadline = (Get-Date).AddSeconds(120)
   while ((Get-Date) -lt $deadline) {
     if (Test-HttpReady "$ideaBaseUrl/health/ready") {
@@ -645,6 +644,10 @@ function Invoke-CanonicalIdeaSeed {
   if (-not (Test-HttpReady "$ideaBaseUrl/health/ready")) {
     throw "lotus-idea did not become ready before canonical advisor queue seed."
   }
+  # Capture source and evaluation time only after the service is ready. Image-build
+  # duration must not age current-run source evidence or candidate evaluation.
+  $sourceObservedAtUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+  $evaluatedAtUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 
   $sourceRef = {
     param([string]$ProductId)
@@ -655,7 +658,7 @@ function Invoke-CanonicalIdeaSeed {
       productVersion = "v1"
       route = "/source/$ProductId"
       asOfDate = $asOfDate
-      generatedAtUtc = $generatedAtUtc
+      generatedAtUtc = $sourceObservedAtUtc
       contentHash = "sha256:$(Get-CanonicalTextSha256 -Value $sourceObservationIdentity)"
       dataQualityStatus = "complete"
       freshness = "current"
@@ -664,7 +667,7 @@ function Invoke-CanonicalIdeaSeed {
 
   $payload = @{
     asOfDate = $asOfDate
-    evaluatedAtUtc = $generatedAtUtc
+    evaluatedAtUtc = $evaluatedAtUtc
     sourceReportedCashWeight = "0.18"
     sourceEvidence = @{
       portfolioStateRef = & $sourceRef "lotus-core:PortfolioStateSnapshot:v1"
@@ -724,10 +727,11 @@ function Invoke-CanonicalIdeaSeed {
     throw "Canonical Lotus Idea seed returned no persisted candidate identity."
   }
 
+  $lifecycleObservedAtUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
   & node (Join-Path $PSScriptRoot "invoke-idea-candidate-lifecycle-seed.mjs") `
     --idea-base-url $ideaBaseUrl `
     --candidate-id $candidateId `
-    --generated-at-utc $generatedAtUtc `
+    --observed-at-utc $lifecycleObservedAtUtc `
     --tenant-id $payload.accessScope.tenantId `
     --book-id $payload.accessScope.bookId `
     --portfolio-id $payload.accessScope.portfolioId `
@@ -742,8 +746,10 @@ function Invoke-CanonicalIdeaSeed {
     "X-Caller-Capabilities" = "idea.review.queue.read"
     "X-Caller-Portfolio-Ids" = $PortfolioId
   }
+  $queueEvaluatedAtUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+  $encodedEvaluatedAtUtc = [uri]::EscapeDataString($queueEvaluatedAtUtc)
   $queue = Invoke-RestMethod `
-    -Uri "$ideaBaseUrl/api/v1/review-queues/advisor" `
+    -Uri "$ideaBaseUrl/api/v1/review-queues/advisor?evaluatedAtUtc=$encodedEvaluatedAtUtc" `
     -Headers $queueHeaders
   $seededQueueItems = @($queue.items | Where-Object {
       [string]$_.candidate.candidateId -eq $candidateId
@@ -757,12 +763,15 @@ function Invoke-CanonicalIdeaSeed {
 
   New-Item -ItemType Directory -Force -Path $canonicalEvidenceRoot | Out-Null
   $candidateEvidence = [ordered]@{
-    schemaVersion = "lotus-workbench.idea-candidate-seed-evidence.v1"
+    schemaVersion = "lotus-workbench.idea-candidate-seed-evidence.v2"
     runId = $ideaCanonicalRunId
     candidateId = $candidateId
     portfolioId = $PortfolioId
     lifecycleStatus = "ready_for_review"
-    generatedAtUtc = $generatedAtUtc
+    sourceObservedAtUtc = $sourceObservedAtUtc
+    evaluatedAtUtc = $evaluatedAtUtc
+    lifecycleObservedAtUtc = $lifecycleObservedAtUtc
+    queueEvaluatedAtUtc = $queueEvaluatedAtUtc
     queuePolicyVersion = [string]$queue.policyVersion
   }
   $candidateEvidencePath = Join-Path $canonicalEvidenceRoot "idea-candidate-seed-evidence.json"

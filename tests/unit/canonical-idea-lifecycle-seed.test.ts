@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const CANDIDATE_ID = "idea_high_cash_contract_001";
-const GENERATED_AT_UTC = "2026-04-10T10:00:00.000Z";
+const OBSERVED_AT_UTC = "2026-09-07T01:07:19.124Z";
 const ACCESS_SCOPE = {
   bookId: "book-advisor-001",
   clientId: "client-001",
@@ -65,8 +65,8 @@ async function runLifecycleCommand(
     ideaBaseUrl,
     "--candidate-id",
     CANDIDATE_ID,
-    "--generated-at-utc",
-    GENERATED_AT_UTC,
+    "--observed-at-utc",
+    OBSERVED_AT_UTC,
     "--tenant-id",
     ACCESS_SCOPE.tenantId,
     "--book-id",
@@ -206,7 +206,7 @@ describe("canonical Idea lifecycle seed", () => {
     ).toEqual(EXPECTED_STATUSES);
     for (const [index, request] of transitionRequests.entries()) {
       const status = EXPECTED_STATUSES[index];
-      const identity = `canonical-idea-lifecycle:${CANDIDATE_ID}:${status}:${GENERATED_AT_UTC}`;
+      const identity = `canonical-idea-lifecycle:${CANDIDATE_ID}:${status}:${OBSERVED_AT_UTC}`;
       expect(request.url).toBe(
         `/api/v1/idea-candidates/${CANDIDATE_ID}/lifecycle-transitions`,
       );
@@ -215,7 +215,7 @@ describe("canonical Idea lifecycle seed", () => {
       );
       expect(request.headers["idempotency-key"]).toBe(identity);
       expect(request.body).toEqual({
-        changedAtUtc: `2026-04-10T10:0${index + 1}:00.000Z`,
+        changedAtUtc: OBSERVED_AT_UTC,
         reasonCodes: ["review_required"],
         targetLifecycleStatus: status,
         transitionId: identity,

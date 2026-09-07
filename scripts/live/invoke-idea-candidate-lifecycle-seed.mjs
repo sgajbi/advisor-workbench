@@ -3,7 +3,7 @@ import { parseArgs } from "node:util";
 const REQUIRED_OPTIONS = [
   "idea-base-url",
   "candidate-id",
-  "generated-at-utc",
+  "observed-at-utc",
   "tenant-id",
   "book-id",
   "portfolio-id",
@@ -28,7 +28,7 @@ function readOptions() {
     options: {
       "idea-base-url": { type: "string" },
       "candidate-id": { type: "string" },
-      "generated-at-utc": { type: "string" },
+      "observed-at-utc": { type: "string" },
       "tenant-id": { type: "string" },
       "book-id": { type: "string" },
       "portfolio-id": { type: "string" },
@@ -67,10 +67,10 @@ async function readJson(url, options = {}) {
 async function seedCandidateLifecycle() {
   const values = readOptions();
   const candidateId = values["candidate-id"];
-  const generatedAtUtc = values["generated-at-utc"];
-  const generatedAt = new Date(generatedAtUtc);
-  if (Number.isNaN(generatedAt.getTime())) {
-    throw new Error(`Invalid --generated-at-utc value '${generatedAtUtc}'.`);
+  const observedAtUtc = values["observed-at-utc"];
+  const observedAt = new Date(observedAtUtc);
+  if (Number.isNaN(observedAt.getTime())) {
+    throw new Error(`Invalid --observed-at-utc value '${observedAtUtc}'.`);
   }
 
   const ideaBaseUrl = values["idea-base-url"].replace(/\/$/, "");
@@ -104,7 +104,7 @@ async function seedCandidateLifecycle() {
   }
 
   let currentStatus = await getSourceLifecycleStatus();
-  for (const [index, targetStatus] of LIFECYCLE_STATUSES.entries()) {
+  for (const targetStatus of LIFECYCLE_STATUSES) {
     if (LIFECYCLE_RANK.get(currentStatus) > LIFECYCLE_RANK.get(targetStatus)) {
       continue;
     }
@@ -123,7 +123,7 @@ async function seedCandidateLifecycle() {
       );
     }
 
-    const transitionIdentity = `canonical-idea-lifecycle:${candidateId}:${targetStatus}:${generatedAtUtc}`;
+    const transitionIdentity = `canonical-idea-lifecycle:${candidateId}:${targetStatus}:${observedAtUtc}`;
     const response = await readJson(`${candidateUrl}/lifecycle-transitions`, {
       method: "POST",
       headers: {
@@ -136,9 +136,7 @@ async function seedCandidateLifecycle() {
       body: JSON.stringify({
         transitionId: transitionIdentity,
         targetLifecycleStatus: targetStatus,
-        changedAtUtc: new Date(
-          generatedAt.getTime() + (index + 1) * 60_000,
-        ).toISOString(),
+        changedAtUtc: observedAt.toISOString(),
         reasonCodes: ["review_required"],
       }),
     });
