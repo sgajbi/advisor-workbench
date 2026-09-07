@@ -72,7 +72,10 @@ describe("useReportOrderingWorkflow", () => {
     await waitFor(() => expect(result.current.catalogueState).toBe("ready"));
     await waitFor(() => expect(result.current.historyState).toBe("ready"));
 
-    expect(optionsMock).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001");
+    expect(optionsMock).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001", {
+      asOfDate: "2026-04-22",
+      reportingCurrency: "SGD",
+    });
     expect(historyMock).toHaveBeenCalledWith("PB_SG_GLOBAL_BAL_001");
     expect(result.current.configuration).toEqual(
       expect.objectContaining({
@@ -501,12 +504,12 @@ describe("useReportOrderingWorkflow", () => {
       payload.reportFamilies[0].configurationFields.filter(
         (field) => field.fieldId === "as_of_date",
       );
-    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections.map(
-      (section) => ({
+    payload.reportFamilies[0].sections = payload.reportFamilies[0].sections
+      .filter((section) => section.sectionId !== "ADVISOR_COMMENTARY")
+      .map((section) => ({
         ...section,
         dependencyFieldIds: [],
-      }),
-    );
+      }));
     optionsMock.mockResolvedValue(parseReportOrderingResponse(payload));
     const { result } = renderHook(() =>
       useReportOrderingWorkflow({
@@ -609,7 +612,10 @@ describe("useReportOrderingWorkflow", () => {
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
     await waitFor(() =>
-      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002", {
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
     );
     expect(result.current.preflightReviewed).toBe(false);
     expect(result.current.submittedHandle).toBeNull();
@@ -635,7 +641,10 @@ describe("useReportOrderingWorkflow", () => {
     rerender({ portfolioId: "PB_SG_OTHER_002" });
 
     await waitFor(() =>
-      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002", {
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
     );
     await waitFor(() => expect(result.current.model?.canSubmit).toBe(true));
     expect(result.current.preflightReviewed).toBe(false);
@@ -681,7 +690,10 @@ describe("useReportOrderingWorkflow", () => {
 
     rerender({ portfolioId: "PB_SG_OTHER_002" });
     await waitFor(() =>
-      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002"),
+      expect(optionsMock).toHaveBeenCalledWith("PB_SG_OTHER_002", {
+        asOfDate: "2026-04-22",
+        reportingCurrency: "SGD",
+      }),
     );
     act(() => {
       result.current.updateConfiguration({ asOfDate: "2026-04-23" });
