@@ -26,6 +26,7 @@ while integrated product support requires canonical runtime evidence and green r
 1. `Remote Feature Lane`
 2. `Pull Request Merge Gate`
 3. `Main Releasability Gate`
+4. `Main Gate Coverage Audit` (scheduled and operator-dispatched control audit)
 
 PR auto-merge uses the repository `LOTUS_AUTOMERGE_TOKEN` secret for rebase auto-merge so the
 resulting main update is not suppressed as a default `GITHUB_TOKEN` push. When the secret is absent,
@@ -36,6 +37,23 @@ dispatcher creates or verifies an immutable `main-releasability-<merge_sha>` tag
 it rejects a different checkout before the remaining gate chain starts. Its concurrency key uses
 the expected merge SHA (or `github.sha` for manual operator dispatch), preventing one revision's
 retry from cancelling or masquerading as another revision's evidence.
+
+The daily `Main Gate Coverage Audit` checks two distinct controls. First, it fails when any `main`
+commit after the latest successful audit checkpoint has no verdict-bearing Main Releasability run,
+including intermediate commits introduced by a multi-commit rebase merge. The first run starts from
+the explicitly declared, already-proven pre-adoption main revision; a missing, malformed, or
+non-ancestor checkpoint fails closed, so a high-volume day cannot fall outside a fixed suffix.
+Second, it compares live `main` branch
+protection field by field with `quality/branch_protection_policy.v1.json`, including required
+deployment environments that GitHub exposes through its GraphQL branch-protection rule. The repository-native
+document check runs in `make lint` before merge; the scheduled live comparison additionally needs
+an approved repository secret with `administration:read`. Until that secret is provisioned, the
+live step fails closed rather than treating protection as verified. An operator should investigate
+reported historical gaps, backfill an exact immutable commit only through the documented command
+printed by the audit, and never relabel an unevaluated revision as passed. The zero-approval review
+posture is deliberate while Workbench has one accepted developer; strict required checks and
+resolved review conversations remain mandatory, and the policy requires one approval plus
+CODEOWNERS when a second accepted reviewer exists.
 
 ## Local command mapping
 
@@ -48,7 +66,8 @@ retry from cancelling or masquerading as another revision's evidence.
   time-bounded and documented against a GitHub issue; do not weaken the severity thresholds or use
   `npm audit fix --force` as an unreviewed dependency migration.
 - `make lint`
-  runs runtime-support and direct-dependency-admission governance, CSS and architecture controls,
+  validates the Workbench branch-protection policy document, then runs runtime-support and
+  direct-dependency-admission governance, CSS and architecture controls,
   screen-documentation governance, and then the maintained ESLint CLI over the repository root
   with the flat configuration. The CSS gate keeps `src/app/globals.css` as a small import-only
   entrypoint, preserves governed global layer order, and blocks global-style budget growth unless
