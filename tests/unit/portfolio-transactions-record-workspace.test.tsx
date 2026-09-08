@@ -113,9 +113,8 @@ describe("portfolio transactions record workspace", () => {
     fireEvent.click(reviewTransactionButton);
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
     expect(screen.getAllByText("FXC-2026-0001").length).toBeGreaterThan(0);
-    expect(routerPushMock).toHaveBeenCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_1",
-      { scroll: false },
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -213,9 +212,8 @@ describe("portfolio transactions record workspace", () => {
 
     expect(vi.getTimerCount()).toBe(0);
     expect(() => vi.advanceTimersByTime(300)).not.toThrow();
-    expect(routerPushMock).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_2",
-      { scroll: false },
     );
   });
 
@@ -240,7 +238,6 @@ describe("portfolio transactions record workspace", () => {
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_250"
         reportingCurrency="SGD"
       />,
     );
@@ -255,6 +252,7 @@ describe("portfolio transactions record workspace", () => {
   });
 
   it("does not repeat the exact read on focus, reconnect, or remount within one hydration", async () => {
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_250");
     const fetchMock = vi.fn(
       async () =>
         new Response(JSON.stringify(buildExactRecord("TX_250")), {
@@ -270,7 +268,6 @@ describe("portfolio transactions record workspace", () => {
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_250"
         reportingCurrency="SGD"
       />
     );
@@ -304,6 +301,7 @@ describe("portfolio transactions record workspace", () => {
   });
 
   it("retains a failed exact read beyond collection and retries only when the adviser requests recovery", async () => {
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_250");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -328,7 +326,6 @@ describe("portfolio transactions record workspace", () => {
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_250"
         reportingCurrency="SGD"
       />
     );
@@ -375,13 +372,13 @@ describe("portfolio transactions record workspace", () => {
       ),
     );
 
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_250");
     renderWithQueryClient(
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_250"
         reportingCurrency="SGD"
       />,
     );
@@ -418,13 +415,13 @@ describe("portfolio transactions record workspace", () => {
       ),
     );
 
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_250");
     renderWithQueryClient(
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_250"
         reportingCurrency="USD"
       />,
     );
@@ -451,24 +448,24 @@ describe("portfolio transactions record workspace", () => {
           ),
     );
     vi.stubGlobal("fetch", fetchMock);
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_OLD");
     const result = renderWithQueryClient(
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_OLD"
         reportingCurrency="USD"
       />,
     );
 
+    window.history.replaceState({}, "", "/transactions?portfolioId=MANUAL_PB_USD_001&period=30D&selectedRecordId=TX_CURRENT");
     result.rerender(
       <PortfolioTransactionsRecordWorkspace
         workspace={buildWorkspace()}
         asOfDate="2026-03-28"
         defaultStartDate="2026-03-01"
         defaultEndDate="2026-03-28"
-        initialSelectedRecordId="TX_CURRENT"
         reportingCurrency="USD"
       />,
     );

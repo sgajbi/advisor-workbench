@@ -19,7 +19,6 @@ export default function PortfolioTransactionsRecordScreen(
           asOfDate={context.selectedAsOfDate}
           defaultStartDate={props.startDate ?? context.effectivePeriodStartDate}
           defaultEndDate={props.endDate ?? context.effectivePeriodEndDate}
-          initialSelectedRecordId={props.selectedRecordId}
           reportingCurrency={
             props.reportingCurrency ?? props.workspace.portfolio.base_currency
           }

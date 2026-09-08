@@ -1732,4 +1732,54 @@ test.describe('Portfolio workbench smoke', () => {
       await expect(page.getByText('TX_PAGE_201', { exact: true })).toBeVisible();
     }
   });
+
+  test('record selection changes the address without a server navigation', async ({ page, request }) => {
+    test.skip(
+      process.env.PORTFOLIO_E2E_PROOF_SCENARIO !== 'transaction-navigation',
+      'Requires the exact-transaction navigation fixture.',
+    );
+    // Opening and closing a record is a client-side change: the page already holds
+    // the record. Routing it through `router.push` made the address bar wait on an
+    // RSC round-trip, and under load that wait outlasted the assertion window --
+    // #1031, where Close left `selectedRecordId` in the URL for the full 5 seconds.
+    // Counting RSC navigations states that mechanism directly, so this fails loudly
+    // if selection ever goes back through the server, rather than only when a
+    // machine happens to be slow enough to expose it.
+    const portfolioId = await resolveSmokePortfolioId(request);
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto(
+      `/transactions?portfolioId=${portfolioId}&asOfDate=2026-04-10&period=30D&reportingCurrency=USD`,
+      { waitUntil: 'domcontentloaded' },
+    );
+    await expect(page.getByRole('button', { name: 'Next entries' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Next entries' }).click();
+    await expect(
+      page
+        .getByLabel('Transaction ledger pages')
+        .getByText('201–201 of 201 ledger entries', { exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    let serverNavigations = 0;
+    await page.route('**/*', async (route) => {
+      const pending = route.request();
+      if (pending.url().includes('_rsc=') || (pending.headers()['rsc'] ?? '') === '1') {
+        serverNavigations += 1;
+      }
+      await route.continue();
+    });
+
+    const reviewButton = page.getByRole('button', { name: 'Review transaction TX_PAGE_201' });
+    await expect(reviewButton).toBeVisible({ timeout: 15_000 });
+    await reviewButton.click();
+    await expect(page).toHaveURL(/selectedRecordId=TX_PAGE_201/, { timeout: 2_000 });
+    await expect(page.getByRole('heading', { name: 'Sell' })).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(page).not.toHaveURL(/selectedRecordId=/, { timeout: 2_000 });
+    await expect(reviewButton).toBeFocused();
+
+    expect(serverNavigations).toBe(0);
+  });
+
+
 });

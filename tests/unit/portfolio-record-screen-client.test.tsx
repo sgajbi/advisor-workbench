@@ -397,9 +397,8 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       "href",
       "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001",
     );
-    expect(routerPushMock).toHaveBeenCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=EQ_US_1",
-      { scroll: false },
     );
 
     fireEvent.click(
@@ -408,19 +407,18 @@ describe("PortfolioRecordScreenClient positions flow", () => {
     expect(
       screen.queryByRole("complementary", { name: "Position review drawer" }),
     ).not.toBeInTheDocument();
-    expect(routerPushMock).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/positions?portfolioId=PB_SG_GLOBAL_BAL_001",
-      { scroll: false },
     );
   });
 
   it("rehydrates a source-confirmed holding from the address", () => {
+    window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=FI_SG_1");
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={buildWorkspace()}
-        selectedRecordId="FI_SG_1"
       />,
     );
 
@@ -430,12 +428,12 @@ describe("PortfolioRecordScreenClient positions flow", () => {
   });
 
   it("does not substitute another holding when addressed identity is absent", () => {
+    window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=NOT_IN_BOOK");
     render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={buildWorkspace()}
-        selectedRecordId="NOT_IN_BOOK"
       />,
     );
 
@@ -449,12 +447,12 @@ describe("PortfolioRecordScreenClient positions flow", () => {
 
   it("follows Back and Forward style address changes without retaining stale detail", () => {
     const workspace = buildWorkspace();
+    window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=EQ_US_1");
     const { rerender } = render(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={workspace}
-        selectedRecordId="EQ_US_1"
       />,
     );
 
@@ -462,6 +460,8 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       screen.getByRole("heading", { name: "US Technology Equity" }),
     ).toBeInTheDocument();
 
+    // Back to the list address: the record leaves the URL, so the drawer closes.
+    window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001");
     rerender(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
@@ -473,12 +473,12 @@ describe("PortfolioRecordScreenClient positions flow", () => {
       screen.queryByRole("complementary", { name: "Position review drawer" }),
     ).not.toBeInTheDocument();
 
+    window.history.replaceState({}, "", "/positions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=FI_SG_1");
     rerender(
       <PortfolioPositionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={workspace}
-        selectedRecordId="FI_SG_1"
       />,
     );
     expect(
@@ -559,9 +559,8 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Review TX_FIRST" }));
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
-    expect(routerPushMock).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=TX_FIRST",
-      { scroll: false },
     );
 
     const secondWorkspace = buildWorkspaceWithTransaction(
@@ -583,9 +582,8 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       screen.getByRole("button", { name: "Open FX Contract Transactions" }),
     );
     expect(screen.getByText("FX contract FXC-SECOND")).toBeInTheDocument();
-    expect(routerPushMock).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/transactions?portfolioId=PB_SG_INCOME_002",
-      { scroll: false },
     );
 
     const thirdWorkspace = buildWorkspaceWithTransaction(
@@ -630,23 +628,23 @@ describe("PortfolioRecordScreenClient transactions flow", () => {
       ),
     );
     vi.stubGlobal("fetch", fetchMock);
+    window.history.replaceState({}, "", "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=TX_DIRECT");
     const { rerender } = renderWithQueryClient(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={workspace}
-        selectedRecordId="TX_DIRECT"
       />,
     );
 
     expect(screen.getByRole("heading", { name: "Buy" })).toBeInTheDocument();
 
+    window.history.replaceState({}, "", "/transactions?portfolioId=PB_SG_GLOBAL_BAL_001&selectedRecordId=TX_NOT_IN_WINDOW");
     rerender(
       <PortfolioTransactionsRecordScreen
         portfolioId="PB_SG_GLOBAL_BAL_001"
         portfolioContext={null}
         workspace={workspace}
-        selectedRecordId="TX_NOT_IN_WINDOW"
       />,
     );
     expect(await screen.findByRole("heading", { name: "Buy" })).toBeInTheDocument();

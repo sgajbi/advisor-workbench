@@ -25,14 +25,12 @@ export default function PortfolioTransactionsRecordWorkspace({
   asOfDate,
   defaultStartDate,
   defaultEndDate,
-  initialSelectedRecordId,
   reportingCurrency,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
   defaultStartDate: string;
   defaultEndDate: string;
-  initialSelectedRecordId?: string;
   reportingCurrency: string;
 }) {
   const [selectedTransactionRecord, setSelectedTransactionRecord] =
@@ -48,7 +46,6 @@ export default function PortfolioTransactionsRecordWorkspace({
   const { selectedRecordId, listHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
-      initialSelectedRecordId,
     });
   const initialTransactionRows = useMemo(
     () =>

@@ -81,7 +81,8 @@
           "fixture_value": "transaction-navigation",
           "spec": "tests/e2e/portfolio-workbench.smoke.spec.ts",
           "expected_tests": [
-            "transaction deep links survive reload and browser history beyond the first ledger page"
+            "transaction deep links survive reload and browser history beyond the first ledger page",
+            "record selection changes the address without a server navigation"
           ]
         }
       }
