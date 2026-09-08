@@ -17,7 +17,6 @@ export default function PortfolioPositionsRecordScreen(props: PortfolioRecordScr
           asOfDate={context.selectedAsOfDate}
           timeWindow={props.timeWindow ?? context.timeWindow}
           reportingCurrency={context.selectedReportingCurrency}
-          initialSelectedRecordId={props.selectedRecordId}
         />
       ) : null}
     </PortfolioRecordScreenShell>

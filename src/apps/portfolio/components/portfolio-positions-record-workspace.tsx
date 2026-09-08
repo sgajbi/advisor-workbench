@@ -25,13 +25,11 @@ export default function PortfolioPositionsRecordWorkspace({
   asOfDate,
   timeWindow,
   reportingCurrency,
-  initialSelectedRecordId,
 }: {
   workspace: PortfolioWorkspace;
   asOfDate: string;
   timeWindow: PortfolioTimeWindow;
   reportingCurrency: string;
-  initialSelectedRecordId?: string;
 }) {
   const availability = buildPositionsReviewAvailability(
     workspace.record_data_availability,
@@ -47,7 +45,6 @@ export default function PortfolioPositionsRecordWorkspace({
   const { selectedRecordId, buildRelatedHref, openRecord, closeRecord } =
     usePortfolioRecordSelection({
       portfolioId: workspace.portfolio.portfolio_id,
-      initialSelectedRecordId,
     });
   const selectedHolding = useMemo(
     () => {
